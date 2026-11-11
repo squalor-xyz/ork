@@ -19,6 +19,98 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+// humanChecksTodoFile is the file at the project root that a landing appends
+// the run's human checks to (S331, *proposed*; owner decision 2026-11-11, adj
+// 281). Human checks never block a landing.
+const humanChecksTodoFile = "human-checks-todo.md"
+
+// afterLandMarker replaces a check's leading deferredPrefix in the todo file.
+const afterLandMarker = "[AFTER LAND] "
+
+// humanChecksTodoHeader is the text a new todo file starts with.
+const humanChecksTodoHeader = "# Human checks to do\n\n" +
+	"Checks that a person runs by hand. They never block a landing: a slice that passes its gates and checks lands, and its human checks are added here (owner decision 2026-11-11, adj 281). The owner usually tests after a release, and anything found becomes a fix slice.\n\n" +
+	"Tick a box when the check is done, or delete the line. Write `-> SNNN` after a check that found a problem, naming the fix slice.\n"
+
+// laterChecks lists the checks of the card that are marked later, as the todo
+// file writes them: a leading "deferred to land: " becomes "[AFTER LAND] ". A
+// ticked check and an open one are left out.
+func laterChecks(card *runrec.ApprovalCard) []string {
+	if card == nil {
+		return nil
+	}
+	var out []string
+	for _, c := range card.HumanChecks {
+		if c.State != runrec.CheckLater {
+			continue
+		}
+		text := c.Text
+		if rest, ok := strings.CutPrefix(text, deferredPrefix); ok {
+			text = afterLandMarker + rest
+		}
+		out = append(out, text)
+	}
+	return out
+}
+
+// appendHumanChecksTodo adds a section for the run to the todo file at path:
+// "## ITEM (run RUN, DATE)" and one "- [ ] TEXT" line for each check. A missing
+// file is created with the header. The text already in the file is kept byte
+// for byte; the section is only appended (after a newline, when the last line
+// has none). A run that already has its section there is not added again, so a
+// landing that is retried appends once. No check adds nothing.
+func appendHumanChecksTodo(path, item, run, date string, lines []string) (err error) {
+	if len(lines) == 0 {
+		return nil
+	}
+	existing, err := os.ReadFile(path)
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return err
+	}
+	heading := fmt.Sprintf("## %s (run %s, %s)", item, run, date)
+	if strings.Contains("\n"+string(existing), "\n## "+item+" (run "+run+",") {
+		return nil
+	}
+	var add strings.Builder
+	switch {
+	case len(existing) == 0:
+		add.WriteString(humanChecksTodoHeader)
+	case existing[len(existing)-1] != '\n':
+		add.WriteString("\n")
+	}
+	add.WriteString("\n" + heading + "\n\n")
+	for _, l := range lines {
+		add.WriteString("- [ ] " + l + "\n")
+	}
+	f, err := os.OpenFile(path, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
+	if err != nil {
+		return err
+	}
+	defer func() { err = errors.Join(err, f.Close()) }()
+	_, err = f.WriteString(add.String())
+	return err
+}
+
+// autoLandReady says ork approves the run itself (S331, *proposed*; adj 281):
+// the project has not opted out, the run is not set to stop after its commit,
+// the card read the slice's human checks, the latest check is green, and no
+// owner finding is still open. It is read when the gate has passed, so the
+// verdict is PASS.
+func (e *Engine) autoLandReady(rec runrec.Record, card *runrec.ApprovalCard) bool {
+	if !e.proj.AutoLandOn() || rec.StopAfter == runrec.StopAfterCommit || card.ChecksError != "" {
+		return false
+	}
+	if n := len(rec.Checks); n == 0 || !rec.Checks[n-1].OK {
+		return false
+	}
+	for _, f := range rec.Findings {
+		if f.Kind == runrec.FindingOwner && f.Answer == "" {
+			return false
+		}
+	}
+	return true
+}
+
 // humanCheckLine matches a [HUMAN CHECK] item: a bullet or numbered line of
 // any section of the slice, as the slices' Check sections write them.
 var humanCheckLine = regexp.MustCompile(`(?i)^\s*(?:[-*+]\s+|\d+[.)]\s+)?\[HUMAN CHECK\]\s*(\S.*?)\s*$`)

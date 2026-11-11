@@ -16,7 +16,9 @@ ork runs slice relays for you across projects. A slice is one tracked unit of
 work in slicer. For each slice ork makes a git worktree, runs an implementer,
 runs the project checks, runs a reviewer, runs fix rounds, runs a gate, and
 then waits for you. You approve; ork finishes, commits and lands the slice on
-the base branch (`docs/design.md:162-221`, `docs/design.md:358-389`).
+the base branch (`docs/design.md:162-221`, `docs/design.md:358-389`). *Proposed
+(S331, adj 281):* a run that passes everything lands with no approve step (see
+"Approve and land").
 
 What ork owns: the list of projects, a record per run, role reports, and the
 daemon (`docs/state.md:8-26`). What it does not own: the roadmap and the
@@ -143,6 +145,7 @@ The registry holds optional per-project settings. Change them with
 | `--budget-minutes N` | run-time budget per slice |
 | `--budget-tokens N` | token budget per slice |
 | `--push on\|off` | push the base branch after landing; off by default |
+| `--auto-land on\|off` | ork approves and lands a run whose gate passes with no open owner finding and a green check, with no `ork approve`; on when unset, `off` is the opt-out (*proposed*, S331, adj 281). Refused while runs are unfinished: a started run reads it at its gate |
 | `--bell on\|off` | the terminal bell for the project's runs and counts; on when unset (*proposed*, S224). Allowed while runs are unfinished; the TUI reads it at start, so restart ork to apply it |
 | `--ui-doc PATH` | the project's UI design doc, relative to the project; the UI pass reads it |
 | `--ui-pass-skills A,B` | comma-separated skill names stored in `ui_pass_skills`; only a Claude UI pass is advised to load them (*proposed*, S209) |
@@ -564,7 +567,26 @@ at launch. See section 9.
 
 ### Approve and land
 
-When the gate passes, the run waits in **Needs you** as "Approve". Open it.
+*Proposed (S331; owner decision 2026-11-11, adj 281):* there is no approve step
+for a run that passes everything. When the gate says `VERDICT: PASS`, no owner
+finding is still open and the latest check is green, ork approves the run
+itself, runs the finish step, commits, lands and cleans up, with no
+`ork approve`. This holds for every project; `ork projects set NAME --auto-land
+off` opts one out. Human checks never hold a landing back: ork marks each open
+one *later*, and at landing it adds the checks marked later to
+`human-checks-todo.md` at the project root, under `## ID (run RUN, DATE)` as
+`- [ ] TEXT` lines (a deferred line starts with `[AFTER LAND]`). The file is
+created with a header when it is missing, and the section is committed with the
+landing's tracking commit. A run goes to the card below instead when the gate
+fails, an owner finding is open, the check is red, the project opted out, the
+run was started with `--stop-after commit`, the card could not read the
+slice's human checks, or ork could not record the approval (the reason shows on
+the run). A landing that pauses (a merge conflict, a red re-check, a failed
+push) pauses as before, and `ork retry` carries on with the landing. A landing
+you approve by hand adds the checks you marked *later* to the same file.
+
+When the gate passes and the run does not land by itself, it waits in **Needs
+you** as "Approve". Open it.
 The approval card shows the gate result, the diff summary, owner findings and
 the slice's human checks (`docs/dashboard.md:836-945`).
 
@@ -633,6 +655,7 @@ Set it with `ork projects set NAME --bell on|off` (*proposed*, S224).
 | Situation | What to do |
 |---|---|
 | A run is paused with no question (shape, error, lost, interrupted) | `t` on the row, or `ork retry RUN` (`docs/design.md:1088-1091`). *Proposed (S256):* `ork retry RUN "TEXT"` also sends a note, for example after you fixed the tree: the rerun brief shows it as an owner note. A resumed role is told to read `git status` and the diff again; the `t` key sends no note. `ork answer` and `ork fix` do not work on such a pause |
+| A run is paused on report shape twice in a row for one role and round (*proposed*, S298) | The reason names what is wrong (for an owner finding: the missing or misnumbered part, with the offending line), the refused report file and `ork show RUN`. A plain `ork retry RUN` (and `t`) is refused. Read the report with `ork show RUN`, then choose: `ork retry RUN --accept-shape` keeps each owner finding that has no options as an open owner finding (an `[owner blocker]` becomes a question you answer in words) and runs no role; it refuses any other shape problem. `ork retry RUN --again` runs the role once more; if that fails too the pause is capped again. Or `ork stop RUN`. The first shape pause is not capped: `ork retry RUN` works as before, and its brief now carries the exact error and the finding's lines |
 | You need to know why a run is paused, or read the report that was refused | `ork show RUN` (*proposed*, S297) prints the whole pause reason (and the question with its options), the roles with their report names, the check results with their log names, the owner and later findings, and the paused role's newest report (or the run's last report when that role has none). `ork show RUN NAME` prints one report (`reviewer-1-attempt-3.md`) or one check log (`checks-2.log`). Both take `--json`. It reads only reports and check logs, so you need not open `~/.local/state/ork` |
 | A run is paused at a budget limit | `t` or `ork retry RUN` grants one more role round (`docs/design.md:986-997`) |
 | A run is paused after red rounds or no progress (*proposed*, S294) | Read the named failure in Needs you or `ork status`. `t` or `ork retry RUN` grants two more implementer rounds; `ork retry RUN --rounds N` grants a positive count. If still red at the granted limit, it pauses again. To change the check, `ork stop RUN`, set the check (`ork projects set P --check CMD`), then `ork retry RUN` resumes the stopped run at the checks with the new command (*proposed*, S296). Or stop the run. The pane shows the choices in words; status adds retry and stop commands in its trailing next-step hint |
@@ -694,7 +717,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork check RUN N [ticked|later|open]
     ork fix RUN TEXT
     ork approve RUN
-    ork retry RUN [TEXT] [--wait] [--rounds N]
+    ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N

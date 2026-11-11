@@ -1656,6 +1656,72 @@ func TestProjectsSetBellRefusesABadValue(t *testing.T) {
 	}
 }
 
+// --auto-land on|off sets the per-project auto-land opt-out (S331, *proposed*;
+// adj 281).
+func TestProjectsSetAutoLandOnOff(t *testing.T) {
+	w := newWorld(t, stubSource{},
+		registry.Project{Name: "p", Path: "/p/p", Cap: 2},
+		registry.Project{Name: "q", Path: "/p/q"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "p", "--auto-land", "off")
+	if code != 0 || stdout != "updated p: auto_land=off\n" {
+		t.Fatalf("off: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	saved, _ := registry.Load(w.regPath)
+	if b := saved.Projects[0].AutoLand; b == nil || *b || saved.Projects[0].Cap != 2 || saved.Projects[1].AutoLand != nil {
+		t.Fatalf("saved after off: %+v", saved.Projects)
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "p", "--auto-land", "on")
+	if code != 0 || stdout != "updated p: auto_land=on\n" {
+		t.Fatalf("on: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	saved, _ = registry.Load(w.regPath)
+	if b := saved.Projects[0].AutoLand; b == nil || !*b {
+		t.Fatalf("saved after on: %+v", saved.Projects[0])
+	}
+	code, stdout, stderr = run(t, w.app, "projects", "set", "p", "--auto-land", "off", "--json")
+	var res struct{ Project map[string]any }
+	mustJSON(t, stdout, &res)
+	if code != 0 || res.Project["auto_land"] != false {
+		t.Fatalf("--json: exit %d\nstdout: %s\nstderr: %s", code, stdout, stderr)
+	}
+}
+
+// usageOnlyApp is an App for a command that fails as a usage error before it
+// reaches the daemon: it needs no socket directory, and fails the test when a
+// daemon is started.
+func usageOnlyApp(t *testing.T) *App {
+	t.Helper()
+	return &App{Socket: "/nonexistent-ork/none.sock", Start: func(context.Context) error {
+		t.Error("a usage error started the daemon")
+		return nil
+	}}
+}
+
+func TestProjectsSetAutoLandRefusesABadValue(t *testing.T) {
+	code, _, stderr := run(t, usageOnlyApp(t), "projects", "set", "p", "--auto-land", "maybe")
+	if code != 2 || !strings.Contains(stderr, `projects set: --auto-land takes on or off, got "maybe"`) {
+		t.Fatalf("exit %d: %q", code, stderr)
+	}
+}
+
+func TestProjectsSetNeedsAtLeastOneFlagNamesAutoLand(t *testing.T) {
+	code, _, stderr := run(t, usageOnlyApp(t), "projects", "set", "p")
+	if code != 2 || !strings.Contains(stderr, "needs at least one field flag") || !strings.Contains(stderr, "--auto-land") {
+		t.Fatalf("exit %d: %q", code, stderr)
+	}
+}
+
+func TestUsageTextNamesProjectsSetAutoLand(t *testing.T) {
+	if !strings.Contains(usageText, "[--auto-land on|off]") {
+		t.Errorf("usage lacks [--auto-land on|off]:\n%s", usageText)
+	}
+	for _, line := range strings.Split(usageText, "\n") {
+		if len(line) > 80 {
+			t.Errorf("usage line of %d columns: %q", len(line), line)
+		}
+	}
+}
+
 func TestProjectsSetNeedsAtLeastOneFlagNamesBell(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p/p"})
 	code, _, stderr := run(t, w.app, "projects", "set", "p")

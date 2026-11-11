@@ -675,6 +675,10 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 		bell := *p.Bell
 		proj.Bell = &bell
 	}
+	if p.AutoLand != nil {
+		autoLand := *p.AutoLand
+		proj.AutoLand = &autoLand
+	}
 	if p.UIPassSkills != nil {
 		proj.UIPassSkills = append([]string(nil), (*p.UIPassSkills)...)
 	}

@@ -17,9 +17,11 @@ import (
 
 // land runs after the commit (adj 162, landing.in-ork; S119): merge the base
 // branch into the slice branch when it moved, render, re-check, fast-forward
-// the base branch, run `slicer land`, push when the project says so, and
-// remove the worktree and the branch. The owner's approval is the confirm of
-// the cleanup (adj 152, git.cleanup-key). Each step reads git first, so a
+// the base branch, run `slicer land`, add the checks marked later to the todo
+// file and commit it with the tracking change (S331, *proposed*), push when
+// the project says so, and remove the worktree and the branch. The owner's
+// approval, or the engine's automatic one at the gate (S331), is the confirm
+// of the cleanup (adj 152, git.cleanup-key). Each step reads git first, so a
 // retry after a pause picks up where the landing stopped.
 //
 // A merge conflict is the owner's (*proposed*, S238): ork merges the CHANGELOG.md
@@ -92,12 +94,38 @@ func (e *Engine) land(ctx context.Context) error {
 	if err != nil {
 		return pauseWith("git status: " + err.Error())
 	}
+	commitPaths, message := []string(nil), rec.Item+" done"
 	if strings.TrimSpace(status) != "" {
 		if _, err := e.gitWrite(ctx, P, "add", "-A", "--", ".slicer"); err != nil {
 			return pauseWith("git add .slicer: " + err.Error())
 		}
-		if _, err := e.gitWrite(ctx, P, "commit", "-m", rec.Item+" done", "--", ".slicer"); err != nil {
-			return pauseWith("git commit " + rec.Item + " done: " + err.Error())
+		commitPaths = append(commitPaths, ".slicer")
+	}
+	// S331 (*proposed*; adj 281): the checks marked later go to the todo file at
+	// the project root, in the same commit by path. A retry finds the run's
+	// section there and adds nothing, and still commits a file left uncommitted.
+	if lines := laterChecks(rec.Card); len(lines) > 0 {
+		date := e.d.now().Format("2006-01-02")
+		if err := appendHumanChecksTodo(filepath.Join(P, humanChecksTodoFile), rec.Item, rec.ID, date, lines); err != nil {
+			return pauseWith(humanChecksTodoFile + ": " + err.Error())
+		}
+		dirty, err := e.gitRead(ctx, P, "status", "--porcelain", "--", humanChecksTodoFile)
+		if err != nil {
+			return pauseWith("git status: " + err.Error())
+		}
+		if strings.TrimSpace(dirty) != "" {
+			if _, err := e.gitWrite(ctx, P, "add", "--", humanChecksTodoFile); err != nil {
+				return pauseWith("git add " + humanChecksTodoFile + ": " + err.Error())
+			}
+			if len(commitPaths) == 0 {
+				message = rec.Item + " human checks"
+			}
+			commitPaths = append(commitPaths, humanChecksTodoFile)
+		}
+	}
+	if len(commitPaths) > 0 {
+		if _, err := e.gitWrite(ctx, P, append([]string{"commit", "-m", message, "--"}, commitPaths...)...); err != nil {
+			return pauseWith("git commit " + message + ": " + err.Error())
 		}
 	}
 	if e.proj.Push {

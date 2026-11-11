@@ -48,7 +48,10 @@ func runDaemonIn(t *testing.T, root string, runner roundRunner, routes ...clites
 			return engine.Result{}, fmt.Errorf("unexpected role call")
 		}
 	}
-	p := registry.Project{Name: "p", Path: filepath.Join(root, "p"), CheckCommand: "go test ./..."}
+	// Auto-land is off: these runs rest at the approval card and the tests
+	// approve by hand (S331). A test of the default sets the field itself.
+	noAutoLand := false
+	p := registry.Project{Name: "p", Path: filepath.Join(root, "p"), CheckCommand: "go test ./...", AutoLand: &noAutoLand}
 	store := &runrec.Store{Dir: filepath.Join(root, "runs")}
 	reg := filepath.Join(root, "projects.json")
 	if err := registry.Save(reg, &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
@@ -3563,6 +3566,24 @@ func TestShapeRetryStatusFromRecord(t *testing.T) {
 	}
 	if strings.Count(string(b), `"shape_retry":true`) != 2 {
 		t.Fatalf("role-only retry missing from status: %s", b)
+	}
+}
+
+// A role that does not hold the single pending slot keeps its counted shape
+// pause on its role record (S298); that row was not an automatic retry and is
+// not labelled one.
+func TestCountedShapeContextOnARoleIsNotShownAsAShapeRetry(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	counted := &runrec.Pending{Kind: runrec.PendingShape, State: runrec.StateReview, Role: engine.RoleReviewer, Round: 1, Reason: "x", ShapePauses: 1}
+	if _, err := store.Create(runrec.Record{ID: "counted", Item: "S298", Project: p.Name, State: runrec.StatePaused, Pending: counted, Roles: []runrec.RoleRecord{{Role: engine.RoleReviewer, Round: 1, EndedAt: time.Now(), ShapeRetry: counted}}}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(d.engineRuns(p.Name))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(b), `"shape_retry":true`) {
+		t.Fatalf("a counted shape context is shown as a shape retry: %s", b)
 	}
 }
 

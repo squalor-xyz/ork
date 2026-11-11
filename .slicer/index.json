@@ -16111,6 +16111,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "8b37a840-9e8c-4f6f-a69e-1ee6fb4c7570",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decision 2026-11-11 (adj 292, landing.tracking-conflict-fix = merge-both): Q2 option 1. The pause says both sides changed the file, gives the commands to see each side, says keep both changes and remove the markers, then ork retry. Supersedes the 2026-11-04 'take base' answer.",
+          "created_at": "2026-11-11T13:53:05Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -16679,7 +16693,7 @@
       "id": "S298",
       "title": "Report-shape pauses: name the real defect, feed it back to the role, and cap the retry loop",
       "short_title": "Report-shape pauses: name the real defect, feed it back to the role, and cap the retry loop",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S288"
@@ -16691,6 +16705,34 @@
           "text": "**2026-11-05** — Owner decisions 2026-11-05 (interactive interview), all recommended options: Q1 refuse-plain-retry (plain ork retry refused at the cap, naming ork show RUN, --accept-shape, --again, ork stop RUN); Q2 never-by-default (accept without options only with --accept-shape after the cap); Q3 s288-first (S288 builds first and owns the parser and prompt change; S298 depends on S288); Q4 two (the second consecutive shape pause is capped).",
           "created_at": "2026-11-05T18:11:47Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "f8587590-1970-4da6-8d2a-2faf69430899",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S298):\n- later: deferred to land: A reviewer report with a misnumbered option under an owner finding pauses with a message that names that line, a detail line after `Recommend:` no longer pauses (S288), and a second shape pause on the same role shows the report file name and the accept command.",
+          "created_at": "2026-11-11T13:25:59Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "edd83d66-3f98-4d61-94f9-66f2c041afe7",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: owner-finding shape errors name the real defect and quote the line (cut to 120 chars); the shape retry brief carries the plain error and the finding lines; consecutive shape pauses of one role and round are counted (reviewer and UI pass each keep their own count); the second pause names the refused report, ork show RUN and the ways past; a plain ork retry is refused there, --again reruns once, --accept-shape keeps owner findings without options (blocker as a free-text question), runs no role, and a v11 gate accept records its verdict on its own ledger step. go test -race -count=1 ./... all packages ok; go vet, gofmt, slicer check and adj lint clean. Human check (real run after land) left for the owner.",
+          "created_at": "2026-11-11T13:26:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -16717,7 +16759,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -17787,13 +17829,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "206d74bf-6507-4c09-a061-5837b73add49",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decisions 2026-11-11: Q1 (adj 288, doctor.merge-driver-report = doctor-and-pause): ork doctor finding per project plus one clause on a landing conflict pause in a .slicer file. Q2 (adj 289, doctor.merge-driver-fix = doctor-fix, not the recommendation): ork doctor --fix runs the slicer setup-git lines after a [y/N] prompt (Enter is No), and prints them as today without --fix.",
+          "created_at": "2026-11-11T13:52:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "git config --get-regexp '^merge\\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310.",
@@ -17817,13 +17872,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1e11e5b7-07f8-4066-b732-5b3ef8918f1e",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decisions 2026-11-11 (adj 291, vendor.connection-error = resume-then-fallback): Q1 (a) new connection class, resume the same session, then fall back like error (adj 156), no next row pauses with one line; Q2 (a) one resume after 30 s; Q3 (a) only the two sampled signals.",
+          "created_at": "2026-11-11T13:52:55Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry.",
@@ -17847,13 +17915,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9552eccd-a6df-4418-afe2-e7444e8d98a8",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decisions 2026-11-11: Q1 (adj 290, launch.tracking-commit = commit-first): commit the item's .slicer tracking edits on main by path ('Tracking edits on main before starting ID'), then create the worktree. Q2: its own adj record (290), as recommended.",
+          "created_at": "2026-11-11T13:52:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped.",
@@ -17874,7 +17955,7 @@
       "id": "S331",
       "title": "Auto-land a passing run (per-project opt-in)",
       "short_title": "Auto-land a passing run",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17884,6 +17965,20 @@
           "text": "**2026-11-11** — Owner decision 2026-11-11 (adj 281, landing.auto-approve = default-for-all): when every gate passes (VERDICT: PASS, no open [owner] finding) and the checks are green, the run is approved. ork lands it and cleans up with no ork approve call, for every project. A per-project --auto-land off exists only as an opt-out. Human checks never block: at landing ork appends the run's human checks (including [AFTER LAND] ones) to human-checks-todo.md at the repo root, under '## ID (run RUN, DATE)' as '- [ ] TEXT' lines in the format the file already uses, and commits that file with the landing's tracking commit. Q1 = (a) as default-on for all; Q2 = (a) with checks going to the todo file, not marked later; Q3 is moot (adj 280: Check lines are implementer-runnable); Q4 = (a). The orchestrator lands passing runs by hand under this rule until this slice lands.",
           "created_at": "2026-11-11T12:50:20Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7f895e33-53ba-4a67-a015-93217b1d98d2",
+          "kind": "",
+          "text": "**2026-11-11** — Auto-land verified: a gate PASS with no open owner finding and a green check is approved by the engine (autoLandReady, accept) and lands with no ork approve call; open human checks are marked later and the landing appends the checks marked later to human-checks-todo.md and commits it with the tracking commit (once per run, also after a retry). auto_land is a registry field (absent means on) set with ork projects set P --auto-land on|off; a bad value is a usage error and the call is refused while runs are unfinished. go vet, gofmt, go test ./... (25 packages), slicer check and adj lint pass; TestProjectsSetAutoLandOnOff skips in the sandbox (socket path too long) and runs outside it.",
+          "created_at": "2026-11-11T13:26:51Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -17910,7 +18005,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

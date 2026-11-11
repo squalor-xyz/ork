@@ -236,6 +236,10 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		Name: "ork", Path: P, CheckCommand: "go test ./...", CheckMinutes: 10,
 		EnvironmentLines: []string{"Shell: zsh on darwin.", "Go 1.27.2."},
 	}
+	// The default is off: these tests rest at the approval card and approve by
+	// hand. A test of the automatic landing (S331) sets AutoLand to nil.
+	noAutoLand := false
+	proj.AutoLand = &noAutoLand
 	if o.project != nil {
 		o.project(&proj)
 	}
@@ -290,6 +294,10 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		g("-C", P, "merge", "--ff-only", branch),
 		with(clitest.Route{Tool: "slicer", Args: []string{"land", item}, Prefix: true}, `{"item":{"id":"S04"}}`),
 		g("-C", P, "status", "--porcelain", "--", ".slicer"),
+		// The checks marked later go to the todo file (S331, *proposed*).
+		with(g("-C", P, "status", "--porcelain", "--", "human-checks-todo.md"), "?? human-checks-todo.md\n"),
+		g("-C", P, "add", "--", "human-checks-todo.md"),
+		clitest.Route{Tool: "git", Args: []string{"-C", P, "commit", "-m"}, Prefix: true},
 		g("-C", P, "push"),
 		g("-C", P, "worktree", "remove", W),
 		g("-C", P, "branch", "-d", branch),

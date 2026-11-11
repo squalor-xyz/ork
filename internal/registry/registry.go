@@ -267,10 +267,19 @@ type Project struct {
 
 	// Bell controls every terminal bell for this project (S100, *proposed*).
 	Bell *bool `json:"bell,omitempty"`
+
+	// AutoLand says ork approves and lands a run whose gate passes with no open
+	// owner finding and green checks, with no `ork approve` call (S331,
+	// *proposed*; adj 281). Absent means on; false is the opt-out.
+	AutoLand *bool `json:"auto_land,omitempty"`
 }
 
 // BellOn reports whether the project rings the bell; absent means on.
 func (p Project) BellOn() bool { return p.Bell == nil || *p.Bell }
+
+// AutoLandOn reports whether ork lands a passing run without an approve call;
+// absent means on (adj 281).
+func (p Project) AutoLandOn() bool { return p.AutoLand == nil || *p.AutoLand }
 
 // File is the content of projects.json.
 type File struct {

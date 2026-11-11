@@ -1091,7 +1091,11 @@ The actions follow the state (`ui.answer-pane-scope`):
   30-minute limit and, when ork recorded one, the killed process group, and `t` runs the same row again, with the same
   `ork retry RUN` y/n confirmation as the Overview. When a sibling's owner
   question is queued, the retry shows that question first; the retried role
-  runs after the answer (S159, *proposed*).
+  runs after the answer (S159, *proposed*). A shape pause that repeated for
+  one role and round (S298, *proposed*): the reason names the refused report
+  and the way past; `t` asks as usual and the daemon refuses it with one line
+  naming `ork show RUN`, `ork retry RUN --accept-shape`, `ork retry RUN --again`
+  and `ork stop RUN`. The TUI has no key for those.
 - Paused, and the owner's answer or retry waits for a slot (S274, *proposed*;
   adj 177): the run is not waiting for the owner. It leaves Needs you, its
   count and the Questions view, and shows under Running as `paused` with the

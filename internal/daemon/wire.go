@@ -288,7 +288,8 @@ type RemoveProjectParams struct {
 type SetProjectParams struct {
 	Name              string                          `json:"name"`
 	Push              *bool                           `json:"push,omitempty"`
-	Bell              *bool                           `json:"bell,omitempty"` // S224, *proposed*: true or false; a started run does not read it
+	Bell              *bool                           `json:"bell,omitempty"`      // S224, *proposed*: true or false; a started run does not read it
+	AutoLand          *bool                           `json:"auto_land,omitempty"` // S331, *proposed*; adj 281: false opts the project out of automatic landing; a started run reads it at its gate
 	UIDoc             *string                         `json:"ui_doc,omitempty"`
 	UIPassSkills      *[]string                       `json:"ui_pass_skills,omitempty"`
 	SpecCheckRows     *[]string                       `json:"spec_check_rows,omitempty"` // S258, *proposed*: the whole ordered list; [] clears it
@@ -311,7 +312,7 @@ type SetProjectParams struct {
 // SetsNothing reports whether the call sets no field. The struct holds maps,
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
-	return p.Push == nil && p.Bell == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
+	return p.Push == nil && p.Bell == nil && p.AutoLand == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
 		p.CheckCommand == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
 }
@@ -321,14 +322,15 @@ func (p SetProjectParams) SetsNothing() bool {
 // the budgets, the worktree and branch patterns and the bell are not among
 // them: the cap is read at each admission, the budgets are copied into the run
 // record at start, the patterns are used only when a run is planned, and the
-// TUI reads the bell at its start (S224, owner 2026-11-11).
+// TUI reads the bell at its start (S224, owner 2026-11-11). Auto-land is among
+// them: a started run reads it at its gate (S331, *proposed*).
 func (p SetProjectParams) fieldsReadByARun() []string {
 	var names []string
 	for _, f := range []struct {
 		flag string
 		set  bool
 	}{
-		{"--push", p.Push != nil}, {"--ui-doc", p.UIDoc != nil}, {"--ui-pass-skills", p.UIPassSkills != nil},
+		{"--push", p.Push != nil}, {"--auto-land", p.AutoLand != nil}, {"--ui-doc", p.UIDoc != nil}, {"--ui-pass-skills", p.UIPassSkills != nil},
 		{"--spec-check-rows", p.SpecCheckRows != nil}, {"--check", p.CheckCommand != nil},
 		{"--round-check", p.RoundCheckCommand != nil}, {"--check-minutes", p.CheckMinutes != nil}, {"--env-line", p.EnvironmentLines != nil},
 		{"--permission", len(p.Permissions) != 0}, {"--preset", p.Preset != nil},

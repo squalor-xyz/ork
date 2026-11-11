@@ -107,12 +107,15 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               answer and resume a paused role; returns once
                               it runs, --wait waits until it rests
   ork dismiss RUN             clear a stopped run from Needs you
-  ork retry RUN [TEXT] [--wait] [--rounds N]
+  ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
                               retry a paused role or step, with an optional
                               note for the rerun; returns like answer;
                               a stopped run resumes from its worktree with
                               N more implementer rounds (default 2) and
-                              takes no TEXT
+                              takes no TEXT; after two shape pauses in a
+                              row a plain retry is refused: --accept-shape
+                              keeps owner findings that have no options,
+                              --again runs the role once more
   ork status [--project P]    projects, needs-you counts and active relays
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log
@@ -136,7 +139,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               ({CONTRACTS}) through slicer; needs no daemon
   ork projects unpin NAME     clear the pin through slicer
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
-                              [--bell on|off] [--spec-check-rows rNN,rNN]
+                              [--bell on|off] [--auto-land on|off]
+                              [--spec-check-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--round-check CMD] [--no-verify]
                               [--check-minutes N]
@@ -167,6 +171,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               missing) unless --no-verify, which ork remembers
                               for the project; --bell sets the terminal bell
                               for the project, and the TUI reads it at start;
+                              --auto-land is on unless set off: ork then
+                              approves and lands a run whose gate passes, with
+                              no open owner finding and green checks, and its
+                              human checks go to human-checks-todo.md;
                               while runs are unfinished only --cap, --bell, the
                               budgets and the worktree and branch patterns may
                               change

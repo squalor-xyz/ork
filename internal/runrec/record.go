@@ -84,6 +84,10 @@ type RoleRecord struct {
 	// ShapeRetry keeps the automatic retry context with its role, including
 	// when a concurrent sibling owns Pending (S275, proposed).
 	ShapeRetry *Pending `json:"shape_retry,omitempty"`
+	// ShapeAccepted is true when the owner kept this report as it is with
+	// ork retry --accept-shape (S298, *proposed*): its owner findings without
+	// options stay plain findings.
+	ShapeAccepted bool `json:"shape_accepted,omitempty"`
 }
 
 // Running reports whether the role was started and has no end recorded.
@@ -203,7 +207,29 @@ type Pending struct {
 	// the owner: the retry brief then says to keep the question (S287,
 	// *proposed*; adj 277).
 	Asked bool `json:"asked,omitempty"`
+
+	// The next four fields serve a report-shape pause (S298, *proposed*).
+	// ShapePauses counts the consecutive shape pauses of this role and round,
+	// the one that has just paused included; the automatic retry has not paused
+	// yet and carries 0. At ShapePauseCap a plain retry is refused.
+	ShapePauses int `json:"shape_pauses,omitempty"`
+	// ShapeError is the plain shape error, without the way past that a capped
+	// pause adds to Reason. The retry brief uses it.
+	ShapeError string `json:"shape_error,omitempty"`
+	// ShapeFinding holds the lines of the findings that failed the check, cut
+	// to MaxShapeFindingBytes, for the retry brief.
+	ShapeFinding string `json:"shape_finding,omitempty"`
+	// AcceptShape is set by ork retry --accept-shape: the round keeps the
+	// refused report's owner findings that have no options and runs no role.
+	AcceptShape bool `json:"accept_shape,omitempty"`
 }
+
+// ShapePauseCap is the number of consecutive shape pauses of one role and
+// round after which a plain retry is refused (S298, owner decision 2026-11-05).
+const ShapePauseCap = 2
+
+// MaxShapeFindingBytes cuts the finding text kept on a shape pause.
+const MaxShapeFindingBytes = 2048
 
 // Resume methods: the owner action a waiting resume carries (S274, *proposed*;
 // adj 177).
@@ -217,12 +243,16 @@ const (
 // run stays paused and holds no slot. A freed slot starts it ahead of queued
 // runs, oldest At first. It lives in the record so a daemon restart keeps it.
 type ResumeRequest struct {
-	Method string    `json:"method"` // ResumeAnswer or ResumeRetry
-	Text   string    `json:"text,omitempty"`
-	Rounds int       `json:"rounds,omitempty"`
-	Adj    bool      `json:"adj,omitempty"`
-	By     string    `json:"by,omitempty"`
-	At     time.Time `json:"at"`
+	Method string `json:"method"` // ResumeAnswer or ResumeRetry
+	Text   string `json:"text,omitempty"`
+	Rounds int    `json:"rounds,omitempty"`
+	// AcceptShape and Again are the flags of ork retry at a capped shape pause
+	// (S298, *proposed*).
+	AcceptShape bool      `json:"accept_shape,omitempty"`
+	Again       bool      `json:"again,omitempty"`
+	Adj         bool      `json:"adj,omitempty"`
+	By          string    `json:"by,omitempty"`
+	At          time.Time `json:"at"`
 }
 
 // Feedback names the file that holds what the next implementer round must

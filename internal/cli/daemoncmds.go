@@ -310,6 +310,7 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args []string) int {
 	push := fs.String("push", "", "on or off: push the base branch after a landing")
 	bell := fs.String("bell", "", "on or off: ring the terminal bell for this project")
+	autoLand := fs.String("auto-land", "", "on or off: approve and land a passing run with no approve call (on unless set off)")
 	uiDoc := fs.String("ui-doc", "", "the UI design doc, a path inside the project")
 	uiPassSkills := fs.String("ui-pass-skills", "", "comma-separated skills for a Claude UI pass; empty clears the list")
 	specCheckRows := fs.String("spec-check-rows", "", "comma-separated matrix rows the spec check runs on, in order (r16,r24); empty clears the list")
@@ -356,6 +357,15 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 			p.Bell = &on
 		default:
 			return o.usage("projects set: --bell takes on or off, got %q", *bell)
+		}
+	}
+	if given["auto-land"] {
+		switch *autoLand {
+		case "on", "off":
+			on := *autoLand == "on"
+			p.AutoLand = &on
+		default:
+			return o.usage("projects set: --auto-land takes on or off, got %q", *autoLand)
 		}
 	}
 	if given["ui-pass-skills"] {
@@ -432,7 +442,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --bell, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --bell, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -461,6 +471,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		if p.Bell != nil {
 			changed = append(changed, map[bool]string{true: "bell=on", false: "bell=off"}[proj.BellOn()])
+		}
+		if p.AutoLand != nil {
+			changed = append(changed, map[bool]string{true: "auto_land=on", false: "auto_land=off"}[proj.AutoLandOn()])
 		}
 		if p.UIDoc != nil {
 			changed = append(changed, text("ui_doc", proj.UIDoc))
