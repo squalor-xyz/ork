@@ -18263,9 +18263,7 @@
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "2026-11-11 S328 landing: merge-in stopped on '.slicer/slices/S328.json' DU (branch moved it to done/ via slicer done; main had spec-answer edits). Fixed by hand: merge main's change into done/S328.json, git rm the old path, ork retry. ork's retry does not stage a deleted path. S217 (2026-11-09) hit the same case.",
