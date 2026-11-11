@@ -2,7 +2,7 @@
 {
   "id": 170,
   "title": "May the agent record answers the owner gave in an interactive question as decided?",
-  "status": "decided",
+  "status": "superseded",
   "key": "process.owner-answers",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -27,6 +27,7 @@
   },
   "decision": "record-explicit",
   "rationale": "Owner approved the recommendation in the agent session on 2026-10-25 (AskUserQuestion: yes, decide all 162-170); recorded by the agent at the owner's direction. AGENTS.md is updated to match.",
+  "superseded_by": 316,
   "refs": [
     "AGENTS.md"
   ],
@@ -38,6 +39,11 @@
     {
       "date": "2026-10-25",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-11",
+      "event": "supersede",
+      "note": "by 316"
     }
   ]
 }
