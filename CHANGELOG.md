@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Daemon-session test builds on the BSDs (*proposed*): S225. The `getsid` test
+  helper moved from `cmd/ork/getsid_darwin_test.go` to
+  `cmd/ork/getsid_bsd_test.go` (darwin, dragonfly, freebsd, netbsd, openbsd), so
+  `go vet ./...` passes for those targets. The release workflow's Linux test job
+  gets one `Vet another unix target` step that runs `go vet ./...` with
+  `GOOS=freebsd`; it builds nothing that ships.
 - CHANGELOG resolver accepts compact entries (*proposed*): S327. Landing's
   merge of the root `CHANGELOG.md` (S180) treats every `- ` line as a new entry,
   so entries with no blank line between them, and a body that mixes both

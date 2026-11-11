@@ -12653,7 +12653,7 @@
       "id": "S225",
       "title": "Build the daemon-session test on the BSDs and vet it in CI",
       "short_title": "getsid helper on BSDs, freebsd vet",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S213"
@@ -12666,6 +12666,34 @@
           "created_at": "2026-11-01T00:58:22Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fca44341-96cd-48c1-9100-7e3499181597",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S225):\n- later: deferred to land: The owner runs the workflow once with `workflow_dispatch` and confirms the new `Vet another unix target` step passes on the Linux test job and does not appear on the macOS one.",
+          "created_at": "2026-11-11T12:33:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "672a8632-f3ce-41ae-8cd6-aa2a3796359b",
+          "kind": "",
+          "text": "**2026-11-11** — Added cmd/ork/getsid_bsd_test.go (darwin, dragonfly, freebsd, netbsd, openbsd) in place of getsid_darwin_test.go, a Linux-only 'Vet another unix target' step (GOOS=freebsd GOARCH=amd64 go vet ./...) in the release workflow's test job, a TestWorkflow/cross_vet guard with four failing-edit cases, and a CHANGELOG entry. Verified: go test -race ./... passes in all 25 packages, go vet, gofmt, slicer check and adj lint are clean, and each cross_vet assertion was mutation-checked. The GOOS cross-vet compile checks were assigned to the orchestrator and not run by the implementer; the workflow_dispatch human check is deferred to land.",
+          "created_at": "2026-11-11T12:33:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12691,7 +12719,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
