@@ -658,6 +658,47 @@ func TestRegistryBellFieldDefaultsOn(t *testing.T) {
 	}
 }
 
+// S331 (*proposed*; adj 281): an absent auto_land reads as on, and a stored
+// false is kept through a load and a save.
+func TestRegistryAutoLandFieldDefaultsOn(t *testing.T) {
+	for _, value := range []string{"absent", "false", "true"} {
+		t.Run(value, func(t *testing.T) {
+			path := filepath.Join(t.TempDir(), "projects.json")
+			field := ""
+			if value != "absent" {
+				field = ",\"auto_land\":" + value
+			}
+			writeFile(t, path, []byte(`{"version":2,"projects":[{"name":"a","path":"/p/a","adj":false`+field+`}]}`))
+			for round := 0; round < 2; round++ {
+				f, err := Load(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				p := f.Projects[0]
+				if p.AutoLandOn() != (value != "false") {
+					t.Fatalf("AutoLandOn() = %v for %s", p.AutoLandOn(), value)
+				}
+				if (p.AutoLand == nil) != (value == "absent") {
+					t.Fatalf("AutoLand presence differs for %s", value)
+				}
+				if err := Save(path, f); err != nil {
+					t.Fatal(err)
+				}
+				data, err := os.ReadFile(path)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if bytes.Contains(data, []byte(`"auto_land"`)) != (value != "absent") {
+					t.Fatalf("saved auto_land presence differs for %s: %s", value, data)
+				}
+				if value == "false" && !bytes.Contains(data, []byte(`"auto_land": false`)) {
+					t.Fatalf("saved file lacks auto_land: false: %s", data)
+				}
+			}
+		})
+	}
+}
+
 func TestRegistryKeepsSpecCheckRows(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
 	raw := []byte(`{"version":2,"projects":[{"name":"p","path":"/p","adj":false,"spec_check_rows":["r16","r24"]}]}`)

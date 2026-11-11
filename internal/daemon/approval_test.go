@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 
@@ -35,6 +36,11 @@ func TestRunStatusCarriesTheApprovalCardAndItsActions(t *testing.T) {
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: twoHumanChecks},
 		clitest.Route{Tool: "slicer", Args: []string{"note"}, Prefix: true, Stdout: `{"id":"S1","added":true}`},
 	)
+	// The landing adds the checks marked later to the todo file in the project
+	// folder (S331), so the folder exists although git is faked.
+	if err := os.MkdirAll(p.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
 	b := request(t, d, "run.start", `{"project":"p","item":"S1","well_specified":true,"split":false}`)
 	var rec runrec.Record
 	if err := json.Unmarshal(b, &rec); err != nil {

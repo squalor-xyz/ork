@@ -483,6 +483,18 @@ func (e *Engine) advance(ctx context.Context) error {
 func (e *Engine) Approve(ctx context.Context) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	if err := e.accept(ctx); err != nil {
+		return err
+	}
+	e.orchestratorPhase(ctx, "start", "")
+	return e.advance(ctx)
+}
+
+// accept records the approval of a slice that awaits it and moves it to the
+// finish step. The owner's Approve and the engine's automatic approval at the
+// gate (S331, *proposed*) both come here. The caller holds e.mu and runs the
+// engine on.
+func (e *Engine) accept(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	if rec.State != runrec.StateAwaitingApproval {
 		return refusef("the slice is %s, not awaiting approval", rec.State)
@@ -504,15 +516,10 @@ func (e *Engine) Approve(ctx context.Context) error {
 			return fmt.Errorf("record the human checks as a slicer note: %w", err)
 		}
 	}
-	err := e.run.Update(func(r *runrec.Record) {
+	return e.run.Update(func(r *runrec.Record) {
 		r.Approvals = append(r.Approvals, runrec.Approval{What: "slice", At: e.d.now()})
 		r.State = runrec.StateFinish
 	})
-	if err != nil {
-		return err
-	}
-	e.orchestratorPhase(ctx, "start", "")
-	return e.advance(ctx)
 }
 
 // Reject stops a slice that awaits approval.

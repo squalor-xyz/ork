@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- Land a passing run without an approve call (*proposed*): S331, adj 281
+  (`landing.auto-approve`). When the gate returns `VERDICT: PASS`, no owner
+  finding is open and the latest check is green, ork approves the run itself,
+  finishes, commits, lands and cleans up, for every project; `ork projects set
+  NAME --auto-land off` opts a project out (registry field `auto_land`, absent
+  means on; refused while runs are unfinished). Human checks never block: each
+  open one is marked later, and a landing adds the checks marked later to
+  `human-checks-todo.md` at the project root and commits it with the tracking
+  commit. A run stopped after its commit, or one the card could not read, still
+  waits for `ork approve`. Docs updated: `docs/design.md`, `docs/guide.md` and
+  `docs/state.md`.
 - Set the per-project bell with `ork projects set NAME --bell on|off`
   (*proposed*): S224. `on` stores `true` and `off` stores `false` in the
   registry field `bell` (S100) through `projects.set`, and the text line says

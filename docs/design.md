@@ -597,6 +597,23 @@ slice.
   decision 2026-11-07). A round that pauses (a shape problem, an owner
   question, a blocker finding) closes without a verdict, and its rerun is a
   new ledger step that carries the verdict.
+  *Proposed* (S331; owner decision 2026-11-11, adj 281,
+  `landing.auto-approve`): a gate PASS does not wait for `ork approve` when
+  the run qualifies. After the card is built (`engine.autoLandReady`), the
+  engine approves the run itself when the project has not opted out
+  (`auto_land` false; absent means on), the run's `stop_after` is not
+  `commit`, the card read the slice's human checks, the latest check in
+  `checks[]` is green and no owner finding in `findings[]` is open (an
+  answered one is not). It marks each open human check `later`, then runs the
+  same step as `Engine.Approve` (`accept`: the checks note, the approval
+  record, state `finish`), and the state machine goes on to the finish step,
+  the commit and the landing in the same call. Any other run rests in
+  `awaiting-approval` as before. A failed approval step (the slicer note, say)
+  leaves the run in `awaiting-approval` with the reason
+  `automatic approval failed: ...`; `ork approve` then works as before. An
+  approval by `ork approve` and an automatic one are the same record
+  (`approvals[]`, `what` `slice`). adj 162 (`landing.in-ork`) is unchanged:
+  ork still lands; only who approves differs.
   *Proposed* (S50): the gate brief warns about changed paths from `git status`
   in the worktree that fall outside the item's Files paths from
   `slicer show --json` `paths` (slicer s395). An entry covers itself and
@@ -738,6 +755,20 @@ slice.
      `handoff` mode it marks the item done there, and ork commits the `.slicer`
      change as `ID done` (`git commit -- .slicer`, so files the owner staged
      stay out of it); in `done` mode there is nothing to commit.
+     *Proposed (S331, adj 281):* the same step adds the run's human checks to
+     `human-checks-todo.md` at the project root: the checks of the approval
+     card that are marked `later` (a ticked or an open one is left out), each
+     as `- [ ] TEXT` under `## ID (run RUN, DATE)`, with a leading
+     `deferred to land: ` written as `[AFTER LAND] `. DATE is the landing's
+     date. A missing file is created with its header; an existing file keeps
+     its text byte for byte and only gets the section appended (after a
+     newline when its last line has none). A run that already has its section
+     there adds nothing, so a retried landing appends once. The file is
+     committed with the `.slicer` change in one commit by path
+     (`git commit -m "ID done" -- .slicer human-checks-todo.md`), or alone as
+     `ID human checks` when `.slicer` has nothing to commit. A run with no
+     check marked `later` touches no file. A failure writing or committing the
+     file pauses the landing like the other steps.
   4. `git -C P push` when the project's `push` setting is on (off by default;
      ork writes it only when the owner runs
      `ork projects set NAME --push on|off`). A failed push pauses the slice; the branch is on the
@@ -2488,7 +2519,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
-- `projects set NAME [--push on|off] [--bell on|off] [--ui-doc PATH]
+- `projects set NAME [--push on|off] [--bell on|off] [--auto-land on|off] [--ui-doc PATH]
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--worktree-pattern P]
   [--branch-pattern P] [--check CMD] [--round-check CMD] [--no-verify] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
@@ -2572,8 +2603,14 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   (*proposed*, S224) takes `on` or `off` too and sets the registry field `bell`
   (`bell` on the wire, a boolean): `on` stores `true`, `off` stores `false`,
   and the text line says `bell=on` or `bell=off`. The TUI reads the setting at
-  start, so a running TUI needs a restart to apply it. At least one
-  flag is required, and an unknown flag, a bad `--push` or `--bell` value or a non-number is a usage error
+  start, so a running TUI needs a restart to apply it. `--auto-land`
+  (*proposed*, S331; adj 281) takes `on` or `off` and sets the registry field
+  `auto_land` (`auto_land` on the wire, a boolean): `on` stores `true`, `off`
+  stores `false`, an absent field reads as on, and the text line says
+  `auto_land=on` or `auto_land=off`. A started run reads it at its gate, so
+  the call is refused with `project_busy` while the project has unfinished
+  runs, as `--push` is. At least one
+  flag is required, and an unknown flag, a bad `--push`, `--bell` or `--auto-land` value or a non-number is a usage error
   (exit 2) before the daemon starts. The daemon (`projects.set`) validates the
   values and refuses with `bad_params` (a `ui_doc` that is absolute or leaves
   the project, an invalid `ui_pass_skills` name, an invalid `spec_check_rows` id, a pattern without `{id}` or

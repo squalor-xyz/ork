@@ -152,7 +152,10 @@ func newLandEnv(t *testing.T, opts ...func(*registry.Project)) *landEnv {
 	}
 	writeFile(t, filepath.Join(fakes, "show.json"), sliceJSON())
 
-	proj := registry.Project{Name: "ork", Path: P, CheckCommand: "go test ./...", CheckMinutes: 10}
+	// The default is off: these tests rest at approval after a fix round and
+	// approve by hand. A test of the automatic landing (S331) sets it to nil.
+	noAutoLand := false
+	proj := registry.Project{Name: "ork", Path: P, CheckCommand: "go test ./...", CheckMinutes: 10, AutoLand: &noAutoLand}
 	for _, o := range opts {
 		o(&proj)
 	}

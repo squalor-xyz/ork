@@ -127,6 +127,17 @@ Notes on the fields:
   `ork projects set NAME --push on|off` (below); the owner can also edit the
   file (docs/manual-steps.md). An older ork refuses a registry with `push`
   because `Load` uses strict keys.
+- `auto_land` (*proposed*, S331; owner decision 2026-11-11, adj 281) says ork
+  approves a run whose gate passes with no open owner finding and a green
+  check, and lands it with no `ork approve` call. Absent means on, for every
+  project; `false` is the owner's opt-out, written only by `ork projects set
+  NAME --auto-land on|off` (`on` stores `true`) or by editing the file. A
+  started run reads it at its gate, so the call is refused while the project
+  has unfinished runs. At landing ork adds the run's checks marked `later` to
+  `human-checks-todo.md` at the project's path (in the project's repository,
+  not in ork's state) and commits it with the landing's tracking commit
+  (design.md, Engine). An older ork refuses a registry with `auto_land`
+  because `Load` uses strict keys.
 - `ui_doc` (*proposed*, S136, owner decision 2026-10-27) is the path of the
   project's UI design doc, relative to the project (the example uses
   `docs/ui.md`). The UI pass's brief names it, so the pass judges the screens

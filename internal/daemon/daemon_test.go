@@ -1567,8 +1567,10 @@ func TestProjectsSetSetsAndClearsEveryField(t *testing.T) {
 		t.Fatal(err)
 	}
 	f, _ := registry.Load(d.registryPath())
+	// runDaemon registers the project with auto_land off; this call leaves it.
+	noAutoLand := false
 	want := registry.Project{Name: "p", Path: f.Projects[0].Path, Push: true, UIDoc: "docs/ui.md", WorktreePattern: ".wt/{id_lower}", BranchPattern: "b/{id}",
-		CheckCommand: "make test", CheckMinutes: 9, Cap: 2, Budgets: registry.Budgets{Minutes: 30, Tokens: 5000}}
+		CheckCommand: "make test", CheckMinutes: 9, Cap: 2, Budgets: registry.Budgets{Minutes: 30, Tokens: 5000}, AutoLand: &noAutoLand}
 	if !reflect.DeepEqual(f.Projects[0], want) {
 		t.Fatalf("set all:\n got %+v\nwant %+v", f.Projects[0], want)
 	}
@@ -1587,7 +1589,7 @@ func TestProjectsSetSetsAndClearsEveryField(t *testing.T) {
 		t.Fatal(err)
 	}
 	f, _ = registry.Load(d.registryPath())
-	if !reflect.DeepEqual(f.Projects[0], registry.Project{Name: "p", Path: want.Path}) {
+	if !reflect.DeepEqual(f.Projects[0], registry.Project{Name: "p", Path: want.Path, AutoLand: &noAutoLand}) {
 		t.Fatalf("clear all: %+v", f.Projects[0])
 	}
 }
@@ -1946,6 +1948,10 @@ func TestProjectsSetConcurrentCallsKeepEveryChange(t *testing.T) {
 	}
 	want := registry.Project{Name: "p", Path: f.Projects[0].Path, Push: true, UIDoc: "u.md", WorktreePattern: "w/{id}", BranchPattern: "b/{id}",
 		CheckCommand: "make", CheckMinutes: 4, Cap: 2, Budgets: registry.Budgets{Minutes: 6, Tokens: 7}}
+	want.AutoLand = f.Projects[0].AutoLand // runDaemon registers the project with auto_land off; no call here sets it
+	if f.Projects[0].AutoLand == nil || *f.Projects[0].AutoLand {
+		t.Fatalf("a concurrent set changed auto_land: %+v", f.Projects[0].AutoLand)
+	}
 	if !reflect.DeepEqual(f.Projects[0], want) {
 		t.Fatalf("a concurrent set lost a change:\n got %+v\nwant %+v", f.Projects[0], want)
 	}
@@ -2232,6 +2238,54 @@ func TestProjectsSetBellWhileARunIsUnfinished(t *testing.T) {
 	}
 	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
 		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+// S331 (*proposed*; adj 281): projects.set takes auto_land, a pointer to a
+// boolean. The other fields stay as they are.
+func TestProjectsSetAutoLand(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	if _, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","cap":4}`)); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []bool{false, true} {
+		got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, fmt.Sprintf(`{"name":"p","auto_land":%v}`, want)))
+		if err != nil {
+			t.Fatalf("auto_land %v: %v", want, err)
+		}
+		reply, _ := json.Marshal(got)
+		if want := fmt.Sprintf(`"auto_land":%v`, want); !strings.Contains(string(reply), want) {
+			t.Fatalf("reply lacks %s: %s", want, reply)
+		}
+		f, _ := registry.Load(d.registryPath())
+		if f.Projects[0].AutoLand == nil || *f.Projects[0].AutoLand != want || f.Projects[0].Cap != 4 {
+			t.Fatalf("saved after auto_land %v: %+v", want, f.Projects[0])
+		}
+	}
+}
+
+// A started run reads auto_land at its gate, so the call is refused while a
+// run is unfinished, as --push is, and nothing is saved.
+func TestProjectsSetAutoLandWhileARunIsUnfinished(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "a-run", Project: p.Name, State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.ReadFile(d.registryPath())
+	_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","auto_land":false}`))
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != wantBusy("--auto-land", "it") {
+		t.Fatalf("auto_land with an unfinished run: %v", err)
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
+	}
+}
+
+func TestSetsNothingCountsAutoLand(t *testing.T) {
+	v := false
+	if (SetProjectParams{Name: "p", AutoLand: &v}).SetsNothing() {
+		t.Fatal("auto_land alone sets nothing")
 	}
 }
 

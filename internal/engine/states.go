@@ -844,11 +844,31 @@ func (e *Engine) gate(ctx context.Context) error {
 		// the card is built (S223, proposed).
 		e.syncLedgerAnswers(ctx)
 		card := e.buildCard(ctx, e.run.Snapshot(), out.report)
-		err := e.run.Update(func(rr *runrec.Record) { rr.Card = card; rr.State = runrec.StateAwaitingApproval; rr.Reason = "" })
-		if err == nil {
-			e.orchestratorPhase(ctx, "wait", "approval")
+		// S331 (*proposed*; adj 281): a run that qualifies is approved here, with
+		// no approve call. Its human checks never block: each open one is marked
+		// later, and the landing adds them to the todo file.
+		auto := e.autoLandReady(e.run.Snapshot(), card)
+		if auto {
+			for i := range card.HumanChecks {
+				if !card.HumanChecks[i].Resolved() {
+					card.HumanChecks[i].State = runrec.CheckLater
+				}
+			}
 		}
-		return err
+		err := e.run.Update(func(rr *runrec.Record) { rr.Card = card; rr.State = runrec.StateAwaitingApproval; rr.Reason = "" })
+		if err != nil {
+			return err
+		}
+		if auto {
+			if err := e.accept(ctx); err != nil {
+				// The run waits for the owner's approve, with the reason on it.
+				e.orchestratorPhase(ctx, "wait", "approval")
+				return e.run.Update(func(rr *runrec.Record) { rr.Reason = "automatic approval failed: " + err.Error() })
+			}
+			return nil
+		}
+		e.orchestratorPhase(ctx, "wait", "approval")
+		return nil
 	}
 	// FAIL: record it on the item, then back to the implementer.
 	if err := e.run.Update(func(rr *runrec.Record) { rr.Fails++ }); err != nil {

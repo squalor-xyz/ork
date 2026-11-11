@@ -48,7 +48,10 @@ func runDaemonIn(t *testing.T, root string, runner roundRunner, routes ...clites
 			return engine.Result{}, fmt.Errorf("unexpected role call")
 		}
 	}
-	p := registry.Project{Name: "p", Path: filepath.Join(root, "p"), CheckCommand: "go test ./..."}
+	// Auto-land is off: these runs rest at the approval card and the tests
+	// approve by hand (S331). A test of the default sets the field itself.
+	noAutoLand := false
+	p := registry.Project{Name: "p", Path: filepath.Join(root, "p"), CheckCommand: "go test ./...", AutoLand: &noAutoLand}
 	store := &runrec.Store{Dir: filepath.Join(root, "runs")}
 	reg := filepath.Join(root, "projects.json")
 	if err := registry.Save(reg, &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {

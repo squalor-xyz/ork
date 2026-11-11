@@ -17874,7 +17874,7 @@
       "id": "S331",
       "title": "Auto-land a passing run (per-project opt-in)",
       "short_title": "Auto-land a passing run",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17884,6 +17884,20 @@
           "text": "**2026-11-11** — Owner decision 2026-11-11 (adj 281, landing.auto-approve = default-for-all): when every gate passes (VERDICT: PASS, no open [owner] finding) and the checks are green, the run is approved. ork lands it and cleans up with no ork approve call, for every project. A per-project --auto-land off exists only as an opt-out. Human checks never block: at landing ork appends the run's human checks (including [AFTER LAND] ones) to human-checks-todo.md at the repo root, under '## ID (run RUN, DATE)' as '- [ ] TEXT' lines in the format the file already uses, and commits that file with the landing's tracking commit. Q1 = (a) as default-on for all; Q2 = (a) with checks going to the todo file, not marked later; Q3 is moot (adj 280: Check lines are implementer-runnable); Q4 = (a). The orchestrator lands passing runs by hand under this rule until this slice lands.",
           "created_at": "2026-11-11T12:50:20Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7f895e33-53ba-4a67-a015-93217b1d98d2",
+          "kind": "",
+          "text": "**2026-11-11** — Auto-land verified: a gate PASS with no open owner finding and a green check is approved by the engine (autoLandReady, accept) and lands with no ork approve call; open human checks are marked later and the landing appends the checks marked later to human-checks-todo.md and commits it with the tracking commit (once per run, also after a retry). auto_land is a registry field (absent means on) set with ork projects set P --auto-land on|off; a bad value is a usage error and the call is refused while runs are unfinished. go vet, gofmt, go test ./... (25 packages), slicer check and adj lint pass; TestProjectsSetAutoLandOnOff skips in the sandbox (socket path too long) and runs outside it.",
+          "created_at": "2026-11-11T13:26:51Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -17910,7 +17924,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

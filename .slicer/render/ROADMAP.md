@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-332 items · — 59 · done 240 · retired 33
+332 items · — 58 · done 241 · retired 33
 
 v1.2
 
@@ -220,7 +220,7 @@ v1.2
 | 163 | [S328](slices/S328.md) | Missing slicer merge drivers | S `[needs-owner]` | 1 |  | git config --get-regexp '^merge\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310. · discovered from S289 | — |
 | 164 | [S329](slices/S329.md) | Connection errors resume the role | M `[needs-owner]` | 2 |  | S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry. | — |
 | 165 | [S330](slices/S330.md) | Launch with uncommitted tracking edits | S `[needs-owner]` | 1 |  | S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped. · discovered from S254 | — |
-| 166 | [S331](slices/S331.md) | Auto-land a passing run | M | 2 |  | Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule. | — |
+| 166 | [S331](slices/S331.md) | Auto-land a passing run | M | 2 |  | Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule. | done |
 
 ---
 
