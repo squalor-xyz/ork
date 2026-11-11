@@ -2,7 +2,7 @@
 {
   "id": 195,
   "title": "What time limit does a local role get before ork falls back to the next row?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-timeout",
   "decided_by": "Jon",
   "via": "interactive question, relay session 8d711f67, 2026-11-09",
@@ -29,6 +29,7 @@
   },
   "decision": "45-minutes",
   "rationale": "Owner chose 45 minutes in the 2026-11-09 interview, over the recommended 20, to give slow local runs more time.",
+  "superseded_by": 315,
   "refs": [
     "S301",
     "S303"
@@ -41,6 +42,11 @@
     {
       "date": "2026-11-09",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-11",
+      "event": "supersede",
+      "note": "by 315"
     }
   ]
 }
