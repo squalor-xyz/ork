@@ -137,3 +137,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S289 (run ork-20261111-150602-fa84, 2026-11-11)
 
 - [ ] [AFTER LAND] The next tracking-only conflict in a landing shows the new reason, and after the owner follows it, `slicer show ID` still holds the notes and section edits of both sides.
+
+## S220 (run ork-20261111-160241-e417, 2026-11-11)
+
+- [ ] [AFTER LAND] The owner reads the CHANGELOG v1.1.0 section and the tag summary, runs the workflow dry run if needed, creates and pushes the annotated tag, and checks the release page. ork does none of these.
