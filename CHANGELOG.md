@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v1.1.0 (2026-11-11)
+
 - Docs: re-anchor file:line citations in `docs/guide.md` (S219).
   Audit `docs/design.md`; its three sibling references remain unverified
   because the sibling checkouts are absent. Add a stdlib citation guard for
@@ -796,6 +798,64 @@
   single-item Roadmap launch) moves to Running with the new run selected, unless
   an item waits on spec questions or failed (*proposed*, S262). S140's combined
   Waves, Roadmap and Decisions tabs are removed.
+
+- Local model through a vendor CLI (*proposed*, S301, adj 179 to 181, 183,
+  186 to 188, 192, 194, 195, 198): a matrix row whose Agent is `claude-local`,
+  `codex-local` or `grok-local` runs the launcher of that name as the vendor's
+  binary, with the row's model and effort and the daemon's environment; ork
+  holds no URL or key, and a cloud `vendor_env` does not reach a local twin.
+  Each local vendor has its own out mark, and the three share one pool of four
+  slots, spec checks included. A run whose first implementer row is local
+  reserves one pool slot for its lifetime and takes no global or project cap
+  slot. A local role is stopped after 45 minutes of runtime, machine sleep not
+  counted, and falls back to the next row; cloud roles keep the 30-minute
+  silence limit. A missing launcher is skipped with a named reason. The
+  `grok-local` row's model is `latest`, so the Grok adapter passes no `-m`.
+  Local costs show as `local`, with no dollar amount. No role defaults to
+  local, and an unreachable-endpoint rule is not part of this change. Docs
+  updated: `docs/design.md`, `docs/boundaries.md`, `docs/state.md` and
+  `docs/dashboard.md`.
+- Planning skips a Grok write row (*proposed*, S268): a plan leaves a `grok` or
+  `grok-local` implementer row out (unless the implementer is the read-only
+  preset) and names the reason in the plan note, and the matrix view shows the
+  row as skipped. A plan with no implementer row left is refused, and a launch
+  override with a Grok implementer entry is refused with `bad_params`. Docs
+  updated: `docs/guide.md`, `docs/how-it-works.md` and `docs/design.md`.
+- Role prompts show the report lines literally (*proposed*, S276): the
+  implementer and gate prompts show `Tests: N passed, M failed` and `## Owner
+  needed` as their own lines, say a list number is never part of a heading, and
+  the other role prompts say the heading is exactly `## Owner needed`. The
+  report-shape check is unchanged.
+- Shape retry also covers a malformed report that asks the owner (*proposed*,
+  S287, adj 277): the role is resumed once in the same session with a brief that
+  says to keep its owner question, then the question is asked, or the run
+  pauses on shape if the second report is malformed too. The run record's
+  pending entry gains `asked` (additive, no migration). Docs updated:
+  `docs/design.md` and `docs/state.md`.
+- Landing conflicts only in tracking files (*proposed*, S289, adj 292): when the
+  merge-in of the base stops with every conflicted file a slicer tracking file
+  under the project's `.slicer/slices/`, the pause says both sides changed the
+  file, gives the commands to see each side, and says to keep both changes,
+  remove the markers and run `ork retry`. A mix with other files keeps the
+  generic pause. Docs updated: `docs/design.md`.
+- Subcommand help (*proposed*, S290): `ork SUB --help` and `-h` print that
+  command's usage block, cut from the one usage text, and exit 0; a group
+  prints all its blocks. `ork help SUB` prints the same text and an unknown SUB
+  exits 2. `ork daemon run --help` prints `usage: ork daemon run` and exits 0.
+  Docs updated: `docs/design.md` and `docs/guide.md`.
+- Vendor names on the command line (*proposed*, S291): `--implementer`,
+  `--reviewer`, `--architect`, `ork vendor out` and `ork vendor back` read a
+  vendor name in any case and store it lowercase, on the CLI and on the
+  `run.plan` and `run.start` wire. An unknown name is refused with the list of
+  vendors, built from one list in the daemon behind `supportsVendor`. Matrix
+  agent names such as `Claude Code` are not accepted there. Docs updated:
+  `docs/guide.md` and `docs/design.md`.
+- Spec check and a sibling project's writes (*proposed*, S292): the read-only
+  fingerprint of the main checkout covers only the paths under the project's
+  own root (`git status --porcelain -- .`), so a sibling project's tracking
+  write in the same repository no longer fails the check. A write in the
+  project's own root, its `.slicer` included, still does. The spec check takes
+  no lock. Docs updated: `docs/design.md`.
 
 ## v1.0.0 (2026-10-31)
 

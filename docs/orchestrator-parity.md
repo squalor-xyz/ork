@@ -53,7 +53,7 @@ the tables below.
 | # | Job | Status | ork surface and evidence | Gap slice (size, UI) |
 |---|---|---|---|---|
 | 2.1 | Show the role matrix | exists | `ork roles matrix PROJECT` shows slicer's matrix and which rows ork uses (`internal/cli/roles.go:69-89`). Roadmap `m` opens the matrix pane (S168; `internal/tui/roadmap.go:67-85`) | none |
-| 2.2 | Edit the matrix (`relay-roles add/set/remove/move/rule-edit`) | missing | No ork code calls these. The matrix is slicer's (`docs/glossary.md`, `docs/boundaries.md`), so ork would only call slicer's commands. Deferred to v1.1 (adj 173) | "Role matrix editor" (L, UI) |
+| 2.2 | Edit the matrix (`relay-roles add/set/remove/move/rule-edit`) | exists | Met by S173 and S226 (*proposed*). The daemon method `matrix.edit` previews or runs one `slicer relay-roles` edit in the registered project (`internal/daemon/wire.go:29`), and the Roadmap matrix pane's `e`, `n`, `d`, `m` and `r` keys open a form and ask `[y/N]` (`internal/tui/keys.go:104`, `docs/dashboard.md`). The change is left uncommitted, and the matrix stays slicer's (`docs/glossary.md`, `docs/boundaries.md`). There is no CLI command | none |
 | 2.3 | Pick the lineup for one slice | exists | S166 adds lineup and budget overrides to the launch paths. `ork run` registers the role and budget flags (`internal/cli/run.go:51-52`, `internal/cli/lineup.go:27-35`); `ork wave start` accepts them for every item (`internal/cli/wave.go:249-255`). Waves `e` and the Roadmap launch confirmation's `e edit lineup` use the run-only editor (`internal/tui/keys.go:269-271`, `internal/tui/lineup.go`). Neither edits the matrix | none |
 | 2.4 | One Codex slot at a time, Claude as stand-in when Codex is out of credits | exists | S169 shares one Codex slot across the daemon (`internal/daemon/vendors.go:15-18`, `internal/daemon/runs.go:171-185`). Rounds wait for a slot and skip vendors remembered as out when a later usable row exists (`internal/engine/round.go:233-250`). Rate-limit and out-of-credits exits mark a vendor out for 60 minutes; owner marks last until `ork vendor back` or their `--until` time, also across a daemon restart (S299) (`internal/engine/vendors.go:22-29`, `internal/engine/round.go:421-430`). The matrix must supply the Claude stand-in. Claude still has no measured rate-limit class (`internal/agent/claude/types.go:24-28`) | none |
 | 2.5 | Confirm the setup with the owner before the worktree exists | exists | The plan shows worktree, branch, check command, budgets, lineup and permissions, and asks `Start this slice? [y/N]` (`docs/design.md:1173-1188`, `internal/cli/run.go`). The wave plan does the same per item (`internal/cli/wave.go`) | none |
@@ -149,26 +149,28 @@ numbers. Met rows record the later slices; other titles remain *proposed*.
 | 5 | File a slice from a note or a request (1.7) | M | yes | Met by S170: `ork new` files from a request or a slice note |
 | 6 | Add a note to a slice (1.6) | S | yes | Met by S171: `ork note` and Roadmap `N` |
 | 7 | Answer and ask adj records in ork (6.2, 4.3) | M | yes | Met by S172 and S185: CLI ask/answer and confirmed TUI answers |
-| 8 | Role matrix editor (2.2) | L | yes | Deferred to v1.1 by adj 173; the matrix view exists |
+| 8 | Role matrix editor (2.2) | L | yes | Met in v1.1 by S173 (wire) and S226 (TUI); adj 173 had deferred it to v1.1 |
 | 9 | Registry settings for the remaining fields and the global cap (7.2) | M | yes | Met by S174: `ork projects set` and `ork settings` |
 | 10 | End a stale ledger run from the run pane (7.4) | S | yes | Met by S175: `x end run` confirms ending a stale ledger run (adj 174) |
 | 11 | Open a role report in the run pane (7.7) | S | yes | Met by S176: `run.report` and run pane `p` |
 | 12 | Per-run stop point: after commit, or land (2.6) | S | yes | Met by S177: per-run `--stop-after land\|commit` |
 | 13 | Upgrade command hints (7.5) | M | yes | Met by S178: `ork doctor --upgrade` prints commands; the owner runs them |
-| 14 | Spec drafting round (1.5, 1.3) | L | yes | Deferred to v1.1 by adj 173 (`scope.v1-ork-edits`) |
+| 14 | Spec drafting round (1.5, 1.3) | L | yes | Deferred to v1.1 by adj 173 (`scope.v1-ork-edits`); the owner moved S179 to v1.2 on 2026-10-31 |
 | 15 | Changelog conflict resolver (5.4) | M | no | Met by S180: *proposed* root `CHANGELOG.md`-only entry-aware resolver in Go at landing |
 | 16 | Run a slice as parts or a sliver chain (2.7) | L | yes | Largest; the matrix already has slivers (r8) |
 | 17 | Refuse or warn on a blocked item at wave start (3.7) | S | yes | Met: wave start refuses blocked selections before admitting any member (3.7) |
 | 18 | Watchdog for a hung role (7.4) | M | yes | Met by S182: silent roles pause as lost after the watchdog kills their process group |
 
-Gaps 7 and 13 are met under the owner decisions below. Gap 14 remains
-deferred to v1.1 by adj 173; it needs no new scope decision.
+Gaps 7 and 13 are met under the owner decisions below. Gap 8 is met in v1.1.
+Gap 14 was deferred to v1.1 by adj 173 and the owner moved it to v1.2
+(S179, 2026-10-31); it needs no new scope decision.
 
 ## What the owner still needs an orchestrator session for today
 
-- Changing the role matrix. ork shows it and supports per-run overrides.
+- Changing the role matrix from the shell. The Roadmap matrix pane edits it
+  (S226); there is no CLI command.
 - Writing or fixing a thin spec. ork files slices and notes, but spec
-  drafting stays later under adj 173.
+  drafting is in v1.2 (S179; adj 173 kept it after v1.0).
 - Running design interviews that no role raised.
 - Running slivers and split slices.
 - Pulling and rebuilding slicer, adj and ork with the commands that

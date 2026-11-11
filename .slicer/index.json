@@ -12391,7 +12391,7 @@
       "id": "S220",
       "title": "v1.1 release prep: CHANGELOG heading, docs sweep, tag message and release checklist",
       "short_title": "v1.1 release prep",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S229"
@@ -12438,6 +12438,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "351464f8-7625-4925-af57-a144d22ff653",
+          "kind": "",
+          "text": "**2026-11-11** — Human checks at approval (S220):\n- later: deferred to land: The owner reads the CHANGELOG v1.1.0 section and the tag summary, runs the workflow dry run if needed, creates and pushes the annotated tag, and checks the release page. ork does none of these.",
+          "created_at": "2026-11-11T16:20:29Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1ec20078-e9a5-4a55-93ba-9d0bd82ced4b",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: CHANGELOG.md has an empty ## Unreleased, then ## v1.1.0 (2026-11-11), then ## v1.0.0 (2026-10-31). Added entries for eight done v1.1 items that had none (S301, S268, S276, S287, S289, S290, S291, S292); S284 has none because it changed only test helpers. Docs sweep fixed PROJECT.md, docs/dashboard.md and docs/orchestrator-parity.md (matrix editor landed in v1.1, spec drafting S179 is v1.2). Tag summary is the one line 'ork v1.1.0'. internal/release/changelog_test.go has three tests, each red before the heading or mutation-checked; go test -race ./..., go vet, gofmt, slicer check and adj lint were clean. Not run: the owner's dry run, tag and push (human check, deferred to land).",
+          "created_at": "2026-11-11T16:20:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -12457,7 +12485,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

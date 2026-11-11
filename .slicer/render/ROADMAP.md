@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-333 items · — 52 · done 248 · retired 33
+333 items · — 51 · done 249 · retired 33
 
 v1.2
 
@@ -155,7 +155,7 @@ v1.2
 | 98 | [S217](slices/S217.md) | Warn when main is dirty before landing | S | 1 |  |  | done |
 | 99 | [S218](slices/S218.md) | Wave suggest: one engine slice per wave | S | 1 |  |  | done |
 | 100 | [S219](slices/S219.md) | Re-anchor guide and design citations | S | 1 |  |  | done |
-| 101 | [S220](slices/S220.md) | v1.1 release prep | S | 1 |  |  | — |
+| 101 | [S220](slices/S220.md) | v1.1 release prep | S | 1 |  |  | done |
 | 102 | [S223](slices/S223.md) | Ledger non-blocker owner questions | M | 2 |  |  | done |
 | 103 | [S224](slices/S224.md) | ork projects set --bell on\|off | S | 1 |  |  | done |
 | 104 | [S225](slices/S225.md) | getsid helper on BSDs, freebsd vet | S | 1 |  |  | done |

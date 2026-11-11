@@ -5,7 +5,7 @@ and keys are *proposed* drafts to change after a prototype. v1.0 includes
 filing a slice (S170), adding notes (S171), and answering or asking adj records
 (S172, S185), as decided in `scope.v1-ork-edits` (#173). Roadmap reordering and
 parking (S67, including S68) are in v1.1. The role matrix editor (S173, S226)
-is in v1.1; spec drafting (S179) stays later.
+is in v1.1; spec drafting (S179) is in v1.2.
 
 ## Principles
 
@@ -2044,7 +2044,7 @@ v1.0 includes filing a slice (S170), adding notes (S171), and answering or
 asking adj records (S172, S185), as decided in `scope.v1-ork-edits` (#173).
 Roadmap reordering and parking (S67, including S68) are in v1.1. The role
 matrix editor (S173, S226) is described with the matrix pane above; spec
-drafting (S179) stays later.
+drafting (S179) is in v1.2.
 
 `n new slice` opens a form in the status area with Title and Why fields
 (S170). It is available on the Roadmap with a loaded, available project and
