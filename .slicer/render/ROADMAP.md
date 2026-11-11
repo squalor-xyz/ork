@@ -111,7 +111,7 @@ v1.2
 | 61 | [S340](slices/S340.md) | wave start: spec-check questions can only be answered on a terminal, one at a time | M | - |  |  | — |
 | 62 | [S341](slices/S341.md) | Read-only role check blames the role for any change to the shared tree | S | - |  |  | — |
 | 63 | [S342](slices/S342.md) | wave start: an owner's landing-order answer does not order the wave | M | - |  |  | — |
-| 64 | [S343](slices/S343.md) | Local roles fit the local server | M `[needs-owner]` | 2 |  | S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer's Bash calls went through Claude Code's model-backed classifier (plan mode), which timed out three times. · discovered from S304 | — |
+| 64 | [S343](slices/S343.md) | Local roles fit the local server | M | 2 |  | S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer's Bash calls went through Claude Code's model-backed classifier (plan mode), which timed out three times. · discovered from S304 | — |
 
 ---
 

@@ -18633,9 +18633,7 @@
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer's Bash calls went through Claude Code's model-backed classifier (plan mode), which timed out three times.",
