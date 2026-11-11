@@ -104,6 +104,7 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 		}
 		p.Kind, p.Role, p.Round = runrec.PendingLost, last.Role, last.Round
 		p.AutomaticShapeRetry = false
+		p.AcceptShape = false // no round ended that accepted the report
 		if rec.State != runrec.StatePaused {
 			p.State = rec.State
 		}
@@ -120,6 +121,7 @@ func (e *Engine) Reconcile(ctx context.Context) error {
 	if !resting(rec.State) {
 		if p := rec.AutomaticShapeRetry(); p != nil {
 			p.AutomaticShapeRetry = false
+			p.ShapePauses++ // the restart pause is a shape pause (S298, *proposed*)
 			if err := e.run.Update(func(rr *runrec.Record) {
 				for i := range rr.Roles {
 					if sr := rr.Roles[i].ShapeRetry; sr != nil && sr.AutomaticShapeRetry {

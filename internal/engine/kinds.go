@@ -62,6 +62,12 @@ type segment struct {
 	lines   []string
 }
 
+// text is the finding's lines as the report wrote them, tag line included,
+// with the shared indentation removed.
+func (g segment) text() string {
+	return strings.TrimSpace(strings.Join(dedent(g.lines), "\n"))
+}
+
 func indentOf(line string) int {
 	return len(line) - len(strings.TrimLeft(line, " \t"))
 }
@@ -130,8 +136,10 @@ func segments(lines []string) []segment {
 }
 
 // finding turns a tagged owner or later segment into a Finding. The problem
-// is non-empty when the finding is malformed.
-func (g segment) finding() (Finding, string) {
+// is non-empty when the finding is malformed. With lenient set (the owner
+// accepted the report, S298, *proposed*) an owner finding whose options are
+// not right is kept without an Ask, and is not a problem.
+func (g segment) finding(lenient bool) (Finding, string) {
 	f := Finding{Kind: g.kind, Blocker: g.blocker, Title: g.title}
 	if f.Title == "" {
 		return f, fmt.Sprintf("a [%s] finding needs a one-line title after the tag", g.kind)
@@ -180,14 +188,21 @@ func (g segment) finding() (Finding, string) {
 	// The Question: line makes the block structured, so a shape that is not
 	// right is always an error. Lines that are not the block stay in f.Text
 	// as context (S288, *proposed*).
-	lines, context, ok := ownerBlockLines(f.Title, body)
+	lines, context, why := ownerBlockLines(f.Title, body)
 	var ask *OwnerQuestion
-	var err error
-	if ok {
-		ask, err = parseOwnerQuestion(strings.Join(lines, "\n"))
+	if why == "" {
+		var err error
+		if ask, err = parseOwnerQuestion(strings.Join(lines, "\n")); err != nil {
+			why = shapeCause(err)
+		}
 	}
-	if !ok || err != nil {
-		return f, fmt.Sprintf("owner finding %q needs Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason, %s", f.Title, ownerShapeTail)
+	if why != "" {
+		if lenient {
+			// The owner accepted the report as it is (S298, *proposed*): the
+			// finding stays a plain one, with all its lines in Text.
+			return f, ""
+		}
+		return f, fmt.Sprintf("owner finding %q %s (an owner finding is Options: with 2 to 4 numbered unique labels and summaries, and Recommend: N - reason, %s)", f.Title, why, ownerShapeTail)
 	}
 	f.Ask = ask
 	f.Context = strings.Join(context, "\n")
@@ -202,7 +217,10 @@ func (g segment) finding() (Finding, string) {
 // or Recommend:, a Recommend: before Options:, a Decision key: line behind a
 // list marker, and an option or numbered line after Recommend:. A missing
 // Options: or Recommend: is left to parseOwnerQuestion.
-func ownerBlockLines(title string, body []string) (lines, context []string, ok bool) {
+//
+// why is empty when the body is read, and otherwise names the rule that the
+// refused line broke, quoting the line (S298, *proposed*).
+func ownerBlockLines(title string, body []string) (lines, context []string, why string) {
 	lines = []string{"Question: " + title}
 	const (
 		before = iota
@@ -213,7 +231,9 @@ func ownerBlockLines(title string, body []string) (lines, context []string, ok b
 	for _, raw := range body {
 		line := stripListMarker(raw)
 		if strings.HasPrefix(line, "Decision key:") {
-			return nil, nil, false // a marked key line would be dropped silently
+			// The unmarked key lines are taken out before; a marked one would be
+			// dropped silently.
+			return nil, nil, "a Decision key: line must not have a list marker; write it as Decision key: area.topic"
 		}
 		switch state {
 		case before:
@@ -221,7 +241,7 @@ func ownerBlockLines(title string, body []string) (lines, context []string, ok b
 				lines = append(lines, line)
 				state = inOptions
 			} else if strings.HasPrefix(line, "Recommend:") {
-				return nil, nil, false
+				return nil, nil, "has no Options: line before its " + quoteLine(line)
 			} else {
 				context = append(context, raw)
 			}
@@ -231,27 +251,44 @@ func ownerBlockLines(title string, body []string) (lines, context []string, ok b
 				lines = append(lines, line)
 				state = after
 			case line == "Options:":
-				return nil, nil, false
+				return nil, nil, "Options: appears twice"
 			case optionLine.MatchString(line):
 				if gap {
-					return nil, nil, false
+					return nil, nil, fmt.Sprintf("option line %s comes after a line that is not an option; keep the options together, with nothing between them", quoteLine(line))
 				}
 				lines = append(lines, line)
 				options++
 			case numberedLine.MatchString(line):
-				return nil, nil, false
+				return nil, nil, fmt.Sprintf("numbered line %s is not an option; an option is N. label: summary, with N from 1 to 4", quoteLine(line))
 			default:
 				gap = gap || options > 0
 				context = append(context, raw)
 			}
 		case after:
-			if line == "Options:" || strings.HasPrefix(line, "Recommend:") || optionLine.MatchString(line) || numberedLine.MatchString(line) {
-				return nil, nil, false
+			switch {
+			case line == "Options:":
+				return nil, nil, "Options: comes after Recommend:"
+			case strings.HasPrefix(line, "Recommend:"):
+				return nil, nil, "Recommend: appears twice"
+			case optionLine.MatchString(line) || numberedLine.MatchString(line):
+				return nil, nil, fmt.Sprintf("line %s comes after Recommend:; no numbered line may follow it", quoteLine(line))
 			}
 			context = append(context, raw)
 		}
 	}
-	return lines, context, true
+	return lines, context, ""
+}
+
+// maxQuotedLine is the longest line a shape error quotes.
+const maxQuotedLine = 120
+
+// quoteLine quotes a report line for a shape error, cut to maxQuotedLine
+// characters.
+func quoteLine(s string) string {
+	if r := []rune(s); len(r) > maxQuotedLine {
+		s = string(r[:maxQuotedLine]) + "..."
+	}
+	return strconv.Quote(s)
 }
 
 // numberedLine is a line that opens like a numbered option, "3. ", "3.c" or

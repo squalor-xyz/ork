@@ -480,6 +480,27 @@ automatic retry keeps `shape_retry` (the refused attempt's is cleared when the
 retry starts), so only that row is marked, and it stays marked after the retry
 ends. Text status and the TUI display "shape retry". No owner notice accompanies the first
 refusal, including a refused report that also asks the owner (S287).
+*Proposed (S298):* a shape pause also carries `pending.shape_pauses`, the count of
+consecutive shape pauses of its role and round (the automatic retry carries 0; the
+pause after it is 1; a restart pause counts); `pending.shape_error`, the plain
+error that the retry brief uses (a capped pause's `reason` adds the refused
+report file and the commands for the owner); and `pending.shape_finding`, the
+lines of the findings that failed, cut to 2 KiB. At 2 a plain `ork retry` is
+refused. `pending.accept_shape` is set by `ork retry RUN --accept-shape` and read
+by the next round, which keeps the owner findings that have no options and runs
+no role; that round sets `roles[].shape_accepted: true` on the role's newest
+entry. A finding kept this way has no `ask` in `findings[]`, and an accepted
+`[owner blocker]` is a pending `question` with no `ask`. The reviewer and the UI pass can both fail the shape check in one round while
+`pending` stays single: the role that does not hold `pending` keeps its counted
+context (the same fields, automatic marker off) in `shape_retry` of its newest
+role entry, and its next round reads the count from there; a pause with a higher
+count takes `pending` from a lower one and the displaced role keeps its own in
+`shape_retry`. A `shape_retry` with `shape_pauses` above 0 is a counted pause,
+not an automatic retry, and status does not label that row "shape retry". An
+accepted gate round (v11) opens a new ledger gate step and closes it with the
+report's verdict. A waiting resume
+(`resume`) carries the same two flags as `accept_shape` and `again`. Older
+records without these fields load; an older ork rejects them (strict keys).
 The proposed optional `queued_questions[]` (S135) keeps sibling owner questions
 as pending objects while `pending` stays single. Answering the current question
 shows the next queued question before roles resume. Each role receives its own

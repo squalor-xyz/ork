@@ -598,9 +598,11 @@ func (e *Engine) review(ctx context.Context) error {
 	// findings were kept, or asked, when each report was read.
 	rec = e.run.Snapshot()
 	revFile, revText := e.roundReport(rec, RoleReviewer)
-	rev := triaged(Triage(revText))
+	// Every report here was accepted by its round: its own shape, or the owner's
+	// choice to keep owner findings that have no options (S298, *proposed*).
+	rev := triaged(triage(revText, true))
 	uiFile, uiText := e.roundReport(rec, RoleUI)
-	ui := triaged(Triage(uiText))
+	ui := triaged(triage(uiText, true))
 	switch {
 	case rev.Fix == "" && ui.Fix == "":
 		return e.run.Update(func(rr *runrec.Record) { rr.State = e.beforeGate(rec) })
@@ -721,7 +723,7 @@ func (e *Engine) reviewDone(rec runrec.Record, pend *runrec.Pending, role string
 			return false
 		}
 		// A blocker that no one asked yet means the round is not done.
-		tri, err := Triage(string(b))
+		tri, err := triage(string(b), r.ShapeAccepted)
 		return err == nil && tri.Blocker() == nil
 	}
 	return false

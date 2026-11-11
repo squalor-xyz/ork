@@ -135,6 +135,46 @@ func (e *Engine) earlierReports(rec runrec.Record) []EarlierReport {
 	return out
 }
 
+// nextShapePauses is the count of the shape pause that a round of role at round
+// is about to make, given the context the round started from: one more than the
+// shape pause or automatic retry it reruns, else 1 (S298, *proposed*). A round
+// that ends clean clears the context, a round of another role or round does not
+// read it, so only consecutive shape pauses of one role and round add up.
+func nextShapePauses(pend *runrec.Pending, role string, round int) int {
+	if pend != nil && pend.Kind == runrec.PendingShape && pend.Role == role && pend.Round == round {
+		return pend.ShapePauses + 1
+	}
+	return 1
+}
+
+// shapeCapped reports whether a pause is a shape pause that repeated: a plain
+// retry is refused there (S298, owner decision 2026-11-05).
+func shapeCapped(p *runrec.Pending) bool {
+	return p != nil && p.Kind == runrec.PendingShape && p.ShapePauses >= runrec.ShapePauseCap
+}
+
+// cappedShapeReason is the reason of a capped shape pause: the plain error, the
+// refused report and the ways past.
+func cappedShapeReason(plain, role, report, runID string, pauses int) string {
+	return fmt.Sprintf("%s; the %s's report %s was refused %d times in a row; read it with ork show %s; ork retry %s --accept-shape keeps an owner finding that has no options as it is, ork retry %s --again runs the %s once more, ork stop %s stops the run",
+		plain, role, report, pauses, runID, runID, runID, role, runID)
+}
+
+// cappedRetryRefusal is the one line that refuses a plain retry at the cap.
+func cappedRetryRefusal(id string, pauses int) string {
+	return fmt.Sprintf("run %s paused on report shape %d times in a row; read the report with ork show %s, then ork retry %s --accept-shape, ork retry %s --again (one more rerun) or ork stop %s",
+		id, pauses, id, id, id, id)
+}
+
+// shapeFindingText cuts the offending findings to what a pause keeps.
+func shapeFindingText(findings []string) string {
+	text := strings.Join(findings, "\n\n")
+	if len(text) > runrec.MaxShapeFindingBytes {
+		text = strings.ToValidUTF8(text[:runrec.MaxShapeFindingBytes], "") + "\n(cut)"
+	}
+	return text
+}
+
 // pendingSection is what a resumed round tells its role about why it runs
 // again. The owner's note, when a retry carried one, follows (S256, *proposed*).
 func pendingSection(p *runrec.Pending) []BriefSection {
@@ -182,7 +222,18 @@ func pendingKindSection(p *runrec.Pending) []BriefSection {
 	case runrec.PendingQuestion:
 		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
 	case runrec.PendingShape:
-		return []BriefSection{{Title: "Report shape", Body: shapeRetryBrief(p.Reason, p.Asked)}}
+		// The plain error: a capped pause's reason names commands for the owner.
+		reason := p.ShapeError
+		if reason == "" {
+			reason = p.Reason
+		}
+		body := shapeRetryBrief(reason, p.Asked)
+		if p.ShapeFinding != "" {
+			// The role may not resume its session, and then sees only this.
+			fence := fenceFor(p.ShapeFinding)
+			body += "\n\nThe lines that failed the check, as your report wrote them:\n\n" + fence + "\n" + p.ShapeFinding + "\n" + fence
+		}
+		return []BriefSection{{Title: "Report shape", Body: body}}
 	case runrec.PendingLost:
 		return []BriefSection{{Title: "Earlier process lost", Body: "The process that ran this role before was lost (" + p.Reason + "). The worktree may hold its partial work. Look at it, then continue from it."}}
 	}
@@ -231,6 +282,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 				break
 			}
 		}
+	}
+	// The owner kept the refused report as it is (S298, *proposed*): no role
+	// runs, so no budget, slot or lineup row is needed.
+	if pend != nil && pend.AcceptShape && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n {
+		return e.acceptShape(ctx, r)
 	}
 	// A retry of a budget pause grants this round. Its pending context is
 	// cleared when the round ends, so the next round checks the limits again.
@@ -584,42 +640,21 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 
 	// The report.
-	rep, err := CheckReport(r.role, r.finish, text)
+	rep, tri, findings, bad, err := judgeReport(r, text, false)
+	if err != nil {
+		return outcome{}, err
+	}
 	// A report with a shape error has no verdict to record.
 	verdict := ""
 	if rep != nil {
 		verdict = strings.ToLower(rep.Verdict)
 	}
-	var problems []string
-	var se *ShapeError
-	if errors.As(err, &se) {
-		problems = se.Problems
-	} else if err != nil {
-		return outcome{}, err
-	}
-	var findings string
-	var tri *Triaged
-	if r.role == RoleReviewer || r.role == RoleUI || r.role == RoleGate {
-		var ferr error
-		if r.role == RoleGate {
-			tri, ferr = TriageGate(text)
-		} else {
-			tri, ferr = Triage(text)
-		}
-		if ferr != nil {
-			var fse *ShapeError
-			if errors.As(ferr, &fse) {
-				problems = append(problems, fse.Problems...)
-			}
-		} else if r.role != RoleGate {
-			findings = tri.Fix
-		}
-	}
-	if len(problems) > 0 {
+	if bad != nil {
+		plain := bad.Error()
 		p := runrec.Pending{
 			Kind: runrec.PendingShape, State: r.state, Role: r.role, Round: r.n,
-			Reason: (&ShapeError{Problems: problems}).Error(),
-			Asked:  reportAsksOwner(text),
+			Reason: plain, ShapeError: plain, ShapeFinding: shapeFindingText(bad.Findings),
+			Asked: reportAsksOwner(text),
 		}
 		// A report that also asks the owner is retried too (S287, *proposed*):
 		// the retry brief tells the role to keep its question. Only the one
@@ -633,8 +668,63 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 				}
 			})
 		}
-		return outcome{}, e.pause(p)
+		// A pause: count it, and at the cap name the refused report and the
+		// ways past (S298, *proposed*).
+		p.ShapePauses = nextShapePauses(pend, r.role, r.n)
+		if shapeCapped(&p) {
+			p.Reason = cappedShapeReason(plain, r.role, file, rec.ID, p.ShapePauses)
+		}
+		return outcome{}, e.pauseShape(p)
 	}
+	out, err := e.routeReport(r, rep, tri, findings, text, file)
+	if err != nil || !out.ok {
+		return out, err
+	}
+	closeStep(verdict) // a no-op for a round that closed above
+	return out, nil
+}
+
+// judgeReport checks a role's report: the shared shape checks, then, for the
+// reviewer, UI pass and gate, the findings. A report that breaks the shape comes
+// back as bad, with every problem and the lines of each finding that failed.
+// With lenient set (the owner accepted the report, S298, *proposed*) an owner
+// finding whose options are not right is kept as a plain finding.
+func judgeReport(r round, text string, lenient bool) (rep *Report, tri *Triaged, findings string, bad *ShapeError, err error) {
+	rep, err = CheckReport(r.role, r.finish, text)
+	var problems, shown []string
+	var se *ShapeError
+	if errors.As(err, &se) {
+		problems = se.Problems
+	} else if err != nil {
+		return nil, nil, "", nil, err
+	}
+	if r.role == RoleReviewer || r.role == RoleUI || r.role == RoleGate {
+		var ferr error
+		if r.role == RoleGate {
+			tri, ferr = triageGate(text, lenient)
+		} else {
+			tri, ferr = triage(text, lenient)
+		}
+		if ferr != nil {
+			var fse *ShapeError
+			if errors.As(ferr, &fse) {
+				problems = append(problems, fse.Problems...)
+				shown = fse.Findings
+			}
+		} else if r.role != RoleGate {
+			findings = tri.Fix
+		}
+	}
+	if len(problems) > 0 {
+		return rep, tri, findings, &ShapeError{Problems: problems, Findings: shown}, nil
+	}
+	return rep, tri, findings, nil, nil
+}
+
+// routeReport acts on a report that passed its checks: an owner question or a
+// blocker finding pauses the slice, other findings are kept. The outcome is ok
+// when the round goes on.
+func (e *Engine) routeReport(r round, rep *Report, tri *Triaged, findings, text, file string) (outcome, error) {
 	if rep.Question != "" {
 		err := e.run.Update(func(rr *runrec.Record) {
 			rr.Questions = append(rr.Questions, runrec.Question{Ask: rep.Ask, Role: r.role, Round: r.n, Text: rep.Question, Key: rep.Key, At: e.d.now()})
@@ -674,8 +764,105 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			return outcome{}, nil
 		}
 	}
-	closeStep(verdict) // a no-op for a round that closed above
 	return outcome{ok: true, text: text, report: rep, findings: findings, triage: tri, file: file}, nil
+}
+
+// acceptShape is a round that the owner ended with ork retry --accept-shape
+// (S298, *proposed*): the refused report is read again with the lenient rule
+// for owner findings, and goes on as if the role had given it. No role runs. A
+// v11 gate round opens its own ledger step, on the lineup row of the refused
+// attempt, and closes it with the verdict once the engine accepts the round (the
+// refused attempt's step closed without one, S204).
+func (e *Engine) acceptShape(ctx context.Context, r round) (outcome, error) {
+	rec := e.run.Snapshot()
+	text, file, err := e.refusedReport(rec, r.role, r.n)
+	if err != nil {
+		return outcome{}, e.pauseError(r, "accept-shape: "+err.Error())
+	}
+	rep, tri, findings, bad, err := judgeReport(r, text, true)
+	if err == nil && bad != nil {
+		err = bad
+	}
+	if err != nil {
+		return outcome{}, e.pauseError(r, "accept-shape: "+err.Error())
+	}
+	var entry runrec.LineupEntry
+	for i := len(rec.Roles) - 1; i >= 0; i-- {
+		if old := rec.Roles[i]; old.Role == r.role && old.Round == r.n {
+			entry = runrec.LineupEntry{Vendor: old.Vendor, Model: old.Model, Effort: old.Effort}
+			break
+		}
+	}
+	// The verdict goes only with a round the engine accepts; every other exit
+	// closes the step without one.
+	verdict := ""
+	if r.role == RoleGate && rec.Contract >= 11 {
+		if stepID := e.stepStart(ctx, rec, r, entry); stepID != "" {
+			defer func() { e.stepEnd(ctx, rec, stepID, "done", verdict) }()
+		}
+	}
+	err = e.run.Update(func(rr *runrec.Record) {
+		for i := len(rr.Roles) - 1; i >= 0; i-- {
+			if rr.Roles[i].Role == r.role && rr.Roles[i].Round == r.n {
+				rr.Roles[i].ShapeAccepted = true
+				rr.Roles[i].ShapeRetry = nil // the counted context is spent
+				break
+			}
+		}
+		if rr.State == r.state && (rr.Pending == nil || rr.Pending.Role == "" || rr.Pending.Role == r.role) {
+			rr.Pending = nil
+		}
+	})
+	if err != nil {
+		return outcome{}, err
+	}
+	out, err := e.routeReport(r, rep, tri, findings, text, file)
+	if err == nil && out.ok {
+		verdict = strings.ToLower(rep.Verdict)
+	}
+	return out, err
+}
+
+// refusedReport reads the newest report of the role in the round, the one the
+// shape check refused.
+func (e *Engine) refusedReport(rec runrec.Record, role string, round int) (text, file string, err error) {
+	for i := len(rec.Roles) - 1; i >= 0; i-- {
+		if old := rec.Roles[i]; old.Role == role && old.Round == round {
+			file = old.Report
+			break
+		}
+	}
+	if file == "" {
+		return "", "", errors.New("the refused report is not in the run record")
+	}
+	b, err := os.ReadFile(filepath.Join(e.run.Dir(), file))
+	if err != nil {
+		return "", "", fmt.Errorf("the refused report cannot be read: %w", err)
+	}
+	return string(b), file, nil
+}
+
+// acceptShapeCheck says whether the report the paused role gave can be
+// accepted: only the missing options of an owner finding of a reviewer, UI
+// pass or gate can. It returns a refusal otherwise.
+func (e *Engine) acceptShapeCheck(rec runrec.Record) error {
+	const only = "only an owner finding's missing options can be accepted"
+	p := rec.Pending
+	if p.Role != RoleReviewer && p.Role != RoleUI && p.Role != RoleGate {
+		return refusef("%s; the %s's report has no findings", only, p.Role)
+	}
+	text, _, err := e.refusedReport(rec, p.Role, p.Round)
+	if err != nil {
+		return refusef("%s: %v", only, err)
+	}
+	_, _, _, bad, err := judgeReport(round{role: p.Role, n: p.Round}, text, true)
+	if err != nil {
+		return refusef("%s: %v", only, err)
+	}
+	if bad != nil {
+		return refusef("%s; the report also has: %s", only, oneLine(strings.Join(bad.Problems, "; ")))
+	}
+	return nil
 }
 
 // fallbackSection gives the next row the failed attempts of earlier rows of

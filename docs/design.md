@@ -1004,6 +1004,40 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   the run (kind `shape`, marker cleared) because nothing relaunches it; `Retry`
   resumes the role with the shape brief. A lost running process follows normal
   recovery.
+  *Proposed (S298; owner decisions 2026-11-05):* the shape error names what is
+  wrong with an `[owner]` finding: a missing `Options:` line, a count of
+  options other than 2 to 4, an option numbered out of turn, an option line
+  with no `: summary`, a missing `Recommend:` line, a `Recommend:` number out of
+  range, or a line in the wrong place, each with the offending line cut to 120
+  characters. A finding that has `Options:` and `Recommend:` is never told that
+  they are missing. The pause keeps the lines of each finding that failed
+  (cut to 2 KiB), and the shape retry's brief carries the error and those
+  lines under "Report shape", so a role that cannot resume its session still
+  sees them. The run counts the consecutive shape pauses of one role and
+  round (`pending.shape_pauses`; the automatic retry is not a pause; a
+  round that ends clean, another role or another round starts again at 1).
+  The second one is capped: its reason names the refused report file, `ork
+  show RUN`, and the ways past, and a plain `ork retry RUN` is refused with one
+  line that names `ork show RUN`, `ork retry RUN --accept-shape`, `ork retry RUN
+  --again` and `ork stop RUN`. `--again` runs the role once more on purpose; a
+  further shape failure pauses capped again. `--accept-shape` is chosen by the
+  owner after the cap, never by default: it reads the refused report again,
+  keeps each `[owner]` finding that failed on its options as an owner finding
+  with its text and no `ask` (an `[owner blocker]` becomes a free-text
+  question), runs no role and spends no round, and the run goes on as if
+  the role had given that report. Any other shape problem (no `## Owner
+  needed` section, no verdict, no Tests line, a malformed Owner needed block, a
+  bad Decision key, a finding without a title) is refused with one line
+  saying that only an owner finding's missing options can be accepted. A
+  reviewer, UI pass or architect round that is accepted opens no ledger step
+  (its refused attempt's step already closed). A v11 gate round that is
+  accepted opens a new gate step on the lineup row of the refused attempt and
+  closes it with the verdict from the report, as any accepted gate round does
+  (S204); the refused attempt's step stays closed without one. The reviewer and
+  the UI pass share the single pending slot, so each role that does not hold
+  it keeps its own count in its newest role record (`shape_retry`), and a pause
+  with a higher count takes the slot from a lower one: a capped role always
+  holds the slot, and a plain retry is refused while it does.
   *Proposed (S256):* inside `## Owner
   needed`, lines that hold only a code fence (three or more backticks, then
   at most one word such as `text`) are ignored before the strict question
@@ -1850,7 +1884,10 @@ ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
                             the rerun (S256, proposed); resume a stopped
                             run from its worktree, --rounds N more rounds
-                            (S296, proposed)
+                            (S296, proposed); after two shape pauses in a
+                            row a plain retry is refused, --accept-shape
+                            keeps owner findings that have no options and
+                            --again reruns the role (S298, proposed)
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
 ork daemon stop [--force]   stop the daemon; on a daemon that predates

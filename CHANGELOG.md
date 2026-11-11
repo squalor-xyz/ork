@@ -13,6 +13,14 @@
   commit. A run stopped after its commit, or one the card could not read, still
   waits for `ork approve`. Docs updated: `docs/design.md`, `docs/guide.md` and
   `docs/state.md`.
+- A report-shape pause names what is wrong with an owner finding and quotes the
+  line; the rerun's brief carries that finding's text; the second shape pause in
+  a row for one role and round names the refused report and
+  `ork retry RUN --accept-shape` (*proposed*): S298. A plain `ork retry RUN` is
+  refused there; `--again` runs the role once more, and `--accept-shape` keeps
+  an owner finding that has no options as an open owner finding (an
+  `[owner blocker]` as a free-text question) and runs no role. Docs updated:
+  `docs/design.md`, `docs/guide.md` and `docs/state.md`.
 - Set the per-project bell with `ork projects set NAME --bell on|off`
   (*proposed*): S224. `on` stores `true` and `off` stores `false` in the
   registry field `bell` (S100) through `projects.set`, and the text line says
