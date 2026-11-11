@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 333,
+  "next_id": 334,
   "preamble": "",
   "passes": [
     {
@@ -17905,13 +17905,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "70fb28a2-2671-450a-a9e3-c9d2526231b5",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decision 2026-11-11 (adj 281, landing.auto-approve = default-for-all): when every gate passes (VERDICT: PASS, no open [owner] finding) and the checks are green, the run is approved. ork lands it and cleans up with no ork approve call, for every project. A per-project --auto-land off exists only as an opt-out. Human checks never block: at landing ork appends the run's human checks (including [AFTER LAND] ones) to human-checks-todo.md at the repo root, under '## ID (run RUN, DATE)' as '- [ ] TEXT' lines in the format the file already uses, and commits that file with the landing's tracking commit. Q1 = (a) as default-on for all; Q2 = (a) with checks going to the todo file, not marked later; Q3 is moot (adj 280: Check lines are implementer-runnable); Q4 = (a). The orchestrator lands passing runs by hand under this rule until this slice lands.",
+          "created_at": "2026-11-11T12:50:20Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule.",
@@ -17919,11 +17932,11 @@
         "parent": "",
         "cites": [],
         "key": "ork-gap-auto-land",
-        "pass": "v1.2",
+        "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 1,
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
@@ -17954,6 +17967,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S333",
+      "title": "Running view: start on Running, expand shows only new facts, quieter Recent and run detail",
+      "short_title": "Running view declutter",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-running-view-declutter",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 2,
         "attempts": 0
       }
