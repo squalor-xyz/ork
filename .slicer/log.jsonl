@@ -4363,3 +4363,4 @@
 {"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "add", "from": "", "to": "open", "note": "A paused run cannot get the permission it was denied without stopping every run in the project"}
 {"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T23:25:25Z", "item": "S315", "action": "note", "from": "", "to": "", "note": "Verified outcome: explicit self-host rebuild before daemon r", "by": "Jon Robbins"}

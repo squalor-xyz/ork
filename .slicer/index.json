@@ -17592,6 +17592,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "8458b83c-b4b0-4a96-b5d5-a651d7661d2a",
+          "kind": "",
+          "text": "**2026-11-11** — Verified outcome: explicit self-host rebuild before daemon restart (ork daemon restart --rebuild with a per-project build_command), executable preflight, build failure diagnostics, and rebuild notices in CLI status, doctor and the TUI landed line and status line. Gate returned VERDICT: PASS and the owner approved. The human check stays deferred until after landing.",
+          "created_at": "2026-11-11T23:25:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
