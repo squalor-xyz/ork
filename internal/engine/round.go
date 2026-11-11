@@ -148,6 +148,32 @@ func pendingSection(p *runrec.Pending) []BriefSection {
 	return sections
 }
 
+// reportAsksOwner reports whether a report asks the owner: its Owner needed
+// section is not none, or a line opens an [owner] finding. It reads the text
+// as it is, so it also answers for a report that failed its shape checks.
+func reportAsksOwner(text string) bool {
+	if body, _ := section(text, ownerHeading); !isNone(body) {
+		return true
+	}
+	for _, line := range strings.Split(text, "\n") {
+		if m := kindTag.FindStringSubmatch(strings.TrimSuffix(line, "\r")); m != nil && strings.HasPrefix(strings.ToLower(m[3]), KindOwner) {
+			return true
+		}
+	}
+	return false
+}
+
+// shapeRetryBrief is the brief of a shape retry. asked is true when the
+// refused report asked the owner: the role then keeps its question (S287,
+// *proposed*).
+func shapeRetryBrief(reason string, asked bool) string {
+	body := "ork checked your last report and refused it: " + reason + "\n\nWrite the report again so that it has the shape the prompt asks for, and exit."
+	if asked {
+		body += "\n\nKeep your owner question as it was; fix only the shape."
+	}
+	return body
+}
+
 func pendingKindSection(p *runrec.Pending) []BriefSection {
 	if p.Answer != "" {
 		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
@@ -156,7 +182,7 @@ func pendingKindSection(p *runrec.Pending) []BriefSection {
 	case runrec.PendingQuestion:
 		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
 	case runrec.PendingShape:
-		return []BriefSection{{Title: "Report shape", Body: "ork checked your last report and refused it: " + p.Reason + "\n\nWrite the report again so that it has the shape the prompt asks for, and exit."}}
+		return []BriefSection{{Title: "Report shape", Body: shapeRetryBrief(p.Reason, p.Asked)}}
 	case runrec.PendingLost:
 		return []BriefSection{{Title: "Earlier process lost", Body: "The process that ran this role before was lost (" + p.Reason + "). The worktree may hold its partial work. Look at it, then continue from it."}}
 	}
@@ -593,12 +619,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		p := runrec.Pending{
 			Kind: runrec.PendingShape, State: r.state, Role: r.role, Round: r.n,
 			Reason: (&ShapeError{Problems: problems}).Error(),
+			Asked:  reportAsksOwner(text),
 		}
-		// CheckReport returns no Report on a shape error. Read its existing
-		// section helper so even a malformed owner question prevents an auto retry.
-		body, _ := section(text, ownerHeading)
-		if isNone(body) && (tri == nil || len(tri.Owner) == 0) &&
-			!(pend != nil && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n) {
+		// A report that also asks the owner is retried too (S287, *proposed*):
+		// the retry brief tells the role to keep its question. Only the one
+		// automatic retry per role and round runs.
+		if !(pend != nil && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n) {
 			p.AutomaticShapeRetry = true
 			return outcome{}, e.run.Update(func(rr *runrec.Record) {
 				rr.Roles[idx].ShapeRetry = &p

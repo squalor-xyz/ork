@@ -212,6 +212,80 @@ func TestMalformedOwnerFindingPausesOnAShapeError(t *testing.T) {
 	}
 }
 
+func TestMalformedOwnerFindingBesideAQuestionRetriesOnce(t *testing.T) {
+	h := newHarness(t)
+	asking := func(finding string) string {
+		return strings.Replace(review(finding, "nothing", "nothing", "nothing"), ownerNone, "\n## Owner needed\n\n"+retryQuestion, 1)
+	}
+	calls := 0
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role != RoleReviewer {
+			return Result{}, nil
+		}
+		calls++
+		if calls == 1 {
+			return Result{Exit: ExitOK, Session: "sess-reviewer", Report: asking("- [owner] Which one?")}, nil
+		}
+		return Result{Exit: ExitOK, Session: "sess-reviewer", Report: asking("nothing")}, nil
+	}
+	rec := requireState(t, h.start(), runrec.StatePaused)
+	reqs := shapeRequests(h, RoleReviewer)
+	if len(reqs) != 2 {
+		t.Fatalf("reviewer calls = %d, want 2", len(reqs))
+	}
+	if reqs[0].Round != reqs[1].Round || reqs[1].Resume != "sess-reviewer" {
+		t.Fatalf("retry changed round or session: %+v", reqs[1])
+	}
+	for _, want := range []string{"## Report shape", "Which one?", "Keep your owner question"} {
+		if !strings.Contains(reqs[1].Brief, want) {
+			t.Errorf("retry brief missing %q:\n%s", want, reqs[1].Brief)
+		}
+	}
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion || rec.Pending.Role != RoleReviewer {
+		t.Fatalf("pending %+v", rec.Pending)
+	}
+	if len(rec.Questions) != 1 {
+		t.Fatalf("questions %+v, want the one question once", rec.Questions)
+	}
+}
+
+func TestMalformedGateBlockerBesideAQuestionRetriesOnce(t *testing.T) {
+	h := newHarness(t)
+	gate := func(finding string) string {
+		return "VERDICT: PASS\n\n" + finding + "\nTests: 12 passed, 0 failed\n\n## Owner needed\n\n" + retryQuestion
+	}
+	calls := 0
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role != RoleGate {
+			return Result{}, nil
+		}
+		calls++
+		if calls == 1 {
+			return Result{Exit: ExitOK, Session: "sess-gate", Report: gate("- [owner blocker] Which one?")}, nil
+		}
+		return Result{Exit: ExitOK, Session: "sess-gate", Report: gate("- earlier blockers resolved")}, nil
+	}
+	rec := requireState(t, h.start(), runrec.StatePaused)
+	reqs := shapeRequests(h, RoleGate)
+	if len(reqs) != 2 {
+		t.Fatalf("gate calls = %d, want 2", len(reqs))
+	}
+	if reqs[0].Round != reqs[1].Round || reqs[1].Resume != "sess-gate" {
+		t.Fatalf("retry changed round or session: %+v", reqs[1])
+	}
+	for _, want := range []string{"## Report shape", "Which one?", "Keep your owner question"} {
+		if !strings.Contains(reqs[1].Brief, want) {
+			t.Errorf("retry brief missing %q:\n%s", want, reqs[1].Brief)
+		}
+	}
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion || rec.Pending.Role != RoleGate {
+		t.Fatalf("pending %+v", rec.Pending)
+	}
+	if len(rec.Questions) != 1 {
+		t.Fatalf("questions %+v, want the one question once", rec.Questions)
+	}
+}
+
 func TestOwnerFindingWithAnEnDashKeepsItsAsk(t *testing.T) {
 	finding := strings.Replace(ownerFinding, "Recommend: 2 - isolation", "Recommend: 2 – isolation", 1)
 	got, err := Triage(review(finding, "nothing", "nothing", "nothing"))

@@ -95,7 +95,7 @@ func TestBudgetMinutesCountRoleTimeNotPausedTime(t *testing.T) {
 	h.runner.script = func(req Request, n int) (Result, error) {
 		c.Advance(10 * time.Second)
 		res := defaultResult(req)
-		if n == 0 {
+		if n < 2 {
 			res.Report = "bad shape\n## Owner needed\nWhich format?\n"
 		}
 		return res, nil
@@ -108,7 +108,7 @@ func TestBudgetMinutesCountRoleTimeNotPausedTime(t *testing.T) {
 	if err := e.Retry(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if rec := e.Snapshot(); rec.State != runrec.StateAwaitingApproval || len(rec.Roles) != 4 {
+	if rec := e.Snapshot(); rec.State != runrec.StateAwaitingApproval || len(rec.Roles) != 5 {
 		t.Fatalf("paused time counted: %+v", rec)
 	}
 }
@@ -208,12 +208,8 @@ func TestBudgetGrantSpentOnShapePause(t *testing.T) {
 	if err := e.Retry(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if rec := e.Snapshot(); rec.Pending == nil || rec.Pending.Kind != runrec.PendingShape {
-		t.Fatalf("expected shape pause: %+v", rec.Pending)
-	}
-	if err := e.Retry(context.Background()); err != nil {
-		t.Fatal(err)
-	}
+	// The granted round ends with a shape error. Its automatic retry is another
+	// attempt, so the limits apply again and the spent grant does not cover it.
 	requireBudgetPause(t, e, RoleReviewer, runrec.StateReview, 2)
 	if len(h.runner.requests()) != 2 {
 		t.Fatal("spent grant ran another role")
