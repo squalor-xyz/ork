@@ -7,16 +7,14 @@
   "depends_note": null,
   "findings_note": "2026-11-11 S328 landing: merge-in stopped on '.slicer/slices/S328.json' DU (branch moved it to done/ via slicer done; main had spec-answer edits). Fixed by hand: merge main's change into done/S328.json, git rm the old path, ork retry. ork's retry does not stage a deleted path. S217 (2026-11-09) hit the same case.",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
   "sections": [
     {
       "heading": "Why",
-      "body": "*Proposed.* Evidence:\n\n- S328, run `ork-20261111-141133-aa62`, 2026-11-11: the pause read \"merging main into S328 stopped on conflicts in .slicer/slices/S328.json\". `git ls-files -u` showed stages 1 and 3 only (DU: deleted by us). The branch had run `slicer done`, which moves the file to `done/`. Main had spec-answer edits to the old path, written after the worktree was created. The orchestrator three-way merged main's change into `done/S328.json` with `git merge-file` (here main's edit was older than the branch's rewrite, so the branch copy was kept), ran `git rm` on the old path, and ran `ork retry`.\n- The first `ork retry` paused again. `settleMerge` (`internal/engine/landmerge.go:82`) stages only paths that exist and have no markers (`os.Lstat` fails for the deleted path, so it is skipped). A deleted-by-us path therefore stays unmerged until someone runs `git rm`.\n- S217 (2026-11-09) hit the same case, recorded in S289's notes (\"'.slicer/slices/S217.json deleted by us'\").\n- The source of most of these edits on main is spec answers recorded after the worktree exists. S330 (landed 2026-11-11) commits the item's tracking edits at launch, but answers written later still land on main only.\n\nOpen owner questions (the owner answers before the relay starts):\n- Q1 what ork does. (a) resolve it itself: when the only unmerged path is the item's own `.slicer/slices/ID.json` in DU state and `.slicer/slices/done/ID.json` exists on the branch, three-way merge main's change (stage 1 to stage 3) into the `done/` copy. If that merge is clean, `git rm` the old path, re-render and go on. If it conflicts, pause with the S289 merge-both wording naming the `done/` file (recommended). (b) pause only, with one line naming the move and the two commands (`git merge-file`, `git rm`). (c) always keep the branch's `done/` copy and `git rm` the old path, dropping main's edit.\n- Q2 retry staging. (a) on `ork retry`, a DU or UD path whose working-tree file is absent is staged as deleted (`git rm --cached`) when the item's `done/` copy exists, so the owner's hand fix needs no `git rm` (recommended). (b) leave the retry as it is."
+      "body": "*Proposed.* Evidence:\n\n- S328, run `ork-20261111-141133-aa62`, 2026-11-11: the pause read \"merging main into S328 stopped on conflicts in .slicer/slices/S328.json\". `git ls-files -u` showed stages 1 and 3 only (DU: deleted by us). The branch had run `slicer done`, which moves the file to `done/`. Main had spec-answer edits to the old path, written after the worktree was created. The orchestrator three-way merged main's change into `done/S328.json` with `git merge-file` (here main's edit was older than the branch's rewrite, so the branch copy was kept), ran `git rm` on the old path, and ran `ork retry`.\n- The first `ork retry` paused again. `settleMerge` (`internal/engine/landmerge.go:82`) stages only paths that exist and have no markers (`os.Lstat` fails for the deleted path, so it is skipped). A deleted-by-us path therefore stays unmerged until someone runs `git rm`.\n- S217 (2026-11-09) hit the same case, recorded in S289's notes (\"'.slicer/slices/S217.json deleted by us'\").\n- The source of most of these edits on main is spec answers recorded after the worktree exists. S330 (landed 2026-11-11) commits the item's tracking edits at launch, but answers written later still land on main only.\n\nOwner decisions (2026-11-11, interactive question, relay session 8d711f67):\n- Q1: ork resolves it itself. When the only unmerged path is the item's own `.slicer/slices/ID.json` in DU state and `.slicer/slices/done/ID.json` exists on the branch, it three-way merges main's change into the `done/` copy; a clean merge removes the old path, re-renders and goes on; a conflict pauses with the S289 merge-both wording naming the `done/` file (adj 303, `landing.deleted-slice-json` = resolve).\n- Q2: on `ork retry`, a DU or UD path whose working-tree file is absent is staged as deleted when the item's `done/` copy exists (adj 304, `landing.retry-stage-deleted` = stage)."
     },
     {
       "heading": "Files",
@@ -24,11 +22,11 @@
     },
     {
       "heading": "Failing tests",
-      "body": "- Written for the chosen options. At least: the branch moves `.slicer/slices/S04.json` to `done/` and edits it, and main edits the old path in another field. Under Q1 (a) the landing merges main's field into `done/S04.json`, removes the old path, and lands with no pause. With the same field edited on both sides, it pauses naming `done/S04.json`. Under Q2 (a), after a hand merge with the old path absent, `ork retry` completes the merge with no `git rm`."
+      "body": "- the branch moves `.slicer/slices/S04.json` to `done/` and edits it, and main edits the old path in another field. The landing merges main's field into `done/S04.json`, removes the old path, and lands with no pause. With the same field edited on both sides, it pauses naming `done/S04.json`. After a hand merge with the old path absent, `ork retry` completes the merge with no `git rm`."
     },
     {
       "heading": "Implement",
-      "body": "1. Wait for Q1 and Q2. Then write the steps for the chosen options, reusing S289's tracking-reason path."
+      "body": "1. Read adj 303 and adj 304. Reuse S289's tracking-reason path.\n2. In `settleMerge` (`internal/engine/landmerge.go`), detect the DU case for the item's own slice JSON with a `done/` copy on the branch, three-way merge main's change into it (`git merge-file`), and on a clean merge stage the `done/` copy and `git rm --cached` the old path, then re-render.\n3. On a conflict, pause with the merge-both reason naming `.slicer/slices/done/ID.json`.\n4. On retry, stage an absent DU or UD path as deleted when the item's `done/` copy exists.\n5. Docs (*proposed*): `docs/design.md` landing conflicts. CHANGELOG.md: one bullet under `## Unreleased`."
     },
     {
       "heading": "Check",

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 337,
+  "next_id": 341,
   "preamble": "",
   "passes": [
     {
@@ -18263,9 +18263,7 @@
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "2026-11-11 S328 landing: merge-in stopped on '.slicer/slices/S328.json' DU (branch moved it to done/ via slicer done; main had spec-answer edits). Fixed by hand: merge main's change into done/S328.json, git rm the old path, ork retry. ork's retry does not stage a deleted path. S217 (2026-11-09) hit the same case.",
@@ -18351,6 +18349,133 @@
         "urgency": 2,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S337",
+      "title": "wave start launches without --yes when stdin is not a terminal",
+      "short_title": "wave start launches without --yes when stdin is not a terminal",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "24334c1a-de54-4392-bfb4-b04a103e8c5b",
+          "kind": "",
+          "text": "**2026-11-11** — Correction 2026-11-11: the slices were NOT launched. The run in the ledger (run-20261111-170605-e94e) held only a spec-check step, which ended pass at 17:07:58; the CLI was killed by the 60 s timeout before any launch. So the observed problem is narrower: without --yes and with stdin from /dev/null, `ork wave start` starts and records a spec-check run (a model call) before any confirmation and prints nothing while it runs. Expected: print the plan first, and run nothing that costs a model call until confirmed, or say on stderr that a spec check is running.",
+          "created_at": "2026-11-11T17:11:03Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-019bb2b0f228d35a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S338",
+      "title": "wave start: no way to skip the spec check the owner declined",
+      "short_title": "wave start: no way to skip the spec check the owner declined",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-f52969bae4a83656",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S339",
+      "title": "projects add: a Python project gets the Go allowlist and no check command",
+      "short_title": "projects add: a Python project gets the Go allowlist and no check command",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-9b9939eccb00d06e",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S340",
+      "title": "wave start: spec-check questions can only be answered on a terminal, one at a time",
+      "short_title": "wave start: spec-check questions can only be answered on a terminal, one at a time",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-e254f5f5b4bc72ea",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
       }
     }
   ],
