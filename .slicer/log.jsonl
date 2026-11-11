@@ -4210,3 +4210,4 @@
 {"when": "2026-11-11T13:52:54Z", "item": "S328", "action": "decide", "from": "", "to": "", "note": "Owner decisions 2026-11-11: Q1 (adj 288, doctor.merge-driver", "by": "Jon Robbins"}
 {"when": "2026-11-11T13:52:54Z", "item": "S330", "action": "decide", "from": "", "to": "", "note": "Owner decisions 2026-11-11: Q1 (adj 290, launch.tracking-com", "by": "Jon Robbins"}
 {"when": "2026-11-11T13:52:55Z", "item": "S329", "action": "decide", "from": "", "to": "", "note": "Owner decisions 2026-11-11 (adj 291, vendor.connection-error", "by": "Jon Robbins"}
+{"when": "2026-11-11T13:53:05Z", "item": "S289", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-11 (adj 292, landing.tracking-conflic", "by": "Jon Robbins"}
