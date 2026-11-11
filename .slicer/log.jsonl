@@ -4355,3 +4355,7 @@
 {"when": "2026-11-11T23:16:55Z", "item": "S343", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-11T23:22:53Z", "item": "S343", "action": "note", "from": "", "to": "", "note": "Verified: claude-local read-only roles run with a fixed read", "by": "Jon Robbins"}
 {"when": "2026-11-11T23:22:55Z", "item": "S343", "action": "status", "from": "started", "to": "done", "note": "Local roles fit the local server: claude-local read-only roles use a fixed read-only allowlist with --permission-prompts none (cloud keeps plan mode), local briefs add targeted-read guidance, and the local role limit is 90 minutes (adj 315 supersedes 195). Gate PASS.", "by": "Jon Robbins"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "add", "from": "", "to": "open", "note": "python preset: implementer cannot rename a tracked file or list the index"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "add", "from": "", "to": "open", "note": "A paused run cannot get the permission it was denied without stopping every run in the project"}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "promote", "from": "", "to": "", "note": ""}
