@@ -4360,3 +4360,5 @@
 {"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "add", "from": "", "to": "open", "note": "A paused run cannot get the permission it was denied without stopping every run in the project"}
 {"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-11T23:24:19Z", "item": "S343", "action": "note", "from": "", "to": "", "note": "Verified (finish step rerun after landing merge): claude-loc", "by": "Jon Robbins"}
+{"when": "2026-11-11T23:24:04Z", "item": "S347", "action": "add", "from": "", "to": "open", "note": "Launch tracking commit lists items whose slice files stay uncommitted"}
+{"when": "2026-11-11T23:24:04Z", "item": "S347", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}

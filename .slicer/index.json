@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 347,
+  "next_id": 348,
   "preamble": "",
   "passes": [
     {
@@ -18762,6 +18762,36 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S347",
+      "title": "Launch tracking commit lists items whose slice files stay uncommitted",
+      "short_title": "Launch commit leaves orphan index entries",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported \"S345: marked as having a slice, but no file exists\" and the same for S346. ork's launch commits a56c3f8 (S123) and d5880ab (S343) took main's whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items' slice files.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-launch-index-orphans",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }
