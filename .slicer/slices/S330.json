@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped.",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",

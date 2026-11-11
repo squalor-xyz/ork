@@ -17815,13 +17815,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "206d74bf-6507-4c09-a061-5837b73add49",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decisions 2026-11-11: Q1 (adj 288, doctor.merge-driver-report = doctor-and-pause): ork doctor finding per project plus one clause on a landing conflict pause in a .slicer file. Q2 (adj 289, doctor.merge-driver-fix = doctor-fix, not the recommendation): ork doctor --fix runs the slicer setup-git lines after a [y/N] prompt (Enter is No), and prints them as today without --fix.",
+          "created_at": "2026-11-11T13:52:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "git config --get-regexp '^merge\\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310.",
@@ -17845,13 +17858,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1e11e5b7-07f8-4066-b732-5b3ef8918f1e",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decisions 2026-11-11 (adj 291, vendor.connection-error = resume-then-fallback): Q1 (a) new connection class, resume the same session, then fall back like error (adj 156), no next row pauses with one line; Q2 (a) one resume after 30 s; Q3 (a) only the two sampled signals.",
+          "created_at": "2026-11-11T13:52:55Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry.",
@@ -17875,13 +17901,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9552eccd-a6df-4418-afe2-e7444e8d98a8",
+          "kind": "decision",
+          "text": "**2026-11-11** — Owner decisions 2026-11-11: Q1 (adj 290, launch.tracking-commit = commit-first): commit the item's .slicer tracking edits on main by path ('Tracking edits on main before starting ID'), then create the worktree. Q2: its own adj record (290), as recommended.",
+          "created_at": "2026-11-11T13:52:54Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped.",
