@@ -1,0 +1,43 @@
+{
+  "id": "S330",
+  "title": "Launch: the item's uncommitted tracking edits on main are not in the worktree",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11. Size S. ork creates the worktree from the base branch's last commit. A slice spec that was promoted or edited on main but not committed is then missing from the worktree, while the spec check still reads it. This slice stops that silent mismatch at launch."
+  ],
+  "depends_note": null,
+  "findings_note": "S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped.",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence:\n\n- `internal/engine/states.go:991` runs `git worktree add WT -b BRANCH` from the project's HEAD, so uncommitted files on main do not reach the worktree.\n- On 2026-11-10, S268 was promoted on main (`slicer promote S268`, from `.scratch/s268-outline.md`) and not committed before `ork run ork S268`. The run went through. During the landing the worktree reported \"S268: no slice spec; run slicer promote S268\". The orchestrator committed `.slicer/slices/S268.json` on main, aborted the half-finished merge and ran `ork retry`.\n- Adj 193 (`landing.tracking-commit`) lets ork commit uncommitted tracking edits on main before a landing (S254, `internal/engine/landdirty.go:113`, `checkMain`). Nothing like it runs at launch.\n- Not verified: whether the implementer's brief reads the spec from main or from the worktree. The implementer must check this first and record it in the slice notes.\n\nOpen owner questions (the owner answers before the relay starts):\n- Q1 what launch does when the item's own tracking files (`.slicer/slices/ID.json`, its render, `.slicer/index.json`) have uncommitted edits on main. (a) commit the `.slicer` tracking edits on main by path, as `checkMain` does at landing, then create the worktree (recommended: the same rule as adj 193, one step earlier; the commit message names the item). (b) refuse the launch with one line naming the files and the commit command. (c) warn and go on.\n- Q2 does this need its own adj record, or does adj 193 cover launch. (a) a new record, key `launch.tracking-commit` (recommended: 193's text says \"before a landing\"). (b) 193 covers it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/states.go:985-995` (before `worktree add`)\n- `internal/engine/landdirty.go:86-140` (`trackingPath`, `splitTracking` and `checkMain`, reused)\n- `internal/engine/engine_test.go` (launch tests)\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Launch with `.slicer/slices/ID.json` modified and uncommitted on main: under Q1 (a) main gets one commit with only `.slicer` paths, and the worktree has the edited file. Under (b) the run does not start and the reason names the file.\n- Launch with an uncommitted non-tracking file on main (`notes.txt`): it is not committed and does not block.\n- Launch with a clean main: no commit."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Before `worktree add`, list uncommitted paths on main (`git status --porcelain -z`). Keep the tracking ones with `splitTracking`.\n2. Under Q1 (a), commit them by path, never with a pathspec of `.`, with the message `Tracking edits on main before starting ID`. A failed commit pauses with one line.\n3. Docs (*proposed*): design.md's launch steps.\n4. CHANGELOG.md: one bullet under `## Unreleased` (*proposed*)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine -run 'Launch.*Tracking|Tracking.*Launch' -v` exits 0 and lists the new tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

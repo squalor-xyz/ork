@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 327,
+  "next_id": 332,
   "preamble": "",
   "passes": [
     {
@@ -17112,7 +17112,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b9607d7a-882b-4cd2-b6ef-d2e08c78840f",
+          "kind": "",
+          "text": "**2026-11-11** — Evidence 2026-11-11 (S223, run ork-20261111-024142-12c2): the orchestrator piped an answer into the one-at-a-time stdin prompt without reading the question. A Check-line question was answered 'runnable' where the standing rule (adj 263) says 'orchestrator', and the spec's Check lines were rewritten. Answering by decision key (--answer KEY=N) would have refused or shown the mismatch. Suggest moving this slice to v1.1.",
+          "created_at": "2026-11-11T03:11:31Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -17537,6 +17552,154 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S327",
+      "title": "CHANGELOG resolver: accept entries with no blank line between them",
+      "short_title": "CHANGELOG resolver compact entries",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Merges 8150d74, 84b77d8, 1a99e93, c258376: splitChangelog refuses entries with no blank line between them, so every CHANGELOG conflict paused (S132, S257, S263, S226).",
+        "discovered_from": "S180",
+        "parent": "",
+        "cites": [],
+        "key": "ork-gap-changelog-compact",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S328",
+      "title": "Missing slicer merge drivers: say so in ork doctor and in the landing pause",
+      "short_title": "Missing slicer merge drivers",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "git config --get-regexp '^merge\\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310.",
+        "discovered_from": "S289",
+        "parent": "",
+        "cites": [],
+        "key": "ork-gap-merge-drivers",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S329",
+      "title": "Connection errors: resume the role instead of stopping as unclassified",
+      "short_title": "Connection errors resume the role",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-gap-connection-error",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S330",
+      "title": "Launch: the item's uncommitted tracking edits on main are not in the worktree",
+      "short_title": "Launch with uncommitted tracking edits",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped.",
+        "discovered_from": "S254",
+        "parent": "",
+        "cites": [],
+        "key": "ork-gap-launch-tracking",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S331",
+      "title": "Auto-land a passing run (per-project opt-in)",
+      "short_title": "Auto-land a passing run",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-gap-auto-land",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     }

@@ -1,0 +1,43 @@
+{
+  "id": "S329",
+  "title": "Connection errors: resume the role instead of stopping as unclassified",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11. Size M. A dropped network connection to a vendor ends a role as `unclassified`, and record 23 makes that stop the run. Twice on 2026-11-10 this threw away a long round that a resume would have kept. This slice classifies the two observed connection failures and resumes the same session. What exactly ork does is open (Q1 to Q3)."
+  ],
+  "depends_note": null,
+  "findings_note": "S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry.",
+  "size": "M",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence read on 2026-11-11 from the run records and saved candidate fixtures under `~/.local/state/ork/`:\n\n- S268, run `ork-20261110-124242-bc16`: the Grok reviewer (`grok-4.7`) ran from 12:51:58Z to 13:38:08Z (46 minutes, 504,299 tokens) and ended `unclassified`. Its stderr (`fixtures/grok/20261110T133808Z-3801646317/stderr`) ends: `Error: Internal error: \"reqwest error stream: error sending request for url (https://cli-chat-proxy.grok.com/v1/responses)\"`. The run stopped; the orchestrator ran `ork retry`, and the reviewer started over.\n- S216, run `ork-20261110-123716-4600`: the Claude sonnet implementer ran from 13:15:38Z to 13:21:19Z (cost $5.50) and ended `unclassified`. Its result event (`fixtures/claude/20261110T132119Z-1673783836/stdout`) has `\"is_error\":true`, `\"api_error\":\"connection_failed\"` and the result text `API Error: Couldn't connect through your proxy (ERR_PROXY_TUNNEL) ...`.\n- Classification: `grok.go:332` sets `ExitUnclassified` for any non-zero exit that is not out of credits or a permission cancel. `claude.Classify` (`internal/agent/claude/classify.go:19-34`) makes everything that is not ok or denied unclassified and does not read `api_error`. `internal/daemon/runner.go:72-80` and `:180-186` map those to `engine.ExitUnclassified`.\n- Fallback: `fallbackExit` (`internal/engine/ledger.go:45-47`) falls back on rate limited, out of credits and error only. Adj 156 (`vendor.fallback-trigger-v2`) keeps record 23 (unclassified stops the slice). Adj 77 (`vendor.unsampled-classes`) allows a class only from a real sample. The two fixtures above are real samples.\n- Codex: no connection-failure sample exists. It is out of scope until one does.\n\nOpen owner questions (the owner answers before the relay starts; they need an adj record, key `vendor.connection-error`):\n- Q1 what a connection error does. (a) a new class `connection`: resume the same session once in the same round after a short wait; if that also fails, treat it as `error` (fall back to the next row per adj 156); a run with no next row pauses with a one-line reason naming the vendor and the error (recommended: keeps the session's work, 46 minutes on S268, and stays inside adj 156). (b) classify it as `error`: the next row starts fresh, with no resume. (c) keep `unclassified` and only name the connection error in the pause reason.\n- Q2 the resume budget. (a) one resume after 30 s (recommended). (b) up to three resumes, after 30 s, 60 s and 120 s. (c) another budget.\n- Q3 which signals count. (a) only the two sampled ones: Grok stderr containing `reqwest error` and `error sending request`, and a Claude result with `api_error` `connection_failed` (recommended, per adj 77). (b) also a missing result event after a non-zero exit with network words in stderr (unsampled)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/grok/grok.go:332` (classification)\n- `internal/agent/claude/classify.go:19-34` and `internal/agent/claude/types.go` (read `api_error`)\n- `internal/daemon/runner.go:72-80` and `:180-186` (map the new class)\n- `internal/engine/runner.go:35-36` (the new `ExitClass`)\n- `internal/engine/ledger.go:45-58` (`fallbackExit`, `nextEntry`)\n- `internal/engine/round.go` (the same-session resume, beside S275's shape retry)\n- `testdata/vendors/grok/` and `testdata/vendors/claude/` (the two samples as fixtures, with the run's prompt text removed)\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Grok: the S268 stderr fixture classifies as the new class; the existing bad-model and auth fixtures stay unclassified (`TestGrokBadModelAndAuthStayUnclassified`).\n- Claude: the S216 result fixture classifies as the new class; the existing unclassified fixtures stay unclassified.\n- Engine (Q1 a, Q2 a): a fake runner that returns the new class once, then ok, gives one resume of the same session id in the same round and no pause. Returning it twice falls back to the next row. With no next row, the run pauses with the one-line reason.\n- Engine: an `unclassified` exit still stops the run as today (record 23)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Copy the two samples into `testdata/vendors/` as fixtures, without the prompt and report text, and with no credential lines (the Claude result has a `credential_expires_at` field; drop it).\n2. Add the class and the two classifiers per Q3.\n3. In the round, on the new class, wait (Q2), then resume the role's session once, using the path S275 uses for the shape retry. On a second failure, use the `error` path.\n4. Docs (*proposed*): design.md's exit classes and fallback table.\n5. CHANGELOG.md: one bullet under `## Unreleased` (*proposed*)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/agent/... ./internal/engine ./internal/daemon -run 'Connection|Classify|Unclassified' -v` exits 0 and lists the new tests.\n- `gofmt -l .` prints nothing.\n- `rg -n 'credential' testdata/vendors` prints no new line.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

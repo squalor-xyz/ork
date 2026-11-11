@@ -4127,3 +4127,13 @@
 {"when": "2026-11-11T02:41:41Z", "item": "S223", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-11T02:51:19Z", "item": "S291", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-11T03:01:38Z", "item": "relay-roles.r34", "action": "relay-roles", "from": "", "to": "reviewer", "note": "remove"}
+{"when": "2026-11-11T03:11:22Z", "item": "S327", "action": "add", "from": "", "to": "open", "note": "CHANGELOG resolver: accept entries with no blank line between them"}
+{"when": "2026-11-11T03:11:22Z", "item": "S328", "action": "add", "from": "", "to": "open", "note": "Missing slicer merge drivers: say so in ork doctor and in the landing pause"}
+{"when": "2026-11-11T03:11:22Z", "item": "S329", "action": "add", "from": "", "to": "open", "note": "Connection errors: resume the role instead of stopping as unclassified"}
+{"when": "2026-11-11T03:11:22Z", "item": "S330", "action": "add", "from": "", "to": "open", "note": "Launch: the item's uncommitted tracking edits on main are not in the worktree"}
+{"when": "2026-11-11T03:11:22Z", "item": "S331", "action": "add", "from": "", "to": "open", "note": "Auto-land a passing run (per-project opt-in)"}
+{"when": "2026-11-11T03:11:22Z", "item": "S329", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:23Z", "item": "S330", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:23Z", "item": "S331", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:23Z", "item": "S328", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:31Z", "item": "S312", "action": "note", "from": "", "to": "", "note": "Evidence 2026-11-11 (S223, run ork-20261111-024142-12c2): th", "by": "Jon Robbins"}
