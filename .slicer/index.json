@@ -18626,10 +18626,25 @@
       "id": "S343",
       "title": "Local roles: no plan mode, targeted reads in the brief, and a 90 minute limit",
       "short_title": "Local roles fit the local server",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5e871023-b997-4d78-b9c6-dc3d7aaaa56c",
+          "kind": "",
+          "text": "**2026-11-11** — Verified: claude-local read-only roles run with a fixed read-only allowlist and --permission-prompts none instead of plan mode (cloud keeps plan mode); local briefs carry targeted-read and brief-reasoning guidance; LocalRoleAfter is 90 minutes and the failed ledger step records 'local role exceeded 90m'. Allowlist: Read; Grep; Glob; Bash(git diff*), (git log*), (git status*), (git show*), (git -C * diff|log|status|show*); Bash(slicer show*), (slicer goals*), (slicer list*), (slicer deps*), (slicer find*); Bash(adj show*), (adj check*); Bash(go test*), (go vet*), (go -C * test*), (go -C * vet*); Bash(gofmt -l*). Gate VERDICT: PASS; docs/design.md, docs/state.md and CHANGELOG.md updated.",
+          "created_at": "2026-11-11T23:22:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -18647,7 +18662,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

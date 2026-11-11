@@ -35,13 +35,17 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	if call == nil {
 		call = claude.Run
 	}
+	allowlist := req.Allowlist
+	if req.ReadOnly && req.Vendor == "claude-local" {
+		allowlist = engine.LocalReadOnlyAllowlist()
+	}
 	live := newLiveRedactor(r.env, req.OnLive)
 	var message claude.Usage
 	total := func(u claude.Usage) int {
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
 	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: claudeEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
-		ReadOnly: req.ReadOnly, Allowlist: req.Allowlist, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
+		ReadOnly: req.ReadOnly, Allowlist: allowlist, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			switch ev.Kind {
 			case claude.EventTextDelta:
 				live.send(ev.Text, 0, false)

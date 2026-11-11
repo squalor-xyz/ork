@@ -15,9 +15,11 @@ import (
 //	   (--allowedTools a,b --permission-prompts none | --permission-mode plan)
 //	   PROMPT
 //
-// A write role needs an allowlist. A read-only role runs in plan mode and
-// ignores it. `--include-partial-messages` gives the text deltas for the
-// output tail. `--effort <level>` is listed by `claude --help` ("Effort level
+// A write role needs an allowlist. A cloud read-only role runs in plan mode
+// and ignores it; claude-local uses a read-only allowlist to avoid the
+// model-backed classifier (adj 307). `--include-partial-messages` gives the
+// text deltas for the output tail. `--effort <level>` is listed by
+// `claude --help` ("Effort level
 // for the current session", claude 2.1.x). The allowlist is one comma-joined
 // value, one of the two forms `--help` documents; an entry holding a comma
 // is refused rather than split wrongly.
@@ -42,7 +44,7 @@ func (s Spec) Args() ([]string, error) {
 	if s.Effort != "" {
 		args = append(args, "--effort", s.Effort)
 	}
-	if s.ReadOnly {
+	if s.ReadOnly && s.Bin != "claude-local" {
 		args = append(args, "--permission-mode", "plan")
 	} else {
 		if len(s.Allowlist) == 0 {
