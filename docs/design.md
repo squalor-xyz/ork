@@ -1956,7 +1956,7 @@ ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
                             daemon.stop, print the pid and a kill hint
-ork daemon restart [--force]
+ork daemon restart [--force] [--rebuild]
                             stop and start the current executable
 ork roles print [ROLE]      print the embedded role prompts
 ork roles matrix P          show the role matrix as slicer prints it, then
@@ -2955,6 +2955,34 @@ otherwise the stale marker still shows for a differing build. Text doctor
 prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
 Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
 on stderr. ork never restarts the daemon on its own.
+
+*Proposed (S315; adj 231, 232):* a project's optional `build_command`
+is set or cleared with `ork projects set NAME --build CMD`. Status carries
+the command with the self-host flags. When it is set, status, doctor and the TUI status line use
+`daemon behind main: restart with ork daemon restart --rebuild`. The TUI's
+landed action line offers the same command after reading the post-landing
+snapshot, only for a self-host project that is behind and has the command.
+Without a command the notices keep the plain restart hint.
+
+`ork daemon restart --rebuild` reads status before building. It refuses if a
+relay or engine run has a role running, naming that run, even with `--force`.
+An unknown or unreadable status fails closed. A non-self-host project is
+refused; a missing command names `ork projects set NAME --build CMD`.
+The CLI runs the command through `sh -c` in the registered project directory,
+with a ten minute timeout and clirun process-group cleanup. A build failure
+prints its last twenty output lines and `daemon not restarted`; the old
+daemon stays running. Only a successful build reaches the existing stop and
+restart path, whose busy check still applies if work started during the build.
+Before stopping, the CLI validates and captures an on-disk executable for
+the restart. A deleted-executable suffix is removed before validation. If
+the installed file is missing, it says `daemon not restarted` and keeps the
+old daemon running. A build that cannot start includes its underlying
+start error when there is no captured output.
+There is no automatic rebuild. For ork use
+`ork projects set ork --build 'sh ./build-only-in-home-dir.sh'`.
+This writes outside the workspace to `~/.local/bin/ork`, so the owner or a
+session with approval must run it. `build-in-home-dir.sh` stays available
+for manual build and restart. Doctor checks the build command without running it.
 
 ### Live role output and usage (S99)
 

@@ -317,6 +317,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	worktree := fs.String("worktree-pattern", "", "the worktree path, with {id} or {id_lower}")
 	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
 	check := fs.String("check", "", "the check command")
+	build := fs.String("build", "", "the self-host build-only command; empty clears it")
 	roundCheck := fs.String("round-check", "", "a faster check command for the checks after implementer rounds; needs --check; empty clears it")
 	noVerify := fs.Bool("no-verify", false, "store --check or --round-check even when the static check says it cannot run in the project's folder")
 	checkMinutes := fs.Int("check-minutes", 0, "minutes the check may run")
@@ -403,6 +404,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if given["check"] {
 		p.CheckCommand = check
 	}
+	if given["build"] {
+		p.BuildCommand = build
+	}
 	if given["round-check"] {
 		p.RoundCheckCommand = roundCheck
 	}
@@ -442,7 +446,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --bell, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --bell, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -492,6 +496,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		if p.CheckCommand != nil {
 			changed = append(changed, text("check_command", proj.CheckCommand))
+		}
+		if p.BuildCommand != nil {
+			changed = append(changed, text("build_command", proj.BuildCommand))
 		}
 		if p.RoundCheckCommand != nil {
 			changed = append(changed, text("round_check_command", proj.RoundCheckCommand))

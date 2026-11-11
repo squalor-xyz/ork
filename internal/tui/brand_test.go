@@ -252,3 +252,24 @@ func TestBehindNoticeShortFallback(t *testing.T) {
 		}
 	}
 }
+
+func TestBehindNoticeRebuildShortFallback(t *testing.T) {
+	m := goldenModel(NewTheme(true), 160, 30)
+	m.projects[0].snap.SelfHost, m.projects[0].snap.BehindMain = true, true
+	m.projects[0].snap.Project.BuildCommand = "sh ./build-only-in-home-dir.sh"
+	for w := 1; w <= 80; w++ {
+		t.Run(fmt.Sprint(w), func(t *testing.T) {
+			got := stripANSI(m.statusLine(w))
+			want := " behind main: ork daemon restart --rebuild"
+			if w >= 62 {
+				want = " " + daemon.BehindNotice + " --rebuild"
+			}
+			if w >= 42 && !strings.HasPrefix(got, want) {
+				t.Fatalf("width %d missing rebuild notice %q: %q", w, want, got)
+			}
+			if w < 42 && lipgloss.Width(got) > w {
+				t.Fatalf("width %d overflow: %q", w, got)
+			}
+		})
+	}
+}

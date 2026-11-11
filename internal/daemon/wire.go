@@ -103,11 +103,12 @@ type StopResult struct {
 // open adj questions, needs-owner items and Needs-section engine runs.
 // Parts holds each part's age and state.
 type ProjectStatus struct {
-	SelfHost     bool                 `json:"self_host"`             // proposed
-	BehindMain   bool                 `json:"behind_main"`           // proposed
-	Unavailable  bool                 `json:"unavailable,omitempty"` // proposed: display only, not registered
-	Open         []OpenRecord         `json:"open,omitempty"`        // proposed
-	Held         []HeldItem           `json:"held,omitempty"`        // proposed
+	BuildCommand string               `json:"build_command,omitempty"` // proposed
+	SelfHost     bool                 `json:"self_host"`               // proposed
+	BehindMain   bool                 `json:"behind_main"`             // proposed
+	Unavailable  bool                 `json:"unavailable,omitempty"`   // proposed: display only, not registered
+	Open         []OpenRecord         `json:"open,omitempty"`          // proposed
+	Held         []HeldItem           `json:"held,omitempty"`          // proposed
 	EngineRuns   []EngineRun          `json:"engine_runs"`
 	Name         string               `json:"name"`
 	Path         string               `json:"path"`
@@ -296,6 +297,7 @@ type SetProjectParams struct {
 	WorktreePattern   *string                         `json:"worktree_pattern,omitempty"`
 	BranchPattern     *string                         `json:"branch_pattern,omitempty"`
 	CheckCommand      *string                         `json:"check_command,omitempty"`
+	BuildCommand      *string                         `json:"build_command,omitempty"`       // S315, proposed
 	RoundCheckCommand *string                         `json:"round_check_command,omitempty"` // S285, *proposed*: needs a check command; "" clears it
 	CheckMinutes      *int                            `json:"check_minutes,omitempty"`
 	Cap               *int                            `json:"cap,omitempty"`
@@ -313,7 +315,7 @@ type SetProjectParams struct {
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
 	return p.Push == nil && p.Bell == nil && p.AutoLand == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
-		p.CheckCommand == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
+		p.CheckCommand == nil && p.BuildCommand == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
 }
 

@@ -176,6 +176,9 @@ func BehindWarning(status *StatusResult) string {
 	}
 	for _, p := range status.Projects {
 		if p.SelfHost && p.BehindMain {
+			if p.BuildCommand != "" {
+				return BehindNotice + " --rebuild"
+			}
 			return BehindNotice
 		}
 	}

@@ -927,7 +927,9 @@ pane, on the approval card, `a` still approves at once; the card's own line says
 the same (below). Only `y` confirms; `n`, `esc` and Enter cancel. The
 confirmation keeps its original run target while snapshots change. Approve
 shows `landing ITEM: pending` (S148), then what happened: `landed ITEM` after a
-landing, or `landing ITEM blocked; fix round done, awaiting approval` when the
+landing (*proposed*, S315: `landed ITEM; ork daemon restart --rebuild` for a
+self-host project whose post-landing build is behind main and has a
+`build_command`), or `landing ITEM blocked; fix round done, awaiting approval` when the
 landing was blocked: the reply comes after the fix round has ended and the run
 waits for approval again. Any other result (a pause, a stop) reads `ork approve
 RUN: done`, and a failure keeps the command with its error. The pane's approval
@@ -2269,6 +2271,12 @@ Text `ork doctor`
 prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
 `ork status` prints `ork: warning: daemon behind main: restart with ork daemon restart`
 on stderr. ork never restarts on its own.
+
+*Proposed (S315):* when the project has a `build_command`, the TUI status
+line, `ork doctor` and `ork status` end the notice in `--rebuild`. The full
+notice with its leading space then measures 62 columns. Below 62 columns,
+the TUI uses `behind main: ork daemon restart --rebuild`, then clips if that
+text still does not fit. The rebuild flag stays in the short form.
 
 Waves marks an engine conflict after planning two selected slices whose Files
 touch `internal/engine`, `internal/daemon` or `cmd`, naming both:

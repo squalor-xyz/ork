@@ -717,6 +717,9 @@ func (a runAction) doneText() string {
 		case "committed":
 			return "committed " + a.item + "; ready to land"
 		case "landed":
+			if a.rebuild {
+				return "landed " + a.item + "; ork daemon restart --rebuild"
+			}
 			return "landed " + a.item
 		case "fix round":
 			return "landing " + a.item + " blocked; fix round done, awaiting approval"

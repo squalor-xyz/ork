@@ -147,6 +147,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--spec-check-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--round-check CMD] [--no-verify]
+                              [--build CMD]
                               [--check-minutes N]
                               [--cap N] [--budget-minutes N] [--budget-tokens N]
                               [--env-line LINE]... [--preset go|python]
@@ -203,7 +204,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               which rows ork uses, skips or does not run
   ork daemon run              serve the daemon in the foreground
   ork daemon stop [--force]   stop the daemon
-  ork daemon restart [--force]
+  ork daemon restart [--force] [--rebuild]
                               stop and start the daemon
   ork doctor [--upgrade]      check the slicer and adj versions, the vendor
                               CLIs, and the slicer contract here and for
@@ -234,12 +235,15 @@ type App struct {
 
 	WaitPoll time.Duration // how often ork wait reads the run when no notice comes (S257); zero means 30s
 
-	Socket    string                          // the daemon's socket
-	Pid       string                          // the daemon's pid file; used only for the stop hint
-	Start     func(ctx context.Context) error // starts the daemon; nil means it cannot be started
-	StartWait time.Duration                   // how long to wait for the daemon after Start; zero means 5s
-	PollEvery time.Duration                   // how often to try the socket in that time; zero means 50ms
-	Tools     Tools
+	Socket string                          // the daemon's socket
+	Pid    string                          // the daemon's pid file; used only for the stop hint
+	Start  func(ctx context.Context) error // starts the daemon; nil means it cannot be started
+	// PrepareRestart validates and captures the executable after rebuilding,
+	// before stopping the old daemon. Nil keeps an injected Start unchanged.
+	PrepareRestart func(context.Context) (func(context.Context) error, error)
+	StartWait      time.Duration // how long to wait for the daemon after Start; zero means 5s
+	PollEvery      time.Duration // how often to try the socket in that time; zero means 50ms
+	Tools          Tools
 }
 
 // Run runs the command line with the default App: the daemon's default

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-344 items · — 59 · done 252 · retired 33
+344 items · — 58 · done 253 · retired 33
 
 v1.2
 
@@ -89,7 +89,7 @@ v1.2
 | 39 | [S312](slices/S312.md) | Spec questions: print every open question at once and take all answers in one call | M | - |  |  | — |
 | 40 | [S313](slices/S313.md) | Spec check: reuse a decided adj answer for the same decision key instead of asking again | M | - |  |  | — |
 | 41 | [S314](slices/S314.md) | Name the owner once so answers to spec questions are filed in adj | S | - |  |  | — |
-| 42 | [S315](slices/S315.md) | Self-host: restart the daemon on the current build after main moves | M | - |  |  | — |
+| 42 | [S315](slices/S315.md) | Self-host: restart the daemon on the current build after main moves | M | - |  |  | done |
 | 43 | [S316](slices/S316.md) | ork approve: mark every open human check as later in one step | S | - |  |  | done |
 | 44 | [S317](slices/S317.md) | Run the slice's own Check lines after each round, not only the project check command | M | - |  |  | — |
 | 45 | [S318](slices/S318.md) | ork status --summary: running, waiting on you, blocked, and next, in one view | M | - |  |  | — |

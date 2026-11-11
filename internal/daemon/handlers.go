@@ -417,6 +417,7 @@ func (d *Daemon) unavailableProjects(f *registry.File) []ProjectStatus {
 
 func projectStatus(p registry.Project, s source.Snapshot, now time.Time) ProjectStatus {
 	ps := ProjectStatus{
+		BuildCommand: p.BuildCommand,
 		Name:         p.Name,
 		Path:         p.Path,
 		Adj:          p.Adj,
@@ -699,6 +700,9 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	}
 	if p.CheckCommand != nil {
 		proj.CheckCommand = *p.CheckCommand
+	}
+	if p.BuildCommand != nil {
+		proj.BuildCommand = *p.BuildCommand
 	}
 	if p.RoundCheckCommand != nil {
 		proj.RoundCheckCommand = *p.RoundCheckCommand

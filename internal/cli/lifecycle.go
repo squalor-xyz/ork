@@ -14,7 +14,9 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
@@ -76,6 +78,7 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 	sub := args[0]
 	fs := flag.NewFlagSet("daemon "+sub, flag.ContinueOnError)
 	force := fs.Bool("force", false, "cancel active work")
+	rebuild := fs.Bool("rebuild", false, "build the self-host project before restarting")
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args[1:])
 	if err != nil {
@@ -84,13 +87,37 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 	if len(pos) != 0 {
 		return o.usage("daemon %s takes no arguments", sub)
 	}
+	if *rebuild && sub != "restart" {
+		return o.usage("--rebuild needs daemon restart")
+	}
+	restartApp := *a
 	c, err := daemon.Dial(ctx, a.Socket)
+	if *rebuild && err != nil {
+		return o.fail(ExitFailure, codeDaemon, "daemon not restarted: rebuild needs the running daemon's self-host status: "+err.Error())
+	}
 	if err != nil {
 		// A missing socket or a dead daemon's leftover socket is already stopped.
 		if !errors.Is(err, os.ErrNotExist) && !errors.Is(err, syscall.ECONNREFUSED) {
 			return o.fail(ExitFailure, codeDaemon, err.Error())
 		}
 	} else {
+		defer c.Close()
+		if *rebuild {
+			var status daemon.StatusResult
+			if err := c.Call(ctx, daemon.MethodStatus, daemon.StatusParams{}, &status); err != nil {
+				return o.fail(ExitFailure, codeDaemon, "daemon not restarted: cannot check rebuild safety: "+err.Error())
+			}
+			if err := rebuildProject(ctx, status); err != nil {
+				return o.fail(ExitFailure, codeDaemon, err.Error())
+			}
+			if a.PrepareRestart != nil {
+				start, err := a.PrepareRestart(ctx)
+				if err != nil {
+					return o.fail(ExitFailure, codeDaemon, "daemon not restarted: "+err.Error())
+				}
+				restartApp.Start = start
+			}
+		}
 		// A failed build probe must not prevent an explicit shutdown request.
 		_, _ = a.CheckDaemonBuild(ctx, c, o.stderr)
 		var result daemon.StopResult
@@ -126,7 +153,7 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	if sub == "restart" {
-		c, err := a.connect(ctx)
+		c, err := restartApp.connect(ctx)
 		if err != nil {
 			return o.fail(ExitFailure, codeDaemon, err.Error())
 		}
@@ -141,6 +168,57 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 	}
 	fmt.Fprintf(o.stdout, "daemon %s\n", state)
 	return ExitOK
+}
+
+// rebuildProject fails closed before sending daemon.stop. --force never
+// bypasses this check: a build can replace the executable a role is using.
+func rebuildProject(ctx context.Context, status daemon.StatusResult) error {
+	for _, p := range status.Projects {
+		for _, r := range p.ActiveRelays {
+			if r.Running > 0 {
+				return fmt.Errorf("daemon not restarted: run %s has a role running", r.ID)
+			}
+		}
+		for _, r := range p.EngineRuns {
+			switch r.State {
+			case runrec.StateCommitted, runrec.StateStopped, runrec.StatePaused, runrec.StateAwaitingApproval:
+			default:
+				return fmt.Errorf("daemon not restarted: run %s has a role running", r.ID)
+			}
+		}
+	}
+	if status.RolesRunning {
+		return fmt.Errorf("daemon not restarted: a role is running; wait for its run to become idle")
+	}
+	for _, p := range status.Projects {
+		if !p.SelfHost {
+			continue
+		}
+		if p.BuildCommand == "" {
+			return fmt.Errorf("daemon not restarted: no build_command; set it with ork projects set %s --build CMD", engine.ShellWord(p.Name))
+		}
+		res, err := clirun.Run(ctx, clirun.Call{Bin: "sh", Args: []string{"-c", p.BuildCommand}, Dir: p.Path, Timeout: 10 * time.Minute})
+		if err != nil {
+			tail := strings.TrimSpace(string(res.Stdout) + "\n" + string(res.Stderr))
+			if tail == "" {
+				tail = err.Error()
+			}
+			lines := strings.Split(tail, "\n")
+			if len(lines) > 20 {
+				lines = lines[len(lines)-20:]
+			}
+			reason := fmt.Sprintf("exit %d", res.ExitCode)
+			if errors.Is(err, context.DeadlineExceeded) {
+				reason = "timed out"
+			}
+			if errors.Is(err, context.Canceled) {
+				reason = "cancelled"
+			}
+			return fmt.Errorf("build failed (%s)\n%s\ndaemon not restarted", reason, strings.Join(lines, "\n"))
+		}
+		return nil
+	}
+	return fmt.Errorf("daemon not restarted: registered project is not self-host")
 }
 
 // predatesStop is the guidance for a daemon that answers unknown_method to

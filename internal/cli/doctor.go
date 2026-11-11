@@ -118,6 +118,11 @@ func checkProject(ctx context.Context, p registry.Project) projectCheck {
 			check.addFinding("check_command: %s", fault.Text())
 		}
 	}
+	if p.BuildCommand != "" {
+		for _, fault := range engine.CheckFaults(ctx, p.Path, p.BuildCommand, "project directory") {
+			check.addFinding("build_command: %s", fault.Text())
+		}
+	}
 	for _, pattern := range []struct{ name, value string }{
 		{"worktree_pattern", p.WorktreePattern}, {"branch_pattern", p.BranchPattern},
 	} {

@@ -91,6 +91,13 @@ Notes on the fields:
   `wave.start` refuse the start unless the call carries `allow_no_check`
   (`ork run` and `ork wave start --allow-no-check`), and `ork doctor` reports
   the missing command. Without it only `slicer check` runs after a landing.
+- `build_command` (*proposed*, S315; adj 231) is an optional shell command
+  for an explicit self-host rebuild. `ork projects set NAME --build CMD`
+  stores it; `--build ''` clears it. A started run does not read it, so it
+  may be changed while runs are unfinished. It is omitted when empty.
+  Older binaries reject this key because registry reads use strict keys.
+  For ork, set `sh ./build-only-in-home-dir.sh`. The script builds into
+  `~/.local/bin/ork`, outside the workspace, and does not restart the daemon.
 - `round_check_command` (*proposed*, S285; owner decisions 2026-11-09, adj 252
   to 254) is an optional faster command for the
   checks after implementer rounds. `check_command` stays the full command: it
@@ -187,7 +194,7 @@ Notes on the fields:
   started run does not read it.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
   way ork writes the optional per-project fields. It changes `push`, `bell` (S224), `ui_doc`,
-  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `round_check_command` (S285), `no_verify_check` (S295, with `--no-verify`), `check_minutes`,
+  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `build_command` (S315), `round_check_command` (S285), `no_verify_check` (S295, with `--no-verify`), `check_minutes`,
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and
@@ -196,7 +203,7 @@ Notes on the fields:
   each value, refuses while the project has unfinished runs, and saves under
   its registry lock. *Proposed* (S265, owner answers 2026-11-03 and 2026-11-07):
   while runs are unfinished the daemon allows a call that sets only `cap`, `bell`,
-  `budgets.minutes`, `budgets.tokens`, `worktree_pattern` and `branch_pattern`,
+  `budgets.minutes`, `budgets.tokens`, `worktree_pattern`, `branch_pattern` and `build_command`,
   fields that no started run reads (the cap is read at each admission, the
   budgets are copied into the run record at start, and the patterns are used
   only when a run is planned). S224 adds `bell` to that list: the TUI reads it
@@ -908,6 +915,16 @@ on stdout. Status prints `ork: warning: daemon behind main: restart with ork dae
 on stderr. The daemon continues using its original binary, never a relay
 worktree build, and never restarts itself. See docs/design.md for wave
 admission rules.
+
+*Proposed (S315):* status projects also carry `build_command` when set.
+Status and doctor then append `--rebuild` to the behind notice's command.
+The TUI's landed action line offers `ork daemon restart --rebuild` for a
+self-host project behind main with a build command. The explicit CLI command
+checks status for running roles before building, names a busy run, and refuses
+if status cannot be read, the project is not self-host, or the command is
+unset. A failing or timed-out build keeps the old daemon running and prints
+the last twenty output lines and `daemon not restarted`. No automatic build
+or restart occurs. The build has a ten minute timeout.
 
 ### Vendor memory (S169, *proposed*)
 

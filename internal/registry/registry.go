@@ -233,6 +233,7 @@ type Project struct {
 	WorktreePattern string `json:"worktree_pattern,omitempty"`
 	BranchPattern   string `json:"branch_pattern,omitempty"`
 	CheckCommand    string `json:"check_command,omitempty"`
+	BuildCommand    string `json:"build_command,omitempty"` // S315, proposed: explicit self-host rebuild only
 	// RoundCheckCommand is a faster check command for the checks after
 	// implementer rounds (S285, *proposed*). Empty means CheckCommand runs
 	// everywhere. CheckCommand still runs after a green round check, before

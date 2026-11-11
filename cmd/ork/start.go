@@ -4,9 +4,11 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -18,18 +20,28 @@ import (
 // child that finds the lock held by a daemon that is exiting retries it for
 // two seconds (serveWithRetry), so the race with that exit still serves.
 func startDaemon(ctx context.Context) error {
-	if err := ctx.Err(); err != nil {
+	start, err := prepareDaemonRestart(ctx)
+	if err != nil {
 		return err
+	}
+	return start(ctx)
+}
+
+// prepareDaemonRestart resolves the installed build before the CLI stops the
+// old daemon, and pins that path for the subsequent start.
+func prepareDaemonRestart(ctx context.Context) (func(context.Context) error, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
 	}
 	exe, err := os.Executable()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	paths, err := daemon.DefaultPaths()
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return startDaemonExe(ctx, exe, paths)
+	return prepareDaemonRestartExe(ctx, exe, paths)
 }
 
 // startDaemonExe keeps the detached child's diagnostics in the state directory.
@@ -58,4 +70,20 @@ func startDaemonExe(ctx context.Context, exe string, paths daemon.Paths) error {
 	}
 	go cmd.Wait() // the daemon outlives this command; the wait only reaps it
 	return nil
+}
+
+// prepareDaemonRestartExe captures the launch target before daemon.stop.
+func prepareDaemonRestartExe(ctx context.Context, exe string, paths daemon.Paths) (func(context.Context) error, error) {
+	if err := ctx.Err(); err != nil {
+		return nil, err
+	}
+	exe = strings.TrimSuffix(exe, " (deleted)")
+	info, err := os.Stat(exe)
+	if err != nil {
+		return nil, err
+	}
+	if !info.Mode().IsRegular() || info.Mode().Perm()&0111 == 0 {
+		return nil, fmt.Errorf("daemon executable %q is not executable", exe)
+	}
+	return func(ctx context.Context) error { return startDaemonExe(ctx, exe, paths) }, nil
 }

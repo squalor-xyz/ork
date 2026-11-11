@@ -604,6 +604,7 @@ func (m *Model) statusLine(w int) string {
 		status.RolesRunning = status.RolesRunning || project.snap.RolesRunning
 		status.Projects = append(status.Projects, daemon.ProjectStatus{
 			SelfHost: project.snap.SelfHost, BehindMain: project.snap.BehindMain,
+			BuildCommand: project.snap.Project.BuildCommand,
 		})
 	}
 	notices := 0 // the daemon notice, which stays first
@@ -613,7 +614,11 @@ func (m *Model) statusLine(w int) string {
 	}
 	if notice := daemon.BehindWarning(status); notice != "" {
 		if lipgloss.Width(" "+notice) > w {
+			rebuild := strings.HasSuffix(notice, "--rebuild")
 			notice = "behind main: ork daemon restart"
+			if rebuild {
+				notice += " --rebuild"
+			}
 		}
 		fields = append([]string{m.cfg.Theme.Warn.Render(notice)}, fields...)
 		notices = 1

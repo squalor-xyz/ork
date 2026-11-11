@@ -57,18 +57,20 @@ func currentBuildID() string {
 // program is what run does outside itself. main supplies the real functions;
 // tests supply fakes.
 type program struct {
-	terminal func(io.Writer) bool            // nil means brand.IsTerminal
-	start    func(ctx context.Context) error // starts a daemon detached; nil means none can be started
-	tui      func(tui.Config) error          // shows the TUI until the owner quits
-	daemon   func(ctx context.Context) error // serves the socket until ctx ends
+	prepareRestart func(context.Context) (func(context.Context) error, error)
+	terminal       func(io.Writer) bool            // nil means brand.IsTerminal
+	start          func(ctx context.Context) error // starts a daemon detached; nil means none can be started
+	tui            func(tui.Config) error          // shows the TUI until the owner quits
+	daemon         func(ctx context.Context) error // serves the socket until ctx ends
 }
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	code := run(ctx, os.Args[1:], os.Stdout, os.Stderr, program{
-		start:  startDaemon,
-		tui:    runTUI,
-		daemon: serveDaemon,
+		prepareRestart: prepareDaemonRestart,
+		start:          startDaemon,
+		tui:            runTUI,
+		daemon:         serveDaemon,
 	})
 	stop()
 	os.Exit(code)
@@ -124,7 +126,7 @@ func command(ctx context.Context, args []string, stdout, stderr io.Writer, p pro
 		fmt.Fprintf(stderr, "ork: %v\n", err)
 		return 1
 	}
-	app := &cli.App{Socket: paths.Socket, Pid: paths.Pid, Start: p.start, BuildID: currentBuildID()}
+	app := &cli.App{Socket: paths.Socket, Pid: paths.Pid, Start: p.start, PrepareRestart: p.prepareRestart, BuildID: currentBuildID()}
 	return app.Run(ctx, args, stdout, stderr)
 }
 

@@ -64,7 +64,7 @@ func TestMain(m *testing.M) {
 // shortDir returns a directory whose socket path fits macOS's 104 byte limit.
 func shortDir(t *testing.T) string {
 	t.Helper()
-	dir, err := os.MkdirTemp("", "ork")
+	dir, err := os.MkdirTemp("", "")
 	if err != nil {
 		t.Fatal(err)
 	}

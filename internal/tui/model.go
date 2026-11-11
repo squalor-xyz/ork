@@ -1410,6 +1410,7 @@ type runAction struct {
 	wellSpecified, split     bool
 	push                     bool   // approve: the project's push setting is on
 	outcome                  string // approve: "committed", "landed", "fix round", or ""
+	rebuild                  bool   // landed self-host run: the refreshed build is behind main
 }
 
 // cleanupCommand is the git commands of the cleanup key that will run, one per
@@ -1766,6 +1767,11 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		return m.startLaunch(a)
 	}
 	live := m.cfg.Live
+	src := m.cfg.Source
+	project := registry.Project{Name: a.project}
+	if p := m.byName[a.project]; p != nil {
+		project = p.reg
+	}
 	if m.actionFlights == nil {
 		m.actionFlights = make(map[string][]runAction)
 	}
@@ -1805,6 +1811,12 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 				var rec runrec.Record
 				rec, err = ap.ApproveRecord(context.Background(), a.run)
 				a.outcome = approveOutcome(rec)
+				if err == nil && a.outcome == "landed" && src != nil {
+					// Landing moved main. The pre-approval snapshot may still
+					// say the daemon is current, so read the post-landing build.
+					snap := src.Snapshot(context.Background(), project)
+					a.rebuild = snap.SelfHost && snap.BehindMain && snap.Project.BuildCommand != ""
+				}
 			} else {
 				err = live.Approve(context.Background(), a.run)
 			}

@@ -693,6 +693,7 @@ Set it with `ork projects set NAME --bell on|off` (*proposed*, S224).
 | You want to stop work | `x` on a row or `ork stop RUN`; `ork stop WAVE-ID` for a wave |
 | The daemon died or you stopped it | Start `ork` again. On start the daemon checks every unfinished run against live processes and marks a role with no process and no report as lost, then the slice waits for you (`docs/design.md:167-173`) |
 | Commands warn that the daemon build differs | `ork daemon restart`. It refuses while a role runs unless you add `--force` (`docs/design.md:41-48`) |
+| The self-host daemon is behind main (*proposed*, S315) | Set a build-only command once with `ork projects set ork --build 'sh ./build-only-in-home-dir.sh'`, then run `ork daemon restart --rebuild`. It refuses while a role runs, naming the run, even with `--force`. A failed build prints its last twenty output lines and `daemon not restarted`; the old daemon stays running. The script writes `~/.local/bin/ork` outside the workspace, so the owner or a session with approval runs it. ork never rebuilds automatically. `--build ''` clears the setting; without it the behind notice keeps the plain restart hint. `build-in-home-dir.sh` remains the manual build-and-restart script |
 | A merged slice left its worktree behind | `c` on the Ready row removes the merged worktree and branch (`internal/tui/keys.go:89`) |
 
 Run `ork doctor` after you upgrade slicer or adj. The slicer contract must
@@ -752,7 +753,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork vendor [list] | out NAME [--reason TEXT] [--until TIME] | back NAME
     ork roles print [ROLE]
     ork roles matrix PROJECT
-    ork daemon run | stop [--force] | restart [--force]
+    ork daemon run | stop [--force] | restart [--force] [--rebuild]
     ork doctor
 
 Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2 usage
