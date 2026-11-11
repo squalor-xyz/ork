@@ -1,0 +1,39 @@
+{
+  "id": "S346",
+  "title": "A paused run cannot get the permission it was denied without stopping every run in the project",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11 (slicer s453): the gate failed only because the implementer was denied `git mv`; the owner chose to allow it and retry, but `ork projects set slicer --allow ...` was refused (\"project slicer has unfinished runs: ... (s455 running), ... (s453 paused)\"). The fix waits for an unrelated slice (s455) to land, then the paused run is stopped and retried. Wanted: a per-run grant on retry (e.g. `ork retry RUN --allow PATTERN`), or let --allow change for runs that are paused, since they read it at their next round."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

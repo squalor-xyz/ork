@@ -163,7 +163,7 @@ func TestLocalSpecCheckTimeoutFallsBackWithAReport(t *testing.T) {
 				if req.Vendor != vendor {
 					return Result{Exit: ExitOK, Report: specReport}, nil
 				}
-				clock.Advance(44 * time.Minute)
+				clock.Advance(89 * time.Minute)
 				if req.OnEvent != nil {
 					req.OnEvent()
 				}
@@ -172,7 +172,7 @@ func TestLocalSpecCheckTimeoutFallsBackWithAReport(t *testing.T) {
 				case <-ctx.Done():
 					return Result{}, ctx.Err()
 				case <-time.After(time.Second):
-					t.Error("local spec check was not cancelled after 45 minutes")
+					t.Error("local spec check was not cancelled after 90 minutes")
 					return Result{}, errors.New("local timeout did not cancel")
 				}
 			}}
@@ -182,6 +182,15 @@ func TestLocalSpecCheckTimeoutFallsBackWithAReport(t *testing.T) {
 			b, readErr := os.ReadFile(filepath.Join(cfg.Dir, "spec-check.md"))
 			if err != nil || readErr != nil || string(b) != specReport {
 				t.Fatalf("spec fallback report: %q, %v, %v", b, err, readErr)
+			}
+			var failedSteps []string
+			for _, args := range h.calls("slicer", "relay-run", "step") {
+				if call := join(args); strings.Contains(call, "--phase fail") {
+					failedSteps = append(failedSteps, call)
+				}
+			}
+			if !strings.Contains(strings.Join(failedSteps, "\n"), "--reason local role exceeded 90m:") {
+				t.Fatalf("local spec timeout ledger reason: %q", failedSteps)
 			}
 		})
 	}

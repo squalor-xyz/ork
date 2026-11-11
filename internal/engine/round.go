@@ -539,7 +539,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return e.endHungRound(ctx, rec, r, idx, stepID, res, limit, stop)
 	}
 	if hung() && runErr != nil && IsLocalVendor(entry.Vendor) {
-		res.Reason = "local role exceeded 45m"
+		res.Reason = "local role exceeded " + formatLimit(LocalRoleAfter)
 		runErr = fmt.Errorf("%s: %w", res.Reason, runErr)
 	}
 	class := res.Exit
