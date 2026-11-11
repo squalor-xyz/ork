@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-333 items · — 57 · done 243 · retired 33
+333 items · — 56 · done 244 · retired 33
 
 v1.2
 
@@ -217,7 +217,7 @@ v1.2
 | 160 | [S305](slices/S305.md) | Grok and grok-local accept write roles | M | 2 | agent, daemon |  | — |
 | 161 | [S306](slices/S306.md) | Approval card keeps x stop beside p report | S | 1 | tui | S227 item 6 (from S176 later notes); the owner flagged it as a priority and asked on 2026-11-07 for it to go in v1.1 · discovered from S227 | done |
 | 162 | [S327](slices/S327.md) | CHANGELOG resolver compact entries | S | 1 |  | Merges 8150d74, 84b77d8, 1a99e93, c258376: splitChangelog refuses entries with no blank line between them, so every CHANGELOG conflict paused (S132, S257, S263, S226). · discovered from S180 | done |
-| 163 | [S328](slices/S328.md) | Missing slicer merge drivers | S | 1 |  | git config --get-regexp '^merge\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310. · discovered from S289 | — |
+| 163 | [S328](slices/S328.md) | Missing slicer merge drivers | S | 1 |  | git config --get-regexp '^merge\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310. · discovered from S289 | done |
 | 164 | [S329](slices/S329.md) | Connection errors resume the role | M | 2 |  | S268 Grok reviewer lost 46 min to a reqwest send error; S216 Claude implementer lost $5.50 to api_error connection_failed; both unclassified, both needed ork retry. | — |
 | 165 | [S330](slices/S330.md) | Launch with uncommitted tracking edits | S | 1 |  | S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped. · discovered from S254 | — |
 | 166 | [S331](slices/S331.md) | Auto-land a passing run | M | 2 |  | Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule. | done |

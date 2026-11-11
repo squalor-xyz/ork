@@ -72,8 +72,20 @@ It prints the path of the ork binary first, then one line per check
   worktree and branch patterns contain `{id}` or `{id_lower}`.
 
 `ork doctor` exits 1 when slicer, adj or the contract check fails. Fix those
-before you run anything. Project findings are warnings and do not change the
-exit code (`docs/design.md:1199-1200`).
+before you run anything. Advisory project findings do not change the exit code.
+A failed `--fix` exits 1.
+
+Doctor also checks the slicer merge drivers named in each project's
+`.slicer/.gitattributes`. A missing driver produces a warning and the commands
+from `slicer setup-git --root PROJECT`. Run those commands in the project before
+starting parallel work, or run `ork doctor --fix`. That option names the missing
+drivers in the project header, shows the commands and asks
+`Configure slicer merge drivers? [y/N]` for each affected project.
+Enter means No. Yes runs the commands in that project and changes the clone's
+git configuration (S328, adj 288 and 289). Success replaces the missing finding
+with `merge drivers configured: NAME, NAME`; the project shows `[ok]` when no
+other warning remains. With `--json`, commands are in
+`merge_driver_commands`; confirmation prompts go to stderr.
 
 ork never reads vendor credentials. Log in with each vendor CLI's own login
 (`AGENTS.md`, Project Rules).
@@ -85,6 +97,10 @@ TUI Welcome view offers the current directory only if it holds `.slicer` or
 `.adjudicate.json` (`docs/dashboard.md:31-35`), and the roadmap and ledger
 features need slicer. To set a directory up, run `slicer init` and `adj init`
 in it; these are slicer and adj commands, not ork's.
+
+After `slicer init`, run `slicer setup-git` and run the `git config` lines it
+prints in the same project. They configure slicer's merge drivers once per
+clone, including the generated files and index used during landing.
 
 Add it in either way:
 

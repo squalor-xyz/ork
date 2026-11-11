@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Missing slicer merge drivers (*proposed*, S328, adj 288 and 289): doctor
+  warns per project and prints the `slicer setup-git` commands. `doctor --fix`
+  runs them after a `[y/N]` confirmation (Enter means No). A landing conflict
+  under `.slicer/` also names missing drivers and the setup/retry steps.
+  Docs updated: `docs/guide.md` and `docs/design.md`.
+
 - Quieter Running view (*proposed*): S333, adj 282, 283, 284. The TUI opens on
   Running. An open Running row adds one dim line per working role (role, vendor,
   model, effort, elapsed, tokens, cost) and that role's last output line, and

@@ -3,12 +3,61 @@
 package engine
 
 import (
+	"context"
+	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
 )
+
+// MissingMergeDrivers reports distinct unconfigured drivers named by slicer.
+// Projects without slicer attributes need no drivers.
+func MissingMergeDrivers(ctx context.Context, dir, git string) ([]string, error) {
+	data, err := os.ReadFile(filepath.Join(dir, ".slicer", ".gitattributes"))
+	if os.IsNotExist(err) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	if git == "" {
+		git = "git"
+	}
+	names := map[string]bool{}
+	for _, line := range strings.Split(string(data), "\n") {
+		line, _, _ = strings.Cut(line, "#")
+		fields := strings.Fields(line)
+		for _, attr := range fields[min(1, len(fields)):] {
+			if name, ok := strings.CutPrefix(attr, "merge="); ok && name != "" {
+				names[name] = true
+			}
+		}
+	}
+	var missing []string
+	for name := range names {
+		// Git supplies these drivers without a merge.NAME.driver setting.
+		if name == "text" || name == "binary" || name == "union" {
+			continue
+		}
+		_, err := clirun.Run(ctx, clirun.Call{Bin: git, Args: []string{"-C", dir, "config", "--get", "merge." + name + ".driver"}, Timeout: 10 * time.Second})
+		if err == nil {
+			continue
+		}
+		var exit *clirun.ExitError
+		if !errors.As(err, &exit) || exit.Result.ExitCode != 1 {
+			return nil, err
+		}
+		missing = append(missing, name)
+	}
+	slices.Sort(missing)
+	return missing, nil
+}
 
 // ShellWord quotes s for a shell only when it needs it.
 func ShellWord(s string) string {

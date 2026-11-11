@@ -17826,7 +17826,7 @@
       "id": "S328",
       "title": "Missing slicer merge drivers: say so in ork doctor and in the landing pause",
       "short_title": "Missing slicer merge drivers",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17836,6 +17836,20 @@
           "text": "**2026-11-11** — Owner decisions 2026-11-11: Q1 (adj 288, doctor.merge-driver-report = doctor-and-pause): ork doctor finding per project plus one clause on a landing conflict pause in a .slicer file. Q2 (adj 289, doctor.merge-driver-fix = doctor-fix, not the recommendation): ork doctor --fix runs the slicer setup-git lines after a [y/N] prompt (Enter is No), and prints them as today without --fix.",
           "created_at": "2026-11-11T13:52:54Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "cd4a11c5-7fe4-44a1-b09b-7f3fe60cef37",
+          "kind": "",
+          "text": "**2026-11-11** — Verified missing slicer merge-driver detection excludes Git built-ins; doctor reports and confirms fixes with accurate success status, and landing pauses give the quoted abort-and-retry hint. Focused tests and mutation checks passed; gate returned PASS and owner approved.",
+          "created_at": "2026-11-11T15:01:20Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -17862,7 +17876,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

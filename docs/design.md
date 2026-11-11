@@ -731,7 +731,15 @@ slice.
      kind `error`, state `land`) with a one-line reason that names up to five
      files and `+N more`, the worktree and `ork retry RUN`; `ork retry`
      and `t` work. The files are the owner's, as the relay contract says
-     (`slicer ai relay`, Land). No role resolves them: roles do not commit
+     (`slicer ai relay`, Land). When a conflicted path is under `.slicer/`
+     and a slicer driver named in `.slicer/.gitattributes` is missing from git
+     config,
+     the reason adds: "slicer merge drivers are not configured in this clone;
+     run slicer setup-git and the lines it prints, then git -C WORKTREE merge
+     --abort and ork retry RUN" (S328, adj 288). WORKTREE is the shell-quoted
+     worktree path and RUN is the run ID.
+     The check is advisory and does not block starting runs.
+     No role resolves them: roles do not commit
      (`git.commit`) and the default implementer allowlist has no `git add` or
      `git commit`. The conflict is left in the worktree; ork never runs `git
      merge --abort` or `git reset`. On `ork retry` with the merge still open
@@ -2427,9 +2435,25 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   `engine.SetupWarnings` lines as findings: no check command (worded as the
   refusal, adj 191), the Go allowlist on a project with no `go.mod`, an
   implementer allowlist without `Read`, `Edit` or `Write`, and one with no
-  pattern for the check command. Each names its fix. Project findings print `[WARN]` and keep
-  exit 0, the no-check finding included (owner-side decision of the S265 UI
-  pass).
+  pattern for the check command. Each names its fix. Advisory project findings
+  print `[WARN]` and keep exit 0, the no-check finding included (owner-side
+  decision of the S265 UI pass).
+  Doctor also reads the distinct `merge=NAME` attributes in each project's
+  `.slicer/.gitattributes` and checks `git config --get merge.NAME.driver`.
+  Git's built-in `text`, `binary` and `union` need no configuration and are
+  excluded. Missing slicer drivers produce `merge drivers missing: NAME, NAME
+  (fix: run the lines slicer setup-git prints)` and the commands printed by
+  `slicer setup-git --root PROJECT` (S328, adj 288 and 289). Without `--fix`,
+  doctor only prints the commands. With `--fix`, its project header names the
+  missing drivers, then it shows the commands and asks
+  `Configure slicer merge drivers? [y/N]` per project, with Enter meaning No.
+  Yes executes the printed lines in that project, configuring the clone's
+  git merge drivers. Success replaces the missing finding with
+  `merge drivers configured: NAME, NAME`; the project shows `[ok]` when no
+  other warning remains. Failed setup or execution is reported; a failed fix
+  exits 1. JSON project entries include `merge_driver_commands` when available;
+  prompts and command previews go to stderr with `--json`. The registry stays
+  read only. The explicit confirmation authorizes the git config change.
   The registry is read only; a missing registry is empty and is not created.
   A registry read error is advisory: JSON has `registry_error` (omitted when
   there is no error), separate from the daemon's `warning`. Text prints
@@ -2440,8 +2464,9 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   `[--] projects  none registered: run ork projects add PATH` in the same
   place. Neither line changes `ok` or the exit code.
 
-Doctor exits 1 when slicer, adj or the contract check fails. Project findings
-do not change `ok` or the exit code. `roles print`
+Doctor exits 1 when slicer, adj or the contract check fails. Advisory project
+findings do not change `ok` or the exit code. A failed `--fix` sets `ok` to false
+and exits 1. `roles print`
 and `doctor` run in the CLI process. `status` and `projects` go through the
 daemon, which the CLI starts on demand; with `--json` an error is
 `{"error":{"code","message"}}` on stdout, and the text form is `ork: MESSAGE`

@@ -116,6 +116,14 @@ func (e *Engine) settleMerge(ctx context.Context, rec runrec.Record, base string
 		}
 	}
 	if len(files) > 0 {
+		for _, f := range files {
+			if strings.HasPrefix(f, ".slicer/") {
+				if missing, err := MissingMergeDrivers(ctx, W, e.d.gitBin()); err == nil && len(missing) > 0 {
+					note += "; slicer merge drivers are not configured in this clone; run slicer setup-git and the lines it prints, then git -C " + ShellWord(W) + " merge --abort and ork retry " + rec.ID
+				}
+				break
+			}
+		}
 		return pauseWith(conflictReason(base, rec.Branch, W, rec.ID, files) + note)
 	}
 	if _, cerr := e.gitWrite(ctx, W, "commit", "-m", "Merge "+base+" into "+rec.Branch); cerr != nil {

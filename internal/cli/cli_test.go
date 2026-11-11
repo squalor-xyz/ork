@@ -577,6 +577,141 @@ func TestHelp(t *testing.T) {
 
 // ---- doctor ----
 
+func TestDoctorMergeDriver(t *testing.T) {
+	for _, tc := range []struct {
+		name, input     string
+		fix, configured bool
+		json            bool
+		fault           string
+		otherWarning    bool
+	}{
+		{name: "report"},
+		{name: "enter declines", input: "\n", fix: true},
+		{name: "no declines", input: "n\n", fix: true},
+		{name: "yes configures", input: "y\n", fix: true, configured: true},
+		{name: "json yes", input: "y\n", fix: true, configured: true, json: true},
+		{name: "setup fails", fault: "setup failed"},
+		{name: "fix setup fails", fix: true, fault: "setup failed"},
+		{name: "execution fails", input: "y\n", fix: true, fault: "execution failed"},
+		{name: "yes keeps other warning", input: "y\n", fix: true, configured: true, otherWarning: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(dir, "global"))
+			t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+			cmd := exec.Command("git", "-C", dir, "init", "-q")
+			if out, err := cmd.CombinedOutput(); err != nil {
+				t.Fatalf("init: %s %v", out, err)
+			}
+			if err := os.MkdirAll(filepath.Join(dir, ".slicer"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(dir, ".slicer", ".gitattributes"), []byte("index.json merge=slicer-index\nlog.jsonl merge=union\n"), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+			path, err := registry.DefaultPath()
+			if err != nil {
+				t.Fatal(err)
+			}
+			project := setUpProject(t, registry.Project{Name: "demo", Path: dir})
+			if tc.otherWarning {
+				project.BranchPattern = "fixed"
+			}
+			if err := registry.Save(path, &registry.File{Version: registry.Version, Projects: []registry.Project{project}}); err != nil {
+				t.Fatal(err)
+			}
+			contract, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json"))
+			if err != nil {
+				t.Fatal(err)
+			}
+			setup := clitest.Route{Tool: "slicer", Args: []string{"setup-git", "--root", dir}, Stdout: "git config merge.slicer-index.driver 'slicer merge-index %O %A %B'\n"}
+			if tc.fault == "setup failed" {
+				setup.Stdout = ""
+				setup.Stderr = tc.fault
+				setup.Exit = 1
+			}
+			if tc.fault == "execution failed" {
+				setup.Stdout = "echo 'execution failed' >&2\nexit 1\n"
+			}
+			fake := clitest.Install(t,
+				setup,
+				clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, Stdout: string(contract)},
+				clitest.Route{Tool: "slicer", Args: []string{"--version"}, Stdout: "slicer test\n"},
+				clitest.Route{Tool: "adj", Args: []string{"--version"}, Stdout: "adj test\n"},
+			)
+			app := &App{Tools: Tools{Slicer: fake.Bin("slicer"), Adj: fake.Bin("adj"), Git: "git"}, Call: func(context.Context, string, any, any) error { return fmt.Errorf("offline") }}
+			app.Input = strings.NewReader(tc.input)
+			args := []string{"doctor"}
+			if tc.fix {
+				args = append(args, "--fix")
+			}
+			if tc.json {
+				args = append(args, "--json")
+			}
+			code, out, errs := run(t, app, args...)
+			if tc.fault != "" {
+				if !strings.Contains(out+errs, ": exit 1: "+tc.fault) || (tc.fix && code != 1) {
+					t.Errorf("failure not reported: exit %d: %s %s", code, out, errs)
+				}
+				return
+			}
+			if code != 0 || !strings.Contains(out, "git config merge.slicer-index.driver") {
+				t.Fatalf("missing finding or setup commands: exit %d: %s %s", code, out, errs)
+			}
+			if tc.fix && !strings.Contains(out+errs, "project demo ("+dir+"): merge drivers missing: slicer-index\n") {
+				t.Errorf("prompt header lacks missing names: %s %s", out, errs)
+			}
+			final := out
+			if !tc.json {
+				if i := strings.LastIndex(out, "project demo  "); i >= 0 {
+					final = out[i:]
+				}
+			}
+			if tc.configured {
+				if strings.Contains(final, "merge drivers missing") || !strings.Contains(final, "merge drivers configured: slicer-index") {
+					t.Errorf("stale or missing success finding: %s", final)
+				}
+				if !tc.json {
+					status := "[ok]"
+					if tc.otherWarning {
+						status = "[WARN]"
+					}
+					if !strings.Contains(out, status+" project demo  ") {
+						t.Errorf("wrong project status: %s", out)
+					}
+				}
+			} else if !strings.Contains(final, "merge drivers missing: slicer-index (fix: run the lines slicer setup-git prints)") {
+				t.Errorf("wrong missing drivers: %s", final)
+			}
+			if tc.otherWarning && !strings.Contains(final, "branch_pattern") {
+				t.Errorf("lost unrelated warning: %s", final)
+			}
+			if tc.json && !json.Valid([]byte(out)) {
+				t.Errorf("invalid JSON: %s", out)
+			}
+			if tc.fix && !strings.Contains(out+errs, "[y/N]") {
+				t.Error("missing default-No prompt")
+			}
+			if !tc.fix && strings.Contains(out+errs, "[y/N]") {
+				t.Error("prompted without --fix")
+			}
+			got, err := exec.Command("git", "-C", dir, "config", "--get", "merge.slicer-index.driver").Output()
+			if tc.configured {
+				if err != nil || strings.TrimSpace(string(got)) != "slicer merge-index %O %A %B" {
+					t.Errorf("driver not configured: %q %v", got, err)
+				}
+				_, out, _ = run(t, app, "doctor")
+				if strings.Contains(out, "merge drivers missing") {
+					t.Errorf("configured driver finding: %s", out)
+				}
+			} else if err == nil {
+				t.Errorf("driver configured without consent: %s", got)
+			}
+		})
+	}
+}
+
 // fakeVendor links the shared fake vendor script as DIR/NAME and writes
 // DIR/NAME.version, so the executable logs its arguments to DIR/NAME.log and
 // answers --version. It returns its path and the log.
