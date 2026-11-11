@@ -4359,3 +4359,7 @@
 {"when": "2026-11-11T23:11:45Z", "item": "S315", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S315):", "by": "Jon Robbins"}
 {"when": "2026-11-11T23:19:41Z", "item": "S315", "action": "note", "from": "", "to": "", "note": "Implemented explicit self-host rebuild before restart, execu", "by": "Jon Robbins"}
 {"when": "2026-11-11T23:19:45Z", "item": "S315", "action": "status", "from": "started", "to": "done", "note": "Implemented explicit self-host rebuild before restart, executable preflight, build failure diagnostics, and rebuild notices in CLI and TUI. Focused checks passed; gate returned VERDICT: PASS and owner approved. Human check remains deferred until after landing.", "by": "Jon Robbins"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "add", "from": "", "to": "open", "note": "python preset: implementer cannot rename a tracked file or list the index"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "add", "from": "", "to": "open", "note": "A paused run cannot get the permission it was denied without stopping every run in the project"}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "promote", "from": "", "to": "", "note": ""}
