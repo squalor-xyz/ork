@@ -125,3 +125,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S224 (run ork-20261111-121508-fc5d, 2026-11-11)
 
 - [ ] [AFTER LAND] After a rebuild and `ork daemon restart`, `ork projects set NAME --bell off` prints `updated NAME: bell=off`, `~/.config/ork/projects.json` has `"bell": false` for that project, and a restarted TUI rings no bell for it.
+
+## S298 (run ork-20261111-124323-1746, 2026-11-11)
+
+- [ ] [AFTER LAND] A reviewer report with a misnumbered option under an owner finding pauses with a message that names that line, a detail line after `Recommend:` no longer pauses (S288), and a second shape pause on the same role shows the report file name and the accept command.
