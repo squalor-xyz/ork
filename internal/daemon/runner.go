@@ -90,9 +90,19 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 // adapters, with independent environments and fixture directories.
 type vendorRunner struct{ claude, codex, grok, claudeLocal, codexLocal, grokLocal engine.Runner }
 
-func supportsVendor(v string) bool {
-	return v == "claude" || v == "codex" || v == "grok" || engine.IsLocalVendor(v)
-}
+// vendorNames are the vendor names ork accepts, the one list behind
+// supportsVendor and every error that names the vendors.
+var vendorNames = []string{"claude", "codex", "grok", "claude-local", "codex-local", "grok-local"}
+
+// Vendors returns the vendor names ork accepts, in the order its errors list
+// them. The caller may change the slice.
+func Vendors() []string { return slices.Clone(vendorNames) }
+
+func supportsVendor(v string) bool { return slices.Contains(vendorNames, v) }
+
+// vendorList is the text the errors give for the vendors ork accepts.
+func vendorList() string { return strings.Join(vendorNames, ", ") }
+
 func (r vendorRunner) Run(ctx context.Context, req engine.Request) (engine.Result, error) {
 	switch req.Vendor {
 	case "claude":

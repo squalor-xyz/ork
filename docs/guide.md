@@ -237,7 +237,9 @@ To plan a split slice or one that is not well specified, use the command line:
 The TUI always plans well specified and not split; `e` edits the lineup, not
 these two inputs.
 On the command line, `--implementer`, `--reviewer` and `--architect` take
-`VENDOR:MODEL:EFFORT`. Repeat a role flag to give its whole chain, primary
+`VENDOR:MODEL:EFFORT`. The vendor name may be in any case (`Claude` and
+`claude` are the same) and ork keeps it lowercase; an unknown name is refused
+with the list of vendors. Repeat a role flag to give its whole chain, primary
 first; `--architect off` alone drops that role. Gate follows reviewer and the
 UI pass stays from the matrix. `--budget-minutes N` and `--budget-tokens N`
 set run budgets; zero uses the project default. On `ork wave start`, these

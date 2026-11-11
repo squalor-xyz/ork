@@ -1901,13 +1901,19 @@ keeps the chosen value. The choice is per run; there is no registry default.
 `ork run` and `ork wave start` accept `--implementer`, `--reviewer` and
 `--architect`, each taking `VENDOR:MODEL:EFFORT`. Repeat a role flag to set
 its whole chain in order, primary first. The model may contain colons;
-vendor and effort are the first and last parts. `--architect off` alone
+vendor and effort are the first and last parts. The vendor is read in any case
+and kept lowercase (`ork vendor out|back NAME` reads its name the same way), and
+the CLI refuses a name that is not in the daemon's list of vendors
+(`daemon.Vendors()`, the one list behind `supportsVendor`) with that list;
+`run.plan` and `run.start` lowercase the vendor of each wire entry and refuse an
+unknown one with the list too (*proposed*, S291). `--architect off` alone
 removes the architect. Gate follows reviewer and the UI pass stays from the
 matrix; neither has a flag. `--budget-minutes N` and `--budget-tokens N`
 accept whole numbers of zero or more; zero uses the project default. Omitted
 flags keep the recommendation and project defaults. Invalid flag syntax,
 empty parts, mixed architect off and entries, and negative budgets exit 2
-before a daemon call. Vendor, model and effort validation stays in the daemon.
+before a daemon call, and so does an unknown vendor. Model and effort
+validation stays in the daemon.
 On `wave start` these overrides apply to every item. The CLI sends the same
 overrides on planning and starting, with the printed plan as Expected.
 Edits apply to those runs only; the matrix and registry stay unchanged.

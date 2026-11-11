@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -235,6 +236,33 @@ func TestVendorsListSetAndBackOverTheWire(t *testing.T) {
 	}
 }
 
+func TestVendorNamesHaveOneSource(t *testing.T) {
+	listed := Vendors()
+	if len(listed) == 0 {
+		t.Fatal("no vendors listed")
+	}
+	for _, v := range append(append([]string{}, listed...), "acme", "Claude", "", " claude") {
+		if want := slices.Contains(listed, v); supportsVendor(v) != want {
+			t.Errorf("supportsVendor(%q) = %v, listed = %v", v, !want, want)
+		}
+	}
+	// A caller cannot change the list by changing what it got back.
+	listed[0] = "acme"
+	if supportsVendor("acme") || !supportsVendor(Vendors()[0]) {
+		t.Fatalf("Vendors() shares its storage: %v", Vendors())
+	}
+	d, _, _ := runDaemon(t, nil)
+	_, err := d.handle(context.Background(), "vendors.set", json.RawMessage(`{"vendor":"acme","out":true}`))
+	if err == nil {
+		t.Fatal("acme accepted")
+	}
+	for _, v := range Vendors() {
+		if !strings.Contains(err.Error(), v) {
+			t.Errorf("the vendors.set error lacks %q: %v", v, err)
+		}
+	}
+}
+
 func TestVendorOutAndBackAcceptGrok(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	var set VendorsResult
@@ -246,7 +274,7 @@ func TestVendorOutAndBackAcceptGrok(t *testing.T) {
 		t.Fatalf("back: %+v %v", back, err)
 	}
 	_, err := d.handle(context.Background(), "vendors.set", json.RawMessage(`{"vendor":"acme","out":true}`))
-	if err == nil || !strings.Contains(err.Error(), "use claude, codex or grok") {
+	if err == nil || !strings.Contains(err.Error(), "use "+strings.Join(Vendors(), ", ")) {
 		t.Fatalf("refusal names the vendors: %v", err)
 	}
 	// Grok has no slot cap (owner 2026-11-03).

@@ -725,6 +725,33 @@ func TestRunPlanRefusesBadOverride(t *testing.T) {
 	}
 }
 
+func TestRunPlanNormalisesVendorCase(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"Claude","model":"custom","effort":"max"},{"vendor":" CLAUDE ","model":"backup","effort":"low"}],"reviewer":[{"vendor":"Claude","model":"rev","effort":"high"}]}}`)
+	wantImplementer := []runrec.LineupEntry{{Vendor: "claude", Model: "custom", Effort: "max"}, {Vendor: "claude", Model: "backup", Effort: "low"}}
+	if !reflect.DeepEqual(plan.Lineup[engine.RoleImplementer], wantImplementer) {
+		t.Fatalf("implementer: got %+v, want %+v", plan.Lineup[engine.RoleImplementer], wantImplementer)
+	}
+	wantReviewer := []runrec.LineupEntry{{Vendor: "claude", Model: "rev", Effort: "high"}}
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate} {
+		if !reflect.DeepEqual(plan.Lineup[role], wantReviewer) {
+			t.Errorf("%s: got %+v, want %+v", role, plan.Lineup[role], wantReviewer)
+		}
+	}
+}
+
+func TestRunPlanUnsupportedVendorListsTheVendors(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	for _, method := range []string{MethodRunPlan, MethodRunStart} {
+		_, err := d.handle(context.Background(), method, json.RawMessage(`{"project":"p","item":"S1","lineup":{"implementer":[{"vendor":"acme","model":"m","effort":"high"}]}}`))
+		var wireErr *ipc.Error
+		want := `unsupported vendor "acme" for implementer; use ` + strings.Join(Vendors(), ", ")
+		if !errors.As(err, &wireErr) || wireErr.Code != "bad_params" || !strings.Contains(wireErr.Message, want) {
+			t.Errorf("%s: got %v, want bad_params with %q", method, err, want)
+		}
+	}
+}
+
 func setLaunchBudgets(t *testing.T, d *Daemon, budgets registry.Budgets) {
 	t.Helper()
 	f, err := d.loadRegistry()

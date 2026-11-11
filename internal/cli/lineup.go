@@ -64,7 +64,11 @@ func (f *lineupFlags) apply(p *daemon.RunParams) error {
 				}
 				return fmt.Errorf("--%s requires %s", role.name, form)
 			}
-			chain = append(chain, runrec.LineupEntry{Vendor: value[:first], Model: value[first+1 : last], Effort: value[last+1:]})
+			vendor, ok := vendorName(value[:first])
+			if !ok {
+				return fmt.Errorf("--%s: unsupported vendor %q; use %s", role.name, value[:first], vendorList())
+			}
+			chain = append(chain, runrec.LineupEntry{Vendor: vendor, Model: value[first+1 : last], Effort: value[last+1:]})
 		}
 		if p.Lineup == nil {
 			p.Lineup = map[string][]runrec.LineupEntry{}
