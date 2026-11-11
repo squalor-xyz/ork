@@ -1,0 +1,43 @@
+{
+  "id": "S343",
+  "title": "Local roles: no plan mode, targeted reads in the brief, and a 90 minute limit",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11 from the S304 trial on S316. A local role must finish inside its time limit on the local server. Three changes, all owner-picked on 2026-11-11: a read-only role on a local launcher runs with a read-only allowlist instead of `--permission-mode plan`; a local role's brief tells it to read in targeted ranges; and the local role limit goes from 45 to 90 minutes. Cloud roles do not change."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer's Bash calls went through Claude Code's model-backed classifier (plan mode), which timed out three times.",
+  "size": "M",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence from the claude-local transcripts of run `ork-20261111-172200-10f4` (in `~/.claude/projects/-home-jon-code-squalor-xyz-ork--worktrees-S316/`):\n\n- Implementer (`e3ce20e2...jsonl`, 17:22-18:07): it read whole files, `internal/daemon/runs.go` (2566 lines), `internal/engine/approval.go`, `internal/cli/cli.go` and `internal/cli/run.go`. The context went from 22k to 75k tokens in two turns and passed the launcher's 115k auto-compact window. Two compactions took 858 s and 809 s. One turn spent 305 s on 24k characters of thinking. It made no edits.\n- Reviewer (`dfb7aff3...jsonl`, 19:21-20:05): ork runs a read-only claude role with `--permission-mode plan` (`internal/agent/claude/args.go:45-46`). Each Bash call was then sent to Claude Code's model-backed classifier on the same local model, with about 43k tokens of transcript; it timed out three times (\"qwen3.8-27b is temporarily unavailable (timed out), so auto mode cannot determine the safety of Bash\"), and `auto-mode-classifier-error.txt` sits beside the transcript. The implementer, which runs with `--allowedTools ... --permission-prompts none`, never hit the classifier.\n- The local role limit is `LocalRoleAfter = 45 * time.Minute` (`internal/engine/watchdog.go:28`), from adj 195 (`roles.local-timeout` = 45-minutes).\n\nOwner decisions (2026-11-11, interactive question, relay session 8d711f67):\n- \"the model backed classifier does not work yet. so for local we should not use plan permission mode.\" A read-only role on a local launcher (claude-local; the same rule for any local launcher whose CLI has a model-backed classifier) runs with a read-only allowlist and `--permission-prompts none`, not plan mode (adj `roles.local-read-only-mode`).\n- A local role's brief adds a short paragraph: read files in ranges (offset and limit, or grep first), never a whole file over about 500 lines, and keep reasoning brief (adj `roles.local-brief-reads`).\n- The local role limit becomes 90 minutes. This changes decided adj 195; the owner supersedes it (`adj supersede 195`), and this slice does not start until that record is decided."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/args.go:45-59` (the read-only branch)\n- `internal/agent/claude/types.go:165` (`ReadOnly`)\n- `internal/agent/claude/args_test.go`\n- `internal/engine/perm.go:80-90` (the read-only permission and its allowlist)\n- `internal/engine/round.go:455` and `internal/engine/speccheck.go:275-285` (where `ReadOnly` reaches the request)\n- `internal/engine/brief.go` (the local paragraph)\n- `internal/engine/watchdog.go:28` (`LocalRoleAfter`)\n- `internal/engine/watchdog_test.go`\n- `internal/daemon/runner.go:44`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A read-only reviewer, gate, spec check or UI pass on claude-local gets `--allowedTools` with only read tools (no Edit, Write or a write-capable Bash pattern) and `--permission-prompts none`, and no `--permission-mode plan`. The same role on cloud claude still gets `--permission-mode plan`.\n- A local role's brief holds the targeted-read paragraph; a cloud role's brief does not.\n- The watchdog cancels a local role after 90 minutes, not 45."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Confirm adj 195 is superseded with a 90-minute option before starting.\n2. Define the read-only allowlist for local roles (Read, Grep, Glob, and the read-only Bash patterns the role briefs already ask for: `git diff`, `git log`, `git status`, `git show`, `slicer show`, `adj show`, `adj check`, `go test`, `go vet`, `gofmt -l`). Record the list in the slice notes.\n3. In the claude args, use it for a read-only role when the vendor is local; keep plan mode for cloud.\n4. Add the local paragraph to the brief.\n5. Set `LocalRoleAfter` to 90 minutes and update the tests and docs that say 45.\n6. Docs (*proposed*): `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

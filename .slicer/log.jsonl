@@ -4333,3 +4333,10 @@
 {"when": "2026-11-11T19:18:56Z", "item": "S335", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-11T19:18:57Z", "item": "S335", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
 {"when": "2026-11-11T20:07:15Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 1, 2026-11-11, slice S316 (owner pick), run ork-202611", "by": "Jon Robbins"}
+{"when": "2026-11-11T21:11:17Z", "item": "S341", "action": "add", "from": "", "to": "open", "note": "Read-only role check blames the role for any change to the shared tree"}
+{"when": "2026-11-11T21:11:18Z", "item": "S341", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T21:38:29Z", "item": "S342", "action": "add", "from": "", "to": "open", "note": "wave start: an owner's landing-order answer does not order the wave"}
+{"when": "2026-11-11T21:38:29Z", "item": "S342", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T21:44:35Z", "item": "S343", "action": "add", "from": "", "to": "open", "note": "Local roles: no plan mode, targeted reads in the brief, and a 90 minute limit"}
+{"when": "2026-11-11T21:44:35Z", "item": "S343", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T21:44:41Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "2026-11-11: owner agreed to re-run the trial after S343 land", "by": "Jon Robbins"}

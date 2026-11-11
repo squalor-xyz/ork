@@ -1,0 +1,39 @@
+{
+  "id": "S341",
+  "title": "Read-only role check blames the role for any change to the shared tree",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11 (slicer wave 2): `ork wave start slicer s455 s450 s456 s451 s453` failed with \"ork: spec check failed: spec-check changed the tree, and it is a read-only role\". The change was another session filing slicer s459 on main (log entry 19:18:46, from ork's S335 spec work), not the spec check. Wanted: compare only paths the role could have written, or name the changed paths and their log origin in the error, and refuse to start a spec check on a dirty tree rather than failing after it."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
