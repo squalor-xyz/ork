@@ -4262,3 +4262,7 @@
 {"when": "2026-11-11T14:42:26Z", "item": "S304", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
 {"when": "2026-11-11T14:42:26Z", "item": "S270", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
 {"when": "2026-11-11T15:06:09Z", "item": "S219", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T15:09:14Z", "item": "S303", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-11T15:09:14Z", "item": "S304", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-11T15:09:14Z", "item": "S305", "action": "set", "from": "", "to": "", "note": "pass_key v1.1→v1.2"}
+{"when": "2026-11-11T15:09:14Z", "item": "S220", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-11: release v1.1.0 after S289 and S219 land; S", "by": "Jon Robbins"}
