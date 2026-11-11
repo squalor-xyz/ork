@@ -1,0 +1,41 @@
+{
+  "id": "S327",
+  "title": "CHANGELOG resolver: accept entries with no blank line between them",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11. Size S. S180's CHANGELOG.md resolver never merges ork's own CHANGELOG, so every CHANGELOG conflict at landing pauses for the owner. This slice makes it accept the entry layout ork's CHANGELOG uses and keeps that layout in the merged file."
+  ],
+  "depends_note": null,
+  "findings_note": "Merges 8150d74, 84b77d8, 1a99e93, c258376: splitChangelog refuses entries with no blank line between them, so every CHANGELOG conflict paused (S132, S257, S263, S226).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence read on 2026-11-11:\n\n- Landings paused with \"merging main into SNNN stopped on conflicts in CHANGELOG.md\" and nothing else on S132 (run `ork-20261110-022842-1d19`), S257 (`ork-20261109-164713-3e64`) and S263 (`ork-20261109-170507-eb70`). CHANGELOG.md was also among the conflicts on S173, S204, S244, S255, S267 and S226. Each time the orchestrator removed the markers by hand and ran `ork retry`.\n- `splitChangelog` (`internal/engine/changelog.go:101-104`) refuses an Unreleased body in which a `- ` entry line follows a non-blank line. ork's `CHANGELOG.md` has no blank line between entries (see `CHANGELOG.md:3-30`). A replay of the merge-base, ours and theirs copies of `CHANGELOG.md` for merges `8150d74` (S132), `84b77d8` (S263), `1a99e93` (S257), `d295a16` and `c258376` (S226) refuses all three copies in every case with that rule. So `resolveChangelog` returns `false, nil` (`internal/engine/changelog.go:28-31`), and `settleMerge` (`internal/engine/landmerge.go:92-98`) adds no note and pauses.\n- The tests use only blank-separated entries (`internal/engine/changelog_test.go:21-25`), so they never covered this layout.\n- `mergeChangelogEntries` joins the merged entries with a blank line (`internal/engine/changelog.go:190-192`). Once the parser accepts the layout, the output would add blank lines that the file does not have.\n\nNo open owner question. S180's decision (2026-10-29: merge CHANGELOG.md-only conflicts with the branch side first, no note) stands. This slice only makes it work on the file as it is."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/changelog.go:67-118` (`splitChangelog`: a `- ` line always starts a new entry; record the separator style)\n- `internal/engine/changelog.go:144-193` (`mergeChangelogEntries`: refuse mixed styles; join with the base's separator)\n- `internal/engine/changelog_test.go`\n- `internal/engine/landmerge_test.go`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Unit: `mergeChangelogEntries` on three bodies with no blank lines between entries and two-space continuation lines (the layout of `CHANGELOG.md:3-30`), one entry added on each side, returns ok, with the branch entry first, then the base entry, then the old entries, and no blank lines between entries.\n- Unit: the existing blank-separated cases still merge with blank separators, unchanged.\n- Unit: a body that mixes both styles (some entries separated by blank lines, some not) is refused, as is a side whose style differs from the base.\n- Landing: a CHANGELOG.md-only conflict in the compact layout lands with no pause and a merge commit (next to the existing tests in `internal/engine/landmerge_test.go`)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. In `splitChangelog`, drop the rule that a `- ` line must follow a blank line. A `- ` line always ends the current entry and starts a new one. Record whether entries were separated by a blank line (all of them), by none, or mixed; with more than one entry, mixed returns not ok.\n2. In `mergeChangelogEntries`, refuse when ours or theirs uses a different separator style from the base (a single-entry or empty body takes the base's style). Join entries with `\"\\n\\n\"` for the blank style and `\"\\n\"` for the compact style, and end the body the same way the base did before the next `## ` heading.\n3. Keep every other refusal (prefix, suffix, changed or reordered old entries, duplicates).\n4. Tests first, as listed.\n5. CHANGELOG.md: one bullet under `## Unreleased` (*proposed*), in the file's existing layout.\n\nOwner decisions (2026-11-11): How should the orchestrator-only Check line (`go test -count=1 ./internal/engine -run 'Changelog|LandMixed|LandOwnerEdited' -v`) be handled? -> orchestrator: keep the line as written and explicitly assign it to the orchestrator, since the implementer's allowlist cannot run it."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine -run 'Changelog|LandMixed|LandOwnerEdited' -v` exits 0 and lists the new tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

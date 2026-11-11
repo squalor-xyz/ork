@@ -1,0 +1,43 @@
+{
+  "id": "S328",
+  "title": "Missing slicer merge drivers: say so in ork doctor and in the landing pause",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-11. Size S. The ork clone has none of the git merge drivers that `.slicer/.gitattributes` names. Every parallel landing therefore conflicts in `.slicer/render/*`, `.slicer/index.json` or `.slicer/relay-roles.json`, and the owner fixes it by hand. This slice makes ork notice the missing drivers and print the fix. S289 left this check unspecified (\"a check that the driver is configured ... is the only ork-side work left, not specified here\")."
+  ],
+  "depends_note": null,
+  "findings_note": "git config --get-regexp '^merge\\.' is empty in the ork clone (2026-11-11); render, index.json and relay-roles conflicts at landing on S173, S204, S244, S255, S267, S268, S301, S310.",
+  "size": "S",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence read on 2026-11-11:\n\n- `git -C /home/jon/code/squalor-xyz/ork config --get-regexp '^merge\\.'` prints nothing. `.slicer/.gitattributes` assigns `merge=slicer-generated` to `render/ROADMAP.md`, `render/ROADMAP.html`, `render/slices/*.md` and `render/RELAY-ROLES.md`, `merge=slicer-index` to `index.json` and `merge=slicer-relay-roles` to `relay-roles.json`. It says each driver is \"defined once per clone\". `slicer setup-git` prints the six `git config` lines. When a driver named in `.gitattributes` is not defined, git falls back to an ordinary text merge with conflict markers.\n- S254's spec (2026-11-07) says \"ork's clone configures `slicer-generated`, `slicer-index` and `slicer-relay-roles`\". That is no longer true of this clone, and nothing in ork noticed the change.\n- Landing conflicts in driver-covered files, 2026-11-08 to 2026-11-11 (pause reasons in the orchestrator session): `.slicer/render/ROADMAP.md`/`.html` on S173, S204, S244, S255, S267, S301 and S310; `.slicer/index.json` on S268. The orchestrator took `--ours` for the render files, took main's side of `index.json` with a script, ran `slicer render` and `slicer check`, then `ork retry`.\n- ork has no check for this: `rg -n 'merge\\.slicer|setup-git' internal` finds nothing. `checkProject` (`internal/cli/doctor.go:98-136`) checks the path, the check command, the patterns and `engine.SetupWarnings`.\n\nOpen owner questions (the owner answers before the relay starts):\n- Q1 where ork says it. (a) an `ork doctor` finding per project, plus one clause on a landing conflict pause when a conflicted file is a driver-covered `.slicer` path and its driver is missing: \"slicer merge drivers are not configured in this clone; run `slicer setup-git` and the lines it prints, then ork retry\" (recommended: doctor finds it before a wave, and the pause names it when it matters). (b) doctor only. (c) also refuse `ork run` and `ork wave start` until the drivers exist.\n- Q2 does ork ever run the `git config` lines itself. (a) no, ork prints them and the owner runs them (recommended: it is a change to the clone's git config, outside ork's files per `docs/boundaries.md`). (b) `ork doctor --fix` runs them after a `[y/N]` prompt."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/setup.go:41` (`SetupWarnings`, or a new helper beside it: read the driver names from `.slicer/.gitattributes` and check `git config --get merge.NAME.driver` for each)\n- `internal/cli/doctor.go:98-136` (`checkProject`: the finding)\n- `internal/engine/landmerge.go:82-140` (`settleMerge` and `conflictReason`: the clause, under Q1 (a))\n- `internal/engine/setup_test.go`\n- `internal/engine/landmerge_test.go`\n- `internal/cli/cli_test.go` (doctor tests)\n- `docs/guide.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- Helper: a repo whose `.slicer/.gitattributes` names `slicer-index` and `slicer-generated`, with neither defined in git config, reports both names. With both defined it reports none. A repo with no `.slicer/.gitattributes` reports none.\n- Doctor: the project line carries the finding with the `slicer setup-git` fix text when drivers are missing, and nothing when they are configured.\n- Landing (Q1 a): a merge-in conflict in `.slicer/render/ROADMAP.md`, with the driver missing, pauses with the existing reason plus the clause. A conflict only in `internal/x.go` has no clause."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Add the helper beside `SetupWarnings`. Parse `merge=NAME` attributes from `.slicer/.gitattributes` (ignore comments), and for each distinct NAME run `git -C P config --get merge.NAME.driver`. A missing key is a missing driver.\n2. Add the doctor finding: `merge drivers missing: NAME, NAME (fix: run the lines slicer setup-git prints)`.\n3. Under Q1 (a), in `settleMerge`, when any conflicted path is under `.slicer/` and the helper reports a missing driver, add the clause to the pause reason. Keep it on one line (`oneLine`).\n4. Docs (*proposed*): the guide's setup steps name `slicer setup-git`; design.md's landing section names the clause.\n5. CHANGELOG.md: one bullet under `## Unreleased` (*proposed*)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine ./internal/cli -run 'MergeDriver|Doctor|Land' -v` exits 0 and lists the new tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

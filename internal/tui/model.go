@@ -193,6 +193,10 @@ type Model struct {
 	compose        *composeState
 	composeRequest uint64
 
+	matrixEdit        *matrixEditState // the form of the role matrix editor (S226)
+	matrixEditRequest uint64
+	closedRuns        map[uint64]closedMatrixRun // runs whose form esc closed while the run was out, by request
+
 	projectsReading  bool
 	projectsRevision uint64
 }
@@ -414,9 +418,11 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		if pane := m.itemPane; pane != nil && m.matrixPaneOpen() && m.active >= 0 &&
 			pane.project == msg.project && pane.request == msg.request &&
 			m.projects[m.active].reg.Name == msg.project {
-			pane.pending = false
+			pane.pending, pane.reloading = false, false
 			pane.matrix, pane.err = msg.result, msg.err
 		}
+	case matrixEditMsg:
+		return m, m.applyMatrixEdit(msg)
 	case wavesMsg:
 		return m, m.applyWaves(msg)
 	case launchSpecMsg:
@@ -578,6 +584,13 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.decisionInput.update(msg)
 			return m, nil
 		}
+		if m.matrixEdit != nil {
+			if !m.matrixEdit.pending && !m.matrixEdit.confirming {
+				m.matrixEdit.update(msg)
+				m.actionStatus = ""
+			}
+			return m, nil
+		}
 		if m.compose != nil {
 			if !m.compose.pending {
 				m.compose.field().update(msg)
@@ -685,6 +698,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.decisionKey(msg)
 		}
 	}
+	if m.matrixEdit != nil {
+		return m.matrixEditKey(msg)
+	}
 	if m.compose != nil {
 		return m.composeKey(msg)
 	}
@@ -721,6 +737,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return nil
 	}
 	switch {
+	case m.matrixPaneOpen() && !m.showHelp && m.matrixEditOp(msg) != "":
+		return m.openMatrixEdit(m.matrixEditOp(msg))
 	case m.view == wavesView && !m.showHelp && key.Matches(msg, m.keys.AllProjects):
 		if w := m.waves; w != nil {
 			rows := w.rows()
@@ -1123,6 +1141,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	}
 	m.dropLaunch()
 	m.compose = nil
+	m.matrixEdit = nil
 	m.pane = nil
 	m.active = i
 	if !m.viewShown(m.view) {
@@ -1343,6 +1362,7 @@ func (m *Model) moveView(delta int) tea.Cmd {
 			}
 			m.dropLaunch()
 			m.compose = nil
+			m.matrixEdit = nil
 			m.view = i
 			m.roadmapCursor = 0
 			m.decisionsCursor = 0

@@ -70,6 +70,13 @@ type keyMap struct {
 	No         key.Binding
 	Filter     key.Binding
 	Sidebar    key.Binding
+
+	// The matrix pane's edit keys (S226, *proposed*).
+	MatrixEdit   key.Binding
+	MatrixAdd    key.Binding
+	MatrixRemove key.Binding
+	MatrixMove   key.Binding
+	MatrixRule   key.Binding
 }
 
 func newKeyMap() keyMap {
@@ -93,6 +100,13 @@ func newKeyMap() keyMap {
 		SaveWave:   key.NewBinding(key.WithKeys("w"), key.WithHelp("w", "save the ticked items as a named wave (Waves)")),
 		SavedWaves: key.NewBinding(key.WithKeys("L", "shift+l"), key.WithHelp("L", "list saved waves; enter loads one (Waves)")),
 		Matrix:     key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "matrix")),
+
+		MatrixEdit:   key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit a matrix row (matrix pane)")),
+		MatrixAdd:    key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "add a matrix row (matrix pane)")),
+		MatrixRemove: key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "remove a matrix row (matrix pane)")),
+		MatrixMove:   key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "move a matrix row (matrix pane)")),
+		MatrixRule:   key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "edit a matrix rule (matrix pane)")),
+
 		Approve:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
 		Stop:       key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
 		Retry:      key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
@@ -140,7 +154,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Park, k.MoveDown, k.MoveUp, k.Matrix, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Park, k.MoveDown, k.MoveUp, k.Matrix, k.MatrixEdit, k.MatrixAdd, k.MatrixRemove, k.MatrixMove, k.MatrixRule, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -184,6 +198,7 @@ const (
 	dropNote       = 15      // note drops before matrix (S171, owner decision 2026-10-30)
 	dropMatrix     = 14      // the Roadmap's role matrix outlasts add and remove project and drops before tab views
 	dropHalf       = 14
+	dropMatrixEdit = 12 // the matrix pane's edit keys outlast tab views and drop before the line and page fields (S226)
 	dropTab        = 13
 	dropQuit       = 12
 	dropLine       = 11
@@ -354,6 +369,27 @@ func (m *Model) contextHints() []hintEntry {
 	case m.decisionInput != nil:
 		l.add(dropRow, offer(strings.TrimSpace(m.decisionInput.Value()) != "", k.Select, "enter", "review"))
 		l.add(dropPinned, short(k.Close, "esc", "cancel"))
+	case m.matrixEdit != nil:
+		switch e := m.matrixEdit; {
+		case e.pending:
+			l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
+			l.add(dropPinned, short(k.Close, "esc", "close"))
+		case e.confirming:
+			l.add(dropRow, short(k.Yes, "y", "run"))
+			l.add(dropPinned, short(k.No, "n", "cancel"))
+		default:
+			if len(e.lines) > 1 {
+				l.add(dropRow, short(k.NextView, "tab/shift+tab", "line"))
+			}
+			// enter moves to the next line, and from the last line sends the form.
+			enter := "next"
+			if e.focus == len(e.lines)-1 {
+				enter = "review"
+			}
+			l.add(dropRow, short(k.Select, "enter", enter))
+			l.add(dropRow, key.NewBinding(key.WithKeys("ctrl+s"), key.WithHelp("ctrl+s", "review")))
+			l.add(dropPinned, short(k.Close, "esc", "cancel"))
+		}
 	case m.compose != nil:
 		if m.compose.kind == composeNew {
 			l.add(dropRow, offer(!m.compose.pending, k.NextView, "tab", "field"))
@@ -439,6 +475,9 @@ func (m *Model) contextHints() []hintEntry {
 		if m.itemPane != nil {
 			// Both Roadmap panes scroll by line and page, as the Waves item pane does.
 			l.add(dropPage, short(k.PageDown, "pgup/pgdown", "page"))
+			// The matrix pane's edit keys go after the page field; they drop before the line and page fields (S226, *proposed*).
+			_, editRefused := m.matrixEditRefusal()
+			l.add(dropMatrixEdit, offer(!editRefused, k.MatrixEdit, "e/n/d/m/r", "edit"))
 			l.add(dropLine, short(k.RowNext, "j/k", "line"))
 			l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))
 			l.add(dropTab, short(k.NextView, "tab", "views"))

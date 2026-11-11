@@ -25,6 +25,7 @@ type itemPane struct {
 	pending     bool
 	detail      *slicercli.Detail
 	matrix      *daemon.RolesMatrixResult // the Roadmap's role matrix pane (id matrixPaneID)
+	reloading   bool                      // an edit's reload of the matrix is out; the old matrix and offset stay on screen (S226)
 	err         error
 	offset      int // the first line shown below the heading (Roadmap item pane)
 	room        int // the lines of the scrolling part the last draw had

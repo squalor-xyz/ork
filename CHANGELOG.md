@@ -12,6 +12,19 @@
   advisory. `Client.RelayAsk` takes a `blocker` argument and the paused-question
   mirror still passes it. Docs updated: `docs/design.md`, `docs/state.md` and
   `docs/orchestrator-parity.md`.
+- Role matrix editor in the TUI (*proposed*): S226, the TUI half of S173. In
+  the Roadmap's matrix pane, `e` changes a row, `n` adds one, `d` removes one,
+  `m` moves one and `r` edits a rule's text (`r` no longer refreshes there).
+  Each key opens a form of typed-id lines in the status area: the row id (or
+  rule id) first, then the lines of the key (`e`: agent, vendor, model,
+  reasoning and note; `n`: role, then the same five; `d`: nothing more; `m`:
+  the row to go before; `r`: the new text). `tab` and `shift+tab` move between
+  lines, `enter` on the last line or `ctrl+s` sends. The form is checked
+  against the loaded rows first. The status then shows `Run: <the exact slicer relay-roles command>`,
+  the daemon's warning when the agent has no ork adapter, and `[y/N] (Enter is
+  No)`; `y` runs it through `matrix.edit` and reads the matrix again, and the
+  change is left uncommitted. Slicer's refusal shows verbatim. The daemon is
+  unchanged.
 - Resolved latest models in plans and lineups (*proposed*): S245. A lineup
   entry whose model was resolved from `FAMILY@latest` prints as `latest
   (resolves to MODEL)` in `ork run`'s plan, the launch confirmation and the

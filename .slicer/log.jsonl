@@ -4109,6 +4109,12 @@
 {"when": "2026-11-10T12:38:26Z", "item": "S268", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-10T12:42:41Z", "item": "S268", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-10T13:58:05Z", "item": "S268", "action": "status", "from": "open", "to": "done", "note": "Landed S268", "by": "Jon Robbins"}
+{"when": "2026-11-11T01:41:46Z", "item": "S226", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-11T01:55:15Z", "item": "S226", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-11T01:55:27Z", "item": "S226", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-11T03:01:16Z", "item": "S226", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S226):", "by": "Jon Robbins"}
+{"when": "2026-11-11T03:01:20Z", "item": "S226", "action": "note", "from": "", "to": "", "note": "Verified: role matrix editor in the TUI. In the matrix pane ", "by": "Jon Robbins"}
+{"when": "2026-11-11T03:01:22Z", "item": "S226", "action": "status", "from": "started", "to": "done", "note": "Verified: role matrix editor in the TUI (e/n/d/m/r typed-id form, matrix.edit preview then run, exact command and warning shown, matrix reloaded, change left uncommitted). Full go test -race, vet, gofmt, slicer check and adj lint clean; human check in a scratch project not run.", "by": "Jon Robbins"}
 {"when": "2026-11-10T14:22:00Z", "item": "S245", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-10T14:25:37Z", "item": "S245", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-10T14:25:39Z", "item": "S245", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
@@ -4124,3 +4130,17 @@
 {"when": "2026-11-11T03:21:51Z", "item": "S223", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S223):", "by": "Jon Robbins"}
 {"when": "2026-11-11T03:21:55Z", "item": "S223", "action": "note", "from": "", "to": "", "note": "Verified: non-blocking owner findings are asked in the relay", "by": "Jon Robbins"}
 {"when": "2026-11-11T03:21:57Z", "item": "S223", "action": "status", "from": "started", "to": "done", "note": "Verified: non-blocking owner findings are asked in the relay ledger without --blocker, the owner's ork answer is written through, and ledger answers are read back before the card and the finish step (advisory, skipped after the commit, not filed in adj). Full -race suite, vet, gofmt, slicer check and adj lint green.", "by": "Jon Robbins"}
+{"when": "2026-11-11T02:41:41Z", "item": "S223", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T02:51:19Z", "item": "S291", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T03:01:38Z", "item": "relay-roles.r34", "action": "relay-roles", "from": "", "to": "reviewer", "note": "remove"}
+{"when": "2026-11-11T03:11:22Z", "item": "S327", "action": "add", "from": "", "to": "open", "note": "CHANGELOG resolver: accept entries with no blank line between them"}
+{"when": "2026-11-11T03:11:22Z", "item": "S328", "action": "add", "from": "", "to": "open", "note": "Missing slicer merge drivers: say so in ork doctor and in the landing pause"}
+{"when": "2026-11-11T03:11:22Z", "item": "S329", "action": "add", "from": "", "to": "open", "note": "Connection errors: resume the role instead of stopping as unclassified"}
+{"when": "2026-11-11T03:11:22Z", "item": "S330", "action": "add", "from": "", "to": "open", "note": "Launch: the item's uncommitted tracking edits on main are not in the worktree"}
+{"when": "2026-11-11T03:11:22Z", "item": "S331", "action": "add", "from": "", "to": "open", "note": "Auto-land a passing run (per-project opt-in)"}
+{"when": "2026-11-11T03:11:22Z", "item": "S329", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:23Z", "item": "S330", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:23Z", "item": "S331", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:23Z", "item": "S328", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-11T03:11:31Z", "item": "S312", "action": "note", "from": "", "to": "", "note": "Evidence 2026-11-11 (S223, run ork-20261111-024142-12c2): th", "by": "Jon Robbins"}
+{"when": "2026-11-11T03:14:08Z", "item": "S327", "action": "edit", "from": "", "to": "", "note": "Implement"}

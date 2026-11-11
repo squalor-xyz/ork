@@ -532,26 +532,6 @@
       "model": "qwen3.8-27b",
       "reasoning": "medium",
       "note": "Fallback only, after cloud rows; explicit local use until S304 measures role suitability (owner 2026-11-09)."
-    },
-    {
-      "id": "r34",
-      "role": "reviewer",
-      "when": {
-        "size": [
-          "S"
-        ],
-        "effort": [],
-        "importance": [],
-        "urgency": [],
-        "well_specified": true,
-        "split": null,
-        "sliver": null
-      },
-      "agent": "grok-local",
-      "vendor": "Local",
-      "model": "latest",
-      "reasoning": "medium",
-      "note": "Fallback only, after cloud rows. Read-only roles until S305; latest leaves model selection to the launcher (owner 2026-11-09)."
     }
   ],
   "rules": [
