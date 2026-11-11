@@ -33,6 +33,7 @@ const (
 	ExitRateLimited  ExitClass = "rate_limited"
 	ExitAuth         ExitClass = "auth"
 	ExitError        ExitClass = "error"
+	ExitConnection   ExitClass = "connection"
 	ExitUnclassified ExitClass = "unclassified"
 )
 
