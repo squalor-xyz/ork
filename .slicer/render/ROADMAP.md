@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-336 items · — 54 · done 249 · retired 33
+336 items · — 53 · done 250 · retired 33
 
 v1.2
 
@@ -104,7 +104,7 @@ v1.2
 | 54 | [S332](slices/S332.md) | Adopt landed-changed entries | M `[needs-owner]` | 2 |  | Owner 2026-11-11: per-slice changelog files in landed-changed/, owned and assembled by slicer (slicer s453); convert the existing Unreleased entries. Depends on slicer s453 landing. · discovered from S327 | — |
 | 55 | [S334](slices/S334.md) | Deleted-by-us slice JSON at landing | S `[needs-owner]` | 1 |  | 2026-11-11 S328 landing: merge-in stopped on '.slicer/slices/S328.json' DU (branch moved it to done/ via slicer done; main had spec-answer edits). Fixed by hand: merge main's change into done/S328.json, git rm the old path, ork retry. ork's retry does not stage a deleted path. S217 (2026-11-09) hit the same case. · discovered from S289 | — |
 | 56 | [S335](slices/S335.md) | Batched snapshot polling | M | 2 |  | Owner 2026-11-11 (feedback from another agent): slicer polling is too frequent and slow. Measured 2026-11-11: each slicer call costs about 100 ms, almost all in slicer's imports (python3 -c pass: 4 ms; import slicer.cli: 77 ms). ork runs slicer list, deps and relay-run list per project, every 5 s when visible, every 1 s for live runs and every 30 s for the other 11 projects. | — |
-| 57 | [S336](slices/S336.md) | Idle polling backoff | S | 1 |  | Owner 2026-11-11 (polling too frequent). The daemon's cache keeps reading every registered project every 30 s with no TUI attached; a visible live run is read every 1 s. | — |
+| 57 | [S336](slices/S336.md) | Idle polling backoff | S | 1 |  | Owner 2026-11-11 (polling too frequent). The daemon's cache keeps reading every registered project every 30 s with no TUI attached; a visible live run is read every 1 s. | done |
 
 ---
 

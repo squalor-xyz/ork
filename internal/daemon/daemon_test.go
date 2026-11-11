@@ -1081,23 +1081,61 @@ func TestVisibleProjectRefreshesEvery5sAndOthersEvery30s(t *testing.T) {
 	}
 	waitFor(t, "other project's items read twice by 30 s", func() bool { return e.src.count("items beta") == 2 })
 
-	// The subscriber leaves: alpha is no longer visible, so it goes to 30 s.
+	// The subscriber leaves: no TUI is attached, so nothing is read on a timer
+	// (S336, adj 301).
 	sub.Close()
 	waitFor(t, "the subscriber's projects dropped", func() bool {
 		r.d.subsMu.Lock()
 		defer r.d.subsMu.Unlock()
 		return len(r.d.focus) == 0
 	})
-	for step := 0; step < 5; step++ { // 35 s to 55 s: nothing is read
-		advanceFiveSeconds(e)
-	}
+	e.clock.Advance(10 * time.Minute)
+	settle()
 	if n := e.src.count("items alpha"); n != 7 {
-		t.Fatalf("items read 25 s after the subscriber left: %d reads, want 7", n)
+		t.Fatalf("items read in 10 minutes after the subscriber left: %d reads, want 7", n)
 	}
-	e.clock.Advance(5 * time.Second) // 60 s
-	waitFor(t, "items read 30 s after the subscriber left", func() bool {
-		return e.src.count("items alpha") == 8
-	})
+	if n := e.src.count("items beta"); n != 2 {
+		t.Fatalf("beta's items read in 10 minutes after the subscriber left: %d reads, want 2", n)
+	}
+}
+
+// With no TUI attached the daemon reads nothing on a timer. A TUI that
+// attaches gets one read of each part of the projects it shows (S336, adj 301).
+func TestDaemonReadsNothingOnATimerUntilATUIAttaches(t *testing.T) {
+	e := newEnv(t)
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	e.src.put("beta", alphaItems)
+	e.start(t)
+	c := e.dial(t)
+	ctx := context.Background()
+	c.Snapshot(ctx, registry.Project{Name: "alpha"})
+	c.Snapshot(ctx, registry.Project{Name: "beta"})
+
+	e.clock.Advance(10 * time.Minute)
+	settle()
+	for _, k := range []string{"items alpha", "items beta", "runs alpha", "goals alpha", "decided alpha"} {
+		if n := e.src.count(k); n != 1 {
+			t.Fatalf("%s read %d times in 10 minutes with no TUI attached, want 1", k, n)
+		}
+	}
+
+	sub := e.dial(t)
+	if err := sub.Subscribe(ctx, []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+	for _, k := range []string{"items alpha", "runs alpha", "goals alpha", "decided alpha"} {
+		waitFor(t, k+" read on attach", func() bool { return e.src.count(k) == 2 })
+	}
+	settle()
+	for _, k := range []string{"items alpha", "runs alpha", "goals alpha", "decided alpha"} {
+		if n := e.src.count(k); n != 2 {
+			t.Errorf("%s read %d times on attach, want 2", k, n)
+		}
+	}
+	if n := e.src.count("items beta"); n != 1 {
+		t.Errorf("beta's items read %d times on attach, want 1 (not shown)", n)
+	}
 }
 
 func TestSubscriberGetsANoticeOnlyWhenAPartChanges(t *testing.T) {

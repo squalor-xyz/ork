@@ -139,12 +139,12 @@ ork (TUI)  ork status --json (CLI)
   decided records every 5 min, on a git HEAD change, when a project is opened
   and on `refresh`. A git HEAD change is `git -C PATH rev-parse HEAD` and
   nothing else, read on the same 5 s / 30 s tick as items, deps, runs and open
-  records. The runs part is read every 1 s instead while the project is
+  records. The runs part is read every 2 s instead while the project is
   visible and its last good read holds a run that is not stale (*proposed*,
-  S109); when that read shows no such run it returns to 5 s, and a project that
+  S109; 2 s since S336, adj 301); when that read shows no such run it returns to 5 s, and a project that
   is not visible stays at 30 s. The interval belongs to each project, so the
   Running entry, which makes every project visible, reads the runs of each
-  project with a live run every 1 s and no other part faster (*proposed*,
+  project with a live run every 2 s and no other part faster (*proposed*,
   S110); the 4-process limit holds however many projects that is. Only the runs part speeds up; a change in it
   reaches the clients through the usual notice. Each read is one CLI call. A read that is already running is
   shared, and at most 4 CLI processes run at once across all projects. A
@@ -152,7 +152,7 @@ ork (TUI)  ork status --json (CLI)
   its part starts when that one ends, so a part never has two reads at once. A
   failed read keeps the last good value, with its error and the time it was
   read; a `corrupt`, `locked` or timeout failure is tried once more at once.
-  The cache keeps no files and watches none.
+  The cache keeps no files and watches none. *Proposed* (S336, `poll.idle-backoff`, adj 301): while no TUI is attached (no connection has called `subscribe`), the cache reads nothing on a timer, the git HEAD read included; a read that a client asks for (a snapshot, `refresh`, the refresh after a write) still runs once. When a TUI attaches, each part of the projects it shows that is due is read at once (after an idle longer than a part's interval, that is every part; a part read within its interval waits for it), goals and decided records are read for a project newly shown, and the other projects are read an interval later. Merge detection (`checkMerged`) rides on the HEAD read, so with no TUI attached it waits (owner decision 2026-11-11): merged-run state, the removal of merged spec directories and run pruning happen when a TUI attaches and the HEAD read runs.
 
   **Notices (S15).** A connection that called `subscribe` gets one line per
   change, without an id: `{"method":"snapshot.changed","params":{"project",

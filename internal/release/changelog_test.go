@@ -30,35 +30,18 @@ func unreleasedIndex(t *testing.T, lines []string) int {
 	return -1
 }
 
+// The v1.1.0 release section stays in the changelog. Entries for the next
+// release may stand under `## Unreleased` above it.
 func TestChangelogHasTheV110Section(t *testing.T) {
+	want := regexp.MustCompile(`^## v1\.1\.0 \(\d{4}-\d{2}-\d{2}\)$`)
 	lines := changelogLines(t)
 	i := unreleasedIndex(t, lines)
-	// The first non-blank line under Unreleased must be the v1.1.0 heading.
 	for _, l := range lines[i+1:] {
-		if strings.TrimSpace(l) == "" {
-			continue
-		}
-		want := regexp.MustCompile(`^## v1\.1\.0 \(\d{4}-\d{2}-\d{2}\)$`)
-		if !want.MatchString(l) {
-			t.Fatalf("first line under `## Unreleased` is %q, want a `## v1.1.0 (YYYY-MM-DD)` heading", l)
-		}
-		return
-	}
-	t.Fatal("no heading under `## Unreleased`")
-}
-
-func TestChangelogUnreleasedIsEmptyAfterTheRelease(t *testing.T) {
-	lines := changelogLines(t)
-	i := unreleasedIndex(t, lines)
-	for n, l := range lines[i+1:] {
-		if strings.HasPrefix(l, "## v") {
+		if want.MatchString(l) {
 			return
 		}
-		if strings.TrimSpace(l) != "" {
-			t.Fatalf("CHANGELOG.md line %d under `## Unreleased` is not blank: %q", i+2+n, l)
-		}
 	}
-	t.Fatal("no `## v` heading after `## Unreleased`")
+	t.Fatal("no `## v1.1.0 (YYYY-MM-DD)` heading under `## Unreleased`")
 }
 
 // The Publish release step reads the notes with awk on the second word of each

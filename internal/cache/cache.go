@@ -7,8 +7,8 @@
 // processes run at once across all projects. A failed read keeps the last good
 // value, and a read that fails with corrupt, locked or a timeout is tried once
 // more at once (R3). A change of a project's git HEAD reads its goals and
-// decided records again (boundary.git-head). The cache keeps no files and
-// watches none.
+// decided records again (boundary.git-head). With no client attached (SetIdle)
+// nothing is read on a timer. The cache keeps no files and watches none.
 package cache
 
 import (
@@ -36,8 +36,8 @@ const (
 	SlowInterval = 30 * time.Second
 	GoalInterval = 5 * time.Minute
 	// LiveInterval is the Runs part's interval for a visible project while
-	// the last good read holds a live run (proposed).
-	LiveInterval = time.Second
+	// the last good read holds a live run (proposed; 2 s since S336, adj 301).
+	LiveInterval = 2 * time.Second
 )
 
 // ErrClosed is returned once Close has been called.
@@ -61,6 +61,7 @@ type Options struct {
 	Clock    Clock
 	Fetcher  source.Fetcher
 	OnChange func(project string, part source.Part) // a data part changed; may be nil
+	Idle     bool                                   // start with no client attached: no read comes on a timer (see SetIdle)
 }
 
 // Value is one part as the cache holds it: the last good value and when it
@@ -83,6 +84,7 @@ type Cache struct {
 
 	mu      sync.Mutex
 	closed  bool
+	idle    bool // no client is attached: nothing is read on a timer (S336)
 	visible map[string]bool
 	entries map[key]*entry
 }
@@ -119,6 +121,7 @@ func New(opt Options) *Cache {
 		slots:    make(chan struct{}, Limit),
 		ctx:      ctx,
 		cancel:   cancel,
+		idle:     opt.Idle,
 		visible:  map[string]bool{},
 		entries:  map[key]*entry{},
 	}
@@ -225,7 +228,7 @@ func (c *Cache) scheduleLocked(k key) {
 		e.timer.Stop()
 		e.timer = nil
 	}
-	if c.closed {
+	if c.closed || c.idle {
 		return
 	}
 	now := c.clock.Now()
@@ -418,6 +421,7 @@ func (c *Cache) Refresh(ctx context.Context, p registry.Project, parts ...source
 
 // SetVisible sets the projects the clients show. Their items, deps, runs, open
 // records and git HEAD move to FastInterval, and the others to SlowInterval.
+// While the cache is idle (SetIdle) no timer runs for either.
 // A project that is newly shown has its goals and decided records read now:
 // the tab open.
 func (c *Cache) SetVisible(names []string) {
@@ -451,6 +455,35 @@ func (c *Cache) SetVisible(names []string) {
 			if c.entries[key{n, part}] != nil {
 				c.startLocked(key{n, part})
 			}
+		}
+	}
+}
+
+// SetIdle says whether no client is attached. While idle, no read comes on a
+// timer: the timers stop, and only a read that someone asks for (Get, Refresh, a
+// HEAD change) happens. When a client attaches (idle false), each part of a
+// visible project that is overdue is read at once (after a long idle, every
+// part; a part read within its interval waits for it); a
+// project that is not visible is read an interval from now (S336, adj 301).
+func (c *Cache) SetIdle(idle bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.idle == idle {
+		return
+	}
+	c.idle = idle
+	for k, e := range c.entries {
+		if idle {
+			if e.timer != nil {
+				e.timer.Stop()
+				e.timer = nil
+			}
+			continue
+		}
+		if c.visible[k.project] {
+			c.scheduleLocked(k)
+		} else if e.timer == nil && !c.closed {
+			e.timer = c.clock.AfterFunc(c.intervalLocked(k), func() { c.tick(k) })
 		}
 	}
 }
