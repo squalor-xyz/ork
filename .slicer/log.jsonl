@@ -4344,3 +4344,5 @@
 {"when": "2026-11-11T21:50:45Z", "item": "S315", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-11T21:50:46Z", "item": "S123", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-11T21:55:03Z", "item": "S343", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-11-11T22:01:32Z", "item": "S344", "action": "add", "from": "", "to": "open", "note": "Local spec check and UI pass rows in the matrix"}
+{"when": "2026-11-11T22:01:32Z", "item": "S344", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
