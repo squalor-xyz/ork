@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Read adj 301.\n2. Confirm that the engine and the landing paths do not read the dashboard cache, and record this in the notes.\n3. Change `intervalLocked` and the timer start for the no-subscriber case, and set `LiveInterval`.\n4. Docs (*proposed*), and CHANGELOG.md."
+      "body": "1. Read adj 301.\n2. Confirm that the engine and the landing paths do not read the dashboard cache, and record this in the notes.\n3. Change `intervalLocked` and the timer start for the no-subscriber case, and set `LiveInterval`.\n4. Docs (*proposed*), and CHANGELOG.md.\n\nOwner decisions (2026-11-11): Merge detection rides on the cache's scheduled HEAD read, so with no timer it stops until a TUI attaches. What should happen? -> attach-only: Follow adj 301 as written. With no TUI there is no timed read, including HEAD. Merge detection (`checkMerged`) runs when a TUI attaches and refreshes the HEAD read. Until then, merged-run state, merged spec-dir removal and run pruning wait. The slice's Why and step 2 are amended to say this, and the \"engine landings do not depend on the cache\" claim is dropped. [poll.idle-merge-detection]."
     },
     {
       "heading": "Check",
