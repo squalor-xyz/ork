@@ -4325,3 +4325,5 @@
 {"when": "2026-11-11T17:18:39Z", "item": "S340", "action": "add", "from": "", "to": "open", "note": "wave start: spec-check questions can only be answered on a terminal, one at a time"}
 {"when": "2026-11-11T17:18:39Z", "item": "S340", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-11T17:49:10Z", "item": "S336", "action": "note", "from": "", "to": "", "note": "Verified after the landing merge: the daemon cache starts id", "by": "Jon Robbins"}
+{"when": "2026-11-11T19:18:56Z", "item": "S335", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-11T19:18:57Z", "item": "S335", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
