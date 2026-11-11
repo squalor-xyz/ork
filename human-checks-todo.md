@@ -145,3 +145,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S123 (run ork-20261111-215047-32d5, 2026-11-11)
 
 - [ ] The owner reads the display against `slicer relay-run stats` and confirms the numbers match; for a TUI panel, at 100x30 and 80x24 in a live terminal.
+
+## S315 (run ork-20261111-215046-00fa, 2026-11-11)
+
+- [ ] [AFTER LAND] HUMAN CHECK : with main ahead of the daemon, run `ork daemon restart --rebuild` and see the new build id in `ork status`.
