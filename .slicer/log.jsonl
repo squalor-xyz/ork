@@ -4354,3 +4354,7 @@
 {"when": "2026-11-11T23:15:20Z", "item": "S123", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S123):", "by": "Jon Robbins"}
 {"when": "2026-11-11T23:20:08Z", "item": "S123", "action": "note", "from": "", "to": "", "note": "Implemented ork stats CLI displaying slicer relay-run aggreg", "by": "Jon Robbins"}
 {"when": "2026-11-11T23:20:12Z", "item": "S123", "action": "status", "from": "started", "to": "done", "note": "Implemented ork stats CLI displaying slicer relay-run aggregates, passing --since through and omitting per_run from JSON. Gate PASS and owner approval received; human display comparison deferred by owner.", "by": "Jon Robbins"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "add", "from": "", "to": "open", "note": "python preset: implementer cannot rename a tracked file or list the index"}
+{"when": "2026-11-11T22:08:02Z", "item": "S345", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "add", "from": "", "to": "open", "note": "A paused run cannot get the permission it was denied without stopping every run in the project"}
+{"when": "2026-11-11T22:12:41Z", "item": "S346", "action": "promote", "from": "", "to": "", "note": ""}
