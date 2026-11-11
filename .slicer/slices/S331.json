@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule.",
   "size": "M",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",
@@ -20,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/cli/daemoncmds.go:311-425` (`projects set`: the setting)\n- `internal/registry` (the project field)\n- `internal/engine/approval.go` (reach approval, then land without an approve call when the setting allows)\n- `internal/engine/approval_test.go`\n- `docs/design.md`\n- `docs/guide.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/cli/daemoncmds.go:311-425` (`projects set`: the setting)\n- `internal/registry` (the project field)\n- `internal/engine/approval.go` (reach approval, then land without an approve call when the setting allows)\n- `internal/engine/approval_test.go`\n- `docs/design.md`\n- `docs/guide.md`\n- `CHANGELOG.md`\n\n- `human-checks-todo.md` (append at landing)"
     },
     {
       "heading": "Failing tests",
