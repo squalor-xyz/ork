@@ -17150,6 +17150,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "bf4e840d-c3db-434c-a0dd-9fe65cd7da42",
+          "kind": "",
+          "text": "**2026-11-12** — Trial 2, 2026-11-11/12, slice S314 (owner pick), run ork-20261111-233334-159b, with S343 live (no plan mode, targeted-read brief, 90 min limit): ork run ork S314 --implementer claude-local:qwen3.8-27b:low --implementer claude:sonnet:high. Owner: claude-local as implementer only. Result: claude-local implementer fail, killed at the 90 min limit (23:33:35-01:03:35), no edits, no report. Transcript 06e09bef-...jsonl in ~/.claude/projects/-home-jon-code-squalor-xyz-ork--worktrees-S314/: 32 Read (many whole files despite the targeted-read brief, e.g. answer_adj.go, registry.go, settings.go, speccheck.go with no limit), 19 Grep, 12 Bash; peak context 86k; three auto-compactions at about 85k tokens took 893 s, 983 s and 1121 s (50 of the 90 min); after the first compaction it lost the brief and read its own transcript file to find it (outside the worktree). Slowest turn 301 s. The claude sonnet high fallback took over at 01:03. Finding: compaction on the local server costs 15-19 min each, so a local implementer cannot finish a size S slice while the context passes the compaction threshold; whole-file reads continued despite the brief paragraph. Candidate fixes for the owner: a larger compaction window or none for local, a hard read limit for local roles (a tool-level cap, not brief text), or a smaller brief.",
+          "created_at": "2026-11-12T01:12:56Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
