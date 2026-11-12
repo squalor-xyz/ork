@@ -703,7 +703,7 @@ func TestProjectsAddListRemoveSaveTheRegistry(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if saved.Version != 2 || saved.DaemonIdleMinutes != 7 || len(saved.Projects) != 3 || saved.Projects[1].Name != "with-adj" || saved.Projects[2].Name != "named" {
+	if saved.Version != 3 || saved.DaemonIdleMinutes != 7 || len(saved.Projects) != 3 || saved.Projects[1].Name != "with-adj" || saved.Projects[2].Name != "named" {
 		t.Fatalf("saved registry: %+v", saved)
 	}
 	list, err := c.Projects(ctx)

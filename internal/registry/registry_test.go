@@ -82,8 +82,11 @@ func TestRoundTripKeepsEveryField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f.Version != 2 || f.GlobalCap != 2 || f.DaemonIdleMinutes != 10 || len(f.Projects) != 1 {
+	if f.Version != 3 || f.GlobalCap != 2 || f.DaemonIdleMinutes != 10 || len(f.Projects) != 1 {
 		t.Fatalf("loaded: %+v", f)
+	}
+	if f.Owner != "Jon Robbins" || f.FileAnswers == nil || *f.FileAnswers || f.FileAnswersOn() {
+		t.Fatalf("owner and file_answers: the docs example sets Jon Robbins and false, the file has %q and %v", f.Owner, f.FileAnswers)
 	}
 	p := f.Projects[0]
 	if p.Name != "DataBall" || p.Adj || p.Cap != 2 || p.CheckMinutes != 10 ||
@@ -185,7 +188,7 @@ func TestUnknownVersionRefused(t *testing.T) {
 		name, body, want string
 		got              int
 	}{
-		{"newer", `{"version": 3, "projects": [], "future_field": true}`, "version 3", 3},
+		{"newer", `{"version": 4, "projects": [], "future_field": true}`, "version 4", 4},
 		{"missing", `{"projects": []}`, "version 0", 0},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
@@ -206,7 +209,7 @@ func TestUnknownVersionRefused(t *testing.T) {
 	}
 }
 
-func TestVersion1FileLoadsAndSavesAsVersion2(t *testing.T) {
+func TestVersion1FileLoadsAndSavesAsVersion3(t *testing.T) {
 	dir := t.TempDir()
 	in := filepath.Join(dir, "projects.json")
 	writeFile(t, in, []byte(`{"version": 1, "global_cap": 3, "projects": [{"name": "a", "path": "/p/a", "adj": true, "cap": 2}]}`))
@@ -214,7 +217,7 @@ func TestVersion1FileLoadsAndSavesAsVersion2(t *testing.T) {
 	if err != nil {
 		t.Fatalf("a version 1 file must load: %v", err)
 	}
-	if f.Version != 2 || f.GlobalCap != 3 || f.DaemonIdleMinutes != 0 || len(f.Projects) != 1 || f.Projects[0].Cap != 2 {
+	if f.Version != 3 || f.GlobalCap != 3 || f.DaemonIdleMinutes != 0 || len(f.Projects) != 1 || f.Projects[0].Cap != 2 {
 		t.Fatalf("loaded: %+v", f)
 	}
 	if err := Save(in, f); err != nil {
@@ -224,7 +227,7 @@ func TestVersion1FileLoadsAndSavesAsVersion2(t *testing.T) {
 	var head struct {
 		Version int `json:"version"`
 	}
-	if err := json.Unmarshal(saved, &head); err != nil || head.Version != 2 {
+	if err := json.Unmarshal(saved, &head); err != nil || head.Version != 3 {
 		t.Fatalf("saved version %d, %v:\n%s", head.Version, err, saved)
 	}
 	if strings.Contains(string(saved), "daemon_idle_minutes") {
@@ -238,6 +241,53 @@ func TestVersion1FileRefusesVersion2Field(t *testing.T) {
 	_, err := Load(path)
 	if err == nil || !strings.Contains(err.Error(), "daemon_idle_minutes") {
 		t.Fatalf("a version 1 file with a version 2 key must fail naming it: %v", err)
+	}
+}
+
+// A version 2 file loads and is saved as version 3 (S314, *proposed*; owner
+// decision owner.setting-store). It is strict about the keys version 3 added.
+func TestVersion2FileLoadsAsVersion3AndRefusesVersion3Keys(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	writeFile(t, path, []byte(`{"version": 2, "global_cap": 3, "daemon_idle_minutes": 5, "projects": []}`))
+	f, err := Load(path)
+	if err != nil {
+		t.Fatalf("a version 2 file must load: %v", err)
+	}
+	if f.Version != 3 || f.GlobalCap != 3 || f.DaemonIdleMinutes != 5 || f.Owner != "" || !f.FileAnswersOn() {
+		t.Fatalf("loaded: %+v", f)
+	}
+	for _, key := range []string{`"owner": "Jon"`, `"file_answers": false`} {
+		writeFile(t, path, []byte(`{"version": 2, `+key+`, "projects": []}`))
+		if _, err := Load(path); err == nil || !strings.Contains(err.Error(), strings.Split(key, `"`)[1]) {
+			t.Fatalf("a version 2 file with %s must fail naming the key: %v", key, err)
+		}
+	}
+}
+
+// owner and file_answers are written only when set, and file_answers false is
+// kept: absent means on (S314, *proposed*).
+func TestOwnerAndFileAnswersAreWrittenOnlyWhenSet(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	if err := Save(path, &File{Version: Version, Projects: []Project{}}); err != nil {
+		t.Fatal(err)
+	}
+	saved, _ := os.ReadFile(path)
+	if strings.Contains(string(saved), "owner") || strings.Contains(string(saved), "file_answers") {
+		t.Fatalf("unset settings are written:\n%s", saved)
+	}
+	off := false
+	if err := Save(path, &File{Version: Version, Owner: "Jon", FileAnswers: &off, Projects: []Project{}}); err != nil {
+		t.Fatal(err)
+	}
+	back, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if back.Owner != "Jon" || back.FileAnswersOn() {
+		t.Fatalf("loaded: %+v", back)
+	}
+	if !(&File{}).FileAnswersOn() {
+		t.Fatal("an absent file_answers must mean on")
 	}
 }
 
@@ -271,9 +321,9 @@ func TestDaemonIdle(t *testing.T) {
 
 func TestSaveRefusesUnknownVersion(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
-	err := Save(path, &File{Version: 3})
-	if err == nil || !strings.Contains(err.Error(), "version 3") {
-		t.Fatalf("Save of version 3: %v", err)
+	err := Save(path, &File{Version: 4})
+	if err == nil || !strings.Contains(err.Error(), "version 4") {
+		t.Fatalf("Save of version 4: %v", err)
 	}
 	if _, statErr := os.Stat(path); statErr == nil {
 		t.Fatal("Save wrote a file with an unknown version")
@@ -530,7 +580,7 @@ func TestValidatePermissionEntry(t *testing.T) {
 
 func TestUIPassSkillsRoundTrip(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
-	raw := []byte(`{"version":2,"projects":[{"name":"p","path":"/p","adj":false,"ui_pass_skills":["tui-design","frontend-design"]}]}`)
+	raw := []byte(`{"version":3,"projects":[{"name":"p","path":"/p","adj":false,"ui_pass_skills":["tui-design","frontend-design"]}]}`)
 	writeFile(t, path, raw)
 	f, err := Load(path)
 	if err != nil {
@@ -701,7 +751,7 @@ func TestRegistryAutoLandFieldDefaultsOn(t *testing.T) {
 
 func TestRegistryKeepsSpecCheckRows(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
-	raw := []byte(`{"version":2,"projects":[{"name":"p","path":"/p","adj":false,"spec_check_rows":["r16","r24"]}]}`)
+	raw := []byte(`{"version":3,"projects":[{"name":"p","path":"/p","adj":false,"spec_check_rows":["r16","r24"]}]}`)
 	writeFile(t, path, raw)
 	f, err := Load(path)
 	if err != nil {

@@ -349,18 +349,28 @@ func (p SetProjectParams) fieldsReadByARun() []string {
 // pointer: nil leaves the registry value as it is, and a pointer to 0 clears
 // it (zero means unset). The daemon refuses a call that sets no field and a
 // negative number.
+//
+// S314 (*proposed*) adds Owner and FileAnswers. A pointer to "" clears the
+// owner; a pointer to true clears file_answers (on is the default). The daemon
+// refuses an owner that is not one line.
 type SetSettingsParams struct {
-	GlobalCap         *int `json:"global_cap,omitempty"`
-	DaemonIdleMinutes *int `json:"daemon_idle_minutes,omitempty"`
+	GlobalCap         *int    `json:"global_cap,omitempty"`
+	DaemonIdleMinutes *int    `json:"daemon_idle_minutes,omitempty"`
+	Owner             *string `json:"owner,omitempty"`
+	FileAnswers       *bool   `json:"file_answers,omitempty"`
 }
 
 // SettingsResult is the registry's file-level settings (S174, *proposed*):
-// the stored values (0 means unset) and the values the daemon uses.
+// the stored values (0 means unset) and the values the daemon uses. Owner is
+// the stored owner name (empty means unset) and FileAnswers says whether ork
+// files answers in adj (true when the key is absent; S314, *proposed*).
 type SettingsResult struct {
-	GlobalCap                  int `json:"global_cap"`
-	DaemonIdleMinutes          int `json:"daemon_idle_minutes"`
-	EffectiveGlobalCap         int `json:"effective_global_cap"`
-	EffectiveDaemonIdleMinutes int `json:"effective_daemon_idle_minutes"`
+	GlobalCap                  int    `json:"global_cap"`
+	DaemonIdleMinutes          int    `json:"daemon_idle_minutes"`
+	EffectiveGlobalCap         int    `json:"effective_global_cap"`
+	EffectiveDaemonIdleMinutes int    `json:"effective_daemon_idle_minutes"`
+	Owner                      string `json:"owner,omitempty"`
+	FileAnswers                bool   `json:"file_answers"`
 }
 
 // ProjectsResult is the registered projects, in registry order.

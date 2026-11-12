@@ -36,14 +36,14 @@ func TestSettingsSetAndShow(t *testing.T) {
 	}
 
 	code, stdout, stderr = run(t, w.app, "settings", "show")
-	if code != 0 || stdout != "global_cap=6 (effective 6)\ndaemon_idle_minutes=unset (effective 10)\n" {
+	if code != 0 || stdout != "global_cap=6 (effective 6)\ndaemon_idle_minutes=unset (effective 10)\nowner=unset\nfile_answers=on\n" {
 		t.Fatalf("show: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
 	}
 
 	code, stdout, _ = run(t, w.app, "settings", "show", "--json")
 	var shown struct{ Settings daemon.SettingsResult }
 	mustJSON(t, stdout, &shown)
-	if code != 0 || shown.Settings != (daemon.SettingsResult{GlobalCap: 6, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 10}) {
+	if code != 0 || shown.Settings != (daemon.SettingsResult{GlobalCap: 6, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 10, FileAnswers: true}) {
 		t.Fatalf("show --json: exit %d: %s", code, stdout)
 	}
 	if !strings.Contains(stdout, `"settings": {`) || !strings.Contains(stdout, `"effective_global_cap": 6`) {
@@ -54,7 +54,7 @@ func TestSettingsSetAndShow(t *testing.T) {
 	code, stdout, _ = run(t, w.app, "settings", "set", "--daemon-idle-minutes", "20", "--json")
 	var set struct{ Settings daemon.SettingsResult }
 	mustJSON(t, stdout, &set)
-	if code != 0 || set.Settings != (daemon.SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 20, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 20}) {
+	if code != 0 || set.Settings != (daemon.SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 20, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 20, FileAnswers: true}) {
 		t.Fatalf("set --json: exit %d: %s", code, stdout)
 	}
 
@@ -64,8 +64,43 @@ func TestSettingsSetAndShow(t *testing.T) {
 		t.Fatalf("clear: exit %d: %q", code, stdout)
 	}
 	code, stdout, _ = run(t, w.app, "settings", "show")
-	if code != 0 || stdout != "global_cap=unset (effective 2)\ndaemon_idle_minutes=20 (effective 20)\n" {
+	if code != 0 || stdout != "global_cap=unset (effective 2)\ndaemon_idle_minutes=20 (effective 20)\nowner=unset\nfile_answers=on\n" {
 		t.Fatalf("show after clear: exit %d: %q", code, stdout)
+	}
+}
+
+// The owner and whether answers are filed are set and shown with the other
+// settings (S314, *proposed*; owner decision owner.setting-command).
+func TestSettingsSetOwnerAndFileAnswers(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	code, stdout, stderr := run(t, w.app, "settings", "set", "--owner", "Jon Robbins", "--file-answers", "off")
+	if code != 0 || stdout != "updated settings: owner=Jon Robbins, file_answers=off\n" {
+		t.Fatalf("set: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	saved, err := registry.Load(w.regPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if saved.Owner != "Jon Robbins" || saved.FileAnswersOn() {
+		t.Fatalf("saved: %q %v", saved.Owner, saved.FileAnswers)
+	}
+	code, stdout, _ = run(t, w.app, "settings", "show")
+	if code != 0 || !strings.Contains(stdout, "owner=Jon Robbins\nfile_answers=off\n") {
+		t.Fatalf("show: exit %d: %q", code, stdout)
+	}
+	code, stdout, _ = run(t, w.app, "settings", "show", "--json")
+	var shown struct{ Settings daemon.SettingsResult }
+	mustJSON(t, stdout, &shown)
+	if code != 0 || shown.Settings.Owner != "Jon Robbins" || shown.Settings.FileAnswers {
+		t.Fatalf("show --json: exit %d: %s", code, stdout)
+	}
+	// An empty owner clears it; on turns filing back on.
+	code, stdout, _ = run(t, w.app, "settings", "set", "--owner", "", "--file-answers", "on")
+	if code != 0 || stdout != "updated settings: owner=unset, file_answers=on\n" {
+		t.Fatalf("clear: exit %d: %q", code, stdout)
+	}
+	if saved, _ = registry.Load(w.regPath); saved.Owner != "" || !saved.FileAnswersOn() {
+		t.Fatalf("saved after clear: %q %v", saved.Owner, saved.FileAnswers)
 	}
 }
 
@@ -78,7 +113,8 @@ func TestSettingsUsage(t *testing.T) {
 	}{
 		{[]string{"settings"}, "settings needs show or set"},
 		{[]string{"settings", "nope"}, `unknown settings command "nope"`},
-		{[]string{"settings", "set"}, "needs at least one flag (--global-cap, --daemon-idle-minutes)"},
+		{[]string{"settings", "set"}, "needs at least one flag (--global-cap, --daemon-idle-minutes, --owner, --file-answers)"},
+		{[]string{"settings", "set", "--file-answers", "maybe"}, "--file-answers must be on or off"},
 		{[]string{"settings", "set", "--global-cap", "-1"}, "--global-cap must not be negative"},
 		{[]string{"settings", "set", "--daemon-idle-minutes", "-5"}, "--daemon-idle-minutes must not be negative"},
 		{[]string{"settings", "set", "--global-cap", "many"}, `invalid value "many" for flag -global-cap`},

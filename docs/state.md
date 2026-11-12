@@ -41,9 +41,11 @@ name that is already registered is never sent.
 
 ```json
 {
-  "version": 2,
+  "version": 3,
   "global_cap": 2,
   "daemon_idle_minutes": 10,
+  "owner": "Jon Robbins",
+  "file_answers": false,
   "projects": [
     {
       "name": "DataBall",
@@ -84,6 +86,15 @@ Notes on the fields:
   literal text, and every item would plan the same worktree.
 - `daemon_idle_minutes` is how long an idle daemon waits before it exits
   (`daemon.idle`). 0 or absent means 10. It is new in version 2.
+- `owner` and `file_answers` (*proposed*, S314; owner decisions
+  owner.name-source, owner.filing-default, owner.setting-store; adj 228, 229)
+  are new in version 3. `owner` is the owner's name for adj: the daemon files
+  the answers to spec questions under it when `ADJ_DECIDED_BY` is not set in
+  the caller's environment (the variable wins). It is one line; absent means
+  unset. `file_answers` is a boolean: absent means on, and ork writes it only
+  as `false`, which turns that filing off. `ork settings set --owner NAME` and
+  `--file-answers on|off` write them. An ork without S314 refuses a version 3
+  file with a version error.
 - `check_command` is a fallback. ork prefers slicer's config key once
   slicer has one (`project.check-command`). The `check_minutes` value sets
   the check command timeout (`internal/engine/states.go:198-202`).
@@ -198,8 +209,9 @@ Notes on the fields:
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and
-  `adj` are set by `projects add`; `global_cap` and `daemon_idle_minutes` are
-  file-level and belong to `ork settings set`, below). The daemon validates
+  `adj` are set by `projects add`; `global_cap`, `daemon_idle_minutes`,
+  `owner` and `file_answers` are file-level and belong to `ork settings set`,
+  below). The daemon validates
   each value, refuses while the project has unfinished runs, and saves under
   its registry lock. *Proposed* (S265, owner answers 2026-11-03 and 2026-11-07):
   while runs are unfinished the daemon allows a call that sets only `cap`, `bell`,
@@ -250,7 +262,9 @@ Notes on the fields:
   for every admission and the idle minutes each time the idle clock arms.
   Raising the cap starts queued runs that now fit; lowering it never stops a
   running one. `ork settings show` prints the stored and the effective values
-  (2 busy runs and 10 minutes when unset).
+  (2 busy runs and 10 minutes when unset). *Proposed (S314):* `--owner NAME`
+  (empty clears it) and `--file-answers on|off` write `owner` and
+  `file_answers`, and `show` prints both.
 - `vendor_env` is not a place for secrets. `projects.json` is written at mode
   0644, so other users of the machine can read it, and ork never reads vendor
   credentials. Use it for switches such as `VENDOR_CODEX_NETWORK`. ork's text
@@ -871,10 +885,11 @@ the ledger run is absent from the active snapshot. In `ork status`,
   (`registry.zero-values`). `ork settings set` and `ork projects set` clear a
   value by writing 0, and ork does not write a zero value.
 - **Versioned files:** every file has a `version`, and ork refuses a
-  version it does not know. `projects.json` is at version 2; ork still reads
-  version 1 files, which lack `daemon_idle_minutes` and are strict about it
-  (a version 1 file with that key is an error), and the next save writes
-  version 2.
+  version it does not know. `projects.json` is at version 3 (S314,
+  *proposed*); ork still reads version 1 files, which lack
+  `daemon_idle_minutes` and are strict about it (a version 1 file with that
+  key is an error), and version 2 files, which lack `owner` and
+  `file_answers` and are strict about them. The next save writes version 3.
 - **No secrets:** no tokens or credentials in any ork file. Fixture
   candidates are the exception: they hold raw vendor output at mode 0600
   under the state directory, never in a repo, and are redacted when the owner

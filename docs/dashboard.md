@@ -1539,8 +1539,11 @@ its first non-blank line says `none`, so a role's prose after a `none` is not
 shown (the saved report keeps it). The Waves list shows only its first line,
 clipped to the pane, followed by ` (+N more lines)` when there are more; the
 sitting shows the whole text. The Roadmap launch uses the same sitting for its selected slice (S184).
-A question with a decision key is also filed in adj when the project has adj
-and `ADJ_DECIDED_BY` is set (the status line says why not otherwise). When the
+A question with a decision key is also filed in adj when the project has adj,
+an owner is known (`ADJ_DECIDED_BY`, else the registry's `owner`, S314,
+*proposed*) and `file_answers` is not off; only an option picked with `1`-`N`
+is filed, not a typed answer. The status line says why not otherwise, once for
+the item (`no owner set; run ork settings set --owner NAME ...`). When the
 sitting ends, the confirmation below covers the ready items only, and says
 which items it leaves out after the command, for
 example `ork wave start P A? [y/N] (Enter is No)  B waits on spec questions`

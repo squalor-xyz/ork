@@ -11,6 +11,17 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+// ResolveOwner is the owner's name for adj: the environment's ADJ_DECIDED_BY
+// when it is set, else the global owner setting (S314, *proposed*). Empty
+// means no owner is known. Every path that files an answer under the owner's
+// name resolves it here.
+func ResolveOwner(env, setting string) string {
+	if env = strings.TrimSpace(env); env != "" {
+		return env
+	}
+	return strings.TrimSpace(setting)
+}
+
 // FileAnswer files a pending question in adj before Answer resumes the role.
 // The daemon serializes this with the engine's other owner actions.
 func (e *Engine) FileAnswer(ctx context.Context, text, by string) (string, error) {
@@ -32,25 +43,38 @@ func (e *Engine) FileAnswer(ctx context.Context, text, by string) (string, error
 // key is not yet open, then decides it. A key that is already decided is left
 // alone. The notice says what happened.
 func fileDecision(ctx context.Context, d Deps, wr runrec.Writer, root, key, title, ref, question, text, by string) (string, error) {
-	c := d.Adj
-	state, id, err := c.Check(ctx, wr, root, key)
+	why := "Answered in ork on " + d.now().Format("2006-01-02") + ": " + title
+	id, already, err := decideInAdj(ctx, d, wr, root, key, title, ref, question, text, why, by)
 	if err != nil {
 		return "", err
 	}
-	if state == "decided" {
+	if already {
 		return fmt.Sprintf("%s already decided as #%d; not changed", key, id), nil
+	}
+	return fmt.Sprintf("decided in adj as #%d", id), nil
+}
+
+// decideInAdj does the adj calls of fileDecision and returns the record's ID,
+// and whether the key was already decided (then nothing was changed).
+func decideInAdj(ctx context.Context, d Deps, wr runrec.Writer, root, key, title, ref, question, text, why, by string) (int, bool, error) {
+	c := d.Adj
+	state, id, err := c.Check(ctx, wr, root, key)
+	if err != nil {
+		return 0, false, err
+	}
+	if state == "decided" {
+		return id, true, nil
 	}
 	if state != "open" {
 		id, err = c.Ask(ctx, wr, root, title, key, ref, question, by)
 		if err != nil {
-			return "", err
+			return 0, false, err
 		}
 	}
-	why := "Answered in ork on " + d.now().Format("2006-01-02") + ": " + title
 	if err := c.Decide(ctx, wr, root, id, text, why, by); err != nil {
-		return "", err
+		return 0, false, err
 	}
-	return fmt.Sprintf("decided in adj as #%d", id), nil
+	return id, false, nil
 }
 
 func questionTitle(question string) string {

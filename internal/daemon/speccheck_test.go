@@ -455,14 +455,14 @@ func TestSpecAnswerFilesKeyedQuestionsInAdjOnlyWhenTheProjectHasAdj(t *testing.T
 			rig.d.runs.deps.Adj = adjcli.Client{Bin: rig.fake.Bin("adj")}
 			rig.report = specQuestionsReport + "\n## Owner needed\n\nnone\n"
 			rig.check(t, "S2")
-			b := request(t, rig.d, MethodSpecAnswer, `{"project":"p","item":"S2","answers":["memory: rebuilt","long: --extra"],"adj":true,"by":"jon"}`)
+			b := request(t, rig.d, MethodSpecAnswer, `{"project":"p","item":"S2","answers":["memory: rebuilt at each start","long: --extra"],"adj":true,"by":"jon"}`)
 			var ans SpecAnswerResult
 			if err := json.Unmarshal(b, &ans); err != nil || !ans.Ready || len(ans.Notices) != 1 {
 				t.Fatalf("answer: %s %v", b, err)
 			}
 			calls := rig.fake.CallsTo("adj")
 			if hasAdj {
-				if len(calls) != 3 || !strings.Contains(ans.Notices[0], "decided in adj as #42") {
+				if len(calls) != 3 || ans.Notices[0] != "filed in adj: cache.index-store (adj 42)" {
 					t.Errorf("adj calls %+v, notices %v", calls, ans.Notices)
 				}
 			} else if len(calls) != 0 || !strings.Contains(ans.Notices[0], "no adj in this project") {
@@ -470,6 +470,115 @@ func TestSpecAnswerFilesKeyedQuestionsInAdjOnlyWhenTheProjectHasAdj(t *testing.T
 			}
 		})
 	}
+}
+
+// ownerRig is a spec rig whose project has adj and whose registry holds the
+// owner settings. The adj client is the rig's fake: no test reaches a real
+// adj store.
+func ownerRig(t *testing.T, owner string, fileAnswers *bool) *specRig {
+	t.Helper()
+	rig := newSpecRig(t, rulesJSON(u11),
+		clitest.Route{Tool: "adj", Args: []string{"check"}, Prefix: true, Stdout: `{"result":"not found"}`},
+		clitest.Route{Tool: "adj", Args: []string{"ask"}, Prefix: true, Stdout: "42\n"},
+		clitest.Route{Tool: "adj", Args: []string{"decide"}, Prefix: true, Stdout: "42\n"})
+	f, err := registry.Load(rig.d.cfg.RegistryPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Projects[0].Adj = true
+	f.Owner, f.FileAnswers = owner, fileAnswers
+	if err := registry.Save(rig.d.cfg.RegistryPath, f); err != nil {
+		t.Fatal(err)
+	}
+	rig.d.runs.deps.Adj = adjcli.Client{Bin: rig.fake.Bin("adj")}
+	rig.report = specQuestionsReport + "\n## Owner needed\n\nnone\n"
+	rig.check(t, "S2")
+	return rig
+}
+
+func ownerAnswer(t *testing.T, rig *specRig, by string) SpecAnswerResult {
+	t.Helper()
+	params := `{"project":"p","item":"S2","answers":["memory: rebuilt at each start","long: --extra"],"adj":true`
+	if by != "" {
+		params += `,"by":"` + by + `"`
+	}
+	b := request(t, rig.d, MethodSpecAnswer, params+`}`)
+	var ans SpecAnswerResult
+	if err := json.Unmarshal(b, &ans); err != nil || !ans.Ready {
+		t.Fatalf("answer: %s %v", b, err)
+	}
+	return ans
+}
+
+func decideCall(t *testing.T, rig *specRig) string {
+	t.Helper()
+	for _, c := range rig.fake.CallsTo("adj") {
+		if c.Args[0] == "decide" {
+			return strings.Join(c.Args, " ")
+		}
+	}
+	t.Fatalf("no adj decide call: %+v", rig.fake.CallsTo("adj"))
+	return ""
+}
+
+// With the owner in ork's settings and no ADJ_DECIDED_BY in the caller, the
+// daemon files the answer as the owner (S314, *proposed*).
+func TestSpecAnswerFilesAsTheOwnerInTheSettingsWhenTheCallerHasNoName(t *testing.T) {
+	rig := ownerRig(t, "Jon Setting", nil)
+	ans := ownerAnswer(t, rig, "")
+	if len(ans.Notices) != 1 || ans.Notices[0] != "filed in adj: cache.index-store (adj 42)" {
+		t.Fatalf("notices: %q", ans.Notices)
+	}
+	decide := decideCall(t, rig)
+	if !strings.Contains(decide, "--by Jon Setting") || !strings.Contains(decide, "--why Answered in ork on ") || !strings.Contains(decide, "(S2)") {
+		t.Errorf("decide: %s", decide)
+	}
+}
+
+func TestSpecAnswerPrefersTheCallersNameOverTheSetting(t *testing.T) {
+	rig := ownerRig(t, "Jon Setting", nil)
+	ownerAnswer(t, rig, "Jon Env")
+	if decide := decideCall(t, rig); !strings.Contains(decide, "--by Jon Env") || strings.Contains(decide, "Jon Setting") {
+		t.Errorf("decide: %s", decide)
+	}
+}
+
+func TestSpecAnswerWithNoOwnerFilesNothingAndSaysHowToSetOne(t *testing.T) {
+	rig := ownerRig(t, "", nil)
+	ans := ownerAnswer(t, rig, "")
+	if len(ans.Notices) != 1 || !strings.Contains(ans.Notices[0], "no owner set; run ork settings set --owner NAME") {
+		t.Fatalf("notices: %q", ans.Notices)
+	}
+	if n := len(rig.fake.CallsTo("adj")); n != 0 {
+		t.Errorf("%d adj calls without an owner", n)
+	}
+	// The answer is recorded in the slice all the same.
+	if edits := rig.fake.CallsTo("slicer"); len(edits) == 0 {
+		t.Error("no slicer call")
+	}
+	if got := ownerStored(t, rig); !strings.Contains(got, "memory: rebuilt at each start") {
+		t.Errorf("the answers are not kept for the run: %q", got)
+	}
+}
+
+func TestSpecAnswerFilesNothingWhenFileAnswersIsOff(t *testing.T) {
+	off := false
+	rig := ownerRig(t, "Jon Setting", &off)
+	ans := ownerAnswer(t, rig, "Jon Env")
+	if n := len(rig.fake.CallsTo("adj")); n != 0 {
+		t.Errorf("%d adj calls with file-answers off: %+v", n, rig.fake.CallsTo("adj"))
+	}
+	if len(ans.Notices) != 0 {
+		t.Errorf("notices: %q", ans.Notices)
+	}
+}
+
+// ownerStored returns the decisions paragraph the daemon keeps for S2.
+func ownerStored(t *testing.T, rig *specRig) string {
+	t.Helper()
+	rig.d.runs.mu.Lock()
+	defer rig.d.runs.mu.Unlock()
+	return rig.d.runs.specs[specKey("p", "S2")].decisions
 }
 
 // An answered question reaches the implementer: the run's worktree has its own
