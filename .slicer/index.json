@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 355,
+  "next_id": 356,
   "preamble": "",
   "passes": [
     {
@@ -19101,6 +19101,34 @@
         "reason": "",
         "importance": 3,
         "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S355",
+      "title": "Run-question answers are filed in adj under the owner setting",
+      "short_title": "Run answers use the owner setting",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S314 (2026-11-12) files spec-check answers in adj under the owner setting (`ork settings set --owner`, adj 322, 323); run-question answers (ctrl+a, `FileAnswer`) still need `ADJ_DECIDED_BY`.",
+        "discovered_from": "S314",
+        "parent": "",
+        "cites": [],
+        "key": "ork-run-answers-owner",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
         "effort": 2,
         "attempts": 0
       }
