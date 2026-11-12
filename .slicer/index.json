@@ -19183,6 +19183,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "a20c6d5b-02ef-49b3-bc03-1e271e7fee24",
+          "kind": "",
+          "text": "**2026-11-12** — From S360 (2026-11-12): over BASH_MAX_OUTPUT_LENGTH, claude persists Bash output to a file under ~/.claude/projects/.../tool-results and shows a preview. The approval point's outside-the-worktree rule must allow reading that file (in ranges), or a local role cannot see a long test log.",
+          "created_at": "2026-11-12T02:54:47Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
