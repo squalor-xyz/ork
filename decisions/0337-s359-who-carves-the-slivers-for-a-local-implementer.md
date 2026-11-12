@@ -2,10 +2,14 @@
 {
   "id": 337,
   "title": "S359: who carves the slivers for a local implementer?",
-  "status": "open",
+  "status": "decided",
   "key": "roles.local-sliver-carver",
   "asked_by": "claude",
+  "decided_by": "Jon",
+  "recorded_by": "claude",
+  "via": "interactive question, ork relay session 8d711f67",
   "created": "2026-11-12",
+  "decided_at": "2026-11-12",
   "options": [
     {
       "label": "cloud-confirm",
@@ -24,6 +28,8 @@
     "label": "cloud-confirm",
     "reasoning": "A cloud model plans well and cheaply; the owner keeps the say."
   },
+  "decision": "cloud-auto",
+  "rationale": "Owner picked 'cloud-auto' in an interactive question on 2026-11-12 (ork relay session 8d711f67); recorded as the owner's delegate (process.owner-answers, 316).",
   "refs": [
     "S359"
   ],
@@ -31,6 +37,10 @@
     {
       "date": "2026-11-12",
       "event": "ask"
+    },
+    {
+      "date": "2026-11-12",
+      "event": "decide"
     }
   ]
 }

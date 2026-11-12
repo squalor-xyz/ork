@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "S304 trial 2 (2026-11-12, S314): claude-local auto-compacted three times at about 83-86k tokens, taking 893 s, 983 s and 1121 s (50 of 90 min), and after the first compaction it lost its brief and went looking for it in its own transcript.",
   "size": "M",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",

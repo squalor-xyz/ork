@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported \"S345: marked as having a slice, but no file exists\" and the same for S346. ork's launch commits a56c3f8 (S123) and d5880ab (S343) took main's whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items' slice files.",
   "size": "S",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",

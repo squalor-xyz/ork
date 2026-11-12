@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "S304 trials 1 and 2: a claude-local implementer could not finish a size S ork slice in 45 or 90 minutes; its context grew past 80k tokens while it explored.",
   "size": "M",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",

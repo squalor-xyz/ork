@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role.",
   "size": "M",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",

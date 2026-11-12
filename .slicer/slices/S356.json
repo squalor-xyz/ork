@@ -7,9 +7,7 @@
   "depends_note": null,
   "findings_note": "S304 trial 2 (2026-11-12, S314): claude-local read whole files despite the brief's targeted-read paragraph (S343), reached 86k tokens, spent 50 of 90 min in three auto-compactions, and read its own transcript outside the worktree. The allowlist's `Read` entry has no path or size limit, and a call outside the allowlist is denied with nobody asked.",
   "size": "L",
-  "flags": [
-    "needs-owner"
-  ],
+  "flags": [],
   "trees_note": "",
   "trees_plural": false,
   "boundary": "**Not in this slice:**",

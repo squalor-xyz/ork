@@ -4441,3 +4441,9 @@
 {"when": "2026-11-12T02:35:01Z", "item": "S360", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-12T02:54:47Z", "item": "S356", "action": "note", "from": "", "to": "", "note": "From S360 (2026-11-12): over BASH_MAX_OUTPUT_LENGTH, claude ", "by": "Jon Robbins"}
 {"when": "2026-11-12T03:09:18Z", "item": "S360", "action": "note", "from": "", "to": "", "note": "First-turn input tokens, measured by the orchestrator after ", "by": "Jon Robbins"}
+{"when": "2026-11-12T05:36:53Z", "item": "S356", "action": "decide", "from": "", "to": "", "note": "2026-11-12, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
+{"when": "2026-11-12T05:36:53Z", "item": "S358", "action": "decide", "from": "", "to": "", "note": "2026-11-12, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
+{"when": "2026-11-12T05:36:53Z", "item": "S344", "action": "decide", "from": "", "to": "", "note": "2026-11-12, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
+{"when": "2026-11-12T05:36:53Z", "item": "S347", "action": "decide", "from": "", "to": "", "note": "2026-11-12, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
+{"when": "2026-11-12T05:36:53Z", "item": "S359", "action": "note", "from": "", "to": "", "note": "2026-11-12, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
+{"when": "2026-11-12T05:36:57Z", "item": "S359", "action": "decide", "from": "", "to": "", "note": "Q1 cloud-auto (adj 337), Q2 above-s (adj 338); waits for S62", "by": "Jon Robbins"}

@@ -2,10 +2,14 @@
 {
   "id": 317,
   "title": "S344: how do the local spec check and UI pass rows stay out of normal runs?",
-  "status": "open",
+  "status": "decided",
   "key": "roles.local-check-rows-default",
   "asked_by": "claude",
+  "decided_by": "Jon",
+  "recorded_by": "claude",
+  "via": "interactive question, ork relay session 8d711f67",
   "created": "2026-11-11",
+  "decided_at": "2026-11-12",
   "context": "Owner asked 2026-11-11 to file a slice for local spec check and UI pass rows (S344).",
   "options": [
     {
@@ -21,6 +25,8 @@
     "label": "trial-only",
     "reasoning": "adj 296 keeps the spec check on cloud outside the S304 trial, and adj 181 bars a default local role without an owner decision."
   },
+  "decision": "trial-only",
+  "rationale": "Owner picked 'trial-only' in an interactive question on 2026-11-12 (ork relay session 8d711f67); recorded as the owner's delegate (process.owner-answers, 316).",
   "refs": [
     "S344"
   ],
@@ -28,6 +34,10 @@
     {
       "date": "2026-11-11",
       "event": "ask"
+    },
+    {
+      "date": "2026-11-12",
+      "event": "decide"
     }
   ]
 }

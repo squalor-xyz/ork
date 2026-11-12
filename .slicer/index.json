@@ -18800,13 +18800,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c2707514-821d-4cbf-8d21-082d0e9db0fc",
+          "kind": "decision",
+          "text": "**2026-11-12** — 2026-11-12, owner in interactive question (session 8d711f67): trial-only (adj 317), project setting ui_pass_rows (adj 318).",
+          "created_at": "2026-11-12T05:36:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role.",
@@ -18886,13 +18899,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6b470763-6212-46f8-a858-c98ca6f2968a",
+          "kind": "decision",
+          "text": "**2026-11-12** — 2026-11-12, owner in interactive question (session 8d711f67): commit-listed (adj 321).",
+          "created_at": "2026-11-12T05:36:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported \"S345: marked as having a slice, but no file exists\" and the same for S346. ork's launch commits a56c3f8 (S123) and d5880ab (S343) took main's whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items' slice files.",
@@ -19197,14 +19223,26 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "7eaff11c-4b66-4c62-a450-72230a96906c",
+          "kind": "decision",
+          "text": "**2026-11-12** — 2026-11-12, owner in interactive question (session 8d711f67): Q1 hook (adj 329), Q2 block (adj 330), Q3 ork passes --permission-mode manual (adj 331).",
+          "created_at": "2026-11-12T05:36:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
         "size": "L",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S304 trial 2 (2026-11-12, S314): claude-local read whole files despite the brief's targeted-read paragraph (S343), reached 86k tokens, spent 50 of 90 min in three auto-compactions, and read its own transcript outside the worktree. The allowlist's `Read` entry has no path or size limit, and a call outside the allowlist is denied with nobody asked.",
@@ -19256,13 +19294,26 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5298f1c0-b792-40c1-a972-281378229c31",
+          "kind": "decision",
+          "text": "**2026-11-12** — 2026-11-12, owner in interactive question (session 8d711f67): Q1 70k tokens (adj 335), Q2 scratch-note in .scratch/progress-RUN-ROLE.md (adj 336).",
+          "created_at": "2026-11-12T05:36:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S304 trial 2 (2026-11-12, S314): claude-local auto-compacted three times at about 83-86k tokens, taking 893 s, 983 s and 1121 s (50 of 90 min), and after the first compaction it lost its brief and went looking for it in its own transcript.",
@@ -19288,13 +19339,40 @@
       "depends_on": [
         "S62"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "66c72dcc-e3fe-4b58-abf5-ec414ac51578",
+          "kind": "",
+          "text": "**2026-11-12** — 2026-11-12, owner in interactive question (session 8d711f67): Q1 cloud-auto, the cloud role carves the slivers with no confirmation (adj 337, not the recommendation); Q2 above-s (adj 338). Still waits for S62.",
+          "created_at": "2026-11-12T05:36:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "622e13f3-7c17-4e83-9fba-f23f8efbb737",
+          "kind": "decision",
+          "text": "**2026-11-12** — Q1 cloud-auto (adj 337), Q2 above-s (adj 338); waits for S62.",
+          "created_at": "2026-11-12T05:36:57Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
-        "flags": [
-          "needs-owner"
-        ],
+        "flags": [],
         "trees": [],
         "trees_literal": false,
         "findings": "S304 trials 1 and 2: a claude-local implementer could not finish a size S ork slice in 45 or 90 minutes; its context grew past 80k tokens while it explored.",

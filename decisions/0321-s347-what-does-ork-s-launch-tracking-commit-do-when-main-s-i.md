@@ -2,10 +2,14 @@
 {
   "id": 321,
   "title": "S347: what does ork's launch tracking commit do when main's index lists other items whose slice files are untracked?",
-  "status": "open",
+  "status": "decided",
   "key": "landing.launch-index-orphans",
   "asked_by": "claude",
+  "decided_by": "Jon",
+  "recorded_by": "claude",
+  "via": "interactive question, ork relay session 8d711f67",
   "created": "2026-11-11",
+  "decided_at": "2026-11-12",
   "context": "2026-11-11: S312, S315 and S123 landings went red after launch commits a56c3f8 and d5880ab committed an index listing S345/S346 without their slice files.",
   "options": [
     {
@@ -25,6 +29,8 @@
     "label": "commit-listed",
     "reasoning": "The files are slicer's own tracking files for items the committed index already lists; committing them keeps main checkable and needs no owner step."
   },
+  "decision": "commit-listed",
+  "rationale": "Owner picked 'commit-listed' in an interactive question on 2026-11-12 (ork relay session 8d711f67); recorded as the owner's delegate (process.owner-answers, 316).",
   "refs": [
     "S347"
   ],
@@ -32,6 +38,10 @@
     {
       "date": "2026-11-11",
       "event": "ask"
+    },
+    {
+      "date": "2026-11-12",
+      "event": "decide"
     }
   ]
 }
