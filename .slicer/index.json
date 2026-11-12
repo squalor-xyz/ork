@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 356,
+  "next_id": 357,
   "preamble": "",
   "passes": [
     {
@@ -19159,6 +19159,51 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S356",
+      "title": "Local roles: ork approves every tool call",
+      "short_title": "ork approves local tool calls",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "1a6bbf4e-2639-41e0-85cb-854ea3078adb",
+          "kind": "",
+          "text": "**2026-11-12** — adj: decision roles.local-approval = full (328); open Q1 roles.local-approval-mechanism (329), Q2 roles.local-approval-ask (330), Q3 roles.local-permission-mode (331).",
+          "created_at": "2026-11-12T02:26:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "L",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 2 (2026-11-12, S314): claude-local read whole files despite the brief's targeted-read paragraph (S343), reached 86k tokens, spent 50 of 90 min in three auto-compactions, and read its own transcript outside the worktree. The allowlist's `Read` entry has no path or size limit, and a call outside the allowlist is denied with nobody asked.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-approval-point",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 3,
         "attempts": 0
       }
     }

@@ -4421,3 +4421,6 @@
 {"when": "2026-11-12T01:40:07Z", "item": "S354", "action": "status", "from": "started", "to": "done", "note": "ork accepts relay v11 and v12 (adj 326, v10 dropped); role prompts on v12; tool feedback lines parsed from role reports, capped at 3, recorded in run.json and kept out of findings, gate input and later briefs (adj 325); 6900 tests pass; gate PASS", "by": "Jon Robbins"}
 {"when": "2026-11-12T01:40:22Z", "item": "S354", "action": "note", "from": "", "to": "", "note": "Later (S354 review): (1) undressToolFeedback uses strings.Tr", "by": "Jon Robbins"}
 {"when": "2026-11-12T01:20:01Z", "item": "S355", "action": "add", "from": "", "to": "open", "note": "Run-question answers are filed in adj under the owner setting"}
+{"when": "2026-11-12T02:26:38Z", "item": "S356", "action": "add", "from": "", "to": "open", "note": "Local roles: ork approves every tool call"}
+{"when": "2026-11-12T02:26:38Z", "item": "S356", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-12T02:26:43Z", "item": "S356", "action": "note", "from": "", "to": "", "note": "adj: decision roles.local-approval = full (328); open Q1 rol", "by": "Jon Robbins"}
