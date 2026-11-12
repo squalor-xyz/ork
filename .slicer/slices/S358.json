@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Read per-turn input tokens from the stream, test first.\n3. End and restart a local role's session per the answers; record each restart.\n4. Docs (*proposed*): `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Read per-turn input tokens from the stream, test first.\n3. End and restart a local role's session per the answers; record each restart.\n4. Docs (*proposed*): `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-12): How is each local session restart recorded on the run? -> restarts list: add a `restarts` array to the role's `RoleRecord` (`internal/runrec/record.go`), one `{at, tokens}` entry per restart. The role keeps one row and the dashboard is unchanged. Document the field in `docs/state.md`. [roles.local-restart-record]."
     },
     {
       "heading": "Check",
