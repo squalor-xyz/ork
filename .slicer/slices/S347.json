@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. `adj ask` Q1 and wait for the owner's answer.\n2. Change `commitLaunchTracking` per the answer, with the test first.\n3. Docs (*proposed*): `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+      "body": "1. `adj ask` Q1 and wait for the owner's answer.\n2. Change `commitLaunchTracking` per the answer, with the test first.\n3. Docs (*proposed*): `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-12): How does ork learn which items the main index lists, so the launch commit can add their untracked slice files? (adj 321 is decided: commit-listed.) -> slicer-list: call `slicer list --json --lean` through the slicer client, take items with has_slice true whose `.slicer/slices/ID.json` or `.slicer/render/slices/ID.md` is untracked, and commit those with the item's own files. The owner's unlisted staged files, such as S05 in `TestLaunchTrackingItemOnly`, stay uncommitted.. The Check line `go vet ./... && go test ./internal/engine` is orchestrator-only. How should it be fixed? -> split: replace it with two lines, `go vet ./...` and `go test ./internal/engine`, each expected to exit 0. The allowlist in `internal/engine/perm.go:29` covers both, so the implementer can run them.."
     },
     {
       "heading": "Check",
