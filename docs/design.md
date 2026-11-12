@@ -601,7 +601,7 @@ slice.
 - **gate:** the first line of the report must be exactly `VERDICT: PASS` or
   `VERDICT: FAIL`. On S and M items the gate is the resumed reviewer
   ("lite"). A FAIL is recorded with `slicer note ID --text "Review FAIL:
-  ..."` (contract v6). *Proposed* (S204): on v11 the gate's ledger step closes
+  ..."` (contract v6). *Proposed* (S204): from v11 the gate's ledger step closes
   with the report's verdict only when the engine accepts the round (owner
   decision 2026-11-07). A round that pauses (a shape problem, an owner
   question, a blocker finding) closes without a verdict, and its rerun is a
@@ -1073,7 +1073,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   bad Decision key, a finding without a title) is refused with one line
   saying that only an owner finding's missing options can be accepted. A
   reviewer, UI pass or architect round that is accepted opens no ledger step
-  (its refused attempt's step already closed). A v11 gate round that is
+  (its refused attempt's step already closed). A gate round that is
   accepted opens a new gate step on the lineup row of the refused attempt and
   closes it with the verdict from the report, as any accepted gate round does
   (S204); the refused attempt's step stays closed without one. The reviewer and
@@ -1092,6 +1092,19 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   and dotted; a malformed or repeated key is a `role.report-shape` error.
   The full section and its optional key are stored with the question. A key
   enables optional adj filing of the owner's answer in the TUI.
+- **Tool feedback** (relay v12, `relay.tool-feedback`, adj 325). Any role may
+  end its report with up to 3 lines `tool feedback: N. ROLE | tool: slicer|ork|NAME
+  | kind: friction|feature|deterministic-check | proposal: TEXT | evidence: TEXT`.
+  `evidence` is last and takes the rest of the line. ork removes every line
+  that starts with `tool feedback:` from the report before any other check, so
+  a line anywhere in the report, a malformed line, a surplus line and `tool
+  feedback: none` are never a shape error, a finding or an owner question. The
+  well-formed lines (at most 3 per report) go into `tool_feedback` of the run
+  record with the reporting role, and the record keeps the first 3 of a run, in
+  report order. They are advisory: the gate never decides on them, a fix round
+  and the next brief do not carry them, and nothing runs `slicer feedback` for
+  them. A spec check has no run, so its lines are dropped. Showing them in the
+  TUI or `ork show` is not built.
 - **Structured questions** (`ui.structured-questions`, adj #168). Roles write
   this block under `## Owner needed`, with 2 to 4 options, distinct labels,
   consecutive numbers starting at 1, and a recommendation naming an option:
@@ -1294,8 +1307,8 @@ report remain counts of tests the gate itself ran; ork's evidence is cited
 separately.
 
 - **Prompts.** Embedded in ork and canonical (`roles.prompts`). They are
-  seeded from slicer's v11 contract, with anything else written fresh
-  (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent
+  seeded from slicer's v11 contract and now written against v12, with anything
+  else written fresh (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent
   tool, SendMessage, nesting), because roles here never spawn agents.
   `ork roles print [ROLE]` prints them so the agents repo can generate its
   own role files.
@@ -1565,11 +1578,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   For other fallback exits, if no row remains, the stop reason names each
   failed row and its exit.
   Out of credits skips all later rows on that vendor; a rate limit takes
-  the plain next row. On v10 and v11 the failed ledger step includes the classified
+  the plain next row. The failed ledger step includes the classified
   vendor message as `--reason`. Falling back on a plain error exit was an
-  owner-approved deviation from v10 (decision 156, S142). v11 follows ork: its
-  `role_fallback` conformance key (v10 called it `vendor_limit`) falls back on
-  an error exit of the agent process too, so ork's behaviour conforms.
+  owner-approved deviation from v10 (decision 156, S142). v11 and later follow
+  ork: the `role_fallback` conformance key falls back on an error exit of the
+  agent process too, so ork's behaviour conforms.
   The approval card names each switch as `role switched: ROLE FROM to TO
   (REASON)`, identifying rows by vendor, model and effort. It has no
   "Deviation:" prefix. The reason reads "out of credits", "rate limited" or
@@ -2479,8 +2492,8 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   when it is newer than the highest (ork is behind), when a slicer checkout
   is behind its upstream, or when slicer or adj is missing; `--upgrade`
   prints all three whether or not anything is behind. Contract reasons say
-  `older than the versions ork accepts (v10 or v11)` or
-  `newer than the versions ork accepts (v10 or v11)`. With `--upgrade`, a
+  `older than the versions ork accepts (v11 or v12)` or
+  `newer than the versions ork accepts (v11 or v12)`. With `--upgrade`, a
   current slicer or adj reason includes `(installed: VERSION)` when known.
   Text prints `[upgrade] TOOL  REASON`, an optional `note:` line, then each
   command on its own line, indented, after the contract line. slicer: a checkout
@@ -2497,8 +2510,8 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   a network call or runs a printed command, and a hint never changes the exit
   code;
 - the slicer contract: the `contract` string of `slicer ai relay --json --root
-  ROOT` against the accepted set (`roles.AcceptedContracts`, v10 and v11;
-  `boundary.contract-set`, adj 175). Any other version fails. The check runs
+  ROOT` against the accepted set (`roles.AcceptedContracts`, v11 and v12;
+  `boundary.contract-set`, adj 326, which supersedes adj 175). Any other version fails. The check runs
   for the directory doctor is run in, and again for each registered project
   with that project as `--root`, listed as `contract.projects` in the JSON
   (`project`, `pinned`, `found`, `ok`, `error`) and as one `contract NAME` line
@@ -2516,16 +2529,15 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   (`boundary.contract-pin`, adj 97). Engine start reads the same string, and a
   `contract_mismatch` refuses the run with slicer's error and no run record.
   Doctor and the engine also validate `ai relay --json`: exact finding kinds `fix`, `owner`, `later`,
-  required conformance keys (v11: `role_fallback` and `blocker_wait` in place of
-  `vendor_limit`), ledger role names (v11 includes `gate`), gate criteria and
-  verdicts, and outcomes. The run records its version, roles and gate criteria
-  for resumed runs. On v11 a gate round closes its ledger step with
-  `--phase done --verdict pass|fail`; v10 closes it without the flag. A gate
-  report with no valid verdict line closes without one. *Proposed* (S204): a
-  v11 gate round closes with its verdict only when the engine accepts the
-  round; otherwise it closes without one, and the retried round is a new
-  ledger step. Embedded role prompts
-  are written against v11;
+  required conformance keys (including `role_fallback` and `blocker_wait`),
+  ledger role names (including `gate`), gate criteria and verdicts, outcomes,
+  and on v12 the `tool_feedback` key. The run records its version, roles and
+  gate criteria for resumed runs. A gate round closes its ledger step with
+  `--phase done --verdict pass|fail`. A gate report with no valid verdict line
+  closes without one. *Proposed* (S204): a gate round closes with its verdict
+  only when the engine accepts the round; otherwise it closes without one, and
+  the retried round is a new ledger step. Embedded role prompts
+  are written against v12;
 - each project's path exists and is a directory; a configured check command
   passes `sh -n -c` and its first word after leading `VAR=value` assignments
   resolves on PATH, or against the project directory when it contains `/`.
@@ -2807,12 +2819,12 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `pin` (the `pinned` value that `slicer ai relay --json` prints after the
   set) and `{"project":"NAME","pinned":null}` for `unpin`. Text: `pinned NAME
   at relay vN` and `unpinned NAME`. Exit 2 (usage, before any tool runs): a
-  missing `--relay` (`projects pin needs --relay N (v10 or v11)`), an N
+  missing `--relay` (`projects pin needs --relay N (v11 or v12)`), an N
   outside the accepted set, or a wrong argument count. An unregistered NAME
   is `not_found` (exit 1), with a hint to run `ork projects list`.
   Exit 1 also covers when slicer fails the set or unset call (its message is
   shown), or slicer refuses the read-back after the set, for example a pin of
-  v10 on a slicer that serves v11. In that case the pin stays set, and the
+  v11 on a slicer that serves v12. In that case the pin stays set, and the
   message names the project, quotes slicer's error and gives the next step,
   `ork projects pin NAME --relay N` with the version slicer serves or `ork
   projects unpin NAME` (owner, 2026-10-31). `pin` also exits 1 when slicer

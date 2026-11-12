@@ -239,7 +239,7 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 		if want := filepath.Join(h.store.RunDir(rec.ID), r.Role+"-1.md"); r.ReportPath != want {
 			t.Errorf("%s report path %q, want %q", r.Role, r.ReportPath, want)
 		}
-		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v11\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
+		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v12\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
 			t.Errorf("%s brief is missing its parts:\n%.300s", r.Role, r.Brief)
 		}
 	}
@@ -253,7 +253,7 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 	if impl.Vendor != "claude" || impl.Model != "sonnet" || impl.Effort != "high" || rev.Model != "opus" || gate.Model != "opus" {
 		t.Errorf("lineup not applied: %+v %+v %+v", impl, rev, gate)
 	}
-	if rec.Contract != 10 || rec.Item != item || rec.Worktree != h.W || rec.Branch != item || rec.RelayRun != "run-1" || rec.Project != "ork" {
+	if rec.Contract != 12 || rec.Item != item || rec.Worktree != h.W || rec.Branch != item || rec.RelayRun != "run-1" || rec.Project != "ork" {
 		t.Errorf("record: %+v", rec)
 	}
 	if len(rec.Roles) != 3 || len(rec.Checks) != 1 || !rec.Checks[0].OK || rec.Checks[0].Command != "go test ./..." {
@@ -1373,19 +1373,17 @@ func TestContractCheckAcceptsTheSetAndRefusesOthers(t *testing.T) {
 		"Contract: relay v7":   "v7",
 		"Contract: relay v8":   "v8",
 		"Contract: relay v9":   "v9",
-		"Contract: relay v10":  "",
+		"Contract: relay v10":  "v10",
 		"Contract: relay v11":  "",
-		"Contract: relay v12":  "v12",
+		"Contract: relay v12":  "",
+		"Contract: relay v13":  "v13",
 		"Contract: relay v6":   "v6",
 		"something else":       "contract line",
 		"Contract: relay v7 x": "contract line",
 	} {
 		h := newHarness(t, func(o *harnessOpts) {
 			o.routesFor = func(P, W string) []clitest.Route {
-				file, recordedAs := "relay-v10.json", `"contract": "relay v10"`
-				if line == "Contract: relay v11" || line == "Contract: relay v12" {
-					file, recordedAs = "relay-v11.json", `"contract": "relay v11"`
-				}
+				file, recordedAs := "relay-v12.json", `"contract": "relay v12"`
 				raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", file))
 				if err != nil {
 					t.Fatal(err)
@@ -1422,7 +1420,7 @@ func TestNewRefusesAProjectWhoseSlicerReportsContractMismatch(t *testing.T) {
 	})
 	_, err := New(context.Background(), h.deps, h.cfg)
 	var tool *clirun.ToolError
-	if !errors.As(err, &tool) || tool.Code != "contract_mismatch" || !strings.Contains(err.Error(), "pins relay v10") || !strings.Contains(err.Error(), "serves relay v11") {
+	if !errors.As(err, &tool) || tool.Code != "contract_mismatch" || !strings.Contains(err.Error(), "pins relay v11") || !strings.Contains(err.Error(), "serves relay v12") {
 		t.Fatalf("error %v, want contract_mismatch naming both versions", err)
 	}
 	if n := len(h.fake.CallsTo("git")); n != 0 {
@@ -1440,7 +1438,7 @@ func TestNewRecordsTheRunAndRefusesBadInput(t *testing.T) {
 		t.Fatal(err)
 	}
 	rec := e.Snapshot()
-	if rec.ID != "ork-20261019-161201-a1b2" || rec.State != runrec.StateSetup || rec.Contract != 10 || rec.Round != 1 || rec.Item != item {
+	if rec.ID != "ork-20261019-161201-a1b2" || rec.State != runrec.StateSetup || rec.Contract != 12 || rec.Round != 1 || rec.Item != item {
 		t.Fatalf("record: %+v", rec)
 	}
 	if !reflect.DeepEqual(rec.Lineup, h.cfg.Lineup) || rec.Worktree != h.W || rec.Branch != item {
@@ -1593,7 +1591,7 @@ func TestEngineStartKeepsTheContractErrorTexts(t *testing.T) {
 		t.Run(fmt.Sprint(invalid), func(t *testing.T) {
 			h := newHarness(t, func(o *harnessOpts) {
 				o.routesFor = func(P, W string) []clitest.Route {
-					raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json"))
+					raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v12.json"))
 					if err != nil {
 						t.Fatal(err)
 					}
@@ -1601,7 +1599,7 @@ func TestEngineStartKeepsTheContractErrorTexts(t *testing.T) {
 					if invalid {
 						s = strings.ReplaceAll(s, `"key": "finding_kinds"`, `"key": "missing"`)
 					} else {
-						s = strings.Replace(s, `"contract": "relay v11"`, `"contract": "relay v12"`, 1)
+						s = strings.Replace(s, `"contract": "relay v12"`, `"contract": "relay v13"`, 1)
 					}
 					return []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: s}}
 				}
@@ -1614,7 +1612,7 @@ func TestEngineStartKeepsTheContractErrorTexts(t *testing.T) {
 				if !strings.HasPrefix(err.Error(), "slicer ai relay --json: relay conformance missing finding_kinds") {
 					t.Fatalf("conformance error: %v", err)
 				}
-			} else if !strings.Contains(err.Error(), "v12") || strings.HasPrefix(err.Error(), "slicer ai relay --json:") {
+			} else if !strings.Contains(err.Error(), "v13") || strings.HasPrefix(err.Error(), "slicer ai relay --json:") {
 				t.Fatalf("version error: %v", err)
 			}
 		})

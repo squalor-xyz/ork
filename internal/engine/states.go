@@ -147,6 +147,10 @@ func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 	body := "(the file is gone)"
 	if b, err := os.ReadFile(filepath.Join(e.run.Dir(), fb.File)); err == nil {
 		body = string(b)
+		if fb.Kind != "checks" {
+			// A role's tool feedback is advisory and is not sent back (relay v12).
+			body, _ = splitToolFeedback("", body)
+		}
 	}
 	switch fb.Kind {
 	case "checks":

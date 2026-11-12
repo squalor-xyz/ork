@@ -81,6 +81,9 @@ func readReport(dir string, ent fs.DirEntry) (string, bool) {
 type OwnerQuestion = runrec.OwnerQuestion
 type Option = runrec.Option
 
+// ToolFeedback is one advisory tool feedback line of a report (relay v12).
+type ToolFeedback = runrec.ToolFeedback
+
 // Report is what the engine reads from a role's report.
 type Report struct {
 	Ask      *OwnerQuestion
@@ -90,6 +93,8 @@ type Report struct {
 	HasTests bool
 	Key      string // optional adj decision key
 	Question string // the Owner needed section; empty for none
+
+	ToolFeedback []ToolFeedback // at most 3 well-formed lines, advisory (relay v12)
 }
 
 // ShapeError lists every way a report breaks the shape the prompts ask for
@@ -111,15 +116,70 @@ var testsLine = regexp.MustCompile(`(?m)^Tests: (\d+) passed, (\d+) failed\r?$`)
 
 const ownerHeading = "## Owner needed"
 
+// toolFeedbackPrefix starts a tool feedback line of a role's report (relay v12,
+// adj 325 relay.tool-feedback).
+const toolFeedbackPrefix = "tool feedback:"
+
+// toolFeedbackLine is one well-formed tool feedback line, in the run report's
+// shape: the number and the role come first, every value but evidence holds no
+// "|", and evidence is last and takes the rest of the line.
+var toolFeedbackLine = regexp.MustCompile(`^tool feedback: \d+\. [a-z][a-z-]* \| tool: ([^|]+) \| kind: (friction|feature|deterministic-check) \| proposal: ([^|]+) \| evidence: (.+)$`)
+
+// listMarker is a bullet or a number that starts a list item.
+var listMarker = regexp.MustCompile(`^(?:[-*+]|\d+[.)])\s+`)
+
+// undressToolFeedback trims a line and takes off a leading list marker and
+// surrounding backticks, which a role may put around a tool feedback line.
+func undressToolFeedback(line string) string {
+	s := strings.TrimSpace(line)
+	s = strings.TrimSpace(listMarker.ReplaceAllString(s, ""))
+	if strings.HasPrefix(s, "`") {
+		s = strings.TrimSpace(strings.Trim(s, "`"))
+	}
+	return s
+}
+
+// splitToolFeedback removes every line that starts with "tool feedback:" from
+// a role's report and returns the rest with up to runrec.MaxToolFeedback
+// well-formed entries, in report order, each with the reporting role. Tool
+// feedback is advisory: it is not a finding and no check reads it, so a
+// malformed line, a surplus line and "tool feedback: none" are dropped without
+// a shape error.
+func splitToolFeedback(role, text string) (string, []ToolFeedback) {
+	if !strings.Contains(text, toolFeedbackPrefix) {
+		return text, nil
+	}
+	var kept []string
+	var found []ToolFeedback
+	for _, line := range strings.Split(text, "\n") {
+		trimmed := undressToolFeedback(line)
+		if !strings.HasPrefix(trimmed, toolFeedbackPrefix) {
+			kept = append(kept, line)
+			continue
+		}
+		m := toolFeedbackLine.FindStringSubmatch(runrec.PlainText(trimmed))
+		if m == nil || len(found) >= runrec.MaxToolFeedback {
+			continue
+		}
+		f := ToolFeedback{Role: role, Tool: strings.TrimSpace(m[1]), Kind: m[2], Proposal: strings.TrimSpace(m[3]), Evidence: strings.TrimSpace(m[4])}
+		if f.Tool != "" && f.Proposal != "" {
+			found = append(found, f)
+		}
+	}
+	return strings.Join(kept, "\n"), found
+}
+
 // CheckReport checks a role's report against the shape the prompts ask for:
 // the gate's first line, a Tests line from the implementer and the gate, and
 // a final Owner needed section from every role. finish is the implementer's
 // finish step, which needs no Tests line. The architect needs only the shared
 // Owner needed section; its whole report is findings context (adj 150).
-// A shape error is a *ShapeError.
+// Tool feedback lines are read out of the report first (splitToolFeedback) and
+// never count toward the shape. A shape error is a *ShapeError.
 func CheckReport(role string, finish bool, text string) (*Report, error) {
 	var rep Report
 	var problems []string
+	text, rep.ToolFeedback = splitToolFeedback(role, text)
 
 	if role == RoleGate {
 		first, _, _ := strings.Cut(text, "\n")
@@ -444,6 +504,7 @@ func Triage(text string) (*Triaged, error) { return triage(text, false) }
 // triage is Triage; lenient keeps an owner finding whose options are not right
 // as a plain finding (S298, *proposed*).
 func triage(text string, lenient bool) (*Triaged, error) {
+	text, _ = splitToolFeedback("", text)
 	sections := parseSections(text)
 	t := &Triaged{}
 	var problems, shown []string
@@ -514,6 +575,7 @@ func TriageGate(text string) (*Triaged, error) { return triageGate(text, false) 
 
 // triageGate is TriageGate; lenient is as for triage.
 func triageGate(text string, lenient bool) (*Triaged, error) {
+	text, _ = splitToolFeedback("", text)
 	t := &Triaged{Fix: text}
 	var problems, shown []string
 	var kept []string

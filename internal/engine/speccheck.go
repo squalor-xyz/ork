@@ -19,7 +19,6 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
-	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
@@ -340,10 +339,6 @@ entries:
 						reason = runErr.Error()
 					}
 				}
-				version, _ := roles.CheckContractLine("Contract: " + cfg.ledger.contract.Contract)
-				if version < 10 {
-					reason = ""
-				}
 				d.Slicer.RelayStep(context.WithoutCancel(ctx), cfg.ledger.writer, root, cfg.ledger.run, slicercli.StepSpec{Step: stepID, Phase: phase, Reason: strings.Join(strings.Fields(reason), " ")})
 			}
 			if err := ctx.Err(); err != nil {
@@ -404,7 +399,8 @@ entries:
 	if err := os.WriteFile(reportPath, []byte(text), 0600); err != nil {
 		return nil, fmt.Errorf("save spec report: %w", err)
 	}
-	owner, _ := section(text, ownerHeading)
+	clean, _ := splitToolFeedback("", text)
+	owner, _ := section(clean, ownerHeading)
 	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: SpecOwnerText(owner)}, nil
 }
 
@@ -517,6 +513,7 @@ var sliceHeading = regexp.MustCompile(`^## Slice (\S+)\s*$`)
 // needed` section. The verdicts come back in the order of ids. Every way the
 // report breaks the shape is listed in the *ShapeError.
 func ParseSpecCheck(text string, ids []string) ([]SpecVerdict, error) {
+	text, _ = splitToolFeedback("", text) // advisory, no part of a verdict (relay v12)
 	var problems []string
 	type part struct {
 		id    string

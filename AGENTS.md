@@ -103,7 +103,7 @@ and the owner's words. Anything the owner did not decide stays an open ask.
   (`slicer show S05 --root DIR`), because the allowlist matches on the leading
   words. Keep `go -C DIR` and `git -C DIR` as they are.
 - ork implements slicer's relay contract and accepts only the versions it
-  lists (v10 and v11 on 2026-10-30; `boundary.contract-set`). Do not paste the contract's text into docs; refer to it by
+  lists (v11 and v12 on 2026-11-12; `boundary.contract-set`, adj 326). Do not paste the contract's text into docs; refer to it by
   command (`slicer ai relay`). Role prompts are ork's own text
   (`roles.prompts`).
 - Never read vendor credentials or login files; use each vendor CLI's own

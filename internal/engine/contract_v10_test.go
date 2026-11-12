@@ -110,27 +110,17 @@ func TestSpecCheckRecordsLedgerRunWithRoleSpecCheck(t *testing.T) {
 	}
 }
 
-func TestVendorLimitFallbackRecordsFailReasonOnV10(t *testing.T) {
-	for _, version := range []int{9, 10} {
-		h := fallbackHarness(t, RoleImplementer)
-		h.runner.script = func(req Request, _ int) (Result, error) {
-			if req.Role == RoleImplementer && req.Vendor == "codex" {
-				return Result{Exit: ExitRateLimited, Reason: "rate_limited: vendor message"}, nil
-			}
-			return Result{}, nil
+func TestRoleFallbackRecordsTheFailReason(t *testing.T) {
+	h := fallbackHarness(t, RoleImplementer)
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Role == RoleImplementer && req.Vendor == "codex" {
+			return Result{Exit: ExitRateLimited, Reason: "rate_limited: vendor message"}, nil
 		}
-		e, err := New(context.Background(), h.deps, h.cfg)
-		if err != nil {
-			t.Fatal(err)
-		}
-		e.run.Update(func(r *runrec.Record) { r.Contract = version })
-		if err := e.Run(context.Background()); err != nil {
-			t.Fatal(err)
-		}
-		got := ledgerHas(h, "--phase fail", "--reason rate_limited: vendor message")
-		if got != (version == 10) {
-			t.Errorf("v%d: fail reason present=%v", version, got)
-		}
+		return Result{}, nil
+	}
+	h.start()
+	if !ledgerHas(h, "--phase fail", "--reason rate_limited: vendor message") {
+		t.Error("the failed step has no reason")
 	}
 }
 
@@ -163,7 +153,7 @@ func checkLimitRows(t *testing.T, class ExitClass, want int) {
 func TestGateCriteriaComeFromTheContractJSON(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
-			raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json"))
+			raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v12.json"))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -210,7 +200,7 @@ func TestFallbackSwitchIsOnTheRunCard(t *testing.T) {
 func TestEngineRefusesIncompleteContractBeforeCreatingRun(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
-			raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v10.json"))
+			raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v12.json"))
 			if err != nil {
 				t.Fatal(err)
 			}

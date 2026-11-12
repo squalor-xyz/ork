@@ -121,7 +121,7 @@ and choosing what to build.
 ## Relay v11 process rules
 
 *Proposed* (S204). Each row is a rule of `slicer ai relay` or `slicer ai relay-orchestrator`
-(relay v11), by name; the text is slicer's and is not copied here. Owner
+(relay v11, which v12 keeps), by name; the text is slicer's and is not copied here. Owner
 decisions of 2026-11-07: the gate close (Q1 option b) and the two merge and
 fix-round rows (Q2 option a); and of 2026-11-10 (`relay.after-land-check`):
 `[AFTER LAND]` lines are listed, not run (Q3 option a). Rows 3.3 and 5.1 above stay as they are.
@@ -134,6 +134,18 @@ fix-round rows (Q2 option a); and of 2026-11-10 (`relay.after-land-check`):
 | v11.4 | A non-blocker owner question is recorded in the ledger | not in S204 | Its own slice, S223 |
 | v11.5 | `relay-run list` `counts.roles` counts lane steps only | not read | ork decodes `Counts.Roles` (`internal/slicercli/types.go`) and never reads it |
 | v11.6 | A gate round closes with its verdict | met when the engine accepts the round | `--phase done --verdict pass\|fail` only for a round the engine accepts (`closeStep`, `internal/engine/round.go`). A round paused for a shape problem, an owner question or a blocker finding closes without a verdict, and the rerun is a new ledger step that carries it |
+
+## Relay v12 process rules
+
+Each row is a rule of `slicer ai relay` or `slicer ai relay-orchestrator`
+(relay v12, `changes[]`), by name; the text is slicer's and is not copied here.
+Owner decision of 2026-11-12 (`relay.tool-feedback`, adj 325): build it in full.
+
+| # | Rule | ork | Evidence |
+|---|------|-----|----------|
+| v12.1 | Every role may end its report with up to 3 tool feedback lines | met | Each role prompt allows them (`internal/roles/prompts/*.md`). `CheckReport` reads the lines and drops a malformed or surplus one without a shape error; `routeReport` keeps up to 3 in `tool_feedback` of the run record, each with its role (`splitToolFeedback`, `internal/engine/report.go`; `AddToolFeedback`, `internal/runrec/record.go`) |
+| v12.2 | Tool feedback is advisory: not a finding, never gated, never acted on in the slice | met | The lines are removed from a report before triage and before a fix round's brief; no verdict, finding or ledger call reads them (`TestToolFeedbackNeverChangesAGatesVerdictOrFindings`, `TestAGatesToolFeedbackDoesNotChangeTheRun`). A spec check has no run, so its lines are ignored, not recorded |
+| v12.3 | The run report carries `tool feedback: N. ROLE \| ...` lines and `--json` a `tool_feedback` key | not built | The run record holds the entries. Showing them in the TUI or `ork show` is not in S354 (adj 325) |
 
 ## Prioritized gaps
 
@@ -203,7 +215,7 @@ S183 corrects the stale Waves status in README, development status in
 PROJECT, landing rules in boundaries, check timeout in state, the missing
 `land` state in design, and the mouse promise in dashboard. The contract
 wording in boundaries already said v9 and v10 and needed no change (S198 moved
-it to v10 and v11).
+it to v10 and v11; S354 moved it to v11 and v12).
 
 The dated notes and review update matrix viewing (S168), vendor slots and memory
 (S169), registry settings (S174), upgrade hints (S178),

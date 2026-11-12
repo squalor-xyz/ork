@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-354 items · — 65 · done 256 · retired 33
+354 items · — 64 · done 257 · retired 33
 
 v1.2
 
@@ -122,7 +122,7 @@ v1.2
 | 72 | [S351](slices/S351.md) | Landing commits the owner's uncommitted edits on main into its tracking commit | S | - |  |  | — |
 | 73 | [S352](slices/S352.md) | Accept slicer relay v12 and read its tool_feedback line | M | - |  |  | — |
 | 74 | [S353](slices/S353.md) | A slicer contract bump on main breaks ork everywhere at once | S | - |  |  | — |
-| 75 | [S354](slices/S354.md) | Accept relay v12 | M | 2 |  | 2026-11-12: slicer 1.21.0 (s453) prints `Contract: relay v12`; `ork doctor` reports "[FAIL] contract ork accepts relay v10 or v11 and slicer prints v12" for every project, and a new ork run refuses to start. | — |
+| 75 | [S354](slices/S354.md) | Accept relay v12 | M | 2 |  | 2026-11-12: slicer 1.21.0 (s453) prints `Contract: relay v12`; `ork doctor` reports "[FAIL] contract ork accepts relay v10 or v11 and slicer prints v12" for every project, and a new ork run refuses to start. | done |
 
 ---
 

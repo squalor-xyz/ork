@@ -101,28 +101,6 @@ func TestV11GateWithoutAVerdictLineClosesWithoutOne(t *testing.T) {
 	}
 }
 
-func TestV10GateClosesWithoutAVerdictFlag(t *testing.T) {
-	for _, pass := range []bool{true, false} {
-		h := newHarness(t)
-		h.runner.script = func(req Request, n int) (Result, error) {
-			if req.Role == RoleGate && req.Round == 1 && !pass {
-				return Result{Exit: ExitOK, Session: "sess-gate", Report: gateFail}, nil
-			}
-			return Result{}, nil
-		}
-		e := h.start()
-		if rec := requireState(t, e, runrec.StateAwaitingApproval); rec.Contract != 10 {
-			t.Fatalf("recorded contract %d, want 10", rec.Contract)
-		}
-		if got := gateDone(t, h); strings.Contains(got, "--verdict") {
-			t.Fatalf("v10 gate close sends a verdict (pass=%v): %s", pass, got)
-		}
-		if ledgerHas(h, "--verdict") {
-			t.Fatalf("v10 run sent --verdict (pass=%v)", pass)
-		}
-	}
-}
-
 func TestEngineStartWithV11CreatesARun(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
 	e, err := New(context.Background(), h.deps, h.cfg)

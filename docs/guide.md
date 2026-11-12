@@ -65,7 +65,7 @@ It prints the path of the ork binary first, then one line per check
   your lineup uses;
 - the slicer relay contract (`slicer ai relay --json`), for the directory you
   run doctor in and for each registered project with its own pin. ork accepts
-  v10 and v11 only; any other version fails, and so does a project whose slicer
+  v11 and v12 only; any other version fails, and so does a project whose slicer
   refuses its pin (`contract_mismatch`); an unpinned project is checked against
   the accepted set alone (`docs/design.md:2412-2422`);
 - each registered project: the path exists, the check command parses, and the
@@ -133,8 +133,8 @@ The first add creates `~/.config/ork/projects.json`; ork never seeds it
 (`docs/state.md:34-36`).
 
 To pin the project's slicer relay contract, run
-`ork projects pin NAME --relay 11` (v10 or v11). ork runs
-`slicer config relay_contract 11 --root PROJECT` and prints the pin slicer
+`ork projects pin NAME --relay 12` (v11 or v12). ork runs
+`slicer config relay_contract 12 --root PROJECT` and prints the pin slicer
 then reports; the pin lives in the project's slicer config, not in
 `projects.json`. `ork projects unpin NAME` clears it (`--json` prints
 `{"project":NAME,"pinned":null}`). If your slicer serves a different version

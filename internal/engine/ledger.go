@@ -140,14 +140,12 @@ func (e *Engine) stepFail(ctx context.Context, rec runrec.Record, id string, cla
 		return
 	}
 	s := slicercli.StepSpec{Step: id, Phase: "fail"}
-	if rec.Contract >= 10 {
-		if reason == "" {
-			reason = string(class)
-		}
-		if runErr != nil {
-			reason += ": " + runErr.Error()
-		}
-		s.Reason = strings.Join(strings.Fields(reason), " ")
+	if reason == "" {
+		reason = string(class)
 	}
+	if runErr != nil {
+		reason += ": " + runErr.Error()
+	}
+	s.Reason = strings.Join(strings.Fields(reason), " ")
 	e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, s)
 }

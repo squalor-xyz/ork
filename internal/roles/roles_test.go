@@ -114,8 +114,8 @@ func TestEmbeddedFilesMatchNames(t *testing.T) {
 }
 
 func TestContractVersion(t *testing.T) {
-	if ContractVersion != 11 {
-		t.Fatalf("ContractVersion = %d, want 11", ContractVersion)
+	if ContractVersion != 12 {
+		t.Fatalf("ContractVersion = %d, want 12", ContractVersion)
 	}
 	for _, f := range []string{"relay-first-line.txt", "relay-orchestrator-first-line.txt"} {
 		if got := recordedVersion(t, f); got != ContractVersion {
@@ -178,13 +178,13 @@ func TestPromptsTellRolesListNumbersAreNotHeadings(t *testing.T) {
 	}
 }
 
-func TestAcceptedContractsAreV10AndV11(t *testing.T) {
-	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{10, 11}) {
-		t.Fatalf("AcceptedContracts() = %v, want [10 11]", got)
+func TestAcceptedContractsAreV11AndV12(t *testing.T) {
+	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{11, 12}) {
+		t.Fatalf("AcceptedContracts() = %v, want [11 12]", got)
 	}
 	got := AcceptedContracts()
 	got[0] = 99
-	if again := AcceptedContracts(); again[0] != 10 {
+	if again := AcceptedContracts(); again[0] != 11 {
 		t.Fatalf("AcceptedContracts hands out its own slice: %v", again)
 	}
 	if !ContractAccepted(ContractVersion) {
@@ -193,28 +193,28 @@ func TestAcceptedContractsAreV10AndV11(t *testing.T) {
 }
 
 func TestPromptsFirstLineNamesTheirContract(t *testing.T) {
-	if ContractVersion != 11 {
-		t.Errorf("ContractVersion = %d, want 11", ContractVersion)
+	if ContractVersion != 12 {
+		t.Errorf("ContractVersion = %d, want 12", ContractVersion)
 	}
 	for name, p := range prompts(t) {
 		first, _, _ := strings.Cut(p, "\n")
-		if want := "Role: " + name + ". Contract: relay v11"; first != want {
+		if want := "Role: " + name + ". Contract: relay v12"; first != want {
 			t.Errorf("%s: first line %q, want %q", name, first, want)
 		}
 	}
 }
 
 func TestCheckContractLine(t *testing.T) {
-	for _, v := range []int{7, 8, 9, 10, 11, 12} {
+	for _, v := range []int{7, 8, 9, 10, 11, 12, 13} {
 		got, err := CheckContractLine(fmt.Sprintf("Contract: relay v%d", v))
-		if got != v || (err == nil) != (v == 10 || v == 11) {
+		if got != v || (err == nil) != (v == 11 || v == 12) {
 			t.Errorf("v%d: %d, %v", v, got, err)
 		}
-		if err != nil && !strings.Contains(err.Error(), "relay v10 or v11 and slicer prints v"+strconv.Itoa(v)) {
-			t.Errorf("v%d: message %q does not name the set {10, 11}", v, err)
+		if err != nil && !strings.Contains(err.Error(), "relay v11 or v12 and slicer prints v"+strconv.Itoa(v)) {
+			t.Errorf("v%d: message %q does not name the set {11, 12}", v, err)
 		}
 	}
-	for _, bad := range []string{"", "something else", "Contract: relay v", "Contract: relay v11 extra"} {
+	for _, bad := range []string{"", "something else", "Contract: relay v", "Contract: relay v12 extra"} {
 		if v, err := CheckContractLine(bad); err == nil || v != 0 {
 			t.Errorf("%q: %d, %v", bad, v, err)
 		}
@@ -679,15 +679,15 @@ func TestAcceptedContractsPhrase(t *testing.T) {
 	for _, tc := range []struct {
 		versions []int
 		want     string
-	}{{[]int{10}, "v10"}, {[]int{10, 11}, "v10 or v11"}, {[]int{10, 11, 12}, "v10, v11 or v12"}} {
+	}{{[]int{11}, "v11"}, {[]int{11, 12}, "v11 or v12"}, {[]int{11, 12, 13}, "v11, v12 or v13"}} {
 		if got := phrase(tc.versions); got != tc.want {
 			t.Errorf("phrase(%v) = %q, want %q", tc.versions, got, tc.want)
 		}
 	}
-	if got := AcceptedContractsPhrase(); got != "v10 or v11" {
+	if got := AcceptedContractsPhrase(); got != "v11 or v12" {
 		t.Errorf("accepted phrase: %q", got)
 	}
-	if _, err := CheckContractLine("Contract: relay v9"); err == nil || err.Error() != "ork accepts relay v10 or v11 and slicer prints v9" {
+	if _, err := CheckContractLine("Contract: relay v9"); err == nil || err.Error() != "ork accepts relay v11 or v12 and slicer prints v9" {
 		t.Errorf("contract error: %v", err)
 	}
 }
@@ -779,5 +779,24 @@ func TestPromptsSayTMPDIRAlreadyPointsAtTheTempDir(t *testing.T) {
 				t.Errorf("%s lacks %q", name, want)
 			}
 		}
+	}
+}
+
+// Each prompt lets its role end the report with up to 3 tool feedback lines,
+// in the run report's shape, and says they are advisory (adj 325,
+// relay.tool-feedback; relay v12).
+func TestPromptsAllowAdvisoryToolFeedback(t *testing.T) {
+	for name, p := range prompts(t) {
+		t.Run(name, func(t *testing.T) {
+			for _, want := range []string{
+				"up to 3 tool feedback lines",
+				"tool feedback: N. " + name + " | tool: slicer|ork|NAME | kind: friction|feature|deterministic-check | proposal: TEXT | evidence: TEXT",
+				"Tool feedback is advisory: it is not a finding",
+			} {
+				if !has(p, want) {
+					t.Errorf("%s prompt does not say %q", name, want)
+				}
+			}
+		})
 	}
 }

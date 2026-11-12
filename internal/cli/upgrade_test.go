@@ -55,7 +55,7 @@ type upgradeOut struct {
 
 // upOpts picks one case of the upgrade tests. Every field has a default.
 type upOpts struct {
-	contract string // first line of `slicer ai relay`; default relay v10
+	contract string // first line of `slicer ai relay`; default relay v12
 	slicer   string // checkout, dotvenv-nogit, dotvenv-nested, venv or unknown; default unknown
 	behind   string // `rev-list --left-right --count` output; "" means no upstream
 	adj      string // build (build info readable) or unreadable; default unreadable
@@ -95,7 +95,7 @@ func resolvedTemp(t *testing.T) string {
 func setupUpgrade(t *testing.T, o upOpts) *upEnv {
 	t.Helper()
 	if o.contract == "" {
-		o.contract = "Contract: relay v10"
+		o.contract = "Contract: relay v12"
 	}
 	if o.slicer == "" {
 		o.slicer = "unknown"
@@ -338,7 +338,7 @@ func TestDoctorHintsWhenSlicerContractIsOlder(t *testing.T) {
 	}
 	d := env.slicerD
 	for _, want := range []string{
-		"[upgrade] slicer  slicer prints relay v9, older than the versions ork accepts (v10 or v11)\n",
+		"[upgrade] slicer  slicer prints relay v9, older than the versions ork accepts (v11 or v12)\n",
 		"\n  git -C " + engine.ShellWord(d) + " pull --ff-only\n",
 		"\n  " + engine.ShellWord(d+"/.venv/bin/pip") + " install -e " + engine.ShellWord(d) + "\n",
 	} {
@@ -387,7 +387,7 @@ func TestDoctorQuotesPathsInHints(t *testing.T) {
 }
 
 func TestDoctorHintsWhenSlicerContractIsNewer(t *testing.T) {
-	env := setupUpgrade(t, upOpts{contract: "Contract: relay v12"})
+	env := setupUpgrade(t, upOpts{contract: "Contract: relay v13"})
 	code, stdout, _ := run(t, env.app, "doctor")
 	if code != 1 {
 		t.Fatalf("exit %d, want 1\n%s", code, stdout)
@@ -401,7 +401,7 @@ func TestDoctorHintsWhenSlicerContractIsNewer(t *testing.T) {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"[upgrade] ork  slicer prints relay v12, newer than the versions ork accepts (v10 or v11)\n",
+		"[upgrade] ork  slicer prints relay v13, newer than the versions ork accepts (v11 or v12)\n",
 		"\n  go -C ORK_CHECKOUT build -o " + engine.ShellWord(bin) + " ./cmd/ork\n",
 		"\n  " + engine.ShellWord(bin) + " daemon restart\n",
 	} {
@@ -603,7 +603,7 @@ func TestDoctorNeverRunsAnUpgradeCommand(t *testing.T) {
 		check string
 	}{
 		{"older contract", upOpts{slicer: "checkout", contract: "Contract: relay v8", behind: "0\t0"}, nil, ""},
-		{"newer contract", upOpts{contract: "Contract: relay v12"}, nil, ""},
+		{"newer contract", upOpts{contract: "Contract: relay v13"}, nil, ""},
 		{"behind", upOpts{slicer: "checkout", behind: "0\t3"}, nil, ""},
 		{"nothing behind", upOpts{slicer: "checkout", behind: "0\t0"}, nil, ""},
 		{"upgrade flag", upOpts{slicer: "checkout", behind: "0\t0", adj: "build"}, []string{"--upgrade"}, ""},
@@ -712,10 +712,10 @@ func TestContractDirectionFollowsTheAcceptedSet(t *testing.T) {
 }
 
 func TestDoctorReasonsNameTheVersionsOrkAccepts(t *testing.T) {
-	for _, tc := range []struct{ version, tool, direction string }{{"9", "slicer", "older"}, {"12", "ork", "newer"}} {
+	for _, tc := range []struct{ version, tool, direction string }{{"9", "slicer", "older"}, {"13", "ork", "newer"}} {
 		env := setupUpgrade(t, upOpts{contract: "Contract: relay v" + tc.version})
 		_, d, _ := env.json(t)
-		want := "slicer prints relay v" + tc.version + ", " + tc.direction + " than the versions ork accepts (v10 or v11)"
+		want := "slicer prints relay v" + tc.version + ", " + tc.direction + " than the versions ork accepts (v11 or v12)"
 		if len(d.Upgrade) != 1 || d.Upgrade[0].Tool != tc.tool || d.Upgrade[0].Reason != want {
 			t.Errorf("hints %+v want %q", d.Upgrade, want)
 		}

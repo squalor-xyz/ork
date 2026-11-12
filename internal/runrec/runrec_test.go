@@ -1172,3 +1172,32 @@ func TestCheckRecordAttemptsAndFlakyAreOmittedWhenAbsent(t *testing.T) {
 		t.Errorf("an older record: %+v, %v", back, err)
 	}
 }
+
+// A run keeps at most 3 tool feedback entries, in the order they came
+// (relay v12, adj 325 relay.tool-feedback).
+func TestAddToolFeedbackKeepsTheFirstThreeInOrder(t *testing.T) {
+	var r Record
+	entry := func(role, proposal string) ToolFeedback {
+		return ToolFeedback{Role: role, Tool: "slicer", Kind: "friction", Proposal: proposal, Evidence: "e"}
+	}
+	r.AddToolFeedback([]ToolFeedback{entry("implementer", "one"), entry("implementer", "two")})
+	r.AddToolFeedback(nil)
+	r.AddToolFeedback([]ToolFeedback{entry("reviewer", "three"), entry("reviewer", "four"), entry("gate", "five")})
+	var got []string
+	for _, f := range r.ToolFeedback {
+		got = append(got, f.Role+":"+f.Proposal)
+	}
+	if want := []string{"implementer:one", "implementer:two", "reviewer:three"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("tool feedback %v, want %v", got, want)
+	}
+	var raw map[string]any
+	b, _ := json.Marshal(r)
+	json.Unmarshal(b, &raw)
+	list, _ := raw["tool_feedback"].([]any)
+	if len(list) != 3 || list[0].(map[string]any)["role"] != "implementer" || list[0].(map[string]any)["proposal"] != "one" {
+		t.Fatalf("run.json tool_feedback: %v", raw["tool_feedback"])
+	}
+	if b, _ := json.Marshal(Record{}); strings.Contains(string(b), "tool_feedback") {
+		t.Fatalf("an empty record writes tool_feedback: %s", b)
+	}
+}

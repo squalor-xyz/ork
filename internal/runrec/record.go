@@ -344,6 +344,31 @@ const (
 	StopAfterCommit = "commit"
 )
 
+// MaxToolFeedback is the most tool feedback entries a run keeps (relay v12,
+// adj 325 relay.tool-feedback).
+const MaxToolFeedback = 3
+
+// ToolFeedback is one advisory tool feedback entry that a role ended its
+// report with (adj 325). It is not a finding and nothing acts on it.
+type ToolFeedback struct {
+	Role     string `json:"role"`
+	Tool     string `json:"tool"`
+	Kind     string `json:"kind"` // friction, feature or deterministic-check
+	Proposal string `json:"proposal"`
+	Evidence string `json:"evidence"`
+}
+
+// AddToolFeedback appends entries in the order given and keeps the first
+// MaxToolFeedback of them in all.
+func (r *Record) AddToolFeedback(entries []ToolFeedback) {
+	for _, f := range entries {
+		if len(r.ToolFeedback) >= MaxToolFeedback {
+			return
+		}
+		r.ToolFeedback = append(r.ToolFeedback, f)
+	}
+}
+
 // Record is the content of run.json.
 type Record struct {
 	RoundLimit       int                      `json:"round_limit,omitempty"` // proposed: durable owner grant
@@ -383,6 +408,7 @@ type Record struct {
 	Approvals        []Approval               `json:"approvals"`
 	Questions        []Question               `json:"questions"`
 	Findings         []Finding                `json:"findings,omitempty"`
+	ToolFeedback     []ToolFeedback           `json:"tool_feedback,omitempty"` // advisory, at most MaxToolFeedback, in report order (relay v12, adj 325)
 	Card             *ApprovalCard            `json:"card,omitempty"`
 	Fixes            []OwnerFix               `json:"fixes,omitempty"`
 	Writes           []Write                  `json:"writes"`

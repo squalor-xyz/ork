@@ -19066,7 +19066,7 @@
       "id": "S354",
       "title": "Accept relay v12",
       "short_title": "Accept relay v12",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19102,7 +19102,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

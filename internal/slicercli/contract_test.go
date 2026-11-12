@@ -16,7 +16,7 @@ import (
 )
 
 func TestRelayContractJSONConformance(t *testing.T) {
-	raw, err := os.ReadFile(recorded("relay-v10.json"))
+	raw, err := os.ReadFile(recorded("relay-v12.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -24,7 +24,7 @@ func TestRelayContractJSONConformance(t *testing.T) {
 	if err := json.Unmarshal(raw, &original); err != nil {
 		t.Fatal(err)
 	}
-	for _, missing := range []string{"", "finding_kinds", "gate", "roles", "outcomes", "role_order", "gate_rule", "stop_rules", "vendor_limit", "ledger", "finish_after_pass", "run_report", "worktree_scope", "commit_scope", "conformance/finding_kinds"} {
+	for _, missing := range []string{"", "finding_kinds", "gate", "roles", "outcomes", "role_order", "gate_rule", "stop_rules", "ledger", "finish_after_pass", "run_report", "worktree_scope", "commit_scope", "conformance/finding_kinds"} {
 		t.Run(missing, func(t *testing.T) {
 			var body map[string]json.RawMessage
 			json.Unmarshal(raw, &body)
@@ -48,7 +48,7 @@ func TestRelayContractJSONConformance(t *testing.T) {
 			c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, Stdout: string(data)})
 			got, err := c.RelayContract(context.Background(), root)
 			if missing == "" {
-				if err != nil || got.Contract != "relay v10" || got.LedgerRole("ui") != "ui" || len(got.Gate.Criteria) != 5 {
+				if err != nil || got.Contract != "relay v12" || got.LedgerRole("ui") != "ui" || len(got.Gate.Criteria) != 5 {
 					t.Fatalf("%+v: %v", got, err)
 				}
 			} else if err == nil {
@@ -64,7 +64,7 @@ func TestContractCheckPassesRootAndReportsPinMismatch(t *testing.T) {
 	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, File: recorded("error-contract-mismatch.json"), Exit: 2})
 	_, err := c.Contract(context.Background(), root)
 	var tool *clirun.ToolError
-	if !errors.As(err, &tool) || tool.Code != "contract_mismatch" || !strings.Contains(err.Error(), "pins relay v10") || !strings.Contains(err.Error(), "serves relay v11") {
+	if !errors.As(err, &tool) || tool.Code != "contract_mismatch" || !strings.Contains(err.Error(), "pins relay v11") || !strings.Contains(err.Error(), "serves relay v12") {
 		t.Fatalf("%v", err)
 	}
 	if calls := fake.CallsTo("slicer"); len(calls) != 1 || calls[0].Args[len(calls[0].Args)-1] != root {
@@ -91,16 +91,16 @@ func TestReadContractKeepsThePinOfARefusedContract(t *testing.T) {
 }
 
 func TestRelayContractDecodesNumericPin(t *testing.T) {
-	raw, err := os.ReadFile(recorded("relay-v10.json"))
+	raw, err := os.ReadFile(recorded("relay-v12.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, pin := range []string{"10", "9"} {
+	for _, pin := range []string{"12", "9"} {
 		body := strings.Replace(string(raw), `"pinned": null`, `"pinned": `+pin, 1)
 		c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, Stdout: body})
 		got, err := c.RelayContract(context.Background(), root)
-		if pin == "10" {
-			if err != nil || got.Pinned == nil || *got.Pinned != 10 {
+		if pin == "12" {
+			if err != nil || got.Pinned == nil || *got.Pinned != 12 {
 				t.Fatalf("%+v, %v", got, err)
 			}
 		} else if err == nil || !strings.Contains(err.Error(), "pinned relay v9") {
@@ -166,30 +166,54 @@ func TestRelayContractV11Validate(t *testing.T) {
 			}
 		})
 	}
-	// stop[] keys are decoded, not required (owner decision 2026-10-30).
-	if err := editContract(t, "relay-v11.json", func(g map[string]any) { g["stop"] = []any{"plain"} }).Validate(); err != nil {
-		t.Fatalf("v11 with plain stop[] strings refused: %v", err)
+}
+
+// Recorded v12 JSON validates and decodes tool_feedback (slicer 1.21.0, s453);
+// the conformance keys and roles[] are v11's.
+func TestRelayContractV12Validate(t *testing.T) {
+	got := editContract(t, "relay-v12.json", func(map[string]any) {})
+	if err := got.Validate(); err != nil {
+		t.Fatalf("recorded v12 JSON refused: %v", err)
+	}
+	tf := got.ToolFeedback
+	if tf == nil || tf.MaxEntries != 3 || !slices.Equal(tf.Kinds, []string{"friction", "feature", "deterministic-check"}) || !slices.Equal(tf.Fields, []string{"tool", "kind", "proposal", "evidence"}) {
+		t.Fatalf("tool_feedback: %+v", tf)
+	}
+	if err := editContract(t, "relay-v12.json", func(g map[string]any) { delete(g, "tool_feedback") }).Validate(); err == nil || !strings.Contains(err.Error(), "tool_feedback") {
+		t.Fatalf("v12 without tool_feedback: %v", err)
+	}
+	for name, edit := range map[string]func(map[string]any){
+		"no gate in roles[]": func(g map[string]any) { dropEntry(g, "roles", "role", "gate") },
+		"no role_fallback":   func(g map[string]any) { dropEntry(g, "conformance", "key", "role_fallback") },
+	} {
+		if err := editContract(t, "relay-v12.json", edit).Validate(); err == nil {
+			t.Errorf("v12 %s accepted", name)
+		}
 	}
 }
 
-// Recorded v10 JSON keeps validating, with plain-string stop[] and vendor_limit.
-func TestRelayContractV10StillValidates(t *testing.T) {
-	got := editContract(t, "relay-v10.json", func(map[string]any) {})
-	if err := got.Validate(); err != nil {
-		t.Fatal(err)
+// v11 needs no tool_feedback key.
+func TestRelayContractV11NeedsNoToolFeedback(t *testing.T) {
+	got := editContract(t, "relay-v11.json", func(map[string]any) {})
+	if got.ToolFeedback != nil || got.Validate() != nil {
+		t.Fatalf("%+v: %v", got.ToolFeedback, got.Validate())
 	}
-	if len(got.Stop) != 3 || got.Stop[0].Key != "" || got.Stop[0].Text != "the same slice fails its gate three times" {
-		t.Fatalf("v10 stop[]: %+v", got.Stop)
-	}
-	if err := editContract(t, "relay-v10.json", func(g map[string]any) { dropEntry(g, "conformance", "key", "vendor_limit") }).Validate(); err == nil {
-		t.Fatal("v10 without vendor_limit accepted")
+}
+
+// v10 and v13 are outside the accepted set {11, 12}.
+func TestRelayContractV10AndV13AreRefused(t *testing.T) {
+	for _, v := range []string{"relay v10", "relay v13"} {
+		err := editContract(t, "relay-v12.json", func(g map[string]any) { g["contract"] = v }).Validate()
+		if err == nil || !strings.Contains(err.Error(), "relay v11 or v12 and slicer prints "+strings.TrimPrefix(v, "relay ")) {
+			t.Errorf("%s: %v", v, err)
+		}
 	}
 }
 
 func TestRelayContractV9IsRefused(t *testing.T) {
-	got := editContract(t, "relay-v10.json", func(g map[string]any) { g["contract"] = "relay v9" })
+	got := editContract(t, "relay-v12.json", func(g map[string]any) { g["contract"] = "relay v9" })
 	err := got.Validate()
-	if err == nil || !strings.Contains(err.Error(), "v10 or v11") {
+	if err == nil || !strings.Contains(err.Error(), "v11 or v12") {
 		t.Fatalf("v9: %v", err)
 	}
 }
@@ -224,9 +248,11 @@ func TestLedgerRoleGate(t *testing.T) {
 	if got := renamed.LedgerRole("gate"); got != "judge" {
 		t.Fatalf("renamed gate = %q, want the contract's ledger_role", got)
 	}
-	v10 := editContract(t, "relay-v10.json", func(map[string]any) {})
-	if got := v10.LedgerRole("gate"); got != "gate" {
-		t.Fatalf("v10 gate = %q", got)
+	// A contract without the gate entry has no ledger role for it (v10's
+	// fallback to "gate" is gone).
+	none := editContract(t, "relay-v12.json", func(g map[string]any) { dropEntry(g, "roles", "role", "gate") })
+	if got := none.LedgerRole("gate"); got != "" {
+		t.Fatalf("no gate entry: gate = %q", got)
 	}
 }
 

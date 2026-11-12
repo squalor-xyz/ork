@@ -129,7 +129,9 @@ func (e *Engine) earlierReports(rec runrec.Record) []EarlierReport {
 			continue
 		}
 		if b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report)); err == nil {
-			out = append(out, EarlierReport{Name: strings.TrimSuffix(r.Report, ".md"), Text: string(b)})
+			// A role's tool feedback is advisory and is not sent on (relay v12).
+			text, _ := splitToolFeedback("", string(b))
+			out = append(out, EarlierReport{Name: strings.TrimSuffix(r.Report, ".md"), Text: text})
 		}
 	}
 	return out
@@ -666,12 +668,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, e.stop(ctx, stopReason)
 	}
 	stop()
-	// From relay v11 a gate round closes with its verdict, which is known only
-	// once the report is read (slicer s408), and only when the engine accepts
-	// the round: a round that pauses (a shape problem, an owner question, a
-	// blocker finding, an error) closes without one, and its rerun is a new
-	// step that carries the verdict (S204, *proposed*). Every other round, and
-	// every v10 round, closes here. closeStep closes the step once: the
+	// A gate round closes with its verdict, which is known only once the
+	// report is read (slicer s408), and only when the engine accepts the round:
+	// a round that pauses (a shape problem, an owner question, a blocker
+	// finding, an error) closes without one, and its rerun is a new step that
+	// carries the verdict (S204, *proposed*). Every other round closes here. closeStep closes the step once: the
 	// deferred call closes a held gate step on every exit that did not close
 	// it with the verdict.
 	closed := false
@@ -682,7 +683,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		closed = true
 		e.stepEnd(ctx, rec, stepID, "done", verdict)
 	}
-	if r.role == RoleGate && rec.Contract >= 11 {
+	if r.role == RoleGate {
 		defer closeStep("")
 	} else {
 		closeStep("")
@@ -777,6 +778,15 @@ func judgeReport(r round, text string, lenient bool) (rep *Report, tri *Triaged,
 // blocker finding pauses the slice, other findings are kept. The outcome is ok
 // when the round goes on.
 func (e *Engine) routeReport(r round, rep *Report, tri *Triaged, findings, text, file string) (outcome, error) {
+	// Tool feedback is advisory (relay v12, adj 325): the run keeps up to 3
+	// entries, and the report goes on without those lines, so no later brief
+	// or fix round carries them.
+	text, _ = splitToolFeedback(r.role, text)
+	if len(rep.ToolFeedback) > 0 {
+		if err := e.run.Update(func(rr *runrec.Record) { rr.AddToolFeedback(rep.ToolFeedback) }); err != nil {
+			return outcome{}, err
+		}
+	}
 	if rep.Question != "" {
 		err := e.run.Update(func(rr *runrec.Record) {
 			rr.Questions = append(rr.Questions, runrec.Question{Ask: rep.Ask, Role: r.role, Round: r.n, Text: rep.Question, Key: rep.Key, At: e.d.now()})
@@ -822,7 +832,7 @@ func (e *Engine) routeReport(r round, rep *Report, tri *Triaged, findings, text,
 // acceptShape is a round that the owner ended with ork retry --accept-shape
 // (S298, *proposed*): the refused report is read again with the lenient rule
 // for owner findings, and goes on as if the role had given it. No role runs. A
-// v11 gate round opens its own ledger step, on the lineup row of the refused
+// gate round opens its own ledger step, on the lineup row of the refused
 // attempt, and closes it with the verdict once the engine accepts the round (the
 // refused attempt's step closed without one, S204).
 func (e *Engine) acceptShape(ctx context.Context, r round) (outcome, error) {
@@ -848,7 +858,7 @@ func (e *Engine) acceptShape(ctx context.Context, r round) (outcome, error) {
 	// The verdict goes only with a round the engine accepts; every other exit
 	// closes the step without one.
 	verdict := ""
-	if r.role == RoleGate && rec.Contract >= 11 {
+	if r.role == RoleGate {
 		if stepID := e.stepStart(ctx, rec, r, entry); stepID != "" {
 			defer func() { e.stepEnd(ctx, rec, stepID, "done", verdict) }()
 		}
@@ -1004,7 +1014,7 @@ func (e *Engine) stepStart(ctx context.Context, rec runrec.Record, r round, entr
 }
 
 // stepEnd sets the phase of a ledger step when its round ends. verdict is
-// "pass", "fail" or "": a v11 gate round closes with its verdict.
+// "pass", "fail" or "": a gate round closes with its verdict.
 func (e *Engine) stepEnd(ctx context.Context, rec runrec.Record, id, phase, verdict string) {
 	if id == "" || rec.RelayRun == "" {
 		return

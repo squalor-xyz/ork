@@ -37,9 +37,9 @@ func rawRoute(args []string, file string) clitest.Route {
 }
 
 func TestContractReadsTheJSONContractString(t *testing.T) {
-	c, fake := client(t, route("relay-v11.json", "ai", "relay", "--json", "--root", root))
+	c, fake := client(t, route("relay-v12.json", "ai", "relay", "--json", "--root", root))
 	got, err := c.Contract(context.Background(), root)
-	if err != nil || got != "relay v11" {
+	if err != nil || got != "relay v12" {
 		t.Fatalf("%q, %v", got, err)
 	}
 	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"ai", "relay", "--json", "--root", root}) {

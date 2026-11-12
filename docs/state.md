@@ -397,6 +397,7 @@ owner's questions again.
   "budgets": {"minutes": 120, "tokens": 2000000},
   "approvals": [{"what": "slice", "at": "..."}],
   "questions": [{"role": "implementer", "round": 1, "key": "area.topic", "text": "...", "at": "...", "answer": "...", "answered_at": "..."}],
+  "tool_feedback": [{"role": "reviewer", "tool": "slicer", "kind": "friction", "proposal": "...", "evidence": "..."}],
   "findings": [{"kind": "later", "role": "reviewer", "round": 1, "title": "Add a --json flag", "text": "...", "at": "...", "filed": "S130", "filed_at": "..."}],
   "card": {"round": 1, "verdict": "PASS", "passed": 12, "failed": 0, "diff_stat": " a.go | 2 +-\n 1 file changed, 1 insertion(+), 1 deletion(-)",
            "untracked": ["b.go"], "human_checks": [{"text": "...", "state": "ticked"}],
@@ -504,7 +505,7 @@ role entry, and its next round reads the count from there; a pause with a higher
 count takes `pending` from a lower one and the displaced role keeps its own in
 `shape_retry`. A `shape_retry` with `shape_pauses` above 0 is a counted pause,
 not an automatic retry, and status does not label that row "shape retry". An
-accepted gate round (v11) opens a new ledger gate step and closes it with the
+accepted gate round opens a new ledger gate step and closes it with the
 report's verdict. A waiting resume
 (`resume`) carries the same two flags as `accept_shape` and `again`. Older
 records without these fields load; an older ork rejects them (strict keys).

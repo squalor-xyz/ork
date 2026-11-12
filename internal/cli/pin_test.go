@@ -23,7 +23,7 @@ func recordedSlicer(name string) string {
 // registry path.
 func pinWorld(t *testing.T, lead []clitest.Route, projects ...registry.Project) (*App, *clitest.Fake, string) {
 	t.Helper()
-	app, fake, _ := doctorAppLead(t, lead, "Contract: relay v11")
+	app, fake, _ := doctorAppLead(t, lead, "Contract: relay v12")
 	path, err := registry.DefaultPath()
 	if err != nil {
 		t.Fatal(err)
@@ -92,7 +92,7 @@ func TestProjectsPinNeedsRelayFlag(t *testing.T) {
 	P := t.TempDir()
 	app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: P})
 	code, _, stderr := run(t, app, "projects", "pin", "p")
-	if code != 2 || !strings.Contains(stderr, "projects pin needs --relay N (v10 or v11)") || strings.Contains(stderr, "--relay 0") {
+	if code != 2 || !strings.Contains(stderr, "projects pin needs --relay N (v11 or v12)") || strings.Contains(stderr, "--relay 0") {
 		t.Fatalf("exit %d: %s", code, stderr)
 	}
 	if calls := fake.Calls(); len(calls) != 0 {
@@ -103,14 +103,14 @@ func TestProjectsPinNeedsRelayFlag(t *testing.T) {
 func TestProjectsPinRefusesVersionsOutsideTheAcceptedSet(t *testing.T) {
 	P := t.TempDir()
 	for _, args := range [][]string{
-		{"--relay", "9"}, {"--relay", "12"}, {"--relay", "0"},
+		{"--relay", "9"}, {"--relay", "10"}, {"--relay", "13"}, {"--relay", "0"},
 	} {
 		app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: P})
 		code, _, stderr := run(t, app, append([]string{"projects", "pin", "p"}, args...)...)
 		if code != 2 {
 			t.Errorf("%v: exit %d, want 2: %s", args, code, stderr)
 		}
-		if !strings.Contains(stderr, "v10 or v11") {
+		if !strings.Contains(stderr, "v11 or v12") {
 			t.Errorf("%v: stderr %q does not list the accepted set", args, stderr)
 		}
 		if calls := fake.Calls(); len(calls) != 0 {
@@ -146,23 +146,23 @@ func TestProjectsPinNamesSlicersMessageWhenSlicerFails(t *testing.T) {
 	}
 }
 
-// ork accepts v10, so it sets the pin; the slicer in the test serves v11 and
+// ork accepts v11, so it sets the pin; the slicer in the test serves v12 and
 // refuses. The message names the project, says the pin stays set, quotes
 // slicer and gives ork's own next step.
 func TestProjectsPinReportsASlicerThatRefusesTheNewPin(t *testing.T) {
 	P := t.TempDir()
-	app, fake, _ := pinWorld(t, []clitest.Route{configSetRoute(P, "10"), relayRoute(P, "error-contract-mismatch.json", 2)}, registry.Project{Name: "p", Path: P})
-	code, _, stderr := run(t, app, "projects", "pin", "p", "--relay", "10")
+	app, fake, _ := pinWorld(t, []clitest.Route{configSetRoute(P, "11"), relayRoute(P, "error-contract-mismatch.json", 2)}, registry.Project{Name: "p", Path: P})
+	code, _, stderr := run(t, app, "projects", "pin", "p", "--relay", "11")
 	if code != 1 {
 		t.Fatalf("exit %d: %s", code, stderr)
 	}
-	for _, want := range []string{"pinned p at relay v10", "pin stays set", "this project pins relay v10, but this slicer serves relay v11", "`ork projects pin p --relay N`", "`ork projects unpin p`"} {
+	for _, want := range []string{"pinned p at relay v11", "pin stays set", "this project pins relay v11, but this slicer serves relay v12", "`ork projects pin p --relay N`", "`ork projects unpin p`"} {
 		if !strings.Contains(stderr, want) {
 			t.Errorf("stderr lacks %q:\n%s", want, stderr)
 		}
 	}
 	// The pin was written once and nothing cleared it.
-	want := [][]string{{"config", "relay_contract", "10", "--root", P}, {"ai", "relay", "--json", "--root", P}}
+	want := [][]string{{"config", "relay_contract", "11", "--root", P}, {"ai", "relay", "--json", "--root", P}}
 	if got := slicerArgs(fake); !reflect.DeepEqual(got, want) {
 		t.Fatalf("slicer calls %v, want %v", got, want)
 	}
@@ -254,7 +254,7 @@ func TestDoctorFailsAProjectWhoseSlicerRefusesContractMismatch(t *testing.T) {
 		t.Fatalf("exit %d: %+v", code, d)
 	}
 	got := d.Contract.Projects[0]
-	if got.OK || !strings.Contains(got.Error, "pins relay v10") || !strings.Contains(got.Error, "serves relay v11") || !strings.Contains(got.Error, "contract_mismatch") {
+	if got.OK || !strings.Contains(got.Error, "pins relay v11") || !strings.Contains(got.Error, "serves relay v12") || !strings.Contains(got.Error, "contract_mismatch") {
 		t.Fatalf("%+v", got)
 	}
 }
@@ -266,19 +266,19 @@ func TestDoctorChecksAnUnpinnedProjectAgainstTheAcceptedSetOnly(t *testing.T) {
 	if code != 0 || len(d.Contract.Projects) != 1 {
 		t.Fatalf("exit %d: %+v", code, d)
 	}
-	if got := d.Contract.Projects[0]; !got.OK || got.Pinned != nil || got.Found != "relay v11" {
+	if got := d.Contract.Projects[0]; !got.OK || got.Pinned != nil || got.Found != "relay v12" {
 		t.Fatalf("%+v", got)
 	}
 
 	// A slicer that serves a version ork does not accept fails the project.
-	raw, err := os.ReadFile(recordedSlicer("relay-v11.json"))
+	raw, err := os.ReadFile(recordedSlicer("relay-v12.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	v12 := strings.Replace(string(raw), `"contract": "relay v11"`, `"contract": "relay v12"`, 1)
-	app, _, _ = pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: v12}}, registry.Project{Name: "p", Path: P})
+	v13 := strings.Replace(string(raw), `"contract": "relay v12"`, `"contract": "relay v13"`, 1)
+	app, _, _ = pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: v13}}, registry.Project{Name: "p", Path: P})
 	code, d = doctorContracts(t, app)
-	if code != 1 || len(d.Contract.Projects) != 1 || d.Contract.Projects[0].OK || !strings.Contains(d.Contract.Projects[0].Error, "v12") {
+	if code != 1 || len(d.Contract.Projects) != 1 || d.Contract.Projects[0].OK || !strings.Contains(d.Contract.Projects[0].Error, "v13") {
 		t.Fatalf("exit %d: %+v", code, d)
 	}
 }
@@ -319,7 +319,7 @@ func TestDoctorFailsAProjectPinnedOutsideTheAcceptedSet(t *testing.T) {
 		t.Fatalf("exit %d: %+v", code, d)
 	}
 	got := d.Contract.Projects[0]
-	if got.OK || got.Pinned == nil || *got.Pinned != 9 || !strings.Contains(got.Error, "pin v9") || !strings.Contains(got.Error, "v10 or v11") {
+	if got.OK || got.Pinned == nil || *got.Pinned != 9 || !strings.Contains(got.Error, "pin v9") || !strings.Contains(got.Error, "v11 or v12") {
 		t.Fatalf("%+v", got)
 	}
 }
@@ -328,13 +328,13 @@ func TestDoctorFailsAProjectPinnedOutsideTheAcceptedSet(t *testing.T) {
 // the other's entry ok (the two-project test of the 2026-10-20 review).
 func TestDoctorChecksEachProjectWithItsOwnRoot(t *testing.T) {
 	A, B := t.TempDir(), t.TempDir()
-	raw, err := os.ReadFile(recordedSlicer("relay-v10.json"))
+	raw, err := os.ReadFile(recordedSlicer("relay-v12.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	pinned10 := strings.Replace(string(raw), `"pinned": null`, `"pinned": 10`, 1)
+	pinned12 := strings.Replace(string(raw), `"pinned": null`, `"pinned": 12`, 1)
 	app, fake, _ := pinWorld(t, []clitest.Route{
-		{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", A}, Stdout: pinned10},
+		{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", A}, Stdout: pinned12},
 		relayRoute(B, "error-contract-mismatch.json", 2),
 	}, registry.Project{Name: "a", Path: A}, registry.Project{Name: "b", Path: B})
 	code, d := doctorContracts(t, app)
@@ -342,10 +342,10 @@ func TestDoctorChecksEachProjectWithItsOwnRoot(t *testing.T) {
 		t.Fatalf("exit %d: %+v", code, d)
 	}
 	a, b := d.Contract.Projects[0], d.Contract.Projects[1]
-	if a.Project != "a" || !a.OK || a.Pinned == nil || *a.Pinned != 10 || a.Found != "relay v10" {
+	if a.Project != "a" || !a.OK || a.Pinned == nil || *a.Pinned != 12 || a.Found != "relay v12" {
 		t.Fatalf("a: %+v", a)
 	}
-	if b.Project != "b" || b.OK || !strings.Contains(b.Error, "pins relay v10") {
+	if b.Project != "b" || b.OK || !strings.Contains(b.Error, "pins relay v11") {
 		t.Fatalf("b: %+v", b)
 	}
 	roots := map[string]bool{}
@@ -366,7 +366,7 @@ func TestDoctorTextListsEachProjectContract(t *testing.T) {
 	if code != 1 || !strings.Contains(out, "[FAIL] contract p  ") {
 		t.Fatalf("exit %d:\n%s", code, out)
 	}
-	for _, want := range []string{"pins relay v10", "run `ork projects pin p --relay N` with the version slicer serves, or `ork projects unpin p`"} {
+	for _, want := range []string{"pins relay v11", "run `ork projects pin p --relay N` with the version slicer serves, or `ork projects unpin p`"} {
 		if !strings.Contains(out, want) {
 			t.Fatalf("the text lacks %q:\n%s", want, out)
 		}
@@ -388,7 +388,7 @@ func TestDoctorTextForAPinOutsideTheSetNamesTheAcceptedVersions(t *testing.T) {
 	pinned9 := strings.Replace(string(raw), `"pinned": 11`, `"pinned": 9`, 1)
 	app, _, _ := pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: pinned9}}, registry.Project{Name: "p", Path: P})
 	_, out, _ := run(t, app, "doctor")
-	if !strings.Contains(out, "run `ork projects pin p --relay N` with v10 or v11, or `ork projects unpin p`") {
+	if !strings.Contains(out, "run `ork projects pin p --relay N` with v11 or v12, or `ork projects unpin p`") {
 		t.Fatalf("the text lacks the next step:\n%s", out)
 	}
 }
@@ -396,12 +396,12 @@ func TestDoctorTextForAPinOutsideTheSetNamesTheAcceptedVersions(t *testing.T) {
 // Other failures get no pin advice, because pin and unpin would not fix them.
 func TestDoctorTextGivesNoPinAdviceForAnUnacceptedContract(t *testing.T) {
 	P := t.TempDir()
-	raw, err := os.ReadFile(recordedSlicer("relay-v11.json"))
+	raw, err := os.ReadFile(recordedSlicer("relay-v12.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	v12 := strings.Replace(string(raw), `"contract": "relay v11"`, `"contract": "relay v12"`, 1)
-	app, _, _ := pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: v12}}, registry.Project{Name: "p", Path: P})
+	v13 := strings.Replace(string(raw), `"contract": "relay v12"`, `"contract": "relay v13"`, 1)
+	app, _, _ := pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: v13}}, registry.Project{Name: "p", Path: P})
 	_, out, _ := run(t, app, "doctor")
 	if !strings.Contains(out, "[FAIL] contract p  ") || strings.Contains(out, "ork projects unpin p") {
 		t.Fatalf("output:\n%s", out)
@@ -413,8 +413,8 @@ func TestContractWordingUsesOnePhrase(t *testing.T) {
 		args []string
 		want string
 	}{
-		{[]string{"projects", "pin", "p"}, "projects pin needs --relay N (v10 or v11)"},
-		{[]string{"projects", "pin", "p", "--relay", "9"}, "projects pin: --relay 9 is not a version ork accepts (v10 or v11)"},
+		{[]string{"projects", "pin", "p"}, "projects pin needs --relay N (v11 or v12)"},
+		{[]string{"projects", "pin", "p", "--relay", "9"}, "projects pin: --relay 9 is not a version ork accepts (v11 or v12)"},
 	} {
 		t.Run(tc.want, func(t *testing.T) {
 			app, _, _ := pinWorld(t, nil)
@@ -432,14 +432,14 @@ func TestContractWordingUsesOnePhrase(t *testing.T) {
 		}
 		app, _, _ := pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: strings.Replace(string(raw), `"pinned": 11`, `"pinned": 9`, 1)}}, registry.Project{Name: "p", Path: P})
 		_, d := doctorContracts(t, app)
-		if len(d.Contract.Projects) != 1 || d.Contract.Projects[0].Error != "pin v9 is outside what ork accepts (v10 or v11)" {
+		if len(d.Contract.Projects) != 1 || d.Contract.Projects[0].Error != "pin v9 is outside what ork accepts (v11 or v12)" {
 			t.Errorf("pin error: %+v", d.Contract.Projects)
 		}
 	})
 	t.Run("ok", func(t *testing.T) {
 		app, _, _ := doctorApp(t, "Contract: relay v11")
 		_, out, _ := run(t, app, "doctor")
-		if !strings.Contains(out, "[ok] contract  accepts v10 or v11, slicer prints \"Contract: relay v11\"\n") {
+		if !strings.Contains(out, "[ok] contract  accepts v11 or v12, slicer prints \"Contract: relay v11\"\n") {
 			t.Errorf("contract line: %s", out)
 		}
 	})
