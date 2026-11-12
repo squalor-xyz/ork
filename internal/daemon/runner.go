@@ -44,8 +44,8 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	total := func(u claude.Usage) int {
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
-	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: claudeEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
-		ReadOnly: req.ReadOnly, Allowlist: allowlist, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
+	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
+		ReadOnly: req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			switch ev.Kind {
 			case claude.EventTextDelta:
 				live.send(ev.Text, 0, false)
@@ -209,10 +209,9 @@ func (r grokRunner) Run(ctx context.Context, req engine.Request) (engine.Result,
 
 // roleEnv returns base (the process environment when nil) with each named
 // variable set to the given value, replacing every inherited entry of that
-// name. Without a temp directory it returns base unchanged. base is not
-// modified.
-func roleEnv(base []string, tempDir string, set map[string]string) []string {
-	if tempDir == "" {
+// name. With nothing to set it returns base unchanged. base is not modified.
+func roleEnv(base []string, set map[string]string) []string {
+	if len(set) == 0 {
 		return base
 	}
 	if base == nil {
@@ -231,17 +230,35 @@ func roleEnv(base []string, tempDir string, set map[string]string) []string {
 	return env
 }
 
+// localBashOutputCap is the character cap on one Bash result for a claude-local
+// role (S360, *proposed*, roles.local-output-cap). The Claude Code CLI reads it
+// from BASH_MAX_OUTPUT_LENGTH. The owner measured the variable on 2026-11-12
+// (claude 2.1.322): with 2000 set, an 18.9 KB output became a "persisted-output"
+// notice with a ~2.2 KB preview. The owner chose 10000 for local roles.
+const localBashOutputCap = "10000"
+
 // claudeEnv points the role's TMPDIR at its own temp directory (S271,
 // *proposed*), so it needs no "env TMPDIR=DIR" prefix or mkdir. The role's
-// directory wins over a vendor_env TMPDIR.
-func claudeEnv(base []string, tempDir string) []string {
-	return roleEnv(base, tempDir, map[string]string{"TMPDIR": tempDir})
+// directory wins over a vendor_env TMPDIR. A claude-local role also gets the
+// Bash output cap (S360).
+func claudeEnv(base []string, tempDir, vendor string) []string {
+	set := map[string]string{}
+	if tempDir != "" {
+		set["TMPDIR"] = tempDir
+	}
+	if vendor == "claude-local" {
+		set["BASH_MAX_OUTPUT_LENGTH"] = localBashOutputCap
+	}
+	return roleEnv(base, set)
 }
 
 // codexEnv keeps the role's Go build cache inside its writable temp directory
 // (S87) and points TMPDIR there too (S271, *proposed*).
 func codexEnv(base []string, tempDir string) []string {
-	return roleEnv(base, tempDir, map[string]string{"GOCACHE": filepath.Join(tempDir, "gocache"), "TMPDIR": tempDir})
+	if tempDir == "" {
+		return base
+	}
+	return roleEnv(base, map[string]string{"GOCACHE": filepath.Join(tempDir, "gocache"), "TMPDIR": tempDir})
 }
 
 // liveRedactor withholds a possible secret prefix across assistant text events.

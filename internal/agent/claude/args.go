@@ -4,14 +4,21 @@ package claude
 
 import (
 	"errors"
+	"slices"
 	"strings"
 )
+
+// localDisallowedTools are the tools a relay role on claude-local never uses.
+// "Task" is the name the stream's init event lists (testdata/vendors/claude);
+// "Agent" is its newer name.
+var localDisallowedTools = []string{"WebFetch", "WebSearch", "Task", "Agent", "NotebookEdit", "Skill"}
 
 // Args returns the arguments after the binary. The shape follows the
 // measured commands (testdata/vendors/claude/*.cmd) and `claude --help`:
 //
 //	-p [--resume SESSION] --output-format stream-json --verbose
 //	   --include-partial-messages [--model M] [--effort E]
+//	   [--disallowedTools a,b [--disable-slash-commands]]   (claude-local only)
 //	   (--allowedTools a,b --permission-prompts none | --permission-mode plan)
 //	   PROMPT
 //
@@ -43,6 +50,19 @@ func (s Spec) Args() ([]string, error) {
 	}
 	if s.Effort != "" {
 		args = append(args, "--effort", s.Effort)
+	}
+	// A local role starts with less fixed context (S360, *proposed*): the tools
+	// and commands it never uses are turned off. The flags come before
+	// --allowedTools because --disallowedTools takes a variadic value list.
+	if s.Bin == "claude-local" {
+		denied := localDisallowedTools
+		if s.KeepSkills {
+			denied = slices.DeleteFunc(slices.Clone(denied), func(t string) bool { return t == "Skill" })
+		}
+		args = append(args, "--disallowedTools", strings.Join(denied, ","))
+		if !s.KeepSkills {
+			args = append(args, "--disable-slash-commands")
+		}
 	}
 	if s.ReadOnly && s.Bin != "claude-local" {
 		args = append(args, "--permission-mode", "plan")

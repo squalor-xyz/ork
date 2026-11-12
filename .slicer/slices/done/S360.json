@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/agent/claude/args.go:47-61`\n- `internal/agent/claude/args_test.go`\n- `internal/engine/perm.go:19-30`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/agent/claude/args.go`\n- `internal/agent/claude/args_test.go`\n- `internal/agent/claude/types.go`\n- `internal/daemon/runner.go`\n- `internal/daemon/runner_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- A local implementer's args hold `--disallowedTools` with the unused tools and `--disable-slash-commands`; a local UI pass keeps Skill; a cloud role's args do not change.\n- A local role's long command output is capped (the cap and how it is set are measured and recorded in the slice notes; if the CLI offers no cap, the brief's check commands pipe through a tail, and the test checks that)."
+      "body": "- `TestArgsLocalWriteRoleTurnsOffUnusedTools`, `TestArgsLocalReadOnlyUsesAllowlist`, `TestArgsLocalUIPassKeepsSkill` and `TestArgsCloudRoleUnchanged`: a local role's args hold `--disallowedTools` with the unused tools and `--disable-slash-commands`; a local UI pass keeps Skill; a cloud role's args do not change. `TestClaudeReadOnlyRoleArguments` checks the same through the runner (the UI role keeps Skill).\n- `TestClaudeLocalEnvCapsBashOutput`: a claude-local role's environment sets `BASH_MAX_OUTPUT_LENGTH` to 10000 (replacing an inherited value); a cloud role's does not. The owner measured the variable on 2026-11-12 (claude 2.1.322, cloud model): at 2000 an 18.9 KB output became a persisted-output notice with a ~2.2 KB preview."
     },
     {
       "heading": "Implement",

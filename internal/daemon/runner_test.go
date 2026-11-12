@@ -61,7 +61,7 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 				t.Fatal(err)
 			}
 			want := map[string][]string{
-				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--allowedTools", localReadOnlyTools, "--permission-prompts", "none", "brief"},
+				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--disallowedTools", localDisallowedTools, "--disable-slash-commands", "--allowedTools", localReadOnlyTools, "--permission-prompts", "none", "brief"},
 				"codex-local":  {"exec", "resume", "prior", "-m", model, "--json", "-c", "model_reasoning_effort=medium", "-c", `sandbox_mode="read-only"`, "brief"},
 				"grok-local":   {"-p", "brief", "--output-format", "streaming-messages-json", "--include-partial-messages", "--reasoning-effort", "medium", "--resume", "prior", "--permission-mode", "plan", "--cwd", dir},
 			}[vendor]
@@ -73,6 +73,8 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 }
 
 const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(adj show*),Bash(adj check*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
+
+const localDisallowedTools = "WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill"
 
 func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleUI} {
@@ -89,6 +91,13 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 					}
 					want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
 					if vendor == "claude-local" {
+						denied, slash := localDisallowedTools, []string{"--disable-slash-commands"}
+						if role == engine.RoleUI {
+							// A UI pass loads skills (brief.go), so it keeps Skill.
+							denied, slash = "WebFetch,WebSearch,Task,Agent,NotebookEdit", nil
+						}
+						want = append(want, "--disallowedTools", denied)
+						want = append(want, slash...)
 						want = append(want, "--allowedTools", localReadOnlyTools, "--permission-prompts", "none")
 					} else {
 						want = append(want, "--permission-mode", "plan")
@@ -518,6 +527,35 @@ func TestCodexRoundEnvSetsGOCACHEAndTMPDIR(t *testing.T) {
 			}
 			if tc.temp != "" && !reflect.DeepEqual(tc.env, before) {
 				t.Error("base environment mutated")
+			}
+		})
+	}
+}
+
+// S360 (*proposed*): a claude-local role gets a Bash output cap in its
+// environment, replacing an inherited value, with or without a temp directory.
+// For a cloud role ork does not set or replace the variable, so an inherited
+// value stays.
+func TestClaudeLocalEnvCapsBashOutput(t *testing.T) {
+	base := []string{"KEY=value", "BASH_MAX_OUTPUT_LENGTH=150000"}
+	for _, tc := range []struct {
+		vendor, temp string
+		want         []string
+	}{
+		{"claude-local", "/temp", []string{"KEY=value", "BASH_MAX_OUTPUT_LENGTH=10000", "TMPDIR=/temp"}},
+		{"claude-local", "", []string{"KEY=value", "BASH_MAX_OUTPUT_LENGTH=10000"}},
+		{"claude", "/temp", []string{"KEY=value", "BASH_MAX_OUTPUT_LENGTH=150000", "TMPDIR=/temp"}},
+		{"claude", "", base},
+	} {
+		t.Run(tc.vendor+"/"+tc.temp, func(t *testing.T) {
+			runner := claudeRunner{env: base, round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				if !reflect.DeepEqual(s.Env, tc.want) {
+					t.Errorf("environment %v, want %v", s.Env, tc.want)
+				}
+				return claude.Round{Class: claude.ClassOK}, nil
+			}}
+			if _, err := runner.Run(context.Background(), engine.Request{Vendor: tc.vendor, TempDir: tc.temp, ReadOnly: true}); err != nil {
+				t.Fatal(err)
 			}
 		})
 	}

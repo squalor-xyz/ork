@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-360 items · — 69 · done 258 · retired 33
+360 items · — 68 · done 259 · retired 33
 
 v1.2
 
@@ -128,7 +128,7 @@ v1.2
 | 78 | [S357](slices/S357.md) | Slice commit titled with the Git section's text | S | - |  |  | — |
 | 79 | [S358](slices/S358.md) | Local fresh session, not compaction | M `[needs-owner]` | 2 |  | S304 trial 2 (2026-11-12, S314): claude-local auto-compacted three times at about 83-86k tokens, taking 893 s, 983 s and 1121 s (50 of 90 min), and after the first compaction it lost its brief and went looking for it in its own transcript. · discovered from S304 | — |
 | 80 | [S359](slices/S359.md) | Sliver a slice for a local implementer | M `[needs-owner]` | 2 |  | S304 trials 1 and 2: a claude-local implementer could not finish a size S ork slice in 45 or 90 minutes; its context grew past 80k tokens while it explored. · discovered from S304 | — |
-| 81 | [S360](slices/S360.md) | Smaller fixed context for local roles | S | 1 |  | S304 trial 1 (2026-11-11): the claude-local implementer's first turn already held about 22k tokens before it read any file; long command output (go test) also fills the window. · discovered from S304 | — |
+| 81 | [S360](slices/S360.md) | Smaller fixed context for local roles | S | 1 |  | S304 trial 1 (2026-11-11): the claude-local implementer's first turn already held about 22k tokens before it read any file; long command output (go test) also fills the window. · discovered from S304 | done |
 
 ---
 

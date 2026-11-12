@@ -164,6 +164,7 @@ type Spec struct {
 	Effort     string // omitted when empty
 	ReadOnly   bool   // cloud: plan mode; claude-local: read-only allowlist
 	Allowlist  []string
+	KeepSkills bool   // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
 	Resume     string // session id to resume
 	ReportFile string // read first when non-empty
 	FixtureDir string // default DefaultFixtureDir()

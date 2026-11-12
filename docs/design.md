@@ -1805,7 +1805,22 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   stream-json --verbose --include-partial-messages [--model M] [--effort E]`
   (M is the lineup entry's `model`, the alias itself for `opus@latest`;
   S244, *proposed*),
-  then `--allowedTools a,b --permission-prompts none` for a write role or a
+  then, for claude-local only (S360, *proposed*; owner decision 2026-11-12),
+  `--disallowedTools WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill
+  --disable-slash-commands`, which leaves the role less fixed context to
+  prefill each turn (`claude --help` lists both flags). A UI pass keeps
+  `Skill` and the slash commands, since its brief names skills to load. The
+  flags come before `--allowedTools`, because `--disallowedTools` takes a
+  variadic list. A claude-local role's environment also sets
+  `BASH_MAX_OUTPUT_LENGTH` to a character cap on one Bash result
+  (`localBashOutputCap`, `internal/daemon/runner.go`), replacing an inherited
+  value. The owner measured the variable on 2026-11-12 with claude 2.1.322
+  and a cloud model (the cap is client-side): unset, an 18.9 KB output
+  reached the model whole; with `BASH_MAX_OUTPUT_LENGTH=2000` the same
+  output became a "persisted-output" notice (the full output saved to a
+  file) plus a ~2.2 KB preview. The owner chose 10000 for local roles. Cloud
+  roles get neither change.
+  Then `--allowedTools a,b --permission-prompts none` for a write role or a
   read-only claude-local role (using its fixed read-only list), and
   `--permission-mode plan` for a cloud read-only role, then the prompt. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
