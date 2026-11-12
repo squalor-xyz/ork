@@ -2,7 +2,7 @@
 {
   "id": 175,
   "title": "Which relay contract versions does ork accept?",
-  "status": "decided",
+  "status": "superseded",
   "key": "boundary.contract-set",
   "asked_by": "claude",
   "decided_by": "jon",
@@ -25,6 +25,7 @@
   },
   "decision": "10-and-11",
   "rationale": "Owner picked this option in an interactive question in the ork v1.0 session on 2026-10-30; recorded by the agent at the owner's direction (process.owner-answers, 170).",
+  "superseded_by": 326,
   "refs": [
     "S198",
     "S142"
@@ -37,6 +38,11 @@
     {
       "date": "2026-10-30",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-12",
+      "event": "supersede",
+      "note": "by 326 (recorded as 324; renumbered after an id clash, 2026-11-12)"
     }
   ]
 }
