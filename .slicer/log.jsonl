@@ -4397,3 +4397,16 @@
 {"when": "2026-11-11T23:24:04Z", "item": "S347", "action": "add", "from": "", "to": "open", "note": "Launch tracking commit lists items whose slice files stay uncommitted"}
 {"when": "2026-11-11T23:24:04Z", "item": "S347", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
 {"when": "2026-11-11T23:33:34Z", "item": "S314", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-11T23:53:19Z", "item": "S348", "action": "add", "from": "", "to": "open", "note": "Warn before a run starts when the slicer merge drivers are not configured"}
+{"when": "2026-11-11T23:53:19Z", "item": "S348", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-12T00:19:47Z", "item": "S349", "action": "add", "from": "", "to": "open", "note": "Retry of a stopped run skips the implementer and goes straight to checks and the gate"}
+{"when": "2026-11-12T00:19:48Z", "item": "S349", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-12T00:39:47Z", "item": "S350", "action": "add", "from": "", "to": "open", "note": "Implementer has no way to remove a file it created by mistake"}
+{"when": "2026-11-12T00:39:47Z", "item": "S350", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-12T01:00:52Z", "item": "S351", "action": "add", "from": "", "to": "open", "note": "Landing commits the owner's uncommitted edits on main into its tracking commit"}
+{"when": "2026-11-12T01:00:52Z", "item": "S351", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-12T01:08:38Z", "item": "S352", "action": "add", "from": "", "to": "open", "note": "Accept slicer relay v12 and read its tool_feedback line"}
+{"when": "2026-11-12T01:08:38Z", "item": "S352", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-12T01:08:38Z", "item": "S353", "action": "add", "from": "", "to": "open", "note": "A slicer contract bump on main breaks ork everywhere at once"}
+{"when": "2026-11-12T01:08:38Z", "item": "S353", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-12T01:11:43Z", "item": "S354", "action": "add", "from": "", "to": "open", "note": "Accept relay v12"}

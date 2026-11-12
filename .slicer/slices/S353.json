@@ -1,0 +1,39 @@
+{
+  "id": "S353",
+  "title": "A slicer contract bump on main breaks ork everywhere at once",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-12: slicer s453 (relay v12) landed through ork itself; since the slicer command is an editable install of slicer's main checkout, ork immediately refused relays in all 12 projects. ork landed the very slice that broke it, with no warning. Wanted: when a slice under relay changes slicer's RELAY_CONTRACT (`slicer ai relay --json` contract differs between the worktree and main), ork pauses before landing and names the ork version that accepts it."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

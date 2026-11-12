@@ -1,0 +1,39 @@
+{
+  "id": "S352",
+  "title": "Accept slicer relay v12 and read its tool_feedback line",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "slicer s453 landed on 2026-11-12: RELAY_CONTRACT is 12, adding an optional `tool feedback` run-report line (at most 3 entries, counted toward 30 lines): `tool feedback: N. ROLE | tool: slicer|ork|NAME | kind: friction|feature|deterministic-check | proposal: TEXT | evidence: TEXT`, or `tool feedback: none`; `slicer ai relay --json` gains a `tool_feedback` key after `conformance` and `report.lines` a `tool_feedback` key before `role_steps`. Because `slicer` on PATH is an editable install of slicer's main, ork now refuses every relay: `ork doctor` fails the contract check for all 12 projects (\"ork accepts relay v10 or v11 and slicer prints v12\"), and the slicer v1.22 wave is paused at s457/s459. Wanted: accept v12 (and v11 for pinned projects), carry role tool feedback into ork's run view/needs-you, never act on it in the slice."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

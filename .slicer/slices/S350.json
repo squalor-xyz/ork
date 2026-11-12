@@ -1,0 +1,39 @@
+{
+  "id": "S350",
+  "title": "Implementer has no way to remove a file it created by mistake",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-12 (slicer s451, ork-20261111-213809-6e14): the implementer left a 2-byte scratch file tests/test_merge_slice.py.tail, which turned affected.py red; it had no rm in its allowlist, so the run paused for the owner, and the outer session deleted it. Wanted: let the implementer delete untracked files it created this run (or git rm/git clean -n style scoped to its own worktree), or have ork's round check name untracked stray files before red."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

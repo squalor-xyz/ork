@@ -1,0 +1,39 @@
+{
+  "id": "S349",
+  "title": "Retry of a stopped run skips the implementer and goes straight to checks and the gate",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11 (slicer s453, ork-20261111-213809-376f): the run paused after round 3 with the gate's one [fix] open (a denied git mv). After the run was stopped, the allow added, and `ork retry RUN --rounds 2`, round 4 ran checks and the gate only (no implementer-4 report); the gate failed on the same [fix] and the run stopped at 3 gate fails. The help says a stopped run resumes 'with N more implementer rounds'. Wanted: the retry starts with an implementer fix round carrying the open [fix] findings."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

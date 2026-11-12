@@ -1,0 +1,39 @@
+{
+  "id": "S348",
+  "title": "Warn before a run starts when the slicer merge drivers are not configured",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-11 (slicer s455): landing paused on conflicts in .slicer/render/ROADMAP.html and ROADMAP.md because the clone had no merge.slicer-* git config; the fix (`slicer setup-git` lines, merge --abort, ork retry) came only at the land step, after the whole relay. `slicer check`/`slicer setup-git` exit 1 when the drivers are missing. Wanted: `ork run`/`ork wave start` plans (and `ork doctor`) warn when `slicer setup-git` exits 1 for the project, before any slice starts."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

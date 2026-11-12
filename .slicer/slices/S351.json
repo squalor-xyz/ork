@@ -1,0 +1,39 @@
+{
+  "id": "S351",
+  "title": "Landing commits the owner's uncommitted edits on main into its tracking commit",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-12 (slicer s451 landing): the outer session had uncommitted filings on main (s457 spec, s459 decision) awaiting the owner's commit approval; ork's landing committed them as part of \"Tracking edits on main before landing s451\" (f18adb3b and the merge) without asking. Wanted: commit only the landed slice's own tracking edits, and refuse or pause on other uncommitted changes on main, naming them."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
