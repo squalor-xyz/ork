@@ -403,9 +403,14 @@ slice.
     `.slicer/slices/ID.json`, `.slicer/render/slices/ID.md` and
     `.slicer/index.json` on main by literal path, with the message
     `Tracking edits on main before starting ID` (S330, `launch.tracking-commit`,
-    owner scope: item-only). Other tracking files and non-tracking edits stay
-    uncommitted, including staged edits. Clean main needs no commit. A status,
-    prefix, add or commit error pauses setup with one line before creating the
+    owner scope: item-only). When committing the index, also call
+    `slicer list --json --lean` through the slicer client and include each
+    listed item's untracked slice JSON and render when `has_slice` is true
+    (S347, adj 321). This keeps the committed index from listing slice files
+    left uncommitted on main. Edits to other items' already tracked files,
+    unlisted files, configuration and relay roles stay uncommitted, including
+    staged edits. Clean main needs no commit. A status, prefix, list, untracked
+    file read, add or commit error pauses setup with one line before creating the
     worktree. An existing worktree directory skips this commit, including on
     a retry after setup already created it.
   - `git -C P worktree add <worktree_pattern> -b <branch_pattern>`

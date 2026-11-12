@@ -23,7 +23,9 @@ import (
 // Launch tests use real git so assertions cover the commit and checkout contents.
 func launchTrackingHarness(t *testing.T, subfolder bool) *harness {
 	t.Helper()
-	h := newHarness(t)
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[]`})
+	})
 	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(t.TempDir(), "gitconfig"))
 	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	for _, key := range []string{"GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"} {

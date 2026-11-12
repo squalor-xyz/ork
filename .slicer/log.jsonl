@@ -4447,6 +4447,16 @@
 {"when": "2026-11-12T05:36:53Z", "item": "S347", "action": "decide", "from": "", "to": "", "note": "2026-11-12, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
 {"when": "2026-11-12T05:36:53Z", "item": "S359", "action": "note", "from": "", "to": "", "note": "2026-11-12, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
 {"when": "2026-11-12T05:36:57Z", "item": "S359", "action": "decide", "from": "", "to": "", "note": "Q1 cloud-auto (adj 337), Q2 above-s (adj 338); waits for S62", "by": "Jon Robbins"}
+{"when": "2026-11-12T12:34:06Z", "item": "S347", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-12T12:34:06Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-12T12:34:06Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-12T12:34:06Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-12T12:35:18Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-12T12:38:14Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-12T12:38:14Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-12T12:40:14Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-12T13:32:01Z", "item": "S347", "action": "note", "from": "", "to": "", "note": "Verified launch tracking commits include listed has_slice it", "by": "Jon Robbins"}
+{"when": "2026-11-12T13:32:05Z", "item": "S347", "action": "status", "from": "started", "to": "done", "note": "Launch tracking commits include listed has_slice items' untracked slice JSON and renders while preserving unrelated staged files, configuration, relay roles and tracked slice edits. Verified by engine regression tests and mutation checks; gate PASS and owner approved.", "by": "Jon Robbins"}
 {"when": "2026-11-12T12:33:33Z", "item": "S347", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-12T12:33:34Z", "item": "S358", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-12T12:33:36Z", "item": "S344", "action": "edit", "from": "", "to": "", "note": "Implement"}
@@ -4464,3 +4474,4 @@
 {"when": "2026-11-12T13:27:04Z", "item": "S344", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-12T13:35:52Z", "item": "S344", "action": "note", "from": "", "to": "", "note": "Verified S344: r35 is the trial-only local spec check row an", "by": "Jon Robbins"}
 {"when": "2026-11-12T13:35:52Z", "item": "S344", "action": "status", "from": "started", "to": "done", "note": "Verified trial-only local spec check r35 and UI pass r36 with u12 classification, ordered ui_pass_rows selection and fallback, reviewer/gate exclusions, validated settings and matching documentation/help. Gate VERDICT: PASS; owner approved.", "by": "Jon Robbins"}
+{"when": "2026-11-12T12:41:48Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "2026-11-12, owner (chat, session 8d711f67): 'you pick the sl", "by": "Jon Robbins"}
