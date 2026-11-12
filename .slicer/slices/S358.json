@@ -1,0 +1,43 @@
+{
+  "id": "S358",
+  "title": "Local roles: start a fresh session instead of compacting",
+  "lead": [
+    "*Proposed.* Owner decision 2026-11-12 (relay session 8d711f67, chat: \"2 is a great idea. file it\"): a local role never reaches auto-compaction. When its context passes a threshold, ork ends the session and starts a new one with the same brief plus the role's own progress so far. A fresh start costs seconds; a compaction on the local server costs 15-19 minutes. Cloud roles do not change."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 2 (2026-11-12, S314): claude-local auto-compacted three times at about 83-86k tokens, taking 893 s, 983 s and 1121 s (50 of 90 min), and after the first compaction it lost its brief and went looking for it in its own transcript.",
+  "size": "M",
+  "flags": [
+    "needs-owner"
+  ],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* The local server spends 15-19 minutes per compaction because the model summarises the whole 85k-token context (trial 2 transcript `~/.claude/projects/-home-jon-code-squalor-xyz-ork--worktrees-S314/06e09bef-cc2f-4722-b1a3-4866518a6e48.jsonl`, `compact_boundary` entries). The work itself is not lost when a session ends: the edits are in the worktree. What a new session needs is the brief, the diff so far, and the role's short plan. claude CLI 2.1.322 has `--autocompact <auto|tokens>` with a 100k minimum, so compaction cannot be turned off below the launcher's window; ork must end the session first. ork already reads the claude stream (`internal/agent/claude/stream.go:152`); each assistant event carries the turn's input token count.\n\nOpen owner questions (the implementer asks them with `adj ask` first):\n\n- Q1 (`roles.local-fresh-threshold`): at what context size does ork end the session? (a) *recommended*: 70k tokens, below the 83-86k where trial 2 compacted; (b) 60k; (c) a project setting with 70k as default.\n- Q2 (`roles.local-progress-file`): where does the role keep its progress? (a) *recommended*: the role writes a short progress note (done, next, open problems) to `.scratch/progress-RUN-ROLE.md` in the main checkout after each step, and the new session's brief carries it with `git diff --stat` of the worktree; (b) no file: the new brief carries only `git diff --stat` and the diff of the changed files."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/stream.go:84-182` (per-turn input tokens)\n- `internal/agent/claude/run.go:60-100`\n- `internal/agent/claude/types.go`\n- `internal/engine/round.go` (end and restart a local role's session within one round)\n- `internal/engine/brief.go:65` (the restart brief: the brief plus progress)\n- `internal/engine/watchdog.go:28` (the 90 min limit covers the whole round, across sessions)\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- A fake claude-local stream whose turn input passes the threshold is ended, and a new session starts without `--resume`, with a brief that holds the original brief, the progress note and `git diff --stat`.\n- A cloud role passing the same size is not ended.\n- The round's 90 minute limit counts both sessions.\n- Each restart is recorded on the run (time and token count)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Read per-turn input tokens from the stream, test first.\n3. End and restart a local role's session per the answers; record each restart.\n4. Docs (*proposed*): `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

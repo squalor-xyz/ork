@@ -4424,3 +4424,11 @@
 {"when": "2026-11-12T02:26:38Z", "item": "S356", "action": "add", "from": "", "to": "open", "note": "Local roles: ork approves every tool call"}
 {"when": "2026-11-12T02:26:38Z", "item": "S356", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
 {"when": "2026-11-12T02:26:43Z", "item": "S356", "action": "note", "from": "", "to": "", "note": "adj: decision roles.local-approval = full (328); open Q1 rol", "by": "Jon Robbins"}
+{"when": "2026-11-12T02:29:27Z", "item": "S357", "action": "add", "from": "", "to": "open", "note": "Slice commit titled with the Git section's text"}
+{"when": "2026-11-12T02:29:27Z", "item": "S357", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-12T02:30:23Z", "item": "S358", "action": "add", "from": "", "to": "open", "note": "Local roles: start a fresh session instead of compacting"}
+{"when": "2026-11-12T02:30:23Z", "item": "S359", "action": "add", "from": "", "to": "open", "note": "Local implementer: sliver a larger slice first"}
+{"when": "2026-11-12T02:30:23Z", "item": "S360", "action": "add", "from": "", "to": "open", "note": "Local roles: a smaller fixed context"}
+{"when": "2026-11-12T02:30:35Z", "item": "S359", "action": "set", "from": "", "to": "", "note": "depends_on -→S62"}
+{"when": "2026-11-12T02:30:36Z", "item": "S358", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}
+{"when": "2026-11-12T02:30:36Z", "item": "S359", "action": "set", "from": "", "to": "", "note": "flags -→needs-owner"}

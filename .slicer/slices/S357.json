@@ -1,0 +1,39 @@
+{
+  "id": "S357",
+  "title": "Slice commit titled with the Git section's text",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-12 (slicer s457): ork's slice commit 51bbad95 is titled \"One commit on the slice branch.\", the body of the slice's Git section, instead of a title naming the change (earlier slices got e.g. \"changelog: per-slice entries in landed-changed/, assembled at release\"). Wanted: take the commit title from the implementer's report or the slice title, never from a Git section that carries no title."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

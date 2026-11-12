@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 357,
+  "next_id": 361,
   "preamble": "",
   "passes": [
     {
@@ -19204,6 +19204,124 @@
         "importance": 3,
         "urgency": 2,
         "effort": 3,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S357",
+      "title": "Slice commit titled with the Git section's text",
+      "short_title": "Slice commit titled with the Git section's text",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "ork-new-b5719cf75db89a3a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S358",
+      "title": "Local roles: start a fresh session instead of compacting",
+      "short_title": "Local fresh session, not compaction",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 2 (2026-11-12, S314): claude-local auto-compacted three times at about 83-86k tokens, taking 893 s, 983 s and 1121 s (50 of 90 min), and after the first compaction it lost its brief and went looking for it in its own transcript.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-fresh-session",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S359",
+      "title": "Local implementer: sliver a larger slice first",
+      "short_title": "Sliver a slice for a local implementer",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S62"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [
+          "needs-owner"
+        ],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trials 1 and 2: a claude-local implementer could not finish a size S ork slice in 45 or 90 minutes; its context grew past 80k tokens while it explored.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-sliver-first",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S360",
+      "title": "Local roles: a smaller fixed context",
+      "short_title": "Smaller fixed context for local roles",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 1 (2026-11-11): the claude-local implementer's first turn already held about 22k tokens before it read any file; long command output (go test) also fills the window.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-small-context",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }
