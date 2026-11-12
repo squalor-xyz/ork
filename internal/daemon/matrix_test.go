@@ -37,7 +37,7 @@ func TestLocalMatrixUsePrintsTheLauncherName(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
 		t.Run(vendor, func(t *testing.T) {
 			localLaunchers(t)
-			use := matrixUse(slicercli.Row{Role: engine.RoleReviewer, Agent: vendor}, "", nil, false)
+			use := matrixUse(slicercli.Row{Role: engine.RoleReviewer, Agent: vendor}, nil, nil, false)
 			lines := FormatMatrix(&RolesMatrixResult{Rows: []MatrixRow{{ID: "r33", Role: engine.RoleReviewer, Use: use}}})
 			if !strings.Contains(strings.Join(lines, "\n"), "used as "+vendor) {
 				t.Fatalf("matrix text: %v", lines)
@@ -327,6 +327,19 @@ func TestFormatMatrixOrkFirstPutsTheOrkSectionAboveSlicersText(t *testing.T) {
 
 // Every row that the project's setting names, and the row of the rule, is a
 // spec check row; a row nothing names is not.
+func TestMatrixLabelsLocalCheckRows(t *testing.T) {
+	body := `{"rows":[{"id":"r35","role":"reviewer","agent":"claude-local"},{"id":"r36","role":"reviewer","agent":"claude-local"}],"rules":[{"id":"u12","text":"` + localCheckRule + `"}]}`
+	d := readDaemon(t, matrixRoute(body))
+	var got RolesMatrixResult
+	if err := json.Unmarshal(request(t, d, "roles.matrix", `{"project":"p"}`), &got); err != nil {
+		t.Fatal(err)
+	}
+	want := []MatrixRow{{ID: "r35", Role: "reviewer", Agent: "claude-local", Use: "Spec check row, used as claude-local"}, {ID: "r36", Role: "reviewer", Agent: "claude-local", Use: "UI pass row, used as claude-local"}}
+	if !reflect.DeepEqual(got.Rows, want) {
+		t.Errorf("rows %+v, want %+v", got.Rows, want)
+	}
+}
+
 func TestMatrixLabelsEverySpecCheckRow(t *testing.T) {
 	row := func(id, role, agent string) map[string]any {
 		return map[string]any{"id": id, "role": role, "agent": agent, "vendor": "V", "model": "m", "reasoning": "high", "note": ""}

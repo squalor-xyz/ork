@@ -12,6 +12,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -30,6 +31,10 @@ func uiPlan(t *testing.T, implementer, reviewer []string, rules ...string) RunPl
 // uiPlanWith is uiPlan for a project whose spec_check_rows setting is
 // specRows.
 func uiPlanWith(t *testing.T, specRows, implementer, reviewer []string, rules ...string) RunPlan {
+	return uiPlanSettings(t, nil, specRows, implementer, reviewer, rules...)
+}
+
+func uiPlanSettings(t *testing.T, uiIDs, specRows, implementer, reviewer []string, rules ...string) RunPlan {
 	t.Helper()
 	choice := func(role string, rows []string) string {
 		return fmt.Sprintf(`{"role":%q,"row":%s,"alternatives":[%s]}`, role, rows[0], strings.Join(rows[1:], ","))
@@ -46,7 +51,65 @@ func uiPlanWith(t *testing.T, specRows, implementer, reviewer []string, rules ..
 	if specRows != nil {
 		setSpecCheckRows(t, d, specRows...)
 	}
+	if uiIDs != nil {
+		f, err := registry.Load(d.registryPath())
+		if err != nil {
+			t.Fatal(err)
+		}
+		body, _ := json.Marshal(map[string]any{"ui_pass_rows": uiIDs})
+		if err := json.Unmarshal(body, &f.Projects[0]); err != nil {
+			t.Fatal(err)
+		}
+		if err := registry.Save(d.registryPath(), f); err != nil {
+			t.Fatal(err)
+		}
+	}
 	return launchPlan(t, d, `{"project":"p","item":"S1"}`)
+}
+
+const localCheckRule = "Local spec check row (r35) and Local UI pass row (r36) are trial rows."
+
+func localCheckRow(id string) string {
+	return fmt.Sprintf(`{"id":%q,"agent":"claude-local","vendor":"Local","model":"qwen3.8-27b","reasoning":"medium"}`, id)
+}
+
+func TestPlanUIPassProjectOrder(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		ids  []string
+		want []runrec.LineupEntry
+	}{
+		{"listed", []string{"r36", "r14"}, []runrec.LineupEntry{{Vendor: "claude-local", Model: "qwen3.8-27b", Effort: "medium"}, {Vendor: "claude", Model: "opus", Effort: "medium"}}},
+		{"cleared", []string{}, []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			plan := uiPlanSettings(t, tc.ids, nil, []string{matrixRow("r3", "sonnet", "high")}, []string{matrixRow("r5", "review", "medium"), matrixRow("r14", "opus", "medium"), localCheckRow("r35"), localCheckRow("r36")}, u10, localCheckRule)
+			if !reflect.DeepEqual(plan.Lineup[engine.RoleUI], tc.want) {
+				t.Errorf("UI chain %+v, want %+v", plan.Lineup[engine.RoleUI], tc.want)
+			}
+		})
+	}
+}
+
+func TestPlanExcludesLocalCheckRows(t *testing.T) {
+	for _, tc := range []struct {
+		name           string
+		uiIDs, specIDs []string
+	}{
+		{name: "unlisted"},
+		{name: "UI-listed", uiIDs: []string{"r36", "r14"}},
+		{name: "spec-listed", specIDs: []string{"r35", "r16"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			plan := uiPlanSettings(t, tc.uiIDs, tc.specIDs, []string{matrixRow("r3", "sonnet", "high")}, []string{matrixRow("r5", "review", "medium"), localCheckRow("r35"), localCheckRow("r36"), matrixRow("r14", "opus", "medium")}, u10, localCheckRule)
+			for _, role := range []string{engine.RoleReviewer, engine.RoleGate} {
+				want := []runrec.LineupEntry{{Vendor: "claude", Model: "review", Effort: "medium"}}
+				if !reflect.DeepEqual(plan.Lineup[role], want) {
+					t.Errorf("%s chain %+v, want %+v", role, plan.Lineup[role], want)
+				}
+			}
+		})
+	}
 }
 
 const u10 = "A slice that touches the UI also runs the UI pass row (r14) in parallel with the reviewer, not instead of it."

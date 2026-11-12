@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">360 items · — 68 · done 259 · retired 33</p>
+<p class="summary">360 items · — 67 · done 260 · retired 33</p>
 <h2>v1.2</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S61</td><td>Split parts: lead and parts in one worktree</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
@@ -114,7 +114,7 @@
 <tr class="open"><td>62</td><td>S341</td><td>Read-only role check blames the role for any change to the shared tree</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="open"><td>63</td><td>S342</td><td>wave start: an owner&#x27;s landing-order answer does not order the wave</td><td>M</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="done"><td>64</td><td>S343</td><td>Local roles fit the local server</td><td>M</td><td>2</td><td></td><td>S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer&#x27;s Bash calls went through Claude Code&#x27;s model-backed classifier (plan mode), which timed out three times. · discovered from S304</td><td class="status">done</td></tr>
-<tr class="open"><td>65</td><td>S344</td><td>Local spec check and UI pass rows</td><td>M</td><td>2</td><td></td><td>S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role. · discovered from S304</td><td class="status">—</td></tr>
+<tr class="done"><td>65</td><td>S344</td><td>Local spec check and UI pass rows</td><td>M</td><td>2</td><td></td><td>S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role. · discovered from S304</td><td class="status">done</td></tr>
 <tr class="open"><td>66</td><td>S345</td><td>python preset: implementer cannot rename a tracked file or list the index</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="open"><td>67</td><td>S346</td><td>A paused run cannot get the permission it was denied without stopping every run in the project</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="open"><td>68</td><td>S347</td><td>Launch commit leaves orphan index entries</td><td>S</td><td>1</td><td></td><td>2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported &quot;S345: marked as having a slice, but no file exists&quot; and the same for S346. ork&#x27;s launch commits a56c3f8 (S123) and d5880ab (S343) took main&#x27;s whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items&#x27; slice files.</td><td class="status">—</td></tr>

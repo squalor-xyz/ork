@@ -18811,7 +18811,7 @@
       "id": "S344",
       "title": "Local spec check and UI pass rows in the matrix",
       "short_title": "Local spec check and UI pass rows",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -18842,6 +18842,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "12f96acd-3f14-4489-b617-da412d6f0cb1",
+          "kind": "",
+          "text": "**2026-11-12** — Verified S344: r35 is the trial-only local spec check row and r36 the trial-only local UI pass row, classified by u12. The ordered ui_pass_rows setting validates, persists and clears; listed and classified check rows stay out of reviewer and gate chains. Matrix labels, CLI help and design/dashboard/guide documentation match. Gate VERDICT: PASS; owner approved. Prior local focused checks, vet, formatting, slicer check and adj lint passed; broader local socket tests were sandbox-limited.",
+          "created_at": "2026-11-12T13:35:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -18861,7 +18875,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

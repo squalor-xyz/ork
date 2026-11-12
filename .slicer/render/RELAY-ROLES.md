@@ -34,6 +34,8 @@
 | r21 | Orchestrator | every slice | Grok | xAI | grok-*@latest | medium | Grok orchestrator alternative (owner 2026-11-02). Model 'latest' = do not pin a version: use the grok CLI default (grok-4.7 on 2026-11-02); owner 2026-11-02: default to the latest unless asked. ork cannot run Grok until S72 lands, so it is used by hand until then |
 | r24 | Reviewer | every slice | Grok | xAI | grok-*@latest | medium | Spec check row on Grok (owner 2026-11-02): one read-only pass over every ticked slice before a wave (rule u11); an alternative to r16 |
 | r33 | Implementer | well specified, size S | claude-local | Local | qwen3.8-27b | medium | Fallback only, after cloud rows; explicit local use until S304 measures role suitability (owner 2026-11-09). |
+| r35 | Reviewer | every slice | claude-local | Local | qwen3.8-27b | medium | Spec check row, local; S304 trial only (adj 296) |
+| r36 | Reviewer | every slice | claude-local | Local | qwen3.8-27b | medium | UI pass row, local; S304 trial only (adj 296) |
 
 ## Rules
 
@@ -47,3 +49,4 @@
 - u9: The orchestrator reads a Haiku sliver or part diff itself before review and switches that role to Sonnet early when quality falls short.
 - u10: A slice that touches the UI (internal/tui and its golden views, docs/dashboard.md, internal/cli output, or a ui.* adj key) also runs the UI pass row (r14) as its own role, in parallel with the reviewer, not instead of it, on every size. The UI pass runs as a general-purpose subagent (it needs the Skill tool), loads the tui-design:tui-design and frontend-design:frontend-design skills (plugins enabled in .claude/settings.json), edits nothing, and sends suggested design edits to the orchestrator for the implementer; the gate still decides. Folding it into the relay-reviewer on size S was tried and dropped on 2026-10-26 (owner): relay-reviewer has no Skill tool. A vendor that cannot load these skills gets ork's vendor-neutral UI prompt instead. This holds for each slice in a wave.
 - u11: The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code.
+- u12: Local spec check row (r35) and Local UI pass row (r36) are S304 trial rows (adj 296, 341, 342). They never enter reviewer or gate chains. Only project spec_check_rows and ui_pass_rows select them; normal runs keep the cloud rows.

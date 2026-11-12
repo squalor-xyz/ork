@@ -231,8 +231,9 @@ Both show slicer's matrix text and a short `ork` section that says, row by
 row, what ork does with it (the pane puts the `ork` section first, the command
 puts slicer's text first): `used as claude`, `used as codex` or `used as grok`, `skipped: no
 adapter for AGENT`, `skipped: grok has no write mode` for a Grok Implementer row
-(*proposed*, S268), `UI pass row` for the reviewer row that a rule names and
-`Spec check row` for every row that a rule or the project's `spec_check_rows`
+(*proposed*, S268), `UI pass row` for every reviewer row that a rule or the
+project's `ui_pass_rows` names and `Spec check row` for every row that a rule
+or the project's `spec_check_rows`
 names, `not used: the gate runs the reviewer's lineup` for Gate rows
 (ork's gate follows the reviewer), `not run by ork` for the Orchestrator
 row (ork is the orchestrator), and `not used: ork has no role ROLE` for any other
@@ -241,6 +242,19 @@ slicer:
 
     slicer relay-roles show --root DIR
     slicer relay-roles add|set|remove|move|rule-add|rule-edit|rule-remove
+
+`ork projects set PROJECT --ui-pass-rows r36,r14` selects the UI pass rows
+in order: the first usable row runs and later rows are fallbacks. The list
+uses matrix row IDs, trims spaces and refuses duplicates and invalid IDs.
+`--ui-pass-rows ""` restores the rule defaults (r14 in ork). Every listed
+row stays out of reviewer and gate chains. An unfinished run refuses this
+setting change.
+
+For the S304 trial only, ork's matrix classifies r35 as the local spec check
+row and r36 as the local UI pass row (adj 341, 342). They stay excluded from
+reviewer and gate chains even when unlisted. Normal runs use the cloud
+defaults. The trial sets `--spec-check-rows r35,r16` and
+`--ui-pass-rows r36,r14`, then clears both lists after the trial.
 
 For each slice ork calls `slicer relay-roles recommend ID --well-specified
 y/n --split y/n` (with yes and no unless you override them, *proposed*, adj 189;

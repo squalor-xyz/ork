@@ -2385,6 +2385,37 @@ func TestStatusShowsShapeRetry(t *testing.T) {
 	}
 }
 
+func TestProjectsSetUIPassRows(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
+	for _, tc := range []struct{ value, output string }{
+		{"r36,r14", "updated keep: ui_pass_rows=\"r36,r14\"\n"},
+		{" r36 , r14 ", "updated keep: ui_pass_rows=\"r36,r14\"\n"},
+		{"", "updated keep: ui_pass_rows=unset\n"},
+	} {
+		code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-rows", tc.value)
+		if code != 0 || stdout != tc.output {
+			t.Fatalf("%q: exit %d stdout %q stderr %s", tc.value, code, stdout, stderr)
+		}
+		saved, err := registry.Load(w.regPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		want := []string(nil)
+		if tc.value != "" {
+			want = []string{"r36", "r14"}
+		}
+		if !reflect.DeepEqual(saved.Projects[0].UIPassRows, want) {
+			t.Errorf("saved rows %v, want %v", saved.Projects[0].UIPassRows, want)
+		}
+	}
+	for _, bad := range []string{"r1x", "16", "r36,", "r36,r36"} {
+		code, _, stderr := run(t, w.app, "projects", "set", "keep", "--ui-pass-rows", bad)
+		if code != 1 || !strings.Contains(stderr, "ui_pass_rows") {
+			t.Errorf("%q: exit %d: %s", bad, code, stderr)
+		}
+	}
+}
+
 func TestProjectsSetSpecCheckRows(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep", UIDoc: "keep.md"})
 	for _, tc := range []struct {

@@ -2411,6 +2411,36 @@ func TestProjectsSetUIPassSkillsStrictNames(t *testing.T) {
 	}
 }
 
+func TestProjectsSetUIPassRows(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	for _, rows := range [][]string{{"r36", "r14"}, {}} {
+		raw, _ := json.Marshal(map[string]any{"name": "p", "ui_pass_rows": rows})
+		got, err := d.handle(context.Background(), MethodProjectsSet, raw)
+		if err != nil {
+			t.Fatal(err)
+		}
+		proj := got.(registry.Project)
+		if !reflect.DeepEqual(proj.UIPassRows, append([]string(nil), rows...)) {
+			t.Errorf("returned rows %v, want %v", proj.UIPassRows, rows)
+		}
+		f, err := registry.Load(d.registryPath())
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(f.Projects[0].UIPassRows, append([]string(nil), rows...)) {
+			t.Errorf("saved rows %v, want %v", f.Projects[0].UIPassRows, rows)
+		}
+	}
+	for _, rows := range [][]string{{"r36", "r36"}, {""}, {"r1x"}, {"16"}, {" r36"}} {
+		raw, _ := json.Marshal(map[string]any{"name": "p", "ui_pass_rows": rows})
+		_, err := d.handle(context.Background(), MethodProjectsSet, raw)
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "ui_pass_rows") {
+			t.Errorf("%v: %v", rows, err)
+		}
+	}
+}
+
 func TestProjectsSetSpecCheckRows(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	for _, tc := range []struct {
@@ -2661,6 +2691,7 @@ func TestProjectsSetRefusesEachFieldAStartedRunReads(t *testing.T) {
 		`{"name":"p","ui_doc":"d.md"}`:                      "--ui-doc",
 		`{"name":"p","ui_pass_skills":["a"]}`:               "--ui-pass-skills",
 		`{"name":"p","spec_check_rows":["r1"]}`:             "--spec-check-rows",
+		`{"name":"p","ui_pass_rows":["r36","r14"]}`:         "--ui-pass-rows",
 		`{"name":"p","check_command":"make"}`:               "--check",
 		`{"name":"p","round_check_command":"f"}`:            "--round-check",
 		`{"name":"p","check_minutes":3}`:                    "--check-minutes",

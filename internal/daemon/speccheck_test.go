@@ -1183,6 +1183,38 @@ func TestSpecChainUsesTheProjectSetting(t *testing.T) {
 	}
 }
 
+func TestSpecCheckLocalFirstFallsBackToCloud(t *testing.T) {
+	recommend := `{"roles":[{"role":"reviewer","row":` + localCheckRow("r35") + `,"alternatives":[` + matrixRow("r16", "sonnet-spec", "low") + `]}]}`
+	rig := newSpecRig(t, rulesJSON(u11, localCheckRule), clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: recommend})
+	setSpecCheckRows(t, rig.d, "r35", "r16")
+	localFailed := false
+	rig.d.runs.deps.Runner = roundRunner(func(_ context.Context, req engine.Request) (engine.Result, error) {
+		rig.mu.Lock()
+		defer rig.mu.Unlock()
+		if req.Vendor == "claude-local" {
+			localFailed = true
+			return engine.Result{Exit: engine.ExitRateLimited}, nil
+		}
+		// The fallback report proves that the failed local row ran first.
+		if !localFailed {
+			return engine.Result{Exit: engine.ExitUnclassified}, nil
+		}
+		return engine.Result{Exit: engine.ExitOK, Report: "## Slice S1\nReady\n\n## Owner needed\n\nnone\n"}, nil
+	})
+	chain, err := specChainOf(t, rig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []runrec.LineupEntry{{Vendor: "claude-local", Model: "qwen3.8-27b", Effort: "medium"}, {Vendor: "claude", Model: "sonnet-spec", Effort: "low"}}
+	if !reflect.DeepEqual(chain, want) {
+		t.Errorf("chain %+v, want %+v", chain, want)
+	}
+	res := rig.check(t, "S1")
+	if !rig.item(res, "S1").Ready {
+		t.Errorf("fallback result %+v", res)
+	}
+}
+
 func TestSpecChainFallsBackToTheRuleWhenUnset(t *testing.T) {
 	rig := newSpecRig(t, rulesJSON(u11))
 	chain, err := specChainOf(t, rig)

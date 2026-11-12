@@ -1658,8 +1658,9 @@ The Roadmap launch confirmation uses the same editor with `e` (S166).
 The editor starts from that item's plan: implementer, reviewer and architect,
 then budget minutes and tokens. The architect shows `off` when absent.
 The gate follows the reviewer and has no field.
-When the plan has a `ui` entry (the matrix's UI pass row), a line below the
-architect lists its chain for information: the UI pass runs beside the reviewer
+When the plan has a `ui` entry (the matrix's UI pass rows, in `ui_pass_rows`
+order or rule order), a line below the architect lists its chain for
+information: the UI pass runs beside the reviewer
 only on a slice that touches the UI (`roles.ui-pass`, adj #165), has no field,
 and the cursor skips it.
 `up`/`down`, `tab` and `shift+tab` move between rows.
@@ -1925,8 +1926,9 @@ dim; a row that ork skips is in the warning colour (bold in mono). They say
 what ork does with the row:
 `used as claude` or `used as codex` (a row maps to an adapter by its agent,
 adj 155), `UI pass row, ...` and `Spec check row, ...` for the reviewer
-rows that a rule names (rules u10 and u11) or that the project's
-`spec_check_rows` setting lists (S258), `skipped: no adapter for AGENT`,
+rows that a rule names (u10, u11, u12) or that the project's
+`spec_check_rows` or `ui_pass_rows` lists (S258, S344),
+`skipped: no adapter for AGENT`,
 `not used: the gate runs the reviewer's lineup` for a Gate row, `not run by
 ork` for an Orchestrator row (ork is the orchestrator), and `not used: ork has
 no role ROLE` for any other role in the matrix. `j`/`k`, `pgup`/`pgdown`,

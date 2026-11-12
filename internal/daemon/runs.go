@@ -480,10 +480,10 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if rulesErr != nil {
 		rules = nil
 	}
-	// The UI pass row is a reviewer row that only the rule naming it tells
-	// apart (rule u10). Its ledger role is ui. It runs as the UI
-	// pass on a UI slice and is never a fallback of the reviewer or the gate.
-	uiRow := slicercli.UIPassRowID(rules)
+	// UI rows are selected in project or rule order. All UI rows, including
+	// classified trial rows, stay out of reviewer and gate fallbacks.
+	uiIDs := uiPassRows(proj, rules)
+	uiSet := uiPassRowSet(proj, rules)
 	// The spec check row is a reviewer row too (rule u11). It runs only the
 	// spec check, so a run's chains never hold it. The project's
 	// spec_check_rows are spec check rows too (S258).
@@ -524,7 +524,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 				if sourceRole == engine.RoleReviewer && slices.Contains(specRows, row.ID) {
 					continue
 				}
-				if uiRow != "" && sourceRole == engine.RoleReviewer && row.ID == uiRow {
+				if sourceRole == engine.RoleReviewer && slices.Contains(uiSet, row.ID) {
 					if role == engine.RoleReviewer {
 						uiRows = append(uiRows, row)
 					}
@@ -561,10 +561,15 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		plan.Permissions[role] = perm
 	}
 	var uiChain []chainEntry
-	for _, row := range uiRows {
-		if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
-			entry := runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning}
-			uiChain = appendChain(uiChain, chainEntry{entry, isLocalRow(row)})
+	for _, id := range uiIDs {
+		for _, row := range uiRows {
+			if row.ID != id {
+				continue
+			}
+			if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
+				entry := runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning}
+				uiChain = appendChain(uiChain, chainEntry{entry, isLocalRow(row)})
+			}
 		}
 	}
 	if len(uiChain) > 0 {

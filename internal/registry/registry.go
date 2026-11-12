@@ -107,13 +107,22 @@ var specCheckRowName = regexp.MustCompile(`^r\d+$`)
 // *proposed*). Each item is a matrix row id such as "r16", and no id is listed
 // twice. ork does not check that the rows exist; the matrix is slicer's.
 func ValidateSpecCheckRows(rows []string) error {
+	return validateRoleRows("spec_check_rows", rows)
+}
+
+// ValidateUIPassRows checks ordered matrix row IDs without consulting slicer.
+func ValidateUIPassRows(rows []string) error {
+	return validateRoleRows("ui_pass_rows", rows)
+}
+
+func validateRoleRows(field string, rows []string) error {
 	seen := map[string]int{}
 	for i, id := range rows {
 		if !specCheckRowName.MatchString(id) {
-			return fmt.Errorf("spec_check_rows: item %d %q is not a matrix row id such as r16", i+1, id)
+			return fmt.Errorf("%s: item %d %q is not a matrix row id such as r16", field, i+1, id)
 		}
 		if first, ok := seen[id]; ok {
-			return fmt.Errorf("spec_check_rows: %q is listed twice (items %d and %d)", id, first, i+1)
+			return fmt.Errorf("%s: %q is listed twice (items %d and %d)", field, id, first, i+1)
 		}
 		seen[id] = i + 1
 	}
@@ -267,6 +276,10 @@ type Project struct {
 	// chains. Unset means the row that the Spec check row rule names.
 	SpecCheckRows []string `json:"spec_check_rows,omitempty"`
 
+	// UIPassRows selects UI pass rows in order; empty uses the rule defaults.
+	// Every listed row stays out of reviewer and gate chains (S344).
+	UIPassRows []string `json:"ui_pass_rows,omitempty"`
+
 	// Bell controls every terminal bell for this project (S100, *proposed*).
 	Bell *bool `json:"bell,omitempty"`
 
@@ -412,6 +425,9 @@ func (f *File) Validate() error {
 			return fmt.Errorf("project %q: %w", p.Name, err)
 		}
 		if err := ValidateSpecCheckRows(p.SpecCheckRows); err != nil {
+			return fmt.Errorf("project %q: %w", p.Name, err)
+		}
+		if err := ValidateUIPassRows(p.UIPassRows); err != nil {
 			return fmt.Errorf("project %q: %w", p.Name, err)
 		}
 		if !filepath.IsAbs(p.Path) {
