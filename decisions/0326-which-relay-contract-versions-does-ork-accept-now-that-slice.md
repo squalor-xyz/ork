@@ -1,6 +1,6 @@
 ---
 {
-  "id": 324,
+  "id": 326,
   "title": "Which relay contract versions does ork accept, now that slicer 1.21.0 prints relay v12?",
   "status": "decided",
   "key": "boundary.contract-set",
@@ -57,6 +57,11 @@
       "was": {
         "context": "2026-11-12: slicer 1.21.0 (s453) prints relay v12; ork doctor fails its contract check and new runs refuse to start. v12 adds only advisory tool feedback lines."
       }
+    },
+    {
+      "date": "2026-11-12",
+      "event": "renumber",
+      "note": "from 324"
     }
   ]
 }

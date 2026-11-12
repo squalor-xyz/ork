@@ -9,7 +9,7 @@
   "via": "interactive question, relay session 8d711f67, 2026-11-12",
   "created": "2026-11-12",
   "decided_at": "2026-11-12",
-  "context": "Relay v12 (slicer 1.21.0, s453): every role may end its report with up to 3 tool feedback lines (friction, feature, deterministic-check). The slice is S354 (Accept relay v12); the S348 ref was entered before the slice was filed and is wrong.",
+  "context": "Relay v12 (slicer 1.21.0, s453): every role may end its report with up to 3 tool feedback lines (friction, feature, deterministic-check). The slice is S354 (Accept relay v12); the S348 ref was entered before the slice was filed and is wrong. Its sibling contract-set record is adj 326.",
   "options": [
     {
       "label": "full",
@@ -48,6 +48,14 @@
       "note": "context",
       "was": {
         "context": "Relay v12 (slicer 1.21.0, s453): every role may end its report with up to 3 tool feedback lines (friction, feature, deterministic-check)."
+      }
+    },
+    {
+      "date": "2026-11-12",
+      "event": "amend",
+      "note": "context",
+      "was": {
+        "context": "Relay v12 (slicer 1.21.0, s453): every role may end its report with up to 3 tool feedback lines (friction, feature, deterministic-check). The slice is S354 (Accept relay v12); the S348 ref was entered before the slice was filed and is wrong."
       }
     }
   ]

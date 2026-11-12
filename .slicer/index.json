@@ -19055,7 +19055,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ba207a07-4b99-4a0e-a353-46e8c1e266c1",
+          "kind": "",
+          "text": "**2026-11-12** — adj 324 in this spec is now adj 326 (boundary.contract-set): renumbered on 2026-11-12 after an id clash with another session's adj 324 (stopped run pane).",
+          "created_at": "2026-11-12T01:12:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",

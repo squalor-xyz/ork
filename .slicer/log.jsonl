@@ -4410,3 +4410,4 @@
 {"when": "2026-11-12T01:08:38Z", "item": "S353", "action": "add", "from": "", "to": "open", "note": "A slicer contract bump on main breaks ork everywhere at once"}
 {"when": "2026-11-12T01:08:38Z", "item": "S353", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-12T01:11:43Z", "item": "S354", "action": "add", "from": "", "to": "open", "note": "Accept relay v12"}
+{"when": "2026-11-12T01:12:21Z", "item": "S354", "action": "note", "from": "", "to": "", "note": "adj 324 in this spec is now adj 326 (boundary.contract-set):", "by": "Jon Robbins"}
