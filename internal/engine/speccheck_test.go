@@ -754,7 +754,7 @@ func TestRecordSpecAnswersFilesOnlyKeyedQuestionsInAdj(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(notices) != 1 || !strings.Contains(notices[0], "cache.index-store") || !strings.Contains(notices[0], "decided in adj as #42") {
+	if len(notices) != 1 || notices[0] != "filed in adj: cache.index-store (adj 42)" {
 		t.Errorf("notices: %v", notices)
 	}
 	var verbs []string
@@ -767,6 +767,10 @@ func TestRecordSpecAnswersFilesOnlyKeyedQuestionsInAdj(t *testing.T) {
 	decide := h.calls("adj", "decide")[0]
 	if !strings.Contains(join(decide), "--text memory: rebuilt at each start") || !strings.Contains(join(decide), "--by jon") {
 		t.Errorf("decide: %v", decide)
+	}
+	// The why names the date and the slice the question came from.
+	if !strings.Contains(join(decide), "--why Answered in ork on 2026-10-19: Which store holds the index? (S11)") {
+		t.Errorf("decide why: %v", decide)
 	}
 	ask := h.calls("adj", "ask")[0]
 	if !strings.Contains(join(ask), "--ref S11") || !strings.Contains(join(ask), "--key cache.index-store") {
@@ -785,8 +789,61 @@ func TestRecordSpecAnswersWithoutAnAuthorKeepsTheSliceEditAndSaysWhy(t *testing.
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(notices) != 1 || !strings.Contains(notices[0], "ADJ_DECIDED_BY is unset") || len(h.fake.CallsTo("adj")) != 0 || len(h.calls("slicer", "edit")) != 1 {
+	if len(notices) != 1 || !strings.Contains(notices[0], "no owner set; run ork settings set --owner NAME") || len(h.fake.CallsTo("adj")) != 0 || len(h.calls("slicer", "edit")) != 1 {
 		t.Errorf("notices %v, adj calls %v", notices, h.fake.CallsTo("adj"))
+	}
+}
+
+// With two keyed questions and no owner there is one notice, not one for each
+// key, and it names both keys (S314, *proposed*).
+func TestRecordSpecAnswersWithoutAnOwnerSaysItOnceForAllKeys(t *testing.T) {
+	h := answerHarness(t, 0)
+	cfg := answerConfig(h, true, "")
+	cfg.Questions[1].Key = "cli.flag-name"
+	_, notices, err := RecordSpecAnswers(context.Background(), h.deps, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(notices) != 1 || !strings.Contains(notices[0], "cache.index-store") || !strings.Contains(notices[0], "cli.flag-name") {
+		t.Errorf("notices: %q", notices)
+	}
+	if len(h.fake.CallsTo("adj")) != 0 || len(h.calls("slicer", "edit")) != 1 {
+		t.Errorf("adj calls %v, slicer edits %v", h.fake.CallsTo("adj"), h.calls("slicer", "edit"))
+	}
+}
+
+// Only an option the owner picked is filed: free text on a keyed question is
+// recorded in the slice and not filed as an option decision (S314, *proposed*).
+func TestRecordSpecAnswersDoesNotFileFreeText(t *testing.T) {
+	h := answerHarness(t, 0)
+	cfg := answerConfig(h, true, "jon")
+	cfg.Answers[0] = "keep it in a sqlite file"
+	_, notices, err := RecordSpecAnswers(context.Background(), h.deps, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := len(h.fake.CallsTo("adj")); n != 0 {
+		t.Errorf("%d adj calls for a free-text answer: %v", n, h.fake.CallsTo("adj"))
+	}
+	if len(notices) != 1 || !strings.Contains(notices[0], "not filed in adj: cache.index-store") || !strings.Contains(notices[0], "free text") {
+		t.Errorf("notices: %q", notices)
+	}
+	if edits := h.calls("slicer", "edit"); len(edits) != 1 || !strings.Contains(join(edits[0]), "keep it in a sqlite file") {
+		t.Errorf("the answer is not recorded in the slice: %v", edits)
+	}
+}
+
+func TestResolveOwnerPrefersTheEnvironmentThenTheSetting(t *testing.T) {
+	for _, tc := range []struct{ env, setting, want string }{
+		{"Env Owner", "Set Owner", "Env Owner"},
+		{"  ", "Set Owner", "Set Owner"},
+		{"", " Set Owner ", "Set Owner"},
+		{"", "", ""},
+		{" ", " ", ""},
+	} {
+		if got := ResolveOwner(tc.env, tc.setting); got != tc.want {
+			t.Errorf("ResolveOwner(%q, %q) = %q, want %q", tc.env, tc.setting, got, tc.want)
+		}
 	}
 }
 

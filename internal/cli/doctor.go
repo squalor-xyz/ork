@@ -93,6 +93,14 @@ type DoctorReport struct {
 	BehindNotice  string         `json:"behind_notice,omitempty"`
 	Warning       string         `json:"warning,omitempty"`
 	Upgrade       []upgradeHint  `json:"upgrade"`
+
+	// Owner is the name ork files spec-question answers under in adj (S314,
+	// *proposed*): ADJ_DECIDED_BY, else the registry's owner. OwnerSource is
+	// "environment", "setting" or empty. FileAnswers is the registry's
+	// file_answers; it is false when the registry could not be read.
+	Owner       string `json:"owner"`
+	OwnerSource string `json:"owner_source"`
+	FileAnswers bool   `json:"file_answers"`
 }
 
 // addFinding keeps every stored finding on a single text line.
@@ -270,6 +278,10 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}
 
 	t := a.Tools
+	getenv := a.Getenv
+	if getenv == nil {
+		getenv = os.Getenv
+	}
 	rep := DoctorReport{OK: true, Projects: []projectCheck{}, Upgrade: []upgradeHint{}}
 	var registered []registry.Project
 	registryPath, registryErr := registry.DefaultPath()
@@ -278,6 +290,17 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		file, registryErr = registry.Load(registryPath)
 		if registryErr == nil {
 			registered = file.Projects
+			// The owner ork files answers under: ADJ_DECIDED_BY, else the
+			// registry's owner (S314, *proposed*).
+			env := strings.TrimSpace(getenv("ADJ_DECIDED_BY"))
+			rep.Owner = engine.ResolveOwner(env, file.Owner)
+			switch {
+			case env != "":
+				rep.OwnerSource = "environment"
+			case rep.Owner != "":
+				rep.OwnerSource = "setting"
+			}
+			rep.FileAnswers = file.FileAnswersOn()
 			for _, p := range file.Projects {
 				rep.Projects = append(rep.Projects, checkProject(ctx, p))
 			}
@@ -426,10 +449,6 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		o.printJSON(rep)
 		return code
 	}
-	getenv := a.Getenv
-	if getenv == nil {
-		getenv = os.Getenv
-	}
 	for _, row := range brand.Mark(brand.ColourWanted(o.stdout, getenv), brand.ASCIILocale(getenv)) {
 		fmt.Fprintln(o.stdout, row)
 	}
@@ -498,8 +517,18 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	if rep.RegistryError != "" {
 		// The error text already begins with "registry"; the label says it once.
 		fmt.Fprintf(o.stdout, "[WARN] registry  %s\n", strings.TrimPrefix(rep.RegistryError, "registry "))
-	} else if len(rep.Projects) == 0 {
-		fmt.Fprintln(o.stdout, "[--] projects  none registered: run ork projects add PATH")
+	} else {
+		switch {
+		case rep.Owner == "":
+			fmt.Fprintln(o.stdout, "[--] owner  not set; spec answers not filed: ork settings set --owner NAME")
+		case !rep.FileAnswers:
+			fmt.Fprintf(o.stdout, "[ok] owner  %s (%s); spec answers not filed (file_answers off)\n", rep.Owner, ownerSourceLabel(rep.OwnerSource))
+		default:
+			fmt.Fprintf(o.stdout, "[ok] owner  %s (%s); spec answers are filed in adj\n", rep.Owner, ownerSourceLabel(rep.OwnerSource))
+		}
+		if len(rep.Projects) == 0 {
+			fmt.Fprintln(o.stdout, "[--] projects  none registered: run ork projects add PATH")
+		}
 	}
 	for _, p := range rep.Projects {
 		status := "ok"
@@ -520,6 +549,13 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	return code
+}
+
+func ownerSourceLabel(source string) string {
+	if source == "environment" {
+		return "ADJ_DECIDED_BY"
+	}
+	return source
 }
 
 func contractError(err error) string {

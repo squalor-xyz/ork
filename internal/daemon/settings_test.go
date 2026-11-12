@@ -50,7 +50,7 @@ func TestSettingsSetSavesGlobalCapAndIdleMinutes(t *testing.T) {
 	if !reflect.DeepEqual(*after, want) {
 		t.Fatalf("both:\n got %+v\nwant %+v", *after, want)
 	}
-	if res != (SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 15, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 15}) {
+	if res != (SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 15, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 15, FileAnswers: true}) {
 		t.Fatalf("result %+v", res)
 	}
 
@@ -77,12 +77,58 @@ func TestSettingsSetSavesGlobalCapAndIdleMinutes(t *testing.T) {
 	if after, _ = registry.Load(d.registryPath()); !reflect.DeepEqual(*after, want) {
 		t.Fatalf("clear:\n got %+v\nwant %+v", *after, want)
 	}
-	if res != (SettingsResult{EffectiveGlobalCap: 2, EffectiveDaemonIdleMinutes: 10}) {
+	if res != (SettingsResult{EffectiveGlobalCap: 2, EffectiveDaemonIdleMinutes: 10, FileAnswers: true}) {
 		t.Fatalf("cleared result %+v", res)
 	}
 	raw, _ := os.ReadFile(d.registryPath())
 	if strings.Contains(string(raw), "global_cap") || strings.Contains(string(raw), "daemon_idle_minutes") {
 		t.Fatalf("a cleared value was written:\n%s", raw)
+	}
+}
+
+// owner and file_answers are file-level settings too (S314, *proposed*): the
+// owner is stored as given, file_answers is stored only when it is off, and an
+// empty owner or file_answers true clears the key.
+func TestSettingsSetSavesOwnerAndFileAnswers(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	seedSetFixture(t, d)
+	res := settingsCall(t, d, MethodSettingsSet, `{"owner":" Jon Robbins ","file_answers":false}`)
+	if res.Owner != "Jon Robbins" || res.FileAnswers {
+		t.Fatalf("result %+v", res)
+	}
+	f, err := registry.Load(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.Owner != "Jon Robbins" || f.FileAnswers == nil || *f.FileAnswers {
+		t.Fatalf("saved %q %v", f.Owner, f.FileAnswers)
+	}
+	if got := settingsCall(t, d, MethodSettingsGet, ""); got.Owner != "Jon Robbins" || got.FileAnswers {
+		t.Fatalf("get %+v", got)
+	}
+	res = settingsCall(t, d, MethodSettingsSet, `{"owner":"","file_answers":true}`)
+	if res.Owner != "" || !res.FileAnswers {
+		t.Fatalf("cleared result %+v", res)
+	}
+	raw, _ := os.ReadFile(d.registryPath())
+	if strings.Contains(string(raw), "owner") || strings.Contains(string(raw), "file_answers") {
+		t.Fatalf("a cleared value was written:\n%s", raw)
+	}
+}
+
+func TestSettingsSetRefusesAnOwnerThatIsNotOneLine(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	seedSetFixture(t, d)
+	before, _ := os.ReadFile(d.registryPath())
+	for _, raw := range []string{`{"owner":"a\nb"}`, `{"owner":"a\u0000b"}`} {
+		_, err := d.handle(context.Background(), MethodSettingsSet, json.RawMessage(raw))
+		var re *ipc.Error
+		if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "owner") {
+			t.Errorf("%s: %v, want bad_params naming owner", raw, err)
+		}
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+		t.Fatalf("a refusal changed the registry:\n%s", after)
 	}
 }
 
@@ -111,7 +157,7 @@ func TestSettingsSetRefusesBadCalls(t *testing.T) {
 
 func TestSettingsGetReportsEffectiveValues(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
-	if got := settingsCall(t, d, MethodSettingsGet, ""); got != (SettingsResult{EffectiveGlobalCap: 2, EffectiveDaemonIdleMinutes: 10}) {
+	if got := settingsCall(t, d, MethodSettingsGet, ""); got != (SettingsResult{EffectiveGlobalCap: 2, EffectiveDaemonIdleMinutes: 10, FileAnswers: true}) {
 		t.Fatalf("unset: %+v", got)
 	}
 	f, _ := registry.Load(d.registryPath())
@@ -119,12 +165,12 @@ func TestSettingsGetReportsEffectiveValues(t *testing.T) {
 	if err := registry.Save(d.registryPath(), f); err != nil {
 		t.Fatal(err)
 	}
-	if got := settingsCall(t, d, MethodSettingsGet, ""); got != (SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 25, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 25}) {
+	if got := settingsCall(t, d, MethodSettingsGet, ""); got != (SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 25, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 25, FileAnswers: true}) {
 		t.Fatalf("set: %+v", got)
 	}
 	// The wire names are the registry's keys.
 	b, _ := json.Marshal(settingsCall(t, d, MethodSettingsGet, ""))
-	if string(b) != `{"global_cap":6,"daemon_idle_minutes":25,"effective_global_cap":6,"effective_daemon_idle_minutes":25}` {
+	if string(b) != `{"global_cap":6,"daemon_idle_minutes":25,"effective_global_cap":6,"effective_daemon_idle_minutes":25,"file_answers":true}` {
 		t.Fatalf("wire: %s", b)
 	}
 }
@@ -136,7 +182,7 @@ func TestSettingsOverTheSocket(t *testing.T) {
 	c := e.dial(t)
 	cap6 := 6
 	got, err := c.SetSettings(context.Background(), SetSettingsParams{GlobalCap: &cap6})
-	if err != nil || got != (SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 7, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 7}) {
+	if err != nil || got != (SettingsResult{GlobalCap: 6, DaemonIdleMinutes: 7, EffectiveGlobalCap: 6, EffectiveDaemonIdleMinutes: 7, FileAnswers: true}) {
 		t.Fatalf("set: %+v, %v", got, err)
 	}
 	saved, _ := registry.Load(e.regPath)

@@ -589,7 +589,7 @@ type SpecAnswerConfig struct {
 	Questions []SpecQuestion
 	Answers   []string // one for each question: an option as "Label: summary", or free text
 	Adj       bool     // file the keyed questions in adj
-	By        string   // the owner's name for adj (ADJ_DECIDED_BY)
+	By        string   // the owner's name for adj, from ResolveOwner
 }
 
 // RecordSpecAnswers writes the answers into the slice's spec as one
@@ -628,24 +628,62 @@ func RecordSpecAnswers(ctx context.Context, d Deps, cfg SpecAnswerConfig) (strin
 		return "", nil, err
 	}
 	var notices []string
-	for i, q := range cfg.Questions {
-		if q.Key == "" || !cfg.Adj {
-			continue
+	if !cfg.Adj {
+		return para.String(), notices, nil
+	}
+	if strings.TrimSpace(cfg.By) == "" {
+		// One notice for the whole item, not one for each key (S314).
+		var keys []string
+		for _, q := range cfg.Questions {
+			if q.Key != "" {
+				keys = append(keys, q.Key)
+			}
 		}
-		if strings.TrimSpace(cfg.By) == "" {
-			notices = append(notices, "ADJ_DECIDED_BY is unset; not filed in adj: "+q.Key)
+		if len(keys) > 0 {
+			notices = append(notices, "no owner set; run ork settings set --owner NAME (not filed in adj: "+strings.Join(keys, ", ")+")")
+		}
+		return para.String(), notices, nil
+	}
+	for i, q := range cfg.Questions {
+		if q.Key == "" {
 			continue
 		}
 		title := ""
 		if q.Ask != nil {
 			title = q.Ask.Title
 		}
-		notice, err := fileDecision(ctx, d, wr, root, q.Key, title, cfg.Item, q.Text, answers[i], cfg.By)
-		if err != nil {
-			notices = append(notices, "not filed in adj: "+q.Key+": "+err.Error())
+		// Adj's rule: only an option the owner picked is an option decision.
+		// Free text is recorded in the slice and not filed.
+		if !pickedOption(q, answers[i]) {
+			notices = append(notices, "not filed in adj: "+q.Key+" (free text answer, not one of the options)")
 			continue
 		}
-		notices = append(notices, q.Key+": "+notice)
+		// The why names the date and the slice the question came from (the
+		// answer comes before any run of it).
+		why := "Answered in ork on " + date + ": " + title + " (" + cfg.Item + ")"
+		id, already, err := decideInAdj(ctx, d, wr, root, q.Key, title, cfg.Item, q.Text, answers[i], why, cfg.By)
+		switch {
+		case err != nil:
+			notices = append(notices, "not filed in adj: "+q.Key+": "+err.Error())
+		case already:
+			notices = append(notices, fmt.Sprintf("already decided in adj: %s (adj %d); not changed", q.Key, id))
+		default:
+			notices = append(notices, fmt.Sprintf("filed in adj: %s (adj %d)", q.Key, id))
+		}
 	}
 	return para.String(), notices, nil
+}
+
+// pickedOption reports whether the answer is one of the question's options as
+// the clients write it: "Label: summary".
+func pickedOption(q SpecQuestion, answer string) bool {
+	if q.Ask == nil {
+		return false
+	}
+	for _, o := range q.Ask.Options {
+		if answer == strings.Join(strings.Fields(o.Label+": "+o.Summary), " ") {
+			return true
+		}
+	}
+	return false
 }

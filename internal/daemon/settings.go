@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"maps"
 	"slices"
+	"strings"
 
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -177,6 +178,7 @@ func settingsResult(f *registry.File) SettingsResult {
 	res := SettingsResult{
 		GlobalCap: f.GlobalCap, DaemonIdleMinutes: f.DaemonIdleMinutes,
 		EffectiveGlobalCap: f.GlobalCap, EffectiveDaemonIdleMinutes: f.DaemonIdleMinutes,
+		Owner: f.Owner, FileAnswers: f.FileAnswersOn(),
 	}
 	if res.EffectiveGlobalCap == 0 {
 		res.EffectiveGlobalCap = defaultGlobalCap
@@ -188,7 +190,8 @@ func settingsResult(f *registry.File) SettingsResult {
 }
 
 // getSettings returns the registry's global_cap and daemon_idle_minutes with
-// the values the daemon uses (S174, *proposed*).
+// the values the daemon uses, and the owner and file_answers (S174 and S314,
+// *proposed*).
 func (d *Daemon) getSettings() (SettingsResult, error) {
 	f, err := d.loadRegistry()
 	if err != nil {
@@ -206,8 +209,15 @@ func (d *Daemon) setSettings(p SetSettingsParams) (SettingsResult, error) {
 	bad := func(format string, args ...any) error {
 		return &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf(format, args...)}
 	}
-	if p.GlobalCap == nil && p.DaemonIdleMinutes == nil {
+	if p.GlobalCap == nil && p.DaemonIdleMinutes == nil && p.Owner == nil && p.FileAnswers == nil {
 		return SettingsResult{}, bad("settings.set sets no field")
+	}
+	owner := ""
+	if p.Owner != nil {
+		owner = strings.TrimSpace(*p.Owner)
+		if strings.ContainsAny(owner, "\r\n\x00") {
+			return SettingsResult{}, bad("owner must be one line without a NUL byte")
+		}
 	}
 	for _, n := range []struct {
 		name string
@@ -231,6 +241,17 @@ func (d *Daemon) setSettings(p SetSettingsParams) (SettingsResult, error) {
 	}
 	if p.DaemonIdleMinutes != nil {
 		f.DaemonIdleMinutes = *p.DaemonIdleMinutes
+	}
+	if p.Owner != nil {
+		f.Owner = owner
+	}
+	if p.FileAnswers != nil {
+		// On is the default: the key is stored only for off.
+		f.FileAnswers = nil
+		if !*p.FileAnswers {
+			off := false
+			f.FileAnswers = &off
+		}
 	}
 	if err := registry.Save(d.registryPath(), f); err != nil {
 		return SettingsResult{}, &ipc.Error{Code: CodeRegistry, Message: err.Error()}

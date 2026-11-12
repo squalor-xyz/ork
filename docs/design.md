@@ -121,8 +121,8 @@ ork (TUI)  ork status --json (CLI)
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
   | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`) | the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills` or `spec_check_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
-  | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes"}`; the first two are the stored values (0 is unset) |
-  | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?}`, at least one | the same shape as `settings.get`; 0 clears one; `bad_params` for no field or a negative number; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
+  | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes","owner"?,"file_answers"}`; the first two are the stored values (0 is unset); from S314 (*proposed*) `owner` is the stored name (absent when unset) and `file_answers` is true unless the registry turns it off |
+  | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?,"owner"?,"file_answers"?}`, at least one | the same shape as `settings.get`; 0 clears one, `""` clears `owner` and `true` clears `file_answers` (on is the default and is not written); `bad_params` for no field, a negative number or an owner that is not one line; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
   Error codes the daemon adds: `unknown_method`, `bad_params`, `not_found`,
   `duplicate_name`, `invalid_path`, `registry`, *proposed* `project_busy`, *proposed*
@@ -296,7 +296,17 @@ ork (TUI)  ork status --json (CLI)
    `Owner decisions (date)`
    paragraph to the slice's Implement section with `slicer edit --append`, and
    files a question that has a decision key in adj the way a run's answer is
-   filed (`owner.questions`, S28). The paragraph is also stored in the item's
+   filed (`owner.questions`, S28). *Proposed (S314; owner decisions
+   owner.setting-command, owner.setting-store, adj 228 to 230):* the daemon
+   files as the owner it resolves in one place, `engine.ResolveOwner`: the
+   caller's `ADJ_DECIDED_BY` when set, else the registry's `owner` (set with
+   `ork settings set --owner NAME`). Filing is on whenever the project has adj
+   and an owner resolves; `ork settings set --file-answers off` stops it. Only
+   an answer that is one of the question's options (`Label: summary`) is filed;
+   free text is recorded in the slice and not filed. With no owner, nothing is
+   filed and one notice for the item names the keys and says `no owner set; run
+   ork settings set --owner NAME`. A filed answer says `filed in adj: KEY (adj
+   N)` and its `--why` names the date and the slice. The paragraph is also stored in the item's
    run record and added to every role's brief, because the run's worktree does
    not have the main checkout's edit. Only ready items, or items whose
    questions are all answered, can be approved: the daemon refuses an item
@@ -2587,6 +2597,18 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   projects (missing or empty), text prints
   `[--] projects  none registered: run ork projects add PATH` in the same
   place. Neither line changes `ok` or the exit code.
+  *Proposed (S314):* with a readable registry, text also prints one owner
+  line before the project lines, in one of three forms (each fits 80 columns
+  for a name of about 11 characters): `[ok] owner  NAME (SOURCE); spec answers
+  are filed in adj`, `[ok] owner  NAME (SOURCE); spec answers not filed
+  (file_answers off)` and `[--] owner  not set; spec answers not filed: ork
+  settings set --owner NAME`. SOURCE is `ADJ_DECIDED_BY` when the variable is
+  set, else `setting`. The line speaks of spec answers only: run answers and
+  ledger answers still need `ADJ_DECIDED_BY`. JSON has `owner` (empty when
+  unset), `owner_source` (`environment`, `setting` or empty) and
+  `file_answers` (the registry's value, true when the key is absent; false
+  when the registry could not be read). The line does not change `ok` or the
+  exit code.
 
 Doctor exits 1 when slicer, adj or the contract check fails. Advisory project
 findings do not change `ok` or the exit code. A failed `--fix` sets `ok` to false
@@ -2836,6 +2858,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   N)`, with `unset` for a stored 0 and the effective value 4 and 10 when
   unset. `set` needs at least one flag; 0 clears one; a negative number, a
   non-number, an unknown subcommand or flag and no flag are usage errors
+  (*proposed*, S314: `--owner NAME` and `--file-answers on|off` also set the
+  registry's `owner` and `file_answers`; `show` prints `owner=NAME|unset` and
+  `file_answers=on|off` after the two numbers; `--file-answers` takes only
+  `on` or `off`)
   (exit 2) before the daemon starts. Text: `updated settings: FIELD=VALUE,
   ...` with the stored value (`unset` for 0). JSON: `{"settings":{...}}` for
   both, with the keys of `settings.get`. Unlike `projects set`, `settings set`

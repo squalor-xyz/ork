@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 355,
+  "next_id": 356,
   "preamble": "",
   "passes": [
     {
@@ -17589,10 +17589,25 @@
       "id": "S314",
       "title": "Name the owner once so answers to spec questions are filed in adj",
       "short_title": "Name the owner once so answers to spec questions are filed in adj",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a0289ea9-2f3f-4bf9-8098-e9a669891658",
+          "kind": "",
+          "text": "**2026-11-12** — Spec answers are filed in adj under an owner resolved from ADJ_DECIDED_BY, else the new registry v3 owner setting (ork settings set --owner NAME, --file-answers on|off). Filing is on by default when an owner resolves; only an option the owner picked is filed. With no owner, one notice per item says how to set it. ork doctor and ork settings show print the owner and the filing state (doctor reports file_answers false when the registry is unreadable). Verified: go test ./... 6787 passed, 0 failed; go vet, gofmt -l, adj lint clean; slicer check passed with warnings on other slices. Run answers and ledger answers are unchanged and move to S355.",
+          "created_at": "2026-11-12T01:34:14Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -17610,7 +17625,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -19117,6 +19132,34 @@
         "urgency": 3,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S355",
+      "title": "Run-question answers are filed in adj under the owner setting",
+      "short_title": "Run answers use the owner setting",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S314 (2026-11-12) files spec-check answers in adj under the owner setting (`ork settings set --owner`, adj 322, 323); run-question answers (ctrl+a, `FileAnswer`) still need `ADJ_DECIDED_BY`.",
+        "discovered_from": "S314",
+        "parent": "",
+        "cites": [],
+        "key": "ork-run-answers-owner",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
       }
     }
   ],

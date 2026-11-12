@@ -371,7 +371,7 @@ func TestProjectsAddListRemove(t *testing.T) {
 	}
 
 	saved, err := registry.Load(w.regPath)
-	if err != nil || saved.Version != 2 || len(saved.Projects) != 3 || saved.Projects[1].Name != "with-adj" || !saved.Projects[1].Adj || saved.Projects[2].Name != "other" {
+	if err != nil || saved.Version != 3 || len(saved.Projects) != 3 || saved.Projects[1].Name != "with-adj" || !saved.Projects[1].Adj || saved.Projects[2].Name != "other" {
 		t.Fatalf("saved registry: %+v, %v", saved, err)
 	}
 
@@ -1151,10 +1151,15 @@ func TestDoctorRegistryReadFailureIsAdvisory(t *testing.T) {
 		OK            bool   `json:"ok"`
 		Warning       string `json:"warning"`
 		RegistryError string `json:"registry_error"`
+		FileAnswers   bool   `json:"file_answers"`
 	}
 	mustJSON(t, out, &d)
 	if code != 0 || !d.OK || d.Warning != "" || !strings.Contains(d.RegistryError, "unexpected end of JSON input") {
 		t.Fatalf("exit %d: %s", code, out)
+	}
+	// An unreadable registry says nothing about filing: it is not reported as on.
+	if d.FileAnswers {
+		t.Fatalf("file_answers is true with a registry error: %s", out)
 	}
 }
 

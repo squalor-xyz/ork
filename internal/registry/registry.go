@@ -18,9 +18,10 @@ import (
 )
 
 // Version is the projects.json version this package writes. It also reads
-// version 1, which lacks daemon_idle_minutes; Load returns such a file as
-// version 2, so the next Save writes version 2.
-const Version = 2
+// version 1, which lacks daemon_idle_minutes, and version 2, which lacks owner
+// and file_answers (S314, *proposed*); Load returns such a file as version 3,
+// so the next Save writes version 3.
+const Version = 3
 
 // DefaultDaemonIdleMinutes is how long an idle daemon waits before it exits
 // (daemon.idle). A daemon_idle_minutes of 0 means this default
@@ -290,7 +291,17 @@ type File struct {
 
 	// DaemonIdleMinutes is new in version 2. Zero means unset.
 	DaemonIdleMinutes int `json:"daemon_idle_minutes,omitempty"`
+
+	// Owner and FileAnswers are new in version 3 (S314, *proposed*). Owner is
+	// the name ork files spec-question answers under in adj when
+	// ADJ_DECIDED_BY is not set; empty means unset. FileAnswers false turns
+	// that filing off; absent means on.
+	Owner       string `json:"owner,omitempty"`
+	FileAnswers *bool  `json:"file_answers,omitempty"`
 }
+
+// FileAnswersOn reports whether ork files answers in adj; absent means on.
+func (f *File) FileAnswersOn() bool { return f.FileAnswers == nil || *f.FileAnswers }
 
 // fileV1 is the version 1 shape. Decoding a version 1 file into it keeps the
 // strict-key rule: a key added in version 2 is unknown there.
@@ -300,11 +311,19 @@ type fileV1 struct {
 	Projects  []Project `json:"projects"`
 }
 
+// fileV2 is the version 2 shape: a key added in version 3 is unknown there.
+type fileV2 struct {
+	Version           int       `json:"version"`
+	GlobalCap         int       `json:"global_cap,omitempty"`
+	Projects          []Project `json:"projects"`
+	DaemonIdleMinutes int       `json:"daemon_idle_minutes,omitempty"`
+}
+
 // VersionError reports a file version this package does not know.
 type VersionError struct{ Got int }
 
 func (e *VersionError) Error() string {
-	return fmt.Sprintf("unknown registry version %d (this ork reads versions 1 and %d)", e.Got, Version)
+	return fmt.Sprintf("unknown registry version %d (this ork reads versions 1, 2 and %d)", e.Got, Version)
 }
 
 // DefaultPath returns $XDG_CONFIG_HOME/ork/projects.json, else
@@ -336,20 +355,29 @@ func Load(path string) (*File, error) {
 	if err := json.Unmarshal(data, &head); err != nil {
 		return nil, fmt.Errorf("registry %s: %w", path, err)
 	}
-	if head.Version != 1 && head.Version != Version {
+	if head.Version < 1 || head.Version > Version {
 		return nil, fmt.Errorf("registry %s: %w", path, &VersionError{Got: head.Version})
 	}
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields()
 	var f File
-	if head.Version == 1 {
+	switch head.Version {
+	case 1:
 		var v1 fileV1
 		if err := dec.Decode(&v1); err != nil {
 			return nil, fmt.Errorf("registry %s: %w", path, err)
 		}
 		f = File{Version: Version, GlobalCap: v1.GlobalCap, Projects: v1.Projects}
-	} else if err := dec.Decode(&f); err != nil {
-		return nil, fmt.Errorf("registry %s: %w", path, err)
+	case 2:
+		var v2 fileV2
+		if err := dec.Decode(&v2); err != nil {
+			return nil, fmt.Errorf("registry %s: %w", path, err)
+		}
+		f = File{Version: Version, GlobalCap: v2.GlobalCap, Projects: v2.Projects, DaemonIdleMinutes: v2.DaemonIdleMinutes}
+	default:
+		if err := dec.Decode(&f); err != nil {
+			return nil, fmt.Errorf("registry %s: %w", path, err)
+		}
 	}
 	if _, err := dec.Token(); err != io.EOF {
 		return nil, fmt.Errorf("registry %s: trailing data after the JSON object", path)

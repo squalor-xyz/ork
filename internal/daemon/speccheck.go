@@ -409,7 +409,14 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 	} else if fp != e.fingerprint {
 		return nil, fmt.Errorf("spec changed since the check of %s; run the check again", p.Item)
 	}
-	decisions, notices, err := engine.RecordSpecAnswers(ctx, deps, engine.SpecAnswerConfig{Project: proj, Item: p.Item, Questions: e.questions, Answers: p.Answers, Adj: p.Adj && proj.Adj, By: p.By})
+	// The owner is the caller's ADJ_DECIDED_BY, else the registry's owner; the
+	// registry's file_answers turns filing off (S314, *proposed*).
+	reg, err := d.loadRegistry()
+	if err != nil {
+		return nil, err
+	}
+	by := engine.ResolveOwner(p.By, reg.Owner)
+	decisions, notices, err := engine.RecordSpecAnswers(ctx, deps, engine.SpecAnswerConfig{Project: proj, Item: p.Item, Questions: e.questions, Answers: p.Answers, Adj: p.Adj && proj.Adj && reg.FileAnswersOn(), By: by})
 	if err != nil {
 		return nil, err
 	}

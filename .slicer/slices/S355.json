@@ -1,0 +1,41 @@
+{
+  "id": "S355",
+  "title": "Run-question answers are filed in adj under the owner setting",
+  "lead": [
+    "*Proposed.* Owner decision 2026-11-12 (adj 327, `owner.filing-run-answers` = run-answers): the daemon resolves the owner for `run.answer` from the owner setting, and filing an answer in adj is on by default when an owner is known, with ctrl+a in the run pane as the per-session off switch. Ledger answers (`relayanswer`) do not change in this slice."
+  ],
+  "depends_note": null,
+  "findings_note": "S314 (2026-11-12) files spec-check answers in adj under the owner setting (`ork settings set --owner`, adj 322, 323); run-question answers (ctrl+a, `FileAnswer`) still need `ADJ_DECIDED_BY`.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* S314 added the global owner setting for spec-check answers. A run question the owner answers in the run pane or with `ork answer` is filed in adj only when `ADJ_DECIDED_BY` is set in the daemon's environment, so most owner answers to run questions never reach the decision log. The implementer re-anchors the paths after S314 lands: the run pane's ctrl+a toggle (`internal/tui/pane.go`), `FileAnswer` and the `run.answer` handler (`internal/daemon/runs.go`)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go`\n- `internal/tui/pane.go`\n- `internal/engine/answer_adj.go`\n- `docs/design.md`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- With the owner setting `Jon` and no `ADJ_DECIDED_BY`, `run.answer` on a question with a decision key files a decided adj record by Jon.\n- With no owner setting and no `ADJ_DECIDED_BY`, `run.answer` files nothing, as today.\n- ctrl+a in the run pane turns filing off for the session; the next answer files nothing."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Start after S314 lands; re-anchor the files.\n2. Resolve the owner for `run.answer` from the owner setting, then `ADJ_DECIDED_BY`.\n3. Default filing on when an owner is known; ctrl+a turns it off for the session.\n4. Docs (*proposed*): `docs/design.md`, `docs/dashboard.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./internal/daemon ./internal/tui ./internal/engine` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

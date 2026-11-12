@@ -69,7 +69,10 @@ It prints the path of the ork binary first, then one line per check
   refuses its pin (`contract_mismatch`); an unpinned project is checked against
   the accepted set alone (`docs/design.md:2412-2422`);
 - each registered project: the path exists, the check command parses, and the
-  worktree and branch patterns contain `{id}` or `{id_lower}`.
+  worktree and branch patterns contain `{id}` or `{id_lower}`;
+- the owner ork files spec answers under in adj (`ADJ_DECIDED_BY`, else the
+  one set with `ork settings set --owner NAME`), and whether that filing is on
+  (*proposed*, S314). It is advisory and does not change the exit code.
 
 `ork doctor` exits 1 when slicer, adj or the contract check fails. Fix those
 before you run anything. Advisory project findings do not change the exit code.
@@ -206,6 +209,16 @@ Two settings belong to the whole registry. Change them with `ork settings set
 show`. `global_cap` defaults to 2 and `daemon_idle_minutes` to 10; 0 clears
 one. Unlike `projects set`, `settings set` works while runs are unfinished, and
 a higher cap starts queued runs at once.
+
+*Proposed (S314):* two more settings say who you are to adj. `ork settings set
+--owner NAME` stores your name once for all projects (an `ADJ_DECIDED_BY` in
+the environment of the caller still wins). With a name known, the answers you
+give to spec questions are filed in adj under it, for each question that has a
+decision key and an adj-enabled project, and only when you picked one of the
+offered options (a typed answer stays in the slice). `ork settings set
+--file-answers off` turns that filing off. Without a name nothing is filed and
+one notice says `no owner set; run ork settings set --owner NAME`. `ork
+doctor` shows the owner and whether spec answers are filed.
 
 ## 6. The role lineup
 
