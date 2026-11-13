@@ -314,6 +314,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	uiDoc := fs.String("ui-doc", "", "the UI design doc, a path inside the project")
 	uiPassSkills := fs.String("ui-pass-skills", "", "comma-separated skills for a Claude UI pass; empty clears the list")
 	specCheckRows := fs.String("spec-check-rows", "", "comma-separated matrix rows the spec check runs on, in order (r16,r24); empty clears the list")
+	uiPassRows := fs.String("ui-pass-rows", "", "comma-separated matrix rows the UI pass runs on, in order (r36,r14); empty clears the list")
 	worktree := fs.String("worktree-pattern", "", "the worktree path, with {id} or {id_lower}")
 	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
 	check := fs.String("check", "", "the check command")
@@ -395,6 +396,16 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if given["ui-doc"] {
 		p.UIDoc = uiDoc
 	}
+	if given["ui-pass-rows"] {
+		rows := []string{}
+		if *uiPassRows != "" {
+			rows = strings.Split(*uiPassRows, ",")
+			for i := range rows {
+				rows[i] = strings.TrimSpace(rows[i])
+			}
+		}
+		p.UIPassRows = &rows
+	}
 	if given["worktree-pattern"] {
 		p.WorktreePattern = worktree
 	}
@@ -446,7 +457,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --bell, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --bell, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -487,6 +498,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		if p.SpecCheckRows != nil {
 			changed = append(changed, text("spec_check_rows", strings.Join(proj.SpecCheckRows, ",")))
+		}
+		if p.UIPassRows != nil {
+			changed = append(changed, text("ui_pass_rows", strings.Join(proj.UIPassRows, ",")))
 		}
 		if p.WorktreePattern != nil {
 			changed = append(changed, text("worktree_pattern", proj.WorktreePattern))

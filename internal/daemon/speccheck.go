@@ -106,7 +106,26 @@ func specCheckRows(proj registry.Project, rules []slicercli.Rule) []string {
 // reviewer or gate chain, and roles.matrix labels each one.
 func specCheckRowSet(proj registry.Project, rules []slicercli.Rule) []string {
 	set := slices.Clone(specCheckRows(proj, rules))
-	for _, id := range slicercli.SpecCheckRowIDs(rules) {
+	for _, id := range append(slicercli.SpecCheckRowIDs(rules), slicercli.LocalSpecCheckRowIDs(rules)...) {
+		if !slices.Contains(set, id) {
+			set = append(set, id)
+		}
+	}
+	return set
+}
+
+// uiPassRows selects the ordered UI lineup; empty uses the rule defaults.
+func uiPassRows(proj registry.Project, rules []slicercli.Rule) []string {
+	if len(proj.UIPassRows) > 0 {
+		return proj.UIPassRows
+	}
+	return slicercli.UIPassRowIDs(rules)
+}
+
+// uiPassRowSet includes trial rows even when the project does not select them.
+func uiPassRowSet(proj registry.Project, rules []slicercli.Rule) []string {
+	set := slices.Clone(uiPassRows(proj, rules))
+	for _, id := range append(slicercli.UIPassRowIDs(rules), slicercli.LocalUIPassRowIDs(rules)...) {
 		if !slices.Contains(set, id) {
 			set = append(set, id)
 		}

@@ -53,7 +53,7 @@ func (d *Daemon) rolesMatrix(ctx context.Context, p RolesMatrixParams) (*RolesMa
 	if err != nil {
 		return nil, err
 	}
-	uiRow, specRows := slicercli.UIPassRowID(m.Rules), specCheckRowSet(project, m.Rules)
+	uiRows, specRows := uiPassRowSet(project, m.Rules), specCheckRowSet(project, m.Rules)
 	implPerm, permErr := engine.ResolvePermission(project, engine.RoleImplementer)
 	implReadOnly := permErr != nil || implPerm.ReadOnly
 	out := &RolesMatrixResult{Markdown: m.Markdown, Rows: []MatrixRow{}, Rules: m.Rules}
@@ -64,7 +64,7 @@ func (d *Daemon) rolesMatrix(ctx context.Context, p RolesMatrixParams) (*RolesMa
 		out.Rows = append(out.Rows, MatrixRow{
 			ID: row.ID, Role: row.Role, Agent: row.Agent,
 			Vendor: row.Vendor, Model: row.Model, Reasoning: row.Reasoning, Note: row.Note,
-			Use: matrixUse(row, uiRow, specRows, implReadOnly),
+			Use: matrixUse(row, uiRows, specRows, implReadOnly),
 		})
 	}
 	return out, nil
@@ -180,7 +180,7 @@ func quoteWord(s string) string {
 // implementerReadOnly is whether the project gives the implementer a read-only
 // permission; a grok row of the implementer is skipped unless it does (S268,
 // *proposed*).
-func matrixUse(row slicercli.Row, uiRow string, specRows []string, implementerReadOnly bool) string {
+func matrixUse(row slicercli.Row, uiRows, specRows []string, implementerReadOnly bool) string {
 	switch row.Role {
 	case engine.RoleGate:
 		return "not used: the gate runs the reviewer's lineup"
@@ -200,7 +200,7 @@ func matrixUse(row slicercli.Row, uiRow string, specRows []string, implementerRe
 		}
 	}
 	switch {
-	case uiRow != "" && row.ID == uiRow:
+	case row.ID != "" && slices.Contains(uiRows, row.ID):
 		return "UI pass row, " + use
 	case slices.Contains(specRows, row.ID):
 		return "Spec check row, " + use

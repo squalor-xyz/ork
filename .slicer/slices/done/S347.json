@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/landdirty.go:104-131`\n- `internal/engine/landdirty_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/landdirty.go:109-159` (`commitLaunchTracking`)\n- `internal/engine/landdirty_test.go:19-67` (`TestLaunchTrackingListedSlices`)\n- `internal/engine/engine_test.go:24-46` (`launchTrackingHarness` list fixture)\n- `docs/design.md:401-416` (setup tracking commit)\n- `CHANGELOG.md:3` (Unreleased)"
     },
     {
       "heading": "Failing tests",
-      "body": "- A main checkout whose index lists S900 (launched) and S901 (another session's, slice file untracked): after the launch commit, `git ls-files .slicer/slices` holds every slice the committed index lists (under Q1 (a)).\n- The owner's unrelated uncommitted files (outside `.slicer/`, and `.slicer/config.json`, `.slicer/relay-roles.json`) stay uncommitted."
+      "body": "- `internal/engine/landdirty_test.go:19`: `TestLaunchTrackingListedSlices` commits S900 and S901 slice JSON and render when slicer list reports has_slice true; verify real git commit paths and remaining status. Independently vary whether S901 JSON or render is already tracked.\n- `internal/engine/engine_test.go:61`: existing `TestLaunchTrackingItemOnly` preserves unrelated staged files. The listed-slices regression also preserves outside files, config.json, relay-roles.json, unlisted and has_slice false items, and edits to already tracked slices."
     },
     {
       "heading": "Implement",
@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go vet ./... && go test ./internal/engine` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+      "body": "- `go vet ./...` exits 0.\n- `go test ./internal/engine` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` and `adj lint` exit 0 in the worktree."
     },
     {
       "heading": "Git",

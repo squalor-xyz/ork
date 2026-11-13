@@ -2,7 +2,7 @@
 {
   "id": 317,
   "title": "S344: how do the local spec check and UI pass rows stay out of normal runs?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-check-rows-default",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -27,6 +27,7 @@
   },
   "decision": "trial-only",
   "rationale": "Owner picked 'trial-only' in an interactive question on 2026-11-12 (ork relay session 8d711f67); recorded as the owner's delegate (process.owner-answers, 316).",
+  "superseded_by": 342,
   "refs": [
     "S344"
   ],
@@ -38,6 +39,11 @@
     {
       "date": "2026-11-12",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-12",
+      "event": "supersede",
+      "note": "by 342"
     }
   ]
 }

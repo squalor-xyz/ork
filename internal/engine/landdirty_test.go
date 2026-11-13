@@ -10,9 +10,61 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
+
+func TestLaunchTrackingListedSlices(t *testing.T) {
+	for _, tracked := range []string{"", ".slicer/slices/S901.json", ".slicer/render/slices/S901.md"} {
+		t.Run("tracked="+tracked, func(t *testing.T) {
+			h := launchTrackingHarness(t, false)
+			if tracked != "" {
+				writeFile(t, filepath.Join(h.P, tracked), "old\n")
+				gitRun(t, h.P, "add", "--", tracked)
+				gitRun(t, h.P, "commit", "-qm", "tracked slice")
+			}
+			paths := []string{".slicer/index.json", ".slicer/render/slices/S900.md", ".slicer/render/slices/S901.md", ".slicer/slices/S900.json", ".slicer/slices/S901.json"}
+			var wantCommit, wantDirty []string
+			for _, p := range paths {
+				writeFile(t, filepath.Join(h.P, p), "new\n")
+				if p == tracked {
+					wantDirty = append(wantDirty, " M "+p)
+				} else {
+					wantCommit = append(wantCommit, p)
+				}
+			}
+			// Unlisted S902 and has_slice:false S903 must stay with the owner,
+			// along with staged config, matrix and ordinary project files.
+			for _, p := range []string{".slicer/config.json", ".slicer/relay-roles.json", ".slicer/slices/S902.json", "notes.txt"} {
+				writeFile(t, filepath.Join(h.P, p), "owner\n")
+				gitRun(t, h.P, "add", "--", p)
+				wantDirty = append(wantDirty, "A  "+p)
+			}
+			writeFile(t, filepath.Join(h.P, ".slicer/slices/S903.json"), "owner\n")
+			wantDirty = append(wantDirty, "?? .slicer/slices/S903.json")
+			fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", h.P}, Stdout: `[{"id":"S900","has_slice":true},{"id":"S901","has_slice":true},{"id":"S903","has_slice":false}]`})
+			e := &Engine{proj: h.proj, d: h.deps}
+			e.d.Slicer = slicercli.Client{Bin: fake.Bin("slicer")}
+			reason := e.commitLaunchTracking(context.Background(), "S900")
+			committed := gitRun(t, h.P, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD")
+			dirty := strings.Split(gitRun(t, h.P, "status", "--porcelain"), "\n")
+			// gitRun trims the first status column's leading space.
+			for i := range dirty {
+				dirty[i] = strings.TrimSpace(dirty[i])
+			}
+			for i := range wantDirty {
+				wantDirty[i] = strings.TrimSpace(wantDirty[i])
+			}
+			sort.Strings(dirty)
+			sort.Strings(wantDirty)
+			if reason != "" || committed != strings.Join(wantCommit, "\n") || strings.Join(dirty, "\n") != strings.Join(wantDirty, "\n") {
+				t.Errorf("launch reason %q; committed paths %q, want %q; owner status %q, want %q", reason, committed, wantCommit, dirty, wantDirty)
+			}
+		})
+	}
+}
 
 // S254: the landing looks at the main checkout before it merges, and again
 // before the fast-forward. These tests run real git in temp repos (newLandEnv).

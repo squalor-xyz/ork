@@ -154,6 +154,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
                               [--bell on|off] [--auto-land on|off]
                               [--spec-check-rows rNN,rNN]
+                              [--ui-pass-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--round-check CMD] [--no-verify]
                               [--build CMD]
@@ -169,7 +170,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               one comma-separated value; --spec-check-rows
                               lists the matrix rows the spec check runs on, in
                               order, as r16,r24 (a listed row leaves every
-                              run's reviewer and gate chains); --env-line
+                              run's reviewer and gate chains); --ui-pass-rows
+                              lists the UI pass rows in order, as r36,r14
+                              (a listed row also leaves those chains; empty
+                              restores the rule defaults); --env-line
                               repeats to give the whole list, and one empty
                               --env-line clears it; --preset sets the
                               implementer's full allowlist for a language,

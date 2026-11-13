@@ -103,8 +103,9 @@ func splitTracking(prefix string, files []string) (tracking, other []string) {
 	return tracking, other
 }
 
-// commitLaunchTracking carries only this item's tracking edits into a new
-// worktree (launch.tracking-commit and the owner's item-only scope).
+// commitLaunchTracking carries this item's tracking edits into a new worktree.
+// When committing the index, include listed items' untracked slice files so
+// the committed index does not refer to files left only in the main checkout.
 func (e *Engine) commitLaunchTracking(ctx context.Context, item string) string {
 	P := e.proj.Path
 	files, err := e.changedPaths(ctx, P)
@@ -119,9 +120,35 @@ func (e *Engine) commitLaunchTracking(ctx context.Context, item string) string {
 		return oneLine("git rev-parse: " + err.Error())
 	}
 	tracking, _ := splitTracking(strings.TrimSpace(out), files)
+	include := map[string]bool{}
+	for _, rel := range tracking {
+		if rel == ".slicer/index.json" {
+			items, err := e.d.Slicer.List(ctx, P)
+			if err != nil {
+				return oneLine("slicer list: " + err.Error())
+			}
+			untracked, err := e.gitRead(ctx, P, "ls-files", "--others", "--exclude-standard", "-z")
+			if err != nil {
+				return oneLine("git ls-files: " + err.Error())
+			}
+			listed := map[string]bool{}
+			for _, it := range items {
+				if it.HasSlice {
+					listed[".slicer/slices/"+it.ID+".json"] = true
+					listed[".slicer/render/slices/"+it.ID+".md"] = true
+				}
+			}
+			for _, path := range strings.Split(untracked, "\x00") {
+				if listed[path] {
+					include[path] = true
+				}
+			}
+			break
+		}
+	}
 	var own []string
 	for _, rel := range tracking {
-		if rel == ".slicer/index.json" || rel == ".slicer/slices/"+item+".json" || rel == ".slicer/render/slices/"+item+".md" {
+		if include[rel] || rel == ".slicer/index.json" || rel == ".slicer/slices/"+item+".json" || rel == ".slicer/render/slices/"+item+".md" {
 			own = append(own, rel)
 		}
 	}

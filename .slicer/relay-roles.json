@@ -532,6 +532,42 @@
       "model": "qwen3.8-27b",
       "reasoning": "medium",
       "note": "Fallback only, after cloud rows; explicit local use until S304 measures role suitability (owner 2026-11-09)."
+    },
+    {
+      "id": "r35",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "claude-local",
+      "vendor": "Local",
+      "model": "qwen3.8-27b",
+      "reasoning": "medium",
+      "note": "Spec check row, local; S304 trial only (adj 296)"
+    },
+    {
+      "id": "r36",
+      "role": "reviewer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": null,
+        "sliver": null
+      },
+      "agent": "claude-local",
+      "vendor": "Local",
+      "model": "qwen3.8-27b",
+      "reasoning": "medium",
+      "note": "UI pass row, local; S304 trial only (adj 296)"
     }
   ],
   "rules": [
@@ -574,8 +610,12 @@
     {
       "id": "u11",
       "text": "The spec check before a wave runs the Spec check row (r16): one read-only pass over every ticked slice, answered in one sitting. The matrix has no spec-check or ui role (slicer's ledger records them as roles spec-check and ui, but a row is a reviewer row), so r14 and r16 are reviewer rows with notes; they are never a fallback of the reviewer or the gate, and the reviewer's rule u1 does not apply to the spec check because it reads specs and writes no code."
+    },
+    {
+      "id": "u12",
+      "text": "Local spec check row (r35) and Local UI pass row (r36) are S304 trial rows (adj 296, 341, 342). They never enter reviewer or gate chains. Only project spec_check_rows and ui_pass_rows select them; normal runs keep the cloud rows."
     }
   ],
-  "next_row": 35,
-  "next_rule": 12
+  "next_row": 37,
+  "next_rule": 13
 }

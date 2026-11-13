@@ -9,7 +9,10 @@
   the run records each restart's time and token count. Read-only local roles
   get an exact-file write exception for their progress note. Cloud roles do
   not change. Docs updated: `docs/design.md` and `docs/state.md`.
-
+- S344: add trial-only local spec check and UI pass matrix rows, keep them out of reviewer and gate chains, and select ordered UI fallbacks with `projects set --ui-pass-rows`.
+- Launch tracking commits include untracked slice JSON and renders for listed
+  items with `has_slice: true` when committing the index (S347, adj 321).
+  Unrelated owner edits and staged files stay uncommitted.
 - *Proposed (S360):* a claude-local role starts
   with less fixed context: ork passes `--disallowedTools` (WebFetch,
   WebSearch, Task, Agent, NotebookEdit, and Skill except for a UI pass) and

@@ -377,12 +377,44 @@ var uiPassRow = regexp.MustCompile(`UI pass row \((r\d+)\)`)
 // "UI pass row (rNN)" (rule u10 today). It is empty when no rule names one.
 // The matrix can still use a reviewer row for this separate ledger role.
 func UIPassRowID(rules []Rule) string {
-	for _, r := range rules {
-		if m := uiPassRow.FindStringSubmatch(r.Text); m != nil {
-			return m[1]
-		}
+	if ids := UIPassRowIDs(rules); len(ids) > 0 {
+		return ids[0]
 	}
 	return ""
+}
+
+var localUIPassRow = regexp.MustCompile(`Local UI pass row \((r\d+)\)`)
+var localSpecCheckRow = regexp.MustCompile(`Local spec check row \((r\d+)\)`)
+
+// UIPassRowIDs returns ordered unique defaults, excluding local trial classification.
+func UIPassRowIDs(rules []Rule) []string {
+	return namedRowIDs(rules, uiPassRow, localUIPassRow)
+}
+
+// LocalUIPassRowIDs classifies trial rows without activating them by default.
+func LocalUIPassRowIDs(rules []Rule) []string {
+	return namedRowIDs(rules, localUIPassRow, nil)
+}
+
+// LocalSpecCheckRowIDs classifies trial rows without activating them by default.
+func LocalSpecCheckRowIDs(rules []Rule) []string {
+	return namedRowIDs(rules, localSpecCheckRow, nil)
+}
+
+func namedRowIDs(rules []Rule, pattern, exclude *regexp.Regexp) []string {
+	var ids []string
+	for _, r := range rules {
+		text := r.Text
+		if exclude != nil {
+			text = exclude.ReplaceAllString(text, "")
+		}
+		for _, m := range pattern.FindAllStringSubmatch(text, -1) {
+			if !slices.Contains(ids, m[1]) {
+				ids = append(ids, m[1])
+			}
+		}
+	}
+	return ids
 }
 
 var specCheckRow = regexp.MustCompile(`Spec check row \((r\d+)\)`)
@@ -401,15 +433,7 @@ func SpecCheckRowID(rules []Rule) string {
 // SpecCheckRowIDs lists every row that a rule names as "Spec check row (rNN)",
 // in rule order, each once (S258, *proposed*). SpecCheckRowID is the first.
 func SpecCheckRowIDs(rules []Rule) []string {
-	var ids []string
-	for _, r := range rules {
-		for _, m := range specCheckRow.FindAllStringSubmatch(r.Text, -1) {
-			if !slices.Contains(ids, m[1]) {
-				ids = append(ids, m[1])
-			}
-		}
-	}
-	return ids
+	return namedRowIDs(rules, specCheckRow, localSpecCheckRow)
 }
 
 // EditAppend runs `slicer edit ID --section SECTION --append --text TEXT

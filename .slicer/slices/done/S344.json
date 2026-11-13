@@ -1,0 +1,41 @@
+{
+  "id": "S344",
+  "title": "Local spec check and UI pass rows in the matrix",
+  "lead": [
+    "*Proposed.* Filed 2026-11-11 at the owner's request (\"file a slice for local spec check and UI pass rows\"). Add a claude-local spec check row and a claude-local UI pass row to the matrix, and let ork run the UI pass on an ordered list of rows, as it already does for the spec check (S258), so S304 can trial both roles on the local model. Normal runs keep their cloud rows (adj 296)."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* What ork does today:\n\n- Spec check: it runs on the rows that the project's `spec_check_rows` lists, or else on every row a rule names \"Spec check row (rNN)\", in order, each a fallback of the one before (`internal/daemon/speccheck.go:92-102`). A row must also be a reviewer row with an adapter that `slicer relay-roles recommend` returns for the item (`internal/daemon/speccheck.go:175-212`). The matrix has no local reviewer row, so there is nothing to list.\n- UI pass: one row only. `slicercli.UIPassRowID` returns the first rule match of \"UI pass row (rNN)\" (`internal/slicercli/write.go:374-386`; rule u10 names r14), and the run plan collects only that row (`internal/daemon/runs.go:486`, `internal/daemon/runs.go:524-529`, `internal/daemon/runs.go:563-577`). There is no project setting or run flag to put another row first.\n- `ork run` overrides only implementer, reviewer and architect (\"cannot override lineup role\", `internal/daemon/runs.go:578-580`); the gate copies the reviewer chain (`internal/daemon/runs.go:646`).\n- adj 296 (`roles.local-eval-set`): outside the S304 trial, reviewer, gate and spec check stay on cloud Claude and local is for implementers only. adj 181: no default role changes to local without an owner decision.\n- The brief already gives the UI pass skills to claude-local (`internal/engine/brief.go:103`). A read-only local role still runs in plan mode until S343 lands (adj 307).\n\nOpen owner questions:\n\n- Q1 (open, `roles.local-check-rows-default`): how do the new local rows stay out of normal runs? (a) *recommended*: no rule names them; the S304 trial puts a local row first with `ork projects set ork --spec-check-rows rL,r16` and `--ui-pass-rows rU,r14`, and resets after; (b) a rule names them after the cloud rows, so they are a last fallback in every run.\n- Q2 (open, `roles.ui-pass-rows`): how does ork learn the UI pass row order? (a) *recommended*: a project setting `ui_pass_rows`, the same shape and rules as `spec_check_rows` (S258); (b) a rule names several \"UI pass row (rNN)\" ids, in order."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/slicercli/write.go:374-437` (`UIPassRowID`, `UIPassRowIDs`, `SpecCheckRowIDs`, local classification parsers)\n- `internal/daemon/runs.go:482-581` (ordered UI chain and exclusions)\n- `internal/daemon/matrix.go:56-67` and `internal/daemon/matrix.go:183-212` (row labels)\n- `internal/daemon/speccheck.go:92-134` (spec/UI selection and classification sets)\n- `internal/registry/registry.go:109-130`, `internal/registry/registry.go:273-281` and `internal/registry/registry.go:427-432` (validation and project fields)\n- `internal/daemon/wire.go:294-337` (setting wire and busy fields)\n- `internal/daemon/handlers.go:591-600` and `internal/daemon/handlers.go:691-696` (setting validation and save)\n- `internal/cli/daemoncmds.go:315-408` and `internal/cli/daemoncmds.go:499-504` (flag and output)\n- `internal/cli/cli.go:155-179` (usage)\n- `internal/daemon/uipass_test.go`, `internal/daemon/matrix_test.go`, `internal/daemon/speccheck_test.go`, `internal/slicercli/rules_test.go`, `internal/registry/registry_test.go`, `internal/cli/cli_test.go`, `internal/daemon/daemon_test.go` (tests)\n- `docs/design.md:114`, `docs/design.md:123`, `docs/design.md:1390-1402` and `docs/design.md:2747-2782`\n- `docs/guide.md:234-257`\n- `CHANGELOG.md:5`\n- `docs/dashboard.md:1661-1665` and `docs/dashboard.md:1925-1930` (UI chain order and matrix label sources; review fix)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestPlanUIPassProjectOrder`: UI run plans honor ui_pass_rows [r36,r14] in that order; clearing uses r14 alone.\n- `TestPlanExcludesLocalCheckRows`: local spec check r35 and UI pass r36, classified by rule u12, never enter reviewer or gate chains, listed or unlisted.\n- `TestMatrixLabelsLocalCheckRows`: roles.matrix labels r35 as Spec check row and r36 as UI pass row, even unlisted.\n- `TestSpecCheckLocalFirstFallsBackToCloud`: spec_check_rows [r35,r16] runs claude-local first and falls back to cloud r16 on a rate limit (existing spec chain behavior; regression coverage).\n- `TestProjectsSetUIPassRows` in CLI and daemon, `TestRegistryUIPassRows`: validate, persist and clear ui_pass_rows like spec_check_rows.\n- `TestUIRowsSeparateDefaultsFromLocalClassification`: UI row parsing preserves ordered unique defaults and separates local classification from activation.\n- `TestProjectsSetRefusesEachFieldAStartedRunReads`: unfinished runs refuse ui_pass_rows changes.\n- Review fix verification: manually check the design synopsis, CLI chain warning, dashboard row order and u12 labels; measure every projects-set usage line at 80 columns or less. No new tests for these prose-only corrections."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Wait for the owner's answers to Q1 and Q2 (`adj ask` both keys first). Start after S343 lands.\n2. Add the two matrix rows with `slicer relay-roles add` on the owner's confirmation: Reviewer, every slice, claude-local, Local, qwen3.8-27b, medium; notes \"Spec check row, local; S304 trial only (adj 296)\" and \"UI pass row, local; S304 trial only (adj 296)\". Record their ids in the slice notes.\n3. Make the UI pass row order a list (per Q2) and build the UI chain from it, with the same fallback and exclusion rules as the spec check.\n4. Docs (*proposed*): `docs/design.md`, `docs/guide.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-12): How does ork keep the two new local reviewer rows out of every run's reviewer and gate chains when no rule names them and the project does not list them? -> rule-names: add a new matrix rule, not \"Spec check row (rNN)\" or \"UI pass row (rNN)\", that names the local spec check row and the local UI pass row. ork parses it and keeps both rows out of the chains always. This changes the rules and adds a parser in `internal/slicercli/write.go`. [roles.local-check-rows-chain-exclusion]. The only Check line with a test command is `go vet ./... && go test ./internal/daemon ./internal/slicercli ./internal/registry ./internal/cli`. The brief classes it as orchestrator-only. How should the slice treat it? -> runnable: split it into `go vet ./...` and `go test ./internal/daemon ./internal/slicercli ./internal/registry ./internal/cli`, each expected to exit 0. The implementer runs both.."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./... && go test ./internal/daemon ./internal/slicercli ./internal/registry ./internal/cli` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer relay-roles show --root /home/jon/code/squalor-xyz/ork` lists the two new rows; no other row changed.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

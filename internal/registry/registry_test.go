@@ -749,6 +749,32 @@ func TestRegistryAutoLandFieldDefaultsOn(t *testing.T) {
 	}
 }
 
+func TestRegistryUIPassRows(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	for _, rows := range [][]string{{"r36", "r14"}, {}} {
+		if err := Save(path, &File{Version: Version, Projects: []Project{{Name: "p", Path: "/p", UIPassRows: rows}}}); err != nil {
+			t.Fatal(err)
+		}
+		f, err := Load(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !reflect.DeepEqual(f.Projects[0].UIPassRows, append([]string(nil), rows...)) {
+			t.Errorf("loaded rows %v, want %v", f.Projects[0].UIPassRows, rows)
+		}
+	}
+	for _, rows := range [][]string{{"r36", "r36"}, {""}, {"16"}, {" r36"}, {"r1x"}} {
+		raw, _ := json.Marshal(map[string]any{"version": Version, "projects": []any{map[string]any{"name": "p", "path": "/p", "ui_pass_rows": rows}}})
+		writeFile(t, path, raw)
+		if _, err := Load(path); err == nil || !strings.Contains(err.Error(), "ui_pass_rows") {
+			t.Errorf("load %v: %v", rows, err)
+		}
+		if err := Save(path, &File{Version: Version, Projects: []Project{{Name: "p", Path: "/p", UIPassRows: rows}}}); err == nil || !strings.Contains(err.Error(), "ui_pass_rows") {
+			t.Errorf("save %v: %v", rows, err)
+		}
+	}
+}
+
 func TestRegistryKeepsSpecCheckRows(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "projects.json")
 	raw := []byte(`{"version":3,"projects":[{"name":"p","path":"/p","adj":false,"spec_check_rows":["r16","r24"]}]}`)

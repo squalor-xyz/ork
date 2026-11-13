@@ -121,3 +121,13 @@ func TestSpecCheckRowIDsListsEveryNamedRow(t *testing.T) {
 		t.Fatalf("SpecCheckRowIDs with no named row = %q", got)
 	}
 }
+
+func TestUIRowsSeparateDefaultsFromLocalClassification(t *testing.T) {
+	rules := []Rule{{Text: "Local UI pass row (r36)."}, {Text: "UI pass row (r14), UI pass row (r40)."}, {Text: "UI pass row (r14)."}}
+	if got, want := UIPassRowIDs(rules), []string{"r14", "r40"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("defaults %v, want %v", got, want)
+	}
+	if got, want := LocalUIPassRowIDs(rules), []string{"r36"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("local %v, want %v", got, want)
+	}
+}
