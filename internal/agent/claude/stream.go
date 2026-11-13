@@ -14,7 +14,10 @@ type envelope struct {
 	Type      string `json:"type"`
 	Subtype   string `json:"subtype"`
 	SessionID string `json:"session_id"`
-	Event     *struct {
+	Message   *struct {
+		Usage wireUsage `json:"usage"`
+	} `json:"message"`
+	Event *struct {
 		Type    string `json:"type"`
 		Message *struct {
 			Usage wireUsage `json:"usage"`
@@ -66,6 +69,9 @@ func ParseLine(line []byte) (Event, error) {
 	}
 	ev := Event{Kind: EventOther, SessionID: env.SessionID, Raw: append(json.RawMessage(nil), line...)}
 	switch {
+	case env.Type == "assistant" && env.Message != nil:
+		u := env.Message.Usage
+		ev.ContextTokens = int(u.InputTokens + u.CacheCreationTokens + u.CacheReadTokens)
 	case env.Type == "system" && env.Subtype == "init":
 		ev.Kind = EventInit
 	case env.Type == "rate_limit_event":
@@ -78,6 +84,7 @@ func ParseLine(line []byte) (Event, error) {
 		ev.Kind = EventUsage
 		ev.UsageStart = true
 		ev.Usage = env.Event.Message.Usage.usage()
+		ev.ContextTokens = int(ev.Usage.InputTokens + ev.Usage.CacheCreationTokens + ev.Usage.CacheReadTokens)
 	case env.Type == "stream_event" && env.Event != nil && env.Event.Type == "message_delta":
 		ev.Kind = EventUsage
 		ev.Usage = env.Event.Usage.usage()

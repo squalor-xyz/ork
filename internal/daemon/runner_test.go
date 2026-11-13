@@ -76,6 +76,64 @@ const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(g
 
 const localDisallowedTools = "WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill"
 
+func TestClaudeContextReachesEngine(t *testing.T) {
+	got := 0
+	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		ev, err := claude.ParseLine([]byte(`{"type":"assistant","message":{"usage":{"input_tokens":1,"cache_read_input_tokens":70000}}}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		s.OnEvent(ev)
+		return claude.Round{Class: claude.ClassOK}, nil
+	}}
+	_, err := r.Run(context.Background(), engine.Request{Vendor: "claude-local", Brief: "brief", OnContext: func(n int) { got = n }})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != 70001 {
+		t.Fatalf("engine context = %d, want 70001", got)
+	}
+}
+
+func TestInterruptedClaudeLocalKeepsObservedInput(t *testing.T) {
+	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		ev, err := claude.ParseLine([]byte(`{"type":"assistant","message":{"usage":{"input_tokens":1,"cache_read_input_tokens":70000}}}`))
+		if err != nil {
+			t.Fatal(err)
+		}
+		s.OnEvent(ev)
+		return claude.Round{}, context.Canceled
+	}}
+	got, _ := r.Run(context.Background(), engine.Request{Vendor: "claude-local", Brief: "brief"})
+	if got.Tokens != 70001 {
+		t.Fatalf("interrupted usage = %d, want 70001", got.Tokens)
+	}
+}
+
+func TestClaudeProgressPermissionIsOneAbsoluteFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "notes[1]", "progress-run-reviewer.md")
+	var args []string
+	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		var err error
+		args, err = s.Args()
+		return claude.Round{Class: claude.ClassOK}, err
+	}}
+	_, err := r.Run(context.Background(), engine.Request{Vendor: "claude-local", Brief: "brief", ReadOnly: true, ProgressFile: path, Allowlist: []string{"Write"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	escaped := strings.ReplaceAll(strings.ReplaceAll(path, "[", `\[`), "]", `\]`)
+	want := localReadOnlyTools + ",Edit(/" + escaped + ")"
+	i := slices.Index(args, "--allowedTools")
+	if i < 0 || args[i+1] != want {
+		t.Fatalf("scoped progress permissions: %q, want %q", args, want)
+	}
+	i = slices.Index(args, "--add-dir")
+	if i < 0 || args[i+1] != filepath.Dir(path) {
+		t.Fatalf("missing progress working directory: %q", args)
+	}
+}
+
 func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleUI} {
 		for _, vendor := range []string{"claude-local", "claude"} {

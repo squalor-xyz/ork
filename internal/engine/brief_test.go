@@ -42,6 +42,19 @@ func baseBrief() BriefInput {
 	}
 }
 
+func TestReadOnlyProgressBriefException(t *testing.T) {
+	in := baseBrief()
+	in.Vendor, in.Role, in.ReadOnly = "claude-local", RoleReviewer, true
+	in.ProgressFile = "/p/.scratch/progress-run-reviewer.md"
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "The sole exception to the read-only and workspace rules above is") || !strings.Contains(got, "After each step") || !strings.Contains(got, in.ProgressFile) {
+		t.Fatal("read-only brief lacks its scoped progress exception")
+	}
+}
+
 func TestLocalBriefHasTargetedReads(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local", "claude", "codex", "grok"} {
 		for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate, RoleArchitect, RoleSpecCheck, RoleUI} {

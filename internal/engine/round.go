@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
@@ -19,6 +20,8 @@ import (
 )
 
 const heartbeatInterval = 10 * time.Minute
+
+const localFreshTokens = 70000
 
 // round is one role round the state machine asks for.
 type round struct {
@@ -415,6 +418,14 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
+	progressFile := ""
+	if entry.Vendor == "claude-local" {
+		progressFile = filepath.Join(e.proj.Path, ".scratch", fmt.Sprintf("progress-%s-%s.md", rec.ID, r.role))
+		if err := os.MkdirAll(filepath.Dir(progressFile), 0700); err != nil {
+			return fail("progress directory", err)
+		}
+		in.ProgressFile = progressFile
+	}
 	if r.role == RoleGate {
 		implementerPerm, err := ResolvePermission(e.proj, RoleImplementer)
 		if err != nil {
@@ -509,14 +520,66 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	defer stopWatch()
 	endWork := e.beginWork(fmt.Sprintf("%s round %d", r.role, r.n), watch)
 	defer endWork()
-	res, runErr := e.d.Runner.Run(runCtx, Request{
-		Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
-		Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
-		Allowlist: perm.Allow, ReadOnly: perm.ReadOnly, Resume: session,
-		OnEvent: func() { watch.touch(); onEvent() },
-		OnLive:  func(l Live) { watch.touch(); onLive(l) },
-		OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },
-	})
+	originalBrief := brief
+	var res Result
+	var runErr error
+	var spentTokens int
+	var spentCost float64
+	var denials []runrec.DeniedCommand
+	for {
+		sessionCtx, endSession := context.WithCancel(runCtx)
+		var contextTokens atomic.Int64
+		res, runErr = e.d.Runner.Run(sessionCtx, Request{
+			Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
+			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
+			ProgressFile: progressFile,
+			OnContext: func(tokens int) {
+				if entry.Vendor == "claude-local" && tokens > localFreshTokens && contextTokens.CompareAndSwap(0, int64(tokens)) {
+					endSession()
+				}
+			},
+			Allowlist: perm.Allow, ReadOnly: perm.ReadOnly, Resume: session,
+			OnEvent: func() { watch.touch(); onEvent() },
+			OnLive:  func(l Live) { watch.touch(); onLive(l) },
+			OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },
+		})
+		endSession()
+		res.Tokens += spentTokens
+		res.CostUSD += spentCost
+		res.Denials = append(denials, res.Denials...)
+		tokens := int(contextTokens.Load())
+		if tokens == 0 || runCtx.Err() != nil || !errors.Is(runErr, context.Canceled) {
+			break
+		}
+		// Run has joined the old process and its stream callbacks. The round's
+		// slot, heartbeat and watchdog stay alive while only this session ends.
+		stat, err := e.gitRead(runCtx, rec.Worktree, "diff", "--stat", "HEAD")
+		if err != nil {
+			runErr = fmt.Errorf("restart git diff: %w", err)
+			break
+		}
+		progress, err := ReadReport(filepath.Dir(progressFile), filepath.Base(progressFile))
+		if err != nil {
+			progress = "No readable progress note is available."
+		}
+		if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
+			runErr = fmt.Errorf("restart old report: %w", err)
+			break
+		}
+		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. Continue its saved work; do not repeat completed steps.\n\nProgress note:\n\n" + progress + "\n\nGit diff --stat:\n\n" + stat + "\n"
+		session = ""
+		spentTokens, spentCost, denials = res.Tokens, res.CostUSD, res.Denials
+		if err := e.run.Update(func(rr *runrec.Record) {
+			role := &rr.Roles[idx]
+			role.Restarts = append(role.Restarts, runrec.SessionRestart{At: e.d.now(), Tokens: tokens})
+			role.PGID = 0
+			role.Session = ""
+			role.Tokens, role.CostUSD = spentTokens, spentCost
+			role.Denials, role.DeniedCommands = denialNames(denials), denials
+		}); err != nil {
+			return outcome{}, err
+		}
+	}
 	stopWatch()
 	if err := ctx.Err(); err != nil {
 		release()

@@ -4,6 +4,7 @@ package claude
 
 import (
 	"errors"
+	"path/filepath"
 	"slices"
 	"strings"
 )
@@ -62,6 +63,12 @@ func (s Spec) Args() ([]string, error) {
 		args = append(args, "--disallowedTools", strings.Join(denied, ","))
 		if !s.KeepSkills {
 			args = append(args, "--disable-slash-commands")
+		}
+		if s.AddDir != "" {
+			if !filepath.IsAbs(s.AddDir) {
+				return nil, errors.New("claude: progress directory is not absolute")
+			}
+			args = append(args, "--add-dir", s.AddDir)
 		}
 	}
 	if s.ReadOnly && s.Bin != "claude-local" {

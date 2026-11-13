@@ -39,13 +39,32 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	if req.ReadOnly && req.Vendor == "claude-local" {
 		allowlist = engine.LocalReadOnlyAllowlist()
 	}
+	addDir := ""
+	if req.Vendor == "claude-local" && req.ProgressFile != "" {
+		if !filepath.IsAbs(req.ProgressFile) || filepath.Clean(req.ProgressFile) != req.ProgressFile {
+			return engine.Result{}, fmt.Errorf("progress file must be an absolute clean path")
+		}
+		// Edit(path) governs both Edit and Write. Escape gitignore characters
+		// so a project path never turns this exact-file grant into a wildcard.
+		escape := strings.NewReplacer(`\`, `\\`, "*", `\*`, "?", `\?`, "[", `\[`, "]", `\]`, "!", `\!`)
+		allowlist = append(slices.Clone(allowlist), "Edit(/"+escape.Replace(filepath.ToSlash(req.ProgressFile))+")")
+		addDir = filepath.Dir(req.ProgressFile)
+	}
 	live := newLiveRedactor(r.env, req.OnLive)
 	var message claude.Usage
+	used := 0
+	lastContext := 0
 	total := func(u claude.Usage) int {
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
-	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
+	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
 		ReadOnly: req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
+			if ev.ContextTokens > 0 {
+				lastContext = ev.ContextTokens
+			}
+			if ev.ContextTokens > 0 && req.OnContext != nil {
+				req.OnContext(ev.ContextTokens)
+			}
 			switch ev.Kind {
 			case claude.EventTextDelta:
 				live.send(ev.Text, 0, false)
@@ -66,7 +85,9 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 					}
 					message.OutputTokens = ev.Usage.OutputTokens
 				}
-				live.usage(total(message) - before)
+				delta := total(message) - before
+				used += delta
+				live.usage(delta)
 			}
 			if req.OnEvent != nil {
 				req.OnEvent()
@@ -86,6 +107,9 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	}
 	result := engine.Result{Exit: class, Reason: round.Reason, Session: round.SessionID, Report: round.Report, CostUSD: round.Usage.CostUSD,
 		Tokens: int(round.Usage.InputTokens + round.Usage.OutputTokens + round.Usage.CacheReadTokens + round.Usage.CacheCreationTokens)}
+	if req.Vendor == "claude-local" && err != nil && round.Result == nil {
+		result.Tokens = max(used, lastContext)
+	}
 	for _, d := range round.Denials {
 		result.Denials = append(result.Denials, runrec.DeniedCommand{Tool: d.ToolName, Command: d.Detail()})
 	}

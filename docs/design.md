@@ -1387,6 +1387,32 @@ separately.
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
+- **Fresh local sessions** (S358, *proposed*; owner decisions 335, 336 and
+  the relay's progress-permission and restart-record answers): a claude-local
+  role whose current input context exceeds 70,000 tokens ends its session
+  before auto-compaction. Cached input counts; output and cumulative usage
+  do not determine the threshold. ork joins the old process before starting
+  a fresh session without `--resume`. The brief carries the original brief,
+  the role's progress note and `git diff --stat HEAD` from its worktree.
+  A clean final result that races the threshold remains a completed round.
+  The same role row, vendor slot, ledger step, heartbeat and 90-minute runtime
+  watchdog span every session. Tokens and costs accumulate across sessions.
+  Each restart adds an `{at, tokens}` entry to the role's `restarts` list.
+  Cloud roles keep their existing behavior. Other local adapters do not yet
+  expose the per-message context signal used by this Claude-specific change.
+
+  The role replaces a short note after each step: done, next and open problems,
+  at `<project>/.scratch/progress-RUN-ROLE.md`. The brief explicitly allows
+  that one file outside the worktree, including for a read-only local role.
+  The adapter adds its directory with `--add-dir` and grants only an exact
+  absolute `Edit(//path)` rule, escaping path-pattern characters. Claude's
+  Edit rules cover both Edit and Write; `Write(path)` rules do not match
+  ([vendor permission rules](https://code.claude.com/docs/en/permissions#writepath-globpath-and-greppath-rules-dont-match)).
+  The fixed read-only allowlist otherwise stays the same; the brief keeps the
+  tree read-only. Report writing rules stay the same. A missing or unreadable
+  note is named in the restart brief. Note reads use the bounded regular-file
+  guards used for reports, refusing links and special files. ork retains the
+  note for later sessions; it is a scratch artifact, outside run.json.
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
@@ -1739,8 +1765,10 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
   `adj show`, `adj check`, `go test`, `go vet` (also with `go -C`)
-  and `gofmt -l`, with trailing argument wildcards. It allows no Edit, Write,
-  broad Bash or tracking-write commands. Cloud permissions stay the same.
+  and `gofmt -l`, with trailing argument wildcards. S358 adds an exact-file
+  Edit/Write exception for the local progress note described under Roles.
+  It allows no other edits, broad Bash or tracking-write commands. Cloud
+  permissions stay the same.
   An implementer with no entry (or an empty list) gets the built-in
   default, which the registry replaces as a whole: `Read`, `Grep`, `Glob`,
   `Edit`, `Write`, `Bash(slicer *)`, `Bash(git status*)`, `Bash(git

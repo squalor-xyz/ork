@@ -681,6 +681,18 @@ that limit, and time the machine slept is not counted in it. `commit` is
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
 
+*Proposed (S358):* `roles[].restarts`, omitted when empty, records each fresh
+claude-local session within the same role round as `{"at": TIMESTAMP,
+"tokens": INPUT_CONTEXT_TOKENS}`. Cached input is included. It is a list on
+one role row; `started_at` and the 90-minute runtime limit span all sessions.
+The row's tokens and cost include interrupted sessions; its session and PGID
+refer to the latest session. The dashboard keeps one row. The record version
+stays 1; older ork versions that enforce strict fields refuse `restarts`.
+The role's scratch note is `<project>/.scratch/progress-RUN-ROLE.md`, outside
+the run record, and is passed with the original brief and the worktree's diff
+stat when ork starts a fresh session. Read-only Claude local roles have an
+exact-file Edit/Write exception for this note and no other file.
+
 *Proposed (S255):* `chain_from` is an index into `roles[]` (omitted when 0).
 The vendor chain of every role is derived from the role records from that
 index on, so a retry that starts a fresh round restarts each role at its first

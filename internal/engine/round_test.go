@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"runtime"
 	"strings"
 	"testing"
@@ -14,6 +15,167 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// freshSessionRound uses the real round state machine and a cancelling runner.
+// Its first request resumes an older session, so forgetting to clear Resume
+// cannot accidentally pass the fresh-session assertion.
+func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (*Engine, *harness, []Request, outcome) {
+	t.Helper()
+	h := newHarness(t, withDiff)
+	h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: vendor, Model: "local", Effort: "medium"}}
+	at := time.Date(2026, 11, 13, 0, 0, 0, 0, time.UTC)
+	h.deps.Now = func() time.Time { return at }
+	h.store.Now = h.deps.Now
+	var requests []Request
+	hr := &hangRunner{silent: onlyRole(RoleImplementer)}
+	hr.script = func(ctx context.Context, req Request) (Result, error) {
+		requests = append(requests, req)
+		if len(requests) == 1 {
+			if len(stale) > 0 && stale[0] {
+				if err := os.WriteFile(req.ReportPath, []byte("interrupted report"), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if req.ProgressFile != "" {
+				if err := os.WriteFile(req.ProgressFile, []byte("Done: edits saved. Next: run narrow checks."), 0600); err != nil {
+					t.Fatal(err)
+				}
+			}
+			if req.OnContext != nil {
+				req.OnContext(tokens)
+			}
+			if vendor == "claude" || tokens <= 70000 {
+				if ctx.Err() != nil {
+					return Result{}, ctx.Err()
+				}
+				return defaultResult(req), nil
+			}
+			select {
+			case <-ctx.Done():
+				return Result{Tokens: 123, CostUSD: 0.1}, ctx.Err()
+			case <-time.After(100 * time.Millisecond):
+				return Result{Exit: ExitError, Reason: "threshold did not cancel"}, nil
+			}
+		}
+		return defaultResult(req), nil
+	}
+	h.deps.Runner = hr
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err = e.run.Update(func(r *runrec.Record) {
+		r.State = runrec.StateImplement
+		r.Roles = append(r.Roles, runrec.RoleRecord{Role: RoleImplementer, Vendor: vendor, Model: "local", Effort: "medium", Session: "older", StartedAt: at, EndedAt: at, Exit: "ok"})
+	}); err != nil {
+		t.Fatal(err)
+	}
+	out, err := e.runRound(context.Background(), round{role: RoleImplementer, n: 1, state: runrec.StateImplement, resumeFrom: []string{RoleImplementer}}, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return e, h, requests, out
+}
+
+func TestFreshSessionRestoresTheBrief(t *testing.T) {
+	for _, part := range []string{"original", "progress", "stat", "resume", "instructions", "accounting"} {
+		t.Run(part, func(t *testing.T) {
+			e, h, requests, out := freshSessionRound(t, "claude-local", 70001)
+			if !out.ok || len(requests) != 2 {
+				t.Fatalf("local stream did not restart with a valid report: requests=%d outcome=%+v reason=%s", len(requests), out, e.Snapshot().Reason)
+			}
+			switch part {
+			case "original":
+				if !strings.HasPrefix(requests[1].Brief, requests[0].Brief) {
+					t.Fatal("restart lost original brief")
+				}
+			case "progress":
+				if !strings.Contains(requests[1].Brief, "Done: edits saved. Next: run narrow checks.") {
+					t.Fatal("restart lost progress note")
+				}
+			case "stat":
+				if !strings.Contains(requests[1].Brief, stat) {
+					t.Fatal("restart lost git diff --stat")
+				}
+			case "resume":
+				if requests[1].Resume != "" {
+					t.Fatalf("fresh request resumed %q", requests[1].Resume)
+				}
+			case "instructions":
+				want := filepath.Join(h.P, ".scratch", "progress-"+e.Snapshot().ID+"-implementer.md")
+				if requests[0].ProgressFile != want || !strings.Contains(requests[0].Brief, "After each step") || !strings.Contains(requests[0].Brief, want) {
+					t.Fatal("missing progress-file instructions or exact path")
+				}
+			case "accounting":
+				role := e.Snapshot().Roles[1]
+				if role.Tokens != 1123 || role.CostUSD != 0.6 {
+					t.Fatalf("session usage was lost: %+v", role)
+				}
+			}
+		})
+	}
+}
+
+func TestFreshSessionRestartIsPersistedOnOneRole(t *testing.T) {
+	e, h, _, out := freshSessionRound(t, "claude-local", 70001)
+	if !out.ok {
+		t.Fatal("local restart did not finish")
+	}
+	r, err := h.store.Open(e.Snapshot().ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(r.Snapshot().Roles)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []struct {
+		Restarts []struct {
+			At     time.Time
+			Tokens int
+		}
+	}
+	if err = json.Unmarshal(b, &got); err != nil {
+		t.Fatal(err)
+	}
+	want := []struct {
+		Restarts []struct {
+			At     time.Time
+			Tokens int
+		}
+	}{
+		{}, {Restarts: []struct {
+			At     time.Time
+			Tokens int
+		}{{At: time.Date(2026, 11, 13, 0, 0, 0, 0, time.UTC), Tokens: 70001}}},
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("persisted role restarts = %s", b)
+	}
+}
+
+func TestCloudContextDoesNotRestart(t *testing.T) {
+	_, _, local, localOut := freshSessionRound(t, "claude-local", 70001)
+	_, _, cloud, cloudOut := freshSessionRound(t, "claude", 70001)
+	if !localOut.ok || len(local) != 2 || !cloudOut.ok || len(cloud) != 1 || cloudOut.text != localOut.text {
+		t.Fatalf("local/cloud differential: requests=%d/%d reports=%+v/%+v", len(local), len(cloud), localOut, cloudOut)
+	}
+}
+
+func TestFreshSessionThresholdIsStrict(t *testing.T) {
+	_, _, over, overOut := freshSessionRound(t, "claude-local", 70001)
+	_, _, at, atOut := freshSessionRound(t, "claude-local", 70000)
+	if !overOut.ok || len(over) != 2 || !atOut.ok || len(at) != 1 || atOut.text != overOut.text {
+		t.Fatalf("threshold differential: requests=%d/%d reports=%+v/%+v", len(over), len(at), overOut, atOut)
+	}
+}
+
+func TestFreshSessionDiscardsInterruptedReport(t *testing.T) {
+	_, _, _, out := freshSessionRound(t, "claude-local", 70001, true)
+	if !out.ok || out.text != implReport {
+		t.Fatalf("fresh session used the interrupted report: %+v", out)
+	}
+}
 
 func requireDirectoryMode0700(t *testing.T, path string) {
 	t.Helper()

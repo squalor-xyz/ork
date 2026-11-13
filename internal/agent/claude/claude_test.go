@@ -20,6 +20,49 @@ import (
 
 const fixtures = "../../../testdata/vendors/claude"
 
+func TestAssistantContextIncludesCachedInput(t *testing.T) {
+	ev, err := ParseLine([]byte(`{"type":"assistant","session_id":"local","message":{"usage":{"input_tokens":1,"cache_creation_input_tokens":20000,"cache_read_input_tokens":50000,"output_tokens":9000}}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ev.ContextTokens != 70001 {
+		t.Fatalf("assistant context = %d, want 70001", ev.ContextTokens)
+	}
+}
+
+func TestStreamStartReportsContext(t *testing.T) {
+	ev, err := ParseLine([]byte(`{"type":"stream_event","event":{"type":"message_start","message":{"usage":{"input_tokens":1,"cache_creation_input_tokens":20000,"cache_read_input_tokens":50000}}}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if ev.ContextTokens != 70001 {
+		t.Fatalf("message-start context = %d, want 70001", ev.ContextTokens)
+	}
+}
+
+func TestContextStreamCancelsTheProcess(t *testing.T) {
+	dir := t.TempDir()
+	stream := filepath.Join(dir, "stream")
+	if err := os.WriteFile(stream, []byte("{\"type\":\"assistant\",\"session_id\":\"local\",\"message\":{\"usage\":{\"input_tokens\":70001}}}\n"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	s := fakeSpec(t, plan{Mode: "gated", Stdout: stream, Gate: filepath.Join(dir, "never")})
+	s.Allowlist = []string{"Read"}
+	ctx, deadline := context.WithTimeout(context.Background(), time.Second)
+	defer deadline()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+	s.OnEvent = func(ev Event) {
+		if ev.ContextTokens > 70000 {
+			cancel()
+		}
+	}
+	_, err := Run(ctx, s)
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("threshold did not end fake stream: %v", err)
+	}
+}
+
 func fixture(name, ext string) string { return filepath.Join(fixtures, name+"."+ext) }
 
 func readFixture(t *testing.T, name, ext string) []byte {

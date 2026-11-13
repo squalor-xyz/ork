@@ -46,13 +46,14 @@ const (
 
 // Event is one parsed stream line.
 type Event struct {
-	Kind       EventKind
-	SessionID  string
-	Text       string  // EventTextDelta: the delta
-	Result     *Result // EventResult
-	Usage      Usage   // EventUsage: current message usage
-	UsageStart bool    // a new message begins
-	Raw        json.RawMessage
+	ContextTokens int // current message input, including cached input; never cumulative
+	Kind          EventKind
+	SessionID     string
+	Text          string  // EventTextDelta: the delta
+	Result        *Result // EventResult
+	Usage         Usage   // EventUsage: current message usage
+	UsageStart    bool    // a new message begins
+	Raw           json.RawMessage
 }
 
 // Usage is the token and cost part of a result event.
@@ -156,6 +157,7 @@ type Round struct {
 
 // Spec describes one round.
 type Spec struct {
+	AddDir     string   // additional directory for the exact progress-note permission
 	Bin        string   // default "claude"
 	Dir        string   // working directory
 	Env        []string // full environment; nil inherits

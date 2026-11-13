@@ -31,6 +31,38 @@ const (
 	safetyStop = 3 * time.Second
 )
 
+func TestFreshSessionsShareTheNinetyMinuteWatchdog(t *testing.T) {
+	clock := newVendorClock()
+	h := newHarness(t, withDiff)
+	h.deps.Now = clock.Now
+	h.deps.HungAfter = 4 * time.Millisecond
+	h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: "claude-local", Model: "local"}}
+	n := 0
+	hr := &hangRunner{silent: onlyRole(RoleImplementer)}
+	hr.script = func(ctx context.Context, req Request) (Result, error) {
+		n++
+		if n == 1 {
+			clock.Advance(50 * time.Minute)
+			if req.OnContext != nil {
+				req.OnContext(70001)
+			}
+		} else {
+			clock.Advance(41 * time.Minute)
+		}
+		select {
+		case <-ctx.Done():
+			return Result{}, ctx.Err()
+		case <-time.After(time.Second):
+			return Result{Exit: ExitError, Reason: "watchdog or restart missing"}, nil
+		}
+	}
+	h.deps.Runner = hr
+	e := h.start()
+	if !strings.Contains(e.Snapshot().Reason, "local role exceeded 90m") {
+		t.Fatalf("round limit did not cover both sessions: %q", e.Snapshot().Reason)
+	}
+}
+
 func TestLocalRoleFallsBackAfterNinetyMinutesDespiteOutput(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
 		t.Run(vendor, func(t *testing.T) {

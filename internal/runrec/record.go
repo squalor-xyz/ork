@@ -60,24 +60,31 @@ func ModelLabel(e LineupEntry) string {
 	return e.Model
 }
 
-// RoleRecord is ork's record of one role process it started.
+// SessionRestart is a fresh local session within the same role round.
+type SessionRestart struct {
+	At     time.Time `json:"at"`
+	Tokens int       `json:"tokens"`
+}
+
+// RoleRecord is ork's record of one role round, possibly with fresh sessions.
 type RoleRecord struct {
-	TreeSHA256 string    `json:"tree_sha256,omitempty"` // proposed: tracked content and untracked names
-	Role       string    `json:"role"`
-	Round      int       `json:"round"`
-	Vendor     string    `json:"vendor"`
-	Model      string    `json:"model,omitempty"`
-	Effort     string    `json:"effort,omitempty"`
-	Session    string    `json:"session,omitempty"`
-	PGID       int       `json:"pgid,omitempty"`
-	Step       string    `json:"step,omitempty"`
-	StartedAt  time.Time `json:"started_at"`
-	EndedAt    time.Time `json:"ended_at,omitzero"`
-	Exit       string    `json:"exit,omitempty"`
-	Tokens     int       `json:"tokens,omitempty"`
-	CostUSD    float64   `json:"cost_usd,omitempty"`
-	Report     string    `json:"report,omitempty"`
-	Denials    []string  `json:"denials,omitempty"`
+	Restarts   []SessionRestart `json:"restarts,omitempty"`
+	TreeSHA256 string           `json:"tree_sha256,omitempty"` // proposed: tracked content and untracked names
+	Role       string           `json:"role"`
+	Round      int              `json:"round"`
+	Vendor     string           `json:"vendor"`
+	Model      string           `json:"model,omitempty"`
+	Effort     string           `json:"effort,omitempty"`
+	Session    string           `json:"session,omitempty"`
+	PGID       int              `json:"pgid,omitempty"`
+	Step       string           `json:"step,omitempty"`
+	StartedAt  time.Time        `json:"started_at"`
+	EndedAt    time.Time        `json:"ended_at,omitzero"`
+	Exit       string           `json:"exit,omitempty"`
+	Tokens     int              `json:"tokens,omitempty"`
+	CostUSD    float64          `json:"cost_usd,omitempty"`
+	Report     string           `json:"report,omitempty"`
+	Denials    []string         `json:"denials,omitempty"`
 	// DeniedCommands holds one entry per denial, in the same order as Denials.
 	DeniedCommands []DeniedCommand `json:"denied_commands,omitempty"`
 

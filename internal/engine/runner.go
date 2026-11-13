@@ -41,18 +41,20 @@ const (
 // adapter turns Vendor, Model and Effort, Allowlist or ReadOnly, and Resume
 // into its own command line.
 type Request struct {
-	Role       string
-	Round      int
-	Vendor     string
-	Model      string
-	Effort     string
-	Brief      string   // the whole prompt for the role
-	TempDir    string   // the role's own temp directory
-	Worktree   string   // the role's working directory
-	ReportPath string   // where the role writes its final report
-	Allowlist  []string // tools the role may use; empty when ReadOnly
-	ReadOnly   bool     // run in the vendor's read-only mode
-	Resume     string   // a session id to resume; empty starts a fresh session
+	ProgressFile string    // sole progress-note write exception for a local role
+	OnContext    func(int) // current context input tokens, including cached input
+	Role         string
+	Round        int
+	Vendor       string
+	Model        string
+	Effort       string
+	Brief        string   // the whole prompt for the role
+	TempDir      string   // the role's own temp directory
+	Worktree     string   // the role's working directory
+	ReportPath   string   // where the role writes its final report
+	Allowlist    []string // tools the role may use; empty when ReadOnly
+	ReadOnly     bool     // run in the vendor's read-only mode
+	Resume       string   // a session id to resume; empty starts a fresh session
 	// OnStart is called once, with the role process's group id, as soon as
 	// the process runs. The engine records it so a restart can find the
 	// process (engine.restart).
