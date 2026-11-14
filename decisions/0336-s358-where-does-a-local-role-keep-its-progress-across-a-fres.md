@@ -2,7 +2,7 @@
 {
   "id": 336,
   "title": "S358: where does a local role keep its progress across a fresh session?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-progress-file",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -30,6 +30,7 @@
   },
   "decision": "scratch-note",
   "rationale": "Owner picked 'scratch-note' in an interactive question on 2026-11-12 (ork relay session 8d711f67); recorded as the owner's delegate (process.owner-answers, 316).",
+  "superseded_by": 347,
   "refs": [
     "S358"
   ],
@@ -41,6 +42,11 @@
     {
       "date": "2026-11-12",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-14",
+      "event": "supersede",
+      "note": "by 347"
     }
   ]
 }

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 361,
+  "next_id": 362,
   "preamble": "",
   "passes": [
     {
@@ -17178,6 +17178,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "24c42fab-b622-4445-b484-608b8ccfa60e",
+          "kind": "",
+          "text": "**2026-11-14** — Trial 3 started 2026-11-14 22:45: slice S248 (orchestrator pick: size S, effort 1, well specified, no spec questions, files in daemon/cli, not the local-role code), run ork-20261114-224559-2b00: ork run ork S248 --implementer claude-local:qwen3.8-27b:low --implementer claude:sonnet:high. Live: S360 small context, S358 fresh session at 70k, S356 approval point (manual mode, 500-line read cap, path rules, owner permission questions).",
+          "created_at": "2026-11-14T22:46:04Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -19542,6 +19556,34 @@
         "urgency": 2,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S361",
+      "title": "Local roles: progress note in the run dir; read-only commands on own files allowed",
+      "short_title": "Local role own files: run dir and read-only allow",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 3 (2026-11-14, run ork-20261114-224559-2b00, S248): in the first 22 minutes the claude-local implementer's only two owner permission questions were `ls -la` on its own progress note and on its own run temp dir. Separately, `internal/engine/round.go:423` creates `<project>/.scratch/` in every project a claude-local role runs in, though slicer and sluice do not exclude `.scratch/` from git.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-own-files",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],
