@@ -378,6 +378,16 @@ func (c *Client) SpecCheck(ctx context.Context, project string, items []string) 
 	return &out, nil
 }
 
+// SpecPermission reads or answers a live tool permission without waiting for
+// the running spec check's specMu lock or recording a spec decision.
+func (c *Client) SpecPermission(ctx context.Context, p SpecPermissionParams) (*SpecPermissionResult, error) {
+	var out SpecPermissionResult
+	if err := c.Call(ctx, MethodSpecPermission, p, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // SpecAnswer records the owner's answers to an item's open spec questions.
 func (c *Client) SpecAnswer(ctx context.Context, params SpecAnswerParams) (*SpecAnswerResult, error) {
 	var out SpecAnswerResult

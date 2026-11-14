@@ -1776,6 +1776,46 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Edit/Write exception for the local progress note described under Roles.
   It allows no other edits, broad Bash or tracking-write commands. Cloud
   permissions stay the same.
+  Local Claude roles use manual permission mode (adj 328-331). ork installs
+  a `PreToolUse` command hook for every call, including allowlisted calls.
+  The hook calls `tool.approve` on the daemon socket with a per-attempt
+  session id. The daemon owns the worktree and allowlist for that session;
+  the tool call cannot replace them. Hard rules run before allowlist rules:
+  paths must stay in the worktree, the main checkout's `.scratch/`, the
+  S358 progress directory, this Claude session's `tool-results/` directory,
+  the assigned role temp directory, or its exact report file. The report
+  exception does not permit its parent directory or sibling files. These
+  path exceptions retain the role allowlist and the Read cap.
+  Symlinked ancestors are resolved. The transcript itself is denied.
+  Bash commands are split on whitespace and shell operators; a token naming
+  an outside absolute path or parent traversal is denied with that token in
+  the reason. A supplied `Read` limit must be at most 500. An unbounded read
+  of a file with more than 500 lines is denied with its count and guidance
+  to Grep first and Read a range. Bounded reads may start beyond line 500.
+  An allowlisted call proceeds. Bash wildcards cannot introduce shell
+  operators or substitutions absent from the allowlist entry. For example,
+  `Bash(go test*)` does not approve `go test; make test`, while a configured
+  `Bash(go vet ./... && go test ./...*)` approves that check command.
+  Other calls block on an owner permission question. `ork answer RUN allow`
+  or `ork answer RUN deny` answers one call; the run pane offers the same
+  choices. The run stays active, with no `PendingQuestion` or resume request.
+  Concurrent calls are presented in arrival order. Each question has a call
+  number so repeated calls remain distinct. The hook denies on a lost
+  daemon, invalid input, role termination, or a 30-minute answer timeout.
+  Claude's hook timeout is 31 minutes so ork can print the denial first;
+  `onFailure: block` also blocks hook failures. See the vendor's
+  [hook input and decision schema](https://code.claude.com/docs/en/hooks).
+  Hook denials are returned with the role result even when Claude omits them
+  from `permission_denials`; a successful round still proceeds.
+  A local spec check carries its project and checked item ids instead of a
+  run id. While the check runs, the Roadmap or Waves sitting polls
+  `spec.permission` with that scope and shows the same allow/deny choices.
+  An answer names the call id; a stale id or wrong project/items is refused.
+  This request bypasses `specMu`, which the running check holds. Answering
+  grants or denies one tool call without marking a slice Ready, writing a
+  spec answer, or filing an adj decision. Poll replies from before an answer
+  cannot reopen it. Completion, timeout or cancellation removes the live
+  question. The role's final report still supplies the spec verdict.
   An implementer with no entry (or an empty list) gets the built-in
   default, which the registry replaces as a whole: `Read`, `Grep`, `Glob`,
   `Edit`, `Write`, `Bash(slicer *)`, `Bash(git status*)`, `Bash(git
@@ -1856,7 +1896,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   file) plus a ~2.2 KB preview. The owner chose 10000 for local roles. Cloud
   roles get neither change.
   Then `--allowedTools a,b --permission-prompts none` for a write role or a
-  read-only claude-local role (using its fixed read-only list), and
+  read-only claude-local role (using its fixed read-only list). A local role
+  also gets `--permission-mode manual --settings JSON`, containing the ork
+  hook; it never gets plan or auto mode. Cloud roles retain their flags, with
   `--permission-mode plan` for a cloud read-only role, then the prompt. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
   session", claude 2.1.x). When the role has a temp directory, the process

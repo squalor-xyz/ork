@@ -320,6 +320,8 @@ func (m *Model) contextHints() []hintEntry {
 		if m.confirm.verb == "launch" {
 			l.add(dropRow, short(k.EditLineup, "e", "edit lineup"))
 		}
+	case spec != nil && spec.permissionSending:
+		l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
 	case spec != nil:
 		sitting := spec.sitting
 		if ask := sitting.current(); ask != nil {
@@ -331,8 +333,15 @@ func (m *Model) contextHints() []hintEntry {
 				}
 				l.add(dropPinned, short(k.Close, "esc", desc))
 			} else {
-				l.add(dropRow, short(k.PickOption, fmt.Sprintf("1-%d", len(ask.q.Ask.Options)), "pick"), short(k.FreeAnswer, "t", "free text"))
-				l.add(dropPinned, key.NewBinding(key.WithKeys("s", "esc"), key.WithHelp("s/esc", "skip the rest")))
+				l.add(dropRow, short(k.PickOption, fmt.Sprintf("1-%d", len(ask.q.Ask.Options)), "pick"))
+				if spec.permission == nil {
+					l.add(dropRow, short(k.FreeAnswer, "t", "free text"))
+				}
+				desc := "skip the rest"
+				if spec.permission != nil {
+					desc = "deny call"
+				}
+				l.add(dropPinned, key.NewBinding(key.WithKeys("s", "esc"), key.WithHelp("s/esc", desc)))
 			}
 		}
 	case m.activeLineup() != nil:
@@ -668,7 +677,10 @@ func (m *Model) paneHints() []hintEntry {
 		ask := m.paneAsk()
 		switch {
 		case ask != nil && !m.pane.freeText:
-			l.add(dropRow, offer(answers(), k.PickOption, fmt.Sprintf("1-%d", len(ask.Options)), "pick"), short(k.FreeAnswer, "t", "free text"))
+			l.add(dropRow, offer(answers(), k.PickOption, fmt.Sprintf("1-%d", len(ask.Options)), "pick"))
+			if !m.panePermission() {
+				l.add(dropRow, short(k.FreeAnswer, "t", "free text"))
+			}
 			l.add(dropRow+1, offer(noAdj == "" && m.pane.finding == 0, k.FileAdj, "ctrl+a", "file in adj"))
 			scroll()
 			if m.pane.finding > 0 {

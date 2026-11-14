@@ -1394,6 +1394,36 @@ The engine pane behaves as on Overview. It keeps its answer typing and
 submit keys. If the run changes state while the pane is open, its approve,
 stop and retry keys follow the run state and the shared hint line.
 
+### Local tool permissions (S356)
+
+A running `claude-local` role can wait for approval of one tool call. Its
+run appears under Needs you as `? question` and in the Questions view, and
+counts toward the questions total. The run keeps its current state and
+round while it waits; it is not paused. Enter opens the same run detail
+pane from either view.
+
+The question names the tool and previews its command or file path. For other
+inputs, it shows compact input JSON. The preview is capped at 200 runes with
+`...`, followed by the call number. Titles wrap to the available width and
+use the pane's existing scrolling and overflow behavior.
+
+The run pane offers `1-2 pick`: Allow or Deny for this call. Picking an option
+shows the usual exact-command confirmation; `y` sends it, while `n`, Enter
+or Esc cancels the confirmation. Esc from the question closes the pane
+without answering. Permission questions have no `t free text` action. After
+an answer the status says `answered`; it does not say the role resumed,
+because the role and round were already running. The CLI equivalents are
+`ork answer RUN allow` and `ork answer RUN deny`.
+
+Before a run exists, Roadmap and Waves show a live permission question in
+their pending spec-check sitting. The heading is `Spec check tool permission`,
+with the same tool preview, Allow/Deny options, recommendation and reason.
+Here `1` or `2` sends the answer immediately; `s/esc deny call` denies it.
+There is no free-text action. The footer says `The spec check is still
+running.` or `Sending permission answer`; while sending, only `ctrl+c quit`
+is offered. An answer lets the check continue without marking an item Ready
+or recording a spec/adj decision. Its final report supplies that verdict.
+
 ## Waves (one project)
 
 The Waves composer is available (S82). Select one project. `tab` and

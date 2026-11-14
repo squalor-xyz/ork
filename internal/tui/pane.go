@@ -67,6 +67,7 @@ type runPane struct {
 	finding                   int                    // one-based non-blocking owner finding being answered
 	run, project              string
 	answered, answerDone      bool
+	answerPermission          bool // the answer grants one tool call without resuming a role
 	answerState, answerNotice string
 	answerStatus              string // the status text answer tracking wrote last (S134)
 	answerWait, answerKey     string // the run's wait text and decision key when the answer was sent
@@ -282,7 +283,15 @@ func (m *Model) actionRow() (ovRow, bool) {
 
 func (m *Model) paneQuestion() bool {
 	r, _, ok := m.paneRow()
-	return ok && !r.unavailable && !m.pane.ledger && (m.pane.finding > 0 || (r.state == "paused" && r.pending == "question" && !r.resumeWaiting))
+	return ok && !r.unavailable && !m.pane.ledger && (m.pane.finding > 0 || r.pending == "permission" || (r.state == "paused" && r.pending == "question" && !r.resumeWaiting))
+}
+
+func (m *Model) panePermission() bool {
+	if m.pane == nil || m.pane.finding != 0 || m.pane.ledger {
+		return false
+	}
+	r, _, ok := m.paneRow()
+	return ok && r.pending == "permission"
 }
 
 // halfPage is the step of ctrl+d and ctrl+u in a pane that shows room lines
@@ -368,6 +377,9 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 		}
 		if ask := m.paneAsk(); ask != nil && !m.pane.freeText {
 			if msg.String() == "t" {
+				if m.panePermission() {
+					return nil
+				}
 				m.pane.freeText = true
 				m.pane.input = textField{}
 				m.actionStatus = ""
@@ -906,7 +918,7 @@ func (m *Model) refreshAnswerStatus() {
 		}
 		// A wait that reads "resume waits for a slot" is this answer waiting, not a
 		// new question (S274).
-		if p.answerState != "" && r.State != p.answerState || p.answerState == "" && r.State == "paused" && !r.ResumeWaiting && (r.Wait != p.answerWait || r.Key != p.answerKey) {
+		if p.answerState != "" && r.State != p.answerState || (r.Pending == "permission" || p.answerState == "" && r.State == "paused" && !r.ResumeWaiting) && (r.Wait != p.answerWait || r.Key != p.answerKey) {
 			p.answered = false
 			write("")
 			return
@@ -918,7 +930,7 @@ func (m *Model) refreshAnswerStatus() {
 		if r.State != "paused" {
 			p.answerState = r.State
 			text = "answered"
-			for i := len(r.Roles) - 1; i >= 0; i-- {
+			for i := len(r.Roles) - 1; !p.answerPermission && i >= 0; i-- {
 				role := r.Roles[i]
 				if role.EndedAt.IsZero() && role.Round > 0 {
 					text += fmt.Sprintf("; %s resumed (round %d)", role.Role, role.Round)

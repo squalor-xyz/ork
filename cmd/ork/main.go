@@ -7,6 +7,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -20,6 +21,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/agent/claude"
 	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/cli"
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -29,6 +31,43 @@ import (
 
 // version is set at build time with -ldflags "-X main.version=...".
 var version = "dev"
+
+// hookPretool always emits a decision, including on malformed input or a
+// disconnected daemon. It never starts a daemon or enters the normal CLI.
+func hookPretool(ctx context.Context, args []string, input io.Reader, output io.Writer) int {
+	answer := claude.Approval{Decision: "deny", Reason: "invalid local approval hook arguments"}
+	fs := flag.NewFlagSet("ork hook pretool", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	socket := fs.String("socket", "", "daemon socket")
+	session := fs.String("session", "", "role attempt")
+	if fs.Parse(args) == nil && fs.NArg() == 0 && *socket != "" && *session != "" {
+		var call claude.ToolCall
+		decoder := json.NewDecoder(io.LimitReader(input, 1024*1024))
+		if err := decoder.Decode(&call); err != nil {
+			answer.Reason = "invalid hook input: " + err.Error()
+		} else {
+			ctx, cancel := context.WithTimeout(ctx, 30*time.Minute)
+			defer cancel()
+			client, err := daemon.Dial(ctx, *socket)
+			if err == nil {
+				defer client.Close()
+				deadline, _ := ctx.Deadline()
+				err = client.Call(ctx, daemon.MethodToolApprove, daemon.ApprovalParams{Session: *session, Call: call, Deadline: deadline}, &answer)
+			}
+			if err != nil {
+				answer = claude.Approval{Decision: "deny", Reason: "local approval unavailable: " + err.Error()}
+			}
+		}
+	}
+	if answer.Decision != "allow" && answer.Decision != "deny" {
+		answer = claude.Approval{Decision: "deny", Reason: "invalid approval response"}
+	}
+	response := map[string]any{"hookSpecificOutput": map[string]string{"hookEventName": "PreToolUse", "permissionDecision": answer.Decision, "permissionDecisionReason": answer.Reason}}
+	if err := json.NewEncoder(output).Encode(response); err != nil {
+		return 2
+	}
+	return 0
+}
 
 func buildIdentity(info *debug.BuildInfo, ok bool, fallback string) string {
 	if !ok || info == nil {
@@ -86,6 +125,9 @@ func runTUI(cfg tui.Config) error {
 
 // run is main with its inputs passed in. It returns the exit code.
 func run(ctx context.Context, args []string, stdout, stderr io.Writer, p program) int {
+	if len(args) > 1 && args[0] == "hook" && args[1] == "pretool" {
+		return hookPretool(ctx, args[2:], os.Stdin, stdout)
+	}
 	if len(args) > 1 && args[0] == "daemon" && args[1] == "run" {
 		return daemonCommand(ctx, args[1:], stdout, stderr, p)
 	}

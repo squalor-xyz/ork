@@ -139,6 +139,26 @@ Notes on the fields:
   and an older ork reads it. A later change of the check command does not
   update the list; `ork doctor` warns when the list lacks a pattern for the
   command.
+  For claude-local, ork checks this resolved list at every tool call through
+  the daemon's `tool.approve` request. The request carries the attempt session
+  id, hook tool input and a deadline; it cannot supply the policy. The
+  session and pending permission questions live only in daemon memory and
+  are removed when the role attempt ends. They add no `run.json` fields.
+  Snapshots show an active permission question as `pending: "permission"`,
+  with `question` and `wait`, while retaining the run's current state.
+  The question appears under Needs you and in the run pane. An answer of
+  `allow` or `deny` replies to this call without pausing or resuming a role.
+  A hook denial joins the role's existing `denied_commands` and `denials`
+  when the round ends, with the same bounded detail and secret exposure
+  limits as vendor denials. Vendor copies are not counted a second time.
+  Before a run exists, a local spec check binds the attempt to its project
+  and checked item ids. `spec.permission` polls that scope, returning
+  `{id,question}` or an empty object. Supplying the same scope plus `id` and
+  `text` (`allow` or `deny`) answers that live call. The method does not take
+  `specMu` or record a spec decision. The Roadmap and Waves spec-check sitting
+  uses it while the check is pending; stale call ids are refused. These
+  questions are also memory-only. Assigned temp directories and exact report
+  paths are policy exceptions, not additional allowlist entries.
 - `push` (*proposed*, S119, adj 162) says ork runs `git push` in the main
   checkout after it lands a slice there. Absent or `false` means ork never
   pushes (the example turns it on). ork writes it only when the owner runs

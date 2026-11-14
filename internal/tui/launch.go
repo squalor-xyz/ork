@@ -281,6 +281,8 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 	l.stage = launchSpecPending
 	l.checking = true
 	l.checkStarted = m.cfg.Now()
+	l.checkProject = l.params.Project
+	l.checkItems = []string{l.params.Item}
 	live, ctx, request, project, item := m.cfg.Live, l.ctx, l.request, l.params.Project, l.params.Item
 	return func() tea.Msg {
 		if ctx.Err() != nil {
@@ -303,6 +305,7 @@ func (m *Model) applyLaunchSpec(msg launchSpecMsg) tea.Cmd {
 		return nil
 	}
 	l.checking = false
+	l.clearPermission()
 	m.actionStatus = ""
 	if msg.err != nil {
 		m.dropLaunch()
@@ -417,7 +420,7 @@ func (m *Model) launchLineupKey(msg tea.KeyPressMsg) tea.Cmd {
 func (m *Model) launchView(w int) overviewView {
 	out := overviewView{sel: -1}
 	th, l := m.cfg.Theme, m.launch
-	if l.stage == launchSitting {
+	if l.sitting != nil {
 		out, _ := m.sittingParts(&l.specState, w)
 		return out
 	}

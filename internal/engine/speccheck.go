@@ -279,6 +279,7 @@ entries:
 			return nil, err
 		}
 		req := Request{
+			SpecProject: cfg.Project.Name, SpecItems: append([]string(nil), cfg.Items...), ProjectRoot: cfg.Project.Path,
 			Role: RoleSpecCheck, Round: 1, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			Brief: brief, Worktree: root, TempDir: tempDir, ReportPath: reportPath,
 			Allowlist: perm.Allow, ReadOnly: perm.ReadOnly,

@@ -157,20 +157,21 @@ type Round struct {
 
 // Spec describes one round.
 type Spec struct {
-	AddDir     string   // additional directory for the exact progress-note permission
-	Bin        string   // default "claude"
-	Dir        string   // working directory
-	Env        []string // full environment; nil inherits
-	Prompt     string
-	Model      string // omitted when empty
-	Effort     string // omitted when empty
-	ReadOnly   bool   // cloud: plan mode; claude-local: read-only allowlist
-	Allowlist  []string
-	KeepSkills bool   // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
-	Resume     string // session id to resume
-	ReportFile string // read first when non-empty
-	FixtureDir string // default DefaultFixtureDir()
-	TailBytes  int    // default 2048
+	HookCommand string   // claude-local: ork hook pretool, bound to this daemon attempt
+	AddDir      string   // additional directory for the exact progress-note permission
+	Bin         string   // default "claude"
+	Dir         string   // working directory
+	Env         []string // full environment; nil inherits
+	Prompt      string
+	Model       string // omitted when empty
+	Effort      string // omitted when empty
+	ReadOnly    bool   // cloud: plan mode; claude-local: manual mode and read-only allowlist
+	Allowlist   []string
+	KeepSkills  bool   // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
+	Resume      string // session id to resume
+	ReportFile  string // read first when non-empty
+	FixtureDir  string // default DefaultFixtureDir()
+	TailBytes   int    // default 2048
 	// OnStart reports the process group after Start and before Wait (adj #85).
 	OnStart func(pgid int)
 	OnEvent func(Event)

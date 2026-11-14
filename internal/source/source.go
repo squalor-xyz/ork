@@ -364,6 +364,9 @@ func (r EngineRun) Section(runs []EngineRun) Section {
 		// the owner (S274, adj 177).
 		return SectionRunning
 	}
+	if r.Pending == "permission" {
+		return SectionNeeds
+	}
 	switch r.State {
 	case runrec.StateAwaitingApproval, runrec.StatePaused, runrec.StateStopped:
 		return SectionNeeds

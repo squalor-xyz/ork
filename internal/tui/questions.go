@@ -35,7 +35,7 @@ func questionRows(projects []*projectState) []questionRow {
 			continue
 		}
 		for _, r := range p.snap.EngineRuns {
-			if !r.Unavailable && r.State == "paused" && r.Pending == "question" && r.Section(p.snap.EngineRuns) == source.SectionNeeds {
+			if !r.Unavailable && (r.State == "paused" && r.Pending == "question" || r.Pending == "permission") && r.Section(p.snap.EngineRuns) == source.SectionNeeds {
 				rows = append(rows, questionRow{project: p.reg.Name, engine: &r})
 			}
 		}

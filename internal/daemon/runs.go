@@ -154,8 +154,10 @@ func (c *stopCall) abandon(err error) {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
-	recordLocks     map[string]*sync.Mutex // per-run record writes; guarded by mu
-	cleaning        map[string]bool        // cleanup calls in flight; guarded by mu
+	approvals       map[string]*approvalSession // live local attempts, guarded by mu
+	permissionSeq   uint64                      // monotonically orders live permission questions
+	recordLocks     map[string]*sync.Mutex      // per-run record writes; guarded by mu
+	cleaning        map[string]bool             // cleanup calls in flight; guarded by mu
 	heads           map[string]string
 	merged          map[string]*bool
 	mergeLogged     map[string]string          // run ID to the last merge detection error logged for it; guarded by mu (S263)
@@ -258,7 +260,7 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 			claude:      claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: envFor("claude")},
 			codex:       codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex"), env: envFor("codex")},
 			grok:        grokRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "grok"), env: envFor("grok")},
-			claudeLocal: claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude-local")},
+			claudeLocal: claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude-local"), approval: d.prepareApproval},
 			codexLocal:  codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex-local")},
 			grokLocal:   grokRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "grok-local")},
 		}
@@ -1681,6 +1683,25 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		d.runs.mu.Unlock()
 		return RunReply{}, fmt.Errorf("run %s is stopping", p.Run)
 	}
+	if method == MethodRunAnswer {
+		if waiting := d.firstPermissionLocked(p.Run); waiting != nil {
+			answer, err := permissionAnswer(p.Text)
+			if err != nil {
+				d.runs.mu.Unlock()
+				return RunReply{}, err
+			}
+			select {
+			case waiting.reply <- answer:
+			default:
+				d.runs.mu.Unlock()
+				return RunReply{}, fmt.Errorf("permission answer is already being delivered")
+			}
+			waiting.answered = true
+			rec := r.engine.Snapshot()
+			d.runs.mu.Unlock()
+			return RunReply{Record: rec}, nil
+		}
+	}
 	if (r.busy || r.filing) && method != MethodRunStop {
 		d.runs.mu.Unlock()
 		if method == MethodRunRetry {
@@ -2185,6 +2206,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 				}
 			}
 			wait += "; next: ork stop " + rec.ID
+		}
+		if permission := d.firstPermissionLocked(rec.ID); permission != nil {
+			question = permission.question
+			pending = "permission"
+			wait = question.Title + "; next: ork answer " + rec.ID + " allow|deny"
 		}
 		var denials []string
 		denialCounts := map[string]int{}

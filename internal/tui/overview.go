@@ -480,7 +480,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 					row.kind, row.style = "! removed", th.Error
 				case r.State == "stopped":
 					row.kind, row.style = "x stopped", th.Error
-				case r.State == "paused" && r.Pending == "question":
+				case r.State == "paused" && r.Pending == "question" || r.Pending == "permission":
 					row.kind, row.style = "? question", th.Warn.Bold(th.Mono)
 				case r.State == "paused":
 					row.kind, row.style = "= paused", th.Held
@@ -779,7 +779,7 @@ func (m *Model) overview(w int) overviewView {
 	summary := th.Heading.Render(fmt.Sprintf("Running %d", live))
 	questions := 0
 	for _, r := range needs {
-		if r.pending == "question" {
+		if r.pending == "question" || r.pending == "permission" {
 			questions++
 		}
 	}

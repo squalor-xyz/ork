@@ -65,6 +65,16 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 				"codex-local":  {"exec", "resume", "prior", "-m", model, "--json", "-c", "model_reasoning_effort=medium", "-c", `sandbox_mode="read-only"`, "brief"},
 				"grok-local":   {"-p", "brief", "--output-format", "streaming-messages-json", "--include-partial-messages", "--reasoning-effort", "medium", "--resume", "prior", "--permission-mode", "plan", "--cwd", dir},
 			}[vendor]
+			if vendor == "claude-local" {
+				// The command contains a fresh per-attempt session id. Check its
+				// shape separately, then compare every other argument exactly.
+				actual := strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
+				i := slices.Index(actual, "--settings")
+				if i < 0 || i+1 >= len(actual) || !strings.Contains(actual[i+1], "hook pretool --socket") {
+					t.Fatalf("local hook settings missing: %q", actual)
+				}
+				want = append(want[:len(want)-1], "--permission-mode", "manual", "--settings", actual[i+1], "brief")
+			}
 			if string(b) != strings.Join(want, "\n")+"\n" {
 				t.Fatalf("launcher argv: %q; want %q", b, want)
 			}
@@ -157,6 +167,7 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 						want = append(want, "--disallowedTools", denied)
 						want = append(want, slash...)
 						want = append(want, "--allowedTools", localReadOnlyTools, "--permission-prompts", "none")
+						want = append(want, "--permission-mode", "manual", "--settings", claude.HookSettings(""))
 					} else {
 						want = append(want, "--permission-mode", "plan")
 					}

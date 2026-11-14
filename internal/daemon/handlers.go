@@ -62,6 +62,18 @@ func decode(params json.RawMessage, v any) error {
 
 func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessage) (any, error) {
 	switch method {
+	case MethodSpecPermission:
+		var p SpecPermissionParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.specPermission(ctx, p)
+	case MethodToolApprove:
+		var p ApprovalParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.approveTool(ctx, p)
 	case MethodRelayAnswer:
 		var p RelayAnswerParams
 		if err := decode(params, &p); err != nil {

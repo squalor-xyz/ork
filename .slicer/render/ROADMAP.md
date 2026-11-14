@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-360 items · — 65 · done 262 · retired 33
+360 items · — 64 · done 263 · retired 33
 
 v1.2
 
@@ -124,7 +124,7 @@ v1.2
 | 74 | [S353](slices/S353.md) | A slicer contract bump on main breaks ork everywhere at once | S | - |  |  | — |
 | 75 | [S354](slices/S354.md) | Accept relay v12 | M | 2 |  | 2026-11-12: slicer 1.21.0 (s453) prints `Contract: relay v12`; `ork doctor` reports "[FAIL] contract ork accepts relay v10 or v11 and slicer prints v12" for every project, and a new ork run refuses to start. | done |
 | 76 | [S355](slices/S355.md) | Run answers use the owner setting | M | 2 |  | S314 (2026-11-12) files spec-check answers in adj under the owner setting (`ork settings set --owner`, adj 322, 323); run-question answers (ctrl+a, `FileAnswer`) still need `ADJ_DECIDED_BY`. · discovered from S314 | — |
-| 77 | [S356](slices/S356.md) | ork approves local tool calls | L | 3 |  | S304 trial 2 (2026-11-12, S314): claude-local read whole files despite the brief's targeted-read paragraph (S343), reached 86k tokens, spent 50 of 90 min in three auto-compactions, and read its own transcript outside the worktree. The allowlist's `Read` entry has no path or size limit, and a call outside the allowlist is denied with nobody asked. · discovered from S304 | — |
+| 77 | [S356](slices/S356.md) | ork approves local tool calls | L | 3 |  | S304 trial 2 (2026-11-12, S314): claude-local read whole files despite the brief's targeted-read paragraph (S343), reached 86k tokens, spent 50 of 90 min in three auto-compactions, and read its own transcript outside the worktree. The allowlist's `Read` entry has no path or size limit, and a call outside the allowlist is denied with nobody asked. · discovered from S304 | done |
 | 78 | [S357](slices/S357.md) | Slice commit titled with the Git section's text | S | - |  |  | — |
 | 79 | [S358](slices/S358.md) | Local fresh session, not compaction | M | 2 |  | S304 trial 2 (2026-11-12, S314): claude-local auto-compacted three times at about 83-86k tokens, taking 893 s, 983 s and 1121 s (50 of 90 min), and after the first compaction it lost its brief and went looking for it in its own transcript. · discovered from S304 | done |
 | 80 | [S359](slices/S359.md) | Sliver a slice for a local implementer | M | 2 |  | S304 trials 1 and 2: a claude-local implementer could not finish a size S ork slice in 45 or 90 minutes; its context grew past 80k tokens while it explored. · discovered from S304 | — |

@@ -329,6 +329,7 @@ func (m *Model) tick(now time.Time) tea.Cmd {
 		}
 	}
 	cmds = append(cmds, m.cfg.After(m.cfg.TickEvery))
+	cmds = append(cmds, m.pollSpecPermission())
 	return tea.Batch(cmds...)
 }
 
@@ -439,6 +440,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			m.actionStatus = msg.item + ": " + actionError(msg.err)
 		}
 		return m, nil
+	case specPermissionMsg:
+		return m, m.applySpecPermission(msg)
 	case launchMsg:
 		return m, m.applyLaunch(msg)
 	case reportMsg:
@@ -1689,7 +1692,7 @@ func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, ref
 			return "answer with: ork answer " + r.engineID + " TEXT", true
 		}
 	}
-	if verb == "answer" && (m.pane == nil || m.pane.finding == 0) && (r.state != "paused" || r.pending != "question") {
+	if verb == "answer" && (m.pane == nil || m.pane.finding == 0) && r.pending != "permission" && (r.state != "paused" || r.pending != "question") {
 		return "", true
 	}
 	return "", false
@@ -1786,6 +1789,7 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 		m.pane.answerState, m.pane.answerNotice = "", ""
 		m.pane.answerStatus = m.actionStatus
 		m.pane.answerWait, m.pane.answerKey = m.paneRunQuestion()
+		m.pane.answerPermission = m.panePermission()
 		m.refreshAnswerStatus()
 	}
 	return func() tea.Msg {

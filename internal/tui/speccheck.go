@@ -21,13 +21,120 @@ import (
 
 // specState is the check and owner sitting shared by Waves and Roadmap launch.
 type specState struct {
-	checking      bool
-	checkStarted  time.Time // when the running check began (S264)
-	ownerNeeded   string
-	specs         map[string]daemon.SpecItemResult
-	sitting       *specSitting
-	answerProject string
-	unsaved       map[string]bool // items whose answers the daemon failed to write in this sitting (S190)
+	checkProject                         string
+	checkItems                           []string
+	permission                           *daemon.SpecPermissionResult
+	permissionPolling, permissionSending bool
+	permissionEpoch                      uint64
+	checking                             bool
+	checkStarted                         time.Time // when the running check began (S264)
+	ownerNeeded                          string
+	specs                                map[string]daemon.SpecItemResult
+	sitting                              *specSitting
+	answerProject                        string
+	unsaved                              map[string]bool // items whose answers the daemon failed to write in this sitting (S190)
+}
+
+type specPermissionMsg struct {
+	state    *specState
+	epoch    uint64
+	result   *daemon.SpecPermissionResult
+	answered bool
+	err      error
+}
+
+// specPermissionLive is optional so older clients and test sources retain
+// their existing spec-check behavior. The daemon-backed TUI implements it.
+type specPermissionLive interface {
+	SpecPermission(context.Context, daemon.SpecPermissionParams) (*daemon.SpecPermissionResult, error)
+}
+
+func (m *Model) checkingSpec() (*specState, context.Context) {
+	if m.view == roadmapView && m.launch != nil && m.launch.checking && m.launch.ctx != nil && m.launch.ctx.Err() == nil {
+		return &m.launch.specState, m.launch.ctx
+	}
+	if m.view == wavesView && m.waves != nil && m.waves.checking && m.waves.ctx != nil && m.waves.ctx.Err() == nil {
+		return &m.waves.specState, m.waves.ctx
+	}
+	return nil, nil
+}
+
+func (m *Model) pollSpecPermission() tea.Cmd {
+	w, ctx := m.checkingSpec()
+	live, ok := m.cfg.Live.(specPermissionLive)
+	if w == nil || !ok || w.permissionPolling || w.permissionSending {
+		return nil
+	}
+	w.permissionPolling = true
+	epoch := w.permissionEpoch
+	params := daemon.SpecPermissionParams{Project: w.checkProject, Items: append([]string(nil), w.checkItems...)}
+	return func() tea.Msg {
+		out, err := live.SpecPermission(ctx, params)
+		return specPermissionMsg{state: w, epoch: epoch, result: out, err: err}
+	}
+}
+
+func (m *Model) applySpecPermission(msg specPermissionMsg) tea.Cmd {
+	w, _ := m.checkingSpec()
+	if w == nil || w != msg.state || w.permissionEpoch != msg.epoch {
+		return nil
+	}
+	w.permissionPolling = false
+	if msg.err != nil {
+		w.permissionSending = false
+		if w.sitting != nil {
+			w.sitting.recording = 0
+		}
+		m.actionStatus = actionError(msg.err)
+		return nil
+	}
+	if msg.answered {
+		w.permissionSending = false
+		w.permission = nil
+		w.sitting = nil
+		m.actionStatus = ""
+		return m.pollSpecPermission()
+	}
+	if msg.result == nil || msg.result.Question == nil {
+		if w.permission != nil {
+			w.permission = nil
+			w.sitting = nil
+		}
+		return nil
+	}
+	if w.permission == nil || w.permission.ID != msg.result.ID {
+		w.permission = msg.result
+		w.sitting = &specSitting{asks: []specAsk{{item: strings.Join(w.checkItems, ", "), n: 1, of: 1, q: engine.SpecQuestion{Ask: msg.result.Question}}}}
+	}
+	return nil
+}
+
+func (m *Model) answerSpecPermission(w *specState, text string) tea.Cmd {
+	live, ok := m.cfg.Live.(specPermissionLive)
+	active, ctx := m.checkingSpec()
+	if !ok || active != w || w.permission == nil || w.permissionSending {
+		return nil
+	}
+	params := daemon.SpecPermissionParams{Project: w.checkProject, Items: append([]string(nil), w.checkItems...), ID: w.permission.ID, Text: text}
+	w.permissionEpoch++ // discard polls started before this answer
+	epoch := w.permissionEpoch
+	w.permissionSending = true
+	w.permissionPolling = false
+	w.sitting.recording = 1
+	return func() tea.Msg {
+		out, err := live.SpecPermission(ctx, params)
+		return specPermissionMsg{state: w, epoch: epoch, result: out, answered: true, err: err}
+	}
+}
+
+func (w *specState) clearPermission() {
+	w.permissionEpoch++
+	if w.permission != nil {
+		w.sitting = nil
+	}
+	w.permission = nil
+	w.permissionPolling = false
+	w.permissionSending = false
 }
 
 type specAnswerMsg struct {
@@ -118,6 +225,8 @@ func (m *Model) startSpecCheck(items []daemon.RunParams) tea.Cmd {
 	}
 	w.checking = true
 	w.checkStarted = m.cfg.Now()
+	w.checkProject = w.project
+	w.checkItems = append([]string(nil), need...)
 	live, ctx, request, project := m.cfg.Live, w.ctx, w.request, w.project
 	return func() tea.Msg {
 		if ctx.Err() != nil {
@@ -136,6 +245,7 @@ func (m *Model) applyCheck(msg wavesMsg) tea.Cmd {
 		return nil
 	}
 	w.checking = false
+	w.clearPermission()
 	m.actionStatus = ""
 	if msg.err != nil {
 		m.actionStatus = actionError(msg.err)
@@ -198,6 +308,9 @@ func (m *Model) sittingKey(state *specState, done func() tea.Cmd, msg tea.KeyPre
 	if msg.String() == "ctrl+c" {
 		return tea.Quit
 	}
+	if state.permissionSending {
+		return nil
+	}
 	ask := s.current()
 	if ask == nil {
 		return nil
@@ -223,6 +336,9 @@ func (m *Model) sittingKey(state *specState, done func() tea.Cmd, msg tea.KeyPre
 	case "esc", "s":
 		return m.endSitting(state, done)
 	case "t":
+		if state.permission != nil {
+			return nil
+		}
 		s.free = true
 		s.input = textField{}
 	default:
@@ -237,6 +353,9 @@ func (m *Model) sittingKey(state *specState, done func() tea.Cmd, msg tea.KeyPre
 // answerSitting takes the answer to the current question. The last answer of
 // an item records them all in the item's spec.
 func (m *Model) answerSitting(w *specState, done func() tea.Cmd, text string) tea.Cmd {
+	if w.permission != nil {
+		return m.answerSpecPermission(w, text)
+	}
 	s := w.sitting
 	ask := *s.current()
 	s.answers[ask.item] = append(s.answers[ask.item], text)
@@ -268,6 +387,9 @@ func (m *Model) answerSitting(w *specState, done func() tea.Cmd, text string) te
 
 // endSitting skips the questions that are left.
 func (m *Model) endSitting(w *specState, done func() tea.Cmd) tea.Cmd {
+	if w.permission != nil {
+		return m.answerSpecPermission(w, "deny")
+	}
 	w.sitting.ended = true
 	return m.finishSitting(w, done)
 }
@@ -356,7 +478,11 @@ func (m *Model) sittingParts(w *specState, width int) (overviewView, []string) {
 	if len(s.asks) == 1 {
 		noun = "question"
 	}
-	out.body = append(out.body, th.Dim.Render(fmt.Sprintf("Spec check: %d %s for %s", len(s.asks), noun, strings.Join(items, ", "))))
+	heading := fmt.Sprintf("Spec check: %d %s for %s", len(s.asks), noun, strings.Join(items, ", "))
+	if w.permission != nil {
+		heading = "Spec check tool permission"
+	}
+	out.body = append(out.body, th.Dim.Render(heading))
 	ask := s.current()
 	if ask == nil {
 		add(nil, "Recording answers", "")
@@ -399,7 +525,15 @@ func (m *Model) sittingParts(w *specState, width int) (overviewView, []string) {
 		out.body = append(out.body, "", indent+"Answer: "+s.input.view(room, th))
 	}
 	out.body = append(out.body, "")
-	add(dim, fmt.Sprintf("%d of %d answered", s.pos, len(s.asks)), "")
+	if w.permission != nil {
+		text := "The spec check is still running."
+		if w.permissionSending {
+			text = "Sending permission answer"
+		}
+		add(dim, text, "")
+	} else {
+		add(dim, fmt.Sprintf("%d of %d answered", s.pos, len(s.asks)), "")
+	}
 	if w.ownerNeeded != "" {
 		out.body = append(out.body, "")
 		add(dim, "Owner needed: "+w.ownerNeeded, "")

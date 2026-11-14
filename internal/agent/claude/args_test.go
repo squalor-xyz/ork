@@ -17,6 +17,7 @@ func TestArgsLocalReadOnlyUsesAllowlist(t *testing.T) {
 			want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
 			if vendor == "claude-local" {
 				want = append(want, "--disallowedTools", localDisallowed, "--disable-slash-commands", "--allowedTools", "Read,Grep,Glob", "--permission-prompts", "none")
+				want = append(want, "--permission-mode", "manual", "--settings", HookSettings(""))
 			} else {
 				want = append(want, "--permission-mode", "plan")
 			}
@@ -38,7 +39,7 @@ func TestArgsLocalWriteRoleTurnsOffUnusedTools(t *testing.T) {
 	}
 	want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
 		"--disallowedTools", localDisallowed, "--disable-slash-commands",
-		"--allowedTools", "Read,Edit", "--permission-prompts", "none", "implement"}
+		"--allowedTools", "Read,Edit", "--permission-prompts", "none", "--permission-mode", "manual", "--settings", HookSettings(""), "implement"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("local implementer argv: got %q; want %q", got, want)
 	}
@@ -51,7 +52,7 @@ func TestArgsLocalUIPassKeepsSkill(t *testing.T) {
 	}
 	want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
 		"--disallowedTools", "WebFetch,WebSearch,Task,Agent,NotebookEdit",
-		"--allowedTools", "Read", "--permission-prompts", "none", "ui"}
+		"--allowedTools", "Read", "--permission-prompts", "none", "--permission-mode", "manual", "--settings", HookSettings(""), "ui"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("local UI pass argv: got %q; want %q", got, want)
 	}

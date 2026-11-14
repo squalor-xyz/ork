@@ -21,11 +21,13 @@ var localDisallowedTools = []string{"WebFetch", "WebSearch", "Task", "Agent", "N
 //	   --include-partial-messages [--model M] [--effort E]
 //	   [--disallowedTools a,b [--disable-slash-commands]]   (claude-local only)
 //	   (--allowedTools a,b --permission-prompts none | --permission-mode plan)
+//	   [--permission-mode manual --settings JSON]          (claude-local only)
 //	   PROMPT
 //
 // A write role needs an allowlist. A cloud read-only role runs in plan mode
-// and ignores it; claude-local uses a read-only allowlist to avoid the
-// model-backed classifier (adj 307). `--include-partial-messages` gives the
+// and ignores it; claude-local uses manual mode and ork's PreToolUse hook
+// with a read-only allowlist for read-only roles (adj 307, 328-331).
+// `--include-partial-messages` gives the
 // text deltas for the output tail. `--effort <level>` is listed by
 // `claude --help` ("Effort level
 // for the current session", claude 2.1.x). The allowlist is one comma-joined
@@ -86,6 +88,9 @@ func (s Spec) Args() ([]string, error) {
 			}
 		}
 		args = append(args, "--allowedTools", strings.Join(s.Allowlist, ","), "--permission-prompts", "none")
+	}
+	if s.Bin == "claude-local" {
+		args = append(args, "--permission-mode", "manual", "--settings", HookSettings(s.HookCommand))
 	}
 	return append(args, s.Prompt), nil
 }

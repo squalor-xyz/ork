@@ -249,6 +249,15 @@ func (d *Daemon) SpecAnswer(ctx context.Context, params daemon.SpecAnswerParams)
 	return c.SpecAnswer(ctx, params)
 }
 
+func (d *Daemon) SpecPermission(ctx context.Context, p daemon.SpecPermissionParams) (*daemon.SpecPermissionResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.SpecPermission(ctx, p)
+}
+
 func (d *Daemon) Cleanup(ctx context.Context, run string) error {
 	c, err := d.Connect(ctx)
 	if err != nil {

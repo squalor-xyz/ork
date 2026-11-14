@@ -22,6 +22,7 @@ import (
 
 // claudeRunner connects the engine's vendor-neutral request to S16.
 type claudeRunner struct {
+	approval   func(context.Context, engine.Request, []string, string) (string, func() []runrec.DeniedCommand, error)
 	round      func(context.Context, claude.Spec) (claude.Round, error)
 	fixtureDir string
 	env        []string
@@ -51,6 +52,16 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		addDir = filepath.Dir(req.ProgressFile)
 	}
 	live := newLiveRedactor(r.env, req.OnLive)
+	hookCommand := ""
+	finishApproval := func() []runrec.DeniedCommand { return nil }
+	if req.Vendor == "claude-local" && r.approval != nil {
+		var err error
+		hookCommand, finishApproval, err = r.approval(ctx, req, allowlist, addDir)
+		if err != nil {
+			return engine.Result{}, err
+		}
+		defer finishApproval()
+	}
 	var message claude.Usage
 	used := 0
 	lastContext := 0
@@ -58,7 +69,8 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
 	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
-		ReadOnly: req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
+		HookCommand: hookCommand,
+		ReadOnly:    req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			if ev.ContextTokens > 0 {
 				lastContext = ev.ContextTokens
 			}
@@ -113,6 +125,18 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	for _, d := range round.Denials {
 		result.Denials = append(result.Denials, runrec.DeniedCommand{Tool: d.ToolName, Command: d.Detail()})
 	}
+	// Hook denials need not appear in Claude's permission_denials. Preserve
+	// them independently, without double-counting a vendor-reported copy.
+	hookDenials := finishApproval()
+	for _, denial := range result.Denials {
+		for i, hook := range hookDenials {
+			if hook == denial {
+				hookDenials = append(hookDenials[:i], hookDenials[i+1:]...)
+				break
+			}
+		}
+	}
+	result.Denials = append(result.Denials, hookDenials...)
 	return result, err
 }
 
