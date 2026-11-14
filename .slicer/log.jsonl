@@ -4498,3 +4498,4 @@
 {"when": "2026-11-14T22:42:12Z", "item": "S356", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S356):", "by": "Jon Robbins"}
 {"when": "2026-11-14T22:42:39Z", "item": "S356", "action": "note", "from": "", "to": "", "note": "Claude-local now uses manual mode and an ork PreToolUse appr", "by": "Jon Robbins"}
 {"when": "2026-11-14T22:42:43Z", "item": "S356", "action": "status", "from": "started", "to": "done", "note": "Claude-local manual mode and per-call ork approvals are implemented with path and Read limits, owner answers for runs and spec checks, assigned role paths, regression tests and matching docs. Gate PASS and owner approval received; S304 live trial remains deferred until after landing.", "by": "Jon Robbins"}
+{"when": "2026-11-13T01:13:29Z", "item": "S356", "action": "edit", "from": "", "to": "", "note": "Implement"}
