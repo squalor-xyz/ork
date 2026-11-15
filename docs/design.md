@@ -2824,7 +2824,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `status --project`) report that guide as an error and exit 1. JSON status
   keeps an empty projects array; JSON project errors use the usual error object.
 - `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
-  path and `adj`, in columns.
+  path, `adj` (or `-`), and `notify_command=CMD` when set, in columns.
+  The notification cell is cleaned to one line without terminal controls.
 - `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
   duplicate name, a relative path, or a path that is not an existing
@@ -2909,6 +2910,32 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   even when unlisted (adj 341, 342). These phrases do not activate defaults.
   Normal runs keep the cloud rows (adj 296); the trial explicitly lists
   `--spec-check-rows r35,r16` and `--ui-pass-rows r36,r14`, then clears them.
+  *Proposed (S311):* `--notify CMD` stores the per-project `notify_command`;
+  an empty value clears it. A notify-only call is allowed while runs are
+  unfinished (adj 279). `ork projects list` and `ork doctor` show it.
+  The whole string is one executable name or path, including spaces, with
+  no arguments or implicit shell (adj 358). Relative paths resolve in the
+  project directory and plain names use PATH; doctor checks resolution
+  without executing it.
+  The proposed events are `question`, `awaiting-approval`, `paused`,
+  `stopped` and `landed`; `failed` waits for a ledger read, as for `ork wait`
+  (owner decision 2026-11-15, notify.failed-event).
+  Successful run-record updates enqueue delivery when the effective event
+  changes. Delivery runs outside the run-manager lock, independently of the
+  TUI and its subscription cache. It reads the current project setting and
+  claims the occurrence in the record's `notified` list before calling
+  `clirun` with a ten-second timeout. Each fresh transition into a need is
+  attempted once, including across restart (adj 359); same-state updates
+  and reloads do not repeat it. A later question or approval in the same
+  run is a new occurrence. No setting means no
+  execution or notification metadata writes. Shutdown cancels and joins
+  deliveries. Failed delivery logs one cleaned line and leaves the run
+  unaffected; there is no retry. A crash after the claim can lose delivery.
+  The command receives `ORK_EVENT`, `ORK_PROJECT`, `ORK_RUN`, `ORK_ITEM`,
+  `ORK_STATE`, `ORK_REASON` and `ORK_NEXT` through its environment. The event
+  distinguishes a question pause and a landing from raw `paused` and
+  `committed` states. Reason and next-command text have terminal controls
+  removed and whitespace collapsed to one line.
   `--check` and `--round-check` (*proposed*, S295) are verified before they
   are stored, in the project's folder of the main checkout, which is the
   registry path and the same folder the round check uses in the worktree

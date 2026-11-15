@@ -17560,10 +17560,39 @@
       "id": "S311",
       "title": "Notify command: run a configured command when a run needs the owner or ends",
       "short_title": "Notify command: run a configured command when a run needs the owner or ends",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8e2156ec-1d2f-45ee-ac4e-6b3486d65bf5",
+          "kind": "",
+          "text": "**2026-11-15** — Human checks at approval (S311):\n- later: deferred to land: HUMAN CHECK : set a command that appends to a file, start a small slice, and see one line for each time it needs you and one on landing.",
+          "created_at": "2026-11-15T14:37:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d8aec1b3-0960-4f6d-bedd-897c10ded0d8",
+          "kind": "",
+          "text": "**2026-11-15** — Verified configured executable notifications for fresh owner-need occurrences and landing, with durable restart deduplication, cleaned event and CLI text, ten-second timeout, and failure isolation. Gate VERDICT: PASS; owner approved. Human notification check remains deferred until after landing.",
+          "created_at": "2026-11-15T14:37:42Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -17581,7 +17610,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

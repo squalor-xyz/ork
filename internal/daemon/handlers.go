@@ -662,6 +662,9 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 		return registry.Project{}, &ipc.Error{Code: CodeProjectBusy, Message: busyMessage(p.Name, ids, refused)}
 	}
 	proj := &f.Projects[i]
+	if p.NotifyCommand != nil {
+		proj.NotifyCommand = *p.NotifyCommand
+	}
 	// The preset and allow_add read the check command this call saves.
 	base := *proj
 	if p.CheckCommand != nil {

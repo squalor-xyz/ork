@@ -376,9 +376,8 @@ func TestProjectsAddListRemove(t *testing.T) {
 	}
 
 	code, stdout, _ = run(t, w.app, "projects", "list")
-	want := "keep      /p/keep\n" +
-		fmt.Sprintf("with-adj  %s  adj\n", withAdj) +
-		fmt.Sprintf("other     %s\n", plain)
+	want := fmt.Sprintf("keep      %-*s  -\nwith-adj  %s  adj\nother     %-*s  -\n",
+		len(withAdj), "/p/keep", withAdj, len(withAdj), plain)
 	if code != 0 || stdout != want {
 		t.Fatalf("list text, exit %d:\n%q\nwant:\n%q", code, stdout, want)
 	}

@@ -20,6 +20,9 @@ import (
 type Store struct {
 	Dir string           // the runs directory
 	Now func() time.Time // the clock; nil means time.Now
+	// OnChange observes successful updates after the run lock is released.
+	// Set it before using the store. It must return promptly.
+	OnChange func(*Run, Record, Record)
 }
 
 func (s *Store) now() time.Time {
@@ -241,8 +244,15 @@ func clone(rec Record) Record {
 // fails the record in memory is rolled back and the file is untouched.
 func (r *Run) Update(fn func(*Record)) error {
 	r.mu.Lock()
-	defer r.mu.Unlock()
-	before := clone(r.rec)
+	var before, after Record
+	saved := false
+	defer func() {
+		r.mu.Unlock()
+		if saved && r.store.OnChange != nil {
+			r.store.OnChange(r, before, after)
+		}
+	}()
+	before = clone(r.rec)
 	fn(&r.rec)
 	r.rec.UpdatedAt = r.store.now()
 	// Only a state transition starts a new wait. Metadata writes keep its age.
@@ -256,7 +266,30 @@ func (r *Run) Update(fn func(*Record)) error {
 		r.rec = before
 		return err
 	}
+	if r.store.OnChange != nil {
+		after = clone(r.rec)
+	}
+	saved = true
 	return nil
+}
+
+// ClaimNotification durably claims one occurrence key before delivery.
+// It does not change state or its timestamps, and emits no change callback.
+func (r *Run) ClaimNotification(key string) (bool, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	for _, seen := range r.rec.Notified {
+		if seen == key {
+			return false, nil
+		}
+	}
+	before := clone(r.rec)
+	r.rec.Notified = append(r.rec.Notified, key)
+	if err := r.save(); err != nil {
+		r.rec = before
+		return false, err
+	}
+	return true, nil
 }
 
 // ErrNotStopped means only a stopped run can be dismissed.

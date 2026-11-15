@@ -132,6 +132,16 @@ Notes on the fields:
   that set neither leave it. A started run reads it, so it changes only with
   the check commands. An older ork refuses a registry with this key because
   `Load` uses strict keys.
+- `notify_command` (*proposed*, S311) stores the per-project notification
+  command. `ork projects set NAME --notify CMD` sets it; an empty value
+  removes the key. A notify-only change is allowed with unfinished runs
+  (adj 279). `ork projects list` and `ork doctor` display it; doctor warns
+  when it cannot resolve to an executable. The whole string is one executable
+  name or path, spaces included, with no arguments or implicit shell (adj
+  358). Relative paths resolve in the project directory; plain names use
+  the daemon's PATH. The events are `question`, `awaiting-approval`, `paused`,
+  `stopped` and `landed`. Like `ork wait`, `failed` waits for a ledger read
+  (owner decision 2026-11-15, notify.failed-event).
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
   syntax per vendor waits on the vendor spike (design.md). *Proposed* (S265):
   `ork projects set NAME --preset go|python` writes the language's full
@@ -345,6 +355,19 @@ separate file: the registry keeps its version and strict keys.
   for `projects.json`. An older ork does not know the file and ignores it.
 
 ## run.json
+
+*Proposed (S311):* `notified` is an optional list of occurrence keys, written
+as `EVENT@UTC-TIMESTAMP` with RFC3339 nanosecond precision. The timestamp is
+`wait_started_at` for a question, pause or approval, `updated_at` for a stop,
+and `landed_at` for a landing. The daemon records each key before attempting
+its executable. Each fresh transition is attempted once, including across
+restart (adj 359); same-state updates do not repeat it. A later need in the
+same run gets a new key, even if its event name is unchanged. An unsuccessful
+delivery does not retry that occurrence. The marker does not change state or
+timestamps. With no configured command it writes no notification metadata.
+Loading a record does not deliver an old state. A crash between the marker
+and execution can lose a notification; delivery is best effort, without
+retries. The version stays 1; older ork versions refuse the unknown key.
 
 ork writes `run.json` at mode 0600 (adj #106). It creates the runs root,
 each run directory, and role temp directories (including spec check temp

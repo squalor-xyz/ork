@@ -22,6 +22,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -70,6 +71,7 @@ type projectContract struct {
 
 type projectCheck struct {
 	Name                string   `json:"name"`
+	NotifyCommand       string   `json:"notify_command,omitempty"`
 	Path                string   `json:"path"`
 	Findings            []string `json:"findings"`
 	MergeDriverCommands []string `json:"merge_driver_commands,omitempty"`
@@ -109,7 +111,16 @@ func (p *projectCheck) addFinding(format string, args ...any) {
 }
 
 func checkProject(ctx context.Context, p registry.Project) projectCheck {
-	check := projectCheck{Name: p.Name, Path: p.Path, Findings: []string{}}
+	check := projectCheck{Name: p.Name, Path: p.Path, NotifyCommand: p.NotifyCommand, Findings: []string{}}
+	if p.NotifyCommand != "" {
+		command := p.NotifyCommand
+		if strings.ContainsRune(command, os.PathSeparator) && !filepath.IsAbs(command) {
+			command = filepath.Join(p.Path, command)
+		}
+		if _, err := exec.LookPath(command); err != nil {
+			check.addFinding("notify_command: executable not found: %s", runrec.PlainText(command))
+		}
+	}
 	info, err := os.Stat(p.Path)
 	if os.IsNotExist(err) {
 		check.addFinding("path: does not exist")
@@ -539,6 +550,9 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 			}
 		}
 		fmt.Fprintf(o.stdout, "[%s] project %s  %s\n", status, p.Name, p.Path)
+		if p.NotifyCommand != "" {
+			fmt.Fprintf(o.stdout, "  notify_command=%s\n", runrec.PlainText(p.NotifyCommand))
+		}
 		for _, finding := range p.Findings {
 			fmt.Fprintf(o.stdout, "  %s\n", finding)
 		}

@@ -154,6 +154,7 @@ func (c *stopCall) abandon(err error) {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
+	notifications   *notifier
 	approvals       map[string]*approvalSession // live local attempts, guarded by mu
 	permissionSeq   uint64                      // monotonically orders live permission questions
 	recordLocks     map[string]*sync.Mutex      // per-run record writes; guarded by mu
@@ -209,6 +210,8 @@ func (d *Daemon) initRunManager() {
 		deps.Wake = engine.NewWake(now)
 	}
 	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, mergeLogged: map[string]string{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
+	d.runs.notifications = newNotifier(d)
+	deps.Store.OnChange = d.runs.notifications.changed
 }
 
 // watchLocalSlots admits queued runs when a local role/spec check frees a
@@ -366,6 +369,7 @@ func (d *Daemon) closeRuns() {
 		cancel()
 	}
 	d.runs.mu.Unlock()
+	d.runs.notifications.close()
 	d.runs.wg.Wait()
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()

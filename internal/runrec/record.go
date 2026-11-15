@@ -396,6 +396,7 @@ type Record struct {
 	LedgerRoles      map[string]string        `json:"ledger_roles,omitempty"`
 	Contract         int                      `json:"contract"`
 	State            string                   `json:"state"`
+	Notified         []string                 `json:"notified,omitempty"` // S311: occurrence keys claimed before notification delivery
 	Round            int                      `json:"round"`
 	Fails            int                      `json:"fails,omitempty"`
 	LandFixes        int                      `json:"land_fixes,omitempty"`     // fix rounds that a blocked landing has had (S119)

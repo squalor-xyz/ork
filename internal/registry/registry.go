@@ -282,6 +282,8 @@ type Project struct {
 
 	// Bell controls every terminal bell for this project (S100, *proposed*).
 	Bell *bool `json:"bell,omitempty"`
+	// NotifyCommand stores the owner's notification command (S311, proposed).
+	NotifyCommand string `json:"notify_command,omitempty"`
 
 	// AutoLand says ork approves and lands a run whose gate passes with no open
 	// owner finding and green checks, with no `ork approve` call (S331,
