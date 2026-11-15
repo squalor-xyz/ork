@@ -4594,3 +4594,5 @@
 {"when": "2026-11-15T03:35:15Z", "item": "S364", "action": "note", "from": "", "to": "", "note": "Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3", "by": "Jon Robbins"}
 {"when": "2026-11-15T03:35:15Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3", "by": "Jon Robbins"}
 {"when": "2026-11-15T14:42:00Z", "item": "S366", "action": "add", "from": "", "to": "open", "note": "Orientation pack: honour a run's lineup override"}
+{"when": "2026-11-15T15:05:11Z", "item": "S366", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-15T15:05:12Z", "item": "S313", "action": "edit", "from": "", "to": "", "note": "Implement"}
