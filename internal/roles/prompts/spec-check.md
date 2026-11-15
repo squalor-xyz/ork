@@ -71,7 +71,8 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    the implementer's resolved allowlist. Use the brief's classification. Ask the
    owner to replace it with a runnable form or explicitly assign it to the
    orchestrator; an already recorded assignment settles that line.
-4. Ask the least. One question for each real open decision. Do not ask a question
+4. Before inventing a decision key, use `adj find` over decided records and reuse an existing key for the same topic.
+   Ask the least. One question for each real open decision. Do not ask a question
    about the same decision twice across slices; ask it under the first slice that
    needs it and say in the others' questions that they share it.
 5. Do not suggest extra scope and do not review code quality.

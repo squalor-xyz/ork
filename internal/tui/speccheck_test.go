@@ -15,6 +15,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 // twoQuestions are the open questions of item B: the first has a decision key.
@@ -37,6 +38,99 @@ func questionsForB(l *wavesLive) {
 			out.Items = append(out.Items, r)
 		}
 		return out, nil
+	}
+}
+
+func TestWavesOpenAdjHold(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		var result daemon.SpecCheckResult
+		if err := json.Unmarshal([]byte(`{"items":[{"item":"A","ready":true},{"item":"B","ready":false,"waits_on":[42]}]}`), &result); err != nil {
+			t.Fatal(err)
+		}
+		return &result, nil
+	}
+	h.deliver(press("l"))
+	if h.m.waves.sitting != nil || !strings.Contains(h.view(), "ork wave start ork A? [y/N] (Enter is No)  B waits on adj 42") {
+		t.Fatalf("held item entered sitting or launch: %s", h.view())
+	}
+	h.deliver(press("n"))
+	if v := h.view(); !strings.Contains(v, "waits on adj 42") {
+		t.Fatalf("missing adj hold: %s", v)
+	}
+	checkGolden(t, "waves-open-adj.txt", h.m.View().Content)
+}
+
+func TestWavesAdjHoldAfterLaunch(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return &daemon.SpecCheckResult{Items: []daemon.SpecItemResult{{Item: "A", Ready: true}, {Item: "B", WaitsOn: []int{42}}}}, nil
+	}
+	l.result.Items = []daemon.WaveItemResult{{Item: "A", Run: &runrec.Record{ID: "ork-new", Item: "A"}}}
+	h.deliver(press("l"))
+	h.deliver(press("y"))
+	if v := h.view(); !strings.Contains(v, "launched A as ork-new; enter opens it; B waits on adj 42") {
+		t.Fatalf("wrong launch status: %s", v)
+	}
+}
+
+func TestWavesAdjHoldWithRemainingQuestion(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return &daemon.SpecCheckResult{Items: []daemon.SpecItemResult{{Item: "A", Ready: true}, {Item: "B", WaitsOn: []int{42}, Questions: twoQuestions()[1:]}}}, nil
+	}
+	h.deliver(press("l"))
+	h.deliver(press("n"))
+	if hint := hintLine(h.view()); !strings.Contains(hint, "l launch") || strings.Contains(hint, "answer spec questions") {
+		t.Fatalf("unanswerable adj hold hint: %s", hint)
+	}
+}
+
+func TestWavesOnlyAdjHold(t *testing.T) {
+	h, l := wavesHarness(t)
+	openWaves(t, h)
+	h.deliver(press("down"))
+	tickWave(t, h)
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return &daemon.SpecCheckResult{Items: []daemon.SpecItemResult{{Item: "B", WaitsOn: []int{42}}}}, nil
+	}
+	h.deliver(press("l"))
+	if v := h.view(); !strings.Contains(v, "No item is ready: B waits on adj 42") {
+		t.Fatalf("wrong all-held status: %s", v)
+	}
+}
+
+func TestWavesAllLookupNotices(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return &daemon.SpecCheckResult{Items: []daemon.SpecItemResult{
+			{Item: "A", Questions: twoQuestions(), Notices: []string{"adj check key.a: lookup A failed"}},
+			{Item: "B", Questions: twoQuestions(), Notices: []string{"adj check key.b: lookup B failed"}},
+		}}, nil
+	}
+	h.deliver(press("l"))
+	if v := h.view(); !strings.Contains(v, "adj check key.a: lookup A failed; adj check key.b: lookup B failed") {
+		t.Fatalf("lookup notices lost: %s", v)
+	}
+}
+
+func TestWavesStaleAdjAnswerIsShown(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		var result daemon.SpecCheckResult
+		if err := json.Unmarshal([]byte(`{"items":[{"item":"A","ready":true},{"item":"B","ready":false,"questions":[{"ask":{"title":"Store?","options":[{"label":"file","summary":"new store"}]},"previous":"decided as disk: old store on 2026-11-09"}]}]}`), &result); err != nil {
+			t.Fatal(err)
+		}
+		return &result, nil
+	}
+	h.deliver(press("l"))
+	if !strings.Contains(h.view(), "decided as disk: old store on 2026-11-09") {
+		t.Fatal(h.view())
 	}
 }
 
@@ -337,7 +431,7 @@ func TestWavesSkippingTheSittingLaunchesOnlyTheReadyItems(t *testing.T) {
 			if len(l.answers) != 0 {
 				t.Fatalf("a half-answered item was recorded: %+v", l.answers)
 			}
-			if v := h.view(); !strings.Contains(v, "ork wave start ork A? [y/N] (Enter is No)") || !strings.Contains(v, "B waits on spec questions") {
+			if v := h.view(); !strings.Contains(v, "ork wave start ork A? [y/N] (Enter is No)") || !strings.Contains(v, "B waits on 2 spec questions") {
 				t.Fatalf("only A is ready, and the prompt says B is held:\n%s", v)
 			}
 			h.deliver(press("y"))
@@ -349,7 +443,7 @@ func TestWavesSkippingTheSittingLaunchesOnlyTheReadyItems(t *testing.T) {
 				t.Error("B was unticked")
 			}
 			v := h.view()
-			if !strings.Contains(v, "waits on 2 spec questions") || !strings.Contains(h.m.actionStatus, "B waits on spec questions") {
+			if !strings.Contains(v, "waits on 2 spec questions") || !strings.Contains(h.m.actionStatus, "B waits on 2 spec questions") {
 				t.Errorf("status %q:\n%s", h.m.actionStatus, v)
 			}
 			// The hint says what l does now: answer the held questions.

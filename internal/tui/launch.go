@@ -324,6 +324,12 @@ func (m *Model) applyLaunchSpec(msg launchSpecMsg) tea.Cmd {
 		l.specs[r.Item] = r
 	}
 	r := l.specs[l.params.Item]
+	if len(r.WaitsOn) > 0 {
+		return m.finishLaunchSpec()
+	}
+	if len(r.Notices) > 0 {
+		m.actionStatus = strings.Join(r.Notices, "; ")
+	}
 	if r.Ready {
 		return m.finishLaunchSpec()
 	}

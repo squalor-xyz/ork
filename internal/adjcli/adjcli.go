@@ -109,13 +109,22 @@ func (c Client) write(ctx context.Context, w runrec.Writer, root string, argv ..
 
 // Check finds an exact decision key. Substring matches from adj are ignored.
 func (c Client) Check(ctx context.Context, w runrec.Writer, root, key string) (string, int, error) {
+	state, record, err := c.CheckRecord(ctx, w, root, key)
+	if record == nil {
+		return state, 0, err
+	}
+	return state, record.ID, err
+}
+
+// CheckRecord retains the exact-key answer and date for read-only reuse.
+func (c Client) CheckRecord(ctx context.Context, w runrec.Writer, root, key string) (string, *Record, error) {
 	res, err := c.write(ctx, w, root, "check", key, "--json")
 	if err != nil {
-		return "", 0, answerError(err)
+		return "", nil, answerError(err)
 	}
 	var out struct{ Decided, Open, Closed []Record }
 	if err := json.Unmarshal(res.Stdout, &out); err != nil {
-		return "", 0, fmt.Errorf("adj check: decode output: %w", err)
+		return "", nil, fmt.Errorf("adj check: decode output: %w", err)
 	}
 	for _, group := range []struct {
 		state   string
@@ -124,13 +133,13 @@ func (c Client) Check(ctx context.Context, w runrec.Writer, root, key string) (s
 		for _, r := range group.records {
 			if r.Key == key {
 				if r.ID <= 0 {
-					return "", 0, fmt.Errorf("adj check: invalid record id")
+					return "", nil, fmt.Errorf("adj check: invalid record id")
 				}
-				return group.state, r.ID, nil
+				return group.state, &r, nil
 			}
 		}
 	}
-	return "not found", 0, nil
+	return "not found", nil, nil
 }
 
 // Ask files the full question and returns the ID printed by adj.

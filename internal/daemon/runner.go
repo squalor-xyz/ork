@@ -40,6 +40,9 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	allowlist := req.Allowlist
 	if req.ReadOnly && req.Vendor == "claude-local" {
 		allowlist = engine.LocalReadOnlyAllowlist()
+		if req.Role == engine.RoleSpecCheck {
+			allowlist = append(allowlist, "Bash(adj find*)")
+		}
 	}
 	addDir := ""
 	if req.Vendor == "claude-local" && req.ProgressFile != "" {

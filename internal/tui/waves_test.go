@@ -1128,7 +1128,7 @@ func TestWaveLaunchWithAHeldItemStaysOnWaves(t *testing.T) {
 	if !strings.Contains(v, "[>] A") || !strings.Contains(v, "running ork-new") || !strings.Contains(v, "[x] B") || !strings.Contains(v, "waits on 2 spec questions") {
 		t.Errorf("rows after a held launch:\n%s", v)
 	}
-	if !strings.HasSuffix(h.m.actionStatus, "B waits on spec questions") {
+	if !strings.HasSuffix(h.m.actionStatus, "B waits on 2 spec questions") {
 		t.Errorf("status %q", h.m.actionStatus)
 	}
 	h.m.waves.cursor = 0

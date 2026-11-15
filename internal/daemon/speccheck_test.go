@@ -168,6 +168,117 @@ Options:
 Recommend: 2 - flags are spelled out
 `
 
+func TestSpecCheckReusesAdjDecision(t *testing.T) {
+	for _, tc := range []struct {
+		name, output, notice string
+		exit                 int
+		ready, waiting       bool
+	}{
+		{"decided", `{"decided":[{"id":42,"key":"cache.index-store","decision":"memory","options":[{"label":"memory","summary":"rebuilt at each start"}],"decided_at":"2026-11-09"}]}`, "", 0, true, false},
+		{"open", `{"open":[{"id":42,"key":"cache.index-store"}]}`, "", 0, false, true},
+		{"not found", `{"result":"not found"}`, "", 0, false, false},
+		{"near key", `{"decided":[{"id":42,"key":"cache.index-store-other","decision":"memory","options":[{"label":"memory","summary":"rebuilt at each start"}]}]}`, "", 0, false, false},
+		{"stale", `{"decided":[{"id":42,"key":"cache.index-store","decision":"disk","options":[{"label":"disk","summary":"old store"}],"decided_at":"2026-11-09"}]}`, "decided as disk: old store on 2026-11-09", 0, false, false},
+		{"failure", "", "lookup unavailable", 1, false, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			route := clitest.Route{Tool: "adj", Args: []string{"check", "cache.index-store", "--json"}, Prefix: true, Stdout: tc.output, Stderr: "lookup unavailable", Exit: tc.exit}
+			if tc.waiting {
+				route.Seq = []clitest.Reply{{Stdout: tc.output}, {Stdout: `{"decided":[{"id":42,"key":"cache.index-store","decision":"memory","options":[{"label":"memory","summary":"rebuilt at each start"}]}]}`}}
+			}
+			rig := newSpecRig(t, rulesJSON(u11), route)
+			reg, err := registry.Load(rig.d.cfg.RegistryPath)
+			if err != nil {
+				t.Fatal(err)
+			}
+			reg.Projects[0].Adj = true
+			if err := registry.Save(rig.d.cfg.RegistryPath, reg); err != nil {
+				t.Fatal(err)
+			}
+			rig.d.runs.deps.Adj = adjcli.Client{Bin: rig.fake.Bin("adj")}
+			first, _, _ := strings.Cut(specQuestionsReport, "\n\nQuestion: What")
+			rig.report = first + "\n\n## Owner needed\nnone\n"
+			result := rig.check(t, "S2")
+			item := rig.item(result, "S2")
+			if item.Ready != tc.ready {
+				t.Errorf("ready = %v, want %v", item.Ready, tc.ready)
+			}
+			wantQuestions := 1
+			if tc.ready || tc.waiting {
+				wantQuestions = 0
+			}
+			if len(item.Questions) != wantQuestions {
+				t.Errorf("questions = %d, want %d", len(item.Questions), wantQuestions)
+			}
+			raw, _ := json.Marshal(item)
+			if tc.waiting && !strings.Contains(string(raw), `"waits_on":[42]`) {
+				t.Errorf("missing open hold: %s", raw)
+			}
+			if tc.notice != "" && !strings.Contains(string(raw), tc.notice) {
+				t.Errorf("missing notice %q: %s", tc.notice, raw)
+			}
+			if tc.name == "failure" && strings.Count(string(raw), "lookup unavailable") != 1 {
+				t.Errorf("lookup notice must appear once: %s", raw)
+			}
+			calls := rig.fake.CallsTo("adj")
+			if len(calls) != 1 || calls[0].Args[0] != "check" {
+				t.Errorf("expected read-only exact lookup: %+v", calls)
+			}
+			if tc.ready {
+				var paragraphs []string
+				for _, call := range rig.fake.CallsTo("slicer") {
+					if len(call.Args) > 1 && call.Args[0] == "edit" {
+						paragraphs = append(paragraphs, strings.Join(call.Args, " "))
+					}
+				}
+				if len(paragraphs) != 1 || !strings.Contains(paragraphs[0], "-> memory: rebuilt at each start [cache.index-store, adj 42]") {
+					t.Errorf("missing reused decision: %v", paragraphs)
+				}
+			}
+			if tc.ready || tc.waiting {
+				err := rig.d.specGate(context.Background(), "p", "S2")
+				if (err != nil) != tc.waiting {
+					t.Errorf("launch guard: %v", err)
+				}
+				if tc.waiting && (err == nil || !strings.Contains(err.Error(), "waits on adj 42")) {
+					t.Errorf("hold reason: %v", err)
+				}
+			}
+			if tc.ready {
+				b := request(t, rig.d, MethodWaveStart, `{"items":[{"project":"p","item":"S2"}]}`)
+				if !strings.Contains(string(b), `"run"`) {
+					t.Fatalf("reused decision did not permit launch: %s", b)
+				}
+				deadline := time.Now().Add(5 * time.Second)
+				for len(rig.roleRequests()) == 0 && time.Now().Before(deadline) {
+					time.Sleep(time.Millisecond)
+				}
+				reqs := rig.roleRequests()
+				if len(reqs) == 0 || !strings.Contains(reqs[0].Brief, "-> memory: rebuilt at each start [cache.index-store, adj 42]") {
+					t.Fatalf("reused decision missing from implementer brief: %+v", reqs)
+				}
+			}
+			if tc.waiting {
+				after := rig.check(t, "S2")
+				if !after.Items[0].Ready || len(after.Items[0].Questions) > 0 || len(rig.requests()) != 1 {
+					t.Fatalf("decided pending record did not release cached hold: %+v", after)
+				}
+				body, err := os.ReadFile(filepath.Join(rig.d.specDir("p", "S2"), "answers.json"))
+				var stored storedSpecAnswers
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := json.Unmarshal(body, &stored); err != nil {
+					t.Fatal(err)
+				}
+				if !strings.Contains(stored.Decisions, "-> memory: rebuilt at each start [cache.index-store, adj 42]") {
+					t.Fatalf("resolved hold lost saved answer: %s", body)
+				}
+			}
+		})
+	}
+}
+
 // specRig is a daemon whose matrix has a spec check row and whose spec check
 // role answers with the report in rig.report. S1 and S2 are the project's
 // slices; their `slicer show` output is in files the test can rewrite.
@@ -590,7 +701,7 @@ func TestSpecAnswerFilesKeyedQuestionsInAdjOnlyWhenTheProjectHasAdj(t *testing.T
 			}
 			calls := rig.fake.CallsTo("adj")
 			if hasAdj {
-				if len(calls) != 3 || ans.Notices[0] != "filed in adj: cache.index-store (adj 42)" {
+				if len(calls) != 4 || ans.Notices[0] != "filed in adj: cache.index-store (adj 42)" {
 					t.Errorf("adj calls %+v, notices %v", calls, ans.Notices)
 				}
 			} else if len(calls) != 0 || !strings.Contains(ans.Notices[0], "no adj in this project") {
@@ -677,8 +788,8 @@ func TestSpecAnswerWithNoOwnerFilesNothingAndSaysHowToSetOne(t *testing.T) {
 	if len(ans.Notices) != 1 || !strings.Contains(ans.Notices[0], "no owner set; run ork settings set --owner NAME") {
 		t.Fatalf("notices: %q", ans.Notices)
 	}
-	if n := len(rig.fake.CallsTo("adj")); n != 0 {
-		t.Errorf("%d adj calls without an owner", n)
+	if calls := rig.fake.CallsTo("adj"); len(calls) != 1 || calls[0].Args[0] != "check" {
+		t.Errorf("expected only the spec lookup without an owner: %+v", calls)
 	}
 	// The answer is recorded in the slice all the same.
 	if edits := rig.fake.CallsTo("slicer"); len(edits) == 0 {
@@ -693,8 +804,8 @@ func TestSpecAnswerFilesNothingWhenFileAnswersIsOff(t *testing.T) {
 	off := false
 	rig := ownerRig(t, "Jon Setting", &off)
 	ans := ownerAnswer(t, rig, "Jon Env")
-	if n := len(rig.fake.CallsTo("adj")); n != 0 {
-		t.Errorf("%d adj calls with file-answers off: %+v", n, rig.fake.CallsTo("adj"))
+	if calls := rig.fake.CallsTo("adj"); len(calls) != 1 || calls[0].Args[0] != "check" {
+		t.Errorf("expected only the spec lookup with file-answers off: %+v", calls)
 	}
 	if len(ans.Notices) != 0 {
 		t.Errorf("notices: %q", ans.Notices)

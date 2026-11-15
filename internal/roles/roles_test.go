@@ -625,6 +625,7 @@ func TestSpecCheckPrompt(t *testing.T) {
 		"the whole batch in one pass",
 		"Put a blank line between the blocks of one slice",
 		"A decision the owner recorded is settled",
+		"Before inventing a decision key, use `adj find` over decided records and reuse an existing key for the same topic.",
 		"A gap you can close by reading the code is not a question",
 	} {
 		if !has(p, want) {

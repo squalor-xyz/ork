@@ -660,6 +660,16 @@ appear in the **Questions** view and under **Needs you** on the Overview.
 Spec-check questions (before a wave) are answered in the sitting that opens
 at launch. See section 9.
 
+*Proposed (S313):* ork reuses an exact decision key's decided adj option when
+it still matches the question's label and summary. It records the reused
+answer with `[KEY, adj N]` in the slice and proceeds without asking again.
+When the option changed or disappeared, the question shows `decided as X on
+DATE` and asks again. An open record holds the item with `waits on adj N` in
+the CLI and spec pane; answer it in adj, then run the check again. Questions
+for that item wait until its open adj records resolve. Missing records are
+asked normally. A lookup failure keeps the question and prints one notice
+explaining the failure.
+
 ### Approve and land
 
 *Proposed (S331; owner decision 2026-11-11, adj 281):* there is no approve step
