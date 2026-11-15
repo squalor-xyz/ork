@@ -378,6 +378,18 @@ for the orchestrator. Other denied implementer checks belong in report item 6.
 Denied tracking is reviewer section (C) commentary or a gate "Deviation for the
 orchestrator" evidence line, never a finding (`roles.denied-tracking-step`).
 
+*Proposed (S365):* `orientation.md` is an optional run artifact, outside
+`run.json`. The spec check writes one `## Orientation ID` report section for
+each item with a planned local primary implementer. ork saves that item's
+bounded pack as `orientation.md` beside its `check.json` and `spec-check.md`,
+then copies it into the run directory at start. Each pack contains at most
+300 lines and 12,000 Unicode characters, with a truncation notice included in
+those limits. A new check removes the old pack even if the check fails.
+The claude-local implementer's brief includes the saved pack under
+`## Orientation`; cloud implementers and other roles omit it. No saved pack
+means no Orientation section. The file follows its spec or run directory's
+existing retention rules and is saved with mode 0600.
+
 `decisions` is optional (S116, *proposed*). When the owner answered the item's
 spec check questions, it holds the `Owner decisions (date)` paragraph that was
 appended to the item's spec in the main checkout. The run's worktree lacks

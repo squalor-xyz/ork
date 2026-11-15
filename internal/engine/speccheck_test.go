@@ -106,6 +106,105 @@ func specConfig(h *harness, t *testing.T) SpecCheckConfig {
 	}
 }
 
+func TestSpecOrientationRequest(t *testing.T) {
+	for _, local := range []bool{false, true} {
+		t.Run(fmt.Sprint(local), func(t *testing.T) {
+			h := specHarness(t)
+			cfg := specConfig(h, t)
+			if local {
+				cfg.LocalItems = []string{"S10"}
+			}
+			h.runner.script = func(req Request, _ int) (Result, error) {
+				if strings.Contains(req.Brief, "Write `## Orientation S10`") != local {
+					t.Error("orientation request does not match planned implementer")
+				}
+				return Result{Exit: ExitOK, Report: specReport}, nil
+			}
+			if _, err := RunSpecCheck(context.Background(), h.deps, cfg); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestSpecOrientationPacks(t *testing.T) {
+	h := specHarness(t)
+	cfg := specConfig(h, t)
+	cfg.LocalItems = []string{"S10", "S11"}
+	h.runner.script = func(Request, int) (Result, error) {
+		return Result{Exit: ExitOK, Report: specReport + "\n## Orientation S10\nfirst pack\n\n## Orientation S11\nsecond pack\n"}, nil
+	}
+	res, err := RunSpecCheck(context.Background(), h.deps, cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(res.Orientations, map[string]string{"S10": "first pack", "S11": "second pack"}) {
+		t.Fatalf("orientation packs: %#v", res.Orientations)
+	}
+	for _, tc := range []struct{ name, heading string }{
+		{"case", "## Orientation s10"},
+		{"trailing space", "## Orientation S10 "},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := specHarness(t)
+			cfg := specConfig(h, t)
+			cfg.LocalItems = []string{"S10"}
+			h.runner.script = func(Request, int) (Result, error) {
+				return Result{Exit: ExitOK, Report: specReport + "\n" + tc.heading + "\nquoted pack\n"}, nil
+			}
+			res, err := RunSpecCheck(context.Background(), h.deps, cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got := res.Orientations["S10"]; got != "quoted pack" {
+				t.Fatalf("orientation pack: got %q, want quoted pack", got)
+			}
+		})
+	}
+}
+
+func TestSpecOrientationResumeRequest(t *testing.T) {
+	h := specHarness(t)
+	cfg := specConfig(h, t)
+	cfg.LocalItems = []string{"S10"}
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Resume == "" {
+			return Result{Exit: ExitOK, Session: "session", Report: "malformed"}, nil
+		}
+		if !strings.Contains(req.Brief, "Write `## Orientation S10`") {
+			t.Error("resumed spec check lost orientation request")
+		}
+		return Result{Exit: ExitOK, Report: specReport}, nil
+	}
+	if _, err := RunSpecCheck(context.Background(), h.deps, cfg); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSpecOrientationLimits(t *testing.T) {
+	for _, tc := range []struct{ name, pack, want string }{
+		{"lines", strings.Repeat("x\n", 301), strings.Repeat("x\n", 299) + "[Orientation truncated.]"},
+		{"characters", strings.Repeat("界", 12001), strings.Repeat("界", 12000-len("\n[Orientation truncated.]")) + "\n[Orientation truncated.]"},
+		{"boundary", strings.Repeat("x\n", 299) + "x", strings.Repeat("x\n", 299) + "x"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := specHarness(t)
+			cfg := specConfig(h, t)
+			cfg.LocalItems = []string{"S10"}
+			h.runner.script = func(Request, int) (Result, error) {
+				return Result{Exit: ExitOK, Report: specReport + "\n## Orientation S10\n" + tc.pack}, nil
+			}
+			res, err := RunSpecCheck(context.Background(), h.deps, cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if res.Orientations["S10"] != tc.want {
+				t.Fatalf("orientation limit %s: got %d characters, want %d", tc.name, len([]rune(res.Orientations["S10"])), len([]rune(tc.want)))
+			}
+		})
+	}
+}
+
 func TestLocalSpecCheckSharesTheRolePool(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
 		t.Run(vendor, func(t *testing.T) {

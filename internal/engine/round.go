@@ -430,6 +430,13 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
+	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
+		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fail("read orientation", err)
+		}
+		in.Orientation = string(pack)
+	}
 	progressFile := ""
 	if entry.Vendor == "claude-local" {
 		progressFile = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("progress-%s.md", r.role))

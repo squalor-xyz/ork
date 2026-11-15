@@ -352,6 +352,15 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 		d.runs.wg.Done()
 	}()
 	ctx = jobCtx
+	var localItems []string
+	for _, item := range items {
+		// A slice without an admissible plan still needs its spec checked.
+		// Only a valid plan can identify a planned local implementer.
+		plan, err := d.planRun(ctx, RunParams{Project: proj.Name, Item: item})
+		if err == nil && engine.IsLocalRun(plan.Lineup) {
+			localItems = append(localItems, item)
+		}
+	}
 	d.runs.specStateMu.Lock()
 	if _, err := d.registered(proj.Name); err != nil {
 		d.runs.specStateMu.Unlock()
@@ -362,10 +371,14 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 			d.runs.specStateMu.Unlock()
 			return err
 		}
+		if err := os.Remove(filepath.Join(d.specDir(proj.Name, item), "orientation.md")); err != nil && !errors.Is(err, os.ErrNotExist) {
+			d.runs.specStateMu.Unlock()
+			return err
+		}
 	}
 	d.runs.specStateMu.Unlock()
 	dir := d.specDir(proj.Name, items[0])
-	res, err := engine.RunSpecCheck(ctx, deps, engine.SpecCheckConfig{Project: proj, Items: items, Lineup: chain, Dir: dir})
+	res, err := engine.RunSpecCheck(ctx, deps, engine.SpecCheckConfig{Project: proj, Items: items, LocalItems: localItems, Lineup: chain, Dir: dir})
 	if err != nil {
 		var retried *engine.SpecCheckRetryError
 		if errors.As(err, &retried) {
@@ -385,6 +398,11 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 	for _, item := range items[1:] {
 		if err := os.WriteFile(filepath.Join(d.specDir(proj.Name, item), "spec-check.md"), report, 0600); err != nil {
 			return err
+		}
+	}
+	for item, pack := range res.Orientations {
+		if err := os.WriteFile(filepath.Join(d.specDir(proj.Name, item), "orientation.md"), []byte(pack), 0600); err != nil {
+			return fmt.Errorf("save orientation %s: %w", item, err)
 		}
 	}
 	d.runs.mu.Lock()

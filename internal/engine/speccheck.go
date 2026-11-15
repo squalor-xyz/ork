@@ -42,19 +42,21 @@ type SpecVerdict struct {
 // SpecCheckConfig describes one spec check: a batch of slices, checked in one
 // read-only pass of the spec-check row's chain (adj 164, roles.spec-check).
 type SpecCheckConfig struct {
-	ledger  *specLedger
-	Project registry.Project
-	Items   []string
-	Lineup  []runrec.LineupEntry // the spec check row, then its fallbacks
-	Dir     string               // holds the role's temp directory and its report; the caller owns it
+	LocalItems []string // items whose planned implementer is local
+	ledger     *specLedger
+	Project    registry.Project
+	Items      []string
+	Lineup     []runrec.LineupEntry // the spec check row, then its fallbacks
+	Dir        string               // holds the role's temp directory and its report; the caller owns it
 }
 
 // SpecCheckResult holds a verdict for each item, in the order of the config,
 // and the fingerprint of the spec each verdict was made against.
 type SpecCheckResult struct {
-	Verdicts    []SpecVerdict
-	Specs       map[string]string
-	OwnerNeeded string
+	Orientations map[string]string // bounded packs keyed by item
+	Verdicts     []SpecVerdict
+	Specs        map[string]string
+	OwnerNeeded  string
 }
 
 // ErrNoSpec is the error of SpecFingerprint for an item that has no slice
@@ -273,7 +275,7 @@ entries:
 			Allow: implementerPerm.Allow,
 			Role:  RoleSpecCheck, Vendor: entry.Vendor, ReadOnly: true, SliceID: strings.Join(cfg.Items, ", "), Worktree: root, TempDir: tempDir, ReportPath: reportPath,
 			SliceJSON: "[" + strings.Join(raws, ",") + "]", EnvLines: cfg.Project.EnvironmentLines,
-			Sections: []BriefSection{{Title: "Spec check", Body: "Check these slices in one pass: " + strings.Join(cfg.Items, ", ") + ". Report one `## Slice ID` section for each, in this order. The project checkout is your working directory; you may not change it."}},
+			Sections: []BriefSection{{Title: "Spec check", Body: "Check these slices in one pass: " + strings.Join(cfg.Items, ", ") + ". Report one `## Slice ID` section for each, in this order. The project checkout is your working directory; you may not change it." + orientationRequest(cfg.LocalItems)}},
 		})
 		if err != nil {
 			return nil, err
@@ -359,7 +361,7 @@ entries:
 				if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 					return nil, fmt.Errorf("old report: %w", err)
 				}
-				req.Resume, req.Brief, task = res.Session, nudge, taskBase+" resumed with error"
+				req.Resume, req.Brief, task = res.Session, nudge+orientationRequest(cfg.LocalItems), taskBase+" resumed with error"
 				continue
 			}
 			if len(res.Denials) > 0 {
@@ -402,7 +404,50 @@ entries:
 	}
 	clean, _ := splitToolFeedback("", text)
 	owner, _ := section(clean, ownerHeading)
-	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: SpecOwnerText(owner)}, nil
+	packs := map[string]string{}
+	for _, id := range cfg.LocalItems {
+		for _, line := range strings.Split(clean, "\n") {
+			heading := strings.TrimSpace(line)
+			item, ok := strings.CutPrefix(heading, "## Orientation ")
+			if !ok || !strings.EqualFold(item, id) {
+				continue
+			}
+			if body, ok := section(clean, strings.TrimSuffix(line, "\r")); ok {
+				if pack := limitOrientation(body); pack != "" {
+					packs[id] = pack
+				}
+			}
+			break
+		}
+	}
+	return &SpecCheckResult{Verdicts: verdicts, Specs: specs, OwnerNeeded: SpecOwnerText(owner), Orientations: packs}, nil
+}
+
+func orientationRequest(ids []string) string {
+	var b strings.Builder
+	for _, id := range ids {
+		fmt.Fprintf(&b, "\nWrite `## Orientation %s` after `## Owner needed`: this slice's planned implementer is local. Follow the orientation format in your role prompt. Keep the whole pack within 300 lines and 12,000 characters.", id)
+	}
+	return b.String()
+}
+
+// limitOrientation counts Unicode characters and includes the truncation notice
+// in both limits. The saved pack and the brief use the same bounded text.
+func limitOrientation(body string) string {
+	body = strings.TrimSpace(body)
+	lines := strings.Split(body, "\n")
+	if len(lines) <= 300 && len([]rune(body)) <= 12000 {
+		return body
+	}
+	const notice = "\n[Orientation truncated.]"
+	if len(lines) > 299 {
+		body = strings.Join(lines[:299], "\n")
+	}
+	runes := []rune(body)
+	if len(runes) > 12000-len(notice) {
+		body = string(runes[:12000-len(notice)])
+	}
+	return strings.TrimRight(body, "\n") + notice
 }
 
 // SpecOwnerText is the Owner needed text of a spec check that ork shows (S264,

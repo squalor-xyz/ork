@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-365 items · — 65 · done 267 · retired 33
+365 items · — 64 · done 268 · retired 33
 
 v1.2
 
@@ -133,7 +133,7 @@ v1.2
 | 83 | [S362](slices/S362.md) | Hook denies missing-file Read; denial blocks fallback | S | 1 |  | S304 trial 3 (2026-11-15, run ork-20261114-224559-2b00): the claude-local implementer's Read of its own progress note, before the note existed, was denied by the PreToolUse hook ("cannot count Read lines: stat ...: no such file or directory", `internal/agent/claude/pretool.go:113-116`). The run recorded 2 denials, so when the local implementer hit the 90 min limit the claude sonnet fallback did not take over (`internal/engine/round.go:657` requires no denials) and the run stopped. · discovered from S304 | done |
 | 84 | [S363](slices/S363.md) | Local implementer brief: note-first, one test at a time | M | 2 |  | S304 trial 3 (2026-11-14/15, S248, runs ork-20261114-224559-2b00 and ork-20261115-001834-20cf): the claude-local implementer ran 8 fresh sessions in 90 min and made no edit. Each session re-read the same 5-6 files and hit the 70k restart before its first edit; the progress note was written once and said only "nothing survived". The brief it gets is the cloud implementer prompt (20,358 chars) with a short local section added. · discovered from S304 | done |
 | 85 | [S364](slices/S364.md) | Local tuning: minimal system prompt, tools, window | M | 2 |  | S304 trial 3 (2026-11-14/15, S248): each claude-local session started at 23.1k-23.3k input tokens before reading anything, ran 61-96 model turns for about 30 tool calls, produced 20k-68k output tokens, and averaged 13-35 s per turn. S360's --disallowedTools cut the first turn only 12% (30.2k to 26.7k, cloud haiku measure). · discovered from S304 | done |
-| 86 | [S365](slices/S365.md) | Orientation pack for a local implementer | M | 2 |  | S304 trial 3 (2026-11-14/15, S248): every claude-local session spent its window reading the same 5-6 files (wire.go, handlers.go, daemoncmds.go, cli.go, daemon_test.go) in 12-220 line ranges and restarted before its first edit. · discovered from S304 | — |
+| 86 | [S365](slices/S365.md) | Orientation pack for a local implementer | M | 2 |  | S304 trial 3 (2026-11-14/15, S248): every claude-local session spent its window reading the same 5-6 files (wire.go, handlers.go, daemoncmds.go, cli.go, daemon_test.go) in 12-220 line ranges and restarted before its first edit. · discovered from S304 | done |
 
 ---
 
