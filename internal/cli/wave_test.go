@@ -19,6 +19,43 @@ import (
 	"github.com/squalor-xyz/ork/internal/ipc"
 )
 
+func TestSpecCheckSendsRunLineupOverrides(t *testing.T) {
+	for _, args := range [][]string{
+		{"run", "p", "S1", "--implementer", "claude-local:qwen3.8-27b:low", "--yes"},
+		{"wave", "start", "p", "S1", "S2", "--implementer", "claude-local:qwen3.8-27b:low", "--yes"},
+	} {
+		t.Run(args[0], func(t *testing.T) {
+			stub := &savedStub{t: t}
+			var wire []byte
+			app := &App{Input: strings.NewReader(""), Call: func(ctx context.Context, method string, params, result any) error {
+				if method == daemon.MethodSpecCheck {
+					wire, _ = json.Marshal(params)
+				}
+				if method == daemon.MethodRunStart {
+					return json.Unmarshal([]byte(`{"id":"run-1","state":"setup"}`), result)
+				}
+				return stub.call(ctx, method, params, result)
+			}}
+			var out, errs bytes.Buffer
+			if code := app.Run(context.Background(), args, &out, &errs); code != ExitOK {
+				t.Fatalf("command: %d: %s %s", code, &out, &errs)
+			}
+			var got struct {
+				Items   []string                   `json:"items"`
+				Lineups map[string]json.RawMessage `json:"lineups"`
+			}
+			if err := json.Unmarshal(wire, &got); err != nil {
+				t.Fatal(err)
+			}
+			for _, id := range got.Items {
+				if string(got.Lineups[id]) != `{"implementer":[{"vendor":"claude-local","model":"qwen3.8-27b","effort":"low"}]}` {
+					t.Errorf("spec-check wire lost %s lineup: %s", id, wire)
+				}
+			}
+		})
+	}
+}
+
 func waveApp(t *testing.T, failure bool) (*App, *clitest.Fake) {
 	t.Helper()
 	file, exit := "plan-parallel.json", 0

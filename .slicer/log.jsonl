@@ -4594,3 +4594,10 @@
 {"when": "2026-11-15T03:35:15Z", "item": "S364", "action": "note", "from": "", "to": "", "note": "Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3", "by": "Jon Robbins"}
 {"when": "2026-11-15T03:35:15Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3", "by": "Jon Robbins"}
 {"when": "2026-11-15T14:42:00Z", "item": "S366", "action": "add", "from": "", "to": "open", "note": "Orientation pack: honour a run's lineup override"}
+{"when": "2026-11-15T15:05:28Z", "item": "S366", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-15T15:05:53Z", "item": "S366", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-15T15:05:53Z", "item": "S366", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-15T15:09:25Z", "item": "S366", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-15T15:55:01Z", "item": "S366", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S366):", "by": "Jon Robbins"}
+{"when": "2026-11-15T15:55:25Z", "item": "S366", "action": "note", "from": "", "to": "", "note": "Run and wave lineup overrides now reach spec-check planning;", "by": "Jon Robbins"}
+{"when": "2026-11-15T15:55:25Z", "item": "S366", "action": "status", "from": "started", "to": "done", "note": "Run and wave lineup overrides reach spec-check planning, missing local orientation packs invalidate cached verdicts, and local runs copy saved packs. Focused regressions and mutation checks verified; gate PASS and owner approval received. S304 trial 5 remains deferred until after landing.", "by": "Jon Robbins"}

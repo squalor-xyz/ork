@@ -1473,6 +1473,13 @@ separately.
   and brief behavior. A new spec check removes old packs before running, so
   a failed check cannot leave its previous pack available. An item whose run
   plan cannot be built still gets its spec checked, without a pack request.
+  Run and wave start requests pass their per-item lineup overrides to the
+  spec check in the optional `lineups` field, keyed by item ID. Each value
+  has the same shape as `RunParams.Lineup`; `items` remains unchanged.
+  The daemon uses those overrides when planning the implementer. Poller
+  checks without overrides use the matrix lineup. A cached verdict is stale
+  for a planned local implementer when its spec directory has no
+  `orientation.md`, so the spec check runs again to request the pack.
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its

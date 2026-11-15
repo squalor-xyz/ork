@@ -19989,10 +19989,39 @@
       "id": "S366",
       "title": "Orientation pack: honour a run's lineup override",
       "short_title": "Orientation pack ignores --implementer override",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7f06b205-008b-40c2-b422-400493608e15",
+          "kind": "",
+          "text": "**2026-11-15** — Human checks at approval (S366):\n- later: deferred to land: `` S304 trial 5 runs S248 with the pack and records it in S304's notes.",
+          "created_at": "2026-11-15T15:55:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7fed225c-9f43-43fd-b3fe-9339e07850d8",
+          "kind": "",
+          "text": "**2026-11-15** — Run and wave lineup overrides now reach spec-check planning; local runs regenerate missing orientation packs and copy saved packs into their run directories. All five focused regressions and wiring mutations were verified; poller checks retain matrix planning. Gate PASS and owner approval received; S304 trial 5 remains deferred until after landing.",
+          "created_at": "2026-11-15T15:55:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20010,7 +20039,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
