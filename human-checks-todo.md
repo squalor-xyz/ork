@@ -157,3 +157,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S363 (run ork-20261115-014017-53a1, 2026-11-15)
 
 - [ ] [AFTER LAND] `` S304 trial 4 runs a claude-local implementer on S248 with this brief and records sessions, restarts, edits and time in S304's notes.
+
+## S364 (run ork-20261115-015903-0b71, 2026-11-15)
+
+- [ ] [AFTER LAND] `` The orchestrator runs the micro-task for settings 1-4 and records the table in this slice's notes and S304's.
