@@ -224,6 +224,14 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 		detail := fmt.Sprintf("The checks are red after `git merge %s` and `slicer render`:\n\n%s", base, checkFailureBody(string(b), e.proj.CheckCommand, run.attempts))
 		return false, e.landBlocked(ctx, "checks red after merging "+base, detail)
 	}
+	run, paused, err = e.runSliceChecks(ctx, e.run.Snapshot(), runrec.StateLand, "land-slice-checks", true)
+	if paused || err != nil {
+		return false, err
+	}
+	if !run.ok {
+		b, _ := os.ReadFile(filepath.Join(e.run.Dir(), run.log))
+		return false, e.landBlocked(ctx, "slice checks red after merging "+base, string(b))
+	}
 	if err := e.run.Update(func(r *runrec.Record) { r.LandRecheck = false }); err != nil {
 		return false, err
 	}

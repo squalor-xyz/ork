@@ -457,7 +457,7 @@ func TestGatePromptUsesOrkEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"must accept ork's round check result", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
+	for _, want := range []string{"must accept ork's round check result", "The slice's own Check rows are required tests-green evidence", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("gate brief lacks %q", want)
 		}

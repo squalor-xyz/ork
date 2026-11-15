@@ -488,6 +488,22 @@ subfolder of its repository, each `$ COMMAND` line of the check log is followed
 by a line `(in libraries/p)`, the folder of the worktree the command ran in; a
 project at the repository root has no such line. Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
+*Proposed (S317):* slice Check commands add rows to `checks[]` with `slice:
+true`, `command`, `exit`, `ok`, `seconds`, `log` and `log_sha256`. Unsupported
+commands have `not_run: "not run by ork: orchestrator"` and no execution.
+Logs are `slice-checks-ROUND-ROW.log` or `land-slice-checks-ROUND-ROW.log`.
+`product_sha256` fingerprints product paths, modes and contents (including
+untracked files and symlink targets) plus the Check section. Only `docs/`
+and `.slicer/` are excluded. Markdown outside `docs/`, including role prompts
+and `CHANGELOG.md`, and files under `decisions/` invalidate the fingerprint.
+This persisted evidence survives restart;
+only complete unchanged batches are reused, retaining a red result when red.
+Rows rerun as part of the landing re-check after the moved base is merged,
+including a retry with that re-check pending. Landing skips them when the base
+has not moved and no re-check is pending. HUMAN CHECK and `[AFTER LAND]` lines
+add no row. Cancellation records no row and spends no round; a command that
+cannot start pauses at the current state without recording reusable evidence.
+
 *Proposed (S239):* `checks[].attempts` is 2 when the project command failed
 and ork ran it once more, and `checks[].flaky` is true when that second run
 passed; both are omitted otherwise, and an older reader ignores them. The check

@@ -312,23 +312,11 @@ func checkCommandSections(in BriefInput) string {
 		var spec struct{ ID string }
 		_ = json.Unmarshal(raw, &spec)
 		var runnable, orchestrator []string
-		for _, entry := range checklistEntries(sliceChecklistSections(string(raw))["Check"]) {
-			if strings.Contains(entry, "HUMAN CHECK") {
-				continue
-			}
-			var commands []string
-			parts := strings.Split(entry, "`")
-			for i := 1; i < len(parts); i += 2 {
-				if strings.TrimSpace(parts[i]) != "" {
-					commands = append(commands, strings.TrimSpace(parts[i]))
-				}
-			}
-			for _, command := range commands {
-				if checkCommandRunnable(command, in.Worktree, in.Allow) {
-					runnable = append(runnable, command)
-				} else {
-					orchestrator = append(orchestrator, command)
-				}
+		for _, entry := range sliceCheckCommands(string(raw)) {
+			if checkCommandRunnable(entry.command, in.Worktree, in.Allow) {
+				runnable = append(runnable, entry.command)
+			} else {
+				orchestrator = append(orchestrator, entry.command)
 			}
 		}
 		if in.Role == RoleSpecCheck {
@@ -349,6 +337,120 @@ func checkCommandSections(in BriefInput) string {
 		}
 	}
 	return b.String()
+}
+
+type sliceCheckCommand struct {
+	command string
+	empty   bool
+}
+
+// sliceCheckCommands shares the backtick splitter with the role briefs.
+// Human and after-land checks remain owned by their existing workflows.
+func sliceCheckCommands(raw string) []sliceCheckCommand {
+	var commands []sliceCheckCommand
+	for _, entry := range checklistEntries(sliceChecklistSections(raw)["Check"]) {
+		if strings.Contains(entry, "HUMAN CHECK") || strings.Contains(entry, "[AFTER LAND]") {
+			continue
+		}
+		parts := strings.Split(entry, "`")
+		for i := 1; i+1 < len(parts); i += 2 {
+			if command := strings.TrimSpace(parts[i]); command != "" {
+				commands = append(commands, sliceCheckCommand{command: command, empty: strings.Contains(strings.ToLower(entry), "must print nothing")})
+			}
+		}
+	}
+	return commands
+}
+
+type sliceCheck struct {
+	sliceCheckCommand
+	env, argv []string
+	notRun    string
+}
+
+func sliceChecks(raw, worktree string) []sliceCheck {
+	var rows []sliceCheck
+	for _, command := range sliceCheckCommands(raw) {
+		row := sliceCheck{sliceCheckCommand: command}
+		// No shell runs these commands. Reject shell syntax rather than changing
+		// its meaning. scanWord handles literal quotes and escaped spaces.
+		if !plainCheckSyntax(command.command) {
+			row.notRun = "not run by ork: orchestrator"
+		} else {
+			for i := 0; i < len(command.command); {
+				if command.command[i] == ' ' || command.command[i] == '\t' {
+					i++
+					continue
+				}
+				word, end := scanWord(command.command, i)
+				if end <= i {
+					row.notRun = "not run by ork: orchestrator"
+					break
+				}
+				i = end
+				value := word.text
+				if _, v, ok := strings.Cut(value, "="); ok {
+					value = v
+				}
+				path := value
+				if !filepath.IsAbs(path) {
+					path = filepath.Join(worktree, path)
+				}
+				rel, err := filepath.Rel(worktree, filepath.Clean(path))
+				if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+					row.notRun = "not run by ork: orchestrator"
+				}
+				if len(row.argv) == 0 && regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(word.text) {
+					row.env = append(row.env, word.text)
+				} else {
+					row.argv = append(row.argv, word.text)
+				}
+			}
+			if len(row.argv) == 0 {
+				row.notRun = "not run by ork: orchestrator"
+			}
+		}
+		rows = append(rows, row)
+	}
+	return rows
+}
+
+func plainCheckSyntax(command string) bool {
+	var quote byte
+	for i := 0; i < len(command); i++ {
+		c := command[i]
+		if c == '\n' || c == '\r' {
+			return false
+		}
+		if c == '\\' && quote != '\'' {
+			i++
+			if i == len(command) {
+				return false
+			}
+			continue
+		}
+		if c == quote {
+			quote = 0
+			continue
+		}
+		if quote == '\'' {
+			continue
+		}
+		if c == '$' || c == '`' {
+			return false
+		}
+		if quote == '"' {
+			continue
+		}
+		if c == '\'' || c == '"' {
+			quote = c
+			continue
+		}
+		if strings.ContainsRune("|&;<>(){}*?[]~#", rune(c)) {
+			return false
+		}
+	}
+	return quote == 0
 }
 
 func checkCommandRunnable(command, worktree string, allow []string) bool {
