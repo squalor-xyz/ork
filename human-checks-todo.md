@@ -161,3 +161,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S364 (run ork-20261115-015903-0b71, 2026-11-15)
 
 - [ ] [AFTER LAND] `` The orchestrator runs the micro-task for settings 1-4 and records the table in this slice's notes and S304's.
+
+## S365 (run ork-20261115-030723-2a71, 2026-11-15)
+
+- [ ] [AFTER LAND] `` S304 trial 4 or 5 runs S248 with the pack and records it in S304's notes.
