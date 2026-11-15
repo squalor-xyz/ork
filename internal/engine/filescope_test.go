@@ -55,14 +55,14 @@ func filesScopeHarness(t *testing.T, paths []string, status string, failure stri
 	return newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
 			show := clitest.Route{Tool: "slicer", Args: []string{"show", item, "--json", "--lean", "--root", W}, Stdout: raw}
-			// Implementer and reviewer read the spec first; the next read is the
+			// Implementer, reviewer and slice checks read the spec first; the next read is the
 			// advisory scope check. The gate's own spec read must still succeed.
 			if failure == "show" || failure == "decode" {
 				bad := clitest.Reply{Exit: 1, Stderr: "show unavailable"}
 				if failure == "decode" {
 					bad = clitest.Reply{Stdout: "{"}
 				}
-				show.Seq = []clitest.Reply{{Stdout: raw}, {Stdout: raw}, bad, {Stdout: raw}}
+				show.Seq = []clitest.Reply{{Stdout: raw}, {Stdout: raw}, {Stdout: raw}, bad, {Stdout: raw}}
 			}
 			git := clitest.Route{Tool: "git", Args: []string{"-C", W, "status", "--porcelain=v1", "-z", "--untracked-files=all"}, Stdout: status}
 			if failure == "git" {

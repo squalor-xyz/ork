@@ -7,12 +7,73 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestSavedOrientationReachesOnlyLocalImplementer(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "claude"} {
+		t.Run(vendor, func(t *testing.T) {
+			h := newHarness(t)
+			h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: vendor, Model: "model"}}
+			e, err := New(context.Background(), h.deps, h.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(h.deps.Store.RunDir(e.Snapshot().ID), "orientation.md"), []byte("quoted function and nearest test"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := e.Run(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			for _, req := range h.runner.requests() {
+				want := vendor == "claude-local" && req.Role == RoleImplementer
+				if strings.Contains(req.Brief, "## Orientation\n\nquoted function and nearest test") != want {
+					t.Errorf("orientation in %s %s brief: want %v", vendor, req.Role, want)
+				}
+			}
+		})
+	}
+}
+
+func TestLocalRunWithoutOrientation(t *testing.T) {
+	h := newHarness(t)
+	h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: "claude-local", Model: "model"}}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if strings.Contains(req.Brief, "## Orientation") {
+			t.Fatal("missing pack produced an Orientation section")
+		}
+	}
+}
+
+func TestOrientationBriefSelection(t *testing.T) {
+	for _, tc := range []struct {
+		role, vendor string
+		want         bool
+	}{
+		{RoleImplementer, "claude-local", true},
+		{RoleImplementer, "claude", false},
+		{RoleReviewer, "claude-local", false},
+	} {
+		t.Run(tc.role+"/"+tc.vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.Vendor, in.Orientation = tc.role, tc.vendor, "saved pack"
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(got, "## Orientation\n\nsaved pack") != tc.want {
+				t.Fatalf("orientation selection: want %v", tc.want)
+			}
+		})
+	}
+}
 
 func TestFirstRowBriefIsUnchanged(t *testing.T) {
 	h := fallbackHarness(t, RoleImplementer)
@@ -457,7 +518,7 @@ func TestGatePromptUsesOrkEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"must accept ork's round check result", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
+	for _, want := range []string{"must accept ork's round check result", "The slice's own Check rows are required tests-green evidence", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("gate brief lacks %q", want)
 		}

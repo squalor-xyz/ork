@@ -851,9 +851,21 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
 	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
+	var orientation []byte
+	if local {
+		orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, p.Item), "orientation.md"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return runrec.Record{}, "", nil, fmt.Errorf("read orientation: %w", err)
+		}
+	}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, "", nil, err
+	}
+	if len(orientation) > 0 {
+		if err := os.WriteFile(filepath.Join(d.runs.deps.Store.RunDir(e.Snapshot().ID), "orientation.md"), orientation, 0600); err != nil {
+			return runrec.Record{}, "", nil, fmt.Errorf("copy orientation: %w", err)
+		}
 	}
 	// The run record now owns the paragraph, including for queued runs.
 	if err := os.Remove(filepath.Join(d.specDir(plan.project.Name, p.Item), "answers.json")); err != nil && !errors.Is(err, os.ErrNotExist) {

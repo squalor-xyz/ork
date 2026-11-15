@@ -430,6 +430,13 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
+	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
+		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fail("read orientation", err)
+		}
+		in.Orientation = string(pack)
+	}
 	progressFile := ""
 	if entry.Vendor == "claude-local" {
 		progressFile = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("progress-%s.md", r.role))
@@ -444,6 +451,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		body := "No round check result is available. Do not claim tests green without evidence."
 		if len(rec.Checks) > 0 {
 			check := rec.Checks[len(rec.Checks)-1]
+			for i := len(rec.Checks) - 1; i >= 0; i-- {
+				if !rec.Checks[i].Slice {
+					check = rec.Checks[i]
+					break
+				}
+			}
 			log, err := ReadReport(e.run.Dir(), check.Log)
 			if err != nil {
 				return fail("gate check evidence", err)

@@ -25,6 +25,77 @@ import (
 
 const u11 = "The spec check before a wave runs the Spec check row (r16): one read-only pass."
 
+func TestLocalRunWithoutPackAfterSkippedOrFailedCheck(t *testing.T) {
+	for _, failed := range []bool{false, true} {
+		t.Run(fmt.Sprint(failed), func(t *testing.T) {
+			rig := newSpecRig(t, rulesJSON(u11))
+			if failed {
+				dir := rig.d.specDir("p", "S1")
+				if err := os.MkdirAll(dir, 0700); err != nil {
+					t.Fatal(err)
+				}
+				if err := os.WriteFile(filepath.Join(dir, "orientation.md"), []byte("stale pack"), 0600); err != nil {
+					t.Fatal(err)
+				}
+				rig.report = "malformed"
+				_, err := rig.d.specCheck(context.Background(), SpecCheckParams{Project: "p", Items: []string{"S1"}})
+				if err == nil {
+					t.Fatal("malformed fake spec check unexpectedly succeeded")
+				}
+			}
+			rec, err := rig.d.startRun(context.Background(), RunParams{Project: "p", Item: "S1", Lineup: map[string][]runrec.LineupEntry{engine.RoleImplementer: {{Vendor: "claude-local", Model: "qwen3.8-27b", Effort: "medium"}}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			waitIdle(t, rig.d, rec.ID)
+			for _, req := range rig.roleRequests() {
+				if strings.Contains(req.Brief, "## Orientation") {
+					t.Error("skipped or failed spec check supplied an orientation")
+				}
+			}
+		})
+	}
+}
+
+func TestOrientationSpecToRun(t *testing.T) {
+	for _, local := range []bool{false, true} {
+		t.Run(fmt.Sprint(local), func(t *testing.T) {
+			agent := "Claude Code"
+			if local {
+				agent = "claude-local"
+			}
+			recommend := fmt.Sprintf(`{"roles":[{"role":"implementer","row":{"agent":%q,"model":"qwen3.8-27b","reasoning":"medium"}},{"role":"reviewer","row":{"id":"r5","agent":"Claude Code","model":"opus","reasoning":"medium"},"alternatives":[{"id":"r16","agent":"Claude Code","model":"sonnet","reasoning":"medium"}]}]}`, agent)
+			rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: recommend})
+			rig.report = "## Slice S1\nReady\n\n## Owner needed\nnone\n\n## Orientation S1\nquoted source and test\n"
+			rig.check(t, "S1")
+			if strings.Contains(rig.requests()[0].Brief, "Write `## Orientation S1`") != local {
+				t.Error("spec prompt ignored planned implementer")
+			}
+			pack, err := os.ReadFile(filepath.Join(rig.d.specDir("p", "S1"), "orientation.md"))
+			if local {
+				if err != nil || string(pack) != "quoted source and test" {
+					t.Errorf("saved spec pack: %q, %v", pack, err)
+				}
+			} else if !errors.Is(err, os.ErrNotExist) {
+				t.Errorf("cloud spec pack: %q, %v", pack, err)
+			}
+			rec, err := rig.d.startRun(context.Background(), RunParams{Project: "p", Item: "S1"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			waitIdle(t, rig.d, rec.ID)
+			pack, err = os.ReadFile(filepath.Join(rig.store.RunDir(rec.ID), "orientation.md"))
+			if local {
+				if err != nil || string(pack) != "quoted source and test" {
+					t.Errorf("saved run pack: %q, %v", pack, err)
+				}
+			} else if !errors.Is(err, os.ErrNotExist) {
+				t.Errorf("cloud run pack: %q, %v", pack, err)
+			}
+		})
+	}
+}
+
 const specQuestionsReport = `## Slice S2
 Question: Which store holds the index?
 Options:

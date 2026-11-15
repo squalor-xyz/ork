@@ -15,6 +15,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -814,14 +815,38 @@ func (e *Engine) architect(ctx context.Context) error {
 const gateCriteria = "You are the gate. A small fix round is reviewed and gated in one pass: check the new diff against the earlier findings and decide. " +
 	"The first line of your report is exactly `VERDICT: PASS` or `VERDICT: FAIL`. " +
 	"A successful ork round check result is the tests-green evidence. You must accept it and must not run the suite. " +
+	"The slice's own Check rows are also required tests-green evidence; read every row's command, result and log. " +
 	"Cite ork's result separately and give only the counts of tests you actually ran on a `Tests: N passed, M failed` line."
 
 func (e *Engine) gate(ctx context.Context) error {
-	pend := e.takePending()
 	rec := e.run.Snapshot()
+	check, paused, err := e.runSliceChecks(ctx, rec, runrec.StateGate, "slice-checks", false)
+	if paused || err != nil {
+		return err
+	}
+	if !check.ok {
+		return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: check.log}, check.failure)
+	}
+	pend := e.takePending()
+	rec = e.run.Snapshot()
 	r := round{role: RoleGate, n: rec.Round, state: runrec.StateGate, task: rec.Item + " gate",
 		resumeFrom: []string{RoleGate, RoleReviewer},
 		sections:   []BriefSection{{Title: "Gate", Body: gateCriteria}}}
+	var evidence strings.Builder
+	for _, c := range latestSliceChecks(rec.Checks) {
+		b, err := ReadReport(e.run.Dir(), c.Log)
+		if err != nil {
+			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateGate, Reason: "slice check evidence: " + err.Error()})
+		}
+		status := fmt.Sprintf("%d", c.Exit)
+		if c.NotRun != "" {
+			status = c.NotRun
+		}
+		fmt.Fprintf(&evidence, "Round: %d\nCommand: %s\nCheck log: %s\nExit status: %s\nResult: %t\n\n%s\n%s\n%s\n\n", c.Round, c.Command, c.Log, status, c.OK, fenceFor(string(b)), b, fenceFor(string(b)))
+	}
+	if evidence.Len() > 0 {
+		r.sections = append(r.sections, BriefSection{Title: "Ork slice check results", Body: evidence.String()})
+	}
 	if len(rec.GateCriteria) > 0 {
 		r.sections[0].Body += "\nThe criteria from slicer are:\n- " + strings.Join(rec.GateCriteria, "\n- ")
 	}
@@ -905,6 +930,164 @@ func (e *Engine) gate(ctx context.Context) error {
 		}
 	}
 	return e.bumpRound(ctx, runrec.Feedback{Kind: "fail", File: file})
+}
+
+// productContent ignores documentation and tracking, but includes untracked
+// file contents, so edits to a new product file invalidate earlier evidence.
+func (e *Engine) productContent(ctx context.Context, worktree string) (string, error) {
+	names, err := e.gitRead(ctx, worktree, "ls-files", "--cached", "--others", "--exclude-standard", "-z")
+	if err != nil {
+		return "", err
+	}
+	h := sha256.New()
+	for _, name := range strings.Split(names, "\x00") {
+		if name == "" || name == "docs" || strings.HasPrefix(name, "docs/") || strings.HasPrefix(name, ".slicer/") {
+			continue
+		}
+		path := filepath.Join(worktree, name)
+		info, err := os.Lstat(path)
+		if errors.Is(err, os.ErrNotExist) {
+			fmt.Fprintf(h, "%s\x00deleted\x00", name)
+			continue
+		}
+		if err != nil {
+			return "", err
+		}
+		var data []byte
+		if info.Mode()&os.ModeSymlink != 0 {
+			target, err := os.Readlink(path)
+			if err != nil {
+				return "", err
+			}
+			data = []byte(target)
+		} else if info.Mode().IsRegular() {
+			data, err = os.ReadFile(path)
+			if err != nil {
+				return "", err
+			}
+		}
+		fmt.Fprintf(h, "%s\x00%s\x00", name, info.Mode())
+		h.Write(data)
+		h.Write([]byte{0})
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
+// runSliceChecks executes the slice's plain commands outside role sandboxes.
+// Each row has its own deadline and log. Landing always forces a fresh run.
+func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, prefix string, force bool) (checkRun, bool, error) {
+	pause := func(err error) (checkRun, bool, error) {
+		if ctx.Err() != nil {
+			return checkRun{}, false, ctx.Err()
+		}
+		return checkRun{}, true, e.pause(runrec.Pending{Kind: runrec.PendingError, State: state, Reason: "slice checks: " + err.Error()})
+	}
+	raw, err := e.d.Slicer.ShowRaw(ctx, rec.Worktree, rec.Item)
+	if err != nil {
+		return pause(err)
+	}
+	if !json.Valid(raw) {
+		return pause(errors.New("invalid slicer show JSON"))
+	}
+	rows := sliceChecks(string(raw), rec.Worktree)
+	if len(rows) == 0 {
+		return checkRun{ok: true}, false, nil
+	}
+	fingerprint, err := e.productContent(ctx, rec.Worktree)
+	if err != nil {
+		return pause(err)
+	}
+	fingerprint = fmt.Sprintf("%x", sha256.Sum256([]byte(fingerprint+"\x00"+sliceChecklistSections(string(raw))["Check"])))
+	// Reuse complete batches when product and Check spec are unchanged.
+	// Red evidence stays red until a product change invalidates it.
+	if !force {
+		var previous []runrec.CheckRecord
+		for _, c := range rec.Checks {
+			if c.Slice {
+				previous = append(previous, c)
+			}
+		}
+		if len(previous) >= len(rows) {
+			previous = previous[len(previous)-len(rows):]
+			match := true
+			for i, c := range previous {
+				match = match && c.Command == rows[i].command && c.ProductSHA256 == fingerprint
+			}
+			if match {
+				for _, c := range previous {
+					if !c.OK && c.NotRun == "" {
+						return checkRun{log: c.Log, failure: "slice check remains red; product unchanged"}, false, nil
+					}
+				}
+				return checkRun{ok: true}, false, nil
+			}
+		}
+	}
+	defer e.beginWork(prefix, nil)()
+	timeout := time.Duration(e.proj.CheckMinutes) * time.Minute
+	if timeout <= 0 {
+		timeout = 10 * time.Minute
+	}
+	failed := checkRun{ok: true}
+	for i, row := range rows {
+		start := e.d.now()
+		c := runrec.CheckRecord{Slice: true, Round: rec.Round, Command: row.command, NotRun: row.notRun, ProductSHA256: fingerprint}
+		log := "$ " + row.command + "\n"
+		if row.notRun != "" {
+			log += row.notRun + "\n"
+		} else {
+			res, runErr := clirun.Run(ctx, clirun.Call{Bin: row.argv[0], Args: row.argv[1:], Env: append(os.Environ(), row.env...), Dir: rec.Worktree, Timeout: timeout})
+			if ctx.Err() != nil {
+				return checkRun{}, false, ctx.Err()
+			}
+			var exitErr *clirun.ExitError
+			var timeoutErr *clirun.TimeoutError
+			if runErr != nil && !errors.As(runErr, &exitErr) && !errors.As(runErr, &timeoutErr) {
+				return pause(runErr)
+			}
+			output := string(res.Stdout) + string(res.Stderr)
+			log += output
+			c.Exit = res.ExitCode
+			c.OK = runErr == nil && (!row.empty || strings.TrimSpace(output) == "")
+			if runErr != nil {
+				log += "\n" + runErr.Error() + "\n"
+				if c.Exit == 0 {
+					c.Exit = -1
+				}
+			}
+			if runErr == nil && !c.OK {
+				log += "\ncheck must print nothing\n"
+			}
+		}
+		c.Log = fmt.Sprintf("%s-%d-%d.log", prefix, rec.Round, i+1)
+		c.Seconds = int(e.d.now().Sub(start).Seconds())
+		c.LogSHA256 = fmt.Sprintf("%x", sha256.Sum256([]byte(log)))
+		if err := os.WriteFile(filepath.Join(e.run.Dir(), c.Log), []byte(log), 0o600); err != nil {
+			return pause(err)
+		}
+		if err := e.run.Update(func(r *runrec.Record) { r.Checks = append(r.Checks, c) }); err != nil {
+			return checkRun{}, false, err
+		}
+		if !c.OK && c.NotRun == "" && failed.ok {
+			failed = checkRun{log: c.Log, failure: checkFailureLine(log)}
+		}
+	}
+	return failed, false, nil
+}
+
+func latestSliceChecks(checks []runrec.CheckRecord) []runrec.CheckRecord {
+	end := len(checks)
+	for end > 0 && !checks[end-1].Slice {
+		end--
+	}
+	if end == 0 {
+		return nil
+	}
+	start := end - 1
+	for start > 0 && !strings.HasSuffix(checks[start].Log, "-1.log") && checks[start-1].Slice {
+		start--
+	}
+	return checks[start:end]
 }
 
 // failSummary is a gate FAIL report as one line for a note: the text after the
