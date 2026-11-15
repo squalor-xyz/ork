@@ -1550,7 +1550,11 @@ the line goes when the reply comes: the confirmation or the sitting takes its
 place. The daemon asks the role only about specs with no check
 yet or changed since it, so a ready item is asked again at no cost, and one
 whose spec changed is not trusted. A ready item's row says `spec ready` after
-its title; an item with open questions says `waits on N spec questions`. Items
+its title; an item with open questions says `waits on N spec questions`.
+*Proposed (S313):* an item held on an open adj record says `waits on adj N`;
+the sitting opens no question for it, and a question whose decided option
+no longer fits shows a dim `decided as X on DATE` line under its heading.
+Items
 with questions open one sitting that replaces the table: the heading `Spec
 check: N questions for ID, ID` in dim text, then each question in turn as
 `[ID n/of] Title` in the Heading style with its numbered options
@@ -1576,12 +1580,15 @@ is filed, not a typed answer. The status line says why not otherwise, once for
 the item (`no owner set; run ork settings set --owner NAME ...`). When the
 sitting ends, the confirmation below covers the ready items only, and says
 which items it leaves out after the command, for
-example `ork wave start P A? [y/N] (Enter is No)  B waits on spec questions`
+example `ork wave start P A? [y/N] (Enter is No)  B waits on 2 spec questions`
 (the part after the command is not run). A held item stays ticked with `waits
-on N spec questions` on its row, the launch status says `ID waits on spec
-questions`, and while a ticked item is held the hint reads `l answer spec
+on N spec questions` on its row, the launch status repeats that note, and
+while a ticked item has answerable questions the hint reads `l answer spec
 questions` instead of `l launch`. Pressing `l` again checks the ticked
-items again and reopens the sitting. A check error shows its code and message
+items again and reopens the sitting. *Proposed (S313):* adj holds keep
+`l launch` to recheck; the confirmation, launch status and all-held status
+repeat each item's `waits on adj N` note. Lookup-failure notices from all
+checked items appear together in the status. A check error shows its code and message
 and leaves the ticks alone. A check automatically retries once if HEAD moves
 or the checkout changes outside the check. If the report has a shape error, or
 the role's commands were denied, the check gives the role its error once in the

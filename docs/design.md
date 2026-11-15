@@ -2267,10 +2267,25 @@ recording. Complete batches use the existing `RecordSpecAnswers` path, so
 the Owner decisions paragraph retains each decision key. Answers with no
 pending question are refused. With `--json`, batch results include
 `questions` (entries with `item`, `address` and the embedded
-`engine.SpecQuestion` fields: `ask`, optional `key`, `text`) and `answered`
+`engine.SpecQuestion` fields: `ask`, optional `key`, `text`, optional
+`previous` for a stale adj answer) and `answered`
 (`{item,key,answer}`, where keyless questions use `#N`
 and answer is the recorded `Label: summary` or free text). No interactive
 prompt text changes.
+*Proposed (S313):* before showing keyed spec questions, ork runs `adj check`
+and considers only an exact key match. A decided option that still matches
+the question's `Label: summary` is reused silently. Ork appends it to the
+slice's Owner decisions paragraph as `-> OPTION [KEY, adj N]`, carries that
+paragraph into the run, and files no new adj record. A removed or changed
+option is asked again with `decided as X on DATE`. A missing record is asked
+normally; a failed lookup also shows one notice line explaining why.
+An open record holds the item in the daemon, CLI and TUI without asking it
+again. The spec note says `waits on adj N`. The next check rereads the open
+record without rerunning the role. Other questions for the held item wait
+until its adj records are resolved. The spec-check role searches decided
+records with `adj find` before inventing a decision key. The local Claude
+spec-check allowlist includes that read-only query.
+
 The Roadmap launch uses the same sitting after its plan and before its
 confirmation (S184). Skipping leaves the slice held and closes the launch;
 a failed check blocks launch with no skip key. Editing the confirmed lineup

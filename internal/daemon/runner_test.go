@@ -213,7 +213,11 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 						}
 						want = append(want, "--system-prompt-file", filepath.Join(temp, "local-system.md"), "--tools", tools)
 						want = append(want, slash...)
-						want = append(want, "--allowedTools", localReadOnlyTools, "--permission-prompts", "none")
+						allowed := localReadOnlyTools
+						if role == engine.RoleSpecCheck {
+							allowed += ",Bash(adj find*)"
+						}
+						want = append(want, "--allowedTools", allowed, "--permission-prompts", "none")
 						want = append(want, "--permission-mode", "manual", "--settings", claude.HookSettings(""))
 					} else {
 						want = append(want, "--permission-mode", "plan")

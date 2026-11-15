@@ -20,6 +20,25 @@ const batchQuestions = `{"items":[{"item":"S1","ready":false,"questions":[
 {"ask":{"title":"Flag?","options":[{"label":"long","summary":"--extra"}],"recommend":1,"reason":"clear"},"key":"k2","text":"Flag block"},
 {"ask":null,"key":"k3","text":"Describe the limit"}]}]}`
 
+func TestBatchOpenAdjHoldsWithoutPrompt(t *testing.T) {
+	for _, wave := range []bool{false, true} {
+		t.Run(fmt.Sprint(wave), func(t *testing.T) {
+			code, out, errs, stub := batchCommand(t, wave, `{"items":[{"item":"S1","ready":false,"waits_on":[42]}]}`, "--yes")
+			if len(stub.answers) != 0 || len(stub.started) != 0 || !strings.Contains(out+errs, "waits on adj 42") || strings.Contains(out+errs, "Answer:") || code == ExitOK {
+				t.Fatalf("open adj must hold without prompting: code %d, answers %v starts %v: %s %s", code, stub.answers, stub.started, out, errs)
+			}
+		})
+	}
+}
+
+func TestSpecStaleAdjAnswerIsShown(t *testing.T) {
+	check := strings.Replace(batchQuestions, `"text":"Flag block"`, `"text":"Flag block","previous":"decided as disk: old store on 2026-11-09"`, 1)
+	_, out, _, _ := batchCommand(t, false, check, "--questions")
+	if !strings.Contains(out, "[S1 2/3] Flag?\n  decided as disk: old store on 2026-11-09\n  1. long: --extra") {
+		t.Fatalf("stale answer must follow its heading with two-space indent: %s", out)
+	}
+}
+
 func TestBatchQuestionsListing(t *testing.T) {
 	for _, wave := range []bool{false, true} {
 		for _, jsonMode := range []bool{false, true} {

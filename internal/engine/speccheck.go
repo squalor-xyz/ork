@@ -26,9 +26,10 @@ import (
 // SpecQuestion is one open question of a spec check: the parsed block, its
 // optional adj decision key and the block as the role wrote it.
 type SpecQuestion struct {
-	Ask  *OwnerQuestion `json:"ask"`
-	Key  string         `json:"key,omitempty"`
-	Text string         `json:"text"`
+	Previous string         `json:"previous,omitempty"` // stale adj answer shown with this question
+	Ask      *OwnerQuestion `json:"ask"`
+	Key      string         `json:"key,omitempty"`
+	Text     string         `json:"text"`
 }
 
 // SpecVerdict is the spec check's answer for one slice: ready, or the
@@ -630,6 +631,7 @@ func ParseSpecCheck(text string, ids []string) ([]SpecVerdict, error) {
 
 // SpecAnswerConfig is the owner's answers to one slice's spec questions.
 type SpecAnswerConfig struct {
+	ReusedIDs []int // adj records reused read-only, parallel to Questions
 	Project   registry.Project
 	Item      string
 	Questions []SpecQuestion
@@ -664,7 +666,11 @@ func RecordSpecAnswers(ctx context.Context, d Deps, cfg SpecAnswerConfig) (strin
 		}
 		fmt.Fprintf(&para, " %s -> %s", title, answers[i])
 		if q.Key != "" {
-			fmt.Fprintf(&para, " [%s]", q.Key)
+			if i < len(cfg.ReusedIDs) && cfg.ReusedIDs[i] > 0 {
+				fmt.Fprintf(&para, " [%s, adj %d]", q.Key, cfg.ReusedIDs[i])
+			} else {
+				fmt.Fprintf(&para, " [%s]", q.Key)
+			}
 		}
 		para.WriteString(".")
 	}
@@ -718,6 +724,72 @@ func RecordSpecAnswers(ctx context.Context, d Deps, cfg SpecAnswerConfig) (strin
 		}
 	}
 	return para.String(), notices, nil
+}
+
+// SpecReuse is the unresolved part of a verdict after exact-key adj lookup.
+// Waiting retains the original blocks so the daemon can recheck open records
+// without rerunning the role. Reused answers never file a new adj record.
+type SpecReuse struct {
+	Questions, Waiting []SpecQuestion
+	WaitsOn            []int
+	Notices            []string
+	Decisions          string
+}
+
+// ReuseSpecAnswers resolves keyed questions through adj and records fitting
+// answers in the slice. Missing or failed lookups leave the question open.
+func ReuseSpecAnswers(ctx context.Context, d Deps, project registry.Project, item string, questions []SpecQuestion) (SpecReuse, error) {
+	var out SpecReuse
+	var reused []SpecQuestion
+	var answers []string
+	var ids []int
+	w := runrec.Writer{Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}
+	for _, q := range questions {
+		q.Previous = ""
+		if !project.Adj || q.Key == "" {
+			out.Questions = append(out.Questions, q)
+			continue
+		}
+		state, record, err := d.Adj.CheckRecord(ctx, w, project.Path, q.Key)
+		if err != nil {
+			out.Notices = append(out.Notices, "adj check "+q.Key+": "+strings.Join(strings.Fields(err.Error()), " "))
+			out.Questions = append(out.Questions, q)
+			continue
+		}
+		switch state {
+		case "open":
+			out.Waiting = append(out.Waiting, q)
+			if !slices.Contains(out.WaitsOn, record.ID) {
+				out.WaitsOn = append(out.WaitsOn, record.ID)
+			}
+			continue
+		case "decided":
+			answer := record.Decision
+			for _, option := range record.Options {
+				if option.Label == answer {
+					answer = option.Label + ": " + option.Summary
+					break
+				}
+			}
+			answer = strings.Join(strings.Fields(answer), " ")
+			if pickedOption(q, answer) {
+				reused = append(reused, q)
+				answers = append(answers, answer)
+				ids = append(ids, record.ID)
+				continue
+			}
+			q.Previous = "decided as " + answer + " on " + record.DecidedAt
+		}
+		out.Questions = append(out.Questions, q)
+	}
+	if len(reused) > 0 {
+		var err error
+		out.Decisions, _, err = RecordSpecAnswers(ctx, d, SpecAnswerConfig{Project: project, Item: item, Questions: reused, Answers: answers, ReusedIDs: ids})
+		if err != nil {
+			return SpecReuse{}, err
+		}
+	}
+	return out, nil
 }
 
 // pickedOption reports whether the answer is one of the question's options as
