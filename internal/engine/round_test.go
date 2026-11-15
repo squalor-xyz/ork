@@ -16,6 +16,61 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestApprovalDenialTimeoutFallback(t *testing.T) {
+	for _, tc := range []struct {
+		name                     string
+		approval, restart, mixed bool
+	}{
+		{"approval", true, false, false},
+		{"allowlist", false, false, false},
+		{"approval-restart", true, true, false},
+		{"mixed", true, false, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			clock := newVendorClock()
+			h := newHarness(t, withDiff)
+			h.deps.Now = clock.Now
+			h.deps.HungAfter = 4 * time.Millisecond
+			h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: "claude-local", Model: "local"}, {Vendor: "claude", Model: "sonnet"}}
+			session := 0
+			h.deps.Runner = &hangRunner{silent: func(req Request) bool { return req.Vendor == "claude-local" }, script: func(ctx context.Context, req Request) (Result, error) {
+				session++
+				res := Result{}
+				if session == 1 {
+					res.Denials = []runrec.DeniedCommand{{Tool: "Read", Command: "long.go"}}
+					if tc.approval {
+						res.ApprovalDenials = 1
+					}
+					if tc.mixed {
+						res.Denials = append(res.Denials, runrec.DeniedCommand{Tool: "Bash", Command: "unlisted"})
+					}
+				}
+				if tc.restart && session == 1 {
+					req.OnContext(70001)
+				} else {
+					clock.Advance(91 * time.Minute)
+				}
+				select {
+				case <-ctx.Done():
+					return res, ctx.Err()
+				case <-time.After(time.Second):
+					t.Error("local session was not canceled")
+					return res, context.DeadlineExceeded
+				}
+			}}
+			e := h.start()
+			rec := e.Snapshot()
+			if tc.approval && !tc.mixed {
+				if rec.State != runrec.StateAwaitingApproval || len(rec.Roles) < 2 || h.readReport(rec, rec.Roles[1].Report) != implReport {
+					t.Fatalf("approval denial blocked fallback report: state=%s reason=%s", rec.State, rec.Reason)
+				}
+			} else if rec.State != runrec.StateStopped || len(rec.Roles) != 1 || !strings.Contains(rec.Reason, "permission denied") {
+				t.Fatalf("allowlist denial did not stop round: state=%s roles=%+v reason=%s", rec.State, rec.Roles, rec.Reason)
+			}
+		})
+	}
+}
+
 // freshSessionRound uses the real round state machine and a cancelling runner.
 // Its first request resumes an older session, so forgetting to clear Resume
 // cannot accidentally pass the fresh-session assertion.

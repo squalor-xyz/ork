@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/agent/claude/pretool.go:107-122` (missing file: allow)\n- `internal/agent/claude/pretool_test.go`\n- `internal/engine/round.go:650-660` (`fallingBack`: approval-point denials do not block it)\n- `internal/engine/round_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/agent/claude/pretool.go:107-125` (`ApprovalPolicy.Evaluate`: missing-file Read)\n- `internal/agent/claude/pretool_test.go:45` (`TestPretoolMissingRead`)\n- `internal/engine/runner.go:81-90` (`Result`: transient approval-point denial count)\n- `internal/engine/round.go:525-581` (`runRound`: accumulate approval-point denials across sessions)\n- `internal/engine/round.go:657` (`fallingBack`: distinguish approval-point denials)\n- `internal/engine/round_test.go:19` (`TestApprovalDenialTimeoutFallback`)\n- `internal/daemon/runner.go:128-140` (`claudeRunner.Run`: count hook denials before deduplication)\n- `internal/daemon/runner_test.go:24` (`TestClaudeRunnerCountsApprovalDenials`)\n- `docs/design.md:1532` (local timeout denial rule), `docs/design.md:1608` (fallback denial rule), `docs/design.md:1804` (missing reads) and `docs/design.md:1829` (approval-point denials)\n- `CHANGELOG.md:5`"
     },
     {
       "heading": "Failing tests",
-      "body": "- `Evaluate` on a Read with no `limit` of a missing file inside the worktree returns allow.\n- A fake claude-local round that times out after one approval-point denial falls back to the next implementer row.\n- A round whose denial came from the allowlist (no approval point) still stops as today."
+      "body": "- `internal/agent/claude/pretool_test.go`: `TestPretoolMissingRead` verifies an unbounded Read of a missing in-worktree file is allowed, while the allowlist and path boundary still apply.\n- `internal/engine/round_test.go`: `TestApprovalDenialTimeoutFallback` verifies a timed-out claude-local implementer with approval-point denials reaches the saved fallback report, including across fresh-session restart; changing only the denial source to allowlist still stops. The allowlist case is a regression control that already passes before implementation.\n- `internal/daemon/runner_test.go`: `TestClaudeRunnerCountsApprovalDenials` verifies hook-only, duplicate hook/vendor, mixed and vendor-only denial results."
     },
     {
       "heading": "Implement",

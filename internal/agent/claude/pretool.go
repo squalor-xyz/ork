@@ -116,7 +116,7 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 				path = filepath.Join(p.Worktree, path)
 			}
 			n, err := countLines(path)
-			if err != nil {
+			if err != nil && !os.IsNotExist(err) {
 				return deny("cannot count Read lines: " + err.Error())
 			}
 			if n > 500 {

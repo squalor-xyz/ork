@@ -42,6 +42,25 @@ func TestPretoolReadLimits(t *testing.T) {
 
 func strconvQuote(s string) string { b, _ := json.Marshal(s); return string(b) }
 
+func TestPretoolMissingRead(t *testing.T) {
+	root := t.TempDir()
+	for _, tc := range []struct {
+		name, path, want string
+		allow            []string
+	}{
+		{"allowed", filepath.Join(root, "missing"), "allow", []string{"Read"}},
+		{"uncovered", filepath.Join(root, "missing"), "ask", nil},
+		{"outside", filepath.Join(root, "..", "missing"), "deny", []string{"Read"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := (ApprovalPolicy{Worktree: root, Allowlist: tc.allow}).Evaluate(ToolCall{ToolName: "Read", ToolInput: json.RawMessage(`{"file_path":` + strconvQuote(tc.path) + `}`)})
+			if got.Decision != tc.want {
+				t.Fatalf("missing Read decision = %q, want %q: %s", got.Decision, tc.want, got.Reason)
+			}
+		})
+	}
+}
+
 func TestPretoolOwnFileReads(t *testing.T) {
 	root := t.TempDir()
 	progress := filepath.Join(root, "run", "tmp", "progress-reviewer.md")

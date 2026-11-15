@@ -79,13 +79,14 @@ type Live struct {
 
 // Result is what a role round produced.
 type Result struct {
-	Reason  string // classified vendor failure message, when available
-	Exit    ExitClass
-	Session string                 // the vendor session id, for a later resume
-	Report  string                 // the final result text; the report file takes precedence
-	Tokens  int                    // total tokens used
-	CostUSD float64                // cost, when the vendor reports one
-	Denials []runrec.DeniedCommand // permission denials the vendor reported, one per denied call
+	Reason          string // classified vendor failure message, when available
+	Exit            ExitClass
+	Session         string                 // the vendor session id, for a later resume
+	Report          string                 // the final result text; the report file takes precedence
+	Tokens          int                    // total tokens used
+	CostUSD         float64                // cost, when the vendor reports one
+	Denials         []runrec.DeniedCommand // permission denials, one per denied call
+	ApprovalDenials int                    // denials from ork's approval point, included in Denials; not persisted
 }
 
 // Runner runs one role round to its end. A non-nil error means the round did
