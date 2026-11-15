@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-363 items · — 66 · done 264 · retired 33
+363 items · — 65 · done 265 · retired 33
 
 v1.2
 
@@ -131,7 +131,7 @@ v1.2
 | 81 | [S360](slices/S360.md) | Smaller fixed context for local roles | S | 1 |  | S304 trial 1 (2026-11-11): the claude-local implementer's first turn already held about 22k tokens before it read any file; long command output (go test) also fills the window. · discovered from S304 | done |
 | 82 | [S361](slices/S361.md) | Local role own files: run dir and read-only allow | S | 1 |  | S304 trial 3 (2026-11-14, run ork-20261114-224559-2b00, S248): in the first 22 minutes the claude-local implementer's only two owner permission questions were `ls -la` on its own progress note and on its own run temp dir. Separately, `internal/engine/round.go:423` creates `<project>/.scratch/` in every project a claude-local role runs in, though slicer and sluice do not exclude `.scratch/` from git. · discovered from S304 | done |
 | 83 | [S362](slices/S362.md) | Hook denies missing-file Read; denial blocks fallback | S | 1 |  | S304 trial 3 (2026-11-15, run ork-20261114-224559-2b00): the claude-local implementer's Read of its own progress note, before the note existed, was denied by the PreToolUse hook ("cannot count Read lines: stat ...: no such file or directory", `internal/agent/claude/pretool.go:113-116`). The run recorded 2 denials, so when the local implementer hit the 90 min limit the claude sonnet fallback did not take over (`internal/engine/round.go:657` requires no denials) and the run stopped. · discovered from S304 | — |
-| 84 | [S363](slices/S363.md) | Local implementer brief: note-first, one test at a time | M | 2 |  | S304 trial 3 (2026-11-14/15, S248, runs ork-20261114-224559-2b00 and ork-20261115-001834-20cf): the claude-local implementer ran 8 fresh sessions in 90 min and made no edit. Each session re-read the same 5-6 files and hit the 70k restart before its first edit; the progress note was written once and said only "nothing survived". The brief it gets is the cloud implementer prompt (20,358 chars) with a short local section added. · discovered from S304 | — |
+| 84 | [S363](slices/S363.md) | Local implementer brief: note-first, one test at a time | M | 2 |  | S304 trial 3 (2026-11-14/15, S248, runs ork-20261114-224559-2b00 and ork-20261115-001834-20cf): the claude-local implementer ran 8 fresh sessions in 90 min and made no edit. Each session re-read the same 5-6 files and hit the 70k restart before its first edit; the progress note was written once and said only "nothing survived". The brief it gets is the cloud implementer prompt (20,358 chars) with a short local section added. · discovered from S304 | done |
 
 ---
 

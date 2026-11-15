@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -36,8 +37,12 @@ func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (
 					t.Fatal(err)
 				}
 			}
-			if req.ProgressFile != "" {
-				if err := os.WriteFile(req.ProgressFile, []byte("Done: edits saved. Next: run narrow checks."), 0600); err != nil {
+			if req.ProgressFile != "" && !(len(stale) > 1 && stale[1]) {
+				note := "Done: edits saved. Next: run narrow checks."
+				if len(stale) > 2 && stale[2] {
+					note = " \n"
+				}
+				if err := os.WriteFile(req.ProgressFile, []byte(note), 0600); err != nil {
 					t.Fatal(err)
 				}
 			}
@@ -75,6 +80,32 @@ func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (
 		t.Fatal(err)
 	}
 	return e, h, requests, out
+}
+
+func TestFreshLocalImplementerReadsNoteInsteadOfAnchors(t *testing.T) {
+	_, _, requests, _ := freshSessionRound(t, "claude-local", 70001)
+	_, fresh, _ := strings.Cut(requests[1].Brief, "## Fresh local session")
+	if !strings.Contains(fresh, "Read the progress note first; do not reread the files listed in its anchor log") {
+		t.Fatal("restart does not use the note instead of rereading anchors")
+	}
+}
+
+func TestFreshLocalImplementerWithoutSavedProgress(t *testing.T) {
+	for _, missing := range []bool{true, false} {
+		for _, part := range []string{"start", "no-continue"} {
+			t.Run(fmt.Sprintf("missing=%t/%s", missing, part), func(t *testing.T) {
+				_, _, requests, _ := freshSessionRound(t, "claude-local", 70001, false, missing, !missing)
+				_, fresh, _ := strings.Cut(requests[1].Brief, "## Fresh local session")
+				if part == "start" {
+					if !strings.Contains(fresh, "No progress was saved; start at step 1 and write the note first") {
+						t.Fatal("restart without a note does not start at step 1")
+					}
+				} else if strings.Contains(fresh, "Continue its saved work") {
+					t.Fatal("restart without a note claims saved work")
+				}
+			})
+		}
+	}
 }
 
 func TestFreshSessionRestoresTheBrief(t *testing.T) {

@@ -557,6 +557,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			break
 		}
 		progress, err := ReadReport(filepath.Dir(progressFile), filepath.Base(progressFile))
+		savedProgress := err == nil && strings.TrimSpace(progress) != ""
 		if err != nil {
 			progress = "No readable progress note is available."
 		}
@@ -564,7 +565,14 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			runErr = fmt.Errorf("restart old report: %w", err)
 			break
 		}
-		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. Continue its saved work; do not repeat completed steps.\n\nProgress note:\n\n" + progress + "\n\nGit diff --stat:\n\n" + stat + "\n"
+		instruction := "Continue its saved work; do not repeat completed steps."
+		if r.role == RoleImplementer {
+			instruction = "Read the progress note first; do not reread the files listed in its anchor log. Continue its saved work; do not repeat completed steps."
+			if !savedProgress {
+				instruction = "No progress was saved; start at step 1 and write the note first."
+			}
+		}
+		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. " + instruction + "\n\nProgress note:\n\n" + progress + "\n\nGit diff --stat:\n\n" + stat + "\n"
 		session = ""
 		spentTokens, spentCost, denials = res.Tokens, res.CostUSD, res.Denials
 		if err := e.run.Update(func(rr *runrec.Record) {

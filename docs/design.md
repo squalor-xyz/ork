@@ -1410,7 +1410,9 @@ separately.
   at `RUNDIR/tmp/progress-ROLE.md` in the run's state directory (S361,
   adj 347). ork creates no project `.scratch/` directory for this note.
   The brief explicitly allows
-  that one file outside the worktree, including for a read-only local role.
+  that one file outside the worktree, including for a read-only local role. For
+  the claude-local implementer the workspace limit itself names the note beside
+  the temp directory and the report path.
   The adapter adds its directory with `--add-dir` and grants only an exact
   absolute `Edit(//path)` rule, escaping path-pattern characters. Claude's
   Edit rules cover both Edit and Write; `Write(path)` rules do not match
@@ -1420,6 +1422,21 @@ separately.
   note is named in the restart brief. Note reads use the bounded regular-file
   guards used for reports, refusing links and special files. ork retains the
   note for later sessions; it is a run artifact, outside run.json.
+
+  *Proposed (S363):* the claude-local implementer gets a shorter Work variant
+  of the shared role prompt. Its resolved tool rules come immediately after the
+  role line. Before any reads, it writes the progress note with done, next and
+  open problems. Every few reads it appends an anchor log in the form
+  `file:line symbol: purpose`, keeping those anchors when it updates the note.
+  It trusts the spec check's anchors and symbol names instead of re-anchoring
+  or editing the slice. It reads only what the current test needs, then writes
+  one listed test, observes red, implements, observes green and updates the note
+  before the next test. Mutation checks and the full suites run once after the
+  last test: its Done when keeps each failing test as red then green and adds
+  one item for the single mutation check and full-suite run. Its fresh session reads the note first instead of rereading the
+  files in the anchor log. Without a readable, nonempty note, it starts at step
+  1 and writes the note first. Cloud implementer briefs remain byte-identical;
+  other local roles keep their existing prompts and restart instructions.
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
