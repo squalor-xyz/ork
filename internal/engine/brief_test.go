@@ -45,7 +45,7 @@ func baseBrief() BriefInput {
 func TestReadOnlyProgressBriefException(t *testing.T) {
 	in := baseBrief()
 	in.Vendor, in.Role, in.ReadOnly = "claude-local", RoleReviewer, true
-	in.ProgressFile = "/p/.scratch/progress-run-reviewer.md"
+	in.ProgressFile = "/state/runs/r1/tmp/progress-reviewer.md"
 	got, err := BuildBrief(in)
 	if err != nil {
 		t.Fatal(err)

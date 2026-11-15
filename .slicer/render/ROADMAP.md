@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-361 items · — 65 · done 263 · retired 33
+361 items · — 64 · done 264 · retired 33
 
 v1.2
 
@@ -129,7 +129,7 @@ v1.2
 | 79 | [S358](slices/S358.md) | Local fresh session, not compaction | M | 2 |  | S304 trial 2 (2026-11-12, S314): claude-local auto-compacted three times at about 83-86k tokens, taking 893 s, 983 s and 1121 s (50 of 90 min), and after the first compaction it lost its brief and went looking for it in its own transcript. · discovered from S304 | done |
 | 80 | [S359](slices/S359.md) | Sliver a slice for a local implementer | M | 2 |  | S304 trials 1 and 2: a claude-local implementer could not finish a size S ork slice in 45 or 90 minutes; its context grew past 80k tokens while it explored. · discovered from S304 | — |
 | 81 | [S360](slices/S360.md) | Smaller fixed context for local roles | S | 1 |  | S304 trial 1 (2026-11-11): the claude-local implementer's first turn already held about 22k tokens before it read any file; long command output (go test) also fills the window. · discovered from S304 | done |
-| 82 | [S361](slices/S361.md) | Local role own files: run dir and read-only allow | S | 1 |  | S304 trial 3 (2026-11-14, run ork-20261114-224559-2b00, S248): in the first 22 minutes the claude-local implementer's only two owner permission questions were `ls -la` on its own progress note and on its own run temp dir. Separately, `internal/engine/round.go:423` creates `<project>/.scratch/` in every project a claude-local role runs in, though slicer and sluice do not exclude `.scratch/` from git. · discovered from S304 | — |
+| 82 | [S361](slices/S361.md) | Local role own files: run dir and read-only allow | S | 1 |  | S304 trial 3 (2026-11-14, run ork-20261114-224559-2b00, S248): in the first 22 minutes the claude-local implementer's only two owner permission questions were `ls -la` on its own progress note and on its own run temp dir. Separately, `internal/engine/round.go:423` creates `<project>/.scratch/` in every project a claude-local role runs in, though slicer and sluice do not exclude `.scratch/` from git. · discovered from S304 | done |
 
 ---
 

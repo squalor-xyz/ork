@@ -420,10 +420,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	progressFile := ""
 	if entry.Vendor == "claude-local" {
-		progressFile = filepath.Join(e.proj.Path, ".scratch", fmt.Sprintf("progress-%s-%s.md", rec.ID, r.role))
-		if err := os.MkdirAll(filepath.Dir(progressFile), 0700); err != nil {
-			return fail("progress directory", err)
-		}
+		progressFile = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("progress-%s.md", r.role))
 		in.ProgressFile = progressFile
 	}
 	if r.role == RoleGate {
@@ -530,8 +527,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		sessionCtx, endSession := context.WithCancel(runCtx)
 		var contextTokens atomic.Int64
 		res, runErr = e.d.Runner.Run(sessionCtx, Request{
-			RunID: rec.ID, ProjectRoot: e.proj.Path,
-			Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
+			RunID: rec.ID,
+			Role:  r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 			ProgressFile: progressFile,
 			OnContext: func(tokens int) {

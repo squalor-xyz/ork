@@ -78,7 +78,7 @@ func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (
 }
 
 func TestFreshSessionRestoresTheBrief(t *testing.T) {
-	for _, part := range []string{"original", "progress", "stat", "resume", "instructions", "accounting"} {
+	for _, part := range []string{"original", "progress", "stat", "resume", "instructions", "no-project-scratch", "no-scratch-permission", "accounting"} {
 		t.Run(part, func(t *testing.T) {
 			e, h, requests, out := freshSessionRound(t, "claude-local", 70001)
 			if !out.ok || len(requests) != 2 {
@@ -102,9 +102,17 @@ func TestFreshSessionRestoresTheBrief(t *testing.T) {
 					t.Fatalf("fresh request resumed %q", requests[1].Resume)
 				}
 			case "instructions":
-				want := filepath.Join(h.P, ".scratch", "progress-"+e.Snapshot().ID+"-implementer.md")
+				want := filepath.Join(e.run.Dir(), "tmp", "progress-implementer.md")
 				if requests[0].ProgressFile != want || !strings.Contains(requests[0].Brief, "After each step") || !strings.Contains(requests[0].Brief, want) {
 					t.Fatal("missing progress-file instructions or exact path")
+				}
+			case "no-project-scratch":
+				if _, err := os.Stat(filepath.Join(h.P, ".scratch")); !os.IsNotExist(err) {
+					t.Fatalf("project .scratch exists or stat failed: %v", err)
+				}
+			case "no-scratch-permission":
+				if requests[0].ProjectRoot != "" {
+					t.Fatalf("slice round grants project scratch: ProjectRoot=%q", requests[0].ProjectRoot)
 				}
 			case "accounting":
 				role := e.Snapshot().Roles[1]

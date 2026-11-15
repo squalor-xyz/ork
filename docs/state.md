@@ -17,6 +17,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
 | Check output per round (S04); `checks[].log` keeps the name, read on demand by `run.report` and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/checks-<round>.log`, and `land-checks-<round>.log` for the landing re-check |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
+| A claude-local role's progress note (S361, adj 347) | `~/.local/state/ork/runs/<run>/tmp/progress-<role>.md` |
 | The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
 | A spec check's identity, report and temp directory, plus owner answers tied to the spec fingerprint until run start or a spec change (S143); role verdicts live in daemon memory | `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
@@ -708,10 +709,12 @@ one role row; `started_at` and the 90-minute runtime limit span all sessions.
 The row's tokens and cost include interrupted sessions; its session and PGID
 refer to the latest session. The dashboard keeps one row. The record version
 stays 1; older ork versions that enforce strict fields refuse `restarts`.
-The role's scratch note is `<project>/.scratch/progress-RUN-ROLE.md`, outside
+The role's progress note is `RUNDIR/tmp/progress-ROLE.md` (S361, adj 347), outside
 the run record, and is passed with the original brief and the worktree's diff
 stat when ork starts a fresh session. Read-only Claude local roles have an
 exact-file Edit/Write exception for this note and no other file.
+The note stays in the run's state directory; ork creates no project
+`.scratch/` directory for it.
 
 *Proposed (S255):* `chain_from` is an index into `roles[]` (omitted when 0).
 The vendor chain of every role is derived from the role records from that

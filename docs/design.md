@@ -1392,7 +1392,7 @@ separately.
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
-- **Fresh local sessions** (S358, *proposed*; owner decisions 335, 336 and
+- **Fresh local sessions** (S358, *proposed*; owner decisions 335, 347, 348 and
   the relay's progress-permission and restart-record answers): a claude-local
   role whose current input context exceeds 70,000 tokens ends its session
   before auto-compaction. Cached input counts; output and cumulative usage
@@ -1407,7 +1407,9 @@ separately.
   expose the per-message context signal used by this Claude-specific change.
 
   The role replaces a short note after each step: done, next and open problems,
-  at `<project>/.scratch/progress-RUN-ROLE.md`. The brief explicitly allows
+  at `RUNDIR/tmp/progress-ROLE.md` in the run's state directory (S361,
+  adj 347). ork creates no project `.scratch/` directory for this note.
+  The brief explicitly allows
   that one file outside the worktree, including for a read-only local role.
   The adapter adds its directory with `--add-dir` and grants only an exact
   absolute `Edit(//path)` rule, escaping path-pattern characters. Claude's
@@ -1417,7 +1419,7 @@ separately.
   tree read-only. Report writing rules stay the same. A missing or unreadable
   note is named in the restart brief. Note reads use the bounded regular-file
   guards used for reports, refusing links and special files. ork retains the
-  note for later sessions; it is a scratch artifact, outside run.json.
+  note for later sessions; it is a run artifact, outside run.json.
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
@@ -1781,11 +1783,16 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   The hook calls `tool.approve` on the daemon socket with a per-attempt
   session id. The daemon owns the worktree and allowlist for that session;
   the tool call cannot replace them. Hard rules run before allowlist rules:
-  paths must stay in the worktree, the main checkout's `.scratch/`, the
-  S358 progress directory, this Claude session's `tool-results/` directory,
+  paths must stay in the worktree, the exact progress-note file,
+  this Claude session's `tool-results/` directory,
   the assigned role temp directory, or its exact report file. The report
   exception does not permit its parent directory or sibling files. These
   path exceptions retain the role allowlist and the Read cap.
+  The progress-note exception does not permit its parent directory,
+  sibling notes, or another role's temp directory. The adapter's
+  `--add-dir` parent does not grant that tree through the hook.
+  Spec checks also retain the main checkout's `.scratch/` path exception;
+  slice rounds do not grant that exception (S361).
   Symlinked ancestors are resolved. The transcript itself is denied.
   Bash commands are split on whitespace and shell operators; a token naming
   an outside absolute path or parent traversal is denied with that token in
@@ -1796,6 +1803,14 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   operators or substitutions absent from the allowlist entry. For example,
   `Bash(go test*)` does not approve `go test; make test`, while a configured
   `Bash(go vet ./... && go test ./...*)` approves that check command.
+  S361 (adj 349) also allows simple `ls` (optionally `-la`), `wc`
+  (optionally `-l`), `head`, `tail`, `cat` and `stat` calls on only the
+  role's own temp directory and its descendants, exact report file or exact
+  progress note, with reason "read-only on own files". Paths must be
+  absolute; whole-path quotes are accepted. Shell operators, expansions,
+  redirects and other argument forms retain the role allowlist rules.
+  Reads of another run's directory remain denied by the hard path boundary,
+  even when a Bash allowlist entry matches the command.
   Other calls block on an owner permission question. `ork answer RUN allow`
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.

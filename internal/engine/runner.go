@@ -44,7 +44,7 @@ type Request struct {
 	SpecProject  string    // active spec-check project, before an ork run exists
 	SpecItems    []string  // items in this spec-check sitting
 	RunID        string    // ork run identity for live local permission questions
-	ProjectRoot  string    // main checkout, for its .scratch exception
+	ProjectRoot  string    // main checkout, for spec-check path permissions
 	ProgressFile string    // sole progress-note write exception for a local role
 	OnContext    func(int) // current context input tokens, including cached input
 	Role         string
