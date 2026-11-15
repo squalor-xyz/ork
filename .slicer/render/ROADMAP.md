@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-367 items · — 60 · done 272 · retired 35
+367 items · — 59 · done 273 · retired 35
 
 v1.2
 
@@ -87,7 +87,7 @@ v1.2
 | 37 | [S310](slices/S310.md) | Rewrite stale macOS paths throughout slice specs | S | - |  |  | done |
 | 38 | [S311](slices/S311.md) | Notify command: run a configured command when a run needs the owner or ends | M | - |  |  | done |
 | 39 | [S312](slices/S312.md) | Spec questions: print every open question at once and take all answers in one call | M | - |  |  | done |
-| 40 | [S313](slices/S313.md) | Spec check: reuse a decided adj answer for the same decision key instead of asking again | M | - |  |  | — |
+| 40 | [S313](slices/S313.md) | Spec check: reuse a decided adj answer for the same decision key instead of asking again | M | - |  |  | done |
 | 41 | [S314](slices/S314.md) | Name the owner once so answers to spec questions are filed in adj | S | - |  |  | done |
 | 42 | [S315](slices/S315.md) | Self-host: restart the daemon on the current build after main moves | M | - |  |  | done |
 | 43 | [S316](slices/S316.md) | ork approve: mark every open human check as later in one step | S | - |  |  | done |
