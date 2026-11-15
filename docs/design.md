@@ -1458,6 +1458,21 @@ separately.
   files in the anchor log. Without a readable, nonempty note, it starts at step
   1 and writes the note first. Cloud implementer briefs remain byte-identical;
   other local roles keep their existing prompts and restart instructions.
+  *Proposed (S365):* before a spec check, the daemon builds each item's run
+  plan and uses `engine.IsLocalRun` to identify local primary implementers.
+  The spec check writes a `## Orientation ID` section after `## Owner needed`
+  for each such item: quoted code to change, the nearest test to copy, file
+  and line anchors, symbol names and a short plan. ork matches the heading's
+  item ID without regard to case and ignores whitespace around the heading. It caps
+  each whole pack at 300 lines and 12,000 Unicode characters, including a
+  truncation notice when needed. It saves `orientation.md` in the item's spec
+  directory and copies it into the run directory before launch, including queued runs.
+  `round.go` loads that file for a claude-local implementer; `BuildBrief`
+  places it under `## Orientation` after the slice. Cloud implementers and
+  other roles receive no section. Missing packs preserve the existing launch
+  and brief behavior. A new spec check removes old packs before running, so
+  a failed check cannot leave its previous pack available. An item whose run
+  plan cannot be built still gets its spec checked, without a pack request.
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its

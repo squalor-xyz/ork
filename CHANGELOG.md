@@ -9,6 +9,9 @@
   fixes reuse the earlier result. Unsupported shell commands stay with the
   orchestrator. Human and after-land checks keep their existing workflow.
 
+- S365 (*proposed*): have the spec check write bounded orientation packs for
+  planned local implementers and include the saved pack in claude-local briefs.
+
 - *Proposed (S364; adj 351, 352):* a claude-local role gets ork's own short
   system prompt (`--system-prompt-file`) in place of Claude Code's default and
   only six built-in tools (`--tools Read,Grep,Glob,Edit,Write,Bash`; a

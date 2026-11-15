@@ -17248,6 +17248,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "8b0e3adc-bd1f-4e3c-9eb5-ef456e3c51ca",
+          "kind": "",
+          "text": "**2026-11-15** — Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3.8-27b effort low, run directly with ork's flags (no approval hook, no fresh-session restart), brief .scratch/micro/brief.md: write TestProjectsSetDryRunSavesNothing, see it red, stop. One run each. | setting | first-turn context | turns | tool calls | output tokens | peak context | wall | result | (1) S360 disallowed tools, default system prompt | 18,132 | 12 | 11 | 3,441 | 29,130 | 176 s | red | (2) ork system prompt + S360 disallowed tools | 16,751 | 18 | 17 | 4,988 | 44,291 | 288 s | red | (3) ork system prompt + six tools (S364 as landed) | 8,853 | 14 | 13 | 4,076 | 25,374 | 202 s | red | (4) 95k threshold: not run; no setting passed 29k-44k peak, far below the 70k restart, so the threshold did not come into play. Finding: S364 halves the first-turn context (18.1k to 8.9k); the system prompt alone saves 1.4k, the tool list the rest. Turns and time vary run to run (one sample each, shared vLLM server), so they are not a ranking. All three finished the micro-task; trial 3's failure was the brief and re-reading, not window size. adj 335 (70k) needs no change on this evidence.",
+          "created_at": "2026-11-15T03:35:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -19835,6 +19849,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "81dfdbf9-87d9-42ed-9270-363fb228538b",
+          "kind": "",
+          "text": "**2026-11-15** — Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3.8-27b effort low, run directly with ork's flags (no approval hook, no fresh-session restart), brief .scratch/micro/brief.md: write TestProjectsSetDryRunSavesNothing, see it red, stop. One run each. | setting | first-turn context | turns | tool calls | output tokens | peak context | wall | result | (1) S360 disallowed tools, default system prompt | 18,132 | 12 | 11 | 3,441 | 29,130 | 176 s | red | (2) ork system prompt + S360 disallowed tools | 16,751 | 18 | 17 | 4,988 | 44,291 | 288 s | red | (3) ork system prompt + six tools (S364 as landed) | 8,853 | 14 | 13 | 4,076 | 25,374 | 202 s | red | (4) 95k threshold: not run; no setting passed 29k-44k peak, far below the 70k restart, so the threshold did not come into play. Finding: S364 halves the first-turn context (18.1k to 8.9k); the system prompt alone saves 1.4k, the tool list the rest. Turns and time vary run to run (one sample each, shared vLLM server), so they are not a ranking. All three finished the micro-task; trial 3's failure was the brief and re-reading, not window size. adj 335 (70k) needs no change on this evidence.",
+          "created_at": "2026-11-15T03:35:15Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -19861,7 +19889,7 @@
       "id": "S365",
       "title": "Local implementer: a cloud-written orientation pack in the brief",
       "short_title": "Orientation pack for a local implementer",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19871,6 +19899,34 @@
           "text": "**2026-11-15** — 2026-11-15, owner in interactive question (session 8d711f67): Q1 the spec check writes the pack (adj 353), Q2 at most 300 lines and 12k chars (adj 354). Step 1's adj asks are done.",
           "created_at": "2026-11-15T01:58:16Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "40213ede-e025-4aea-989d-5d32b471bd57",
+          "kind": "",
+          "text": "**2026-11-15** — Human checks at approval (S365):\n- later: deferred to land: `` S304 trial 4 or 5 runs S248 with the pack and records it in S304's notes.",
+          "created_at": "2026-11-15T04:26:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "efaf4e7b-8fa5-43c5-b846-2c9533e75f76",
+          "kind": "",
+          "text": "**2026-11-15** — Spec checks produce bounded orientation packs for planned local implementers, and saved packs reach claude-local briefs.",
+          "created_at": "2026-11-15T04:50:56Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19897,7 +19953,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

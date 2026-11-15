@@ -22,6 +22,7 @@ type EarlierReport struct{ Name, Text string }
 
 // BriefInput is what a brief is built from (docs/design.md, Roles).
 type BriefInput struct {
+	Orientation  string   // saved spec-check pack, shown only to a claude-local implementer
 	ProgressFile string   // exact file the local role may write outside its worktree
 	Allow        []string // resolved sandbox command forms, verbatim
 	Finish       bool     // the finish step has no checks after its round
@@ -100,6 +101,9 @@ func BuildBrief(in BriefInput) (string, error) {
 	b.WriteString("\n\n# Brief\n\n")
 	fmt.Fprintf(&b, "Slice: %s\nWorktree: %s\n\n", in.SliceID, in.Worktree)
 	fmt.Fprintf(&b, "## Slice\n\n```json\n%s\n```\n\n", strings.TrimSpace(in.SliceJSON))
+	if localImplementer && strings.TrimSpace(in.Orientation) != "" {
+		fmt.Fprintf(&b, "## Orientation\n\n%s\n\n", strings.TrimSpace(in.Orientation))
+	}
 	fmt.Fprintf(&b, "## Tracking rule\n\n%s\n\n", trackingRule)
 	if localImplementer && in.ProgressFile != "" {
 		fmt.Fprintf(&b, "## Workspace limit\n\nWork only in %s and stay inside the workspace: do not read or write outside it, except your temp directory, your report path and your progress note `%s`.\n\n", in.Worktree, in.ProgressFile)
