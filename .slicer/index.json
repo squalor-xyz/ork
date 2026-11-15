@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 364,
+  "next_id": 366,
   "preamble": "",
   "passes": [
     {
@@ -19718,6 +19718,92 @@
         "parent": "",
         "cites": [],
         "key": "ork-local-implementer-brief",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S364",
+      "title": "Local roles: minimal system prompt and tool set, measured on a micro-task",
+      "short_title": "Local tuning: minimal system prompt, tools, window",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "4dafdb3b-7c57-4e48-babd-5fa5ed6546d9",
+          "kind": "",
+          "text": "**2026-11-15** — 2026-11-15, owner in interactive question (session 8d711f67): Q1 ork's own system prompt (adj 351), Q2 six tools (adj 352); reasoning stays at low (adj 350). Step 1's adj asks are done; owner said compaction window is 115k.",
+          "created_at": "2026-11-15T01:58:16Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 3 (2026-11-14/15, S248): each claude-local session started at 23.1k-23.3k input tokens before reading anything, ran 61-96 model turns for about 30 tool calls, produced 20k-68k output tokens, and averaged 13-35 s per turn. S360's --disallowedTools cut the first turn only 12% (30.2k to 26.7k, cloud haiku measure).",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-tuning",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S365",
+      "title": "Local implementer: a cloud-written orientation pack in the brief",
+      "short_title": "Orientation pack for a local implementer",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d0d98349-fd19-471d-aed3-bb37d23c0a34",
+          "kind": "",
+          "text": "**2026-11-15** — 2026-11-15, owner in interactive question (session 8d711f67): Q1 the spec check writes the pack (adj 353), Q2 at most 300 lines and 12k chars (adj 354). Step 1's adj asks are done.",
+          "created_at": "2026-11-15T01:58:16Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 3 (2026-11-14/15, S248): every claude-local session spent its window reading the same 5-6 files (wire.go, handlers.go, daemoncmds.go, cli.go, daemon_test.go) in 12-220 line ranges and restarted before its first edit.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-orientation-pack",
         "pass": "v1.2",
         "group": "",
         "reason": "",

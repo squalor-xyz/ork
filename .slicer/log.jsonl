@@ -4519,3 +4519,8 @@
 {"when": "2026-11-15T00:18:41Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 3b started 2026-11-15 00:18 at the owner's word ('Try ", "by": "Jon Robbins"}
 {"when": "2026-11-15T01:35:57Z", "item": "S363", "action": "add", "from": "", "to": "open", "note": "Local implementer brief: note first, anchor log, one test at a time"}
 {"when": "2026-11-15T01:36:06Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 3b (run ork-20261115-001834-20cf, started 00:18) stopp", "by": "Jon Robbins"}
+{"when": "2026-11-15T01:40:15Z", "item": "S362", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-15T01:58:02Z", "item": "S364", "action": "add", "from": "", "to": "open", "note": "Local roles: minimal system prompt and tool set, measured on a micro-task"}
+{"when": "2026-11-15T01:58:02Z", "item": "S365", "action": "add", "from": "", "to": "open", "note": "Local implementer: a cloud-written orientation pack in the brief"}
+{"when": "2026-11-15T01:58:16Z", "item": "S364", "action": "note", "from": "", "to": "", "note": "2026-11-15, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
+{"when": "2026-11-15T01:58:16Z", "item": "S365", "action": "note", "from": "", "to": "", "note": "2026-11-15, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
