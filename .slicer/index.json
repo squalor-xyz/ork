@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 366,
+  "next_id": 367,
   "preamble": "",
   "passes": [
     {
@@ -19983,6 +19983,34 @@
         "urgency": 3,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S366",
+      "title": "Orientation pack: honour a run's lineup override",
+      "short_title": "Orientation pack ignores --implementer override",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 4 (2026-11-15, run ork-20261115-144120-d581, S248): `ork run ork S248 --implementer claude-local:qwen3.8-27b:low --implementer claude:sonnet:high` ran its spec check after S365 landed, but no `orientation.md` was saved, so the local implementer got no `## Orientation` section. The spec check job plans each item with `RunParams{Project, Item}` only (`internal/daemon/speccheck.go:359`), so the planned lineup is the matrix default (cloud) and the item is not in `LocalItems`.",
+        "discovered_from": "S365",
+        "parent": "",
+        "cites": [],
+        "key": "ork-orientation-lineup-override",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],
