@@ -157,7 +157,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--ui-pass-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--round-check CMD] [--no-verify]
-                              [--build CMD]
+                              [--build CMD] [--dry-run]
                               [--check-minutes N]
                               [--cap N] [--budget-minutes N] [--budget-tokens N]
                               [--env-line LINE]... [--preset go|python]
@@ -195,7 +195,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               human checks go to human-checks-todo.md;
                               while runs are unfinished only --cap, --bell, the
                               budgets and the worktree and branch patterns may
-                              change
+                              change; --dry-run runs every check and shows the
+                              change without saving
   ork settings show           show global_cap and daemon_idle_minutes, stored
                               and effective
   ork settings set [--global-cap N] [--daemon-idle-minutes N]

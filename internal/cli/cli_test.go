@@ -1775,6 +1775,52 @@ func TestProjectsSetBellOnOff(t *testing.T) {
 	}
 }
 
+// S248 (*proposed*): --dry-run validates and shows the change without saving.
+func TestProjectsSetDryRunText(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p/p"})
+	before, _ := os.ReadFile(w.regPath)
+	code, stdout, stderr := run(t, w.app, "projects", "set", "p", "--push", "on", "--dry-run")
+	if code != 0 || stdout != "would update p: push=on\n" {
+		t.Fatalf("exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	// Nothing was saved: dry_run reached the daemon.
+	if after, _ := os.ReadFile(w.regPath); string(after) != string(before) {
+		t.Fatalf("a dry run changed the registry:\n%s", after)
+	}
+}
+
+func TestProjectsSetDryRunJSON(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p/p"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "p", "--push", "on", "--dry-run", "--json")
+	m := map[string]any{}
+	mustJSON(t, stdout, &m)
+	if code != 0 || m["dry_run"] != true {
+		t.Fatalf("dry run: exit %d\nstdout: %s\nstderr: %s", code, stdout, stderr)
+	}
+	proj, _ := m["project"].(map[string]any)
+	if proj == nil || proj["push"] != true {
+		t.Fatalf("project: %v", m["project"])
+	}
+	// A real call has no dry_run key and saves.
+	code, stdout, stderr = run(t, w.app, "projects", "set", "p", "--push", "on", "--json")
+	m = map[string]any{}
+	mustJSON(t, stdout, &m)
+	if code != 0 {
+		t.Fatalf("real call: exit %d\nstdout: %s\nstderr: %s", code, stdout, stderr)
+	}
+	if _, has := m["dry_run"]; has {
+		t.Fatalf("a real call printed a dry_run key: %s", stdout)
+	}
+	proj, _ = m["project"].(map[string]any)
+	if proj == nil || proj["push"] != true {
+		t.Fatalf("project: %v", m["project"])
+	}
+	saved, _ := registry.Load(w.regPath)
+	if saved.Projects[0].Push != true {
+		t.Fatalf("real call saved nothing: %+v", saved.Projects[0])
+	}
+}
+
 func TestProjectsSetBellRefusesABadValue(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p/p"})
 	starts := w.starts.Load()
@@ -1867,6 +1913,17 @@ func TestProjectsSetNeedsAtLeastOneFlagNamesBell(t *testing.T) {
 func TestUsageTextNamesProjectsSetBell(t *testing.T) {
 	if !strings.Contains(usageText, "[--bell on|off]") {
 		t.Errorf("usage lacks [--bell on|off]:\n%s", usageText)
+	}
+	for _, line := range strings.Split(usageText, "\n") {
+		if len(line) > 80 {
+			t.Errorf("usage line of %d columns: %q", len(line), line)
+		}
+	}
+}
+
+func TestUsageTextNamesProjectsSetDryRun(t *testing.T) {
+	if !strings.Contains(usageText, "[--dry-run]") {
+		t.Errorf("usage lacks [--dry-run]:\n%s", usageText)
 	}
 	for _, line := range strings.Split(usageText, "\n") {
 		if len(line) > 80 {

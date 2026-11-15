@@ -13887,10 +13887,25 @@
       "id": "S248",
       "title": "ork projects set --dry-run: validate and show a change without saving it",
       "short_title": "projects set --dry-run",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8bf244c0-5491-42c4-a67d-0613ba98ddd9",
+          "kind": "",
+          "text": "**2026-11-15** — projects set --dry-run verified: projects.set with dry_run runs every check including the busy check and returns the project as it would be saved without calling registry.Save or starting queued runs; CLI --dry-run prints 'would update NAME: ...' and adds dry_run:true to JSON only on a dry run. Six listed tests green, each assertion mutation-checked; go test -race ./... , go vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-11-15T16:29:02Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -13908,7 +13923,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -662,6 +662,12 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 		return registry.Project{}, &ipc.Error{Code: CodeProjectBusy, Message: busyMessage(p.Name, ids, refused)}
 	}
 	proj := &f.Projects[i]
+	// S248 (*proposed*): a dry run works on a copy and never saves, so the
+	// registry entry and the file stay where they are.
+	if p.DryRun {
+		c := *proj
+		proj = &c
+	}
 	// The preset and allow_add read the check command this call saves.
 	base := *proj
 	if p.CheckCommand != nil {
@@ -745,14 +751,17 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	if p.BudgetTokens != nil {
 		proj.Budgets.Tokens = *p.BudgetTokens
 	}
-	if err := registry.Save(d.registryPath(), f); err != nil {
-		return registry.Project{}, &ipc.Error{Code: CodeRegistry, Message: err.Error()}
-	}
-	if p.Cap != nil {
-		// A raised cap is read at the next admission; start the queued runs that
-		// now fit, as settings.set does (S265, *proposed*). A lowered cap stops nothing.
-		d.runs.lastRegistry = f
-		d.startQueuedLocked(f)
+	if !p.DryRun {
+		if err := registry.Save(d.registryPath(), f); err != nil {
+			return registry.Project{}, &ipc.Error{Code: CodeRegistry, Message: err.Error()}
+		}
+		if p.Cap != nil {
+			// A raised cap is read at the next admission; start the queued runs
+			// that now fit, as settings.set does (S265, *proposed*). A lowered
+			// cap stops nothing.
+			d.runs.lastRegistry = f
+			d.startQueuedLocked(f)
+		}
 	}
 	return *proj, nil
 }

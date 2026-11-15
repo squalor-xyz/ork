@@ -1598,6 +1598,86 @@ func TestProjectsSetUpdatesOneField(t *testing.T) {
 	}
 }
 
+// S248 (*proposed*): a dry run runs every check the real call runs and
+// returns the project as it would be saved, without saving.
+func TestProjectsSetDryRunSavesNothing(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	before, err := os.ReadFile(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true,"dry_run":true}`))
+	if err != nil {
+		t.Fatalf("dry run: %v", err)
+	}
+	res, ok := got.(registry.Project)
+	if !ok || !res.Push {
+		t.Fatalf("result: %#v", got)
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
+		t.Fatalf("a dry run changed the registry file:\n%s", after)
+	}
+}
+
+// S248 (*proposed*): a dry run is refused exactly as a real call is, and a
+// refusal saves nothing.
+func TestProjectsSetDryRunRefusesLikeTheRealCall(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	if _, err := store.Create(runrec.Record{ID: "a-run", Project: p.Name, State: runrec.StatePaused}); err != nil {
+		t.Fatal(err)
+	}
+	before, _ := os.ReadFile(d.registryPath())
+	// A bad pattern is bad_params.
+	_, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","branch_pattern":"{ID}","dry_run":true}`))
+	var re *ipc.Error
+	if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "branch_pattern") {
+		t.Fatalf("bad pattern: %v", err)
+	}
+	// An unknown project is not_found.
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"nope","push":true,"dry_run":true}`))
+	if !errors.As(err, &re) || re.Code != CodeNotFound || !strings.Contains(re.Message, `"nope"`) {
+		t.Fatalf("unknown project: %v", err)
+	}
+	// An unfinished run is project_busy, with the same message as a real call.
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true,"dry_run":true}`))
+	if !errors.As(err, &re) || re.Code != CodeProjectBusy || re.Message != wantBusy("--push", "it") {
+		t.Fatalf("unfinished run: %v", err)
+	}
+	// A dry run with no field sets nothing.
+	_, err = d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","dry_run":true}`))
+	if !errors.As(err, &re) || re.Code != CodeBadParams || !strings.Contains(re.Message, "no field") {
+		t.Fatalf("no field: %v", err)
+	}
+	after, _ := os.ReadFile(d.registryPath())
+	if string(after) != string(before) {
+		t.Fatalf("a dry run refusal changed the registry:\n%s", after)
+	}
+}
+
+// S248 (*proposed*): idempotence. Two identical real calls give the same
+// project and leave the registry file byte-for-byte where the first one did.
+func TestProjectsSetTwiceIsTheSame(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	first, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true,"cap":2,"budget_tokens":5000}`))
+	if err != nil {
+		t.Fatalf("first: %v", err)
+	}
+	mid, err := os.ReadFile(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","push":true,"cap":2,"budget_tokens":5000}`))
+	if err != nil {
+		t.Fatalf("second: %v", err)
+	}
+	if !reflect.DeepEqual(first, second) {
+		t.Fatalf("two identical calls gave different projects:\n%#v\n%#v", first, second)
+	}
+	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(mid) {
+		t.Fatalf("a second identical call rewrote the registry:\n%s", after)
+	}
+}
+
 func TestProjectsSetSetsAndClearsEveryField(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	all := `{"name":"p","push":true,"ui_doc":"docs/ui.md","worktree_pattern":".wt/{id_lower}","branch_pattern":"b/{id}","check_command":"make test","check_minutes":9,"cap":2,"budget_minutes":30,"budget_tokens":5000}`

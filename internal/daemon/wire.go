@@ -310,6 +310,7 @@ type SetProjectParams struct {
 	AllowAdd          map[string][]string             `json:"allow_add,omitempty"`          // S265, *proposed*
 	VendorEnv         map[string]map[string]*string   `json:"vendor_env,omitempty"`
 	NoVerify          bool                            `json:"no_verify,omitempty"` // S295, *proposed*: store a check command that failed the static check; not a field
+	DryRun            bool                            `json:"dry_run,omitempty"`   // S248, *proposed*: run every check and return the result without saving; not a field
 }
 
 // SetsNothing reports whether the call sets no field. The struct holds maps,

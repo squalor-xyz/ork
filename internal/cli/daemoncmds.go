@@ -321,6 +321,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	build := fs.String("build", "", "the self-host build-only command; empty clears it")
 	roundCheck := fs.String("round-check", "", "a faster check command for the checks after implementer rounds; needs --check; empty clears it")
 	noVerify := fs.Bool("no-verify", false, "store --check or --round-check even when the static check says it cannot run in the project's folder")
+	dryRun := fs.Bool("dry-run", false, "run every check and show the change without saving")
 	checkMinutes := fs.Int("check-minutes", 0, "minutes the check may run")
 	capN := fs.Int("cap", 0, "the project's concurrent run cap")
 	budgetMinutes := fs.Int("budget-minutes", 0, "the run time budget in minutes")
@@ -340,7 +341,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if len(pos) != 1 {
 		return o.usage("projects set takes one NAME, got %d arguments", len(pos))
 	}
-	p := daemon.SetProjectParams{Name: pos[0], NoVerify: *noVerify}
+	p := daemon.SetProjectParams{Name: pos[0], NoVerify: *noVerify, DryRun: *dryRun}
 	given := map[string]bool{}
 	fs.Visit(func(f *flag.Flag) { given[f.Name] = true })
 	if given["push"] {
@@ -465,7 +466,11 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 			return o.failErr(err)
 		}
 		if o.json {
-			return o.printJSON(map[string]any{"project": proj})
+			m := map[string]any{"project": proj}
+			if *dryRun {
+				m["dry_run"] = true
+			}
+			return o.printJSON(m)
 		}
 		// Say what the registry holds now: the daemon may clean a value.
 		text := func(name, value string) string {
@@ -576,7 +581,11 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 			}
 			changed = append(changed, "vendor_env="+strings.Join(vendors, "; "))
 		}
-		fmt.Fprintf(o.stdout, "updated %s: %s\n", proj.Name, strings.Join(changed, ", "))
+		verb := "updated"
+		if *dryRun {
+			verb = "would update"
+		}
+		fmt.Fprintf(o.stdout, "%s %s: %s\n", verb, proj.Name, strings.Join(changed, ", "))
 		return ExitOK
 	})
 }

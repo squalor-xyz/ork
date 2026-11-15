@@ -150,7 +150,7 @@ command needs the daemon.
 ## 5. Set a project's options
 
 The registry holds optional per-project settings. Change them with
-`ork projects set` (`internal/cli/cli.go:141-154`):
+`ork projects set` (`internal/cli/cli.go:154-167`):
 
 | Flag | What it sets |
 |---|---|
@@ -169,6 +169,7 @@ The registry holds optional per-project settings. Change them with
 | `--ui-doc PATH` | the project's UI design doc, relative to the project; the UI pass reads it |
 | `--ui-pass-skills A,B` | comma-separated skill names stored in `ui_pass_skills`; only a Claude UI pass is advised to load them (*proposed*, S209) |
 | `--spec-check-rows rNN,rNN` | the matrix rows the spec check runs on, in order: the first with an adapter runs, the next is its fallback; **a row listed here leaves every run's reviewer and gate chains**; `""` clears it, and with none set ork uses every row the matrix's `Spec check row (rNN)` rules name, in rule order (*proposed*, S258) |
+| `--dry-run` | takes no value: every check a real call runs, including the busy check, still runs, and the output shows the project as it would be saved, without saving it; it still needs a field flag, so `--dry-run` alone is a usage error (*proposed*, S248) |
 
 Give one flag value, for example `--ui-pass-skills tui-design,frontend-design`.
 The list replaces the previous list; `--ui-pass-skills ""` clears it.

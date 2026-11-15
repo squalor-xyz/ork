@@ -94,6 +94,11 @@
   one attaches (owner decision 2026-11-11). With a TUI attached, a live run is
   read every 2 s instead of every 1 s.
 
+- *Proposed (S248):* `ork projects set NAME ... --dry-run` runs every check
+  the real call runs, including the busy check, and prints the project as it
+  would be saved without saving it. JSON adds `dry_run: true`; the text verb
+  is `would update`. A call without `--dry-run` is unchanged.
+
 ## v1.1.0 (2026-11-11)
 
 - Docs: re-anchor file:line citations in `docs/guide.md` (S219).
