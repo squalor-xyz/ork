@@ -4552,3 +4552,5 @@
 {"when": "2026-11-15T03:24:31Z", "item": "S319", "action": "retire", "from": "open", "to": "retired", "note": "Done by S309 (ee0eb888, 2026-11-08): ParseSpecCheck maps a section id to the batch id ignoring case (internal/engine/speccheck.go:530-534), tested at internal/engine/speccheck_test.go:498-507. The 2026-11-09 failure was on build 3d537be3 (2026-11-07), older than the fix; no run since records the shape error."}
 {"when": "2026-11-15T03:31:14Z", "item": "S311", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-15T03:31:15Z", "item": "S317", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-15T03:35:15Z", "item": "S364", "action": "note", "from": "", "to": "", "note": "Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3", "by": "Jon Robbins"}
+{"when": "2026-11-15T03:35:15Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Micro-task (S364 AFTER LAND), 2026-11-15, claude-local qwen3", "by": "Jon Robbins"}
