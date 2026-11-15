@@ -4517,3 +4517,5 @@
 {"when": "2026-11-15T00:18:00Z", "item": "S362", "action": "add", "from": "", "to": "open", "note": "Approval hook: a Read of a missing file is a denial that blocks the fallback"}
 {"when": "2026-11-15T00:18:00Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 3 owner-wait time: permission call 1 waited 190 s and ", "by": "Jon Robbins"}
 {"when": "2026-11-15T00:18:41Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 3b started 2026-11-15 00:18 at the owner's word ('Try ", "by": "Jon Robbins"}
+{"when": "2026-11-15T01:35:57Z", "item": "S363", "action": "add", "from": "", "to": "open", "note": "Local implementer brief: note first, anchor log, one test at a time"}
+{"when": "2026-11-15T01:36:06Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 3b (run ork-20261115-001834-20cf, started 00:18) stopp", "by": "Jon Robbins"}

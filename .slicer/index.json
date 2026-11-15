@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 363,
+  "next_id": 364,
   "preamble": "",
   "passes": [
     {
@@ -17234,6 +17234,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f79c8fef-1371-4dda-9820-5a030fa216dc",
+          "kind": "",
+          "text": "**2026-11-15** — Trial 3b (run ork-20261115-001834-20cf, started 00:18) stopped by the owner at about 00:35 with no edits, after the orchestrator found the local brief drives the re-read loop (cloud prompt plus a local section: read-all-first step 1, note 'after each step', tool rules at the end). Filed S363 (local implementer brief). Trial 4 reruns S248 after S361, S362 and S363 land.",
+          "created_at": "2026-11-15T01:36:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -19682,6 +19696,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S363",
+      "title": "Local implementer brief: note first, anchor log, one test at a time",
+      "short_title": "Local implementer brief: note-first, one test at a time",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 3 (2026-11-14/15, S248, runs ork-20261114-224559-2b00 and ork-20261115-001834-20cf): the claude-local implementer ran 8 fresh sessions in 90 min and made no edit. Each session re-read the same 5-6 files and hit the 70k restart before its first edit; the progress note was written once and said only \"nothing survived\". The brief it gets is the cloud implementer prompt (20,358 chars) with a short local section added.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-implementer-brief",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
         "attempts": 0
       }
     }
