@@ -523,6 +523,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	var spentTokens int
 	var spentCost float64
 	var denials []runrec.DeniedCommand
+	var approvalDenials int
 	for {
 		sessionCtx, endSession := context.WithCancel(runCtx)
 		var contextTokens atomic.Int64
@@ -545,6 +546,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		res.Tokens += spentTokens
 		res.CostUSD += spentCost
 		res.Denials = append(denials, res.Denials...)
+		res.ApprovalDenials += approvalDenials
 		tokens := int(contextTokens.Load())
 		if tokens == 0 || runCtx.Err() != nil || !errors.Is(runErr, context.Canceled) {
 			break
@@ -575,6 +577,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. " + instruction + "\n\nProgress note:\n\n" + progress + "\n\nGit diff --stat:\n\n" + stat + "\n"
 		session = ""
 		spentTokens, spentCost, denials = res.Tokens, res.CostUSD, res.Denials
+		approvalDenials = res.ApprovalDenials
 		if err := e.run.Update(func(rr *runrec.Record) {
 			role := &rr.Roles[idx]
 			role.Restarts = append(role.Restarts, runrec.SessionRestart{At: e.d.now(), Tokens: tokens})
@@ -659,7 +662,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		text, file = e.readReport(reportPath, reportName, res.Report)
 	}
 	fallback := fallbackExit(class)
-	fallingBack := fallback && len(res.Denials) == 0 && !changed && statusErr == nil && nextEntry(entries, entryIndex, class) < len(entries)
+	fallingBack := fallback && len(res.Denials) == res.ApprovalDenials && !changed && statusErr == nil && nextEntry(entries, entryIndex, class) < len(entries)
 	err = e.run.Update(func(rr *runrec.Record) {
 		// A sibling round of the same state may have paused the slice already;
 		// its pause context is not this round's to clear.

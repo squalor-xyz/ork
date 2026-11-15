@@ -1546,8 +1546,9 @@ separately.
   and time the machine slept is not counted in it (the sleep detector applies,
   S235). Expiry ends
   the same process-group context and records an `error` exit, so the existing
-  fallback rules try the next lineup row. It marks no vendor out. A denied
-  command or a read-only tree change still prevents fallback. Cloud roles
+  fallback rules try the next lineup row. It marks no vendor out. An allowlist
+  denial or a read-only tree change still prevents fallback. A round whose
+  denials all came from ork's approval point may fall back. Cloud roles
   retain the 30-minute silence limit and the `hung` owner-retry path.
   The wait for a vendor slot is not counted
   as silence. Time the machine slept is not counted as silence either
@@ -1621,8 +1622,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
 - **Fallback** (`vendor.fallback-trigger-v2`, decision 156): an exit
   classified as rate-limited, out of credits or error moves the role to the next eligible entry in
   its chain, in the same state and round. Auth and unclassified exits, an
-  unsuccessful round with permission denials, and a changed tree in a
-  read-only role still stop.
+  unsuccessful round with an allowlist denial, and a changed tree in a
+  read-only role still stop. A round whose denials all came from ork's
+  approval point may fall back.
   A `connection` exit (S329, adj 291, `vendor.connection-error`) first waits
   30 seconds, then resumes the same session once on the same row and round.
   The vendor slot is released during the wait. A second connection failure
@@ -1816,6 +1818,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   the reason. A supplied `Read` limit must be at most 500. An unbounded read
   of a file with more than 500 lines is denied with its count and guidance
   to Grep first and Read a range. Bounded reads may start beyond line 500.
+  A missing file passes the line-count check so Claude's Read can report
+  its absence; path boundaries and the role allowlist still apply.
   An allowlisted call proceeds. Bash wildcards cannot introduce shell
   operators or substitutions absent from the allowlist entry. For example,
   `Bash(go test*)` does not approve `go test; make test`, while a configured
@@ -1839,6 +1843,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   [hook input and decision schema](https://code.claude.com/docs/en/hooks).
   Hook denials are returned with the role result even when Claude omits them
   from `permission_denials`; a successful round still proceeds.
+  The transient role result counts approval-point denials before deduplicating
+  vendor copies and adds the count across fresh-session restarts. An unsuccessful
+  round may fall back to the next role row when every denial came from that
+  approval point. An allowlist denial still blocks fallback. The count is not
+  persisted in the run record.
   A local spec check carries its project and checked item ids instead of a
   run id. While the check runs, the Roadmap or Waves sitting polls
   `spec.permission` with that scope and shows the same allow/deny choices.
@@ -1858,8 +1867,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `Bash(git -C * diff*)`, `Bash(git -C * log*)`, `Bash(adj check*)`,
   `Bash(adj lint*)`, `Bash(adj show*)` and `Bash(adj inbox*)`
   (`engine.default-allowlist`). A registry allowlist for a read-only role is
-  an error. A denial stops an unsuccessful round; a success proceeds. The
-  spike measured the claude allowlist
+  an error. An allowlist denial stops an unsuccessful round; a success proceeds.
+  The spike measured the claude allowlist
   denial: it exits 0 and shows only in `permission_denials`, so ork must read
   the JSON to see it. codex has no per-tool allowlist and ignores the registry allowlist. It may
   run write roles with `-s workspace-write` (`vendor.codex-write`, decision

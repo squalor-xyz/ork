@@ -128,6 +128,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	// Hook denials need not appear in Claude's permission_denials. Preserve
 	// them independently, without double-counting a vendor-reported copy.
 	hookDenials := finishApproval()
+	result.ApprovalDenials = len(hookDenials)
 	for _, denial := range result.Denials {
 		for i, hook := range hookDenials {
 			if hook == denial {

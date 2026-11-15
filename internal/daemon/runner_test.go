@@ -21,6 +21,39 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestClaudeRunnerCountsApprovalDenials(t *testing.T) {
+	hook := runrec.DeniedCommand{Tool: "Read", Command: "long.go"}
+	duplicate := claude.Denial{ToolName: "Read", ToolInput: json.RawMessage(`{"file_path":"long.go"}`)}
+	other := claude.Denial{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":"unlisted"}`)}
+	for _, tc := range []struct {
+		name   string
+		hooks  []runrec.DeniedCommand
+		vendor []claude.Denial
+		count  int
+		want   []runrec.DeniedCommand
+	}{
+		{"hook-only", []runrec.DeniedCommand{hook}, nil, 1, []runrec.DeniedCommand{hook}},
+		{"duplicate", []runrec.DeniedCommand{hook}, []claude.Denial{duplicate}, 1, []runrec.DeniedCommand{hook}},
+		{"mixed", []runrec.DeniedCommand{hook}, []claude.Denial{duplicate, other}, 1, []runrec.DeniedCommand{hook, {Tool: "Bash", Command: "unlisted"}}},
+		{"vendor-only", nil, []claude.Denial{other}, 0, []runrec.DeniedCommand{{Tool: "Bash", Command: "unlisted"}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := claudeRunner{
+				approval: func(context.Context, engine.Request, []string, string) (string, func() []runrec.DeniedCommand, error) {
+					return "hook", func() []runrec.DeniedCommand { return slices.Clone(tc.hooks) }, nil
+				},
+				round: func(context.Context, claude.Spec) (claude.Round, error) {
+					return claude.Round{Denials: tc.vendor}, context.DeadlineExceeded
+				},
+			}
+			got, err := r.Run(context.Background(), engine.Request{Vendor: "claude-local"})
+			if !errors.Is(err, context.DeadlineExceeded) || got.ApprovalDenials != tc.count || !reflect.DeepEqual(got.Denials, tc.want) {
+				t.Fatalf("approval count=%d denials=%+v err=%v; want count=%d denials=%+v", got.ApprovalDenials, got.Denials, err, tc.count, tc.want)
+			}
+		})
+	}
+}
+
 // These launchers exercise the real dispatcher and adapters without a server.
 func localLaunchers(t *testing.T) string {
 	t.Helper()
