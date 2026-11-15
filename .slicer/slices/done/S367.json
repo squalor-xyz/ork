@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/agent/claude/pretool.go:91-104` (token scan: single-quoted spans, `~`, braces)\n- `internal/agent/claude/pretool.go:221-229` (`shellOperators`: skip single-quoted spans)\n- `internal/agent/claude/pretool_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/agent/claude/pretool.go:90-118` (`ApprovalPolicy.Evaluate`: deny precedence before asks)\n- `internal/agent/claude/pretool.go:231-315` (`shellOperators` and shared `scanShell`; flush before incomplete return)\n- `internal/agent/claude/pretool_test.go:45-136` (evaluation regression tests)\n- `docs/design.md:1859-1885` (approval hook rules and deny precedence)\n- `CHANGELOG.md:3` (Unreleased)"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestEvaluateQuotedPipeIsNotAnOperator`: `go -C WT test -run 'TestA|TestB' ./internal/cli` with `Bash(go -C * test*)` allowed returns allow with reason \"role allowlist\".\n- `TestEvaluateUnquotedPipeStillAsks`: `go -C WT test ./... | tail -5` does not match that rule.\n- `TestEvaluateTildePathOutsideWorktree`: `cat ~/.ssh/config` is denied or asks, never allowed.\n- `TestEvaluateBracePathOutsideWorktree`: `ls /home/{x,y}` with an allowlist that would match `ls` is denied or asks.\n- `TestEvaluateDoubleQuotedOperator`: a `|` inside double quotes is literal for the operator comparison, but a `$(` or backtick inside double quotes still counts."
+      "body": "- `TestEvaluateQuotedPipeIsNotAnOperator`: `go -C WT test -run 'TestA|TestB' ./internal/cli` returns allow with reason \"role allowlist\" under `Bash(go -C * test*)`; also cover quoted semicolon, ampersand and redirection.\n- `TestEvaluateUnquotedPipeStillAsks`: unquoted pipe does not match that rule (existing regression guard).\n- `TestEvaluateTildePathOutsideWorktree`: `cat ~/.ssh/config` asks or denies under `Bash(cat*)`.\n- `TestEvaluateBracePathOutsideWorktree`: `ls /home/{x,y}` stays blocked (existing guard); `ls WT/{safe,escape}/file`, where escape is a symlink outside WT, asks or denies under `Bash(ls*)`.\n- `TestEvaluateDoubleQuotedOperator`: double-quoted pipe is literal; double-quoted command substitution and backticks remain blocked (existing guards).\n- `TestEvaluateQuotedPathStaysWhole`: a single-quoted absolute path through an outside symlink whose name contains a space is denied.\n- `TestEvaluateOutsidePathOverridesAsk`: brace or tilde expansion, incomplete quoting after a comment marker, and a trailing backslash cannot mask an outside absolute path or traversal; each denies with the outside token in the reason."
     },
     {
       "heading": "Implement",

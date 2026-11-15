@@ -20046,10 +20046,25 @@
       "id": "S367",
       "title": "Approval hook: shell quoting in the Bash token scan",
       "short_title": "Hook token scan: quoted operators, braces, tilde",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d3d36d20-442c-4e1e-a672-e8fcf69a4a50",
+          "kind": "",
+          "text": "**2026-11-15** — Verified quote-aware Bash path and operator scanning, tilde and brace approval guards, and outside-path denial before expansion or incomplete-quoting asks. Regression tests and mutation checks verified the wiring; design and changelog describe the behavior.",
+          "created_at": "2026-11-15T16:53:27Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20067,7 +20082,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

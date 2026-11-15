@@ -42,6 +42,98 @@ func TestPretoolReadLimits(t *testing.T) {
 
 func strconvQuote(s string) string { b, _ := json.Marshal(s); return string(b) }
 
+func TestEvaluateQuotedPipeIsNotAnOperator(t *testing.T) {
+	root := t.TempDir()
+	p := ApprovalPolicy{Worktree: root, Allowlist: []string{"Bash(go -C * test*)"}}
+	for _, filter := range []string{"'TestA|TestB'", "'TestA;TestB&TestC>TestD'"} {
+		got := p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote("go -C "+root+" test -run "+filter+" ./internal/cli") + `}`)})
+		if got != (Approval{"allow", "role allowlist"}) {
+			t.Errorf("filter %s = %+v, want allow with role allowlist", filter, got)
+		}
+	}
+}
+
+func TestEvaluateUnquotedPipeStillAsks(t *testing.T) {
+	root := t.TempDir()
+	p := ApprovalPolicy{Worktree: root, Allowlist: []string{"Bash(go -C * test*)"}}
+	got := p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote("go -C "+root+" test ./... | tail -5") + `}`)})
+	if got.Decision != "ask" {
+		t.Fatalf("unquoted pipe = %+v, want ask", got)
+	}
+}
+
+func TestEvaluateTildePathOutsideWorktree(t *testing.T) {
+	p := ApprovalPolicy{Worktree: t.TempDir(), Allowlist: []string{"Bash(cat*)"}}
+	got := p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":"cat ~/.ssh/config"}`)})
+	if got.Decision == "allow" {
+		t.Fatalf("tilde path = %+v, must ask or deny", got)
+	}
+}
+
+func TestEvaluateBracePathOutsideWorktree(t *testing.T) {
+	root := t.TempDir()
+	if err := os.Symlink(filepath.Dir(root), filepath.Join(root, "escape")); err != nil {
+		t.Fatal(err)
+	}
+	p := ApprovalPolicy{Worktree: root, Allowlist: []string{"Bash(ls*)"}}
+	for _, path := range []string{"/home/{x,y}", root + "/{safe,escape}/file"} {
+		got := p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote("ls "+path) + `}`)})
+		if got.Decision == "allow" {
+			t.Errorf("brace path %s = %+v, must ask or deny", path, got)
+		}
+	}
+}
+
+func TestEvaluateDoubleQuotedOperator(t *testing.T) {
+	root := t.TempDir()
+	p := ApprovalPolicy{Worktree: root, Allowlist: []string{"Bash(go -C * test*)"}}
+	for _, tc := range []struct{ filter, want string }{
+		{`"TestA|TestB"`, "allow"},
+		{`"$(echo TestA)"`, "ask"},
+		{"\"`echo TestA`\"", "ask"},
+	} {
+		t.Run(tc.filter, func(t *testing.T) {
+			got := p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote("go -C "+root+" test -run "+tc.filter+" ./internal/cli") + `}`)})
+			if got.Decision != tc.want {
+				t.Fatalf("double quoted filter = %+v, want %s", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestEvaluateQuotedPathStaysWhole(t *testing.T) {
+	root := t.TempDir()
+	link := filepath.Join(root, "escape space")
+	if err := os.Symlink(filepath.Dir(root), link); err != nil {
+		t.Fatal(err)
+	}
+	p := ApprovalPolicy{Worktree: root, Allowlist: []string{"Bash(ls*)"}}
+	got := p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote("ls '"+link+"/file'") + `}`)})
+	if got.Decision != "deny" {
+		t.Fatalf("quoted symlink path = %+v, want deny", got)
+	}
+}
+
+func TestEvaluateOutsidePathOverridesAsk(t *testing.T) {
+	p := ApprovalPolicy{Worktree: t.TempDir(), Allowlist: []string{"Bash(ls*)", "Bash(cat*)"}}
+	for _, tc := range []struct{ name, command, outside string }{
+		{"brace", "ls {a,b} /etc/passwd", "/etc/passwd"},
+		{"tilde", "cat ~/.ssh/config ../outside", "../outside"},
+		{"incomplete quote", "cat /etc/passwd; # '", "/etc/passwd"},
+		{"trailing backslash", `cat /etc/passwd\`, "/etc/passwd"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote(tc.command) + `}`)})
+			if got.Decision != "deny" {
+				t.Errorf("decision = %q, want deny: %s", got.Decision, got.Reason)
+			}
+			if !strings.Contains(got.Reason, strconvQuote(tc.outside)) {
+				t.Errorf("reason %q lacks outside token %q", got.Reason, tc.outside)
+			}
+		})
+	}
+}
+
 func TestPretoolMissingRead(t *testing.T) {
 	root := t.TempDir()
 	for _, tc := range []struct {
