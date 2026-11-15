@@ -1,0 +1,41 @@
+{
+  "id": "S362",
+  "title": "Approval hook: a Read of a missing file is a denial that blocks the fallback",
+  "lead": [
+    "*Proposed.* A Read of a file that does not exist is not a policy question: the hook allows it (Claude's Read then reports the missing file to the model). And a denial made by ork's own approval point (S356) is a policy answer the model already received; it does not block falling back to the next row the way an allowlist denial does."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 3 (2026-11-15, run ork-20261114-224559-2b00): the claude-local implementer's Read of its own progress note, before the note existed, was denied by the PreToolUse hook (\"cannot count Read lines: stat ...: no such file or directory\", `internal/agent/claude/pretool.go:113-116`). The run recorded 2 denials, so when the local implementer hit the 90 min limit the claude sonnet fallback did not take over (`internal/engine/round.go:657` requires no denials) and the run stopped.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* `fallingBack` excludes runs with denials because, before S356, a denial meant the allowlist lacked something the owner had to add. Under S356 a local role is denied by design (500-line cap, outside paths), so any such denial would stop a local run at the time limit instead of falling back. The trial 3 denials were also false: the file the role was told to keep did not exist yet."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/pretool.go:107-122` (missing file: allow)\n- `internal/agent/claude/pretool_test.go`\n- `internal/engine/round.go:650-660` (`fallingBack`: approval-point denials do not block it)\n- `internal/engine/round_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `Evaluate` on a Read with no `limit` of a missing file inside the worktree returns allow.\n- A fake claude-local round that times out after one approval-point denial falls back to the next implementer row.\n- A round whose denial came from the allowlist (no approval point) still stops as today."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Red tests above.\n2. Allow the missing-file Read; mark approval-point denials on the result so `fallingBack` can tell them apart.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
