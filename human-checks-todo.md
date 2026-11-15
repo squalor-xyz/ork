@@ -169,3 +169,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S311 (run ork-20261115-033114-333e, 2026-11-15)
 
 - [ ] [AFTER LAND] HUMAN CHECK : set a command that appends to a file, start a small slice, and see one line for each time it needs you and one on landing.
+
+## S366 (run ork-20261115-150511-7d21, 2026-11-15)
+
+- [ ] [AFTER LAND] `` S304 trial 5 runs S248 with the pack and records it in S304's notes.
