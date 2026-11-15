@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/speccheck.go:355-363` (plan with the run request's lineup flags when the spec check comes from `ork run` or `ork wave start`)\n- `internal/daemon/runs.go:850-870` (a local run with no saved pack: re-run the spec check, or start without one; the implementer picks and says why)\n- `internal/daemon/speccheck_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/daemon/speccheck.go:35-39` (`SpecCheckParams`: optional per-item lineups); `internal/daemon/speccheck.go:245-312` (`specCheck`: plan with overrides and treat a missing local pack as stale); `internal/daemon/speccheck.go:341` (`runSpecCheck`: consume planned local items)\n- `internal/daemon/speccheck_test.go:37-83` (override, matrix, copy and stale-cache regressions)\n- `internal/cli/wave.go:479-491` (`specCheck`: shared run/wave wire request)\n- `internal/cli/wave_test.go:22-57` (run/wave override wire regression)\n- `docs/design.md:1461-1482` (orientation lifecycle)\n- `CHANGELOG.md:3` (Unreleased)\n- `internal/daemon/runs.go:850-878` (reference only: preserve missing-pack launch behavior)"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestSpecCheckUsesRunLineupOverride`: a spec check started for `ork run P S --implementer claude-local:M:low` with a cloud matrix default asks for `## Orientation S` and saves `orientation.md`.\n- `TestPollerSpecCheckUsesMatrixLineup`: a poller spec check with a cloud matrix default asks for no pack.\n- `TestLocalRunCopiesPackFromOverrideCheck`: the run started with that override has `orientation.md` in its run dir."
+      "body": "- `TestSpecCheckUsesRunLineupOverride`: a local override against a cloud matrix asks for Orientation S1 and saves orientation.md.\n- `TestPollerSpecCheckUsesMatrixLineup`: no run override uses the cloud matrix and asks for no pack (existing-behavior control).\n- `TestLocalRunCopiesPackFromOverrideCheck`: the override run copies the generated pack into its run directory.\n- `TestLocalOverrideRechecksCachedVerdictWithoutPack`: an unchanged cloud verdict without a pack is stale for a local override.\n- `TestSpecCheckSendsRunLineupOverrides`: ork run and ork wave start send each item lineup over the spec-check wire."
     },
     {
       "heading": "Implement",

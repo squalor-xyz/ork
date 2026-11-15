@@ -15,6 +15,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
@@ -477,13 +478,17 @@ func printWave(o *output, result daemon.WaveResult) int {
 // the prompts writer.
 func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.Writer, params *daemon.WaveStartParams, flags *specFlags) (held, noSpec []string, code int) {
 	var ids []string
+	lineups := map[string]map[string][]runrec.LineupEntry{}
 	for _, item := range params.Items {
 		ids = append(ids, item.Item)
+		if len(item.Lineup) > 0 {
+			lineups[item.Item] = item.Lineup
+		}
 	}
 	// The call returns when the role has finished: say so first (S264, *proposed*).
 	fmt.Fprintf(w, "spec check: %s; wait for it to finish\n", strings.Join(ids, ", "))
 	var check daemon.SpecCheckResult
-	if code := a.callWith(ctx, o, "spec check failed: ", daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids}, &check); code != ExitOK {
+	if code := a.callWith(ctx, o, "spec check failed: ", daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids, Lineups: lineups}, &check); code != ExitOK {
 		return nil, nil, code
 	}
 	if check.OwnerNeeded != "" {

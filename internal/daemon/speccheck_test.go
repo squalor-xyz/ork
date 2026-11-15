@@ -25,6 +25,63 @@ import (
 
 const u11 = "The spec check before a wave runs the Spec check row (r16): one read-only pass."
 
+const overrideCheck = `{"project":"p","items":["S1"],"lineups":{"S1":{"implementer":[{"vendor":"claude-local","model":"qwen3.8-27b","effort":"low"}]}}}`
+
+func overrideSpecRig(t *testing.T) *specRig {
+	t.Helper()
+	rig := newSpecRig(t, rulesJSON(u11))
+	rig.report = "## Slice S1\nReady\n\n## Owner needed\nnone\n\n## Orientation S1\nquoted source and test\n"
+	return rig
+}
+
+func TestSpecCheckUsesRunLineupOverride(t *testing.T) {
+	rig := overrideSpecRig(t)
+	request(t, rig.d, MethodSpecCheck, overrideCheck)
+	if !strings.Contains(rig.requests()[0].Brief, "Write `## Orientation S1`") {
+		t.Error("local override did not request Orientation S1")
+	}
+	pack, err := os.ReadFile(filepath.Join(rig.d.specDir("p", "S1"), "orientation.md"))
+	if err != nil || string(pack) != "quoted source and test" {
+		t.Errorf("override spec pack: %q, %v", pack, err)
+	}
+}
+
+func TestPollerSpecCheckUsesMatrixLineup(t *testing.T) {
+	rig := overrideSpecRig(t)
+	rig.check(t, "S1")
+	if strings.Contains(rig.requests()[0].Brief, "Write `## Orientation S1`") {
+		t.Error("cloud matrix requested Orientation S1")
+	}
+	pack, err := os.ReadFile(filepath.Join(rig.d.specDir("p", "S1"), "orientation.md"))
+	if !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("cloud matrix saved pack: %q, %v", pack, err)
+	}
+}
+
+func TestLocalRunCopiesPackFromOverrideCheck(t *testing.T) {
+	rig := overrideSpecRig(t)
+	request(t, rig.d, MethodSpecCheck, overrideCheck)
+	rec, err := rig.d.startRun(context.Background(), RunParams{Project: "p", Item: "S1", Lineup: map[string][]runrec.LineupEntry{engine.RoleImplementer: {{Vendor: "claude-local", Model: "qwen3.8-27b", Effort: "low"}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitIdle(t, rig.d, rec.ID)
+	pack, err := os.ReadFile(filepath.Join(rig.store.RunDir(rec.ID), "orientation.md"))
+	if err != nil || string(pack) != "quoted source and test" {
+		t.Errorf("override run pack: %q, %v", pack, err)
+	}
+}
+
+func TestLocalOverrideRechecksCachedVerdictWithoutPack(t *testing.T) {
+	rig := overrideSpecRig(t)
+	rig.check(t, "S1")
+	request(t, rig.d, MethodSpecCheck, overrideCheck)
+	pack, err := os.ReadFile(filepath.Join(rig.d.specDir("p", "S1"), "orientation.md"))
+	if err != nil || string(pack) != "quoted source and test" {
+		t.Errorf("cached cloud verdict did not regenerate local pack: %q, %v", pack, err)
+	}
+}
+
 func TestLocalRunWithoutPackAfterSkippedOrFailedCheck(t *testing.T) {
 	for _, failed := range []bool{false, true} {
 		t.Run(fmt.Sprint(failed), func(t *testing.T) {

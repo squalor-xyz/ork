@@ -33,8 +33,9 @@ const CodeSpecQuestions = "spec_questions"
 
 // SpecCheckParams names the project and the items to check in one pass.
 type SpecCheckParams struct {
-	Project string   `json:"project"`
-	Items   []string `json:"items"`
+	Project string                                     `json:"project"`
+	Items   []string                                   `json:"items"`
+	Lineups map[string]map[string][]runrec.LineupEntry `json:"lineups,omitempty"`
 }
 
 // SpecItemResult is the check's answer for one item against its current
@@ -271,7 +272,7 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		return nil, err
 	}
 	deps := d.runDeps(proj)
-	var stale []string
+	var stale, localItems []string
 	noSpec := map[string]bool{}
 	for _, item := range items {
 		raw, err := deps.Slicer.ShowRaw(ctx, proj.Path, item)
@@ -294,12 +295,27 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		d.runs.mu.Lock()
 		e, ok := d.runs.specs[specKey(proj.Name, item)]
 		d.runs.mu.Unlock()
-		if !ok || e.fingerprint != fp {
+		// A cached cloud check has no pack for a newly selected local
+		// implementer. Plan with the same overrides as run admission.
+		plan, planErr := d.planRun(ctx, RunParams{Project: proj.Name, Item: item, Lineup: p.Lineups[item]})
+		local := planErr == nil && engine.IsLocalRun(plan.Lineup)
+		missingPack := false
+		if local {
+			_, err := os.Stat(filepath.Join(d.specDir(proj.Name, item), "orientation.md"))
+			missingPack = errors.Is(err, os.ErrNotExist)
+			if err != nil && !missingPack {
+				return nil, fmt.Errorf("stat orientation %s: %w", item, err)
+			}
+		}
+		if !ok || e.fingerprint != fp || missingPack {
 			stale = append(stale, item)
+			if local {
+				localItems = append(localItems, item)
+			}
 		}
 	}
 	if len(stale) > 0 {
-		if err := d.runSpecCheck(ctx, deps, proj, stale); err != nil {
+		if err := d.runSpecCheck(ctx, deps, proj, stale, localItems); err != nil {
 			return nil, err
 		}
 	}
@@ -382,7 +398,7 @@ func (d *Daemon) reuseSpecAnswers(ctx context.Context, deps engine.Deps, proj re
 
 // runSpecCheck runs the role over items and remembers each verdict. The job
 // counts as active work, so the daemon does not stop or restart under it.
-func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj registry.Project, items []string) error {
+func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj registry.Project, items, localItems []string) error {
 	chain, err := d.specChain(ctx, deps, proj, items[0])
 	if err != nil {
 		return err
@@ -412,15 +428,6 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 		d.runs.wg.Done()
 	}()
 	ctx = jobCtx
-	var localItems []string
-	for _, item := range items {
-		// A slice without an admissible plan still needs its spec checked.
-		// Only a valid plan can identify a planned local implementer.
-		plan, err := d.planRun(ctx, RunParams{Project: proj.Name, Item: item})
-		if err == nil && engine.IsLocalRun(plan.Lineup) {
-			localItems = append(localItems, item)
-		}
-	}
 	d.runs.specStateMu.Lock()
 	if _, err := d.registered(proj.Name); err != nil {
 		d.runs.specStateMu.Unlock()

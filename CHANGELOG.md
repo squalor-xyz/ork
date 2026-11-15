@@ -9,6 +9,9 @@
   failures keep the question with a notice. The spec-check prompt searches
   decided records before inventing a key.
 
+- S366: honor run and wave lineup overrides when requesting orientation
+  packs, and recheck cached verdicts missing a pack for a local implementer.
+
 - *Proposed (S311):* store and clear per-project `notify_command`
   with `ork projects set NAME --notify CMD`, including while runs are
   unfinished. Execute the whole value as one program, without arguments,
