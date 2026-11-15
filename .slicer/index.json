@@ -19731,7 +19731,7 @@
       "id": "S364",
       "title": "Local roles: minimal system prompt and tool set, measured on a micro-task",
       "short_title": "Local tuning: minimal system prompt, tools, window",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19741,6 +19741,34 @@
           "text": "**2026-11-15** — 2026-11-15, owner in interactive question (session 8d711f67): Q1 ork's own system prompt (adj 351), Q2 six tools (adj 352); reasoning stays at low (adj 350). Step 1's adj asks are done; owner said compaction window is 115k.",
           "created_at": "2026-11-15T01:58:16Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "f223ed34-4616-4f16-b101-8c7d0e40ce48",
+          "kind": "",
+          "text": "**2026-11-15** — Human checks at approval (S364):\n- later: deferred to land: `` The orchestrator runs the micro-task for settings 1-4 and records the table in this slice's notes and S304's.",
+          "created_at": "2026-11-15T02:31:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "8b91063b-acc1-42e4-aeb3-051610bfc434",
+          "kind": "",
+          "text": "**2026-11-15** — Verified outcome: a claude-local role now gets ork's own system prompt (internal/roles/prompts/local-system.md, 1179 characters, embedded, written to local-system.md in the role's temp directory) via --system-prompt-file, and --tools Read,Grep,Glob,Edit,Write,Bash (read-only roles drop Edit and Write unless they hold the progress-note grant; a UI pass adds Skill) in place of S360's --disallowedTools. Cloud args are unchanged. ORK_LOCAL_FRESH_TOKENS overrides the 70,000-token fresh-session threshold for measurement only (adj 335 unchanged). go vet, go test ./... (26 packages), gofmt -l, slicer check and adj lint pass; ten mutations each went red. The micro-task table for settings 1-4 is the AFTER LAND check and is not recorded yet.",
+          "created_at": "2026-11-15T02:32:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19767,7 +19795,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

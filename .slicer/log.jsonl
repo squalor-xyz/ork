@@ -4524,3 +4524,9 @@
 {"when": "2026-11-15T01:58:02Z", "item": "S365", "action": "add", "from": "", "to": "open", "note": "Local implementer: a cloud-written orientation pack in the brief"}
 {"when": "2026-11-15T01:58:16Z", "item": "S364", "action": "note", "from": "", "to": "", "note": "2026-11-15, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
 {"when": "2026-11-15T01:58:16Z", "item": "S365", "action": "note", "from": "", "to": "", "note": "2026-11-15, owner in interactive question (session 8d711f67)", "by": "Jon Robbins"}
+{"when": "2026-11-15T02:10:39Z", "item": "S364", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-15T02:17:54Z", "item": "S364", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-15T02:17:56Z", "item": "S364", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-15T02:31:57Z", "item": "S364", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S364):", "by": "Jon Robbins"}
+{"when": "2026-11-15T02:32:03Z", "item": "S364", "action": "note", "from": "", "to": "", "note": "Verified outcome: a claude-local role now gets ork's own sys", "by": "Jon Robbins"}
+{"when": "2026-11-15T02:32:05Z", "item": "S364", "action": "status", "from": "started", "to": "done", "note": "Local roles: ork's own system prompt and six-tool --tools set for claude-local, ORK_LOCAL_FRESH_TOKENS override for measurement; checks green; micro-task table pending after land.", "by": "Jon Robbins"}

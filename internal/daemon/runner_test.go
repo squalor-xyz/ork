@@ -18,6 +18,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/agent/grok"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -52,7 +53,7 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 			if vendor == "grok-local" {
 				model = "latest"
 			}
-			got, err := d.runDeps(p).Runner.Run(context.Background(), engine.Request{Vendor: vendor, Brief: "brief", Worktree: dir, Model: model, Effort: "medium", Resume: "prior", ReadOnly: true})
+			got, err := d.runDeps(p).Runner.Run(context.Background(), engine.Request{Vendor: vendor, Brief: "brief", Worktree: dir, TempDir: dir, Model: model, Effort: "medium", Resume: "prior", ReadOnly: true})
 			if err != nil || got.Report != "local report" {
 				t.Fatalf("launcher result: %+v, %v", got, err)
 			}
@@ -61,7 +62,7 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 				t.Fatal(err)
 			}
 			want := map[string][]string{
-				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--disallowedTools", localDisallowedTools, "--disable-slash-commands", "--allowedTools", localReadOnlyTools, "--permission-prompts", "none", "brief"},
+				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--system-prompt-file", filepath.Join(dir, "local-system.md"), "--tools", "Read,Grep,Glob,Bash", "--disable-slash-commands", "--allowedTools", localReadOnlyTools, "--permission-prompts", "none", "brief"},
 				"codex-local":  {"exec", "resume", "prior", "-m", model, "--json", "-c", "model_reasoning_effort=medium", "-c", `sandbox_mode="read-only"`, "brief"},
 				"grok-local":   {"-p", "brief", "--output-format", "streaming-messages-json", "--include-partial-messages", "--reasoning-effort", "medium", "--resume", "prior", "--permission-mode", "plan", "--cwd", dir},
 			}[vendor]
@@ -78,13 +79,18 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 			if string(b) != strings.Join(want, "\n")+"\n" {
 				t.Fatalf("launcher argv: %q; want %q", b, want)
 			}
+			if vendor == "claude-local" {
+				// ork writes its own system prompt into the role's temp directory.
+				text, err := os.ReadFile(filepath.Join(dir, "local-system.md"))
+				if err != nil || string(text) != roles.LocalSystemPrompt() {
+					t.Fatalf("local system prompt file: %q, %v", text, err)
+				}
+			}
 		})
 	}
 }
 
 const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(adj show*),Bash(adj check*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
-
-const localDisallowedTools = "WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill"
 
 func TestClaudeContextReachesEngine(t *testing.T) {
 	got := 0
@@ -126,11 +132,18 @@ func TestClaudeProgressPermissionIsOneAbsoluteFile(t *testing.T) {
 	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
 		var err error
 		args, err = s.Args()
+		// Without a role temp directory the file still exists during the round.
+		if _, statErr := os.Stat(s.SystemPromptFile); statErr != nil {
+			t.Errorf("system prompt file during the round: %v", statErr)
+		}
 		return claude.Round{Class: claude.ClassOK}, err
 	}}
 	_, err := r.Run(context.Background(), engine.Request{Vendor: "claude-local", Brief: "brief", ReadOnly: true, ProgressFile: path, Allowlist: []string{"Write"}})
 	if err != nil {
 		t.Fatal(err)
+	}
+	if i := slices.Index(args, "--tools"); i < 0 || args[i+1] != "Read,Grep,Glob,Edit,Write,Bash" {
+		t.Fatalf("a read-only role with a progress note needs Edit and Write: %q", args)
 	}
 	escaped := strings.ReplaceAll(strings.ReplaceAll(path, "[", `\[`), "]", `\]`)
 	want := localReadOnlyTools + ",Edit(/" + escaped + ")"
@@ -152,6 +165,7 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 				if err != nil {
 					t.Fatal(err)
 				}
+				temp := t.TempDir()
 				r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
 					got, err := s.Args()
 					if err != nil {
@@ -159,12 +173,12 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 					}
 					want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
 					if vendor == "claude-local" {
-						denied, slash := localDisallowedTools, []string{"--disable-slash-commands"}
+						tools, slash := "Read,Grep,Glob,Bash", []string{"--disable-slash-commands"}
 						if role == engine.RoleUI {
 							// A UI pass loads skills (brief.go), so it keeps Skill.
-							denied, slash = "WebFetch,WebSearch,Task,Agent,NotebookEdit", nil
+							tools, slash = "Read,Grep,Glob,Bash,Skill", nil
 						}
-						want = append(want, "--disallowedTools", denied)
+						want = append(want, "--system-prompt-file", filepath.Join(temp, "local-system.md"), "--tools", tools)
 						want = append(want, slash...)
 						want = append(want, "--allowedTools", localReadOnlyTools, "--permission-prompts", "none")
 						want = append(want, "--permission-mode", "manual", "--settings", claude.HookSettings(""))
@@ -177,7 +191,7 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 					}
 					return claude.Round{Class: claude.ClassOK}, nil
 				}}
-				_, err = r.Run(context.Background(), engine.Request{Role: role, Vendor: vendor, Brief: "review", ReadOnly: perm.ReadOnly, Allowlist: []string{"Edit", "Write", "Bash(git *)"}})
+				_, err = r.Run(context.Background(), engine.Request{Role: role, Vendor: vendor, Brief: "review", TempDir: temp, ReadOnly: perm.ReadOnly, Allowlist: []string{"Edit", "Write", "Bash(git *)"}})
 				if err != nil {
 					t.Fatal(err)
 				}
@@ -617,13 +631,22 @@ func TestClaudeLocalEnvCapsBashOutput(t *testing.T) {
 		{"claude", "", base},
 	} {
 		t.Run(tc.vendor+"/"+tc.temp, func(t *testing.T) {
+			// A claude-local round writes its system prompt into the temp
+			// directory, so "/temp" stands for a real directory.
+			temp, want := tc.temp, slices.Clone(tc.want)
+			if temp != "" {
+				temp = t.TempDir()
+				for i := range want {
+					want[i] = strings.ReplaceAll(want[i], "/temp", temp)
+				}
+			}
 			runner := claudeRunner{env: base, round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
-				if !reflect.DeepEqual(s.Env, tc.want) {
-					t.Errorf("environment %v, want %v", s.Env, tc.want)
+				if !reflect.DeepEqual(s.Env, want) {
+					t.Errorf("environment %v, want %v", s.Env, want)
 				}
 				return claude.Round{Class: claude.ClassOK}, nil
 			}}
-			if _, err := runner.Run(context.Background(), engine.Request{Vendor: tc.vendor, TempDir: tc.temp, ReadOnly: true}); err != nil {
+			if _, err := runner.Run(context.Background(), engine.Request{Vendor: tc.vendor, TempDir: temp, ReadOnly: true}); err != nil {
 				t.Fatal(err)
 			}
 		})

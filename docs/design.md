@@ -1895,13 +1895,26 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   stream-json --verbose --include-partial-messages [--model M] [--effort E]`
   (M is the lineup entry's `model`, the alias itself for `opus@latest`;
   S244, *proposed*),
-  then, for claude-local only (S360, *proposed*; owner decision 2026-11-12),
-  `--disallowedTools WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill
-  --disable-slash-commands`, which leaves the role less fixed context to
-  prefill each turn (`claude --help` lists both flags). A UI pass keeps
-  `Skill` and the slash commands, since its brief names skills to load. The
-  flags come before `--allowedTools`, because `--disallowedTools` takes a
-  variadic list. A claude-local role's environment also sets
+  then, for claude-local only (S360, S364, *proposed*; owner decisions
+  2026-11-12 and 2026-11-15, adj 351 and 352), `--system-prompt-file F
+  --tools Read,Grep,Glob,Edit,Write,Bash --disable-slash-commands`, which
+  leaves the role less fixed context to prefill each turn (`claude --help`
+  lists the flags). `F` is ork's own short system prompt
+  (`internal/roles/prompts/local-system.md`, under 2,000 characters, embedded
+  in the binary), which replaces Claude Code's default one; the daemon
+  writes it to `local-system.md` in the role's temp directory before each
+  round, and the role prompt and brief stay the user message. `--bare` is not
+  used: it skips hooks, and the approval point is a hook. `--tools` limits
+  the built-in tools the model is sent, so S360's `--disallowedTools` list is
+  not passed any more. A read-only role gets the same set without Edit and
+  Write, unless it holds the progress-note grant (an Edit rule the hook
+  applies to Edit and Write), which needs both. A UI pass keeps `Skill` in
+  its tool set and the slash commands, since its brief names skills to load.
+  The flags come before `--allowedTools`, because `--tools` takes a variadic
+  list. The measured effect of these settings on a micro-task is recorded in
+  S364's notes. The S358 fresh-session threshold stays 70,000 tokens (adj
+  335); the daemon's environment variable `ORK_LOCAL_FRESH_TOKENS` overrides
+  it for a measurement only. A claude-local role's environment also sets
   `BASH_MAX_OUTPUT_LENGTH` to a character cap on one Bash result
   (`localBashOutputCap`, `internal/daemon/runner.go`), replacing an inherited
   value. The owner measured the variable on 2026-11-12 with claude 2.1.322

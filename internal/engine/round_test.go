@@ -44,7 +44,7 @@ func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (
 			if req.OnContext != nil {
 				req.OnContext(tokens)
 			}
-			if vendor == "claude" || tokens <= 70000 {
+			if vendor == "claude" || tokens <= localFreshLimit() {
 				if ctx.Err() != nil {
 					return Result{}, ctx.Err()
 				}
@@ -175,6 +175,23 @@ func TestFreshSessionThresholdIsStrict(t *testing.T) {
 	_, _, at, atOut := freshSessionRound(t, "claude-local", 70000)
 	if !overOut.ok || len(over) != 2 || !atOut.ok || len(at) != 1 || atOut.text != overOut.text {
 		t.Fatalf("threshold differential: requests=%d/%d reports=%+v/%+v", len(over), len(at), overOut, atOut)
+	}
+}
+
+// ORK_LOCAL_FRESH_TOKENS moves the threshold for a measurement only (S364,
+// *proposed*); an unset or unusable value leaves 70,000 (adj 335).
+func TestFreshSessionThresholdEnvOverride(t *testing.T) {
+	t.Setenv("ORK_LOCAL_FRESH_TOKENS", "95000")
+	_, _, below, belowOut := freshSessionRound(t, "claude-local", 95000)
+	_, _, over, overOut := freshSessionRound(t, "claude-local", 95001)
+	if !belowOut.ok || len(below) != 1 || !overOut.ok || len(over) != 2 || belowOut.text != overOut.text {
+		t.Fatalf("override differential: requests=%d/%d reports=%+v/%+v", len(below), len(over), belowOut, overOut)
+	}
+	for _, bad := range []string{"", "abc", "0", "-5"} {
+		t.Setenv("ORK_LOCAL_FRESH_TOKENS", bad)
+		if got := localFreshLimit(); got != 70000 {
+			t.Errorf("ORK_LOCAL_FRESH_TOKENS=%q gives %d, want 70000", bad, got)
+		}
 	}
 }
 

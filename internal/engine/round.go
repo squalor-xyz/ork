@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -22,6 +23,17 @@ import (
 const heartbeatInterval = 10 * time.Minute
 
 const localFreshTokens = 70000
+
+// localFreshLimit is the context size above which a claude-local session ends
+// and restarts fresh (adj 335). ORK_LOCAL_FRESH_TOKENS overrides it so a
+// measurement can try another size (S364, *proposed*); it is not a setting, and
+// changing adj 335 is the owner's call.
+func localFreshLimit() int {
+	if n, err := strconv.Atoi(os.Getenv("ORK_LOCAL_FRESH_TOKENS")); err == nil && n > 0 {
+		return n
+	}
+	return localFreshTokens
+}
 
 // round is one role round the state machine asks for.
 type round struct {
@@ -532,7 +544,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 			ProgressFile: progressFile,
 			OnContext: func(tokens int) {
-				if entry.Vendor == "claude-local" && tokens > localFreshTokens && contextTokens.CompareAndSwap(0, int64(tokens)) {
+				if entry.Vendor == "claude-local" && tokens > localFreshLimit() && contextTokens.CompareAndSwap(0, int64(tokens)) {
 					endSession()
 				}
 			},

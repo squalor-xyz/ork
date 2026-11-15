@@ -30,6 +30,17 @@ import (
 //go:embed prompts/*.md
 var promptFS embed.FS
 
+// localSystem is ork's own system prompt for a claude-local role (S364,
+// adj 351, *proposed*). It is not a role prompt: it replaces Claude Code's
+// default system prompt, and the role prompt stays the user message. It holds
+// no placeholders and is under 2,000 characters.
+//
+//go:embed prompts/local-system.md
+var localSystem string
+
+// LocalSystemPrompt returns ork's own system prompt for a claude-local role.
+func LocalSystemPrompt() string { return localSystem }
+
 // ContractVersion is the version of slicer's relay contract that the prompts
 // are written against. It matches each prompt's first line. ork accepts the
 // versions in AcceptedContracts, which include this one.

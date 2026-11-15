@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/agent/claude/args.go:22-67` (claude-local: `--system-prompt-file`, `--tools`)\n- `internal/agent/claude/args_test.go`\n- `internal/roles/prompts/local-system.md` (new, if Q1 is (a))\n- `internal/roles/roles.go` (embed it)\n- `internal/engine/round.go` (threshold override for the measurement, if needed)\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/agent/claude/args.go` (claude-local: `--system-prompt-file`, `--tools`; `Spec.Args`, `localTools`)\n- `internal/agent/claude/args_test.go`\n- `internal/agent/claude/types.go` (`Spec.SystemPromptFile`)\n- `internal/daemon/runner.go` (writes the prompt file into the role's temp directory)\n- `internal/daemon/runner_test.go`\n- `internal/roles/prompts/local-system.md` (new)\n- `internal/roles/roles.go` (embed it; `LocalSystemPrompt`)\n- `internal/roles/roles_test.go`\n- `internal/engine/round.go` (`localFreshLimit`: ORK_LOCAL_FRESH_TOKENS override for the measurement)\n- `internal/engine/round_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- A claude-local role's args hold `--system-prompt-file` naming ork's local system prompt (under Q1 (a)), and `--tools` with the Q2 set; a cloud role's args do not change.\n- A local UI pass keeps Skill in its tool set (S360 rule).\n- The local system prompt file is embedded, and under 2,000 characters."
+      "body": "- `TestArgsLocalWriteRoleUsesOwnPromptAndSixTools`, `TestArgsLocalReadOnlyUsesAllowlist`, `TestArgsLocalReadOnlyToolsKeepEditWriteOnlyForProgressNote`, `TestArgsLocalSystemPromptFileMustBeAbsolute`, `TestArgsCloudRoleUnchanged`: a claude-local role's args hold `--system-prompt-file` naming ork's local system prompt and `--tools` with the Q2 set; a cloud role's args do not change. `TestLocalDispatcherUsesLaunchersAndRowFlags` and `TestClaudeReadOnlyRoleArguments` check the same through the runner, including the file's content.\n- `TestArgsLocalUIPassKeepsSkill`: a local UI pass keeps Skill in its tool set (S360 rule).\n- `TestLocalSystemPromptIsEmbeddedAndShort`, `TestEmbeddedFilesMatchNames`: the local system prompt file is embedded, and under 2,000 characters.\n- `TestFreshSessionThresholdEnvOverride`: ORK_LOCAL_FRESH_TOKENS moves the fresh-session threshold for a measurement."
     },
     {
       "heading": "Implement",
