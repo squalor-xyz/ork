@@ -76,6 +76,15 @@ func BuildBrief(in BriefInput) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	localImplementer := in.Role == RoleImplementer && in.Vendor == "claude-local"
+	if localImplementer {
+		prompt, err = roles.LocalImplementerPrompt()
+		if err != nil {
+			return "", err
+		}
+		line, rest, _ := strings.Cut(prompt, "\n")
+		prompt = line + "\n\n## Tool rules\n\nAllowed forms, verbatim: " + strings.Join(in.Allow, "; ") + "; any other command is denied. Run one plain command per call; no pipes, no && or ;, no command substitution, no cd, no env prefix unless an entry allows it. Change files with the Edit and Write tools only.\n\n## Note first\n\nWrite your progress note now to `" + in.ProgressFile + "` with Edit or Write, before reading any file. This exact file is an exception to the workspace limit. Record done, next and open problems, even when nothing is done yet. After each step, update the note. Append an anchor log every few reads (`file:line symbol: purpose`); keep existing anchors when updating the note. ork may start a fresh session past 70,000 context tokens; the note preserves your work.\n" + rest
+	}
 	prompt = strings.NewReplacer(
 		"{{slice_id}}", in.SliceID,
 		"{{worktree}}", in.Worktree,
@@ -92,8 +101,12 @@ func BuildBrief(in BriefInput) (string, error) {
 	fmt.Fprintf(&b, "Slice: %s\nWorktree: %s\n\n", in.SliceID, in.Worktree)
 	fmt.Fprintf(&b, "## Slice\n\n```json\n%s\n```\n\n", strings.TrimSpace(in.SliceJSON))
 	fmt.Fprintf(&b, "## Tracking rule\n\n%s\n\n", trackingRule)
-	fmt.Fprintf(&b, "## Workspace limit\n\nWork only in %s and stay inside the workspace: do not read or write outside it, except your temp directory and your report path.\n\n", in.Worktree)
-	if in.ProgressFile != "" && in.Vendor == "claude-local" {
+	if localImplementer && in.ProgressFile != "" {
+		fmt.Fprintf(&b, "## Workspace limit\n\nWork only in %s and stay inside the workspace: do not read or write outside it, except your temp directory, your report path and your progress note `%s`.\n\n", in.Worktree, in.ProgressFile)
+	} else {
+		fmt.Fprintf(&b, "## Workspace limit\n\nWork only in %s and stay inside the workspace: do not read or write outside it, except your temp directory and your report path.\n\n", in.Worktree)
+	}
+	if in.ProgressFile != "" && in.Vendor == "claude-local" && !localImplementer {
 		fmt.Fprintf(&b, "## Local progress note\n\nThe sole exception to the read-only and workspace rules above is `%s`. After each step, replace this short note with what is done, what is next, and any open problems. Update the note with Edit or Write. For a read-only role, this note is the only file it may change. ork may end this session when its context passes 70,000 tokens and start a fresh session with the same brief and this note. Keep the note current.\n\n", in.ProgressFile)
 	}
 	if IsLocalVendor(in.Vendor) {
@@ -196,10 +209,10 @@ func doneWhen(in BriefInput) string {
 			add("Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.")
 			add("A command that needs approval ends the run and loses the report unless a finished report was already produced. Do not issue one. Give the complete report as your final message.")
 		}
-	} else {
+	} else if !(in.Role == RoleImplementer && in.Vendor == "claude-local") {
 		items = append(items, "Allowed forms, verbatim: "+strings.Join(in.Allow, "; ")+"; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.")
 	}
-	if in.Role == RoleImplementer && (in.Vendor == "claude" || in.Vendor == "claude-local") && !in.ReadOnly {
+	if in.Role == RoleImplementer && in.Vendor == "claude" && !in.ReadOnly {
 		add("Change files with the Edit and Write tools only: no `sed -i`, no scripts (python or others), no heredocs, no redirects into files.")
 		add("Run one plain command per shell call: no pipes, no `&&` or `;`, no command substitution, no `cd` (use absolute paths, `go -C DIR` and `git -C DIR`).")
 		add("If a command is denied, use an allowed form; do not retry it another way.")
@@ -230,10 +243,17 @@ func doneWhen(in BriefInput) string {
 				}
 				for _, entry := range entries {
 					if heading == "Failing tests" {
-						add(entry + ": red before the code, green after; mutation-check every new assertion.")
+						if in.Vendor == "claude-local" {
+							add(entry + ": red before the code, green after.")
+						} else {
+							add(entry + ": red before the code, green after; mutation-check every new assertion.")
+						}
 					} else if !strings.Contains(entry, "HUMAN CHECK") {
 						add("Run or report blocked: " + entry)
 					}
+				}
+				if heading == "Failing tests" && in.Vendor == "claude-local" && len(entries) > 0 {
+					add("After the last listed test, mutation-check every new assertion once: break the product, see that assertion fail for the right reason, restore it, then run the full test suite of each affected project once.")
 				}
 			}
 			for _, section := range in.Sections {

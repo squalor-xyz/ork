@@ -64,6 +64,36 @@ func Prompt(name string) (string, error) {
 	return string(b), nil
 }
 
+// LocalImplementerPrompt replaces the cloud Work section for a small context
+// window, sharing the rules, owner questions and report contract unchanged.
+func LocalImplementerPrompt() (string, error) {
+	prompt, err := Prompt("implementer")
+	if err != nil {
+		return "", err
+	}
+	before, work, _ := strings.Cut(prompt, "## Work\n")
+	_, after, _ := strings.Cut(work, "## Later rounds")
+	return before + `## Work
+
+1. Write your progress note as instructed above before any reads.
+2. Read the project's AGENTS.md and this slice end to end, including Not in this
+   slice and the rest of the brief. The anchors were checked by the spec check;
+   trust the symbol names. Read only the source ranges needed for the current test.
+3. Start this slice unless the brief says it is already started. Touch no other item.
+4. For one test at a time: write one listed test, see it fail for the stated reason
+   and save its failure line, write the code, see it pass, update the note, then
+   proceed to the next test. If it passes before the code, fix the test.
+5. After the last test, mutation-check every new assertion once: break the product,
+   see that assertion fail for the right reason, restore and verify the file.
+   Then run the full test suite of each affected project once. Never ship a green
+   mutation. Use one variable per differential test and assert on real output.
+   If the premise is false, stop and report a refutation instead of inventing a fix.
+6. Update docs with the code. Before reporting, re-read Not in this slice and
+   check the diff contains only named files, or explain why. Verify cited symbols.
+
+` + "## Later rounds" + after, nil
+}
+
 // acceptedContracts is the owner-decided supported set: v11 and v12, v10 dropped
 // (adj 326, boundary.contract-set, decided 2026-11-12; it supersedes adj 175
 // and follows S142 and boundary.contract).

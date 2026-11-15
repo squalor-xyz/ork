@@ -19675,10 +19675,25 @@
       "id": "S362",
       "title": "Approval hook: a Read of a missing file is a denial that blocks the fallback",
       "short_title": "Hook denies missing-file Read; denial blocks fallback",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "0381bcd0-ded2-4c36-9885-04d0a86cbe48",
+          "kind": "",
+          "text": "**2026-11-15** — Verified: a Read of a missing in-worktree file is allowed by the PreToolUse hook (allowlist and path boundary still apply). Result.ApprovalDenials counts approval-point denials before dedup in the daemon runner, accumulates across fresh-session restart in runRound, and fallingBack lets a timed-out local round fall back when every denial is an approval-point one; allowlist and mixed denials still stop. Docs (design.md) and CHANGELOG updated. Gate PASS; go vet and go test green.",
+          "created_at": "2026-11-15T02:11:49Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19696,17 +19711,46 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S363",
       "title": "Local implementer brief: note first, anchor log, one test at a time",
       "short_title": "Local implementer brief: note-first, one test at a time",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "beac1368-e3a7-49fd-b038-9806067fb6d7",
+          "kind": "",
+          "text": "**2026-11-15** — Human checks at approval (S363):\n- later: deferred to land: `` S304 trial 4 runs a claude-local implementer on S248 with this brief and records sessions, restarts, edits and time in S304's notes.",
+          "created_at": "2026-11-15T02:21:58Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "6064c067-b89d-4262-886d-c94e5427ed7d",
+          "kind": "",
+          "text": "**2026-11-15** — Verified outcome: claude-local implementer brief now starts with tool rules and a note-first instruction, trusts spec-check anchors, works one test at a time with a single mutation check and full-suite run after the last test, and names the progress note in the workspace limit. Fresh sessions read the note, or start at step 1 when none was saved. Cloud briefs are byte-identical. Full go test ./..., go vet, gofmt and adj lint were clean. S304 trial 4 on S248 remains for after land.",
+          "created_at": "2026-11-15T02:22:02Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -19724,7 +19768,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

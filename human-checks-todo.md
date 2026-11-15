@@ -153,3 +153,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S356 (run ork-20261113-011329-81c8, 2026-11-14)
 
 - [ ] [AFTER LAND] `` S304 trial 3 runs a claude-local implementer on a size S slice with the approval point live, and records the denials and the time in S304's notes.
+
+## S363 (run ork-20261115-014017-53a1, 2026-11-15)
+
+- [ ] [AFTER LAND] `` S304 trial 4 runs a claude-local implementer on S248 with this brief and records sessions, restarts, edits and time in S304's notes.

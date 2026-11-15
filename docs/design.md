@@ -1410,7 +1410,9 @@ separately.
   at `RUNDIR/tmp/progress-ROLE.md` in the run's state directory (S361,
   adj 347). ork creates no project `.scratch/` directory for this note.
   The brief explicitly allows
-  that one file outside the worktree, including for a read-only local role.
+  that one file outside the worktree, including for a read-only local role. For
+  the claude-local implementer the workspace limit itself names the note beside
+  the temp directory and the report path.
   The adapter adds its directory with `--add-dir` and grants only an exact
   absolute `Edit(//path)` rule, escaping path-pattern characters. Claude's
   Edit rules cover both Edit and Write; `Write(path)` rules do not match
@@ -1420,6 +1422,21 @@ separately.
   note is named in the restart brief. Note reads use the bounded regular-file
   guards used for reports, refusing links and special files. ork retains the
   note for later sessions; it is a run artifact, outside run.json.
+
+  *Proposed (S363):* the claude-local implementer gets a shorter Work variant
+  of the shared role prompt. Its resolved tool rules come immediately after the
+  role line. Before any reads, it writes the progress note with done, next and
+  open problems. Every few reads it appends an anchor log in the form
+  `file:line symbol: purpose`, keeping those anchors when it updates the note.
+  It trusts the spec check's anchors and symbol names instead of re-anchoring
+  or editing the slice. It reads only what the current test needs, then writes
+  one listed test, observes red, implements, observes green and updates the note
+  before the next test. Mutation checks and the full suites run once after the
+  last test: its Done when keeps each failing test as red then green and adds
+  one item for the single mutation check and full-suite run. Its fresh session reads the note first instead of rereading the
+  files in the anchor log. Without a readable, nonempty note, it starts at step
+  1 and writes the note first. Cloud implementer briefs remain byte-identical;
+  other local roles keep their existing prompts and restart instructions.
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
@@ -1529,8 +1546,9 @@ separately.
   and time the machine slept is not counted in it (the sleep detector applies,
   S235). Expiry ends
   the same process-group context and records an `error` exit, so the existing
-  fallback rules try the next lineup row. It marks no vendor out. A denied
-  command or a read-only tree change still prevents fallback. Cloud roles
+  fallback rules try the next lineup row. It marks no vendor out. An allowlist
+  denial or a read-only tree change still prevents fallback. A round whose
+  denials all came from ork's approval point may fall back. Cloud roles
   retain the 30-minute silence limit and the `hung` owner-retry path.
   The wait for a vendor slot is not counted
   as silence. Time the machine slept is not counted as silence either
@@ -1604,8 +1622,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
 - **Fallback** (`vendor.fallback-trigger-v2`, decision 156): an exit
   classified as rate-limited, out of credits or error moves the role to the next eligible entry in
   its chain, in the same state and round. Auth and unclassified exits, an
-  unsuccessful round with permission denials, and a changed tree in a
-  read-only role still stop.
+  unsuccessful round with an allowlist denial, and a changed tree in a
+  read-only role still stop. A round whose denials all came from ork's
+  approval point may fall back.
   A `connection` exit (S329, adj 291, `vendor.connection-error`) first waits
   30 seconds, then resumes the same session once on the same row and round.
   The vendor slot is released during the wait. A second connection failure
@@ -1799,6 +1818,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   the reason. A supplied `Read` limit must be at most 500. An unbounded read
   of a file with more than 500 lines is denied with its count and guidance
   to Grep first and Read a range. Bounded reads may start beyond line 500.
+  A missing file passes the line-count check so Claude's Read can report
+  its absence; path boundaries and the role allowlist still apply.
   An allowlisted call proceeds. Bash wildcards cannot introduce shell
   operators or substitutions absent from the allowlist entry. For example,
   `Bash(go test*)` does not approve `go test; make test`, while a configured
@@ -1822,6 +1843,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   [hook input and decision schema](https://code.claude.com/docs/en/hooks).
   Hook denials are returned with the role result even when Claude omits them
   from `permission_denials`; a successful round still proceeds.
+  The transient role result counts approval-point denials before deduplicating
+  vendor copies and adds the count across fresh-session restarts. An unsuccessful
+  round may fall back to the next role row when every denial came from that
+  approval point. An allowlist denial still blocks fallback. The count is not
+  persisted in the run record.
   A local spec check carries its project and checked item ids instead of a
   run id. While the check runs, the Roadmap or Waves sitting polls
   `spec.permission` with that scope and shows the same allow/deny choices.
@@ -1841,8 +1867,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `Bash(git -C * diff*)`, `Bash(git -C * log*)`, `Bash(adj check*)`,
   `Bash(adj lint*)`, `Bash(adj show*)` and `Bash(adj inbox*)`
   (`engine.default-allowlist`). A registry allowlist for a read-only role is
-  an error. A denial stops an unsuccessful round; a success proceeds. The
-  spike measured the claude allowlist
+  an error. An allowlist denial stops an unsuccessful round; a success proceeds.
+  The spike measured the claude allowlist
   denial: it exits 0 and shows only in `permission_denials`, so ork must read
   the JSON to see it. codex has no per-tool allowlist and ignores the registry allowlist. It may
   run write roles with `-s workspace-write` (`vendor.codex-write`, decision

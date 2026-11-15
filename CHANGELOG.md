@@ -9,6 +9,16 @@
   grant; a UI pass adds Skill), replacing S360's `--disallowedTools`. The
   daemon's `ORK_LOCAL_FRESH_TOKENS` overrides the 70,000-token fresh-session
   threshold for a measurement. Cloud roles do not change.
+
+- *Proposed (S363):* shorten the claude-local implementer brief: tool rules
+  first, progress note before reads, an anchor log and one test at a time.
+  Fresh sessions use the note, or start at step 1 when no progress was saved.
+  Cloud implementer briefs are unchanged.
+
+- S362: allow missing-file Reads through the approval hook's line-count
+  check. Approval-point denials no longer block role fallback, including
+  across fresh local sessions; allowlist denials still stop unsuccessful rounds.
+
 - S361: keep claude-local progress notes in `RUNDIR/tmp/progress-ROLE.md`,
   without creating project `.scratch/` directories. Allow simple read-only
   commands on the role's own temp files, report and progress note without
