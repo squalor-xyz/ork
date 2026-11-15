@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 367,
+  "next_id": 368,
   "preamble": "",
   "passes": [
     {
@@ -20004,6 +20004,34 @@
         "parent": "",
         "cites": [],
         "key": "ork-orientation-lineup-override",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S367",
+      "title": "Approval hook: shell quoting in the Bash token scan",
+      "short_title": "Hook token scan: quoted operators, braces, tilde",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 4 (2026-11-15, run ork-20261115-144120-d581, S248): the claude-local implementer's `go -C WT test -run 'TestA|TestB|TestC' -v ./internal/cli` went to the owner as a permission question (owner allowed it). The allowlist rule `Bash(go -C * test*)` did not match because `shellOperators` (`internal/agent/claude/pretool.go:221-229`) counts the `|` inside single quotes. S356 review (deferred): brace expansion (`/a/{b,c}`) and `~` paths are not split or expanded by the token scan (`internal/agent/claude/pretool.go:92-104`), so a path outside the worktree can pass it.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-hook-shell-quoting",
         "pass": "v1.2",
         "group": "",
         "reason": "",
