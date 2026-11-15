@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-365 items · — 64 · done 268 · retired 33
+365 items · — 62 · done 268 · retired 35
 
 v1.2
 
@@ -93,7 +93,7 @@ v1.2
 | 43 | [S316](slices/S316.md) | ork approve: mark every open human check as later in one step | S | - |  |  | done |
 | 44 | [S317](slices/S317.md) | Run the slice's own Check lines after each round, not only the project check command | M | - |  |  | — |
 | 45 | [S318](slices/S318.md) | ork status --summary: running, waiting on you, blocked, and next, in one view | M | - |  |  | — |
-| 46 | [S319](slices/S319.md) | Spec check report shape rejects a capitalised item id (S374 for s374) | S | 1 |  |  | — |
+| 46 | [S319](slices/S319.md) | Spec check report shape rejects a capitalised item id (S374 for s374) | S | 1 |  | Done by S309 (ee0eb888, 2026-11-08): ParseSpecCheck maps a section id to the batch id ignoring case (internal/engine/speccheck.go:530-534), tested at internal/engine/speccheck_test.go:498-507. The 2026-11-09 failure was on build 3d537be3 (2026-11-07), older than the fix; no run since records the shape error. | retired |
 | 47 | [S320](slices/S320.md) | Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions | M | 2 |  |  | — |
 | 48 | S321 | TUI: a Waves item with no spec says waits on 0 spec questions | S | 1 |  | Found by the S283 UI pass 2026-11-09: after S283, an item with no spec shows 'waits on 0 spec questions' on the Waves screen (internal/tui/speccheck.go specNote and the held status). Adj 218 left the TUI out of S283; the owner chose a follow-up slice. Needed: a NoSpec branch in specNote and held status that says the item has no spec and shows the slicer promote hint, with a TUI test and golden update. · discovered from S283 | — |
 | 49 | S322 | Status line: vendor-out fields drop with no cue when several vendors are out | S | 1 |  | internal/tui/view.go:596-603 adds one 'NAME out until ...' field per vendor out and drops whole fields from the end until the line fits. With six vendor identities (claude-local out is 34 cells) three or more out at 80 columns hide marks with no +N cue. Found by the S301 reviewer; traced, not rendered. Needed: a +N cue or shortening, with a test at 80 columns. · discovered from S301 | — |
@@ -120,7 +120,7 @@ v1.2
 | 70 | [S349](slices/S349.md) | Retry of a stopped run skips the implementer and goes straight to checks and the gate | S | - |  |  | — |
 | 71 | [S350](slices/S350.md) | Implementer has no way to remove a file it created by mistake | S | - |  |  | — |
 | 72 | [S351](slices/S351.md) | Landing commits the owner's uncommitted edits on main into its tracking commit | S | - |  |  | — |
-| 73 | [S352](slices/S352.md) | Accept slicer relay v12 and read its tool_feedback line | M | - |  |  | — |
+| 73 | [S352](slices/S352.md) | Accept slicer relay v12 and read its tool_feedback line | M | - |  | Duplicate: S354 (landed 767295db, 2026-11-12) accepts relay v11 and v12 (adj 324, 326) and parses role tool feedback into the run record (adj 325); ork doctor reports the contract ok for every project. Carrying tool feedback into Needs you is S320. | retired |
 | 74 | [S353](slices/S353.md) | A slicer contract bump on main breaks ork everywhere at once | S | - |  |  | — |
 | 75 | [S354](slices/S354.md) | Accept relay v12 | M | 2 |  | 2026-11-12: slicer 1.21.0 (s453) prints `Contract: relay v12`; `ork doctor` reports "[FAIL] contract ork accepts relay v10 or v11 and slicer prints v12" for every project, and a new ork run refuses to start. | done |
 | 76 | [S355](slices/S355.md) | Run answers use the owner setting | M | 2 |  | S314 (2026-11-12) files spec-check answers in adj under the owner setting (`ork settings set --owner`, adj 322, 323); run-question answers (ctrl+a, `FileAnswer`) still need `ADJ_DECIDED_BY`. · discovered from S314 | — |
