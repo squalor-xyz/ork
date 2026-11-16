@@ -4802,3 +4802,16 @@
 {"when": "2026-11-16T21:20:07Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-16T21:29:56Z", "item": "S359", "action": "note", "from": "", "to": "", "note": "Verified: a local implementer on a size M or L slice has the", "by": "Jon Robbins"}
 {"when": "2026-11-16T21:29:58Z", "item": "S359", "action": "status", "from": "started", "to": "done", "note": "Verified: a local implementer on a size M or L slice has the spec check carve slivers once Ready (adj 337, 338); ork run, ork wave start and the TUI (adj 401) plan again, list the filed slivers and the owner approves the chain once (adj 388, 396); a start never carves. Effort 3 is refused on a local implementer and a cloud implementer is not slivered. go vet, go test ./..., gofmt, slicer check and adj lint were green.", "by": "Jon Robbins"}
+{"when": "2026-11-16T20:21:43Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:24:41Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:25:32Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:30:39Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:32:58Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:38:47Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T21:15:28Z", "item": "S378", "action": "add", "from": "", "to": "open", "note": "Grok: classify the usage-limit error as out"}
+{"when": "2026-11-16T21:15:28Z", "item": "S379", "action": "add", "from": "", "to": "open", "note": "Spec check skips a vendor marked out"}
+{"when": "2026-11-16T21:17:03Z", "item": "S378", "action": "note", "from": "", "to": "", "note": "Real sample for fixture 08-usage-limit (orchestrator probe 2", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:17:24Z", "item": "S378", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:27:45Z", "item": "S378", "action": "note", "from": "", "to": "", "note": "Verified: a grok error_during_execution result whose errors ", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:27:47Z", "item": "S378", "action": "status", "from": "started", "to": "done", "note": "Verified: a grok error_during_execution result whose errors hold the free usage-limit text now classifies as out_of_credits (fixed reason, no URL), so the role falls back to its next row; other error text stays unclassified. Real sample in testdata/vendors/grok/08-usage-limit. go vet, go test ./..., gofmt -l . and adj lint clean; slicer check passes.", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:17:06Z", "item": "S378", "action": "edit", "from": "", "to": "", "note": "Implement"}
