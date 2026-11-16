@@ -1,0 +1,41 @@
+{
+  "id": "S369",
+  "title": "UI pass can write its renders to its run temp dir",
+  "lead": [
+    "*Proposed.* A cloud UI pass may write files only under its own run temp dir (for rendered views), as a claude-local read-only role may write its progress note (adj 348). It still may not change the worktree."
+  ],
+  "depends_note": null,
+  "findings_note": "S241 (2026-11-16, run ork-20261116-015040-d93b): the UI pass (claude opus, read-only, plan mode) was denied two Writes to `~/.local/state/ork/runs/RUN/` and reported tool feedback: \"plan mode allowed writing only a plan file, so renders/*.txt could not be produced\".",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* The UI pass prompt asks for rendered views to check layout; plan mode blocks every write but the plan file, so the pass reviews without them."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/args.go:90-91` (read-only cloud role: plan mode)\n- `internal/engine/perm.go`\n- `internal/agent/claude/args_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestUIPassMayWriteOnlyItsTempDir`: a UI pass's args allow Write and Edit only under its run temp dir; a reviewer's args are unchanged."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. `adj ask` the mechanism (an `Edit(DIR/**)` allow rule beside plan mode, or acceptEdits with a path rule) with `--ref` this slice; wait for the owner's answer.\n2. Red test, then the args.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
