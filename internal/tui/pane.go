@@ -49,6 +49,19 @@ func hangLines(first, rest, text string, width int) []string {
 	return lines
 }
 
+// hangDetail wraps one line of a tool input at width. A line that wraps
+// continues under a two-space hanging indent, so it reads as a wrap and not as
+// a new line of the input (S373, adj 378). Only the first line may use the
+// whole width: the rest is wrapped again at the width the indent leaves.
+func hangDetail(line string, width int) []string {
+	first := wrapText(line, width)[0]
+	if len(first) >= len(line) {
+		return []string{line}
+	}
+	rest := strings.TrimLeft(line[len(first):], " ")
+	return append([]string{first}, hangLines("  ", "  ", rest, width)...)
+}
+
 // gapPriority is the drop priority of the blank lines between the card's
 // blocks: above every other footer line, so they go first (S141).
 const gapPriority = 9
@@ -507,6 +520,8 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	// An option is one group that drops whole; optionGroups remembers them so the
 	// marker can count the ones that went (S132, *proposed*).
 	var optionGroups []int
+	// The group and the line count of a permission question's detail (S373).
+	detailGroup, detailRows := 0, 0
 	addOption := func(lines []string) {
 		addGroup(lines, 0, true)
 		optionGroups = append(optionGroups, nextGroup)
@@ -583,6 +598,19 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 				title[i] = m.cfg.Theme.Heading.Render(title[i])
 			}
 			addFooter(title, 0)
+			if ask.Detail != "" {
+				// The whole tool input of a permission call (S373): an allow depends
+				// on every token, so every token is shown, wrapped. A tab is four
+				// spaces so the width holds. It drops whole, with a marker that says
+				// so, after the status, Why and adj lines.
+				detail := strings.NewReplacer("\r\n", "\n", "\r", "\n", "\t", "    ").Replace(ask.Detail)
+				var rows []string
+				for _, line := range strings.Split(detail, "\n") {
+					rows = append(rows, hangDetail(line, width)...)
+				}
+				addGroup(rows, 1, true)
+				detailGroup, detailRows = nextGroup, len(rows)
+			}
 			for i, option := range ask.Options {
 				text := optionText(option.Label, option.Summary)
 				if i+1 == ask.Recommend {
@@ -723,10 +751,33 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 		return n
 	}
-	if hiddenOptions() > 0 && limit > 0 {
-		for len(footer) >= limit {
+	// A detail that dropped is not silent either (S373): a line says how many of
+	// its lines are hidden, and where the whole input is.
+	hiddenDetail := detailGroup != 0 && !slices.Contains(groups, detailGroup)
+	markers := func() int {
+		n := 0
+		if hiddenDetail {
+			n++
+		}
+		if hiddenOptions() > 0 {
+			n++
+		}
+		return n
+	}
+	if limit > 0 && markers() > 0 {
+		for len(footer)+markers() > limit && len(footer) > 0 {
 			dropOne()
 		}
+		if hiddenDetail {
+			word := "lines"
+			if detailRows == 1 {
+				word = "line"
+			}
+			marker := m.cfg.Theme.Dim.Render(fmt.Sprintf("+%d detail %s hidden; ork show %s", detailRows, word, r.engineID))
+			footer, priorities, groups = append(footer, marker), append(priorities, 0), append(groups, 0)
+		}
+	}
+	if hiddenOptions() > 0 && limit > 0 {
 		word := "options"
 		if n := hiddenOptions(); n == 1 {
 			word = "option"

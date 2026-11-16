@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/tui/questions.go`\n- `internal/tui/pane.go`\n- `testdata/golden/`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/tui/pane.go`\n- `internal/tui/permission_detail_test.go`\n- `testdata/golden/`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestPermissionQuestionShowsDetail`: a pending permission question with a 300-character detail renders the whole detail, wrapped at the pane width, under the title (golden).\n- `TestQuestionWithoutDetailUnchanged`: a question with no detail renders as today."
+      "body": "- `TestPermissionQuestionShowsDetail`: a pending permission question with a 300-character detail renders the whole detail, wrapped at the pane width, under the title (golden).\n- `TestQuestionWithoutDetailUnchanged`: a question with no detail renders as today.\n- `TestPermissionDetailHangingIndent`: a wrapped line of the detail continues under a 2-space hanging indent; a real new line is at the margin (adj 378).\n- `TestPermissionDetailOverflowMarker`: a detail too tall for the pane drops whole, a line says how many lines are hidden, and the options stay (golden)."
     },
     {
       "heading": "Implement",

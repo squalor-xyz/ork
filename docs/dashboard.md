@@ -1406,9 +1406,18 @@ The question names the tool and previews its command or file path. For other
 inputs, it shows compact input JSON. The title is a preview of at most 120
 characters (tool, start of the input with newlines shown as spaces, `...`,
 call number). The whole input is in the question's `detail` field, which `ork
-status --json` carries and `ork show RUN` prints under `Input:`; the TUI shows
-only the preview (adj 369). Titles wrap to the available width and
-use the pane's existing scrolling and overflow behavior.
+status --json` carries and `ork show RUN` prints under `Input:`. *Proposed
+(S373, adj 369, 378):* the run pane shows the whole `detail` under the title.
+Every token is shown, wrapped at the pane width (the spaces at a wrap point
+go), with a tab shown as four spaces. A line of the input that wraps
+continues under a 2-space hanging indent; a line at the margin is a new line of
+the input. On a short terminal the detail drops whole, after the status, Why
+and adj lines (before the status line while an answer is being confirmed) and
+before the options. A dim line at the foot of the pane then says `+N detail lines hidden; ork
+show RUN`, so a hidden command is never mistaken for a question with none.
+A question with no detail shows the title and options only. The Questions list
+still shows one line per question. Titles wrap to the
+available width and use the pane's existing scrolling and overflow behavior.
 
 The run pane offers `1-2 pick`: Allow or Deny for this call. Picking an option
 shows the usual exact-command confirmation; `y` sends it, while `n`, Enter

@@ -1,0 +1,24 @@
+ork                │ Overview │ Questions 1 │ Waves │ Roadmap │ Decisions
+  Running        1 │────────────────────────────────────────────────────────────
+0>Needs you      1 │All projects
+1 ork            1 │  ? question ork  engine  S22  owner action
+                   │
+                   │
+                   │
+                   │
+                   │
+                   │────────────────────────────────────────────────────────────
+                   │  Run engine  S22  implement
+                   │  [......]
+                   │  implementer > reviewer > gate
+                   │  . implementer queued
+                   │  . reviewer    queued
+                   │  . gate        queued
+                   │
+                   │  Allow Bash call 3?
+                   │  1. Allow: Allow this call once
+                   │  2. Deny: Deny this call (recommended)
+                   │  +25 detail lines hidden; ork show engine
+                   │────────────────────────────────────────────────────────────
+                   │ 1-2 pick; pgup/pgdown line; esc close pane
+                   │ 1 project | refreshed 16:42:00

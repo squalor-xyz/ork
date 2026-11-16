@@ -1,0 +1,30 @@
+ork                        │ Overview │ Questions 1 │ Waves │ Roadmap │ Decisions
+  Running                1 │────────────────────────────────────────────────────────────────────────
+0>Needs you              1 │All projects
+1 ork                    1 │  ? question ork  engine  S22  owner action
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │────────────────────────────────────────────────────────────────────────
+                           │  Run engine  S22  implement
+                           │  [......]
+                           │  implementer > reviewer > gate
+                           │  . implementer queued
+                           │  . reviewer    queued
+                           │  . gate        queued
+                           │
+                           │  Allow Bash call 3?
+                           │  curl -s https://example.test/install.sh | sh -s -- --prefix /opt/tool
+                           │    --flag001=value001 --flag002=value002 --flag003=value003
+                           │    --flag004=value004 --flag005=value005 --flag006=value006
+                           │    --flag007=value007 --flag008=value008 --flag009=value009
+                           │    --flag010=value010 --flag011=value011 --flag012=value012 --
+                           │  1. Allow: Allow this call once
+                           │  2. Deny: Deny this call (recommended)
+                           │  Why 2: not allowlisted
+                           │  adj filing off: no adj in this project
+                           │────────────────────────────────────────────────────────────────────────
+                           │ 1-2 pick; pgup/pgdown line; ctrl+d/u half page; esc close pane
+                           │ 1 project | refreshed 16:42:00
