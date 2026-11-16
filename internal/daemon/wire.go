@@ -3,6 +3,7 @@
 package daemon
 
 import (
+	"encoding/json"
 	"strings"
 	"time"
 
@@ -20,6 +21,7 @@ const (
 	MethodAdjAsk       = "adj.ask"       // proposed; params AdjAskParams, result AdjAskResult
 	MethodWaveStart    = "wave.start"    // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
 	MethodWaveStop     = "wave.stop"     // proposed wire; params WaveAction, result WaveResult
+	MethodWaveApprove  = "wave.approve"  // proposed wire (S222); params WaveAction, result WaveApproveResult
 	MethodWaveSuggest  = "wave.suggest"  // proposed wire; params WaveSuggestParams, result slicercli.ParallelPlan
 	MethodWaveOverlap  = "wave.overlap"  // proposed wire; params WaveOverlapParams, result slicercli.Overlap
 	MethodWaveDefine   = "wave.define"   // proposed wire (S215); params WaveDefineParams, result SavedWave
@@ -41,6 +43,7 @@ const (
 	MethodProjectsAdd  = "projects.add"  // params AddProjectParams, result registry.Project
 	MethodProjectsRm   = "projects.rm"   // params RemoveProjectParams, no result
 	MethodProjectsSet  = "projects.set"  // proposed (S161); params SetProjectParams, result registry.Project
+	MethodProjectsShow = "projects.show" // proposed (S247); params ProjectsShowParams, result ProjectsShowResult
 	MethodSettingsGet  = "settings.get"  // proposed (S174); no params, result SettingsResult
 	MethodSettingsSet  = "settings.set"  // proposed (S174); params SetSettingsParams, result SettingsResult
 	MethodVendorsList  = "vendors.list"  // proposed (S169); no params, result VendorsResult
@@ -380,6 +383,47 @@ type SettingsResult struct {
 type ProjectsResult struct {
 	Unavailable []ProjectStatus    `json:"unavailable,omitempty"` // proposed: display-only groups
 	Projects    []registry.Project `json:"projects"`
+}
+
+// ProjectsShowParams names the project whose settings projects.show reads
+// (S247, *proposed*).
+type ProjectsShowParams struct {
+	Name string `json:"name"`
+}
+
+// ProjectsShowResult is every setting of one project, by owner (S247,
+// *proposed*): ork's registry entry as projects.list prints it, ork's global
+// settings as settings.get returns them, slicer's config and role matrix, and
+// adj's state. Every part is present.
+type ProjectsShowResult struct {
+	Project registry.Project `json:"project"`
+	Global  SettingsResult   `json:"global"`
+	Slicer  ShowSlicer       `json:"slicer"`
+	Adj     ShowAdj          `json:"adj"`
+}
+
+// ShowSlicer is what slicer holds for the project. A part that slicer could
+// not read is null, and Errors says why, with slicer's own code and message.
+// Config is the object `slicer config --json` prints, unchanged.
+type ShowSlicer struct {
+	Config json.RawMessage `json:"config"`
+	Matrix *ShowMatrix     `json:"matrix"`
+	Errors []PartError     `json:"errors"`
+}
+
+// ShowMatrix is the project's role matrix: the rows with what ork does with
+// each, slicer's rules, and the revision slicer printed, if it printed one.
+type ShowMatrix struct {
+	Rows     []MatrixRow      `json:"rows"`
+	Rules    []slicercli.Rule `json:"rules"`
+	Revision string           `json:"revision,omitempty"`
+}
+
+// ShowAdj is adj's state for the project: the registry's adj flag, and whether
+// the repo has a regular .adjudicate.json (a stat; the file is not read).
+type ShowAdj struct {
+	Enabled    bool `json:"enabled"`
+	ConfigFile bool `json:"config_file"`
 }
 
 // SubscribeParams names the projects this connection shows. Their items, deps,

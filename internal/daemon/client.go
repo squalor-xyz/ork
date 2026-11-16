@@ -188,6 +188,16 @@ func (c *Client) ApproveRecord(ctx context.Context, run string) (runrec.Record, 
 	return reply.Record, err
 }
 
+// WaveApprove approves each run of the wave that awaits approval, in start
+// order, and returns once the loop has ended: every run of the wave with what
+// the call did to it. It stops at the first run that does not land, and it is
+// refused, approving nothing, while a human check is open (S222, *proposed*).
+func (c *Client) WaveApprove(ctx context.Context, wave string) (WaveApproveResult, error) {
+	var result WaveApproveResult
+	err := c.Call(ctx, MethodWaveApprove, WaveAction{Wave: wave}, &result)
+	return result, err
+}
+
 // Fix sends the owner's note to a fix round of the run that awaits approval.
 // The call returns when the run rests again.
 func (c *Client) Fix(ctx context.Context, run, note string) error {
@@ -284,6 +294,17 @@ func (c *Client) WaveOverlap(ctx context.Context, project string, items []string
 func (c *Client) RolesMatrix(ctx context.Context, project string) (*RolesMatrixResult, error) {
 	var out RolesMatrixResult
 	if err := c.Call(ctx, MethodRolesMatrix, RolesMatrixParams{Project: project}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// ProjectsShow reads every setting of one project, from ork, slicer and adj
+// (S247, *proposed*). A part that slicer could not read is in the result's
+// Slicer.Errors; only an unknown project or a registry fault is an error.
+func (c *Client) ProjectsShow(ctx context.Context, name string) (*ProjectsShowResult, error) {
+	var out ProjectsShowResult
+	if err := c.Call(ctx, MethodProjectsShow, ProjectsShowParams{Name: name}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

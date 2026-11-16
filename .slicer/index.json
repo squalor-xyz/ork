@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 377,
+  "next_id": 378,
   "preamble": "",
   "passes": [
     {
@@ -11690,7 +11690,7 @@
       "id": "S206",
       "title": "ork pins a project's adj contract and checks the pin",
       "short_title": "Pin and check the adj contract",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S24"
@@ -11723,6 +11723,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5c89a69b-0d93-4a6c-ac8b-b5027ce3c72e",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S206):\n- later: deferred to land: On a scratch project with `adj: true`: `ork projects pin NAME --adj 1`, then `ork doctor` shows the adj pin; edit nothing by hand; `ork projects unpin NAME --adj` clears it.",
+          "created_at": "2026-11-16T18:52:05Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "caf78639-f18d-40d5-b10d-44b581699955",
+          "kind": "",
+          "text": "**2026-11-16** — ork pins and checks a project's adj contract (adj-json v1). projects pin NAME takes --relay N, --adj M, or both, slicer first. unpin NAME clears both pins when adj is on; --adj clears only the adj pin. Doctor shows the adj pin, and a run refuses a pin or a spoken version outside adj-json v1 before a run record exists.",
+          "created_at": "2026-11-16T18:52:29Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -11742,7 +11770,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -12591,7 +12619,7 @@
       "id": "S222",
       "title": "Approve a wave as one action: approve every waiting run in order and stop at the first failure",
       "short_title": "Approve a wave in order",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -12602,6 +12630,34 @@
           "created_at": "2026-11-01T00:58:29Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "84f7c1bb-5030-4326-a6a8-52a053615a20",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S222):\n- later: deferred to land: With a real pair wave of two small slices, both at `awaiting-approval`: tick every human check, press the key, read the confirm at 100x30 and 80x24, confirm, and watch the first land and then the second. Then repeat with a pair whose second landing hits a conflict and confirm the first lands, the second goes to a fix round, and nothing else is approved.",
+          "created_at": "2026-11-16T19:47:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2ecbb770-8e9d-4a90-88f2-1f564c33d071",
+          "kind": "",
+          "text": "**2026-11-16** — Approve a wave in order is implemented and verified: ork approve WAVE-ID, the wave.approve daemon method and the A key (Overview row or run pane, after a y/N naming the runs and what each approval does) approve every waiting run of a wave one after the other in start order and stop at the first run that does not end committed. No human check is ticked or skipped; any open check refuses the whole call. The engine run rows carry wave. Verified: go test -race -count=1 ./... passed in all packages, go vet and gofmt clean, slicer check and adj lint clean for S222, go test -race -run TestWaveApproveKey ./internal/tui exits 0, and every new assertion was mutation-checked. The [AFTER LAND] pair-wave human check is left for the owner after landing.",
+          "created_at": "2026-11-16T19:47:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12627,7 +12683,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -13960,10 +14016,39 @@
       "id": "S247",
       "title": "ork projects show: every setting of one project, from ork, slicer and adj, in one read",
       "short_title": "ork projects show",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7b976b29-fc71-420b-81c2-610521a9ae80",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S247):\n- later: `ork projects show ork` and `ork projects show ork --json` against the owner's running daemon after rebuild: the matrix lines match `slicer relay-roles show`.",
+          "created_at": "2026-11-16T18:31:49Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c2edda12-e6e6-4034-9871-df7ef96a94ea",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: ork projects show NAME [--json] and the daemon method projects.show read one project's settings from the ork registry, ork's global settings, slicer config and role matrix (through the slicer CLI) and adj state (registry flag plus a stat of .adjudicate.json); nothing is written. A part slicer cannot read is null with slicer's code and message. Text has one block per owner and leaves out vendor_env values; --json prints them unmasked. go test -race ./..., go vet, gofmt, slicer check and adj lint pass; the human check against the owner's running daemon is left for approval.",
+          "created_at": "2026-11-16T18:31:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13981,7 +14066,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -20657,6 +20742,49 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S377",
+      "title": "Landing: fast-forward fails after main moves during the landing",
+      "short_title": "Landing ff-only fails when main moves mid-landing",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "b7b8b226-038a-4e23-aaa9-a86ffff5ccf0",
+          "kind": "",
+          "text": "**2026-11-16** — A landing whose base gains a commit after the merge-in merges that commit in once more and then fast-forwards. A conflict retry that commits tracking edits while an older merge is still open takes the same extra merge-in. A base that moves again pauses at git merge --ff-only with the existing one-line reason.",
+          "created_at": "2026-11-16T19:59:46Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-16, two landings paused on \"git merge --ff-only B: ... Diverging branches can't be fast-forwarded\": S373 (run ork-20261116-155524-4cf4), after the orchestrator committed to main during the landing; S206 (run ork-20261116-172629-3a8b), after a merge conflict was resolved by hand and the run retried: ork's own commit d6b72802 \"Tracking edits on main before landing S206\" (`.slicer/log.jsonl`, one line) moved main, and the fast-forward then failed. A plain `ork retry` landed both.",
+        "discovered_from": "S206",
+        "parent": "",
+        "cites": [],
+        "key": "ork-land-ff-diverged",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 1
       }
     }

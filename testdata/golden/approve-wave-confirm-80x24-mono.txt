@@ -1,0 +1,24 @@
+[1mork[m                │ [1mOverview[m[2m │ [mQuestions[2m │ [mWaves[2m │ [mRoadmap[2m │ [mDecisions
+  Running        2 │[2m────────────────────────────────────────────────────────────[m
+[1;7m0>Needs you      2 [m│[1mNeeds you 2[m
+[2m1[m ork            2*│  [1mApprove 2[m
+                   │[1;7m  +  ork  r-a  S22  awaiting approval  2m  owner action     [m
+                   │  [1m+[m  ork  r-b  S23  awaiting approval  12m  owner action
+                   │
+                   │[1mRunning 2[m
+                   │   ork  [1mS24[m  [2mimplement[m  [......]  [2mheard 0s[m
+                   │   ork  [1mS22[m  [2mactive[m     [......]
+                   │
+                   │[1mRecent[m
+                   │  [2mnone[m
+                   │
+                   │[2m  +2 more lines[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │  ork approve wave-1
+                   │  Each run lands in turn, then its worktree and branch are
+                   │  removed. The first run that does not end committed stops
+                   │  the rest.
+                   │  Approve and land S23, then S22? [y/N] (Enter is No)
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ y [2mapprove wave[m; n [2mcancel[m
+                   │ 1 project | refreshed 16:42:00

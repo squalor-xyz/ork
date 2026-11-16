@@ -161,6 +161,9 @@ func TestProjectsPinReportsASlicerThatRefusesTheNewPin(t *testing.T) {
 			t.Errorf("stderr lacks %q:\n%s", want, stderr)
 		}
 	}
+	if strings.Contains(stderr, "clears the slicer pin and the adj pin") {
+		t.Errorf("adj is off, but stderr warns about the adj pin:\n%s", stderr)
+	}
 	// The pin was written once and nothing cleared it.
 	want := [][]string{{"config", "relay_contract", "11", "--root", P}, {"ai", "relay", "--json", "--root", P}}
 	if got := slicerArgs(fake); !reflect.DeepEqual(got, want) {
@@ -189,6 +192,261 @@ func TestProjectsUnpinRunsExactlyTheUnsetCall(t *testing.T) {
 	want := [][]string{{"config", "relay_contract", "--unset", "--root", P}}
 	if got := slicerArgs(fake); !reflect.DeepEqual(got, want) {
 		t.Fatalf("slicer calls %v, want %v", got, want)
+	}
+}
+
+func toolArgs(fake *clitest.Fake) [][]string {
+	var out [][]string
+	for _, c := range fake.Calls() {
+		out = append(out, append([]string{c.Tool}, c.Args...))
+	}
+	return out
+}
+
+func adjSpoken(pinned string) string {
+	return `{"contract":"adj-json v1","version":1,"pinned":` + pinned + `,"extra":true}`
+}
+
+func TestProjectsPinAdjRunsAfterSlicer(t *testing.T) {
+	P := t.TempDir()
+	app, fake, _ := pinWorld(t, []clitest.Route{
+		configSetRoute(P, "11"),
+		relayRoute(P, "relay-v11-pinned.json", 0),
+		{Tool: "adj", Args: []string{"contract", "pin", "1", "--root", P}, Stdout: "pinned\n"},
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: adjSpoken("1")},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, stderr := run(t, app, "projects", "pin", "p", "--relay", "11", "--adj", "1")
+	if code != 0 {
+		t.Fatalf("exit %d: %s %s", code, out, stderr)
+	}
+	if !strings.Contains(out, "relay v11") || !strings.Contains(out, "adj-json v1") {
+		t.Fatalf("stdout %q", out)
+	}
+	want := [][]string{
+		{"slicer", "config", "relay_contract", "11", "--root", P},
+		{"adj", "contract", "pin", "1", "--root", P},
+		{"slicer", "ai", "relay", "--json", "--root", P},
+		{"adj", "contract", "--json", "--root", P},
+	}
+	if got := toolArgs(fake); !reflect.DeepEqual(got, want) {
+		t.Fatalf("calls %v, want %v", got, want)
+	}
+}
+
+func TestProjectsPinAdjAlone(t *testing.T) {
+	P := t.TempDir()
+	app, fake, _ := pinWorld(t, []clitest.Route{
+		{Tool: "adj", Args: []string{"contract", "pin", "1", "--root", P}, Stdout: "pinned\n"},
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: adjSpoken("1")},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, stderr := run(t, app, "projects", "pin", "p", "--adj", "1")
+	if code != 0 || !strings.Contains(out, "adj-json v1") {
+		t.Fatalf("exit %d: %q %q", code, out, stderr)
+	}
+	if slicerArgs(fake) != nil {
+		t.Fatalf("slicer calls %v", slicerArgs(fake))
+	}
+	want := [][]string{
+		{"adj", "contract", "pin", "1", "--root", P},
+		{"adj", "contract", "--json", "--root", P},
+	}
+	if got := toolArgs(fake); !reflect.DeepEqual(got, want) {
+		t.Fatalf("calls %v, want %v", got, want)
+	}
+}
+
+func TestProjectsPinAdjSkippedWhenSlicerFails(t *testing.T) {
+	P := t.TempDir()
+	app, fake, _ := pinWorld(t, []clitest.Route{{
+		Tool: "slicer", Args: []string{"config", "relay_contract", "11", "--root", P},
+		Stderr: "slicer broke\n", Exit: 1,
+	}}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, _, stderr := run(t, app, "projects", "pin", "p", "--relay", "11", "--adj", "1")
+	if code != 1 || !strings.Contains(stderr, "slicer broke") {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	for _, c := range fake.Calls() {
+		if c.Tool == "adj" {
+			t.Fatalf("adj was called: %v", toolArgs(fake))
+		}
+	}
+}
+
+func TestProjectsPinAdjRefusesOutsideTheAcceptedSet(t *testing.T) {
+	P := t.TempDir()
+	app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: P, Adj: true})
+	code, _, stderr := run(t, app, "projects", "pin", "p", "--adj", "2")
+	if code != 2 || !strings.Contains(stderr, "--adj 2") || !strings.Contains(stderr, "adj-json v1") {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	if calls := fake.Calls(); len(calls) != 0 {
+		t.Fatalf("ran %v", calls)
+	}
+}
+
+func TestProjectsPinAdjRefusesAProjectWithoutAdj(t *testing.T) {
+	P := t.TempDir()
+	app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: P, Adj: false})
+	code, _, stderr := run(t, app, "projects", "pin", "p", "--adj", "1")
+	if code != 2 || !strings.Contains(stderr, "adj is off") {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	if calls := fake.Calls(); len(calls) != 0 {
+		t.Fatalf("ran %v", calls)
+	}
+}
+
+func TestProjectsUnpinAdj(t *testing.T) {
+	P := t.TempDir()
+	t.Run("flag", func(t *testing.T) {
+		app, fake, _ := pinWorld(t, []clitest.Route{{
+			Tool: "adj", Args: []string{"contract", "unpin", "--root", P}, Stdout: "unpinned\n",
+		}}, registry.Project{Name: "p", Path: P, Adj: true})
+		code, out, stderr := run(t, app, "projects", "unpin", "p", "--adj")
+		if code != 0 {
+			t.Fatalf("exit %d: %s %s", code, out, stderr)
+		}
+		if slicerArgs(fake) != nil {
+			t.Fatalf("slicer calls %v", slicerArgs(fake))
+		}
+		want := [][]string{{"adj", "contract", "unpin", "--root", P}}
+		if got := toolArgs(fake); !reflect.DeepEqual(got, want) {
+			t.Fatalf("calls %v, want %v", got, want)
+		}
+	})
+	t.Run("default", func(t *testing.T) {
+		app, fake, _ := pinWorld(t, []clitest.Route{
+			{Tool: "slicer", Args: []string{"config", "relay_contract", "--unset", "--root", P}, File: recordedSlicer("config-relay-contract-unset.txt")},
+			{Tool: "adj", Args: []string{"contract", "unpin", "--root", P}, Stdout: "unpinned\n"},
+		}, registry.Project{Name: "p", Path: P, Adj: true})
+		code, out, stderr := run(t, app, "projects", "unpin", "p")
+		if code != 0 || !strings.Contains(out, "unpinned p") {
+			t.Fatalf("exit %d: %s %s", code, out, stderr)
+		}
+		want := [][]string{
+			{"slicer", "config", "relay_contract", "--unset", "--root", P},
+			{"adj", "contract", "unpin", "--root", P},
+		}
+		if got := toolArgs(fake); !reflect.DeepEqual(got, want) {
+			t.Fatalf("calls %v, want %v", got, want)
+		}
+	})
+}
+
+func TestProjectsPinUsageStatesTheFlagAndTheDaemon(t *testing.T) {
+	if !strings.Contains(usageText, "at least one flag") || !strings.Contains(usageText, "needs no daemon") {
+		t.Fatalf("usage drops a clause:\n%s", usageText)
+	}
+	if !strings.Contains(usageText, ") through slicer") {
+		t.Fatal("usage dropped the slicer phrase")
+	}
+	for _, line := range strings.Split(usageText, "\n") {
+		if len(line) > 80 {
+			t.Errorf("%d columns: %q", len(line), line)
+		}
+	}
+}
+
+func TestProjectsPinSlicerRefusalOnAnAdjProjectSaysUnpinClearsBoth(t *testing.T) {
+	P := t.TempDir()
+	app, fake, _ := pinWorld(t, []clitest.Route{configSetRoute(P, "11"), relayRoute(P, "error-contract-mismatch.json", 2)}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, _, stderr := run(t, app, "projects", "pin", "p", "--relay", "11")
+	if code != 1 || !strings.Contains(stderr, "`ork projects unpin p` clears the slicer pin and the adj pin") {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	for _, c := range fake.Calls() {
+		if c.Tool == "adj" {
+			t.Fatalf("adj was called: %v", toolArgs(fake))
+		}
+	}
+}
+
+func TestProjectsPinNamesTheAdjPinItSet(t *testing.T) {
+	P := t.TempDir()
+	spoken := `{"contract":"other","version":1,"pinned":1}`
+	app, _, _ := pinWorld(t, []clitest.Route{
+		{Tool: "adj", Args: []string{"contract", "pin", "1", "--root", P}, Stdout: "pinned\n"},
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: spoken},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, stderr := run(t, app, "projects", "pin", "p", "--adj", "1")
+	if code != 0 || !strings.Contains(out, "pinned p at adj-json v1") || strings.Contains(out, "other") {
+		t.Fatalf("exit %d: %q %q", code, out, stderr)
+	}
+
+	app, _, _ = pinWorld(t, []clitest.Route{
+		configSetRoute(P, "11"),
+		relayRoute(P, "relay-v11-pinned.json", 0),
+		{Tool: "adj", Args: []string{"contract", "pin", "1", "--root", P}, Stdout: "pinned\n"},
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: spoken},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, stderr = run(t, app, "projects", "pin", "p", "--relay", "11", "--adj", "1")
+	if code != 0 || !strings.Contains(out, "pinned p at relay v11 and adj-json v1") || strings.Contains(out, "other") {
+		t.Fatalf("both: exit %d: %q %q", code, out, stderr)
+	}
+}
+
+func TestProjectsPinAdjReadBackRefusesAPinTheSpokenVersionDoesNotMatch(t *testing.T) {
+	P := t.TempDir()
+	app, _, _ := pinWorld(t, []clitest.Route{
+		{Tool: "adj", Args: []string{"contract", "pin", "1", "--root", P}, Stdout: "pinned\n"},
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: `{"contract":"adj-json v2","version":2,"pinned":1}`},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, stderr := run(t, app, "projects", "pin", "p", "--adj", "1")
+	if code != 1 || out != "" {
+		t.Fatalf("exit %d: %q %q", code, out, stderr)
+	}
+	for _, want := range []string{"pinned p at adj-json v1, but", "speaks adj-json v2", "The pin stays set", "`ork projects pin p --adj 1`", "`ork projects unpin p --adj`"} {
+		if !strings.Contains(stderr, want) {
+			t.Errorf("stderr lacks %q:\n%s", want, stderr)
+		}
+	}
+	if strings.Contains(stderr, "pinned p at adj-json v2") {
+		t.Errorf("reports the spoken version as the pin:\n%s", stderr)
+	}
+}
+
+func TestProjectsPinSaysWhenTheRelayPinStaysSet(t *testing.T) {
+	P := t.TempDir()
+	broken := clitest.Route{Tool: "adj", Args: []string{"contract", "pin", "1", "--root", P}, Exit: 1, Stdout: `{"error":{"code":"adj_broke","message":"adj broke"}}`}
+	app, _, _ := pinWorld(t, []clitest.Route{configSetRoute(P, "11"), broken}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, _, stderr := run(t, app, "projects", "pin", "p", "--relay", "11", "--adj", "1")
+	if code != 1 || !strings.Contains(stderr, "pinned p at relay v11, but adj failed: adj broke. The relay pin stays set") {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	app, _, _ = pinWorld(t, []clitest.Route{configSetRoute(P, "11"), broken}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, _ := run(t, app, "projects", "pin", "p", "--relay", "11", "--adj", "1", "--json")
+	if code != 1 || !strings.Contains(out, `"code": "adj_broke"`) || !strings.Contains(out, "The relay pin stays set") {
+		t.Fatalf("json exit %d: %s", code, out)
+	}
+}
+
+func TestProjectsUnpinSaysWhenTheRelayPinWasCleared(t *testing.T) {
+	P := t.TempDir()
+	routes := []clitest.Route{
+		{Tool: "slicer", Args: []string{"config", "relay_contract", "--unset", "--root", P}, File: recordedSlicer("config-relay-contract-unset.txt")},
+		{Tool: "adj", Args: []string{"contract", "unpin", "--root", P}, Exit: 1, Stdout: `{"error":{"code":"adj_broke","message":"adj broke"}}`},
+	}
+	app, _, _ := pinWorld(t, routes, registry.Project{Name: "p", Path: P, Adj: true})
+	code, _, stderr := run(t, app, "projects", "unpin", "p")
+	if code != 1 || !strings.Contains(stderr, "cleared p's relay pin, but adj failed: adj broke. The adj pin is unchanged; run ork projects unpin p --adj") {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	app, _, _ = pinWorld(t, routes, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, _ := run(t, app, "projects", "unpin", "p", "--json")
+	if code != 1 || !strings.Contains(out, `"code": "adj_broke"`) || !strings.Contains(out, "The adj pin is unchanged") {
+		t.Fatalf("json exit %d: %s", code, out)
+	}
+}
+
+func TestProjectsPinNeedsRelayOrAdj(t *testing.T) {
+	P := t.TempDir()
+	app, fake, _ := pinWorld(t, nil, registry.Project{Name: "p", Path: P, Adj: true})
+	code, _, stderr := run(t, app, "projects", "pin", "p")
+	if code != 2 || !strings.Contains(stderr, "--relay") || !strings.Contains(stderr, "--adj") {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	if calls := fake.Calls(); len(calls) != 0 {
+		t.Fatalf("ran %v", calls)
 	}
 }
 
@@ -371,6 +629,9 @@ func TestDoctorTextListsEachProjectContract(t *testing.T) {
 			t.Fatalf("the text lacks %q:\n%s", want, out)
 		}
 	}
+	if strings.Contains(out, "clears the slicer pin and the adj pin") {
+		t.Fatalf("adj is off, but the text warns about the adj pin:\n%s", out)
+	}
 	app, _, _ = pinWorld(t, []clitest.Route{relayRoute(P, "relay-v11-pinned.json", 0)}, registry.Project{Name: "p", Path: P})
 	code, out, _ = run(t, app, "doctor")
 	if code != 0 || !strings.Contains(out, "[ok] contract p  pinned relay v11") || strings.Contains(out, "ork projects unpin") {
@@ -391,9 +652,135 @@ func TestDoctorTextForAPinOutsideTheSetNamesTheAcceptedVersions(t *testing.T) {
 	if !strings.Contains(out, "run `ork projects pin p --relay N` with v11 or v12, or `ork projects unpin p`") {
 		t.Fatalf("the text lacks the next step:\n%s", out)
 	}
+	if strings.Contains(out, "clears the slicer pin and the adj pin") {
+		t.Fatalf("adj is off, but the text warns about the adj pin:\n%s", out)
+	}
+}
+
+func TestDoctorSlicerNextStepOnAnAdjProjectSaysUnpinClearsBoth(t *testing.T) {
+	P := t.TempDir()
+	app, _, _ := pinWorld(t, []clitest.Route{relayRoute(P, "error-contract-mismatch.json", 2)}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, _ := run(t, app, "doctor")
+	if code != 1 || !strings.Contains(out, "run `ork projects pin p --relay N` with the version slicer serves, or `ork projects unpin p` clears the slicer pin and the adj pin") {
+		t.Fatalf("mismatch: exit %d:\n%s", code, out)
+	}
+
+	raw, err := os.ReadFile(recordedSlicer("relay-v11-pinned.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	pinned9 := strings.Replace(string(raw), `"pinned": 11`, `"pinned": 9`, 1)
+	app, _, _ = pinWorld(t, []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: pinned9}}, registry.Project{Name: "p", Path: P, Adj: true})
+	_, out, _ = run(t, app, "doctor")
+	if !strings.Contains(out, "run `ork projects pin p --relay N` with v11 or v12, or `ork projects unpin p` clears the slicer pin and the adj pin") {
+		t.Fatalf("outside set:\n%s", out)
+	}
 }
 
 // Other failures get no pin advice, because pin and unpin would not fix them.
+func TestDoctorProjectListHasTheAdjPin(t *testing.T) {
+	P := t.TempDir()
+	app, _, _ := pinWorld(t, []clitest.Route{
+		relayRoute(P, "relay-v11-pinned.json", 0),
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: adjSpoken("1")},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, _ := run(t, app, "doctor")
+	if code != 0 || !strings.Contains(out, "adj-json v1 pinned") {
+		t.Fatalf("pinned: exit %d:\n%s", code, out)
+	}
+	_, jsonOut, _ := run(t, app, "doctor", "--json")
+	var body struct {
+		Contract struct {
+			Projects []struct {
+				AdjPinned *int   `json:"adj_pinned"`
+				AdjFound  string `json:"adj_found"`
+			} `json:"projects"`
+		} `json:"contract"`
+	}
+	mustJSON(t, jsonOut, &body)
+	if len(body.Contract.Projects) != 1 || body.Contract.Projects[0].AdjPinned == nil || *body.Contract.Projects[0].AdjPinned != 1 || body.Contract.Projects[0].AdjFound != "adj-json v1" {
+		t.Fatalf("json: %s", jsonOut)
+	}
+
+	app, _, _ = pinWorld(t, []clitest.Route{
+		relayRoute(P, "relay-v12.json", 0),
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: adjSpoken("null")},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	_, out, _ = run(t, app, "doctor")
+	if !strings.Contains(out, "adj-json v1 unpinned") {
+		t.Fatalf("unpinned:\n%s", out)
+	}
+
+	app, _, _ = pinWorld(t, []clitest.Route{relayRoute(P, "relay-v11-pinned.json", 0)}, registry.Project{Name: "p", Path: P})
+	_, out, _ = run(t, app, "doctor")
+	if !strings.Contains(out, "adj -") {
+		t.Fatalf("adj off:\n%s", out)
+	}
+}
+
+func TestDoctorFailsOnAnAdjContractMismatch(t *testing.T) {
+	P := t.TempDir()
+	app, _, _ := pinWorld(t, []clitest.Route{
+		relayRoute(P, "relay-v11-pinned.json", 0),
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: `{"contract":"adj-json v1","version":1,"pinned":2}`},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, _ := run(t, app, "doctor")
+	if code != 1 || !strings.Contains(out, "[FAIL] contract p") || !strings.Contains(out, "ork projects pin p --adj 1") || strings.Contains(out, "--adj N") || !strings.Contains(out, "ork projects unpin p --adj") {
+		t.Fatalf("exit %d:\n%s", code, out)
+	}
+
+	app, _, _ = pinWorld(t, []clitest.Route{
+		relayRoute(P, "relay-v11-pinned.json", 0),
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Exit: 1, Stdout: `{"error":{"code":"contract_mismatch","message":"pins adj-json v2, speaks adj-json v1"}}`},
+	}, registry.Project{Name: "p", Path: P, Adj: true})
+	code, out, _ = run(t, app, "doctor")
+	if code != 1 || !strings.Contains(out, "contract_mismatch") || !strings.Contains(out, "ork projects pin p --adj 1") || strings.Contains(out, "--adj N") || !strings.Contains(out, "ork projects unpin p --adj") {
+		t.Fatalf("tool error: exit %d:\n%s", code, out)
+	}
+}
+
+func TestDoctorContractLinesFitEightyColumns(t *testing.T) {
+	P := t.TempDir()
+	app, _, _ := pinWorld(t, []clitest.Route{
+		relayRoute(P, "relay-v12.json", 0),
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: adjSpoken("null")},
+	}, registry.Project{Name: "project1", Path: P, Adj: true})
+	_, out, _ := run(t, app, "doctor")
+	if !contractLinesFit(t, out, "project1") {
+		t.Fatalf("unpinned:\n%s", out)
+	}
+
+	app, _, _ = pinWorld(t, []clitest.Route{
+		relayRoute(P, "relay-v11-pinned.json", 0),
+		{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: adjSpoken("1")},
+	}, registry.Project{Name: "project1", Path: P, Adj: true})
+	_, out, _ = run(t, app, "doctor")
+	if !contractLinesFit(t, out, "project1") {
+		t.Fatalf("pinned:\n%s", out)
+	}
+}
+
+func contractLinesFit(t *testing.T, out, name string) bool {
+	t.Helper()
+	found := false
+	ok := true
+	for _, line := range strings.Split(out, "\n") {
+		if !strings.Contains(line, "contract "+name) && !strings.HasPrefix(line, "  adj") {
+			continue
+		}
+		found = true
+		if n := len([]rune(line)); n > 80 {
+			t.Errorf("%d columns: %q", n, line)
+			ok = false
+		}
+	}
+	if !found {
+		t.Errorf("no contract line:\n%s", out)
+		return false
+	}
+	return ok
+}
+
 func TestDoctorTextGivesNoPinAdviceForAnUnacceptedContract(t *testing.T) {
 	P := t.TempDir()
 	raw, err := os.ReadFile(recordedSlicer("relay-v12.json"))

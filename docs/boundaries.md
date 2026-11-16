@@ -45,8 +45,13 @@ Two things keep them in line
    its own slicer config (`relay_contract`), never in ork's `projects.json`.
    ork sets and checks it through slicer: `ork projects pin NAME --relay N`
    runs `slicer config relay_contract N`, and `ork projects unpin NAME` clears
-   it (`boundary.contract-pin`, adj 97). The adj pin is a later slice behind
-   adjudicate S45; until it lands ork checks no adj pin.
+   it (`boundary.contract-pin`, adj 97). *Proposed:* ork also sets and checks
+   the project's adj pin through adj (`adj contract --help`). `ork projects pin
+   NAME --adj M` writes it, and `ork projects unpin NAME` clears the slicer pin
+   and the adj pin together when the project has adj on (`--adj` clears only
+   the adj pin). Doctor and the engine check the pin, and the version adj
+   speaks, before a run starts. The pin lives in the project's adj config,
+   never in `projects.json`.
 2. ork reads `slicer ai relay --json` and validates its finding kinds,
    conformance keys, ledger roles, gate criteria and verdicts, and outcomes.
    The run keeps its contract version, ledger role names and gate criteria.

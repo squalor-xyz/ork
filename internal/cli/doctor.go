@@ -16,6 +16,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -64,9 +65,17 @@ type projectContract struct {
 	OK      bool   `json:"ok"`
 	Error   string `json:"error,omitempty"`
 
+	// AdjPinned, AdjFound and AdjError are the project's adj contract
+	// (*proposed*). AdjPinned is null when adj is off, unpinned, or the read
+	// failed. adjOn distinguishes off from unpinned in the text list.
+	AdjPinned *int   `json:"adj_pinned"`
+	AdjFound  string `json:"adj_found,omitempty"`
+	AdjError  string `json:"adj_error,omitempty"`
+
 	// next is ork's own next step for a pin problem, printed in the text
 	// output only.
-	next string
+	next  string
+	adjOn bool
 }
 
 type projectCheck struct {
@@ -267,15 +276,16 @@ func checkContract(ctx context.Context, slicer toolCheck, root string) contractC
 // checkProjectContract asks the project's own slicer, with the project as
 // --root, for its contract and pin (adj 97). It fails when slicer refuses
 // with contract_mismatch, when the pin is outside the accepted set, or when
-// the contract is not one ork accepts.
-func checkProjectContract(ctx context.Context, client slicercli.Client, p registry.Project) projectContract {
+// the contract is not one ork accepts. For a project with adj on it also
+// reads `adj contract --json` and fails on the same kinds of adj problem.
+func checkProjectContract(ctx context.Context, client slicercli.Client, adj adjcli.Client, p registry.Project) projectContract {
 	pc := projectContract{Project: p.Name}
 	contract, err := client.ReadContract(ctx, p.Path)
 	if err != nil {
 		pc.Error = contractError(err)
 		var tool *clirun.ToolError
 		if errors.As(err, &tool) && tool.Code == "contract_mismatch" {
-			pc.next = fmt.Sprintf("run `ork projects pin %s --relay N` with the version slicer serves, or `ork projects unpin %s`", p.Name, p.Name)
+			pc.next = fmt.Sprintf("run `ork projects pin %s --relay N` with the version slicer serves, or %s", p.Name, slicerUnpinStep(p))
 		}
 		return pc
 	}
@@ -283,7 +293,7 @@ func checkProjectContract(ctx context.Context, client slicercli.Client, p regist
 	pc.Found = contract.Contract
 	if contract.Pinned != nil && !roles.ContractAccepted(*contract.Pinned) {
 		pc.Error = fmt.Sprintf("pin v%d is outside what ork accepts (%s)", *contract.Pinned, acceptedList())
-		pc.next = fmt.Sprintf("run `ork projects pin %s --relay N` with %s, or `ork projects unpin %s`", p.Name, acceptedList(), p.Name)
+		pc.next = fmt.Sprintf("run `ork projects pin %s --relay N` with %s, or %s", p.Name, acceptedList(), slicerUnpinStep(p))
 		return pc
 	}
 	if _, err := roles.CheckContractLine("Contract: " + contract.Contract); err != nil {
@@ -294,8 +304,47 @@ func checkProjectContract(ctx context.Context, client slicercli.Client, p regist
 		pc.Error = contractError(err)
 		return pc
 	}
+	if !p.Adj {
+		pc.OK = true
+		return pc
+	}
+	pc.adjOn = true
+	got, err := adj.Contract(ctx, p.Path)
+	if err != nil {
+		pc.AdjError = contractError(err)
+		pc.Error = pc.AdjError
+		var tool *clirun.ToolError
+		if errors.As(err, &tool) && tool.Code == "contract_mismatch" {
+			pc.next = "run " + adjPinOrUnpin(p.Name)
+		}
+		return pc
+	}
+	pc.AdjPinned = got.Pinned
+	pc.AdjFound = got.Contract
+	if err := roles.CheckAdjContract(got.Contract, got.Version, got.Pinned); err != nil {
+		pc.AdjError = err.Error()
+		pc.Error = pc.AdjError
+		pc.next = "run " + adjPinOrUnpin(p.Name)
+		return pc
+	}
 	pc.OK = true
 	return pc
+}
+
+func (pc projectContract) adjText() string {
+	if !pc.adjOn {
+		return "adj -"
+	}
+	// A pin that passed the check equals the version adj speaks, so the
+	// column names that contract once.
+	label := pc.AdjFound
+	if label == "" {
+		label = roles.AcceptedAdjContractsPhrase()
+	}
+	if pc.AdjPinned != nil {
+		return label + " pinned"
+	}
+	return label + " unpinned"
 }
 
 // doctor checks the tools ork calls. It runs `--version` on each and
@@ -406,11 +455,12 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	// path is gone is skipped: its project finding says so.
 	if registryErr == nil && rep.Tools[0].Present {
 		client := slicercli.Client{Bin: rep.Tools[0].Path, Timeout: versionTimeout}
+		adjClient := adjcli.Client{Bin: toolPath(rep.Tools, "adj"), Timeout: versionTimeout}
 		for _, p := range registered {
 			if info, err := os.Stat(p.Path); err != nil || !info.IsDir() {
 				continue
 			}
-			pc := checkProjectContract(ctx, client, p)
+			pc := checkProjectContract(ctx, client, adjClient, p)
 			rep.Contract.Projects = append(rep.Contract.Projects, pc)
 			if !pc.OK {
 				rep.Contract.OK = false
@@ -553,8 +603,10 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 			fmt.Fprintf(o.stdout, "[FAIL] contract %s  %s%s\n", pc.Project, pc.Error, next)
 		case pc.Pinned != nil:
 			fmt.Fprintf(o.stdout, "[ok] contract %s  pinned relay v%d\n", pc.Project, *pc.Pinned)
+			fmt.Fprintf(o.stdout, "  %s\n", pc.adjText())
 		default:
 			fmt.Fprintf(o.stdout, "[ok] contract %s  not pinned, slicer serves %s\n", pc.Project, pc.Found)
+			fmt.Fprintf(o.stdout, "  %s\n", pc.adjText())
 		}
 	}
 	for _, h := range rep.Upgrade {
@@ -611,6 +663,15 @@ func ownerSourceLabel(source string) string {
 		return "ADJ_DECIDED_BY"
 	}
 	return source
+}
+
+func toolPath(tools []toolCheck, name string) string {
+	for _, tc := range tools {
+		if tc.Name == name {
+			return tc.Path
+		}
+	}
+	return ""
 }
 
 func contractError(err error) string {

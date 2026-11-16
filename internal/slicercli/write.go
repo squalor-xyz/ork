@@ -74,6 +74,16 @@ func (c Client) Config(ctx context.Context, root, key string) (string, error) {
 	return out.Value, nil
 }
 
+// ConfigAll runs `slicer config --json --root ROOT` and returns the object it
+// prints, every setting of the project's slicer config, as printed.
+func (c Client) ConfigAll(ctx context.Context, root string) (json.RawMessage, error) {
+	var out json.RawMessage
+	if err := clirun.RunJSON(ctx, c.call("config", "--json", "--root", root), &out); err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // Check runs `slicer check --json --root ROOT`. A failed check (exit 1) is a
 // result with OK false, not an error.
 func (c Client) Check(ctx context.Context, root string) (*CheckResult, error) {
@@ -217,6 +227,9 @@ type Matrix struct {
 	Markdown string `json:"relay_roles"`
 	Rows     []Row  `json:"rows"`
 	Rules    []Rule `json:"rules"`
+	// Revision is the matrix's revision when slicer prints one (S247,
+	// *proposed*; the slicer slice relay-roles-apply); empty otherwise.
+	Revision string `json:"revision,omitempty"`
 }
 
 // RelayMatrix runs `slicer relay-roles show --json --root ROOT`.

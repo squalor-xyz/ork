@@ -185,3 +185,15 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S371 (run ork-20261116-155616-1207, 2026-11-16)
 
 - [ ] [AFTER LAND] `` S304 trial 6 runs a local implementer on a slice with a large file and records sessions, reads and edits in S304's notes.
+
+## S247 (run ork-20261116-175515-ebde, 2026-11-16)
+
+- [ ] `ork projects show ork` and `ork projects show ork --json` against the owner's running daemon after rebuild: the matrix lines match `slicer relay-roles show`.
+
+## S206 (run ork-20261116-172629-3a8b, 2026-11-16)
+
+- [ ] [AFTER LAND] On a scratch project with `adj: true`: `ork projects pin NAME --adj 1`, then `ork doctor` shows the adj pin; edit nothing by hand; `ork projects unpin NAME --adj` clears it.
+
+## S222 (run ork-20261116-190149-a0bf, 2026-11-16)
+
+- [ ] [AFTER LAND] With a real pair wave of two small slices, both at `awaiting-approval`: tick every human check, press the key, read the confirm at 100x30 and 80x24, confirm, and watch the first land and then the second. Then repeat with a pair whose second landing hits a conflict and confirm the first lands, the second goes to a fix round, and nothing else is approved.

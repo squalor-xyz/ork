@@ -397,6 +397,19 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		}
 		return printWave(o, result)
 	}
+	// ork approve WAVE-ID (S222, *proposed*) approves each waiting run of the
+	// wave in order and stops at the first that does not land. It never marks a
+	// human check, so --later-checks stays with a single run.
+	if command == "approve" && strings.HasPrefix(pos[0], "wave-") {
+		if laterChecks {
+			return o.usage("approve: --later-checks is for one run; tick or mark each check of the wave's runs first")
+		}
+		var result daemon.WaveApproveResult
+		if code := a.call(ctx, o, daemon.MethodWaveApprove, daemon.WaveAction{Wave: pos[0]}, &result); code != ExitOK {
+			return code
+		}
+		return printWaveApprove(o, result)
+	}
 	p := daemon.RunAction{Run: pos[0], Rounds: rounds, AcceptShape: acceptShape, Again: again, NoWait: (command == "answer" || command == "retry") && !wait}
 	if command == "file" {
 		n, err := strconv.Atoi(pos[1])

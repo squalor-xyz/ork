@@ -77,7 +77,11 @@ It prints the path of the ork binary first, then one line per check
   run doctor in and for each registered project with its own pin. ork accepts
   v11 and v12 only; any other version fails, and so does a project whose slicer
   refuses its pin (`contract_mismatch`); an unpinned project is checked against
-  the accepted set alone (`docs/design.md:2412-2422`);
+  the accepted set alone (`docs/design.md:2412-2422`). *Proposed:* a project
+  with adj on is checked the same way (`adj contract --help`). An ok project
+  puts the adj column on the next indented line: `adj-json v1 pinned`,
+  `adj-json v1 unpinned`, or `adj -` when adj is off. A failed adj check
+  names `ork projects pin NAME --adj 1` or `ork projects unpin NAME --adj`;
 - each registered project: the path exists, the check command parses, and the
   worktree and branch patterns contain `{id}` or `{id_lower}`;
 - the owner ork files spec answers under in adj (`ADJ_DECIDED_BY`, else the
@@ -143,8 +147,14 @@ another row has the same name (a tracked project keeps it ahead of a plain git
 repo; add the other with `--name`). The scan looks at 500
 folders at most, and says when it stopped.
 
-Other commands: `ork projects list` and `ork projects rm NAME`. Removal is
-refused while the project has unfinished runs (`docs/design.md:2604-2608`).
+Other commands: `ork projects list`, `ork projects show NAME` and
+`ork projects rm NAME`. Removal is refused while the project has unfinished
+runs (`docs/design.md:2604-2608`).
+
+*Proposed (S247):* `ork projects show NAME` prints every setting of one
+project in one read: ork's registry entry and global settings, slicer's config
+and role matrix, and adj's state. It changes nothing. Text leaves out the
+`vendor_env` values; `--json` prints the whole result.
 
 The first add creates `~/.config/ork/projects.json`; ork never seeds it
 (`docs/state.md:34-36`).
@@ -153,13 +163,29 @@ To pin the project's slicer relay contract, run
 `ork projects pin NAME --relay 12` (v11 or v12). ork runs
 `slicer config relay_contract 12 --root PROJECT` and prints the pin slicer
 then reports; the pin lives in the project's slicer config, not in
-`projects.json`. `ork projects unpin NAME` clears it (`--json` prints
-`{"project":NAME,"pinned":null}`). If your slicer serves a different version
-than the pin, slicer refuses and the command exits 1 naming both versions; the
-pin stays set, and `ork doctor` lists the project as failed until you run
-`ork projects pin NAME --relay N` with the version slicer serves,
-`ork projects unpin NAME`, or install a slicer that serves the pin. Neither
-command needs the daemon.
+`projects.json`. On a project with adj off, `ork projects unpin NAME` clears
+the slicer pin (`--json` prints `{"project":NAME,"pinned":null}`). On a
+project with adj on, that same command clears the slicer pin and the adj pin.
+If your slicer serves a different version than the pin, slicer refuses and the
+command exits 1 naming both versions; the pin stays set, and `ork doctor`
+lists the project as failed until you run `ork projects pin NAME --relay N`
+with the version slicer serves, or `ork projects unpin NAME` (on a project
+with adj on, that clears both pins), or install a slicer that serves the pin.
+Neither command needs the daemon.
+
+*Proposed:* `ork projects pin NAME --adj 1` pins the adj contract. The version
+ork accepts is adj-json v1 (`adj contract --help`). With `--relay` and `--adj`
+together, ork pins slicer first and pins adj only if that call succeeded, then
+prints both pins. The printed adj version is the pin, `adj-json vN`. A
+read-back whose pin is not the version adj speaks exits 1 and says the pin
+stays set. If adj's call fails after the slicer pin was set, the message says
+the relay pin stays set. `ork projects unpin NAME` clears the slicer pin and,
+when the project has adj on, the adj pin; that is the recovery after a refused
+slicer pin, and the message says so. If the adj unpin then fails, the message
+says the relay pin was cleared and the adj pin is unchanged. `ork projects
+unpin NAME --adj` clears only the adj pin. A project with adj off is unchanged:
+unpin clears the slicer pin only. None of these write the pin into
+`projects.json`.
 
 ## 5. Set a project's options
 
@@ -776,6 +802,23 @@ follow-up list and the `[AFTER LAND]` handling do not change. `later` means you
 have not looked: use the flag when you mean that. There is no `all ticked`;
 ticking stays per check.
 
+*Proposed (S222):* when a wave has two or more runs waiting at the card, you can
+approve them as one action instead of one after the other: `ork approve
+WAVE-ID`, or `A` on an Overview row or in a run pane (it acts on the wave of the
+selected run and asks `y/N` first, naming the runs in start order). ork approves
+the first run, waits until it has landed (or come back to its card after a fix
+round), then approves the next, in the order the runs were started. It stops at
+the first run that does not end committed: that run keeps its state (a fix
+round or a pause), the runs after it stay at their cards, and `ork approve`
+prints `failed` and `not-attempted` for them and exits 1. A run that landed
+stays landed. A run you started with `--stop-after commit` ends committed
+without landing; that counts as done, the wave goes on, and you land that run
+yourself later. It never ticks a check for you: if any waiting run has a human check
+that is neither ticked nor marked later, the whole call is refused, approving
+nothing, and names each run and its open checks. Mark them (`ork check RUN N`),
+then run it again. `--later-checks` is for one run and is refused with a wave
+id. For a single run use `a` or `ork approve RUN` as before.
+
 *Proposed (S238):* if the merge has a conflict, ork merges the `CHANGELOG.md`
 entries itself and pauses the run on any other file, with a one-line message
 that names the files and the worktree. Resolve them in the worktree (no need
@@ -844,6 +887,7 @@ them all (`internal/tui/keys.go:82-157`).
 | Lists | `j` `k`, `g` `G`, `pgup` `pgdown`, `ctrl+d` `ctrl+u` | move and scroll |
 | Overview | `enter`, `esc` | open / close a run |
 | Overview, run pane | `a`, `x`, `t`, `c` | approve, stop, retry, clean up a merged worktree |
+| Overview, run pane (*proposed*, S222) | `A` | approve every waiting run of the selected run's wave, in start order (asks first) |
 | Run pane | `1`-`9`, `F`, `v`, `f`, `o` | mark check, fix note, renders, file slice, answer owner finding |
 | Question | `1`-`4` then `y`; `t` then `enter`; `ctrl+a` | load an option and send it; type a free answer and send it; file in adj |
 | Running entry | `space`, `E` | expand a run, expand all |
@@ -879,7 +923,8 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork show RUN [NAME]
     ork wait [RUN] [--until STATE,...] [--timeout D] [--project P]
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]
-    ork projects pin NAME --relay N | unpin NAME
+    ork projects show NAME
+    ork projects pin NAME [--relay N] [--adj M] | unpin NAME [--adj]
     ork run P ID [--slivers]
     ork wave suggest P
     ork wave start P ITEM...
@@ -892,6 +937,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork check RUN all later
     ork fix RUN TEXT
     ork approve RUN [--later-checks]
+    ork approve WAVE-ID
     ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
     ork stop RUN|WAVE
     ork dismiss RUN

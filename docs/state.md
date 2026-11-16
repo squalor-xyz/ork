@@ -516,9 +516,8 @@ started. They are not a copy of slicer state. The ledger link is
 saved wave gets a fresh `wave` id, and `ork stop` still takes that id. It is
 omitted for a run that was not started from a saved wave. The version stays 1;
 an older ork refuses a `run.json` with `wave_name` because `Store.Open` uses
-strict keys, as for `dismissed_at`. Only `run.json` carries it so far: the
-engine rows of `ork status --json` and the TUI show neither `wave` nor
-`wave_name`.
+strict keys, as for `dismissed_at`. The engine rows of `ork status --json` and
+the TUI carry `wave` (*proposed*, S222) and still omit `wave_name`.
 
 `state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
 `awaiting-approval`, `finish`, `commit`, `land`, `committed`, `paused` and `stopped`;
@@ -689,6 +688,8 @@ owner (*proposed*, S238). The daemon echoes `land_fixes` on the engine-run
 row, and `ork status` marks a repeat approval with it. A run that landed is
 `committed` with its worktree and branch removed; if the cleanup failed,
 `reason` says so.
+The daemon echoes the record's `wave` on the engine-run row (omitted when
+empty; *proposed*, S222), so the TUI can tell which runs share a wave.
 The `architect` state runs only when the lineup includes that role (adj #151),
 after accepted reviewer findings and before the gate (adj #123). Its whole
 report becomes `architect` feedback for a fix round (adj #150).

@@ -195,6 +195,26 @@ func TestPromptsTellRolesListNumbersAreNotHeadings(t *testing.T) {
 	}
 }
 
+func TestAcceptedAdjContractsIsOne(t *testing.T) {
+	if got := AcceptedAdjContracts(); !reflect.DeepEqual(got, []int{1}) {
+		t.Fatalf("AcceptedAdjContracts() = %v, want [1]", got)
+	}
+	got := AcceptedAdjContracts()
+	got[0] = 99
+	if again := AcceptedAdjContracts(); again[0] != 1 {
+		t.Fatalf("AcceptedAdjContracts hands out its own slice: %v", again)
+	}
+	if AdjContractAccepted(2) {
+		t.Fatal("AdjContractAccepted(2) = true, want false")
+	}
+	if !AdjContractAccepted(1) {
+		t.Fatal("AdjContractAccepted(1) = false")
+	}
+	if AcceptedAdjContractsPhrase() != "adj-json v1" {
+		t.Fatalf("phrase %q", AcceptedAdjContractsPhrase())
+	}
+}
+
 func TestAcceptedContractsAreV11AndV12(t *testing.T) {
 	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{11, 12}) {
 		t.Fatalf("AcceptedContracts() = %v, want [11 12]", got)

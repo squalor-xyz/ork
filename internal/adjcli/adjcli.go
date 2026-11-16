@@ -73,6 +73,34 @@ func (c Client) call(args ...string) clirun.Call {
 	return clirun.Call{Bin: bin, Args: args, Timeout: c.Timeout}
 }
 
+// Contract is the adj JSON contract `adj contract --json` prints. Pinned is
+// nil when the repo does not pin a version. Unknown keys are ignored.
+type Contract struct {
+	Contract string `json:"contract"`
+	Version  int    `json:"version"`
+	Pinned   *int   `json:"pinned"`
+}
+
+// Contract runs `adj contract --json --root ROOT`.
+func (c Client) Contract(ctx context.Context, root string) (Contract, error) {
+	var out Contract
+	err := clirun.RunJSON(ctx, c.call("contract", "--json", "--root", root), &out)
+	return out, err
+}
+
+// SetPin runs `adj contract pin M --root ROOT`. The call prints text, so a
+// failure keeps adj's own error.
+func (c Client) SetPin(ctx context.Context, root string, m int) error {
+	_, err := clirun.Run(ctx, c.call("contract", "pin", strconv.Itoa(m), "--root", root))
+	return err
+}
+
+// UnsetPin runs `adj contract unpin --root ROOT`.
+func (c Client) UnsetPin(ctx context.Context, root string) error {
+	_, err := clirun.Run(ctx, c.call("contract", "unpin", "--root", root))
+	return err
+}
+
 func (c Client) records(ctx context.Context, args ...string) ([]Record, error) {
 	var out struct {
 		Records []Record `json:"records"`

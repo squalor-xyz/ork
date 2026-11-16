@@ -914,7 +914,13 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				} else {
 					lines = append(lines, packHints(actionHints, w)...)
 				}
-				lines = append(lines, clip("o answer owner finding; p report (run pane)", w))
+				ownerKeys := "o answer owner finding; p report (run pane)"
+				if m.view == 0 {
+					// A approves the runs of one wave in start order (S222, *proposed*);
+					// on the other views it is all projects or all waves.
+					ownerKeys += "; A approve wave"
+				}
+				lines = append(lines, clip(ownerKeys, w))
 			}
 			if m.relayAnswerable() {
 				if h == m.keys.PickOption.Help() {

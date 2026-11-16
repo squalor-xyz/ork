@@ -50,7 +50,10 @@ const (
 	codeDaemon = "daemon_unavailable"
 )
 
-var usageText = strings.Replace(usageTemplate, "{CONTRACTS}", roles.AcceptedContractsPhrase(), 1)
+var usageText = strings.NewReplacer(
+	"{CONTRACTS}", roles.AcceptedContractsPhrase(),
+	"{ADJ}", roles.AcceptedAdjContractsPhrase(),
+).Replace(usageTemplate)
 
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
@@ -97,6 +100,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               finish and commit a passed slice; it stops on an
                               open human check, unless --later-checks marks
                               every open one later first and names each
+  ork approve WAVE-ID         approve each run of a wave that awaits approval,
+                              in start order; stops at the first run that does
+                              not end committed; refused, approving nothing,
+                              while any human check is open
   ork check RUN N [ticked|later|open]
                               mark human check N of a slice that awaits approval
   ork check RUN all later     mark every open human check later; approve nothing
@@ -145,16 +152,23 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               the only registered project); exit 0 changed,
                               3 question pending, 4 nothing active, 5 timeout
   ork projects list           list the registered projects
+  ork projects show NAME      print every setting of a project, one block per
+                              owner: ork's registry entry and global settings,
+                              slicer's config and role matrix, and adj; text
+                              leaves out vendor_env values, --json prints them
   ork projects add [PATH] [--name N]
                               register a project
   ork projects add --scan DIR [--yes]
                               list the projects below DIR; add the tracked
                               ones after a yes, or at once with --yes
   ork projects rm NAME        unregister a project
-  ork projects pin NAME --relay N
-                              pin the project's slicer relay contract at N
-                              ({CONTRACTS}) through slicer; needs no daemon
-  ork projects unpin NAME     clear the pin through slicer
+  ork projects pin NAME [--relay N] [--adj M]
+                              pin slicer at N ({CONTRACTS}) through slicer.
+                              Or adj at M ({ADJ}); at least one flag.
+                              needs no daemon
+  ork projects unpin NAME [--adj]
+                              clear both pins, or only the adj pin with
+                              --adj; a project with adj off clears slicer
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
                               [--bell on|off] [--auto-land on|off]
                               [--notify CMD]

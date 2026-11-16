@@ -5,6 +5,7 @@ package cli
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
@@ -181,7 +182,7 @@ func workingDuration(d time.Duration) string {
 // projects dispatches the projects subcommands.
 func (a *App) projects(ctx context.Context, o *output, args []string) int {
 	if len(args) == 0 {
-		return o.usage("projects needs add, list, rm, set, pin or unpin")
+		return o.usage("projects needs add, list, show, rm, set, pin or unpin")
 	}
 	sub, rest := args[0], args[1:]
 	fs := flag.NewFlagSet("projects "+sub, flag.ContinueOnError)
@@ -206,6 +207,23 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 			printProjects(o.stdout, list)
 			return ExitOK
 		})
+	case "show":
+		pos, err := parse(fs, rest)
+		if err != nil {
+			return o.usage("projects show: %v", err)
+		}
+		if len(pos) != 1 {
+			return o.usage("projects show takes one NAME, got %d arguments", len(pos))
+		}
+		var res daemon.ProjectsShowResult
+		if code := a.call(ctx, o, daemon.MethodProjectsShow, daemon.ProjectsShowParams{Name: pos[0]}, &res); code != 0 {
+			return code
+		}
+		if o.json {
+			return o.printJSON(res)
+		}
+		printProjectShow(o.stdout, res)
+		return ExitOK
 	case "add":
 		name := fs.String("name", "", "the project's name; default is the path's base name")
 		scan := fs.String("scan", "", "list the projects below this folder and add them")
@@ -321,6 +339,145 @@ func printProjects(w io.Writer, list []registry.Project) {
 		fmt.Fprintln(tw)
 	}
 	tw.Flush()
+}
+
+// printProjectShow prints a project's settings, one block per owner (S247,
+// *proposed*): ork's registry entry, ork's global settings, slicer's config,
+// slicer's role matrix and adj. A line is KEY and VALUE; a matrix row is one
+// line. vendor_env prints the names of its keys and never a value. Every
+// string comes from a file or a tool, so control characters are taken out.
+func printProjectShow(w io.Writer, r daemon.ProjectsShowResult) {
+	plain := func(s string) string {
+		return strings.Join(strings.Split(runrec.PlainText(s), "\n"), " ")
+	}
+	text := func(s string) string {
+		if s == "" {
+			return "unset"
+		}
+		return plain(s)
+	}
+	list := func(items []string) string {
+		if len(items) == 0 {
+			return "unset"
+		}
+		return plain(strings.Join(items, ","))
+	}
+	block := func(heading string, rows [][2]string) {
+		fmt.Fprintln(w, heading)
+		tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+		for _, row := range rows {
+			fmt.Fprintf(tw, "%s\t%s\n", row[0], row[1])
+		}
+		tw.Flush()
+	}
+	partError := func(part string) string {
+		for _, e := range r.Slicer.Errors {
+			if e.Part == part {
+				return fmt.Sprintf("%s (%s)", plain(e.Message), plain(e.Code))
+			}
+		}
+		return "not read"
+	}
+
+	p := r.Project
+	rows := [][2]string{
+		{"name", text(p.Name)}, {"path", text(p.Path)}, {"adj", onOff(p.Adj)}, {"push", onOff(p.Push)},
+		{"bell", onOff(p.BellOn())}, {"auto_land", onOff(p.AutoLandOn())}, {"cap", unsetOr(p.Cap)},
+		{"check_command", text(p.CheckCommand)}, {"round_check_command", text(p.RoundCheckCommand)},
+		{"build_command", text(p.BuildCommand)}, {"no_verify_check", onOff(p.NoVerifyCheck)},
+		{"check_minutes", unsetOr(p.CheckMinutes)}, {"budget_minutes", unsetOr(p.Budgets.Minutes)},
+		{"budget_tokens", unsetOr(p.Budgets.Tokens)}, {"worktree_pattern", text(p.WorktreePattern)},
+		{"branch_pattern", text(p.BranchPattern)}, {"ui_doc", text(p.UIDoc)},
+		{"ui_pass_skills", list(p.UIPassSkills)}, {"spec_check_rows", list(p.SpecCheckRows)},
+		{"ui_pass_rows", list(p.UIPassRows)}, {"notify_command", text(p.NotifyCommand)},
+	}
+	if len(p.EnvironmentLines) == 0 {
+		rows = append(rows, [2]string{"environment_line", "unset"})
+	}
+	for _, line := range p.EnvironmentLines {
+		rows = append(rows, [2]string{"environment_line", text(line)})
+	}
+	if len(p.Permissions) == 0 {
+		rows = append(rows, [2]string{"permission", "unset"})
+	}
+	for _, role := range slices.Sorted(maps.Keys(p.Permissions)) {
+		perm, value := p.Permissions[role], ""
+		if perm.Preset != "" {
+			value = perm.Preset
+		} else {
+			value = "allow " + strings.Join(perm.Allow, ", ")
+		}
+		rows = append(rows, [2]string{"permission", plain(role) + ": " + plain(value)})
+	}
+	if len(p.VendorEnv) == 0 {
+		rows = append(rows, [2]string{"vendor_env", "unset"})
+	}
+	for _, vendor := range slices.Sorted(maps.Keys(p.VendorEnv)) {
+		keys := slices.Sorted(maps.Keys(p.VendorEnv[vendor]))
+		rows = append(rows, [2]string{"vendor_env", plain(vendor) + ": " + plain(strings.Join(keys, ", "))})
+	}
+	block("ork (projects.json)", rows)
+
+	g := r.Global
+	fmt.Fprintln(w)
+	block("ork (global)", [][2]string{
+		{"global_cap", fmt.Sprintf("%s (effective %d)", unsetOr(g.GlobalCap), g.EffectiveGlobalCap)},
+		{"daemon_idle_minutes", fmt.Sprintf("%s (effective %d)", unsetOr(g.DaemonIdleMinutes), g.EffectiveDaemonIdleMinutes)},
+		{"owner", ownerOr(plain(g.Owner))}, {"file_answers", onOff(g.FileAnswers)},
+	})
+
+	var config map[string]json.RawMessage
+	if err := json.Unmarshal(r.Slicer.Config, &config); err != nil || config == nil {
+		config = nil
+	}
+	rows = nil
+	if config == nil {
+		rows = append(rows, [2]string{"unavailable", partError("config")})
+	}
+	for _, key := range slices.Sorted(maps.Keys(config)) {
+		value, raw := "", config[key]
+		var s string
+		if json.Unmarshal(raw, &s) == nil {
+			value = s
+		} else {
+			value = string(raw)
+		}
+		rows = append(rows, [2]string{plain(key), plain(value)})
+	}
+	fmt.Fprintln(w)
+	if config != nil && len(config) == 0 {
+		fmt.Fprintln(w, "slicer config")
+		fmt.Fprintln(w, "no keys")
+	} else {
+		block("slicer config", rows)
+	}
+
+	fmt.Fprintln(w)
+	fmt.Fprintln(w, "slicer relay-roles")
+	m := r.Slicer.Matrix
+	switch {
+	case m == nil:
+		fmt.Fprintf(w, "unavailable  %s\n", partError("matrix"))
+	default:
+		if m.Revision != "" {
+			fmt.Fprintf(w, "revision  %s\n", plain(m.Revision))
+		}
+		for _, row := range m.Rows {
+			words := []string{row.ID, row.Role, row.Agent, row.Model, row.Reasoning}
+			words = slices.DeleteFunc(words, func(s string) bool { return s == "" })
+			fmt.Fprintf(w, "%s  %s\n", plain(strings.Join(words, " ")), plain(row.Use))
+		}
+		if len(m.Rows) == 0 {
+			fmt.Fprintln(w, "no rows")
+		}
+	}
+
+	configFile := "absent"
+	if r.Adj.ConfigFile {
+		configFile = "present"
+	}
+	fmt.Fprintln(w)
+	block("adj", [][2]string{{"enabled", onOff(r.Adj.Enabled)}, {"config_file", configFile}})
 }
 
 // projectsSet is `ork projects set NAME --field VALUE...` (S161, *proposed*).

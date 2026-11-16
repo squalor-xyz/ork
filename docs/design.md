@@ -133,6 +133,7 @@ ork (TUI)  ork status --json (CLI)
   | `wave.list` (proposed wire, S215) | `{"project"?}` | `{"waves":[{"project","name","items":[{"item","status","title"}],"created_at","updated_at","error"?}]}` in the order saved; `status` and `title` come from one `slicer list --all` for each project that has a wave to show, and a member that list lacks has status `missing`; a project whose slicer read fails (or that is no longer registered) puts `error` on its waves and the members carry no status, and the other projects still list; an unknown `project` filter is `not_found`; slicer runs on each call; nothing is written |
   | `wave.rm` (proposed wire, S215) | `{"project","name"}` | the saved wave that was removed; `not_found` when the project has no wave of that name |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
+  | `wave.approve` (*proposed* wire, S222) | `{"wave"}` (a `wave-` id: anything else is `bad_params`; an unknown wave is `not_found`) | `{"wave","items":[{"item","run","outcome","error"?,"state"}]}`, every run of the wave in start order; approves each run that awaits approval one after the other through the path of `run.approve`, which returns once the run rests again, and stops at the first run that does not end `committed`; `outcome` is `landed` (committed with `landed_at`), `committed` (committed without a landing, `stop_after` `commit`), `failed` (an error, or the run rests in another state: a landing that went to its fix round is `awaiting-approval` with `land_fixes` above 0, and `state` says which; the loop stops here), `not-attempted` (waits for approval, after the stop), `not-waiting` (in another state, left alone) or `done` (already committed). A wave with no run awaiting approval, or with a human check open on any waiting run, is `refused` before anything is approved; the refusal names each run and its open checks. It never ticks or marks a check. The call checks its context between runs: when it is cancelled the runs not yet approved are `not-attempted` and the one in flight finishes |
   | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads, with a second engine, daemon or cmd slice of a wave moved into a wave of its own after it (S218, *proposed*; see Self-hosting); slicer runs on each call, not from the cache |
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","vendor","model","reasoning","note","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text (*proposed*, S173: `vendor`, `model`, `reasoning` and `note` are omitted when empty), and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's role row setting or a rule classifies), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
   | `matrix.edit` (*proposed* wire, S173) | `{"project","op","id"?,"fields"?,"before"?,"last"?,"text"?,"preview"?}`; `op` is `add`, `set`, `remove`, `move` or `rule-edit`; `fields` maps a flag name (`role size effort importance urgency well-specified split sliver agent vendor model reasoning note`) to a text value for `add` and `set`: an absent name is not passed, an empty value clears the field; `move` takes exactly one of `before` and `last`; `rule-edit` takes `id` and `text` | `{"command","warning"?,"id"?,"done"}`; previews (`preview`, `done` false) or runs one `slicer relay-roles` write in the registered project's main checkout with `--render`, with no run record; the change is left uncommitted for the owner, and slicer owns the file; `command` is the line the owner confirms, quoted for a shell; slicer's refusal comes back with its code and message; `warning` when `fields.agent` matches no adapter (`agent "X" has no ork adapter: a plan skips this row`), and the edit still runs; `id` is the new row after `add`; a missing project, an unknown op, a missing id, a field name outside the list, `fields` on `remove`, `move` or `rule-edit`, a blank text or a text that starts with `-` and has no space (slicer's parser would read it as a flag) is `bad_params`, with no slicer call; no cache refresh, because `roles.matrix` reads slicer on each call |
@@ -141,6 +142,7 @@ ork (TUI)  ork status --json (CLI)
   | `run.landcheck` (*proposed*, S217) | `{"run"}` | `{"base"?,"blockers"?,"reason"?,"error"?}`; current advisory landing check; absent fields are empty |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
+  | `projects.show` (*proposed*, S247) | `{"name"}` | `{"project","global","slicer":{"config","matrix","errors"},"adj"}`, in that key order, every part present: `project` is the registry entry as `projects.list` returns it (`vendor_env` values included, until S192 decides the masking, owner 2026-11-16); `global` is the `settings.get` result; `slicer.config` is the object `slicer config --json` prints, unchanged; `slicer.matrix` is `{"rows":[...as roles.matrix...],"rules":[...],"revision"?}` from `slicer relay-roles show --json`, with `revision` copied when slicer prints one and omitted otherwise; a part slicer could not read is `null` and `slicer.errors` holds `{"part":"config"\|"matrix","code","message"}` with slicer's own code and message (a project without `.slicer/` has both null), and the call still succeeds; `adj` is `{"enabled","config_file"}`: `enabled` is the registry flag and `config_file` is true when `.adjudicate.json` is a regular file (a stat; ork does not read it); a blank name is `bad_params` and an unknown project `not_found`, with no slicer call; read-only, nothing is written and no lock is held beyond the registry read; slicer runs on each call |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
   | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `ui_pass_rows` (a list, S344), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`), and `dry_run` (a boolean, S248, *proposed*), which the field check ignores | with `dry_run` the project as it would be saved, without saving it, every check of a real call running; otherwise the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`, `spec_check_rows` or `ui_pass_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
@@ -838,7 +840,15 @@ slice.
   The same check runs again right before the fast-forward, for an edit made
   during the merge-in or the re-check. A tracking-only overlap there is
   committed and the landing goes back to step 1 once; any other overlap, or a
-  second one, pauses as above. A failed read (`git status: `, `git diff: `,
+  second one, pauses as above. *Proposed (S377):* the base can also move by a
+  commit while the checkout is clean: another writer during the landing, or
+  ork's own tracking commit on a retry that still has the earlier merge open
+  (that commit runs before the open merge is settled, so the settlement does
+  not contain it). When the base tip is not in the slice branch after the
+  merge-in, the landing merges it in once more and then fast-forwards. A base
+  that moves again is not merged a third time; the fast-forward runs and a
+  failure pauses with the same one line as any other failed fast-forward,
+  `git merge --ff-only BRANCH: `. A failed read (`git status: `, `git diff: `,
   `git rev-parse: `) pauses with one line. When the slice branch is already
   in the base branch (a retry after the fast-forward), none of this runs.
   1. If the base branch moved (its tip is not in the slice branch), `git -C W
@@ -2366,6 +2376,9 @@ ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
                             keeps owner findings that have no options and
                             --again reruns the role (S298, proposed)
 ork stop RUN|WAVE           stop and record why
+ork approve WAVE-ID         approve each run of the wave that awaits approval,
+                            in start order, and stop at the first that does not
+                            land (S222, proposed)
 ork daemon run              serve the daemon in the foreground
 ork daemon status           show daemon build, state and running roles
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
@@ -2730,6 +2743,23 @@ it prints the reply. A plain `run.approve` is unchanged, and its refusal now
 names `--later-checks`. The flag is the owner's explicit choice, never a
 default. The follow-up list is built from the card at landing, so the later
 checks reach it as they do after `ork check RUN N later`.
+*Proposed (S222):* `wave.approve` (`ork approve WAVE-ID`, the `A` key) approves a
+wave as one action. Landing is serial anyway (the engines of a project share one
+`Landings` lock), so the call does what the owner did by hand: it approves the
+first waiting run, waits until the run rests again (landed, or back at its
+approval card after a fix round), then the next, in start order (`created_at`,
+then run id). It stops at the first run that does not end `committed` (a landing
+that went to its fix round, a pause, a stop or an error) and reports the rest
+`not-attempted`; a run that landed stays landed. A run with `stop_after`
+`commit` ends `committed` without a landing: that is outcome `committed`, it
+counts as done, and the wave goes on. It never marks a human check:
+with any check open on a waiting run it refuses the whole call and approves
+nothing, and it does not take `later_checks` (the CLI refuses `--later-checks`
+with a wave id). `Engine.Approve`, the landing and the single-run `run.approve`
+are unchanged. The engine run rows carry `wave` (omitted when empty), so the TUI
+can tell which runs share a wave. The CLI prints `ITEM RUN OUTCOME` for each run
+and exits 1 when any run is `failed` or `not-attempted`; `--json` prints the
+result.
 *Proposed (S121):* `run.render` takes `{run,name}` and returns `{name,text}`:
 the plain text of one render of the run's card, read from
 `tmp/ui-<ui_round>/renders/NAME` in the run directory. It reads the stored
@@ -2941,17 +2971,30 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   `boundary.contract-set`, adj 326, which supersedes adj 175). Any other version fails. The check runs
   for the directory doctor is run in, and again for each registered project
   with that project as `--root`, listed as `contract.projects` in the JSON
-  (`project`, `pinned`, `found`, `ok`, `error`) and as one `contract NAME` line
+  (`project`, `pinned`, `found`, `ok`, `error`; *proposed:* `adj_pinned`, `adj_found`, `adj_error`) and as one `contract NAME` line
   each in the text. A project fails when its pin is outside the accepted set
   or its slicer refuses with `contract_mismatch` (exit 2, no contract text;
   `slicer/docs/agents.md:712`); slicer's error object names the pinned and the
-  served version. An unpinned project is checked against the accepted set alone. A
-  project whose path is gone is skipped (its project finding says so). The pin
+  served version. An unpinned project is checked against the accepted set alone.
+  *Proposed* (S206): a project with adj on is also asked `adj contract --json
+  --root PATH` (see `adj contract --help`). The entry adds `adj_pinned` (null
+  when unpinned or when adj is off), `adj_found` (the contract string adj
+  speaks) and `adj_error`. It fails when adj refuses with `contract_mismatch`,
+  when the pin is not the version adj speaks, when the pin is outside the
+  accepted set, or when the version adj speaks is outside it. An unpinned adj
+  repo is checked against the accepted set alone (adj-json v1). An ok text
+  line names the slicer pin, and the next indented line is `adj-json v1
+  pinned`, `adj-json v1 unpinned`, or `adj -` when adj is off. A failed adj
+  check ends with `run ork projects pin NAME --adj 1` or `ork projects unpin
+  NAME --adj`. Engine start reads the same contract after the slicer
+  check and refuses on the same rules, before any other adj read and before a
+  run record exists. A project whose path is gone is skipped (its project finding says so). The pin
   is set with `ork projects pin NAME --relay N`, which refuses N outside the
   accepted set before it runs anything, runs `slicer config relay_contract N
   --root PROJECT`, and reports the `pinned` value that `slicer ai relay
   --json` then prints; `ork projects unpin NAME` runs `slicer config
-  relay_contract --unset --root PROJECT`. Neither needs the daemon, and ork
+  relay_contract --unset --root PROJECT` and, for a project with adj on,
+  `adj contract unpin`. Neither needs the daemon, and ork
   never writes the pin to `projects.json` or to slicer's config file itself
   (`boundary.contract-pin`, adj 97). Engine start reads the same string, and a
   `contract_mismatch` refuses the run with slicer's error and no run record.
@@ -3100,6 +3143,27 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `push`, `ui-pass-skills=a,b`, only when set, in that order. With none set,
   the third column is `-`. `notify_command=CMD` still follows when set.
   The notification cell is cleaned to one line without terminal controls.
+- `projects show NAME` (S247, *proposed*): every setting of one project, from
+  every tool that owns one, in one read through `projects.show`. `--json`
+  prints the wire result unchanged, `vendor_env` values included as
+  `projects list --json` prints them (owner 2026-11-16; S192 changes
+  `projects list`, `projects set` and `projects show` together). Text has one
+  block per owner, in this order, with a blank line between blocks and no
+  indent: `ork (projects.json)`, `ork (global)`, `slicer config`,
+  `slicer relay-roles` and `adj`. A line is `KEY  VALUE`; an empty string or
+  a zero number prints `unset`, while `bell` and `auto_land` print `on` or
+  `off` because an absent value means on. `vendor_env` prints a line per
+  vendor with the names of its keys and never a value. The matrix is one line
+  per row, as `r9 implementer Codex gpt-6.1-sol medium  used as codex`: id,
+  role, agent, then the model and reasoning when set, two spaces, and what ork
+  does with the row. The matrix block starts with `revision  VALUE` when
+  slicer printed one and prints `no rows` when the matrix has none; slicer's
+  rules are in `--json` only. A config with no keys prints one line `no keys`.
+  The adj block prints `enabled on|off` and `config_file present|absent`. A
+  part slicer could not read is one line `unavailable  MESSAGE (CODE)` in its
+  block. Strings are cleaned to one line without terminal
+  controls. No NAME or more than one is a usage error (exit 2) and calls no
+  daemon; an unknown project is `not_found` (exit 1).
 - `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
   duplicate name, a relative path, or a path that is not an existing
@@ -3305,7 +3369,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `pin` (the `pinned` value that `slicer ai relay --json` prints after the
   set) and `{"project":"NAME","pinned":null}` for `unpin`. Text: `pinned NAME
   at relay vN` and `unpinned NAME`. Exit 2 (usage, before any tool runs): a
-  missing `--relay` (`projects pin needs --relay N (v11 or v12)`), an N
+  missing `--relay` and `--adj` (`projects pin needs --relay N (v11 or v12) or --adj M (adj-json v1)`), an N
   outside the accepted set, or a wrong argument count. An unregistered NAME
   is `not_found` (exit 1), with a hint to run `ork projects list`.
   Exit 1 also covers when slicer fails the set or unset call (its message is
@@ -3313,8 +3377,28 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   v11 on a slicer that serves v12. In that case the pin stays set, and the
   message names the project, quotes slicer's error and gives the next step,
   `ork projects pin NAME --relay N` with the version slicer serves or `ork
-  projects unpin NAME` (owner, 2026-10-31). `pin` also exits 1 when slicer
+  projects unpin NAME` (owner, 2026-10-31). On a project with adj on, that
+  `unpin NAME` clears the slicer pin and the adj pin, and the message says so.
+  `pin` also exits 1 when slicer
   prints no pin after a successful set.
+- `projects pin NAME [--relay N] [--adj M]` and `projects unpin NAME [--adj]`
+  (*proposed*, S206; adj 97): the adj contract pin, set through adj
+  (`adj contract --help`), not by writing `.adjudicate.json` or `projects.json`.
+  At least one of `--relay` and `--adj` is required. M outside the accepted set
+  (adj-json v1), or `--adj` on a project with adj off, is a usage error (exit 2)
+  before any call. With both flags the slicer pin runs first and the adj pin
+  only if that call succeeded; ork then reads `adj contract --json` and reports
+  the pin, not the version adj speaks. It exits 1 when that pin is not the
+  version adj speaks; the pin stays set. Text forms: `pinned NAME at relay vN`,
+  `pinned NAME at adj-json v1`, `pinned NAME at relay vN and adj-json v1`,
+  `unpinned NAME (adj)`, and `unpinned NAME (relay and adj)`. When adj's call
+  fails after slicer's call succeeded, pin says the relay pin stays set and
+  unpin says the relay pin was cleared and the adj pin is unchanged (`ork
+  projects unpin NAME --adj` remains the way to clear it). `unpin` with no
+  flag clears the slicer pin and, when the project has adj on, the adj pin
+  (slicer first, adj only if that succeeded). `--adj` clears only the adj pin.
+  A project with adj off keeps the slicer-only unpin (`unpinned NAME`). JSON
+  adds `adj_pinned` when an adj pin was set or cleared.
 - `settings show` and `settings set [--global-cap N] [--daemon-idle-minutes N]`
   (*proposed*, S174, owner decision 2026-10-29): the file-level registry
   settings, over `settings.get` and `settings.set`. `show` prints
@@ -3346,7 +3430,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   first, then slicer's text (owner, 2026-10-29).
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
   "ok","error"}],"contract":{"accepted":[10,11],"found","ok","error",
-  "projects":[{"project","pinned","found","ok","error"}]},"binary",
+  "projects":[{"project","pinned","found","ok","error","adj_pinned","adj_found","adj_error"}]},"binary",
   "projects":[{"name","path","findings":[]}],"registry_error"?}`,
   where `binary` is the path of the running ork binary (empty when it cannot
   be read). Text: one `[ok]`, `[--]`, `[WARN]` or `[FAIL]` line per check, and
@@ -3361,7 +3445,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   and `found` is the bare contract string ("relay vN"). Both formats are
   kept on purpose. A failed project's text line ends with ork's next step,
   `run ork projects pin NAME --relay N ... or ork projects unpin NAME`,
-  for a refused pin or a pin outside the accepted set.
+  for a refused slicer pin or a slicer pin outside the accepted set. On a
+  project with adj on, that `unpin NAME` clears the slicer pin and the adj
+  pin. An adj failure names `run ork projects pin NAME --adj 1 ... or ork
+  projects unpin NAME --adj`.
   Projects have one `project NAME  PATH` line each, with
   findings indented below. Every finding is stored on one line.
 

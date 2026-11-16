@@ -2,6 +2,45 @@
 
 ## Unreleased
 
+- S377 (*proposed*): a landing whose base branch gains a commit after the
+  merge-in merges that commit in once and then fast-forwards, instead of
+  pausing. The same retry covers ork's own tracking commit when a landing
+  resumes with an older merge still open: the commit happens first, then the
+  settlement, so the landing merges the base in again before the
+  fast-forward. A base that moves again pauses at the fast-forward with the
+  same one-line `git merge --ff-only` reason. Docs updated: `docs/design.md`.
+
+- S222 (*proposed*): Approve a wave in order. `ork approve WAVE-ID`, the daemon
+  method `wave.approve` and the `A` key (Overview row or run pane, after a
+  `y/N` that names the runs) approve every run of a wave that waits for
+  approval, one after the other in start order, each only after the previous run
+  rests again, and stop at the first run that does not end `committed` (a
+  landing that goes to a fix round, a pause or an error); the rest are reported
+  `not-attempted`. A run set to stop after its commit ends `committed` without
+  landing, counts as done and the wave goes on. The call never ticks a human check: with any check
+  open on a waiting run it is refused whole and approves nothing. The engine
+  run rows carry `wave` (omitted when empty).
+
+- S206: ork pins and checks a project's adj contract (*proposed*). `ork projects
+  pin NAME [--relay N] [--adj M]` sets the slicer pin, the adj pin, or both
+  (slicer first). `ork projects unpin NAME` clears both when the project has
+  adj on; `--adj` clears only the adj pin. Doctor shows the adj pin, and a
+  run refuses a pin or a spoken version outside adj-json v1 before it starts
+  (adj 97). On a project with adj on, the slicer recovery says `unpin NAME`
+  clears both pins. Doctor puts the adj column on the next line (`adj-json v1
+  pinned` or `adj-json v1 unpinned`). Docs updated: `docs/design.md`,
+  `docs/boundaries.md`, `docs/guide.md`.
+
+- S247 (*proposed*): `ork projects show NAME [--json]` and the daemon method
+  `projects.show` print every setting of one project in one read: the registry
+  entry, ork's global settings, slicer's config and role matrix (read through
+  `slicer config --json` and `slicer relay-roles show --json`) and adj's state
+  (the registry flag, and whether `.adjudicate.json` is a regular file). A part
+  slicer cannot read is null with slicer's code and message, and the call still
+  succeeds. Text has one block per owner and leaves out `vendor_env` values;
+  `--json` prints them as `projects list --json` does (S192 decides masking
+  later). It writes nothing. Docs updated: `docs/design.md`, `docs/guide.md`.
+
 - S372: a claude-local implementer's Read is capped at 150 lines. A larger
   limit, or a Read with no limit of a longer file, is denied with guidance
   to Grep for the symbol and Read 150 lines around it. Read-only local roles

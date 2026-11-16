@@ -198,14 +198,17 @@ either (S152). When the line
 is too narrow, whole hints drop, lowest priority first: `f file slice`,
 `v renders`, `F fix round`, the check digits, `t retry`, `x stop`, then
 `ctrl+d/u half page`, `p report`, `tab views`, `pgup/pgdown`, `a approve`
-and `c clean up`,
+(with `A approve wave`, S222, *proposed*, which shows only when two runs of a
+wave wait) and `c clean up`,
 and last the row's main key. On a stale ledger pane `x end run` ranks with
 the row's main key, above all scroll keys (S175). When open human checks refuse approval, the check
 digits and `F fix round` rank above stop and all scroll keys; the way out stays
 pinned. On an approval card pane (S306, *proposed*; owner decision 2026-11-07)
 the keys outlast each other in this order: `a approve`; with open checks the
-check digits, `F fix round`, `o answer` and `f file slice`; `x stop`; `p report`;
-the scroll keys (these drop first). With every check marked the digits and
+check digits, `F fix round`, `o answer` and `f file slice`; `x stop`;
+`A approve wave` (S222, *proposed*; owner decision, adj 390: it drops just
+before `x stop` and outlasts `p report`); `p report`; the scroll keys (these
+drop first). With every check marked the digits and
 `F fix round` are not needed: they drop before all of those, the scroll keys
 included. So `x stop` outlasts `p report` and the scroll keys. On a card with a report and no owner findings, at 80x24
 and with open checks the line reads `x stop; 1-3 tick/later; F fix round; esc close pane`
@@ -956,6 +959,34 @@ Ineligible actions explain why there,
 and ledger rows started elsewhere have no actions. `esc` dismisses
 a pending message or action result and restores the selected row's detail.
 Hiding a pending message leaves its call running.
+
+*Proposed (S222):* `A` (shift-a) approves a wave as one action, on an Overview
+row and in a run pane (on Decisions and Waves `A` keeps its meaning, all
+projects or all waves). It acts on the wave of the selected run, and only when
+two or more runs of that wave wait for approval; with fewer, the key is silent
+and absent from the hint line, and `a` stays the way to approve one run. The
+engine run rows carry `wave` for this. It always asks first, in the pane too:
+the command `ork approve WAVE-ID`, a note on what each approval does, then
+`Approve and land A, then B? [y/N] (Enter is No)`, naming the waiting runs'
+items in start order. The note and the question follow the runs, as the
+single-run confirm does: a landing run is landed, pushed when the project's
+`push` setting is on (`Approve and land and push A, then B?`; the note says each
+run is pushed), and then loses its worktree and branch; a run set to stop after
+its commit reads `commit A on its branch` (`Approve and commit A on its branch,
+then land B?`), and the note says it is committed and keeps its worktree. The
+note ends with `The first run that does not end committed stops the rest.` Only
+`y` confirms. With any human check open on a waiting run the key is refused and
+the status line names each run and the numbers of its open checks (`Approve wave
+needs every human check marked; S22 (RUN): open 1, 2 (enter on a run's row opens
+its card)`); the key never ticks or marks a check. One `wave.approve` call runs
+for each confirm; while it runs the status reads `approving WAVE-ID: A, B:
+pending`, and a second press of `A`, or a press of `a`, on any run of the wave
+names the command as pending (`ork approve WAVE-ID is pending`). The result
+replaces the status, whichever row is selected: `landed A, B`, or `landed A; B
+needs a fix round; C not approved`, with `committed A` for a run that stops at
+its commit, `B failed: CODE: TEXT` for an error, `B is paused` for another
+state, and the command with the refusal text when the daemon refuses the whole
+call. The full help names the key on the Overview (`A approve wave`).
 
 Retry uses the optional engine `pending` kind (`ui.pending-kind`). When it is
 `question`, the detail area says to answer with `ork answer RUN TEXT` instead.

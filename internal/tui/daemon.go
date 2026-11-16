@@ -80,6 +80,17 @@ func (d *Daemon) ApproveRecord(ctx context.Context, run string) (runrec.Record, 
 	defer c.Close()
 	return c.ApproveRecord(ctx, run)
 }
+
+// WaveApprove approves each waiting run of the wave in start order and returns
+// what the call did to each run (wave.approve, S222, *proposed*).
+func (d *Daemon) WaveApprove(ctx context.Context, wave string) (daemon.WaveApproveResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return daemon.WaveApproveResult{}, err
+	}
+	defer c.Close()
+	return c.WaveApprove(ctx, wave)
+}
 func (d *Daemon) Stop(ctx context.Context, run string) error {
 	c, err := d.Connect(ctx)
 	if err != nil {
