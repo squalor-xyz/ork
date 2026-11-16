@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 377,
+  "next_id": 378,
   "preamble": "",
   "passes": [
     {
@@ -20701,6 +20701,34 @@
         "urgency": 1,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S377",
+      "title": "Landing: fast-forward fails after main moves during the landing",
+      "short_title": "Landing ff-only fails when main moves mid-landing",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-16, two landings paused on \"git merge --ff-only B: ... Diverging branches can't be fast-forwarded\": S373 (run ork-20261116-155524-4cf4), after the orchestrator committed to main during the landing; S206 (run ork-20261116-172629-3a8b), after a merge conflict was resolved by hand and the run retried: ork's own commit d6b72802 \"Tracking edits on main before landing S206\" (`.slicer/log.jsonl`, one line) moved main, and the fast-forward then failed. A plain `ork retry` landed both.",
+        "discovered_from": "S206",
+        "parent": "",
+        "cites": [],
+        "key": "ork-land-ff-diverged",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
+        "attempts": 0
       }
     }
   ],
