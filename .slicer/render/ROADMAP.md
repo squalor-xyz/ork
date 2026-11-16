@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-376 items · — 54 · done 287 · retired 35
+376 items · — 53 · done 288 · retired 35
 
 v1.2
 
@@ -50,7 +50,7 @@ v1.2
 |---|---|---|---|---|---|---|---|
 | 1 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | done |
 | 2 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (needs ui.mouse) | M | 2 |  |  | — |
-| 3 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | — |
+| 3 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | done |
 | 4 | [S123](slices/S123.md) | Relay stats: thin display of slicer's | S | 1 |  |  | done |
 | 5 | [S179](slices/S179.md) | Spec drafting round | L | 3 |  | discovered from S165 | — |
 | 6 | S192 | S174 later notes: vendor_env masking in --json, error wording, removed-vendor label | S | - |  | discovered from S174 | — |

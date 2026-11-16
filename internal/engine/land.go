@@ -85,7 +85,13 @@ func (e *Engine) land(ctx context.Context) error {
 			return pauseWith(oneLine("git merge --ff-only " + B + ": " + errText(err)))
 		}
 	}
-	if err := e.d.Slicer.Land(ctx, e.wr, P, rec.Item, B, "Landed "+B); err != nil {
+	// The last sliver of a chain lands the parent once (S62). A lone sliver, and
+	// a run with no parent, land their own item.
+	landItem := rec.Item
+	if rec.Parent != "" && rec.Chain != "" && rec.SliverIndex == rec.SliverCount {
+		landItem = rec.Parent
+	}
+	if err := e.d.Slicer.Land(ctx, e.wr, P, landItem, B, "Landed "+B); err != nil {
 		return pauseWith("slicer land: " + err.Error())
 	}
 	// In handoff mode slicer land marked the item done in the main checkout.
@@ -94,7 +100,7 @@ func (e *Engine) land(ctx context.Context) error {
 	if err != nil {
 		return pauseWith("git status: " + err.Error())
 	}
-	commitPaths, message := []string(nil), rec.Item+" done"
+	commitPaths, message := []string(nil), landItem+" done"
 	if strings.TrimSpace(status) != "" {
 		if _, err := e.gitWrite(ctx, P, "add", "-A", "--", ".slicer"); err != nil {
 			return pauseWith("git add .slicer: " + err.Error())

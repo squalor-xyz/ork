@@ -438,6 +438,15 @@ for unregistered projects and legacy random-named check directories
 files are discarded and logged with their full path, so the check asks the
 owner's questions again.
 
+A sliver run (*proposed*, S62) adds `parent`, the slice it was carved from.
+A chain started with `ork run PARENT --slivers` also sets `chain`,
+`sliver_index` (one-based) and `sliver_count`. The worktree and branch are
+the parent's. A lone sliver has `parent` and no `chain`. The chain holds one
+project slot and one global slot until its last sliver ends. A stop releases
+the slot, and a retry takes a slot again. A sliver that is not the last ends
+`committed` after its finish step and commit, with no landing; the last
+sliver waits for the owner's approval and lands the parent.
+
 ```json
 {
   "version": 1,

@@ -2722,7 +2722,7 @@
       "id": "S62",
       "title": "Slivers as their own items under the cap",
       "short_title": "Slivers as their own items under the cap",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S61"
@@ -2755,6 +2755,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1f2478f7-b542-4650-be51-0f0f5957bfd0",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: ork run PARENT --slivers plans and runs a sliver chain, one run record per sliver (chain id, parent worktree and branch), one cap slot held until the last sliver ends (a stop releases it). A non-last sliver is accepted at its gate, finishes and commits without landing; the last sliver waits for one owner approval and lands the parent once; a lone sliver lands its own item. A stopped chain keeps its worktree and later slivers stay queued across a restart; a restart between slivers keeps the slot. TUI rows and run tree show the parent and position; the plan lists each sliver's rows. go test -race ./internal/..., go vet, gofmt, slicer check and adj lint were green.",
+          "created_at": "2026-11-16T20:07:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2774,7 +2788,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

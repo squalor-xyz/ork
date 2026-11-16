@@ -55,6 +55,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	spec.register(fs)
 	well := fs.String("well-specified", "", "y/n")
 	split := fs.String("split", "", "y/n")
+	slivers := fs.Bool("slivers", false, "run the parent's slivers as one chain")
 	allowNoCheck := fs.Bool("allow-no-check", false, "start although the project has no check command")
 	var lineup lineupFlags
 	lineup.register(fs)
@@ -75,6 +76,9 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 	wellSpecified, splitItem, ok := lineupAnswers(*well, *split)
 	if !ok {
 		return o.usage("run: --well-specified y/n and --split y/n each take y or n")
+	}
+	if *slivers && splitItem {
+		return o.usage("run: --slivers cannot be combined with --split y")
 	}
 	var overrides daemon.RunParams
 	if err := lineup.apply(&overrides); err != nil {
@@ -107,7 +111,7 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 		return answer, nil
 	}
-	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: wellSpecified, Split: splitItem}
+	params := daemon.RunParams{Project: pos[0], Item: pos[1], WellSpecified: wellSpecified, Split: splitItem, Slivers: *slivers}
 	params.Lineup, params.Budgets, params.StopAfter = overrides.Lineup, overrides.Budgets, overrides.StopAfter
 	params.AllowNoCheck = *allowNoCheck
 	if spec.questions {
@@ -252,6 +256,12 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 		check += " (from " + p.CheckSource + ")" // S246
 	}
 	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, check)
+	if p.Parent != "" && p.Item != p.Parent {
+		fmt.Fprintf(w, "parent: %s\n", p.Parent)
+	}
+	if len(p.Slivers) > 0 {
+		fmt.Fprintf(w, "slivers: %d, one landing of %s\n", len(p.Slivers), p.Parent)
+	}
 	if p.RoundCheckCommand != "" {
 		fmt.Fprintf(w, "round check: %s\n", p.RoundCheckCommand)
 	}
@@ -268,8 +278,28 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 	if budgetsOverridden {
 		fmt.Fprintf(w, "budgets: %d min, %d tokens\n", p.Budgets.Minutes, p.Budgets.Tokens)
 	}
+	if len(p.Slivers) > 0 {
+		// Each sliver has its own rows (S62); the owner confirms all of them.
+		for _, sliver := range p.Slivers {
+			fmt.Fprintf(w, "sliver %d of %d: %s\n", sliver.Index, sliver.Count, sliver.Item)
+			printRoleRows(w, p, sliver.Lineup)
+		}
+	} else {
+		printRoleRows(w, p, p.Lineup)
+	}
+	for _, warning := range p.Warnings {
+		fmt.Fprintf(w, "warning: %s\n", warning)
+	}
+	if p.Note != "" {
+		fmt.Fprintf(w, "note: %s\n", p.Note)
+	}
+}
+
+// printRoleRows prints each role's rows from lineup, with the plan's
+// permissions.
+func printRoleRows(w io.Writer, p daemon.RunPlan, lineup map[string][]runrec.LineupEntry) {
 	for _, role := range []string{"implementer", "part", "reviewer", "ui", "architect", "gate"} {
-		if (role == "architect" || role == "ui" || role == "part") && len(p.Lineup[role]) == 0 {
+		if (role == "architect" || role == "ui" || role == "part") && len(lineup[role]) == 0 {
 			continue
 		}
 		// In a split run (S61, *proposed*) the implementer's slot is the lead.
@@ -277,7 +307,7 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 		if role == "implementer" && p.Split {
 			label = "lead"
 		}
-		for i, entry := range p.Lineup[role] {
+		for i, entry := range lineup[role] {
 			fallback := ""
 			if i > 0 {
 				fallback = " (fallback)"
@@ -294,13 +324,8 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 			fmt.Fprintf(w, "  skills: %s\n", strings.Join(p.Project.UIPassSkills, ", "))
 		}
 	}
-	for _, warning := range p.Warnings {
-		fmt.Fprintf(w, "warning: %s\n", warning)
-	}
-	if p.Note != "" {
-		fmt.Fprintf(w, "note: %s\n", p.Note)
-	}
 }
+
 func printRun(o *output, r runrec.Record) int {
 	if o.json {
 		return o.printJSON(r)

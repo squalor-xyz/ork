@@ -301,6 +301,10 @@ type EngineRun struct {
 	Roles          []EngineRole          `json:"roles,omitempty"`
 	ID             string                `json:"id"`
 	Item           string                `json:"item"`
+	Parent         string                `json:"parent,omitempty"`
+	Chain          string                `json:"chain,omitempty"`
+	SliverIndex    int                   `json:"sliver_index,omitempty"`
+	SliverCount    int                   `json:"sliver_count,omitempty"`
 	State          string                `json:"state"`
 	Wait           string                `json:"wait,omitempty"`
 	VendorWait     string                `json:"vendor_wait,omitempty"` // proposed: the vendor whose slot a round of this run waits for (S169); daemon memory only

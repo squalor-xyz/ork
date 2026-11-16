@@ -35,7 +35,7 @@ func TestFix1LedgerWaitNamesRole(t *testing.T) {
 func TestFix1QueuedTailSaysQueued(t *testing.T) {
 	r := fix1LedgerQuestion()
 	h := treeHarness(t, []slicercli.RelayRun{r}, "")
-	tail := strings.Join(plainLines(h.m.boardTail(ledgerTreeSteps(r.Steps), 100, 12)), "\n")
+	tail := strings.Join(plainLines(h.m.boardTail(ledgerTreeSteps(r.Steps), 100, 12, false)), "\n")
 	if strings.Contains(tail, "waiting") || !strings.Contains(tail, "queued") {
 		t.Fatalf("queued tail: %q", tail)
 	}

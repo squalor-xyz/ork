@@ -471,7 +471,28 @@ slice.
   - the implementer runs `slicer start` (the contract says the implementer
     starts the item).
 - **implement:** one implementer, or a lead and parts in a split
-  (`slice.options`). Slivers run as their own items, under the cap.
+  (`slice.options`). A sliver chain (*proposed*, S62; slice.sliver-worktree,
+  slice.sliver-chain-record, slice.sliver-chain-approval) runs the parent's
+  slivers one after another in the parent's worktree and branch. `ork run
+  PARENT --slivers` plans that chain as one plan. Each sliver is its own run
+  record, linked by a chain id, and the chain holds one slot under the project
+  and global caps until its last sliver ends. A stop releases that slot, and a
+  retry takes a slot again. A lone `ork run SLIVER` is the
+  same record with no chain id and counts as one slot; it uses the parent's
+  worktree and branch and queues behind a run that already owns that worktree.
+  Each sliver runs implement, review and gate with no owner stop between
+  them. A sliver that is not the last is accepted at its gate, runs its finish
+  step and its commit, ends its ledger run, and does not land; the next sliver
+  then starts on that commit. The owner approves once after the last sliver,
+  and ork lands the parent's branch once, as the last sliver's landing. A lone
+  sliver lands its own item. A sliver that stops stops the chain and keeps the
+  branch and the worktree for a retry from that sliver; the later slivers stay
+  queued, also after a restart, until the stopped sliver is dismissed. A
+  restart between two slivers keeps the chain's slot too: the committed sliver
+  is loaded again and the next one is not left to compete for a slot. The plan
+  lists each sliver's own rows. The Overview and Running rows name
+  the parent and the position (`2 of 4`), and the run tree nests the slivers
+  under the parent.
   - **Split run** (*proposed*, S61; owner decisions 2026-10-28). A split is
     opt-in per run: `ork run ID --split y` (and the same flag on `ork wave
     start`), or the `s` key on the TUI launch confirm, which flips split and
@@ -2322,7 +2343,8 @@ ork wave rm [--project P] NAME
                             remove a saved wave (S215, proposed)
 ork wave start [--project P] NAME
                             start a saved wave (S215, proposed)
-ork run P ID                show a plan, check the spec, then launch one slice
+ork run P ID [--slivers]   show a plan, check the spec, then launch one slice;
+                            --slivers runs the parent's slivers as one chain
 ork approve RUN [--later-checks]
                             finish a passed slice, commit and land it; with
                             --later-checks, mark every open human check later

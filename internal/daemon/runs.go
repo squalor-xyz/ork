@@ -60,6 +60,7 @@ type RunParams struct {
 	Item          string                          `json:"item"`
 	WellSpecified bool                            `json:"well_specified"`
 	Split         bool                            `json:"split"`
+	Slivers       bool                            `json:"slivers,omitempty"` // ork run PARENT --slivers (S62)
 	Expected      *RunPlan                        `json:"expected,omitempty"`
 	Lineup        map[string][]runrec.LineupEntry `json:"lineup,omitempty"`
 	Budgets       *registry.Budgets               `json:"budgets,omitempty"`
@@ -97,7 +98,9 @@ type RunPlan struct {
 	effective         registry.Project                // project with the check command the run uses (S246); the engine gets this one
 	Project           registry.Project                `json:"project"`
 	Item              string                          `json:"item"`
-	Split             bool                            `json:"split,omitempty"` // a lead and parts in one worktree (S61, *proposed*); the lineup then has a part chain
+	Parent            string                          `json:"parent,omitempty"`  // set when the item is a sliver, or the parent of a sliver chain (S62)
+	Split             bool                            `json:"split,omitempty"`   // a lead and parts in one worktree (S61, *proposed*); the lineup then has a part chain
+	Slivers           []SliverPlan                    `json:"slivers,omitempty"` // the chain, in slicer's order; empty for one item
 	Worktree          string                          `json:"worktree"`
 	Branch            string                          `json:"branch"`
 	CheckCommand      string                          `json:"check_command"`
@@ -108,6 +111,15 @@ type RunPlan struct {
 	Permissions       map[string]engine.Permission    `json:"permissions"`
 	Note              string                          `json:"note,omitempty"`     // why rule-based roles could not be identified
 	Warnings          []string                        `json:"warnings,omitempty"` // proposed (S265): setup problems, see engine.SetupWarnings
+}
+
+// SliverPlan is one sliver of a chain the owner confirms as one plan (S62).
+type SliverPlan struct {
+	Item   string                          `json:"item"`
+	Parent string                          `json:"parent,omitempty"`
+	Index  int                             `json:"index"`
+	Count  int                             `json:"count"`
+	Lineup map[string][]runrec.LineupEntry `json:"lineup,omitempty"`
 }
 
 // EngineRun is the owner's status of one engine run. Wire fields are proposed.
@@ -304,6 +316,19 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 				d.runs.mu.Unlock()
 				d.runs.specStateMu.Unlock()
 			}
+			// A stopped sliver keeps its chain's branch for a retry; its later
+			// slivers must stay queued after a restart too. A committed sliver
+			// that is not the last is loaded so its chain keeps its one cap slot
+			// while the next sliver waits (S62). Neither is reconciled or started.
+			chainRest := rec.State == runrec.StateStopped || (rec.State == runrec.StateCommitted && rec.SliverIndex < rec.SliverCount)
+			if rec.Chain != "" && chainRest && rec.DismissedAt.IsZero() {
+				if p, ok := find(f, rec.Project); ok {
+					ep := d.runProject(ctx, p)
+					d.runs.mu.Lock()
+					d.runs.runs[rec.ID] = &managedRun{engine: engine.Load(d.runDeps(ep), ep, r)}
+					d.runs.mu.Unlock()
+				}
+			}
 			continue
 		}
 		p, ok := find(f, rec.Project)
@@ -479,6 +504,12 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// command slicer names, when it names one (S246). registered stays the
 	// entry the plan-changed checks compare.
 	proj, checkSource, checkErr := d.effectiveProject(ctx, registered)
+	if p.Slivers {
+		if p.Split {
+			return nil, badParams(errors.New("--slivers cannot be combined with --split y"))
+		}
+		return d.planSliverChain(ctx, p, proj)
+	}
 	// A split run (S61, *proposed*) asks the matrix twice: split no for the lead
 	// (the implementer's slot, the reviewer, the gate and the architect, which the
 	// matrix gives to size L only) and split yes for the parts, whose rows only the
@@ -735,21 +766,86 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			plan.Budgets.Tokens = p.Budgets.Tokens
 		}
 	}
+	if rec.Sliver {
+		detail, showErr := d.runs.deps.Slicer.Show(ctx, proj.Path, p.Item)
+		if showErr != nil {
+			return nil, showErr
+		}
+		if detail.Parent == "" {
+			return nil, fmt.Errorf("%s is a sliver with no parent", p.Item)
+		}
+		plan.Parent = detail.Parent
+	}
+	treeID := p.Item
+	if plan.Parent != "" {
+		treeID = plan.Parent
+	}
+	plan.Worktree, plan.Branch = filledTree(proj, treeID)
+	return plan, nil
+}
+
+// filledTree is the project's worktree and branch patterns with id filled.
+// A relative worktree is joined to the project directory.
+func filledTree(proj registry.Project, id string) (string, string) {
 	pattern := proj.WorktreePattern
 	if pattern == "" {
 		pattern = ".worktrees/{id}"
 	}
-	plan.Worktree = registry.FillPattern(pattern, p.Item)
-	if !filepath.IsAbs(plan.Worktree) {
-		plan.Worktree = filepath.Join(proj.Path, plan.Worktree)
+	worktree := registry.FillPattern(pattern, id)
+	if !filepath.IsAbs(worktree) {
+		worktree = filepath.Join(proj.Path, worktree)
 	}
-	plan.Worktree = filepath.Clean(plan.Worktree)
 	pattern = proj.BranchPattern
 	if pattern == "" {
 		pattern = "{id}"
 	}
-	plan.Branch = registry.FillPattern(pattern, p.Item)
-	return plan, nil
+	return filepath.Clean(worktree), registry.FillPattern(pattern, id)
+}
+
+// planSliverChain plans every sliver of p.Item, in slicer's order, as one
+// plan. The plan's item is the parent. Each sliver keeps its own lineup. The
+// worktree and branch are the parent's (record 124).
+func (d *Daemon) planSliverChain(ctx context.Context, p RunParams, proj registry.Project) (*RunPlan, error) {
+	kids, err := d.runs.deps.Slicer.ListChildren(ctx, proj.Path, p.Item)
+	if err != nil {
+		return nil, err
+	}
+	if len(kids) == 0 {
+		return nil, fmt.Errorf("%s has no slivers", p.Item)
+	}
+	var slivers []SliverPlan
+	var first *RunPlan
+	for _, kid := range kids {
+		child := p
+		child.Item = kid.ID
+		child.Slivers = false
+		child.Split = false
+		child.Expected = nil
+		cp, err := d.planRun(ctx, child)
+		if err != nil {
+			return nil, err
+		}
+		if cp.Parent == "" {
+			cp.Parent = p.Item
+		}
+		if cp.Parent != p.Item {
+			return nil, fmt.Errorf("sliver %s belongs to %s, not %s", kid.ID, cp.Parent, p.Item)
+		}
+		slivers = append(slivers, SliverPlan{
+			Item: kid.ID, Parent: p.Item, Index: len(slivers) + 1, Count: len(kids), Lineup: cp.Lineup,
+		})
+		if first == nil {
+			first = cp
+		}
+	}
+	worktree, branch := filledTree(proj, p.Item)
+	first.Item = p.Item
+	first.Parent = p.Item
+	first.Worktree = worktree
+	first.Branch = branch
+	first.Slivers = slivers
+	first.Lineup = slivers[0].Lineup
+	return first, nil
 }
 
 // effectiveProject is p with the check command a run of it uses (S246; adj 32,
@@ -878,11 +974,22 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	if err != nil {
 		return runrec.Record{}, "", nil, err
 	}
+	// A second ordinary run on a worktree is refused. A sliver, alone or in a
+	// chain, queues behind the run that owns the parent's worktree (S62).
+	behind := false
 	for _, r := range stored {
 		rec := r.Snapshot()
-		if !runrec.IsFinal(rec.State) && rec.Worktree == plan.Worktree {
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil {
+			rec = m.engine.Snapshot()
+		}
+		if runrec.IsFinal(rec.State) || rec.Worktree != plan.Worktree {
+			continue
+		}
+		if plan.Parent == "" && len(plan.Slivers) == 0 {
 			return runrec.Record{}, "", nil, fmt.Errorf("run %s already owns %s", rec.ID, rec.Worktree)
 		}
+		behind = true
+		break
 	}
 	// Admission is here and only here: owner actions never reach startRun, so
 	// approve and stop bypass the caps (adj 122). An answer or retry of a
@@ -909,6 +1016,9 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	if wave == "" {
 		wave = newWaveID(time.Now())
 	}
+	if len(plan.Slivers) > 0 {
+		return d.admitChainLocked(ctx, plan, p, wave, behind)
+	}
 	// current equals plan.project here, so the plan's effective project is
 	// current with the check command the run uses (S246).
 	message, resumed, err := d.autoResumeLocked(ctx, f, plan.effective, p.Item, plan.Worktree, wave, p.waveName, stored, probe)
@@ -924,10 +1034,12 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	}
 	// Local admission claims its shared slot after New has saved a queued
 	// record. This avoids a check/claim race with spec checks and role slots.
-	queued := local || !d.hasRoomLocked(f, plan.project.Name)
+	// A sliver whose parent's worktree is already owned waits, even when a
+	// cap slot is free (S62).
+	queued := local || !d.hasRoomLocked(f, plan.project.Name) || behind
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
-	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.effective, Item: p.Item, Lineup: plan.Lineup, Split: plan.Split, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
+	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.effective, Item: p.Item, Lineup: plan.Lineup, Split: plan.Split, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions, Worktree: plan.Worktree, Branch: plan.Branch, Parent: plan.Parent}
 	var orientation []byte
 	if local {
 		orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, p.Item), "orientation.md"))
@@ -963,6 +1075,87 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 		d.launchRun(r, e.Run)
 	}
 	return rec, message, nil, nil
+}
+
+// admitChainLocked starts one run per sliver in the parent's worktree. The
+// first takes a cap slot when one is free and the worktree is free. The rest
+// wait, and the chain keeps that one slot until the last sliver ends. The
+// caller holds the manager lock.
+func (d *Daemon) admitChainLocked(ctx context.Context, plan *RunPlan, p RunParams, wave string, behind bool) (runrec.Record, string, *resumeLaunch, error) {
+	chain := newChainID(time.Now())
+	f, err := d.loadRunRegistryLocked()
+	if err != nil {
+		return runrec.Record{}, "", nil, err
+	}
+	room := d.hasRoomLocked(f, plan.project.Name)
+	var first runrec.Record
+	for i, sliver := range plan.Slivers {
+		local := engine.IsLocalRun(sliver.Lineup)
+		if local {
+			d.watchLocalSlots()
+		}
+		queued := behind || i > 0 || local || !room
+		var orientation []byte
+		if local {
+			orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, sliver.Item), "orientation.md"))
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
+				return runrec.Record{}, "", nil, fmt.Errorf("read orientation: %w", err)
+			}
+		}
+		cfg := engine.Config{
+			StopAfter: plan.StopAfter, Project: plan.effective, Item: sliver.Item, Lineup: sliver.Lineup,
+			Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued,
+			Decisions: d.runs.specs[specKey(plan.project.Name, sliver.Item)].decisions,
+			Worktree:  plan.Worktree, Branch: plan.Branch, Parent: plan.Parent,
+			Chain: chain, SliverIndex: sliver.Index, SliverCount: sliver.Count,
+		}
+		e, err := engine.New(ctx, d.runDeps(plan.effective), cfg)
+		if err != nil {
+			return runrec.Record{}, "", nil, err
+		}
+		if len(orientation) > 0 {
+			if err := os.WriteFile(filepath.Join(d.runs.deps.Store.RunDir(e.Snapshot().ID), "orientation.md"), orientation, 0600); err != nil {
+				return runrec.Record{}, "", nil, fmt.Errorf("copy orientation: %w", err)
+			}
+		}
+		if i == 0 && !behind && local && e.TryReserveLocal() {
+			if err := e.Dequeue(); err != nil {
+				e.ReleaseLocal()
+				return runrec.Record{}, "", nil, err
+			}
+			queued = false
+		}
+		rec := e.Snapshot()
+		d.runs.runs[rec.ID] = &managedRun{engine: e}
+		if !queued {
+			d.launchRun(d.runs.runs[rec.ID], e.Run)
+		}
+		if i == 0 {
+			first = e.Snapshot()
+		}
+	}
+	for _, id := range append([]string{p.Item}, sliverItems(plan.Slivers)...) {
+		if err := os.Remove(filepath.Join(d.specDir(plan.project.Name, id), "answers.json")); err != nil && !errors.Is(err, os.ErrNotExist) {
+			fmt.Fprintf(os.Stderr, "remove transferred spec answers: %v\n", err)
+		}
+		delete(d.runs.specs, specKey(plan.project.Name, id))
+	}
+	return first, fmt.Sprintf("sliver chain %s: %d slivers, one cap slot", chain, len(plan.Slivers)), nil, nil
+}
+
+func sliverItems(slivers []SliverPlan) []string {
+	ids := make([]string, len(slivers))
+	for i, sliver := range slivers {
+		ids[i] = sliver.Item
+	}
+	return ids
+}
+
+// newChainID links the run records of one sliver chain.
+func newChainID(now time.Time) string {
+	b := make([]byte, 2)
+	rand.Read(b)
+	return "chain-" + now.UTC().Format("20060102-150405") + "-" + hex.EncodeToString(b)
 }
 
 // resumeProbe is what a start learned about the item's stopped run before it
@@ -1508,19 +1701,7 @@ func (d *Daemon) blockedByLocked(f *registry.File, project string) string {
 	if p, ok := find(f, project); ok {
 		projectCap = p.Cap
 	}
-	total, inProject := 0, 0
-	for _, r := range d.runs.runs {
-		if !r.busy || r.engine == nil {
-			continue
-		}
-		if r.engine.LocalPrimary() {
-			continue
-		}
-		total++
-		if r.engine.Snapshot().Project == project {
-			inProject++
-		}
-	}
+	total, inProject := d.frontierSlotsLocked(project)
 	if projectCap != 0 && inProject >= projectCap {
 		return fmt.Sprintf("project cap %d", projectCap)
 	}
@@ -1544,6 +1725,136 @@ func (d *Daemon) recordBlockedByLocked(f *registry.File, rec runrec.Record, held
 		return fmt.Sprintf("local pool cap %d", engine.LocalSlotCap)
 	}
 	return d.blockedByLocked(f, rec.Project)
+}
+
+// frontierSlotsLocked counts cap slots. A busy frontier run holds one. A
+// sliver chain holds one between its slivers too: the slot stays taken from
+// the first sliver that leaves the queue until the chain has no queued sliver
+// left, so another run cannot take it in the gap. A chain that has not
+// started, or that a sliver stopped, holds none. The caller holds the manager
+// lock.
+func (d *Daemon) frontierSlotsLocked(project string) (total, inProject int) {
+	seen := map[string]bool{}
+	add := func(key, proj string) {
+		if key == "" || seen[key] {
+			return
+		}
+		seen[key] = true
+		total++
+		if proj == project {
+			inProject++
+		}
+	}
+	chains := map[string][]runrec.Record{}
+	for _, r := range d.runs.runs {
+		if r.engine == nil {
+			continue
+		}
+		rec := r.engine.Snapshot()
+		if rec.Chain != "" && !r.engine.LocalPrimary() {
+			chains[rec.Chain] = append(chains[rec.Chain], rec)
+		}
+		if !r.busy || r.engine.LocalPrimary() {
+			continue
+		}
+		key := rec.ID
+		if rec.Chain != "" {
+			key = rec.Chain
+		}
+		add(key, rec.Project)
+	}
+	for id, members := range chains {
+		if chainHolds(members) {
+			add(id, members[0].Project)
+		}
+	}
+	return total, inProject
+}
+
+// chainHolds reports that a chain has started, has not been stopped, and
+// still has a sliver waiting.
+func chainHolds(members []runrec.Record) bool {
+	admitted, queued, stopped := false, false, false
+	for _, m := range members {
+		switch m.State {
+		case runrec.StateStopped:
+			stopped = true
+		case runrec.StateQueued:
+			queued = true
+		default:
+			admitted = true
+		}
+	}
+	return admitted && queued && !stopped
+}
+
+// sliverBlockedLocked reports that an earlier sliver of this chain has not
+// finished, or stopped. The chain does not pass a stopped sliver.
+func (d *Daemon) sliverBlockedLocked(rec runrec.Record) bool {
+	if rec.Chain == "" || rec.SliverIndex <= 1 {
+		return false
+	}
+	for _, r := range d.runs.runs {
+		if r.engine == nil {
+			continue
+		}
+		other := r.engine.Snapshot()
+		if other.Chain != rec.Chain || other.SliverIndex >= rec.SliverIndex {
+			continue
+		}
+		if (other.State == runrec.StateStopped && other.DismissedAt.IsZero()) || !runrec.IsFinal(other.State) {
+			return true
+		}
+	}
+	return false
+}
+
+// worktreeOwnedLocked reports a non-queued run that still holds rec's
+// worktree, or a stopped sliver of another chain that keeps the worktree and
+// its branch for a retry while a later sliver of that chain has not finished.
+func (d *Daemon) worktreeOwnedLocked(rec runrec.Record) bool {
+	var all []runrec.Record
+	for _, r := range d.runs.runs {
+		if r.engine == nil {
+			continue
+		}
+		all = append(all, r.engine.Snapshot())
+	}
+	for _, other := range all {
+		if other.ID == rec.ID || other.Worktree != rec.Worktree {
+			continue
+		}
+		if !runrec.IsFinal(other.State) && other.State != runrec.StateQueued {
+			return true
+		}
+		if other.Chain != "" && other.Chain != rec.Chain && other.State == runrec.StateStopped && other.DismissedAt.IsZero() {
+			for _, later := range all {
+				if later.Chain == other.Chain && later.SliverIndex > other.SliverIndex && !runrec.IsFinal(later.State) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
+// chainContinuesLocked reports that rec is the waiting sliver of a chain that
+// already holds its one cap slot.
+func (d *Daemon) chainContinuesLocked(rec runrec.Record) bool {
+	if rec.Chain == "" || rec.State != runrec.StateQueued {
+		return false
+	}
+	var members []runrec.Record
+	for _, r := range d.runs.runs {
+		if r.engine == nil {
+			continue
+		}
+		other := r.engine.Snapshot()
+		if other.Chain == rec.Chain {
+			members = append(members, other)
+		}
+	}
+	return chainHolds(members)
 }
 
 // startQueuedLocked first starts the paused runs whose answer or retry waits
@@ -1588,7 +1899,12 @@ func (d *Daemon) startQueuedLocked(f *registry.File) {
 			}
 			continue
 		}
-		if d.runBlockedByLocked(f, w.r.engine) != "" || !w.r.engine.TryReserveLocal() {
+		if d.sliverBlockedLocked(w.rec) || d.worktreeOwnedLocked(w.rec) {
+			continue
+		}
+		// The next sliver of a chain that already holds its slot does not take
+		// a second one (S62).
+		if (!d.chainContinuesLocked(w.rec) && d.runBlockedByLocked(f, w.r.engine) != "") || !w.r.engine.TryReserveLocal() {
 			continue
 		}
 		if err := w.r.engine.Dequeue(); err != nil {
@@ -2407,7 +2723,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			c := rec.Checks[n-1]
 			lastCheck = &source.EngineCheck{Round: c.Round, Command: c.Command, OK: c.OK, Log: c.Log}
 		}
-		runs = append(runs, EngineRun{LastCheck: lastCheck, Lineup: rec.Lineup, VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, ResumeWaiting: rec.State == runrec.StatePaused && rec.Resume != nil, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		runs = append(runs, EngineRun{LastCheck: lastCheck, Lineup: rec.Lineup, VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Parent: rec.Parent, Chain: rec.Chain, SliverIndex: rec.SliverIndex, SliverCount: rec.SliverCount, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, ResumeWaiting: rec.State == runrec.StatePaused && rec.Resume != nil, Pending: pending, RelayRun: rec.RelayRun, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
 	}
 	return runs
 }

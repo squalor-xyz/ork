@@ -71,7 +71,7 @@ func TestRunUsageSaysYAndN(t *testing.T) {
 	if code := (&App{}).Run(context.Background(), []string{"help"}, &out, &errs); code != ExitOK {
 		t.Fatalf("help: code %d: %s", code, errs.String())
 	}
-	if !strings.Contains(out.String(), "ork run P ID [--yes] [--well-specified y/n] [--split y/n]") || strings.Contains(out.String(), "yes|no") {
+	if !strings.Contains(out.String(), "ork run P ID [--yes] [--well-specified y/n] [--split y/n] [--slivers]") || strings.Contains(out.String(), "yes|no") {
 		t.Fatalf("usage text: %s", out.String())
 	}
 }
@@ -1097,6 +1097,26 @@ func TestPrintRunPlanShowsTheLeadAndPartRowsOfASplit(t *testing.T) {
 	// The part's permission line must not print without its row either.
 	if got := out.String(); !strings.Contains(got, "implementer: claude sonnet high\n") || strings.Contains(got, "lead:") || strings.Contains(got, "part:") || strings.Contains(got, "slicer show*") {
 		t.Errorf("a plan with no split shows split rows:\n%s", got)
+	}
+}
+
+// S62 (*proposed*): the plan of a sliver chain shows each sliver's own rows, so
+// the owner confirms every model the chain will use.
+func TestPrintRunPlanShowsEachSliversRows(t *testing.T) {
+	haiku := map[string][]runrec.LineupEntry{"implementer": {{Vendor: "claude", Model: "haiku", Effort: "xhigh"}}}
+	sonnet := map[string][]runrec.LineupEntry{"implementer": {{Vendor: "claude", Model: "sonnet", Effort: "high"}}}
+	plan := daemon.RunPlan{Project: registry.Project{Name: "p"}, Item: "S1", Parent: "S1", Lineup: haiku,
+		Slivers:     []daemon.SliverPlan{{Item: "S1a", Parent: "S1", Index: 1, Count: 2, Lineup: haiku}, {Item: "S1b", Parent: "S1", Index: 2, Count: 2, Lineup: sonnet}},
+		Permissions: map[string]engine.Permission{"implementer": {Allow: []string{"Read"}}, "reviewer": {ReadOnly: true}, "gate": {ReadOnly: true}}}
+	var out bytes.Buffer
+	printRunPlan(&out, plan, false)
+	rest := "  allowlist: Read\n  permissions: read-only\n  permissions: read-only\n"
+	want := "sliver 1 of 2: S1a\nimplementer: claude haiku xhigh\n" + rest + "sliver 2 of 2: S1b\nimplementer: claude sonnet high\n" + rest
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("the plan lacks each sliver's rows:\n%s", out.String())
+	}
+	if strings.Count(out.String(), "implementer:") != 2 {
+		t.Errorf("the plan shows the first sliver's rows twice:\n%s", out.String())
 	}
 }
 

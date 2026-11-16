@@ -178,7 +178,11 @@ caps, its parts run at the same time only when their files are disjoint (at
 most 3 at once), and one review and one gate cover the combined diff.
 
 **Sliver.** A small item carved from a slice and linked by `parent`, so that a
-cheaper model can implement it. Owner: slicer.
+cheaper model can implement it. Owner: slicer. ork runs a parent's slivers as
+one chain in the parent's worktree and branch (`ork run PARENT --slivers`,
+*proposed*, S62): one run record per sliver, one cap slot for the chain, and
+one landing of the parent's branch after the last sliver. A lone sliver is
+one record with no chain id.
 
 **Wave.** A set of items that can run in parallel, from dependencies and
 `Files` paths. Printed by `slicer plan-parallel` (s376, done

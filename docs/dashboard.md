@@ -824,7 +824,14 @@ the text column, falling back to a shorter indent when needed to fit.
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the ork run
-id, then slice, engine state and wait. Denied calls appear as
+id, then slice, engine state and wait. A sliver row also names its parent and,
+in a chain, its position (`parent S1 2 of 4`, *proposed*, S62), in the Overview
+row and in the item cell of the Running row. A committed sliver that is not the
+last of its chain is not listed under Ready to land: the last sliver lands the
+parent, and its land command names the parent. The run tree nests the sliver's roles under the sliver and the sliver
+under the parent (`chain`, neutral while the chain runs). A sliver node reads
+`done`, `queued`, `stopped`, `wait` (the owner's approval or answer) or
+`start`; the stage bar above the tree is the open run's own. Denied calls appear as
 `denied: Bash: git push origin main, Write: /x.txt`
 (the tool, then its command or file path, capped at 200 characters; a denial
 with no detail shows the tool name alone) from the snapshot's `denials` field

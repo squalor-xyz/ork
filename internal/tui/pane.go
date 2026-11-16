@@ -817,7 +817,8 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		}
 		steps := m.paneSteps()
 		lines = append(lines, m.boardLines(steps, width)...)
-		roleWidth := treeRoleWidth(steps)
+		tree := m.paneTreeSteps(steps)
+		roleWidth := treeRoleWidth(tree)
 		if boardLive(m.paneBoardRun().State) {
 			for _, role := range pipelineRoles(steps) {
 				roleWidth = max(roleWidth, len(role))
@@ -828,8 +829,8 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 		if !boardLive(m.paneBoardRun().State) {
 			frame = 0
 		}
-		lines = append(lines, m.runTreeLinesWithRoleWidth(steps, width, frame, roleWidth)...)
-		lines = append(lines, m.boardTail(steps, width, roleWidth)...)
+		lines = append(lines, m.runTreeLinesWithRoleWidth(tree, width, frame, roleWidth)...)
+		lines = append(lines, m.boardTail(steps, width, roleWidth, len(tree) > len(steps))...)
 	}
 	if len(lines) == 0 {
 		lines = wrapText(reason, width)

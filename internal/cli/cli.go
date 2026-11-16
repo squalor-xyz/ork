@@ -54,7 +54,7 @@ var usageText = strings.Replace(usageTemplate, "{CONTRACTS}", roles.AcceptedCont
 
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
-  ork run P ID [--yes] [--well-specified y/n] [--split y/n]
+  ork run P ID [--yes] [--well-specified y/n] [--split y/n] [--slivers]
                               [--questions | --answer KEY=N ...]
                               [--stop-after land|commit] [--allow-no-check]
                               [--implementer VENDOR:MODEL:EFFORT]
@@ -69,6 +69,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               flags say otherwise
                               --well-specified and --split do not skip
                               the spec check.
+                              --slivers runs the parent's slivers as one
+                              chain in the parent's worktree.
                               --questions prints all spec questions and starts
                               nothing; --answer KEY=N or KEY=text repeats for
                               every question (#N when there is no key)

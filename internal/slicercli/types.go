@@ -92,6 +92,7 @@ type Item struct {
 	Claim      *Claim   `json:"claim"`
 	Fields     Fields   `json:"fields"`
 	Notes      []string `json:"notes"`
+	Parent     string   `json:"parent,omitempty"` // the slice this sliver was carved from (S62)
 }
 
 // Section is one headed part of a slice spec.
