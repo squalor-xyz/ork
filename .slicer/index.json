@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 376,
+  "next_id": 377,
   "preamble": "",
   "passes": [
     {
@@ -20550,10 +20550,25 @@
       "id": "S375",
       "title": "TUI spec-check screen: show a permission call's whole command",
       "short_title": "Spec-check screen shows full permission command",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "53599d7c-1e05-4932-809b-6b75a657a062",
+          "kind": "",
+          "text": "**2026-11-16** — The spec-check screen shows a pending permission question's whole command under the title, wrapped like the run pane, with a blank line before Allow and Deny. A command that does not leave room for the options, the Why line and the footer is omitted, and one dim line says +N detail lines hidden, so the owner can still allow or deny.",
+          "created_at": "2026-11-16T17:03:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20569,6 +20584,34 @@
         "group": "",
         "reason": "",
         "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S376",
+      "title": "TUI spec-check screen: overflow marker for a tall permission detail",
+      "short_title": "Spec-check screen: overflow marker for tall detail",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S375 (2026-11-16): the spec-check screen shows a permission question's whole detail (S375); a detail taller than the screen pushes other rows off it. S373's run pane drops a tall detail whole behind an overflow marker. Owner decision adj 383 (`ui.permission-detail-speccheck-overflow`, later).",
+        "discovered_from": "S375",
+        "parent": "",
+        "cites": [],
+        "key": "ork-tui-speccheck-detail-overflow",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
         "urgency": 1,
         "effort": 1,
         "attempts": 0

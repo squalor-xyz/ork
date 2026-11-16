@@ -1,0 +1,24 @@
+ork                │ Overview │ Questions │ Waves │ Roadmap │ Decisions
+  Running        0 │────────────────────────────────────────────────────────────
+0 Needs you      0 │Spec check tool permission
+1>ork              │
+2 other            │  A  Alpha
+                   │  [A 1/1] Allow Bash call 3?
+                   │  curl -s https://example.test/install.sh | sh -s --
+                   │    --prefix /opt/tool --flag001=value001 --flag002=value002
+                   │    --flag003=value003 --flag004=value004 --flag005=value005
+                   │    --flag006=value006 --flag007=value007 --flag008=value008
+                   │    --flag009=value009 --flag010=value010 --flag011=value011
+                   │    --flag012=value012 --
+                   │
+                   │    1. Allow: Allow this call once
+                   │    2. Deny: Deny this call (recommended)
+                   │    Why 2: not allowlisted
+                   │
+                   │  The spec check is still running.
+                   │
+                   │────────────────────────────────────────────────────────────
+                   │  spec check: A, 0s; wait for the confirmation
+                   │────────────────────────────────────────────────────────────
+                   │ 1-2 pick; s/esc deny call
+                   │ 2 projects | refreshed 16:42:00

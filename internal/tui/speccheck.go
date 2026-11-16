@@ -471,8 +471,9 @@ func (w *wavesState) heldWithQuestions() bool {
 	return false
 }
 
-// sittingParts draws the sitting in place of the table.
-func (m *Model) sittingParts(w *specState, width int) (overviewView, []string) {
+// sittingParts draws the sitting in place of the table. lines is the body
+// window the screen will show. Zero means the caller wants the whole body.
+func (m *Model) sittingParts(w *specState, width, lines int) (overviewView, []string) {
 	out := overviewView{sel: -1}
 	th := m.cfg.Theme
 	s := w.sitting
@@ -524,6 +525,20 @@ func (m *Model) sittingParts(w *specState, width int) (overviewView, []string) {
 	out.body = append(out.body, "")
 	add(dim, ask.item+"  "+title, "")
 	add(th.Heading.Render, fmt.Sprintf("[%s %d/%d] ", ask.item, ask.n, ask.of)+askTitle(ask.q), "")
+	detailAt := len(out.body)
+	detailRows := 0
+	if ask.q.Ask != nil && ask.q.Ask.Detail != "" {
+		// The whole tool input, wrapped as the run pane wraps it (S373, adj 377).
+		room := max(width-len(indent), 1)
+		rows := permissionInputLines(ask.q.Ask.Detail, room)
+		detailRows = len(rows)
+		for _, line := range rows {
+			out.body = append(out.body, indent+line)
+		}
+		// A blank line keeps a wrapped command from starting where the options do.
+		out.body = append(out.body, "")
+	}
+	suffixAt := len(out.body)
 	if ask.q.Previous != "" {
 		add(dim, ask.q.Previous, "  ")
 	}
@@ -560,7 +575,47 @@ func (m *Model) sittingParts(w *specState, width int) (overviewView, []string) {
 		out.body = append(out.body, "")
 		add(dim, "Owner needed: "+w.ownerNeeded, "")
 	}
+	if lines > 0 && detailRows > 0 && len(out.body) > lines {
+		// The wrapped command would push the options, the Why line or the
+		// footer out of the window. Drop it whole. This screen is before a
+		// run exists, so the marker does not name one.
+		word := "lines"
+		if detailRows == 1 {
+			word = "line"
+		}
+		suffix := append([]string(nil), out.body[suffixAt:]...)
+		out.body = out.body[:detailAt]
+		add(dim, fmt.Sprintf("+%d detail %s hidden", detailRows, word), "")
+		out.body = append(out.body, "")
+		out.body = append(out.body, suffix...)
+	}
 	return out, nil
+}
+
+// specCheckBodyLines is the body window a spec-check sitting is drawn into.
+// It matches screen: the terminal less the hint, the view bar and rules, and
+// the status band while a Waves check is running.
+func (m *Model) specCheckBodyLines(mainW int) int {
+	_, h, _ := m.layoutSize()
+	status := m.actionStatus
+	if m.view == wavesView && m.waves != nil && m.waves.checking {
+		var ids []string
+		for _, p := range m.waves.items() {
+			ids = append(ids, p.Item)
+		}
+		wait := specWaitText(ids, m.cfg.Now().Sub(m.waves.checkStarted))
+		if status != "" {
+			wait += "\n" + status
+		}
+		status = wait
+	}
+	bodyH := max(h-4, 1)
+	if status == "" {
+		return bodyH
+	}
+	detail := wrapText(status, max(mainW-len(indent), 1))
+	detail = detail[:min(len(detail), max(h-6, 1))]
+	return max(h-5-len(detail), 1)
 }
 
 func askTitle(q engine.SpecQuestion) string {
@@ -568,4 +623,16 @@ func askTitle(q engine.SpecQuestion) string {
 		return q.Ask.Title
 	}
 	return "Question"
+}
+
+// permissionInputLines is a permission question's whole tool input, wrapped
+// the way the run pane wraps it (S373): every token, a tab as four spaces,
+// and a line that wraps continued under a two-space hanging indent.
+func permissionInputLines(detail string, width int) []string {
+	detail = strings.NewReplacer("\r\n", "\n", "\r", "\n", "\t", "    ").Replace(detail)
+	var rows []string
+	for _, line := range strings.Split(detail, "\n") {
+		rows = append(rows, hangDetail(line, width)...)
+	}
+	return rows
 }
