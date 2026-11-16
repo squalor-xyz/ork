@@ -246,20 +246,81 @@ func (e *Engine) implement(ctx context.Context) error {
 			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Reason: reason})
 		}
 	}
-	r := round{role: RoleImplementer, n: rec.Round, state: runrec.StateImplement, task: rec.Item + " implementer", resumeFrom: []string{RoleImplementer}}
+	// A split run's lead has the implementer's slot (S61, *proposed*). Its first
+	// round returned the parts list; when that list stands, the parts go on.
+	// A fix round's hand-back (owner decision, adj 385) that is not spent also
+	// goes on with its parts and does not run the lead's round again.
+	if rec.Split && len(rec.Parts) > 0 && (rec.Feedback == nil || pendingHandBack(rec)) {
+		done, err := e.runParts(ctx, pend)
+		if err != nil || !done {
+			return err
+		}
+		return e.endImplement(ctx, rec)
+	}
+	who := "implementer"
+	if rec.Split {
+		who = "lead"
+	}
+	r := round{role: RoleImplementer, lead: rec.Split, n: rec.Round, state: runrec.StateImplement, task: rec.Item + " " + who, resumeFrom: []string{RoleImplementer}}
 	if rec.Feedback == nil {
 		r.sections = []BriefSection{{Title: "Round", Body: "This is the first round. The slice is not started: run `slicer start " + rec.Item + " --render --strict` first."}}
 	} else {
-		r.task = fmt.Sprintf("%s implementer fix round %d", rec.Item, rec.Round-1)
+		r.task = fmt.Sprintf("%s %s fix round %d", rec.Item, who, rec.Round-1)
 		r.sections = []BriefSection{
 			{Title: "Round", Body: fmt.Sprintf("This is fix round %d. The slice is already started; do not start it again.", rec.Round-1)},
 			e.feedbackSection(rec.Feedback),
+		}
+		if rec.Split && len(rec.Parts) > 0 {
+			r.sections = append(r.sections, handBackSection(rec.Parts))
 		}
 	}
 	out, err := e.runRound(ctx, r, pend)
 	if err != nil || !out.ok {
 		return err
 	}
+	if rec.Split && rec.Feedback != nil && len(rec.Parts) > 0 {
+		back, err := parseHandBack(out.text, rec.Parts)
+		if err != nil {
+			return e.pauseError(r, "hand back: "+err.Error())
+		}
+		if len(back) > 0 {
+			if err := e.run.Update(func(rr *runrec.Record) {
+				for i := range rr.Parts {
+					if text, ok := back[rr.Parts[i].ID]; ok {
+						rr.Parts[i].Done, rr.Parts[i].HandBack = false, text
+					}
+				}
+			}); err != nil {
+				return err
+			}
+			done, err := e.runParts(ctx, nil)
+			if err != nil || !done {
+				return err
+			}
+		}
+	}
+	if rec.Split && rec.Feedback == nil {
+		parts, err := e.planParts(ctx, rec, out.text)
+		if err != nil {
+			return e.pauseError(r, "parts list: "+err.Error())
+		}
+		if len(parts) > 0 {
+			if err := e.run.Update(func(rr *runrec.Record) { rr.Parts = parts }); err != nil {
+				return err
+			}
+			done, err := e.runParts(ctx, nil)
+			if err != nil || !done {
+				return err
+			}
+		}
+	}
+	return e.endImplement(ctx, rec)
+}
+
+// endImplement records the content fingerprint of the tree the implement state
+// left, on the implementer's (the lead's) record of the round, and moves to the
+// checks.
+func (e *Engine) endImplement(ctx context.Context, rec runrec.Record) error {
 	fingerprint, err := e.treeContent(ctx, rec.Worktree)
 	if err != nil {
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Reason: "worktree fingerprint: " + err.Error()})
@@ -1185,7 +1246,11 @@ func (e *Engine) finish(ctx context.Context) error {
 		"2. %s\n\n"+
 		"Replace \"Describe the verified outcome\" with the outcome you verified. Do not commit. "+
 		"Your report needs no Tests line; end it with `## Owner needed`.", rec.Item, step)
-	r := round{role: RoleImplementer, n: rec.Round + 1, state: runrec.StateFinish, task: rec.Item + " implementer finish step", finish: true,
+	who := "implementer"
+	if rec.Split {
+		who = "lead"
+	}
+	r := round{role: RoleImplementer, lead: rec.Split, n: rec.Round + 1, state: runrec.StateFinish, task: rec.Item + " " + who + " finish step", finish: true,
 		resumeFrom: []string{RoleImplementer}, sections: []BriefSection{{Title: "Finish step", Body: body}}}
 	if section := deferredSection(rec.Checks, true); section != nil {
 		r.sections = append(r.sections, *section)

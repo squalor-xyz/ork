@@ -142,6 +142,149 @@ func TestLaunchPlanBeforeConfirm(t *testing.T) {
 	}
 }
 
+// S61 (*proposed*): the launch confirm of a split plan shows the lead (the
+// implementer's slot) and the part rows, and a plan with no split shows neither.
+func TestLaunchPlanShowsTheLeadAndPartRowsOfASplit(t *testing.T) {
+	for _, split := range []bool{true, false} {
+		h, l := launchHarness(t)
+		l.plan.Split = split
+		if split {
+			l.plan.Lineup["part"] = []runrec.LineupEntry{{Vendor: "Claude", Model: "haiku", Effort: "medium"}}
+			l.plan.Permissions["part"] = engine.Permission{Allow: []string{"Read", "Bash(slicer show*)"}}
+		}
+		c := launchPlanning(t, h)
+		h.deliver(c())
+		v := h.view()
+		if got := strings.Contains(v, "lead: Codex gpt high") && strings.Contains(v, "part: Claude haiku medium"); got != split {
+			t.Errorf("split %v: lead and part rows shown = %v:\n%s", split, got, v)
+		}
+		if !split && (strings.Contains(v, "lead:") || strings.Contains(v, "part:")) {
+			t.Errorf("a plan with no split shows split rows:\n%s", v)
+		}
+	}
+}
+
+// S61 (*proposed*; owner decision 2026-10-28: a toggle in the launch confirm):
+// s on the launch confirm flips split and plans again; the start carries the
+// split and the new plan.
+func TestLaunchConfirmToggleSplitPlansAgainAndStartsASplit(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	if v := h.view(); !strings.Contains(v, "s split") || strings.Contains(v, "split: yes") {
+		t.Fatalf("the confirm of a run with no split offers s split and shows no split:\n%s", v)
+	}
+	l.plan.Split = true
+	l.plan.Lineup["part"] = []runrec.LineupEntry{{Vendor: "Claude", Model: "haiku", Effort: "medium"}}
+	l.plan.Permissions["part"] = engine.Permission{Allow: []string{"Read"}}
+	_, cmd := h.m.Update(press("s"))
+	if cmd == nil || !strings.Contains(h.view(), "pending: run.plan") {
+		t.Fatalf("s did not ask for a new plan:\n%s", h.view())
+	}
+	h.deliver(cmd())
+	if len(l.plans) != 2 || l.plans[0].Split || !l.plans[1].Split || l.plans[1].Item != "S90" {
+		t.Fatalf("plans %+v, want the first with no split and the second with split", l.plans)
+	}
+	v := h.view()
+	for _, want := range []string{"split: yes", "lead: Codex gpt high", "part: Claude haiku medium", "ork run ork S90? [y/N]"} {
+		if !strings.Contains(v, want) {
+			t.Errorf("the split confirm lacks %q:\n%s", want, v)
+		}
+	}
+	_, start := h.m.Update(press("y"))
+	if start == nil {
+		t.Fatal("no start")
+	}
+	start()
+	if len(l.starts) != 1 || !l.starts[0].Split || l.starts[0].Expected == nil || !l.starts[0].Expected.Split {
+		t.Fatalf("starts %+v, want a split start that carries the split plan", l.starts)
+	}
+}
+
+// s again turns the split off; the part override of a split plan goes with it,
+// because the daemon refuses a part override on a run with no split.
+func TestLaunchConfirmToggleSplitBackDropsThePartOverride(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	l.plan.Split = true
+	l.plan.Lineup["part"] = []runrec.LineupEntry{{Vendor: "Claude", Model: "haiku", Effort: "medium"}}
+	_, cmd := h.m.Update(press("s"))
+	if cmd == nil {
+		t.Fatal("s did not ask for a new plan")
+	}
+	h.deliver(cmd())
+	h.m.launch.params.Lineup = map[string][]runrec.LineupEntry{"part": {{Vendor: "Claude", Model: "custom", Effort: "low"}}, "implementer": {{Vendor: "Codex", Model: "x", Effort: "high"}}}
+	l.plan.Split = false
+	delete(l.plan.Lineup, "part")
+	_, cmd = h.m.Update(press("s"))
+	if cmd == nil {
+		t.Fatal("no replan")
+	}
+	h.deliver(cmd())
+	if len(l.plans) != 3 || l.plans[2].Split {
+		t.Fatalf("plans %+v", l.plans)
+	}
+	if _, has := l.plans[2].Lineup["part"]; has || l.plans[2].Lineup["implementer"][0].Model != "x" {
+		t.Fatalf("the third plan params %+v: the part override must go and the implementer override stay", l.plans[2].Lineup)
+	}
+	if strings.Contains(h.view(), "split: yes") {
+		t.Errorf("the confirm still shows a split:\n%s", h.view())
+	}
+}
+
+// esc during the new plan keeps the plan the owner was looking at.
+func TestLaunchConfirmToggleSplitEscKeepsThePlan(t *testing.T) {
+	h, l := launchHarness(t)
+	launchConfirmed(t, h)
+	old := *h.m.confirm
+	_, cmd := h.m.Update(press("s"))
+	if cmd == nil {
+		t.Fatal("no replan")
+	}
+	h.m.Update(press("esc"))
+	if h.m.confirm == nil || !reflect.DeepEqual(*h.m.confirm, old) || h.m.launch.params.Split {
+		t.Fatalf("esc did not restore the plan: %+v", h.m.confirm)
+	}
+	_ = l
+}
+
+// The lineup editor of a split plan has the lead and the part row, and the part
+// chain is an override like the others.
+func TestLineupEditorOfASplitPlanHasAPartRow(t *testing.T) {
+	plan := &daemon.RunPlan{Split: true, Lineup: map[string][]runrec.LineupEntry{
+		"implementer": {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
+		"reviewer":    {{Vendor: "claude", Model: "opus", Effort: "medium"}},
+		"part":        {{Vendor: "claude", Model: "haiku", Effort: "medium"}},
+	}}
+	e := newLineupEditor("S1", plan)
+	if fmt.Sprint(e.roles) != "[implementer reviewer architect part]" {
+		t.Fatalf("roles %v", e.roles)
+	}
+	if got := newLineupEditor("S1", &daemon.RunPlan{}).roles; len(got) != len(lineupRoles) {
+		t.Fatalf("a plan with no split has roles %v", got)
+	}
+	e.chains[3] = []runrec.LineupEntry{{Vendor: "claude", Model: "custom", Effort: "low"}}
+	p, changed, ok := lineupOverrides(e, daemon.RunParams{Project: "ork", Item: "S1", Split: true})
+	if !ok || !changed || p.Lineup["part"][0].Model != "custom" || len(p.Lineup) != 1 {
+		t.Fatalf("overrides %+v changed %v ok %v", p.Lineup, changed, ok)
+	}
+}
+
+// The launch confirm marks a fallback entry, so two rows of one role are not read
+// as two parts.
+func TestLaunchPlanMarksAFallbackRow(t *testing.T) {
+	h, l := launchHarness(t)
+	l.plan.Split = true
+	l.plan.Lineup["part"] = []runrec.LineupEntry{{Vendor: "Claude", Model: "haiku", Effort: "medium"}, {Vendor: "Codex", Model: "gpt", Effort: "low"}}
+	h.deliver(launchPlanning(t, h)())
+	v := h.view()
+	if !strings.Contains(v, "part: Claude haiku medium\n") && !strings.Contains(v, "part: Claude haiku medium ") {
+		t.Fatalf("no first part row:\n%s", v)
+	}
+	if !strings.Contains(v, "part: Codex gpt low (fallback)") || strings.Contains(v, "part: Claude haiku medium (fallback)") {
+		t.Fatalf("the second part entry is not marked as a fallback:\n%s", v)
+	}
+}
+
 // The launch confirm names the round check command under the check command
 // when the plan has one (S285), and shows no such line when it has none.
 func TestLaunchPlanShowsTheRoundCheckCommand(t *testing.T) {

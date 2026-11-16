@@ -572,8 +572,8 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		if e := m.activeLineup(); e != nil {
 			if e.custom {
 				e.fields[e.focus].update(msg)
-			} else if e.row > len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
-				e.budgets[e.row-len(lineupRoles)-1].update(msg)
+			} else if e.row > len(e.roles) && e.row <= len(e.roles)+len(e.budgets) {
+				e.budgets[e.row-len(e.roles)-1].update(msg)
 			}
 			m.actionStatus = ""
 			return m, nil
@@ -647,6 +647,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		case "e":
 			if m.confirm.verb == "launch" {
 				return m.openLaunchLineup()
+			}
+		case "s":
+			if m.confirm.verb == "launch" {
+				return m.toggleLaunchSplit()
 			}
 		case "ctrl+c":
 			return tea.Quit

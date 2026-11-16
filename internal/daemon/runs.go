@@ -97,6 +97,7 @@ type RunPlan struct {
 	effective         registry.Project                // project with the check command the run uses (S246); the engine gets this one
 	Project           registry.Project                `json:"project"`
 	Item              string                          `json:"item"`
+	Split             bool                            `json:"split,omitempty"` // a lead and parts in one worktree (S61, *proposed*); the lineup then has a part chain
 	Worktree          string                          `json:"worktree"`
 	Branch            string                          `json:"branch"`
 	CheckCommand      string                          `json:"check_command"`
@@ -478,9 +479,19 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// command slicer names, when it names one (S246). registered stays the
 	// entry the plan-changed checks compare.
 	proj, checkSource, checkErr := d.effectiveProject(ctx, registered)
-	rec, err := d.runs.deps.Slicer.RecommendRoles(ctx, proj.Path, p.Item, p.WellSpecified, p.Split)
+	// A split run (S61, *proposed*) asks the matrix twice: split no for the lead
+	// (the implementer's slot, the reviewer, the gate and the architect, which the
+	// matrix gives to size L only) and split yes for the parts, whose rows only the
+	// part chain takes.
+	rec, err := d.runs.deps.Slicer.RecommendRoles(ctx, proj.Path, p.Item, p.WellSpecified, false)
 	if err != nil {
 		return nil, err
+	}
+	var partRec *slicercli.Recommendation
+	if p.Split {
+		if partRec, err = d.runs.deps.Slicer.RecommendRoles(ctx, proj.Path, p.Item, p.WellSpecified, true); err != nil {
+			return nil, err
+		}
 	}
 	rules, rulesErr := d.runs.deps.Slicer.RelayRules(ctx, proj.Path)
 	if rulesErr != nil {
@@ -499,7 +510,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// (vendor column Local), and become plan.Lineup once their models are
 	// resolved (S244).
 	chains := map[string][]chainEntry{}
-	plan := &RunPlan{StopAfter: p.StopAfter, project: registered, effective: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, CheckSource: checkSource, RoundCheckCommand: proj.RoundCheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
+	plan := &RunPlan{Split: p.Split, StopAfter: p.StopAfter, project: registered, effective: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, CheckSource: checkSource, RoundCheckCommand: proj.RoundCheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
 	if checkErr != nil {
 		plan.Note = checkErr.Error()
 	}
@@ -566,6 +577,34 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		}
 		plan.Permissions[role] = perm
 	}
+	if p.Split {
+		// The parts' chain is the implementer rows the matrix gives a part of a
+		// split slice (split yes). A part has the implementer's permission, less
+		// the slicer commands that write.
+		for _, choice := range partRec.Roles {
+			if choice.Role != engine.RoleImplementer {
+				continue
+			}
+			rows := choice.Alternatives
+			if choice.Row != nil {
+				rows = append([]slicercli.Row{*choice.Row}, rows...)
+			}
+			for _, row := range rows {
+				if vendor := matrixAdapters[strings.ToLower(row.Agent)]; vendor != "" {
+					entry := runrec.LineupEntry{Vendor: vendor, Model: row.Model, Effort: row.Reasoning}
+					chains[engine.RolePart] = appendChain(chains[engine.RolePart], chainEntry{entry, isLocalRow(row)})
+				}
+			}
+		}
+		if len(chains[engine.RolePart]) == 0 {
+			return nil, errors.New("lineup has no row with an adapter for a part")
+		}
+		perm, err := engine.ResolvePermission(proj, engine.RolePart)
+		if err != nil {
+			return nil, err
+		}
+		plan.Permissions[engine.RolePart] = perm
+	}
 	var uiChain []chainEntry
 	for _, id := range uiIDs {
 		for _, row := range uiRows {
@@ -587,7 +626,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		plan.Permissions[engine.RoleUI] = perm
 	}
 	for role, entries := range p.Lineup {
-		if role != engine.RoleImplementer && role != engine.RoleReviewer && role != engine.RoleArchitect {
+		if role != engine.RoleImplementer && role != engine.RoleReviewer && role != engine.RoleArchitect && !(role == engine.RolePart && p.Split) {
 			return nil, badParams(fmt.Errorf("cannot override lineup role %q", role))
 		}
 		if role == engine.RoleArchitect && len(entries) == 0 {
@@ -888,7 +927,7 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	queued := local || !d.hasRoomLocked(f, plan.project.Name)
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
-	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.effective, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
+	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.effective, Item: p.Item, Lineup: plan.Lineup, Split: plan.Split, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
 	var orientation []byte
 	if local {
 		orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, p.Item), "orientation.md"))
@@ -2310,7 +2349,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		shapeRetry := rec.AutomaticShapeRetry() != nil
 		var roles []source.EngineRole
 		for _, role := range rec.Roles {
-			roles = append(roles, source.EngineRole{ShapeRetry: role.ShapeRetry != nil && role.ShapeRetry.ShapePauses == 0, Report: role.Report, Role: role.Role, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
+			roles = append(roles, source.EngineRole{ShapeRetry: role.ShapeRetry != nil && role.ShapeRetry.ShapePauses == 0, Report: role.Report, Role: role.Role, Part: role.Part, Round: role.Round, Vendor: role.Vendor, Model: role.Model, Effort: role.Effort, Step: role.Step, StartedAt: role.StartedAt, EndedAt: role.EndedAt, Exit: role.Exit, Tokens: role.Tokens, CostUSD: role.CostUSD})
 			for _, text := range roleDenials(role) {
 				if denialCounts[text] == 0 {
 					denials = append(denials, text)

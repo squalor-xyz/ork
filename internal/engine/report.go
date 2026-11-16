@@ -193,7 +193,7 @@ func CheckReport(role string, finish bool, text string) (*Report, error) {
 		}
 	}
 
-	if (role == RoleImplementer && !finish) || role == RoleGate {
+	if ((role == RoleImplementer || role == RolePart) && !finish) || role == RoleGate {
 		matches := testsLine.FindAllStringSubmatch(text, -1)
 		if len(matches) == 0 {
 			problems = append(problems, `no "Tests: N passed, M failed" line`)

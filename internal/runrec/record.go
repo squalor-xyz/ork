@@ -95,6 +95,24 @@ type RoleRecord struct {
 	// ork retry --accept-shape (S298, *proposed*): its owner findings without
 	// options stay plain findings.
 	ShapeAccepted bool `json:"shape_accepted,omitempty"`
+	// Part is the id of the split part this round ran (S61, *proposed*); empty
+	// for every other round, the lead's included.
+	Part string `json:"part,omitempty"`
+}
+
+// Part is one part of a split run's plan: the lead's parts list (S61,
+// *proposed*). A part changes only its Files, in the slice worktree, and runs
+// only its own Tests.
+type Part struct {
+	ID       string   `json:"id"`
+	Files    []string `json:"files"`
+	Tests    []string `json:"tests"`
+	Done     bool     `json:"done,omitempty"`     // the part's round ended clean and its own check passed
+	Attempts int      `json:"attempts,omitempty"` // rounds the part has run
+	// HandBack is the findings the lead handed back to this part in a fix round
+	// (S61, owner decision, adj 385); the part is not done until it has acted on
+	// them. Empty once it has.
+	HandBack string `json:"hand_back,omitempty"`
 }
 
 // Running reports whether the role was started and has no end recorded.
@@ -206,6 +224,7 @@ type Pending struct {
 	Round          int            `json:"round,omitempty"`
 	Reason         string         `json:"reason"`
 	Question       string         `json:"question,omitempty"`
+	Part           string         `json:"part,omitempty"` // the split part the pause belongs to (S61, *proposed*)
 	Answer         string         `json:"answer,omitempty"`
 	// Note is the owner's text sent with a retry. It goes to the rerun's brief
 	// and leaves the record when the round ends (S256, *proposed*).
@@ -393,6 +412,8 @@ type Record struct {
 	ID               string                   `json:"id"`
 	Wave             string                   `json:"wave,omitempty"`
 	WaveName         string                   `json:"wave_name,omitempty"` // proposed (S215): the saved wave's name, a label and not an id
+	Split            bool                     `json:"split,omitempty"`     // a lead and parts implement the slice in one worktree (S61, *proposed*)
+	Parts            []Part                   `json:"parts,omitempty"`     // the lead's parts list, once the lead round has returned it (S61, *proposed*)
 	Decisions        string                   `json:"decisions,omitempty"` // the owner's spec check answers, for every brief (S116)
 	Project          string                   `json:"project"`
 	Item             string                   `json:"item"`

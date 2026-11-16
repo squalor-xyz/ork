@@ -32,7 +32,12 @@ Roles.
 
 **Lead and part implementers.** In a split, the lead runs the slicer
 commands. The parts change only their own files and run no slicer command
-that writes. Owner: slicer, `ai.py` Roles.
+that writes. Owner: slicer, `ai.py` Roles. In ork (*proposed*, S61) the lead
+holds the implementer's slot in a split run and lists the parts in a `## Parts`
+section of its first report; ork runs the parts in the slice worktree and the
+ledger records the lead and each part as an `implementer` step, a part's under
+the lead's. A fix round goes to the lead, who may hand a file's findings back
+to the part that owns the file for that round (owner decision, adj 385).
 
 **Reviewer.** Read-only. Reviews correctness, test strength and direction
 against `slicer goals`. Never wrote code in the slice it reviews. Owner:
@@ -167,7 +172,10 @@ cleared by `release`, `handoff` or `reject`. Separate from status and
 readiness. Owner: slicer.
 
 **Split.** One slice implemented by a lead and parts with disjoint files.
-Owner: slicer.
+Owner: slicer. ork runs a split only when the owner asks for it for one run
+(`ork run ID --split y`, *proposed*, S61); it counts as one run against the
+caps, its parts run at the same time only when their files are disjoint (at
+most 3 at once), and one review and one gate cover the combined diff.
 
 **Sliver.** A small item carved from a slice and linked by `parent`, so that a
 cheaper model can implement it. Owner: slicer.

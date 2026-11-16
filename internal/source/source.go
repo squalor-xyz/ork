@@ -170,6 +170,7 @@ type EngineRole struct {
 	Tokens    int       `json:"tokens,omitempty"`   // proposed
 	CostUSD   float64   `json:"cost_usd,omitempty"` // proposed
 	Role      string    `json:"role"`
+	Part      string    `json:"part,omitempty"` // proposed (S61): the split part's id, for a part's round
 	Round     int       `json:"round"`
 	Vendor    string    `json:"vendor"`
 	Model     string    `json:"model,omitempty"`

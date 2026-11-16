@@ -19,6 +19,7 @@ type runTreeStep struct {
 	slicercli.Step
 	shapeRetry    bool
 	round         int
+	part          string // the split part's id (S61, *proposed*); empty for every other step
 	hasUsage      bool
 	usageKnown    bool
 	costKnown     bool
@@ -109,7 +110,16 @@ func (m *Model) paneSteps() []runTreeStep {
 				if stepID == "" {
 					stepID = fmt.Sprintf("role-%d", i)
 				}
-				steps = append(steps, runTreeStep{Step: slicercli.Step{ID: stepID, Role: role.Role, Vendor: role.Vendor, Model: role.Model, Reasoning: role.Effort, Phase: phase, BeganAt: begin, UpdatedAt: end}, round: role.Round})
+				// A split part sits under the lead's step of its round (S61).
+				parent := ""
+				if role.Part != "" {
+					for _, lead := range r.Roles[:i] {
+						if lead.Role == "implementer" && lead.Part == "" && lead.Round == role.Round && lead.Step != "" {
+							parent = lead.Step
+						}
+					}
+				}
+				steps = append(steps, runTreeStep{Step: slicercli.Step{ID: stepID, Role: role.Role, Vendor: role.Vendor, Model: role.Model, Reasoning: role.Effort, Phase: phase, Parent: parent, BeganAt: begin, UpdatedAt: end}, round: role.Round, part: role.Part})
 			}
 			return m.roleDetails(steps, r)
 		}
@@ -132,9 +142,18 @@ func (m *Model) runTreeLines(steps []runTreeStep, width, frame int) []string {
 func treeRoleWidth(steps []runTreeStep) int {
 	width := 0
 	for _, s := range steps {
-		width = max(width, lipgloss.Width(treeText(s.Role)))
+		width = max(width, lipgloss.Width(s.roleText()))
 	}
 	return width
+}
+
+// roleText is what the role column says of a step: the role, and for a split
+// part `part ID`, so a clipped row still tells the parts apart (S61, *proposed*).
+func (s runTreeStep) roleText() string {
+	if s.part != "" {
+		return "part " + treeText(s.part)
+	}
+	return treeText(s.Role)
 }
 
 func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, roleWidth int) []string {
@@ -209,6 +228,9 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 			if who == "" {
 				who = treeText(s.Role)
 			}
+			if s.part != "" {
+				who += " part " + treeText(s.part)
+			}
 			// `*`, a mark no step state uses: `.` would read as a queued step in mono.
 			note := "* " + who + " out of credits, fell back to " + s.fellBackTo
 			lines = append(lines, prefix+m.cfg.Theme.Dim.Render(treeClip(note, available)))
@@ -218,7 +240,7 @@ func (m *Model) runTreeLinesWithRoleWidth(steps []runTreeStep, width, frame, rol
 			return
 		}
 		roleColumns := min(roleWidth, max(available-8, 1))
-		role := treeClip(treeText(s.Role), roleColumns)
+		role := treeClip(s.roleText(), roleColumns)
 		role += strings.Repeat(" ", max(roleColumns-lipgloss.Width(role), 0))
 		phaseColumns := min(phaseWidth, max(available-roleColumns-4, 1))
 		phase := treeClip(treeText(stepPhaseLabel(s.Step)), phaseColumns)
@@ -398,6 +420,7 @@ func (m *Model) roleDetails(steps []runTreeStep, r source.EngineRun) []runTreeSt
 			steps[i].fellBackFrom = fellBackFrom(r.Roles, j)
 			steps[i].fellBackTo = fellBackTo(r.Roles, j)
 			steps[i].shapeRetry = role.ShapeRetry
+			steps[i].part = role.Part
 			steps[i].hasUsage = true
 			steps[i].tokens = role.Tokens
 			steps[i].cost = role.CostUSD
@@ -424,7 +447,7 @@ func fellBackFrom(roles []source.EngineRole, j int) string {
 	role := roles[j]
 	for k := j - 1; k >= 0; k-- {
 		before := roles[k]
-		if before.Role != role.Role {
+		if before.Role != role.Role || before.Part != role.Part {
 			continue
 		}
 		same := before.Vendor == role.Vendor && before.Model == role.Model && before.Effort == role.Effort
@@ -449,7 +472,7 @@ func fellBackTo(roles []source.EngineRole, j int) string {
 		return ""
 	}
 	for _, next := range roles[j+1:] {
-		if next.Role != role.Role || next.Round != role.Round {
+		if next.Role != role.Role || next.Round != role.Round || next.Part != role.Part {
 			continue
 		}
 		if next.Vendor == role.Vendor && next.Model == role.Model && next.Effort == role.Effort {
