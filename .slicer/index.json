@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 376,
+  "next_id": 377,
   "preamble": "",
   "passes": [
     {
@@ -20495,7 +20495,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ce54e442-125d-4c15-a226-57185c453373",
+          "kind": "",
+          "text": "**2026-11-16** — Hold: owner 2026-11-16 (relay session 8d711f67, 'Hold until Dec 7'): do not start before 2026-12-07; grok stays first choice until then. Answers recorded: adj 380 (reorder and hold out), adj 381 (keep grok-local).",
+          "created_at": "2026-11-16T16:36:56Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20557,6 +20572,34 @@
         "urgency": 1,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S376",
+      "title": "TUI spec-check screen: overflow marker for a tall permission detail",
+      "short_title": "Spec-check screen: overflow marker for tall detail",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S375 (2026-11-16): the spec-check screen shows a permission question's whole detail (S375); a detail taller than the screen pushes other rows off it. S373's run pane drops a tall detail whole behind an overflow marker. Owner decision adj 383 (`ui.permission-detail-speccheck-overflow`, later).",
+        "discovered_from": "S375",
+        "parent": "",
+        "cites": [],
+        "key": "ork-tui-speccheck-detail-overflow",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],
