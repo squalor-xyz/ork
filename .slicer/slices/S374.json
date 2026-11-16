@@ -1,0 +1,41 @@
+{
+  "id": "S374",
+  "title": "Grok cutover before the accounts end on 2026-12-09",
+  "lead": [
+    "*Proposed.* Owner direction 2026-11-16 (interactive question, \"Plan the cutover\"): before 2026-12-09 no run depends on the cancelled grok login. Until then grok stays first choice (adj 373 adds it as implementer)."
+  ],
+  "depends_note": null,
+  "findings_note": "Owner, 2026-11-16 (relay session 8d711f67, chat): \"my grok accounts will be cancelled effective December 9th. so let's ensure we maximize that account use through then\". Grok is first choice in ork's matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer's matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* A grok row whose login fails mid-run stops that run for the owner. `ork vendor out grok` (no `--until`) holds every grok row out across restarts, so each role falls back to its next row; the matrices still name grok first and should say so.\n\nOpen owner questions (the implementer asks them with `adj ask` first):\n\n- Q1 (`vendors.grok-cutover`): how is grok retired? (a) *recommended*: on 2026-12-08 the orchestrator runs `ork vendor out grok --reason \"accounts end 2026-12-09\"`; this slice moves every grok row in ork's matrix after its Claude or Codex fallback and marks it retired with the date; slicer's matrix gets the same change through an item filed in slicer. (b) delete the grok rows outright.\n- Q2 (`vendors.grok-local-after-cutover`): does `grok-local` still run without the grok account? (a) *recommended*: probe once (`grok-local` on a read-only task with the cloud login signed out is not possible to test before the date; instead read the launcher and the grok CLI's auth requirements, and ask the owner). (b) treat grok-local as retired with grok."
+    },
+    {
+      "heading": "Files",
+      "body": "- `.slicer/` relay roles (via `slicer relay-roles` commands; no hand edits)\n- `docs/guide.md` (the vendor-out step for a cancelled account)\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestPlanSkipsGrokWhenVendorOut`: with grok marked out and no `--until`, `ork run` plans each role on its next non-grok row (existing behaviour; pinned for the cutover)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Red test, then the matrix and docs changes.\n3. File the matching slicer item for slicer's matrix (r15, r16, r17).\n4. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- `[AFTER LAND]` On 2026-12-08 the orchestrator runs `ork vendor out grok --reason \"accounts end 2026-12-09\"` and `ork vendor` shows grok out with no end time."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

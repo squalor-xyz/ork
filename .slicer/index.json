@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 374,
+  "next_id": 375,
   "preamble": "",
   "passes": [
     {
@@ -20410,6 +20410,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S374",
+      "title": "Grok cutover before the accounts end on 2026-12-09",
+      "short_title": "Grok cutover by 2026-12-09",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner, 2026-11-16 (relay session 8d711f67, chat): \"my grok accounts will be cancelled effective December 9th. so let's ensure we maximize that account use through then\". Grok is first choice in ork's matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer's matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows.",
+        "discovered_from": "S305",
+        "parent": "",
+        "cites": [],
+        "key": "ork-grok-cutover",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }
