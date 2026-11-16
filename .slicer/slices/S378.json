@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Copy the probe output into a fixture (`08-usage-limit`), redacting the session ids.\n2. Red tests, then the classifier.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+      "body": "1. Copy the probe output into a fixture (`08-usage-limit`), redacting the session ids.\n2. Red tests, then the classifier.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-16): How does the implementer get the probe output for fixture 08-usage-limit? -> orchestrator copies: ork places `out.jsonl` and `err.txt` from the main checkout's `.scratch/grok-probe2/` into the worktree before the implementer starts. The implementer redacts the session ids and writes `.cmd` and `.exit` (1) itself.."
     },
     {
       "heading": "Check",
