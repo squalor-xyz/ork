@@ -101,6 +101,42 @@ func TestGrokCreditsStopClassifiesAsOutOfCredits(t *testing.T) {
 	}
 }
 
+// usageLimitSentence is the start of the text in 08-usage-limit (stderr and
+// the `errors` of the error_during_execution result).
+const usageLimitSentence = "You’ve reached your free Grok Build usage limit for now."
+
+func TestGrokUsageLimitIsOut(t *testing.T) {
+	// 08-usage-limit is the real sample (grok 1.0.77, exit 1): the stream has
+	// an init line and a result whose text is in `errors`, not in `result`.
+	s := fake(t, out(t, "08-usage-limit"), true)
+	t.Setenv("ORK_GROK_STDERR", fixture(t, "08-usage-limit", "stderr"))
+	got, err := Run(context.Background(), s)
+	if err != nil || got.Exit != ExitOutOfCredits || got.ExitCode != 1 {
+		t.Fatalf("exit=%s code=%d err=%v", got.Exit, got.ExitCode, err)
+	}
+	if got.Reason == "" || strings.Contains(got.Reason, "http") {
+		t.Fatalf("reason %q", got.Reason)
+	}
+	if got.Report != "" {
+		t.Fatalf("report %q", got.Report)
+	}
+}
+
+func TestGrokOtherErrorStaysUnclassified(t *testing.T) {
+	// Same real stream with only the `errors` text changed.
+	output := out(t, "08-usage-limit")
+	if !strings.Contains(output, usageLimitSentence) {
+		t.Fatal("fixture lost the usage-limit sentence")
+	}
+	output = strings.ReplaceAll(output, usageLimitSentence, "Something else went wrong.")
+	s := fake(t, output, true)
+	t.Setenv("ORK_GROK_STDERR", "Error: Something else went wrong.\n")
+	got, err := Run(context.Background(), s)
+	if err != nil || got.Exit != ExitUnclassified || got.ExitCode != 1 || got.Reason != "" {
+		t.Fatalf("exit=%s code=%d reason=%q err=%v", got.Exit, got.ExitCode, got.Reason, err)
+	}
+}
+
 func TestGrokBadModelAndAuthStayUnclassified(t *testing.T) {
 	for name, output := range map[string]string{
 		"bad model (06, real)": out(t, "06-bad-model"),

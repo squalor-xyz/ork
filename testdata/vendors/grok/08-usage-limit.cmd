@@ -1,0 +1,1 @@
+grok -p Append the line ok to a.txt using your edit tool, then reply done. --output-format streaming-messages-json --include-partial-messages --permission-mode dontAsk --allow write --allow search_replace --allow Bash(go test*) --cwd <probe-repo>
