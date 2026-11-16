@@ -173,3 +173,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S366 (run ork-20261115-150511-7d21, 2026-11-15)
 
 - [ ] [AFTER LAND] `` S304 trial 5 runs S248 with the pack and records it in S304's notes.
+
+## S241 (run ork-20261116-015040-d93b, 2026-11-16)
+
+- [ ] After landing and a rebuild, the owner runs `ork wave start ork ITEM ITEM` for two slices where only one touches the engine paths, reads the plan before answering `n`, and confirms that the labels, the pair rule line and the spec check lines are clear at 80 columns.
