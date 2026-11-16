@@ -249,7 +249,7 @@ func (*fakeLive) WaveList(context.Context, string) ([]daemon.SavedWaveView, erro
 	return nil, errors.New("unexpected wave list")
 }
 
-func (*fakeLive) SpecCheck(_ context.Context, _ string, items []string) (*daemon.SpecCheckResult, error) {
+func (*fakeLive) SpecCheck(_ context.Context, _ string, items []string, _ map[string]map[string][]runrec.LineupEntry) (*daemon.SpecCheckResult, error) {
 	out := &daemon.SpecCheckResult{}
 	for _, id := range items {
 		out.Items = append(out.Items, daemon.SpecItemResult{Item: id, Ready: true})

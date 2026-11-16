@@ -32,9 +32,11 @@ type launchLive struct {
 	plan              daemon.RunPlan
 	planErr, startErr error
 	checks            [][]string
+	lineups           []map[string]map[string][]runrec.LineupEntry // the lineups of each spec check (S359)
 	check             func([]string) (*daemon.SpecCheckResult, error)
 	answers           []daemon.SpecAnswerParams
 	answerErr         error
+	answerCarved      []string // the slivers an answer reports it carved (S359)
 }
 
 func (l *launchLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPlan, error) {
@@ -49,8 +51,9 @@ func (l *launchLive) Start(_ context.Context, p daemon.RunParams) (runrec.Record
 	}
 	return runrec.Record{ID: "new-run"}, l.startErr
 }
-func (l *launchLive) SpecCheck(_ context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
+func (l *launchLive) SpecCheck(_ context.Context, project string, items []string, lineups map[string]map[string][]runrec.LineupEntry) (*daemon.SpecCheckResult, error) {
 	l.checks = append(l.checks, append([]string{project}, items...))
+	l.lineups = append(l.lineups, lineups)
 	if l.check != nil {
 		return l.check(items)
 	}
@@ -62,7 +65,7 @@ func (l *launchLive) SpecCheck(_ context.Context, project string, items []string
 }
 func (l *launchLive) SpecAnswer(_ context.Context, p daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error) {
 	l.answers = append(l.answers, p)
-	return &daemon.SpecAnswerResult{Item: p.Item, Ready: true}, l.answerErr
+	return &daemon.SpecAnswerResult{Item: p.Item, Ready: true, Carved: l.answerCarved}, l.answerErr
 }
 func launchHarness(t *testing.T) (*harness, *launchLive) {
 	t.Helper()

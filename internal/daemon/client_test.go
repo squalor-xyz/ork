@@ -160,7 +160,7 @@ func TestClientSpecCheckAndAnswer(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer c.Close()
-	res, err := c.SpecCheck(ctx, "ork", []string{"S1", "S2"})
+	res, err := c.SpecCheck(ctx, "ork", []string{"S1", "S2"}, nil)
 	if err != nil || len(res.Items) != 1 || !res.Items[0].Ready {
 		t.Fatalf("check: %+v %v", res, err)
 	}

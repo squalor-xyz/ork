@@ -102,8 +102,8 @@ type RunPlan struct {
 	Parent            string                          `json:"parent,omitempty"`  // set when the item is a sliver, or the parent of a sliver chain (S62)
 	Split             bool                            `json:"split,omitempty"`   // a lead and parts in one worktree (S61, *proposed*); the lineup then has a part chain
 	Slivers           []SliverPlan                    `json:"slivers,omitempty"` // the chain, in slicer's order; empty for one item
-	carved            []engine.CarvedSliver           // the saved carve report whose filing a start finishes (S359); private to the daemon
-	Carve             bool                            `json:"carve,omitempty"` // a local implementer on a slice above size S: the start has the spec check row carve slivers first (S359, *proposed*)
+	carved            []engine.CarvedSliver           // the saved carve report whose filing a spec check finishes (S359); private to the daemon
+	Carve             bool                            `json:"carve,omitempty"` // a local implementer on a slice above size S with its slivers not filed yet: the spec check carves them, and the plan is made again to list them (S359, *proposed*)
 	Worktree          string                          `json:"worktree"`
 	Branch            string                          `json:"branch"`
 	CheckCommand      string                          `json:"check_command"`
@@ -802,8 +802,11 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 //   - an effort 3 slice is refused, whatever its size: rule u6 never slivers it;
 //   - a slice above size S that already has slivers is planned as the chain of
 //     those slivers, which is returned;
-//   - a slice above size S with none is marked in the plan to be carved when
-//     the run starts (plan.Carve), and nil is returned;
+//   - a slice above size S with none is marked in the plan to be carved
+//     (plan.Carve), and nil is returned: the spec check carves and files the
+//     slivers, and the plan is made again to show them for the owner's one
+//     approval (owner decision 2026-11-16, adj 396). A start of a plan still
+//     marked is refused;
 //   - any other slice goes whole, and nil is returned.
 //
 // A slice with no size or no effort is not above size S and not effort 3.
@@ -839,14 +842,14 @@ func (d *Daemon) localSliverGate(ctx context.Context, p RunParams, proj registry
 		if plan.Note != "" {
 			plan.Note += "; "
 		}
-		plan.Note += fmt.Sprintf("%s has %d of the %d slivers of its saved carve filed: the start files the rest from that report, with no new carve, then runs them as one chain", p.Item, len(kids), len(saved))
+		plan.Note += fmt.Sprintf("%s has %d of the %d slivers of its saved carve filed: the spec check files the rest from that report, with no new carve, and the plan then lists them as one chain", p.Item, len(kids), len(saved))
 		return nil, nil
 	}
 	plan.Carve = true
 	if plan.Note != "" {
 		plan.Note += "; "
 	}
-	plan.Note += fmt.Sprintf("%s is size %s and the implementer is local: the start has the spec check row carve slivers (size S, effort 1) and file them under %s with no confirmation, then runs them as one chain", p.Item, size, p.Item)
+	plan.Note += fmt.Sprintf("%s is size %s and the implementer is local: the spec check row carves slivers (size S, effort 1) and ork files them under %s with no confirmation, and the plan then lists them as one chain for your approval", p.Item, size, p.Item)
 	return nil, nil
 }
 
@@ -984,21 +987,12 @@ func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, erro
 			return RunReply{}, errors.New("plan changed; run the command again to confirm it")
 		}
 	}
-	// A local implementer on a slice above size S runs its slivers: the spec
-	// check row carves them and ork files them first, with no confirmation
-	// (S359, *proposed*; adj 337). The plan the owner confirmed was checked
-	// above; the chain is planned again from the filed slivers.
-	carved := ""
+	// A local implementer on a slice above size S runs its slivers, which the
+	// spec check carves and files (S359, *proposed*; owner decision 2026-11-16,
+	// adj 396). A start never carves: with no slivers filed yet, the owner has
+	// not seen the chain, so the start refuses instead of running the slice whole.
 	if plan.Carve {
-		ids, err := d.carveSlivers(ctx, plan.project.Name, p.Item, plan.carved)
-		if err != nil {
-			return RunReply{}, err
-		}
-		carved = fmt.Sprintf("carved %s into %d slivers (%s); ", p.Item, len(ids), strings.Join(ids, ", "))
-		p.Slivers = true
-		if plan, err = d.planRun(ctx, p); err != nil {
-			return RunReply{}, fmt.Errorf("%sthe chain could not be planned: %w", carved, err)
-		}
+		return RunReply{}, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("%s has no slivers filed yet, and a local implementer runs a slice above size S only as slivers. The spec check carves them: run it first, then confirm the chain it plans, or pick a cloud implementer.", p.Item)}
 	}
 	// The tree is fingerprinted here, outside the locks; admitRun re-checks
 	// under the lock that the run it probed is unchanged.
@@ -1031,7 +1025,7 @@ func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, erro
 		}
 		rec = resumed.m.engine.Snapshot()
 	}
-	return RunReply{Record: rec, Message: carved + message}, nil
+	return RunReply{Record: rec, Message: message}, nil
 }
 
 // resumeLaunch is a stopped run an admission resumed: its job started, and

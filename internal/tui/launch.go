@@ -36,6 +36,7 @@ type launchState struct {
 	prev         *daemon.RunPlan
 	prevParams   daemon.RunParams
 	replanCancel context.CancelFunc
+	rechecked    bool // a replan's plan still carved, so its spec check ran again (S359)
 	stage        launchStage
 	cursor       int
 	params       daemon.RunParams
@@ -275,21 +276,33 @@ func (m *Model) applyLaunch(msg launchMsg) tea.Cmd {
 	l.plan = msg.plan
 	l.prev = nil
 	m.actionStatus = ""
-	if replan {
+	// A replan whose plan still has slivers to carve (the owner's lineup edit
+	// chose a local implementer after the check) needs the check that carves
+	// them, once; the plan that follows lists them (S359, *proposed*).
+	if replan && !(msg.plan.Carve && !l.rechecked) {
 		m.confirmLaunch()
 		return nil
 	}
+	l.rechecked = replan
+	return m.startLaunchSpecCheck()
+}
+
+// startLaunchSpecCheck asks for the spec check of the launch's item with its
+// lineup, which carves a local implementer's slivers once the item is Ready.
+func (m *Model) startLaunchSpecCheck() tea.Cmd {
+	l := m.launch
 	l.stage = launchSpecPending
 	l.checking = true
 	l.checkStarted = m.cfg.Now()
 	l.checkProject = l.params.Project
 	l.checkItems = []string{l.params.Item}
-	live, ctx, request, project, item := m.cfg.Live, l.ctx, l.request, l.params.Project, l.params.Item
+	l.lineups = lineupsOf([]daemon.RunParams{l.params})
+	live, ctx, request, project, item, lineups := m.cfg.Live, l.ctx, l.request, l.params.Project, l.params.Item, l.lineups
 	return func() tea.Msg {
 		if ctx.Err() != nil {
 			return nil
 		}
-		res, err := live.SpecCheck(ctx, project, []string{item})
+		res, err := live.SpecCheck(ctx, project, []string{item}, lineups)
 		return launchSpecMsg{request: request, check: res, err: err}
 	}
 }
@@ -350,6 +363,11 @@ func (m *Model) applyLaunchSpec(msg launchSpecMsg) tea.Cmd {
 func (m *Model) finishLaunchSpec() tea.Cmd {
 	l := m.launch
 	if l.specReady(l.params.Item) {
+		if len(l.specs[l.params.Item].Carved) > 0 {
+			// The check carved slivers: the plan the owner saw lists none, so plan
+			// again and confirm the one that lists them (S359, *proposed*).
+			return m.replanLaunch(l.params)
+		}
 		m.confirmLaunch()
 		return nil
 	}
@@ -370,6 +388,7 @@ func (m *Model) finishLaunchSpec() tea.Cmd {
 func (m *Model) confirmLaunch() {
 	l := m.launch
 	l.stage = launchConfirm
+	l.rechecked = false
 	m.confirm = &runAction{verb: "launch", project: l.params.Project, run: l.params.Item, plan: l.plan, wellSpecified: l.params.WellSpecified, split: l.params.Split, stopAfter: l.params.StopAfter, lineup: l.params.Lineup, budgets: l.params.Budgets}
 }
 
@@ -514,6 +533,20 @@ func (m *Model) launchView(w int) overviewView {
 		add(p.Project.Name + " " + p.Item)
 		add("worktree: " + p.Worktree)
 		add("branch: " + p.Branch)
+		if p.Parent != "" && p.Item != p.Parent {
+			add("parent: " + p.Parent)
+		}
+		// A chain of slivers (S62; S359 carves it for a local implementer): the
+		// owner approves all of them at once, so each one is named. They share one
+		// wrapped line, so a long chain does not push the roles and the warnings
+		// below the pane, which this body cannot scroll.
+		if len(p.Slivers) > 0 {
+			ids := make([]string, len(p.Slivers))
+			for i, sliver := range p.Slivers {
+				ids[i] = sliver.Item
+			}
+			add(fmt.Sprintf("slivers: %d, one landing of %s: %s", len(p.Slivers), p.Parent, strings.Join(ids, ", ")))
+		}
 		warn := func(text string) {
 			for _, line := range wrapText(text, max(w-2, 1)) {
 				out.body = append(out.body, indent+th.Warn.Render(line))

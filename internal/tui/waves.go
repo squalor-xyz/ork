@@ -45,7 +45,8 @@ type wavesState struct {
 	list           *savedList
 	listRequest    uint64
 	loaded         *loadedWave
-	planQueue      []string // loaded items still to plan, one after another
+	planQueue      []string        // loaded items still to plan, one after another
+	replanning     map[string]bool // items whose plan is made again for the slivers a check carved (S359)
 	specState
 }
 
@@ -280,7 +281,7 @@ func (m *Model) waveLaunchRefusal() (status string, refused bool) {
 	if a, ok := m.waveFlights[w.project]; ok {
 		return a.command() + " is pending", true
 	}
-	if w.planning != "" {
+	if w.planning != "" || len(w.replanning) > 0 {
 		return "A plan is pending; wait before launching", true
 	}
 	if w.checking {
@@ -434,6 +435,8 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 	switch msg.kind {
 	case "check":
 		return m.applyCheck(msg)
+	case "carved":
+		return m.applyCarvedPlan(msg)
 	case "detail":
 		if w.pane != nil && w.paneRequest == msg.sequence && w.pane.id == msg.item {
 			w.pane.pending = false
@@ -785,6 +788,11 @@ func waveLineup(p daemon.RunParams) []string {
 			// Fallbacks sit under the values, past the label column.
 			lines = append(lines, fmt.Sprintf("%6s +%d fallbacks", "", len(chain)-1))
 		}
+	}
+	// A carved chain (S359, *proposed*): the plan lists the slivers the owner
+	// approves with the item.
+	if n := len(p.Expected.Slivers); n > 0 {
+		lines = append(lines, fmt.Sprintf("slivers: %d", n))
 	}
 	if p.StopAfter != "" {
 		lines = append(lines, "stop*: "+p.Expected.StopAfter)

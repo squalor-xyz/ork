@@ -155,6 +155,11 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 		}
 		return ExitFailure
 	}
+	// A carve in the spec check filed slivers: the plan it made again, which
+	// lists them, is the one the owner confirms below (S359, *proposed*).
+	if checked.Items[0].Expected != nil {
+		plan = *checked.Items[0].Expected
+	}
 	if !*yes {
 		confirm, err := ask("Start this slice?", "y/N", "no")
 		if err != nil {

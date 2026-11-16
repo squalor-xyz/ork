@@ -390,10 +390,12 @@ func (c *Client) WaveRm(ctx context.Context, project, name string) (*SavedWave, 
 }
 
 // SpecCheck runs the spec check for the items, or returns the answers the
-// daemon remembers for their current specs.
-func (c *Client) SpecCheck(ctx context.Context, project string, items []string) (*SpecCheckResult, error) {
+// daemon remembers for their current specs. Lineups are the owner's lineup
+// overrides by item: a local implementer's item is carved into slivers by the
+// check (S359, *proposed*), so the check must know the implementer.
+func (c *Client) SpecCheck(ctx context.Context, project string, items []string, lineups map[string]map[string][]runrec.LineupEntry) (*SpecCheckResult, error) {
 	var out SpecCheckResult
-	if err := c.specCall(ctx, MethodSpecCheck, SpecCheckParams{Project: project, Items: items}, &out); err != nil {
+	if err := c.specCall(ctx, MethodSpecCheck, SpecCheckParams{Project: project, Items: items, Lineups: lineups}, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil

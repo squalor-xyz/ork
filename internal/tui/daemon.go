@@ -243,13 +243,13 @@ func (d *Daemon) WaveList(ctx context.Context, project string) ([]daemon.SavedWa
 	return out.Waves, nil
 }
 
-func (d *Daemon) SpecCheck(ctx context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
+func (d *Daemon) SpecCheck(ctx context.Context, project string, items []string, lineups map[string]map[string][]runrec.LineupEntry) (*daemon.SpecCheckResult, error) {
 	c, err := d.Connect(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer c.Close()
-	return c.SpecCheck(ctx, project, items)
+	return c.SpecCheck(ctx, project, items, lineups)
 }
 func (d *Daemon) SpecAnswer(ctx context.Context, params daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error) {
 	c, err := d.Connect(ctx)

@@ -13,6 +13,7 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 // The spec check (adj 164, S116, S184) runs before Waves and Roadmap
@@ -33,6 +34,25 @@ type specState struct {
 	sitting                              *specSitting
 	answerProject                        string
 	unsaved                              map[string]bool // items whose answers the daemon failed to write in this sitting (S190)
+	// lineups are the lineup overrides of the items under check, by item. The
+	// check and the answers send them: a local implementer's item is carved into
+	// slivers once it is Ready (S359, *proposed*; owner decision adj 401).
+	lineups map[string]map[string][]runrec.LineupEntry
+}
+
+// lineupsOf maps each item that has lineup overrides to them.
+func lineupsOf(items []daemon.RunParams) map[string]map[string][]runrec.LineupEntry {
+	var out map[string]map[string][]runrec.LineupEntry
+	for _, p := range items {
+		if len(p.Lineup) == 0 {
+			continue
+		}
+		if out == nil {
+			out = map[string]map[string][]runrec.LineupEntry{}
+		}
+		out[p.Item] = p.Lineup
+	}
+	return out
 }
 
 type specPermissionMsg struct {
@@ -227,12 +247,13 @@ func (m *Model) startSpecCheck(items []daemon.RunParams) tea.Cmd {
 	w.checkStarted = m.cfg.Now()
 	w.checkProject = w.project
 	w.checkItems = append([]string(nil), need...)
-	live, ctx, request, project := m.cfg.Live, w.ctx, w.request, w.project
+	w.lineups = lineupsOf(items)
+	live, ctx, request, project, lineups := m.cfg.Live, w.ctx, w.request, w.project, w.lineups
 	return func() tea.Msg {
 		if ctx.Err() != nil {
 			return nil
 		}
-		res, err := live.SpecCheck(ctx, project, need)
+		res, err := live.SpecCheck(ctx, project, need, lineups)
 		return wavesMsg{request: request, kind: "check", check: res, err: err}
 	}
 }
@@ -284,9 +305,81 @@ func (m *Model) applyCheck(msg wavesMsg) tea.Cmd {
 	return nil
 }
 
+// replanCarved plans again each ticked item whose spec check or answers filed
+// slivers: the plan the owner saw when ticking it lists none, and the start
+// refuses a plan that changed (S359, *proposed*; owner decision adj 401). The
+// plans arrive as wavesMsg "carved", and the last one goes on to the
+// confirmation. It returns nil when no item needs one.
+func (m *Model) replanCarved() tea.Cmd {
+	w := m.waves
+	var cmds []tea.Cmd
+	live, ctx, request := m.cfg.Live, w.ctx, w.request
+	for _, p := range w.items() {
+		if r := w.specs[p.Item]; !r.Ready || len(r.Carved) == 0 || w.replanning[p.Item] {
+			continue
+		}
+		if w.replanning == nil {
+			w.replanning = map[string]bool{}
+		}
+		w.replanning[p.Item] = true
+		p.Expected = nil
+		cmds = append(cmds, func() tea.Msg {
+			if ctx.Err() != nil {
+				return nil
+			}
+			plan, err := live.Plan(ctx, p)
+			return wavesMsg{request: request, kind: "carved", item: p.Item, plan: plan, err: err}
+		})
+	}
+	if len(cmds) == 0 {
+		return nil
+	}
+	return tea.Batch(cmds...)
+}
+
+// applyCarvedPlan takes the plan that lists an item's carved slivers as the
+// plan its start compares. An item whose new plan failed is held, because the
+// start would refuse its old plan.
+func (m *Model) applyCarvedPlan(msg wavesMsg) tea.Cmd {
+	w := m.waves
+	if !w.replanning[msg.item] {
+		return nil
+	}
+	delete(w.replanning, msg.item)
+	r := w.specs[msg.item]
+	r.Carved = nil
+	// An item the owner unticked meanwhile is dropped with no word: its plan
+	// no longer matters, whether or not it came back.
+	if p, ok := w.picked[msg.item]; ok {
+		if msg.err == nil && msg.plan != nil {
+			p.Expected = msg.plan
+			w.picked[msg.item] = p
+		} else {
+			r.Ready = false
+			m.actionStatus = msg.item + ": the plan with its carved slivers failed; " + errorText(msg.err)
+		}
+	}
+	w.specs[msg.item] = r
+	if len(w.replanning) > 0 {
+		return nil
+	}
+	return m.askLaunch()
+}
+
+// errorText is err's owner-facing text, or a plain note for none.
+func errorText(err error) string {
+	if err == nil {
+		return "no plan returned"
+	}
+	return actionError(err)
+}
+
 // askLaunch confirms the wave for the ticked items whose spec is ready.
 func (m *Model) askLaunch() tea.Cmd {
 	w := m.waves
+	if cmd := m.replanCarved(); cmd != nil {
+		return cmd
+	}
 	var ready []daemon.RunParams
 	var held []string
 	for _, p := range w.items() {
@@ -379,7 +472,7 @@ func (m *Model) answerSitting(w *specState, done func() tea.Cmd, text string) te
 		s.recording++
 		answers := s.answers[ask.item]
 		live, project := m.cfg.Live, w.answerProject
-		params := daemon.SpecAnswerParams{Project: project, Item: ask.item, Answers: answers, By: os.Getenv("ADJ_DECIDED_BY")}
+		params := daemon.SpecAnswerParams{Project: project, Item: ask.item, Answers: answers, By: os.Getenv("ADJ_DECIDED_BY"), Lineup: w.lineups[ask.item]}
 		if ps := m.byName[project]; ps != nil {
 			params.Adj = ps.reg.Adj
 		}
@@ -431,7 +524,12 @@ func (m *Model) applyAnswer(w *specState, done func() tea.Cmd, msg specAnswerMsg
 		if w.specs == nil {
 			w.specs = map[string]daemon.SpecItemResult{}
 		}
-		w.specs[msg.item] = daemon.SpecItemResult{Item: msg.item, Ready: true}
+		ready := daemon.SpecItemResult{Item: msg.item, Ready: true}
+		if msg.answer != nil {
+			// The answers made the item Ready, which carved a local run (S359).
+			ready.Carved = msg.answer.Carved
+		}
+		w.specs[msg.item] = ready
 		delete(w.unsaved, msg.item)
 		m.actionStatus = ""
 		if msg.answer != nil && len(msg.answer.Notices) > 0 {
