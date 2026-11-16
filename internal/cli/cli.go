@@ -67,6 +67,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               --allow-no-check
                               plans well specified y and split n unless the
                               flags say otherwise
+                              --well-specified and --split do not skip
+                              the spec check.
                               --questions prints all spec questions and starts
                               nothing; --answer KEY=N or KEY=text repeats for
                               every question (#N when there is no key)

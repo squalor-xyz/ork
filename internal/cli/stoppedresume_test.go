@@ -20,6 +20,10 @@ func startReply(t *testing.T, reply string, args ...string) (code int, out, errs
 	var stdout, stderr bytes.Buffer
 	app := &App{Input: strings.NewReader("yes\n"), Call: func(_ context.Context, method string, params, result any) error {
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case daemon.MethodRunPlan:
 			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","check_command":"go test ./..."}`), result)
 		case daemon.MethodSpecCheck:
@@ -43,7 +47,7 @@ func TestRunPrintsWhatTheStartDidWithAStoppedRun(t *testing.T) {
 	}
 	// A start with nothing to say prints the one line it always did.
 	code, out, _ = startReply(t, `{"id":"r2","state":"setup"}`, "run", "p", "S1", "--yes")
-	if code != ExitOK || !strings.HasSuffix(out, "r2 setup\n") {
+	if code != ExitOK || !strings.HasSuffix(out, "r2 setup\nfollow: ork status --project p\nstop it: ork stop r2\n") {
 		t.Fatalf("code %d, out %q", code, out)
 	}
 	// JSON carries the message as a field of the one result value.

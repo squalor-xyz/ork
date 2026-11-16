@@ -13560,10 +13560,39 @@
       "id": "S241",
       "title": "Plan and launch output: label the fallback, show push and skills, say engine slice and pair rule, show the spec check and what to do next",
       "short_title": "Plan and launch output",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b88df373-31da-4c67-b290-63c2e4c13656",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S241):\n- later: After landing and a rebuild, the owner runs `ork wave start ork ITEM ITEM` for two slices where only one touches the engine paths, reads the plan before answering `n`, and confirms that the labels, the pair rule line and the spec check lines are clear at 80 columns.",
+          "created_at": "2026-11-16T03:08:19Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "54f4e265-5401-4519-887a-caaf0605a7ba",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: ork run and ork wave start print fallback labels, push and UI pass skills (read from projects.list, text mode only), the files line, the pair rule before the spec check, the visible spec check, and follow/stop commands (none when no wave item started). ork projects list shows adj, push and ui-pass-skills words, with - when none is set. Race suite, vet, gofmt, slicer check and adj lint pass; the new tests were mutation-checked.",
+          "created_at": "2026-11-16T03:08:26Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13581,7 +13610,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

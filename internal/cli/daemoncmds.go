@@ -299,11 +299,21 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 func printProjects(w io.Writer, list []registry.Project) {
 	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
 	for _, p := range list {
+		var words []string
 		if p.Adj {
-			fmt.Fprintf(tw, "%s\t%s\tadj", p.Name, p.Path)
-		} else {
-			fmt.Fprintf(tw, "%s\t%s\t-", p.Name, p.Path)
+			words = append(words, "adj")
 		}
+		if p.Push {
+			words = append(words, "push")
+		}
+		if len(p.UIPassSkills) > 0 {
+			words = append(words, "ui-pass-skills="+strings.Join(p.UIPassSkills, ","))
+		}
+		cell := "-"
+		if len(words) > 0 {
+			cell = strings.Join(words, " ")
+		}
+		fmt.Fprintf(tw, "%s\t%s\t%s", p.Name, p.Path, cell)
 		if p.NotifyCommand != "" {
 			command := strings.Join(strings.Fields(runrec.PlainText(p.NotifyCommand)), " ")
 			fmt.Fprintf(tw, "\tnotify_command=%s", command)

@@ -335,6 +335,8 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 		return answer, nil
 	}
 	params := daemon.WaveStartParams{Items: []daemon.RunParams{}, Name: name}
+	engineSlices := map[string]bool{}
+	var show func(daemon.RunPlan) daemon.RunPlan
 	for _, item := range items {
 		p := daemon.RunParams{Project: project, Item: item, WellSpecified: opts.wellSpecified, Split: opts.split}
 		p.Lineup, p.Budgets, p.StopAfter = opts.overrides.Lineup, opts.overrides.Budgets, opts.overrides.StopAfter
@@ -352,14 +354,27 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 				return code
 			}
 		} else {
-			printRunPlan(o.stdout, noCheckPlanText(plan, p.AllowNoCheck), p.Budgets != nil)
+			if show == nil {
+				show = a.planSettings(ctx, o, project)
+			}
+			printRunPlan(o.stdout, noCheckPlanText(show(plan), p.AllowNoCheck), p.Budgets != nil)
 		}
+		engineSlices[item] = daemon.EngineSlice(a.launchDetail(ctx, o, project, item))
 		// The daemon refuses the whole wave too (adj 191).
 		if plan.CheckCommand == "" && !p.AllowNoCheck {
 			return o.fail(ExitFailure, daemon.CodeRefused, daemon.NoCheckRefusalMessage(p.Project))
 		}
 		p.Expected = &plan
 		params.Items = append(params.Items, p)
+	}
+	if !opts.spec.questions {
+		line, conflict := pairRule(items, engineSlices)
+		if conflict != "" {
+			return o.fail(ExitFailure, daemon.CodeRefused, conflict)
+		}
+		if !o.json && line != "" {
+			fmt.Fprintln(o.stdout, line)
+		}
 	}
 	// A saved wave with nothing startable has no item to check.
 	held, noSpec, code := []string{}, []string{}, ExitOK
@@ -438,10 +453,26 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 		}
 		return code
 	}
-	return printWave(o, result)
+	code = printWaveLaunch(o, result)
+	// The hints are for a wave with a run to follow or stop.
+	for _, item := range result.Items {
+		if item.Run != nil {
+			printLaunch(o, project, result.Wave, true)
+			break
+		}
+	}
+	return code
 }
 
 func printWave(o *output, result daemon.WaveResult) int {
+	return printWaveOutput(o, result, false)
+}
+
+func printWaveLaunch(o *output, result daemon.WaveResult) int {
+	return printWaveOutput(o, result, true)
+}
+
+func printWaveOutput(o *output, result daemon.WaveResult, launch bool) int {
 	code := ExitOK
 	for _, item := range result.Items {
 		if item.Error != nil {
@@ -459,6 +490,9 @@ func printWave(o *output, result daemon.WaveResult) int {
 		if item.Error != nil {
 			fmt.Fprintf(o.stderr, "%s: %s (%s)\n", item.Item, item.Error.Message, item.Error.Code)
 		} else if item.Run != nil {
+			if launch {
+				fmt.Fprintf(o.stdout, "%s ", item.Item)
+			}
 			printRun(o, *item.Run)
 			if item.Message != "" {
 				fmt.Fprintf(o.stdout, "%s: %s\n", item.Item, item.Message)
@@ -486,7 +520,7 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		}
 	}
 	// The call returns when the role has finished: say so first (S264, *proposed*).
-	fmt.Fprintf(w, "spec check: %s; wait for it to finish\n", strings.Join(ids, ", "))
+	fmt.Fprintf(w, "spec check: reading %s (it runs even with --well-specified)\n", strings.Join(ids, ", "))
 	var check daemon.SpecCheckResult
 	if code := a.callWith(ctx, o, "spec check failed: ", daemon.MethodSpecCheck, daemon.SpecCheckParams{Project: params.Items[0].Project, Items: ids, Lineups: lineups}, &check); code != ExitOK {
 		return nil, nil, code
@@ -496,7 +530,11 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 	}
 	open := map[string]daemon.SpecItemResult{}
 	missing := map[string]bool{}
+	var ready []string
 	for _, r := range check.Items {
+		if r.Ready && !r.NoSpec {
+			ready = append(ready, r.Item+" ready")
+		}
 		for _, notice := range r.Notices {
 			fmt.Fprintln(w, notice)
 		}
@@ -513,6 +551,9 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		case !r.Ready:
 			open[r.Item] = r
 		}
+	}
+	if len(ready) > 0 {
+		fmt.Fprintf(w, "spec check: %s\n", strings.Join(ready, ", "))
 	}
 	for _, item := range params.Items {
 		if missing[item.Item] {
