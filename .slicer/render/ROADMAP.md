@@ -42,13 +42,13 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-376 items · — 55 · done 286 · retired 35
+376 items · — 52 · done 289 · retired 35
 
 v1.2
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | — |
+| 1 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | done |
 | 2 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (needs ui.mouse) | M | 2 |  |  | — |
 | 3 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | — |
 | 4 | [S123](slices/S123.md) | Relay stats: thin display of slicer's | S | 1 |  |  | done |
@@ -68,7 +68,7 @@ v1.2
 | 18 | [S241](slices/S241.md) | Plan and launch output | M | 2 |  |  | done |
 | 19 | [S242](slices/S242.md) | Daemon status and stale rule | M | 2 |  |  | done |
 | 20 | [S246](slices/S246.md) | Check command from slicer first | S | 1 |  |  | done |
-| 21 | [S247](slices/S247.md) | ork projects show | M | 2 |  |  | — |
+| 21 | [S247](slices/S247.md) | ork projects show | M | 2 |  |  | done |
 | 22 | [S248](slices/S248.md) | projects set --dry-run | S | 1 |  |  | done |
 | 23 | [S249](slices/S249.md) | Project setup steps | M | 2 |  |  | — |
 | 24 | [S250](slices/S250.md) | Matrix change sets | M | 2 |  |  | — |
@@ -144,7 +144,7 @@ v1.2
 | 94 | [S373](slices/S373.md) | TUI shows full permission command | S | 1 |  | S370 (2026-11-16): the permission question title is now a 120-character preview with the whole input in the question's `detail` field (adj 368); the TUI shows only the title. Owner decision adj 369 (`ui.permission-detail`, later-slice). · discovered from S370 | done |
 | 95 | [S374](slices/S374.md) | Grok cutover by 2026-12-09 | S | 1 |  | Owner, 2026-11-16 (relay session 8d711f67, chat): "my grok accounts will be cancelled effective December 9th. so let's ensure we maximize that account use through then". Grok is first choice in ork's matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer's matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305 | — |
 | 96 | [S375](slices/S375.md) | Spec-check screen shows full permission command | S | 1 |  | S373 (2026-11-16): the run pane shows a permission question's `detail` in full; the spec-check screen still shows only the 120-character title. Owner decision adj 377 (`ui.permission-detail-speccheck`, follow-up). · discovered from S373 | done |
-| 97 | [S376](slices/S376.md) | Spec-check screen: overflow marker for tall detail | S | 1 |  | S375 (2026-11-16): the spec-check screen shows a permission question's whole detail (S375); a detail taller than the screen pushes other rows off it. S373's run pane drops a tall detail whole behind an overflow marker. Owner decision adj 383 (`ui.permission-detail-speccheck-overflow`, later). · discovered from S375 | — |
+| 97 | [S376](slices/S376.md) | Spec-check screen: overflow marker for tall detail | S | 1 |  | S375 (2026-11-16): the spec-check screen shows a permission question's whole detail (S375); a detail taller than the screen pushes other rows off it. S373's run pane drops a tall detail whole behind an overflow marker. Owner decision adj 383 (`ui.permission-detail-speccheck-overflow`, later). · discovered from S375 | done |
 
 ---
 
