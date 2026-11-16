@@ -119,12 +119,17 @@ func (d DeniedCommand) Text() string {
 
 // CheckRecord is one run of the project's checks.
 type CheckRecord struct {
-	LogSHA256 string `json:"log_sha256,omitempty"`
-	Round     int    `json:"round"`
-	Command   string `json:"command"`
-	OK        bool   `json:"ok"`
-	Seconds   int    `json:"seconds"`
-	Log       string `json:"log,omitempty"`
+	// Slice rows are proposed (S317); NotRun rows are orchestrator-owned.
+	Slice         bool   `json:"slice,omitempty"`
+	NotRun        string `json:"not_run,omitempty"`
+	Exit          int    `json:"exit,omitempty"`
+	ProductSHA256 string `json:"product_sha256,omitempty"`
+	LogSHA256     string `json:"log_sha256,omitempty"`
+	Round         int    `json:"round"`
+	Command       string `json:"command"`
+	OK            bool   `json:"ok"`
+	Seconds       int    `json:"seconds"`
+	Log           string `json:"log,omitempty"`
 	// Deferred holds the slicer check problems on other items that did not
 	// make this round red: the branch was behind its base, and the landing
 	// merge decides them (S279, adj 178).
@@ -396,6 +401,7 @@ type Record struct {
 	LedgerRoles      map[string]string        `json:"ledger_roles,omitempty"`
 	Contract         int                      `json:"contract"`
 	State            string                   `json:"state"`
+	Notified         []string                 `json:"notified,omitempty"` // S311: occurrence keys claimed before notification delivery
 	Round            int                      `json:"round"`
 	Fails            int                      `json:"fails,omitempty"`
 	LandFixes        int                      `json:"land_fixes,omitempty"`     // fix rounds that a blocked landing has had (S119)

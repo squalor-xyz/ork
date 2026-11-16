@@ -17,6 +17,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/agent/codex"
 	"github.com/squalor-xyz/ork/internal/agent/grok"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -39,6 +40,9 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	allowlist := req.Allowlist
 	if req.ReadOnly && req.Vendor == "claude-local" {
 		allowlist = engine.LocalReadOnlyAllowlist()
+		if req.Role == engine.RoleSpecCheck {
+			allowlist = append(allowlist, "Bash(adj find*)")
+		}
 	}
 	addDir := ""
 	if req.Vendor == "claude-local" && req.ProgressFile != "" {
@@ -62,6 +66,22 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		}
 		defer finishApproval()
 	}
+	systemFile := ""
+	if req.Vendor == "claude-local" {
+		dir := req.TempDir
+		if dir == "" {
+			var err error
+			if dir, err = os.MkdirTemp("", "ork-local-"); err != nil {
+				return engine.Result{}, err
+			}
+			defer os.RemoveAll(dir)
+		}
+		// ork's own system prompt replaces Claude Code's default one (S364).
+		systemFile = filepath.Join(dir, "local-system.md")
+		if err := os.WriteFile(systemFile, []byte(roles.LocalSystemPrompt()), 0o600); err != nil {
+			return engine.Result{}, fmt.Errorf("write local system prompt: %w", err)
+		}
+	}
 	var message claude.Usage
 	used := 0
 	lastContext := 0
@@ -69,8 +89,8 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
 	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
-		HookCommand: hookCommand,
-		ReadOnly:    req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
+		HookCommand: hookCommand, SystemPromptFile: systemFile,
+		ReadOnly: req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			if ev.ContextTokens > 0 {
 				lastContext = ev.ContextTokens
 			}
@@ -128,6 +148,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	// Hook denials need not appear in Claude's permission_denials. Preserve
 	// them independently, without double-counting a vendor-reported copy.
 	hookDenials := finishApproval()
+	result.ApprovalDenials = len(hookDenials)
 	for _, denial := range result.Denials {
 		for i, hook := range hookDenials {
 			if hook == denial {

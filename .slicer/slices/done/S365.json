@@ -1,0 +1,41 @@
+{
+  "id": "S365",
+  "title": "Local implementer: a cloud-written orientation pack in the brief",
+  "lead": [
+    "*Proposed.* Owner direction 2026-11-15 (relay session 8d711f67, chat: \"I agree, go ahead\"): before a local implementer starts, a cloud read-only role writes an orientation pack for the slice: for each failing test, the code to change and the nearest existing test to copy, quoted with file and line, and a short plan. ork puts the pack in the local implementer's brief so it edits instead of exploring. Cloud implementers do not get it."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 3 (2026-11-14/15, S248): every claude-local session spent its window reading the same 5-6 files (wire.go, handlers.go, daemoncmds.go, cli.go, daemon_test.go) in 12-220 line ranges and restarted before its first edit.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* The cloud spec check already reads the slice's code to check its anchors (S258). Cloud tokens are cheap and fast for reading; local exploration is what fails. A pack of a few quoted functions is a few thousand tokens, against the 40k+ the local role spent per session re-reading.\n\nOpen owner questions (the implementer asks them with `adj ask` first):\n\n- Q1 (`roles.local-orientation-writer`): which role writes the pack? (a) *recommended*: the spec check row, as one more output of the spec check that already runs before every run, only when the planned implementer is local. (b) a separate cloud read-only step after the spec check.\n- Q2 (`roles.local-orientation-size`): how large may the pack be? (a) *recommended*: at most 300 quoted lines and 12k characters in all; the writer picks the lines. (b) no limit."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/speccheck.go:44-61` (`SpecCheckConfig`, `SpecCheckResult`); `internal/engine/speccheck.go:278` (request); `internal/engine/speccheck.go:407-451` (packs and limits)\n- `internal/roles/prompts/spec-check.md:149` (orientation report format)\n- `internal/engine/brief.go:104-106` (`BuildBrief`: local Orientation section)\n- `internal/engine/round.go:433-439` (`runRound`: load saved pack)\n- `internal/engine/brief_test.go:19-76` (round wiring and brief selection)\n- `internal/engine/speccheck_test.go:109-206` (request, resume, parsing and limits)\n- `internal/daemon/speccheck.go:325-412` (`runSpecCheck`: planning and per-item persistence)\n- `internal/daemon/runs.go:850-865` (`admitRun`: run directory copy)\n- `internal/daemon/speccheck_test.go:28-98` (spec-to-run and skipped/failed-check integration)\n- `docs/design.md`\n- `docs/state.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `internal/engine/speccheck_test.go:109` TestSpecOrientationRequest: request only the local planned items; TestSpecOrientationResumeRequest at line 166 keeps the request after a malformed report.\n- `internal/engine/speccheck_test.go:130` TestSpecOrientationPacks: parse each requested pack separately from verdicts and owner questions.\n- `internal/engine/speccheck_test.go:184` TestSpecOrientationLimits: enforce 300 lines and 12k characters including the notice; preserve an exact-boundary pack.\n- `internal/daemon/speccheck_test.go:60` TestOrientationSpecToRun: use engine.IsLocalRun on the planned lineup, save the fake report pack per item, and copy it into the run directory. Cloud runs get no pack.\n- `internal/engine/brief_test.go:19` TestSavedOrientationReachesOnlyLocalImplementer and TestOrientationBriefSelection at line 55: the saved pack reaches only the claude-local implementer under ## Orientation.\n- `internal/engine/brief_test.go:44` TestLocalRunWithoutOrientation and `internal/daemon/speccheck_test.go:28` TestLocalRunWithoutPackAfterSkippedOrFailedCheck: missing packs preserve launch and omit the section; failed checks discard old packs."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Red tests, then the code and the prompt text.\n3. Docs: `docs/design.md`, `docs/state.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-15): How does the spec check learn the implementer is local, and how does the pack reach the run's brief? -> report-section: The daemon's spec check job passes the engine the items whose planned implementer is local, judged the way run admission does (`engine.IsLocalRun` on the lineup that run would use). The spec check brief asks for one `## Orientation SID` section per such slice, after `## Owner needed`. ork cuts each section to 300 lines and 12k chars, saves it as `orientation.md` in that item's spec dir, and copies it into the run dir at run start. `round.go` then gives it to a `claude-local` implementer's brief as `## Orientation`. This also touches `internal/daemon/speccheck.go` and `internal/engine/round.go`, which the slice's Files list does not name.."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- `[AFTER LAND]` S304 trial 4 or 5 runs S248 with the pack and records it in S304's notes."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

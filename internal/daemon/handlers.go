@@ -668,6 +668,9 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 		c := *proj
 		proj = &c
 	}
+	if p.NotifyCommand != nil {
+		proj.NotifyCommand = *p.NotifyCommand
+	}
 	// The preset and allow_add read the check command this call saves.
 	base := *proj
 	if p.CheckCommand != nil {

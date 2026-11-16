@@ -1,0 +1,45 @@
+{
+  "id": "S364",
+  "title": "Local roles: minimal system prompt and tool set, measured on a micro-task",
+  "lead": [
+    "*Proposed.* Owner direction 2026-11-15 (relay session 8d711f67, chat: \"I agree, go ahead\"): measure the settings that shape a local session on a fixed micro-task, and adopt what helps. Reasoning stays on at effort low (adj 350); it is not cut or capped. The launcher's auto-compaction window is 115k (owner, same chat)."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 3 (2026-11-14/15, S248): each claude-local session started at 23.1k-23.3k input tokens before reading anything, ran 61-96 model turns for about 30 tool calls, produced 20k-68k output tokens, and averaged 13-35 s per turn. S360's --disallowedTools cut the first turn only 12% (30.2k to 26.7k, cloud haiku measure).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Most of the 23k fixed context is Claude Code's own system prompt and tool schemas, not ork's brief. claude CLI 2.1.323 has `--system-prompt` / `--system-prompt-file` (replace the default prompt) and `--tools` (limit the built-in tools sent) (`claude --help`). `--bare` is not usable: it skips hooks, and S356's approval point is a hook. The S358 fresh-session threshold is 70k (adj 335); with compaction at 115k there is room for a larger window, and vLLM prefix caching (on) keeps the repeated prefix cheap.\n\nOpen owner questions (the implementer asks them with `adj ask` first):\n\n- Q1 (`roles.local-system-prompt`): what replaces the default system prompt for a claude-local role? (a) *recommended*: ork's own short system prompt file (`internal/roles/prompts/local-system.md`): tool use basics, one command per call, absolute paths, terse output; the role prompt and brief stay the user message. (b) keep the default prompt and only add `--exclude-dynamic-system-prompt-sections`.\n- Q2 (`roles.local-tool-set`): which tools does a local implementer get with `--tools`? (a) *recommended*: Read, Grep, Glob, Edit, Write, Bash; read-only roles the same without Edit and Write (their progress note write stays through the S356/S361 rule). (b) keep today's set minus S360's disallowed list."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/args.go` (claude-local: `--system-prompt-file`, `--tools`; `Spec.Args`, `localTools`)\n- `internal/agent/claude/args_test.go`\n- `internal/agent/claude/types.go` (`Spec.SystemPromptFile`)\n- `internal/daemon/runner.go` (writes the prompt file into the role's temp directory)\n- `internal/daemon/runner_test.go`\n- `internal/roles/prompts/local-system.md` (new)\n- `internal/roles/roles.go` (embed it; `LocalSystemPrompt`)\n- `internal/roles/roles_test.go`\n- `internal/engine/round.go` (`localFreshLimit`: ORK_LOCAL_FRESH_TOKENS override for the measurement)\n- `internal/engine/round_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestArgsLocalWriteRoleUsesOwnPromptAndSixTools`, `TestArgsLocalReadOnlyUsesAllowlist`, `TestArgsLocalReadOnlyToolsKeepEditWriteOnlyForProgressNote`, `TestArgsLocalSystemPromptFileMustBeAbsolute`, `TestArgsCloudRoleUnchanged`: a claude-local role's args hold `--system-prompt-file` naming ork's local system prompt and `--tools` with the Q2 set; a cloud role's args do not change. `TestLocalDispatcherUsesLaunchersAndRowFlags` and `TestClaudeReadOnlyRoleArguments` check the same through the runner, including the file's content.\n- `TestArgsLocalUIPassKeepsSkill`: a local UI pass keeps Skill in its tool set (S360 rule).\n- `TestLocalSystemPromptIsEmbeddedAndShort`, `TestEmbeddedFilesMatchNames`: the local system prompt file is embedded, and under 2,000 characters.\n- `TestFreshSessionThresholdEnvOverride`: ORK_LOCAL_FRESH_TOKENS moves the fresh-session threshold for a measurement."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Red tests, then the flags.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- `[AFTER LAND]` The orchestrator runs the micro-task for settings 1-4 and records the table in this slice's notes and S304's."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    },
+    {
+      "heading": "Micro-task",
+      "body": "The first failing test of S248 (`TestProjectsSetDryRunSavesNothing`) from a clean S248 worktree, with a brief that says to write that test, see it fail, and stop. Each setting runs once on claude-local qwen3.8-27b low; record first-turn input tokens, turns, output tokens, wall time, whether the test was written and seen red, and restarts.\n\nSettings to compare (results in the slice notes, one table row each):\n\n1. Today (S360, S361, S362, S363 live).\n2. Minimal system prompt (Q1).\n3. 2 plus the narrowed tool set (Q2).\n4. 3 with the fresh-session threshold at 95k (an env or test override only; changing adj 335 is the owner's call after the numbers)."
+    }
+  ],
+  "notes": []
+}

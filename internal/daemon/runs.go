@@ -154,6 +154,7 @@ func (c *stopCall) abandon(err error) {
 // runManager serializes admission and owner actions; the engine serializes
 // each run's state transitions. Background jobs use the daemon's lifetime.
 type runManager struct {
+	notifications   *notifier
 	approvals       map[string]*approvalSession // live local attempts, guarded by mu
 	permissionSeq   uint64                      // monotonically orders live permission questions
 	recordLocks     map[string]*sync.Mutex      // per-run record writes; guarded by mu
@@ -209,6 +210,8 @@ func (d *Daemon) initRunManager() {
 		deps.Wake = engine.NewWake(now)
 	}
 	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, mergeLogged: map[string]string{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
+	d.runs.notifications = newNotifier(d)
+	deps.Store.OnChange = d.runs.notifications.changed
 }
 
 // watchLocalSlots admits queued runs when a local role/spec check frees a
@@ -366,6 +369,7 @@ func (d *Daemon) closeRuns() {
 		cancel()
 	}
 	d.runs.mu.Unlock()
+	d.runs.notifications.close()
 	d.runs.wg.Wait()
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
@@ -847,9 +851,21 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
 	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
+	var orientation []byte
+	if local {
+		orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, p.Item), "orientation.md"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return runrec.Record{}, "", nil, fmt.Errorf("read orientation: %w", err)
+		}
+	}
 	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
 	if err != nil {
 		return runrec.Record{}, "", nil, err
+	}
+	if len(orientation) > 0 {
+		if err := os.WriteFile(filepath.Join(d.runs.deps.Store.RunDir(e.Snapshot().ID), "orientation.md"), orientation, 0600); err != nil {
+			return runrec.Record{}, "", nil, fmt.Errorf("copy orientation: %w", err)
+		}
 	}
 	// The run record now owns the paragraph, including for queued runs.
 	if err := os.Remove(filepath.Join(d.specDir(plan.project.Name, p.Item), "answers.json")); err != nil && !errors.Is(err, os.ErrNotExist) {

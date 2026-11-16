@@ -33,8 +33,9 @@ const CodeSpecQuestions = "spec_questions"
 
 // SpecCheckParams names the project and the items to check in one pass.
 type SpecCheckParams struct {
-	Project string   `json:"project"`
-	Items   []string `json:"items"`
+	Project string                                     `json:"project"`
+	Items   []string                                   `json:"items"`
+	Lineups map[string]map[string][]runrec.LineupEntry `json:"lineups,omitempty"`
 }
 
 // SpecItemResult is the check's answer for one item against its current
@@ -44,6 +45,8 @@ type SpecCheckParams struct {
 // is not Ready, has no questions and no role ran for it. The caller keeps the
 // item out of its wave and names the fix, slicer promote.
 type SpecItemResult struct {
+	WaitsOn   []int                 `json:"waits_on,omitempty"`
+	Notices   []string              `json:"notices,omitempty"`
 	Item      string                `json:"item"`
 	Ready     bool                  `json:"ready"`
 	NoSpec    bool                  `json:"no_spec,omitempty"`
@@ -80,6 +83,9 @@ type SpecAnswerResult struct {
 // the spec still has that fingerprint. Role verdicts live in memory; owner
 // answers are also saved beside the check until run start or a spec change.
 type specEntry struct {
+	waiting     []engine.SpecQuestion
+	waitsOn     []int
+	notices     []string
 	fingerprint string
 	ready       bool
 	questions   []engine.SpecQuestion
@@ -266,7 +272,7 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		return nil, err
 	}
 	deps := d.runDeps(proj)
-	var stale []string
+	var stale, localItems []string
 	noSpec := map[string]bool{}
 	for _, item := range items {
 		raw, err := deps.Slicer.ShowRaw(ctx, proj.Path, item)
@@ -289,12 +295,35 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		d.runs.mu.Lock()
 		e, ok := d.runs.specs[specKey(proj.Name, item)]
 		d.runs.mu.Unlock()
-		if !ok || e.fingerprint != fp {
+		// A cached cloud check has no pack for a newly selected local
+		// implementer. Plan with the same overrides as run admission.
+		plan, planErr := d.planRun(ctx, RunParams{Project: proj.Name, Item: item, Lineup: p.Lineups[item]})
+		local := planErr == nil && engine.IsLocalRun(plan.Lineup)
+		missingPack := false
+		if local {
+			_, err := os.Stat(filepath.Join(d.specDir(proj.Name, item), "orientation.md"))
+			missingPack = errors.Is(err, os.ErrNotExist)
+			if err != nil && !missingPack {
+				return nil, fmt.Errorf("stat orientation %s: %w", item, err)
+			}
+		}
+		if !ok || e.fingerprint != fp || missingPack {
 			stale = append(stale, item)
+			if local {
+				localItems = append(localItems, item)
+			}
 		}
 	}
 	if len(stale) > 0 {
-		if err := d.runSpecCheck(ctx, deps, proj, stale); err != nil {
+		if err := d.runSpecCheck(ctx, deps, proj, stale, localItems); err != nil {
+			return nil, err
+		}
+	}
+	for _, item := range items {
+		if noSpec[item] {
+			continue
+		}
+		if err := d.reuseSpecAnswers(ctx, deps, proj, item); err != nil {
 			return nil, err
 		}
 	}
@@ -308,7 +337,7 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 			continue
 		}
 		e := d.runs.specs[specKey(proj.Name, item)]
-		out.Items = append(out.Items, SpecItemResult{Item: item, Ready: e.ready, Questions: e.questions})
+		out.Items = append(out.Items, SpecItemResult{Item: item, Ready: e.ready, Questions: e.questions, WaitsOn: e.waitsOn, Notices: e.notices})
 		if e.ownerNeeded != "" && !ownerTexts[e.ownerNeeded] {
 			if out.OwnerNeeded != "" {
 				out.OwnerNeeded += "\n\n"
@@ -320,9 +349,56 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 	return out, nil
 }
 
+// reuseSpecAnswers runs while specMu serializes checks and owner answers.
+// Open adj records are read again on the next check without rerunning a role.
+func (d *Daemon) reuseSpecAnswers(ctx context.Context, deps engine.Deps, proj registry.Project, item string) error {
+	d.runs.mu.Lock()
+	e := d.runs.specs[specKey(proj.Name, item)]
+	d.runs.mu.Unlock()
+	if e.ready || len(e.questions)+len(e.waiting) == 0 {
+		return nil
+	}
+	questions := append(slices.Clone(e.questions), e.waiting...)
+	reuse, err := engine.ReuseSpecAnswers(ctx, deps, proj, item, questions)
+	if err != nil {
+		return err
+	}
+	e.questions, e.waiting, e.waitsOn, e.notices = reuse.Questions, reuse.Waiting, reuse.WaitsOn, reuse.Notices
+	e.ready = len(e.questions)+len(e.waiting) == 0
+	if reuse.Decisions != "" {
+		if e.decisions != "" {
+			e.decisions += "\n\n"
+		}
+		e.decisions += reuse.Decisions
+		raw, err := deps.Slicer.ShowRaw(ctx, proj.Path, item)
+		if err != nil {
+			return err
+		}
+		e.fingerprint, err = engine.SpecFingerprint(raw)
+		if err != nil {
+			return err
+		}
+	}
+	d.runs.specStateMu.Lock()
+	defer d.runs.specStateMu.Unlock()
+	if _, err := d.registered(proj.Name); err != nil {
+		return err
+	}
+	if e.ready {
+		err := writeSpecJSON(filepath.Join(d.specDir(proj.Name, item), "answers.json"), storedSpecAnswers{Fingerprint: e.fingerprint, Decisions: e.decisions, OwnerNeeded: e.ownerNeeded})
+		if err != nil {
+			return err
+		}
+	}
+	d.runs.mu.Lock()
+	d.runs.specs[specKey(proj.Name, item)] = e
+	d.runs.mu.Unlock()
+	return nil
+}
+
 // runSpecCheck runs the role over items and remembers each verdict. The job
 // counts as active work, so the daemon does not stop or restart under it.
-func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj registry.Project, items []string) error {
+func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj registry.Project, items, localItems []string) error {
 	chain, err := d.specChain(ctx, deps, proj, items[0])
 	if err != nil {
 		return err
@@ -362,10 +438,14 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 			d.runs.specStateMu.Unlock()
 			return err
 		}
+		if err := os.Remove(filepath.Join(d.specDir(proj.Name, item), "orientation.md")); err != nil && !errors.Is(err, os.ErrNotExist) {
+			d.runs.specStateMu.Unlock()
+			return err
+		}
 	}
 	d.runs.specStateMu.Unlock()
 	dir := d.specDir(proj.Name, items[0])
-	res, err := engine.RunSpecCheck(ctx, deps, engine.SpecCheckConfig{Project: proj, Items: items, Lineup: chain, Dir: dir})
+	res, err := engine.RunSpecCheck(ctx, deps, engine.SpecCheckConfig{Project: proj, Items: items, LocalItems: localItems, Lineup: chain, Dir: dir})
 	if err != nil {
 		var retried *engine.SpecCheckRetryError
 		if errors.As(err, &retried) {
@@ -385,6 +465,11 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 	for _, item := range items[1:] {
 		if err := os.WriteFile(filepath.Join(d.specDir(proj.Name, item), "spec-check.md"), report, 0600); err != nil {
 			return err
+		}
+	}
+	for item, pack := range res.Orientations {
+		if err := os.WriteFile(filepath.Join(d.specDir(proj.Name, item), "orientation.md"), []byte(pack), 0600); err != nil {
+			return fmt.Errorf("save orientation %s: %w", item, err)
 		}
 	}
 	d.runs.mu.Lock()
@@ -418,6 +503,9 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 	if !ok || e.ready || len(e.questions) == 0 {
 		return nil, fmt.Errorf("%s has no open spec questions", p.Item)
 	}
+	if len(e.waitsOn) > 0 {
+		return nil, fmt.Errorf("%s %s", p.Item, specWaitsOn(e.waitsOn))
+	}
 	deps := d.runDeps(proj)
 	raw, err := deps.Slicer.ShowRaw(ctx, proj.Path, p.Item)
 	if err != nil {
@@ -438,6 +526,9 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 	decisions, notices, err := engine.RecordSpecAnswers(ctx, deps, engine.SpecAnswerConfig{Project: proj, Item: p.Item, Questions: e.questions, Answers: p.Answers, Adj: p.Adj && proj.Adj && reg.FileAnswersOn(), By: by})
 	if err != nil {
 		return nil, err
+	}
+	if e.decisions != "" {
+		decisions = e.decisions + "\n\n" + decisions
 	}
 	if p.Adj && !proj.Adj {
 		for _, q := range e.questions {
@@ -475,7 +566,7 @@ func (d *Daemon) specGate(ctx context.Context, project, item string) error {
 	d.runs.mu.Lock()
 	e, ok := d.runs.specs[specKey(project, item)]
 	d.runs.mu.Unlock()
-	if !ok || e.ready || len(e.questions) == 0 {
+	if !ok || e.ready || len(e.questions)+len(e.waiting) == 0 {
 		return nil
 	}
 	proj, err := d.registered(project)
@@ -490,9 +581,20 @@ func (d *Daemon) specGate(ctx context.Context, project, item string) error {
 	if err != nil || fp != e.fingerprint {
 		return nil
 	}
+	if len(e.waitsOn) > 0 {
+		return &ipc.Error{Code: CodeSpecQuestions, Message: item + " " + specWaitsOn(e.waitsOn)}
+	}
 	noun := "questions"
 	if len(e.questions) == 1 {
 		noun = "question"
 	}
 	return &ipc.Error{Code: CodeSpecQuestions, Message: fmt.Sprintf("%s has %d open spec %s; answer them first", item, len(e.questions), noun)}
+}
+
+func specWaitsOn(ids []int) string {
+	var names []string
+	for _, id := range ids {
+		names = append(names, fmt.Sprintf("adj %d", id))
+	}
+	return "waits on " + strings.Join(names, ", ")
 }

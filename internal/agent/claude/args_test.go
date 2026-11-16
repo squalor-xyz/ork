@@ -4,19 +4,22 @@ package claude
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 )
+
+const localSystemPath = "/run/tmp/local-system.md"
 
 func TestArgsLocalReadOnlyUsesAllowlist(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "claude"} {
 		t.Run(vendor, func(t *testing.T) {
-			got, err := (Spec{Bin: vendor, Prompt: "review", ReadOnly: true, Allowlist: []string{"Read", "Grep", "Glob"}}).Args()
+			got, err := (Spec{Bin: vendor, Prompt: "review", ReadOnly: true, SystemPromptFile: localSystemPath, Allowlist: []string{"Read", "Grep", "Glob"}}).Args()
 			if err != nil {
 				t.Fatal(err)
 			}
 			want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
 			if vendor == "claude-local" {
-				want = append(want, "--disallowedTools", localDisallowed, "--disable-slash-commands", "--allowedTools", "Read,Grep,Glob", "--permission-prompts", "none")
+				want = append(want, "--system-prompt-file", localSystemPath, "--tools", "Read,Grep,Glob,Bash", "--disable-slash-commands", "--allowedTools", "Read,Grep,Glob", "--permission-prompts", "none")
 				want = append(want, "--permission-mode", "manual", "--settings", HookSettings(""))
 			} else {
 				want = append(want, "--permission-mode", "plan")
@@ -29,38 +32,62 @@ func TestArgsLocalReadOnlyUsesAllowlist(t *testing.T) {
 	}
 }
 
-// localDisallowed is the tool list a local role never uses (S360, *proposed*).
-const localDisallowed = "WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill"
-
-func TestArgsLocalWriteRoleTurnsOffUnusedTools(t *testing.T) {
-	got, err := (Spec{Bin: "claude-local", Prompt: "implement", Allowlist: []string{"Read", "Edit"}}).Args()
+// A local write role gets ork's own system prompt and the six tools (S364,
+// adj 351 and 352, *proposed*); the S360 deny list is redundant with --tools.
+func TestArgsLocalWriteRoleUsesOwnPromptAndSixTools(t *testing.T) {
+	got, err := (Spec{Bin: "claude-local", Prompt: "implement", SystemPromptFile: localSystemPath, Allowlist: []string{"Read", "Edit"}}).Args()
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
-		"--disallowedTools", localDisallowed, "--disable-slash-commands",
+		"--system-prompt-file", localSystemPath, "--tools", "Read,Grep,Glob,Edit,Write,Bash", "--disable-slash-commands",
 		"--allowedTools", "Read,Edit", "--permission-prompts", "none", "--permission-mode", "manual", "--settings", HookSettings(""), "implement"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("local implementer argv: got %q; want %q", got, want)
 	}
 }
 
+// A read-only role loses Edit and Write unless it holds the progress-note
+// grant (AddDir), which is an Edit rule the hook applies to Edit and Write.
+func TestArgsLocalReadOnlyToolsKeepEditWriteOnlyForProgressNote(t *testing.T) {
+	for _, tc := range []struct{ addDir, want string }{
+		{"", "Read,Grep,Glob,Bash"},
+		{"/run/progress", "Read,Grep,Glob,Edit,Write,Bash"},
+	} {
+		got, err := (Spec{Bin: "claude-local", Prompt: "review", ReadOnly: true, AddDir: tc.addDir, SystemPromptFile: localSystemPath, Allowlist: []string{"Read"}}).Args()
+		if err != nil {
+			t.Fatal(err)
+		}
+		i := slices.Index(got, "--tools")
+		if i < 0 || got[i+1] != tc.want {
+			t.Fatalf("AddDir %q: --tools in %q, want %q", tc.addDir, got, tc.want)
+		}
+	}
+}
+
 func TestArgsLocalUIPassKeepsSkill(t *testing.T) {
-	got, err := (Spec{Bin: "claude-local", Prompt: "ui", ReadOnly: true, KeepSkills: true, Allowlist: []string{"Read"}}).Args()
+	got, err := (Spec{Bin: "claude-local", Prompt: "ui", ReadOnly: true, KeepSkills: true, SystemPromptFile: localSystemPath, Allowlist: []string{"Read"}}).Args()
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
-		"--disallowedTools", "WebFetch,WebSearch,Task,Agent,NotebookEdit",
+		"--system-prompt-file", localSystemPath, "--tools", "Read,Grep,Glob,Bash,Skill",
 		"--allowedTools", "Read", "--permission-prompts", "none", "--permission-mode", "manual", "--settings", HookSettings(""), "ui"}
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("local UI pass argv: got %q; want %q", got, want)
 	}
 }
 
+func TestArgsLocalSystemPromptFileMustBeAbsolute(t *testing.T) {
+	_, err := (Spec{Bin: "claude-local", Prompt: "implement", SystemPromptFile: "local-system.md", Allowlist: []string{"Read"}}).Args()
+	if err == nil {
+		t.Fatal("a relative system prompt file was accepted")
+	}
+}
+
 func TestArgsCloudRoleUnchanged(t *testing.T) {
 	for _, keep := range []bool{false, true} {
-		got, err := (Spec{Bin: "claude", Prompt: "implement", KeepSkills: keep, Allowlist: []string{"Read", "Edit"}}).Args()
+		got, err := (Spec{Bin: "claude", Prompt: "implement", KeepSkills: keep, SystemPromptFile: localSystemPath, Allowlist: []string{"Read", "Edit"}}).Args()
 		if err != nil {
 			t.Fatal(err)
 		}

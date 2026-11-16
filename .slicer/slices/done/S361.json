@@ -1,0 +1,41 @@
+{
+  "id": "S361",
+  "title": "Local roles: progress note in the run dir; read-only commands on own files allowed",
+  "lead": [
+    "Owner decisions 2026-11-14 (relay session 8d711f67, chat \"Yes\"): a local role's progress note lives in the run's state dir, `~/.local/state/ork/runs/RUN/tmp/progress-ROLE.md` (adj 347, supersedes 336); a read-only role may write only that file (adj 348, supersedes 343); the approval point allows read-only commands on the role's own temp dir, report path and progress note without asking the owner (adj 349)."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 3 (2026-11-14, run ork-20261114-224559-2b00, S248): in the first 22 minutes the claude-local implementer's only two owner permission questions were `ls -la` on its own progress note and on its own run temp dir. Separately, `internal/engine/round.go:423` creates `<project>/.scratch/` in every project a claude-local role runs in, though slicer and sluice do not exclude `.scratch/` from git.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "`docs/state.md:25` says nothing is written inside a project except what git and slicer write for a slice. `.scratch/` is this repo's convention only: slicer and sluice have no ignore or exclude rule for it, so the note would show as untracked and a landing or `git add -A` could commit it. The run dir already holds the role's temp dir and report (`docs/state.md:16-19`), outlives the worktree, and is redacted as one set. The two trial questions were reads of paths the brief itself assigns (`internal/engine/brief.go:95,125`); asking the owner for them adds no oversight."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/round.go:421-425` and `internal/engine/round.go:530` (run tmp progress path; no project .scratch creation or round permission)\n- `internal/engine/runner.go:47-48` (ProjectRoot and progress-note comments)\n- `internal/engine/brief.go:95-98` (brief names supplied progress path)\n- `internal/agent/claude/pretool.go:53-256` (Evaluate, own-file reads and exact progress exception in contains)\n- `internal/agent/claude/pretool_test.go:45-192` (own-file reads, exact write boundaries, other-run and sibling-temp denial)\n- `internal/engine/round_test.go:80-129` (TestFreshSessionRestoresTheBrief, including no-scratch-permission)\n- `internal/engine/brief_test.go:45-56` (TestReadOnlyProgressBriefException)\n- `docs/design.md:1395-1422` and `docs/design.md:1770-1817`\n- `docs/state.md:20` and `docs/state.md:712-718`\n- `CHANGELOG.md:5-8`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `internal/engine/round_test.go`, TestFreshSessionRestoresTheBrief: instructions require the run tmp progress path; no-project-scratch checks no directory; no-scratch-permission checks Request.ProjectRoot is empty.\n- `internal/engine/brief_test.go`, TestReadOnlyProgressBriefException: brief names the supplied progress path.\n- `internal/agent/claude/pretool_test.go`, TestPretoolOwnFileReads and TestPretoolOwnFileReadQuotedPath: six own-file read commands allow; rm and redirect ask; progress parent and sibling writes deny.\n- `internal/agent/claude/pretool_test.go`, TestPretoolSiblingTempsDenied: Read, Grep and Glob cannot access another role temp beneath the shared progress parent, even with those tools allowlisted.\n- `internal/agent/claude/pretool_test.go`, TestPretoolOtherRunDirectoryDenied: another run directory denies even with matching Bash allowlist.\n- `internal/agent/claude/pretool_test.go`, exact-progress cases: only the note permits Edit/Write; progress other denies in TestPretoolPathsAndAllowlist."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Red tests above.\n2. Move the progress path; drop the `.scratch` mkdir and the `.scratch` progress exception.\n3. Add the read-only own-files rule to `Evaluate` before the allowlist ask.\n4. Docs: `docs/design.md`, `docs/state.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

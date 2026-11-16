@@ -83,6 +83,11 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 	if call.CWD != "" && !p.contains(call.CWD) {
 		return deny("tool cwd is outside worktree " + p.Worktree)
 	}
+	// This parser validates every path itself, including quoted paths that
+	// the conservative general Bash token scan below would split at spaces.
+	if call.ToolName == "Bash" && p.readOnlyOwnFiles(in.Command) {
+		return Approval{"allow", "read-only on own files"}
+	}
 	if call.ToolName == "Bash" {
 		for _, token := range strings.FieldsFunc(in.Command, func(r rune) bool { return unicode.IsSpace(r) || strings.ContainsRune(";&|<>()`\"'", r) }) {
 			// Flags such as --root=/path also name a path. ./... is a Go package
@@ -111,7 +116,7 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 				path = filepath.Join(p.Worktree, path)
 			}
 			n, err := countLines(path)
-			if err != nil {
+			if err != nil && !os.IsNotExist(err) {
 				return deny("cannot count Read lines: " + err.Error())
 			}
 			if n > 500 {
@@ -131,14 +136,79 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 		}
 		if strings.HasPrefix(rule, "Edit(") && strings.HasSuffix(rule, ")") && (call.ToolName == "Edit" || call.ToolName == "Write") {
 			// The runner's S358 grant is one escaped absolute file, not a glob.
-			path := strings.TrimPrefix(rule[5:len(rule)-1], "/")
-			unescape := strings.NewReplacer(`\\`, `\`, `\*`, "*", `\?`, "?", `\[`, "[", `\]`, "]", `\!`, "!")
-			if in.FilePath == unescape.Replace(path) {
+			if in.FilePath == progressPath(rule) {
 				return Approval{"allow", "exact progress file"}
 			}
 		}
 	}
 	return Approval{"ask", "call is not covered by the role allowlist"}
+}
+
+// progressPath decodes the runner's exact, escaped Edit grant (also for Write).
+func progressPath(rule string) string {
+	if !strings.HasPrefix(rule, "Edit(/") || !strings.HasSuffix(rule, ")") {
+		return ""
+	}
+	path := strings.TrimPrefix(rule[5:len(rule)-1], "/")
+	return strings.NewReplacer(`\\`, `\`, `\*`, "*", `\?`, "?", `\[`, "[", `\]`, "]", `\!`, "!").Replace(path)
+}
+
+var ownReadTokens = regexp.MustCompile(`"[^"\n\r]*"|'[^'\n\r]*'|[^\s"']+`)
+
+func (p ApprovalPolicy) readOnlyOwnFiles(command string) bool {
+	// Accept only simple reads. Never interpret shell syntax, expansions or
+	// escapes; an unrecognized form falls through to the role allowlist.
+	if shellOperators(command) != "" || strings.ContainsAny(command, "\\*?[]{}") {
+		return false
+	}
+	var tokens []string
+	end := 0
+	for _, span := range ownReadTokens.FindAllStringIndex(command, -1) {
+		if strings.TrimSpace(command[end:span[0]]) != "" || (end > 0 && span[0] == end) {
+			return false
+		}
+		token := command[span[0]:span[1]]
+		if token[0] == '\'' || token[0] == '"' {
+			token = token[1 : len(token)-1]
+		}
+		tokens = append(tokens, token)
+		end = span[1]
+	}
+	if strings.TrimSpace(command[end:]) != "" || len(tokens) < 2 {
+		return false
+	}
+	switch tokens[0] {
+	case "ls", "wc", "head", "tail", "cat", "stat":
+	default:
+		return false
+	}
+	paths := tokens[1:]
+	if (tokens[0] == "ls" && paths[0] == "-la") || (tokens[0] == "wc" && paths[0] == "-l") {
+		paths = paths[1:]
+	}
+	if len(paths) == 0 {
+		return false
+	}
+	for _, path := range paths {
+		if !filepath.IsAbs(path) {
+			return false
+		}
+		path = resolveAncestor(path)
+		own := p.ReportFile != "" && path == resolveAncestor(p.ReportFile)
+		if p.TempDir != "" {
+			rel, err := filepath.Rel(resolveAncestor(p.TempDir), path)
+			own = own || (err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))
+		}
+		for _, rule := range p.Allowlist {
+			if progress := progressPath(rule); progress != "" && path == resolveAncestor(progress) {
+				own = true
+			}
+		}
+		if !own {
+			return false
+		}
+	}
+	return true
 }
 
 func wildcard(pattern, text string) bool {
@@ -167,7 +237,12 @@ func (p ApprovalPolicy) contains(path string) bool {
 	if p.ReportFile != "" && path == resolveAncestor(p.ReportFile) {
 		return true
 	}
-	for _, root := range []string{p.Worktree, p.Scratch, p.AddDir, p.ToolResults, p.TempDir} {
+	for _, rule := range p.Allowlist {
+		if progress := progressPath(rule); progress != "" && path == resolveAncestor(progress) {
+			return true
+		}
+	}
+	for _, root := range []string{p.Worktree, p.Scratch, p.ToolResults, p.TempDir} {
 		if root == "" {
 			continue
 		}

@@ -30,6 +30,17 @@ import (
 //go:embed prompts/*.md
 var promptFS embed.FS
 
+// localSystem is ork's own system prompt for a claude-local role (S364,
+// adj 351, *proposed*). It is not a role prompt: it replaces Claude Code's
+// default system prompt, and the role prompt stays the user message. It holds
+// no placeholders and is under 2,000 characters.
+//
+//go:embed prompts/local-system.md
+var localSystem string
+
+// LocalSystemPrompt returns ork's own system prompt for a claude-local role.
+func LocalSystemPrompt() string { return localSystem }
+
 // ContractVersion is the version of slicer's relay contract that the prompts
 // are written against. It matches each prompt's first line. ork accepts the
 // versions in AcceptedContracts, which include this one.
@@ -51,6 +62,36 @@ func Prompt(name string) (string, error) {
 		return "", fmt.Errorf("role %q: %w", name, err)
 	}
 	return string(b), nil
+}
+
+// LocalImplementerPrompt replaces the cloud Work section for a small context
+// window, sharing the rules, owner questions and report contract unchanged.
+func LocalImplementerPrompt() (string, error) {
+	prompt, err := Prompt("implementer")
+	if err != nil {
+		return "", err
+	}
+	before, work, _ := strings.Cut(prompt, "## Work\n")
+	_, after, _ := strings.Cut(work, "## Later rounds")
+	return before + `## Work
+
+1. Write your progress note as instructed above before any reads.
+2. Read the project's AGENTS.md and this slice end to end, including Not in this
+   slice and the rest of the brief. The anchors were checked by the spec check;
+   trust the symbol names. Read only the source ranges needed for the current test.
+3. Start this slice unless the brief says it is already started. Touch no other item.
+4. For one test at a time: write one listed test, see it fail for the stated reason
+   and save its failure line, write the code, see it pass, update the note, then
+   proceed to the next test. If it passes before the code, fix the test.
+5. After the last test, mutation-check every new assertion once: break the product,
+   see that assertion fail for the right reason, restore and verify the file.
+   Then run the full test suite of each affected project once. Never ship a green
+   mutation. Use one variable per differential test and assert on real output.
+   If the premise is false, stop and report a refutation instead of inventing a fix.
+6. Update docs with the code. Before reporting, re-read Not in this slice and
+   check the diff contains only named files, or explain why. Verify cited symbols.
+
+` + "## Later rounds" + after, nil
 }
 
 // acceptedContracts is the owner-decided supported set: v11 and v12, v10 dropped

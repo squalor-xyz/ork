@@ -1302,6 +1302,27 @@ it records no wait.
 
 ## Roles
 
+*Proposed (S317):* before the gate, after review and the architect, ork reads
+the slice's Check section through `slicer show --json` and runs its backticked
+plain commands in the worktree. Leading `VAR=value` words become environment
+entries. Quoted literal arguments are supported; shell operators, expansions
+and paths outside the worktree are left as "not run by ork: orchestrator".
+Relative arguments are resolved against the worktree and cleaned before this
+containment check.
+HUMAN CHECK and `[AFTER LAND]` entries keep their existing workflow.
+Each command has the project's check timeout (ten minutes when unset), an exit
+status and its own log and check row. A nonzero exit, timeout or output on a
+line saying "must print nothing" sends the row's log to a fix round. All rows
+run even when one fails. Cancellation returns the context error without a row
+or a spent round. A command that cannot start, or returns an unexpected
+execution error, pauses at the current state instead of becoming a red row.
+A later fix reruns rows after a change outside `docs/` and `.slicer/`;
+product Markdown and `decisions/` changes count. Unchanged red evidence remains
+red. The cache also includes the Check section so changed commands are checked. The landing
+re-check runs the same rows after merging the moved base. The gate receives
+every row's command, result and log alongside the project check evidence.
+The run pane does not add a list of check rows.
+
 *Proposed (S309):* spec-check and gate briefs split slice Check commands into
 implementer-runnable and orchestrator-only commands, using the implementer's
 resolved allowlist. An environment assignment prefix, an absolute path outside
@@ -1392,7 +1413,7 @@ separately.
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
-- **Fresh local sessions** (S358, *proposed*; owner decisions 335, 336 and
+- **Fresh local sessions** (S358, *proposed*; owner decisions 335, 347, 348 and
   the relay's progress-permission and restart-record answers): a claude-local
   role whose current input context exceeds 70,000 tokens ends its session
   before auto-compaction. Cached input counts; output and cumulative usage
@@ -1407,8 +1428,12 @@ separately.
   expose the per-message context signal used by this Claude-specific change.
 
   The role replaces a short note after each step: done, next and open problems,
-  at `<project>/.scratch/progress-RUN-ROLE.md`. The brief explicitly allows
-  that one file outside the worktree, including for a read-only local role.
+  at `RUNDIR/tmp/progress-ROLE.md` in the run's state directory (S361,
+  adj 347). ork creates no project `.scratch/` directory for this note.
+  The brief explicitly allows
+  that one file outside the worktree, including for a read-only local role. For
+  the claude-local implementer the workspace limit itself names the note beside
+  the temp directory and the report path.
   The adapter adds its directory with `--add-dir` and grants only an exact
   absolute `Edit(//path)` rule, escaping path-pattern characters. Claude's
   Edit rules cover both Edit and Write; `Write(path)` rules do not match
@@ -1417,7 +1442,44 @@ separately.
   tree read-only. Report writing rules stay the same. A missing or unreadable
   note is named in the restart brief. Note reads use the bounded regular-file
   guards used for reports, refusing links and special files. ork retains the
-  note for later sessions; it is a scratch artifact, outside run.json.
+  note for later sessions; it is a run artifact, outside run.json.
+
+  *Proposed (S363):* the claude-local implementer gets a shorter Work variant
+  of the shared role prompt. Its resolved tool rules come immediately after the
+  role line. Before any reads, it writes the progress note with done, next and
+  open problems. Every few reads it appends an anchor log in the form
+  `file:line symbol: purpose`, keeping those anchors when it updates the note.
+  It trusts the spec check's anchors and symbol names instead of re-anchoring
+  or editing the slice. It reads only what the current test needs, then writes
+  one listed test, observes red, implements, observes green and updates the note
+  before the next test. Mutation checks and the full suites run once after the
+  last test: its Done when keeps each failing test as red then green and adds
+  one item for the single mutation check and full-suite run. Its fresh session reads the note first instead of rereading the
+  files in the anchor log. Without a readable, nonempty note, it starts at step
+  1 and writes the note first. Cloud implementer briefs remain byte-identical;
+  other local roles keep their existing prompts and restart instructions.
+  *Proposed (S365):* before a spec check, the daemon builds each item's run
+  plan and uses `engine.IsLocalRun` to identify local primary implementers.
+  The spec check writes a `## Orientation ID` section after `## Owner needed`
+  for each such item: quoted code to change, the nearest test to copy, file
+  and line anchors, symbol names and a short plan. ork matches the heading's
+  item ID without regard to case and ignores whitespace around the heading. It caps
+  each whole pack at 300 lines and 12,000 Unicode characters, including a
+  truncation notice when needed. It saves `orientation.md` in the item's spec
+  directory and copies it into the run directory before launch, including queued runs.
+  `round.go` loads that file for a claude-local implementer; `BuildBrief`
+  places it under `## Orientation` after the slice. Cloud implementers and
+  other roles receive no section. Missing packs preserve the existing launch
+  and brief behavior. A new spec check removes old packs before running, so
+  a failed check cannot leave its previous pack available. An item whose run
+  plan cannot be built still gets its spec checked, without a pack request.
+  Run and wave start requests pass their per-item lineup overrides to the
+  spec check in the optional `lineups` field, keyed by item ID. Each value
+  has the same shape as `RunParams.Lineup`; `items` remains unchanged.
+  The daemon uses those overrides when planning the implementer. Poller
+  checks without overrides use the matrix lineup. A cached verdict is stale
+  for a planned local implementer when its spec directory has no
+  `orientation.md`, so the spec check runs again to request the pack.
 - **UI pass.** A read-only role with its own prompt (`ui.md`: 80x24, ASCII and
   monospace, clipping, key hints, and the renders it writes), the same for every vendor. It runs beside
   the reviewer on a slice that touches the UI (see the review state). Its
@@ -1527,8 +1589,9 @@ separately.
   and time the machine slept is not counted in it (the sleep detector applies,
   S235). Expiry ends
   the same process-group context and records an `error` exit, so the existing
-  fallback rules try the next lineup row. It marks no vendor out. A denied
-  command or a read-only tree change still prevents fallback. Cloud roles
+  fallback rules try the next lineup row. It marks no vendor out. An allowlist
+  denial or a read-only tree change still prevents fallback. A round whose
+  denials all came from ork's approval point may fall back. Cloud roles
   retain the 30-minute silence limit and the `hung` owner-retry path.
   The wait for a vendor slot is not counted
   as silence. Time the machine slept is not counted as silence either
@@ -1602,8 +1665,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
 - **Fallback** (`vendor.fallback-trigger-v2`, decision 156): an exit
   classified as rate-limited, out of credits or error moves the role to the next eligible entry in
   its chain, in the same state and round. Auth and unclassified exits, an
-  unsuccessful round with permission denials, and a changed tree in a
-  read-only role still stop.
+  unsuccessful round with an allowlist denial, and a changed tree in a
+  read-only role still stop. A round whose denials all came from ork's
+  approval point may fall back.
   A `connection` exit (S329, adj 291, `vendor.connection-error`) first waits
   30 seconds, then resumes the same session once on the same row and round.
   The vendor slot is released during the wait. A second connection failure
@@ -1781,21 +1845,36 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   The hook calls `tool.approve` on the daemon socket with a per-attempt
   session id. The daemon owns the worktree and allowlist for that session;
   the tool call cannot replace them. Hard rules run before allowlist rules:
-  paths must stay in the worktree, the main checkout's `.scratch/`, the
-  S358 progress directory, this Claude session's `tool-results/` directory,
+  paths must stay in the worktree, the exact progress-note file,
+  this Claude session's `tool-results/` directory,
   the assigned role temp directory, or its exact report file. The report
   exception does not permit its parent directory or sibling files. These
   path exceptions retain the role allowlist and the Read cap.
+  The progress-note exception does not permit its parent directory,
+  sibling notes, or another role's temp directory. The adapter's
+  `--add-dir` parent does not grant that tree through the hook.
+  Spec checks also retain the main checkout's `.scratch/` path exception;
+  slice rounds do not grant that exception (S361).
   Symlinked ancestors are resolved. The transcript itself is denied.
   Bash commands are split on whitespace and shell operators; a token naming
   an outside absolute path or parent traversal is denied with that token in
   the reason. A supplied `Read` limit must be at most 500. An unbounded read
   of a file with more than 500 lines is denied with its count and guidance
   to Grep first and Read a range. Bounded reads may start beyond line 500.
+  A missing file passes the line-count check so Claude's Read can report
+  its absence; path boundaries and the role allowlist still apply.
   An allowlisted call proceeds. Bash wildcards cannot introduce shell
   operators or substitutions absent from the allowlist entry. For example,
   `Bash(go test*)` does not approve `go test; make test`, while a configured
   `Bash(go vet ./... && go test ./...*)` approves that check command.
+  S361 (adj 349) also allows simple `ls` (optionally `-la`), `wc`
+  (optionally `-l`), `head`, `tail`, `cat` and `stat` calls on only the
+  role's own temp directory and its descendants, exact report file or exact
+  progress note, with reason "read-only on own files". Paths must be
+  absolute; whole-path quotes are accepted. Shell operators, expansions,
+  redirects and other argument forms retain the role allowlist rules.
+  Reads of another run's directory remain denied by the hard path boundary,
+  even when a Bash allowlist entry matches the command.
   Other calls block on an owner permission question. `ork answer RUN allow`
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.
@@ -1807,6 +1886,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   [hook input and decision schema](https://code.claude.com/docs/en/hooks).
   Hook denials are returned with the role result even when Claude omits them
   from `permission_denials`; a successful round still proceeds.
+  The transient role result counts approval-point denials before deduplicating
+  vendor copies and adds the count across fresh-session restarts. An unsuccessful
+  round may fall back to the next role row when every denial came from that
+  approval point. An allowlist denial still blocks fallback. The count is not
+  persisted in the run record.
   A local spec check carries its project and checked item ids instead of a
   run id. While the check runs, the Roadmap or Waves sitting polls
   `spec.permission` with that scope and shows the same allow/deny choices.
@@ -1826,8 +1910,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `Bash(git -C * diff*)`, `Bash(git -C * log*)`, `Bash(adj check*)`,
   `Bash(adj lint*)`, `Bash(adj show*)` and `Bash(adj inbox*)`
   (`engine.default-allowlist`). A registry allowlist for a read-only role is
-  an error. A denial stops an unsuccessful round; a success proceeds. The
-  spike measured the claude allowlist
+  an error. An allowlist denial stops an unsuccessful round; a success proceeds.
+  The spike measured the claude allowlist
   denial: it exits 0 and shows only in `permission_denials`, so ork must read
   the JSON to see it. codex has no per-tool allowlist and ignores the registry allowlist. It may
   run write roles with `-s workspace-write` (`vendor.codex-write`, decision
@@ -1880,13 +1964,26 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   stream-json --verbose --include-partial-messages [--model M] [--effort E]`
   (M is the lineup entry's `model`, the alias itself for `opus@latest`;
   S244, *proposed*),
-  then, for claude-local only (S360, *proposed*; owner decision 2026-11-12),
-  `--disallowedTools WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill
-  --disable-slash-commands`, which leaves the role less fixed context to
-  prefill each turn (`claude --help` lists both flags). A UI pass keeps
-  `Skill` and the slash commands, since its brief names skills to load. The
-  flags come before `--allowedTools`, because `--disallowedTools` takes a
-  variadic list. A claude-local role's environment also sets
+  then, for claude-local only (S360, S364, *proposed*; owner decisions
+  2026-11-12 and 2026-11-15, adj 351 and 352), `--system-prompt-file F
+  --tools Read,Grep,Glob,Edit,Write,Bash --disable-slash-commands`, which
+  leaves the role less fixed context to prefill each turn (`claude --help`
+  lists the flags). `F` is ork's own short system prompt
+  (`internal/roles/prompts/local-system.md`, under 2,000 characters, embedded
+  in the binary), which replaces Claude Code's default one; the daemon
+  writes it to `local-system.md` in the role's temp directory before each
+  round, and the role prompt and brief stay the user message. `--bare` is not
+  used: it skips hooks, and the approval point is a hook. `--tools` limits
+  the built-in tools the model is sent, so S360's `--disallowedTools` list is
+  not passed any more. A read-only role gets the same set without Edit and
+  Write, unless it holds the progress-note grant (an Edit rule the hook
+  applies to Edit and Write), which needs both. A UI pass keeps `Skill` in
+  its tool set and the slash commands, since its brief names skills to load.
+  The flags come before `--allowedTools`, because `--tools` takes a variadic
+  list. The measured effect of these settings on a micro-task is recorded in
+  S364's notes. The S358 fresh-session threshold stays 70,000 tokens (adj
+  335); the daemon's environment variable `ORK_LOCAL_FRESH_TOKENS` overrides
+  it for a measurement only. A claude-local role's environment also sets
   `BASH_MAX_OUTPUT_LENGTH` to a character cap on one Bash result
   (`localBashOutputCap`, `internal/daemon/runner.go`), replacing an inherited
   value. The owner measured the variable on 2026-11-12 with claude 2.1.322
@@ -2177,10 +2274,25 @@ recording. Complete batches use the existing `RecordSpecAnswers` path, so
 the Owner decisions paragraph retains each decision key. Answers with no
 pending question are refused. With `--json`, batch results include
 `questions` (entries with `item`, `address` and the embedded
-`engine.SpecQuestion` fields: `ask`, optional `key`, `text`) and `answered`
+`engine.SpecQuestion` fields: `ask`, optional `key`, `text`, optional
+`previous` for a stale adj answer) and `answered`
 (`{item,key,answer}`, where keyless questions use `#N`
 and answer is the recorded `Label: summary` or free text). No interactive
 prompt text changes.
+*Proposed (S313):* before showing keyed spec questions, ork runs `adj check`
+and considers only an exact key match. A decided option that still matches
+the question's `Label: summary` is reused silently. Ork appends it to the
+slice's Owner decisions paragraph as `-> OPTION [KEY, adj N]`, carries that
+paragraph into the run, and files no new adj record. A removed or changed
+option is asked again with `decided as X on DATE`. A missing record is asked
+normally; a failed lookup also shows one notice line explaining why.
+An open record holds the item in the daemon, CLI and TUI without asking it
+again. The spec note says `waits on adj N`. The next check rereads the open
+record without rerunning the role. Other questions for the held item wait
+until its adj records are resolved. The spec-check role searches decided
+records with `adj find` before inventing a decision key. The local Claude
+spec-check allowlist includes that read-only query.
+
 The Roadmap launch uses the same sitting after its plan and before its
 confirmation (S184). Skipping leaves the slice held and closes the launch;
 a failed check blocks launch with no skip key. Editing the confirmed lineup
@@ -2770,7 +2882,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `status --project`) report that guide as an error and exit 1. JSON status
   keeps an empty projects array; JSON project errors use the usual error object.
 - `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
-  path and `adj`, in columns.
+  path, `adj` (or `-`), and `notify_command=CMD` when set, in columns.
+  The notification cell is cleaned to one line without terminal controls.
 - `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
   duplicate name, a relative path, or a path that is not an existing
@@ -2855,6 +2968,32 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   even when unlisted (adj 341, 342). These phrases do not activate defaults.
   Normal runs keep the cloud rows (adj 296); the trial explicitly lists
   `--spec-check-rows r35,r16` and `--ui-pass-rows r36,r14`, then clears them.
+  *Proposed (S311):* `--notify CMD` stores the per-project `notify_command`;
+  an empty value clears it. A notify-only call is allowed while runs are
+  unfinished (adj 279). `ork projects list` and `ork doctor` show it.
+  The whole string is one executable name or path, including spaces, with
+  no arguments or implicit shell (adj 358). Relative paths resolve in the
+  project directory and plain names use PATH; doctor checks resolution
+  without executing it.
+  The proposed events are `question`, `awaiting-approval`, `paused`,
+  `stopped` and `landed`; `failed` waits for a ledger read, as for `ork wait`
+  (owner decision 2026-11-15, notify.failed-event).
+  Successful run-record updates enqueue delivery when the effective event
+  changes. Delivery runs outside the run-manager lock, independently of the
+  TUI and its subscription cache. It reads the current project setting and
+  claims the occurrence in the record's `notified` list before calling
+  `clirun` with a ten-second timeout. Each fresh transition into a need is
+  attempted once, including across restart (adj 359); same-state updates
+  and reloads do not repeat it. A later question or approval in the same
+  run is a new occurrence. No setting means no
+  execution or notification metadata writes. Shutdown cancels and joins
+  deliveries. Failed delivery logs one cleaned line and leaves the run
+  unaffected; there is no retry. A crash after the claim can lose delivery.
+  The command receives `ORK_EVENT`, `ORK_PROJECT`, `ORK_RUN`, `ORK_ITEM`,
+  `ORK_STATE`, `ORK_REASON` and `ORK_NEXT` through its environment. The event
+  distinguishes a question pause and a landing from raw `paused` and
+  `committed` states. Reason and next-command text have terminal controls
+  removed and whitespace collapsed to one line.
   `--check` and `--round-check` (*proposed*, S295) are verified before they
   are stored, in the project's folder of the main checkout, which is the
   registry path and the same folder the round check uses in the worktree

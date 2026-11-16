@@ -203,15 +203,7 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 			if o.json {
 				return o.printJSON(daemon.ProjectsResult{Projects: list})
 			}
-			tw := tabwriter.NewWriter(o.stdout, 0, 0, 2, ' ', 0)
-			for _, p := range list {
-				if p.Adj {
-					fmt.Fprintf(tw, "%s\t%s\tadj\n", p.Name, p.Path)
-				} else {
-					fmt.Fprintf(tw, "%s\t%s\n", p.Name, p.Path)
-				}
-			}
-			tw.Flush()
+			printProjects(o.stdout, list)
 			return ExitOK
 		})
 	case "add":
@@ -304,12 +296,30 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 	return o.usage("unknown projects command %q", sub)
 }
 
+func printProjects(w io.Writer, list []registry.Project) {
+	tw := tabwriter.NewWriter(w, 0, 0, 2, ' ', 0)
+	for _, p := range list {
+		if p.Adj {
+			fmt.Fprintf(tw, "%s\t%s\tadj", p.Name, p.Path)
+		} else {
+			fmt.Fprintf(tw, "%s\t%s\t-", p.Name, p.Path)
+		}
+		if p.NotifyCommand != "" {
+			command := strings.Join(strings.Fields(runrec.PlainText(p.NotifyCommand)), " ")
+			fmt.Fprintf(tw, "\tnotify_command=%s", command)
+		}
+		fmt.Fprintln(tw)
+	}
+	tw.Flush()
+}
+
 // projectsSet is `ork projects set NAME --field VALUE...` (S161, *proposed*).
 // A flag that is given sets its field; a flag that is left out keeps the
 // registry value. An empty string or 0 clears a field.
 func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args []string) int {
 	push := fs.String("push", "", "on or off: push the base branch after a landing")
 	bell := fs.String("bell", "", "on or off: ring the terminal bell for this project")
+	notify := fs.String("notify", "", "the notification command; empty clears it")
 	autoLand := fs.String("auto-land", "", "on or off: approve and land a passing run with no approve call (on unless set off)")
 	uiDoc := fs.String("ui-doc", "", "the UI design doc, a path inside the project")
 	uiPassSkills := fs.String("ui-pass-skills", "", "comma-separated skills for a Claude UI pass; empty clears the list")
@@ -344,6 +354,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	p := daemon.SetProjectParams{Name: pos[0], NoVerify: *noVerify, DryRun: *dryRun}
 	given := map[string]bool{}
 	fs.Visit(func(f *flag.Flag) { given[f.Name] = true })
+	if given["notify"] {
+		p.NotifyCommand = notify
+	}
 	if given["push"] {
 		switch *push {
 		case "on", "off":
@@ -458,7 +471,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --bell, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --bell, --notify, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -486,6 +499,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 			return fmt.Sprintf("%s=%d", name, value)
 		}
 		var changed []string
+		if p.NotifyCommand != nil {
+			changed = append(changed, text("notify_command", proj.NotifyCommand))
+		}
 		if p.Push != nil {
 			changed = append(changed, map[bool]string{true: "push=on", false: "push=off"}[proj.Push])
 		}

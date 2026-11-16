@@ -17,6 +17,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
 | Check output per round (S04); `checks[].log` keeps the name, read on demand by `run.report` and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/checks-<round>.log`, and `land-checks-<round>.log` for the landing re-check |
 | A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
+| A claude-local role's progress note (S361, adj 347) | `~/.local/state/ork/runs/<run>/tmp/progress-<role>.md` |
 | The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
 | A spec check's identity, report and temp directory, plus owner answers tied to the spec fingerprint until run start or a spec change (S143); role verdicts live in daemon memory | `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` |
 | Fixture candidates: raw output of every non-ok vendor round or round with denials, mode 0600 | `~/.local/state/ork/fixtures/<vendor>/` |
@@ -131,6 +132,16 @@ Notes on the fields:
   that set neither leave it. A started run reads it, so it changes only with
   the check commands. An older ork refuses a registry with this key because
   `Load` uses strict keys.
+- `notify_command` (*proposed*, S311) stores the per-project notification
+  command. `ork projects set NAME --notify CMD` sets it; an empty value
+  removes the key. A notify-only change is allowed with unfinished runs
+  (adj 279). `ork projects list` and `ork doctor` display it; doctor warns
+  when it cannot resolve to an executable. The whole string is one executable
+  name or path, spaces included, with no arguments or implicit shell (adj
+  358). Relative paths resolve in the project directory; plain names use
+  the daemon's PATH. The events are `question`, `awaiting-approval`, `paused`,
+  `stopped` and `landed`. Like `ork wait`, `failed` waits for a ledger read
+  (owner decision 2026-11-15, notify.failed-event).
 - `permissions` is the per-role allowlist (`launch.permissions`). Its exact
   syntax per vendor waits on the vendor spike (design.md). *Proposed* (S265):
   `ork projects set NAME --preset go|python` writes the language's full
@@ -345,6 +356,19 @@ separate file: the registry keeps its version and strict keys.
 
 ## run.json
 
+*Proposed (S311):* `notified` is an optional list of occurrence keys, written
+as `EVENT@UTC-TIMESTAMP` with RFC3339 nanosecond precision. The timestamp is
+`wait_started_at` for a question, pause or approval, `updated_at` for a stop,
+and `landed_at` for a landing. The daemon records each key before attempting
+its executable. Each fresh transition is attempted once, including across
+restart (adj 359); same-state updates do not repeat it. A later need in the
+same run gets a new key, even if its event name is unchanged. An unsuccessful
+delivery does not retry that occurrence. The marker does not change state or
+timestamps. With no configured command it writes no notification metadata.
+Loading a record does not deliver an old state. A crash between the marker
+and execution can lose a notification; delivery is best effort, without
+retries. The version stays 1; older ork versions refuse the unknown key.
+
 ork writes `run.json` at mode 0600 (adj #106). It creates the runs root,
 each run directory, and role temp directories (including spec check temp
 directories) at mode 0700. Saving a run tightens its existing run directory
@@ -376,6 +400,18 @@ names its ordered commands and sends a denied finish command to `## Owner needed
 for the orchestrator. Other denied implementer checks belong in report item 6.
 Denied tracking is reviewer section (C) commentary or a gate "Deviation for the
 orchestrator" evidence line, never a finding (`roles.denied-tracking-step`).
+
+*Proposed (S365):* `orientation.md` is an optional run artifact, outside
+`run.json`. The spec check writes one `## Orientation ID` report section for
+each item with a planned local primary implementer. ork saves that item's
+bounded pack as `orientation.md` beside its `check.json` and `spec-check.md`,
+then copies it into the run directory at start. Each pack contains at most
+300 lines and 12,000 Unicode characters, with a truncation notice included in
+those limits. A new check removes the old pack even if the check fails.
+The claude-local implementer's brief includes the saved pack under
+`## Orientation`; cloud implementers and other roles omit it. No saved pack
+means no Orientation section. The file follows its spec or run directory's
+existing retention rules and is saved with mode 0600.
 
 `decisions` is optional (S116, *proposed*). When the owner answered the item's
 spec check questions, it holds the `Owner decisions (date)` paragraph that was
@@ -487,6 +523,22 @@ subfolder of its repository, each `$ COMMAND` line of the check log is followed
 by a line `(in libraries/p)`, the folder of the worktree the command ran in; a
 project at the repository root has no such line. Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
+*Proposed (S317):* slice Check commands add rows to `checks[]` with `slice:
+true`, `command`, `exit`, `ok`, `seconds`, `log` and `log_sha256`. Unsupported
+commands have `not_run: "not run by ork: orchestrator"` and no execution.
+Logs are `slice-checks-ROUND-ROW.log` or `land-slice-checks-ROUND-ROW.log`.
+`product_sha256` fingerprints product paths, modes and contents (including
+untracked files and symlink targets) plus the Check section. Only `docs/`
+and `.slicer/` are excluded. Markdown outside `docs/`, including role prompts
+and `CHANGELOG.md`, and files under `decisions/` invalidate the fingerprint.
+This persisted evidence survives restart;
+only complete unchanged batches are reused, retaining a red result when red.
+Rows rerun as part of the landing re-check after the moved base is merged,
+including a retry with that re-check pending. Landing skips them when the base
+has not moved and no re-check is pending. HUMAN CHECK and `[AFTER LAND]` lines
+add no row. Cancellation records no row and spends no round; a command that
+cannot start pauses at the current state without recording reusable evidence.
+
 *Proposed (S239):* `checks[].attempts` is 2 when the project command failed
 and ork ran it once more, and `checks[].flaky` is true when that second run
 passed; both are omitted otherwise, and an older reader ignores them. The check
@@ -708,10 +760,12 @@ one role row; `started_at` and the 90-minute runtime limit span all sessions.
 The row's tokens and cost include interrupted sessions; its session and PGID
 refer to the latest session. The dashboard keeps one row. The record version
 stays 1; older ork versions that enforce strict fields refuse `restarts`.
-The role's scratch note is `<project>/.scratch/progress-RUN-ROLE.md`, outside
+The role's progress note is `RUNDIR/tmp/progress-ROLE.md` (S361, adj 347), outside
 the run record, and is passed with the original brief and the worktree's diff
 stat when ork starts a fresh session. Read-only Claude local roles have an
 exact-file Edit/Write exception for this note and no other file.
+The note stays in the run's state directory; ork creates no project
+`.scratch/` directory for it.
 
 *Proposed (S255):* `chain_from` is an index into `roles[]` (omitted when 0).
 The vendor chain of every role is derived from the role records from that

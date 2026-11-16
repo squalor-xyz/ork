@@ -167,11 +167,14 @@ type Spec struct {
 	Effort      string // omitted when empty
 	ReadOnly    bool   // cloud: plan mode; claude-local: manual mode and read-only allowlist
 	Allowlist   []string
-	KeepSkills  bool   // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
-	Resume      string // session id to resume
-	ReportFile  string // read first when non-empty
-	FixtureDir  string // default DefaultFixtureDir()
-	TailBytes   int    // default 2048
+	KeepSkills  bool // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
+	// SystemPromptFile is the absolute path of the system prompt that replaces
+	// Claude Code's default one (claude-local only; S364, *proposed*).
+	SystemPromptFile string
+	Resume           string // session id to resume
+	ReportFile       string // read first when non-empty
+	FixtureDir       string // default DefaultFixtureDir()
+	TailBytes        int    // default 2048
 	// OnStart reports the process group after Start and before Wait (adj #85).
 	OnStart func(pgid int)
 	OnEvent func(Event)

@@ -289,8 +289,9 @@ type RemoveProjectParams struct {
 type SetProjectParams struct {
 	Name              string                          `json:"name"`
 	Push              *bool                           `json:"push,omitempty"`
-	Bell              *bool                           `json:"bell,omitempty"`      // S224, *proposed*: true or false; a started run does not read it
-	AutoLand          *bool                           `json:"auto_land,omitempty"` // S331, *proposed*; adj 281: false opts the project out of automatic landing; a started run reads it at its gate
+	Bell              *bool                           `json:"bell,omitempty"`           // S224, *proposed*: true or false; a started run does not read it
+	NotifyCommand     *string                         `json:"notify_command,omitempty"` // S311, proposed; empty clears it
+	AutoLand          *bool                           `json:"auto_land,omitempty"`      // S331, *proposed*; adj 281: false opts the project out of automatic landing; a started run reads it at its gate
 	UIDoc             *string                         `json:"ui_doc,omitempty"`
 	UIPassSkills      *[]string                       `json:"ui_pass_skills,omitempty"`
 	SpecCheckRows     *[]string                       `json:"spec_check_rows,omitempty"` // S258, *proposed*: the whole ordered list; [] clears it
@@ -316,7 +317,7 @@ type SetProjectParams struct {
 // SetsNothing reports whether the call sets no field. The struct holds maps,
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
-	return p.Push == nil && p.Bell == nil && p.AutoLand == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.UIPassRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
+	return p.Push == nil && p.Bell == nil && p.NotifyCommand == nil && p.AutoLand == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.UIPassRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
 		p.CheckCommand == nil && p.BuildCommand == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
 }

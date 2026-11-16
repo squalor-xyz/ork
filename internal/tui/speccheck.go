@@ -260,13 +260,16 @@ func (m *Model) applyCheck(msg wavesMsg) tea.Cmd {
 	if w.specs == nil {
 		w.specs = map[string]daemon.SpecItemResult{}
 	}
+	var notices []string
 	for _, r := range msg.check.Items {
 		w.specs[r.Item] = r
+		notices = append(notices, r.Notices...)
 	}
+	m.actionStatus = strings.Join(notices, "; ")
 	var asks []specAsk
 	for _, p := range w.items() {
 		r := w.specs[p.Item]
-		if r.Ready {
+		if r.Ready || len(r.WaitsOn) > 0 {
 			continue
 		}
 		for i, q := range r.Questions {
@@ -295,12 +298,21 @@ func (m *Model) askLaunch() tea.Cmd {
 	}
 	if len(ready) == 0 {
 		if len(held) > 0 {
-			m.actionStatus = "No item is ready: " + strings.Join(held, ", ") + " wait on spec questions"
+			m.actionStatus = "No item is ready: " + strings.Join(w.heldNotes(held), "; ")
 		}
 		return nil
 	}
-	m.confirm = &runAction{verb: "wave", project: w.project, items: ready, held: held}
+	m.confirm = &runAction{verb: "wave", project: w.project, items: ready, held: w.heldNotes(held)}
 	return nil
+}
+
+// heldNotes gives each held item the same explanation as its spec row.
+func (w *wavesState) heldNotes(items []string) []string {
+	var notes []string
+	for _, id := range items {
+		notes = append(notes, id+" "+specNote(w.specs[id]))
+	}
+	return notes
 }
 
 func (m *Model) sittingKey(state *specState, done func() tea.Cmd, msg tea.KeyPressMsg) tea.Cmd {
@@ -435,6 +447,13 @@ func specNote(r daemon.SpecItemResult) string {
 	if r.Ready {
 		return "spec ready"
 	}
+	if len(r.WaitsOn) > 0 {
+		var names []string
+		for _, id := range r.WaitsOn {
+			names = append(names, fmt.Sprintf("adj %d", id))
+		}
+		return "waits on " + strings.Join(names, ", ")
+	}
 	noun := "spec questions"
 	if len(r.Questions) == 1 {
 		noun = "spec question"
@@ -445,7 +464,7 @@ func specNote(r daemon.SpecItemResult) string {
 // heldWithQuestions reports whether a ticked item waits on spec questions.
 func (w *wavesState) heldWithQuestions() bool {
 	for _, p := range w.items() {
-		if r, ok := w.specs[p.Item]; ok && !r.Ready && len(r.Questions) > 0 {
+		if r, ok := w.specs[p.Item]; ok && !r.Ready && len(r.WaitsOn) == 0 && len(r.Questions) > 0 {
 			return true
 		}
 	}
@@ -505,6 +524,9 @@ func (m *Model) sittingParts(w *specState, width int) (overviewView, []string) {
 	out.body = append(out.body, "")
 	add(dim, ask.item+"  "+title, "")
 	add(th.Heading.Render, fmt.Sprintf("[%s %d/%d] ", ask.item, ask.n, ask.of)+askTitle(ask.q), "")
+	if ask.q.Previous != "" {
+		add(dim, ask.q.Previous, "  ")
+	}
 	if a := ask.q.Ask; a != nil {
 		for i, o := range a.Options {
 			text := fmt.Sprintf("%d. %s: %s", i+1, o.Label, o.Summary)

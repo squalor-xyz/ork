@@ -388,7 +388,7 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 		if w != nil && w.request == msg.request {
 			w.starting = false
 			if msg.err == nil {
-				// Ticked items that were not in the call wait on spec questions.
+				// Ticked items that were not in the call retain their spec holds.
 				var waiting []string
 				for _, p := range w.items() {
 					if !slices.ContainsFunc(msg.action.items, func(a daemon.RunParams) bool { return a.Item == p.Item }) {
@@ -396,11 +396,7 @@ func (m *Model) applyWaves(msg wavesMsg) tea.Cmd {
 					}
 				}
 				if len(waiting) > 0 {
-					verb := "waits"
-					if len(waiting) > 1 {
-						verb = "wait"
-					}
-					status += "; " + strings.Join(waiting, ", ") + " " + verb + " on spec questions"
+					status += "; " + strings.Join(w.heldNotes(waiting), "; ")
 				}
 				kept := map[string]daemon.RunParams{}
 				for _, id := range waiting {

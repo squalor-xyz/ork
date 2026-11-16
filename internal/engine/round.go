@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -22,6 +23,17 @@ import (
 const heartbeatInterval = 10 * time.Minute
 
 const localFreshTokens = 70000
+
+// localFreshLimit is the context size above which a claude-local session ends
+// and restarts fresh (adj 335). ORK_LOCAL_FRESH_TOKENS overrides it so a
+// measurement can try another size (S364, *proposed*); it is not a setting, and
+// changing adj 335 is the owner's call.
+func localFreshLimit() int {
+	if n, err := strconv.Atoi(os.Getenv("ORK_LOCAL_FRESH_TOKENS")); err == nil && n > 0 {
+		return n
+	}
+	return localFreshTokens
+}
 
 // round is one role round the state machine asks for.
 type round struct {
@@ -418,12 +430,16 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Finish:       r.finish,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
+	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
+		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
+		if err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fail("read orientation", err)
+		}
+		in.Orientation = string(pack)
+	}
 	progressFile := ""
 	if entry.Vendor == "claude-local" {
-		progressFile = filepath.Join(e.proj.Path, ".scratch", fmt.Sprintf("progress-%s-%s.md", rec.ID, r.role))
-		if err := os.MkdirAll(filepath.Dir(progressFile), 0700); err != nil {
-			return fail("progress directory", err)
-		}
+		progressFile = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("progress-%s.md", r.role))
 		in.ProgressFile = progressFile
 	}
 	if r.role == RoleGate {
@@ -435,6 +451,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		body := "No round check result is available. Do not claim tests green without evidence."
 		if len(rec.Checks) > 0 {
 			check := rec.Checks[len(rec.Checks)-1]
+			for i := len(rec.Checks) - 1; i >= 0; i-- {
+				if !rec.Checks[i].Slice {
+					check = rec.Checks[i]
+					break
+				}
+			}
 			log, err := ReadReport(e.run.Dir(), check.Log)
 			if err != nil {
 				return fail("gate check evidence", err)
@@ -526,16 +548,17 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	var spentTokens int
 	var spentCost float64
 	var denials []runrec.DeniedCommand
+	var approvalDenials int
 	for {
 		sessionCtx, endSession := context.WithCancel(runCtx)
 		var contextTokens atomic.Int64
 		res, runErr = e.d.Runner.Run(sessionCtx, Request{
-			RunID: rec.ID, ProjectRoot: e.proj.Path,
-			Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
+			RunID: rec.ID,
+			Role:  r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 			ProgressFile: progressFile,
 			OnContext: func(tokens int) {
-				if entry.Vendor == "claude-local" && tokens > localFreshTokens && contextTokens.CompareAndSwap(0, int64(tokens)) {
+				if entry.Vendor == "claude-local" && tokens > localFreshLimit() && contextTokens.CompareAndSwap(0, int64(tokens)) {
 					endSession()
 				}
 			},
@@ -548,6 +571,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		res.Tokens += spentTokens
 		res.CostUSD += spentCost
 		res.Denials = append(denials, res.Denials...)
+		res.ApprovalDenials += approvalDenials
 		tokens := int(contextTokens.Load())
 		if tokens == 0 || runCtx.Err() != nil || !errors.Is(runErr, context.Canceled) {
 			break
@@ -560,6 +584,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			break
 		}
 		progress, err := ReadReport(filepath.Dir(progressFile), filepath.Base(progressFile))
+		savedProgress := err == nil && strings.TrimSpace(progress) != ""
 		if err != nil {
 			progress = "No readable progress note is available."
 		}
@@ -567,9 +592,17 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			runErr = fmt.Errorf("restart old report: %w", err)
 			break
 		}
-		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. Continue its saved work; do not repeat completed steps.\n\nProgress note:\n\n" + progress + "\n\nGit diff --stat:\n\n" + stat + "\n"
+		instruction := "Continue its saved work; do not repeat completed steps."
+		if r.role == RoleImplementer {
+			instruction = "Read the progress note first; do not reread the files listed in its anchor log. Continue its saved work; do not repeat completed steps."
+			if !savedProgress {
+				instruction = "No progress was saved; start at step 1 and write the note first."
+			}
+		}
+		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. " + instruction + "\n\nProgress note:\n\n" + progress + "\n\nGit diff --stat:\n\n" + stat + "\n"
 		session = ""
 		spentTokens, spentCost, denials = res.Tokens, res.CostUSD, res.Denials
+		approvalDenials = res.ApprovalDenials
 		if err := e.run.Update(func(rr *runrec.Record) {
 			role := &rr.Roles[idx]
 			role.Restarts = append(role.Restarts, runrec.SessionRestart{At: e.d.now(), Tokens: tokens})
@@ -654,7 +687,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		text, file = e.readReport(reportPath, reportName, res.Report)
 	}
 	fallback := fallbackExit(class)
-	fallingBack := fallback && len(res.Denials) == 0 && !changed && statusErr == nil && nextEntry(entries, entryIndex, class) < len(entries)
+	fallingBack := fallback && len(res.Denials) == res.ApprovalDenials && !changed && statusErr == nil && nextEntry(entries, entryIndex, class) < len(entries)
 	err = e.run.Update(func(rr *runrec.Record) {
 		// A sibling round of the same state may have paused the slice already;
 		// its pause context is not this round's to clear.

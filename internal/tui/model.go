@@ -1406,7 +1406,7 @@ type runAction struct {
 	cleanupCommand           string
 	worktreeGone             bool // cleanup: the daemon skips git worktree remove, so the confirm omits it (S153)
 	items                    []daemon.RunParams
-	held                     []string // wave: ticked items left out because they wait on spec questions
+	held                     []string // wave: notes for ticked items left out of the launch
 	lineup                   map[string][]runrec.LineupEntry
 	budgets                  *registry.Budgets
 	plan                     *daemon.RunPlan
@@ -1523,12 +1523,8 @@ func (a runAction) prompt() string {
 	}
 	prompt := a.command() + "? [y/N] (Enter is No)"
 	if len(a.held) > 0 {
-		verb := "waits"
-		if len(a.held) > 1 {
-			verb = "wait"
-		}
 		// Outside the command: ork does not run it with these items.
-		prompt += "  " + strings.Join(a.held, ", ") + " " + verb + " on spec questions"
+		prompt += "  " + strings.Join(a.held, "; ")
 	}
 	return prompt
 }

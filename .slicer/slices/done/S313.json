@@ -1,0 +1,39 @@
+{
+  "id": "S313",
+  "title": "Spec check: reuse a decided adj answer for the same decision key instead of asking again",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* The same decision came up as a new question on slice after slice: how to run a Check line that no role can run (S244, S103), which stale paths to rewrite (S310), what a gate may use as test evidence (S309). Each time the owner answered it interactively and the answer lived only in that slice's Owner decisions paragraph, so the next spec check asked it again with a fresh key.\n\nAdj already stores a decided answer under a key, and `adj check KEY` says `decided` with the option (AGENTS.md, Decisions). The spec check can use that:\n\n- When the spec-check role writes a question with a decision key, ork looks the key up with `adj check KEY`. If it is `decided`, ork treats the question as answered by that record, records it in the slice's Owner decisions paragraph with `[KEY, adj ID]`, and does not ask.\n- The spec-check prompt (`internal/roles/prompts/spec-check.md`) tells the role to reuse an existing key for the same topic (`adj find` over decided records) before inventing one.\n- A record that is `open` is not asked again either (AGENTS.md: if open, do not ask again); the item is held with \"waits on adj ID\" naming it.\n\nThis only works if answers are filed in adj. S314 makes filing the default. Until then the lookup finds only records the owner filed by hand.\n\nOpen questions:\n- Q1 scope of reuse. (a) reuse only when the key matches exactly (recommended: predictable). (b) also suggest a near match and ask the owner to confirm.\n- Q2 a decided record that no longer fits (the slice's text changed). (a) the owner can reject it for one slice by answering anyway (recommended: the question is shown with \"decided as X on DATE, press enter to accept\"). (b) never shown again."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/speccheck.go:649` (`RecordSpecAnswers`; reuse resolution beside it)\n- `internal/engine/answer_adj.go:45` (`fileDecision`; existing answer path, no change needed)\n- `internal/adjcli/adjcli.go:111` (`Check`; retain full exact-key record for reuse)\n- `internal/daemon/speccheck.go` and `internal/daemon/speccheck_test.go` (cache, holds, answers and launch guard)\n- `internal/daemon/runner.go` and `internal/daemon/runner_test.go` (allow the required adj find query for local Claude spec checks)\n- `internal/cli/wave.go` and `internal/cli/spec_questions_test.go` (shared run/wave sitting and stale answer display)\n- `internal/tui/speccheck.go`, `internal/tui/launch.go`, `internal/tui/model.go`, `internal/tui/waves.go`, `internal/tui/waves_test.go`, `internal/tui/speccheck_test.go` (held notes, confirmation/status, notices and stale answer display)\n- `testdata/golden/waves-open-adj.txt`\n- `testdata/golden/waves-sitting-confirm-80x24-color.txt`, `testdata/golden/waves-sitting-confirm-80x24-mono.txt`, `testdata/golden/waves-sitting-confirm-120x40-color.txt`, `testdata/golden/waves-sitting-confirm-120x40-mono.txt`\n- `testdata/golden/waves-launched-80x24-color.txt`, `testdata/golden/waves-launched-80x24-mono.txt`, `testdata/golden/waves-launched-120x40-color.txt`, `testdata/golden/waves-launched-120x40-mono.txt`\n- `internal/roles/prompts/spec-check.md` and `internal/roles/roles_test.go:618` (`TestSpecCheckPrompt`)\n- `docs/design.md`, `docs/guide.md`, `docs/dashboard.md`, `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestSpecCheckReusesAdjDecision`: matching exact decided key hides the question, records OPTION [KEY, adj N], starts the run with the reused paragraph in its implementer brief and makes no adj write; open holds without asking and refuses launch, then resolves when adj is decided; not found and substring-only matches still ask; stale options show the old answer/date and ask again; failed lookup still asks with one notice line.\n- `TestBatchOpenAdjHoldsWithoutPrompt`: run and wave hold an open adj record without requesting an answer and show waits on adj N.\n- `TestWavesOpenAdjHold`: the spec pane and confirmation show waits on adj N, open no sitting for that record and keep the item held; golden view pins the row.\n- `TestWavesAdjHoldAfterLaunch`: the completed launch status names the open adj record.\n- `TestWavesAdjHoldWithRemainingQuestion`: an adj-held item with another question still offers launch/recheck, not answer spec questions.\n- `TestWavesOnlyAdjHold`: when only an adj-held item is ticked, the all-held status names its adj record.\n- `TestWavesAllLookupNotices`: notices from every checked item appear together.\n- `TestSpecStaleAdjAnswerIsShown` and `TestWavesStaleAdjAnswerIsShown`: CLI and TUI render the stale answer and date under the question heading; CLI indents it two spaces.\n- `TestSpecCheckPrompt`: pinned sentence requires adj find over decided records before inventing a new key.\n- `TestClaudeReadOnlyRoleArguments/spec-check/claude-local`: launcher arguments include the required read-only adj find query only for spec checks."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. After the spec-check result is parsed, for each keyed question call `adj check KEY` through the adj client (read only) and drop the questions it answers.\n2. Record each reused answer in the Owner decisions paragraph with the record id; never write a new adj record for a reused answer.\n3. Add the lookup sentence to `spec-check.md` and its pinned test.\n4. Docs and CHANGELOG, marked *proposed*. Do not run `adj decide`, `adj reject` or `adj supersede` from this code.\n\nOwner decisions (2026-11-09, accepted the recommended answers): scope of reuse -> (a) reuse only when the key matches exactly (recommended: predictable) [specs.answer-reuse-scope, adj 226]. a decided record that no longer fits (the slice's text changed) -> (a) the owner can reject it for one slice by answering anyway (recommended: the question is shown with \"decided as X on DATE, press enter to accept\") [specs.answer-reuse-stale, adj 227].\n\nOwner decisions (2026-11-15): When a decided record's option still fits, is the question hidden, or shown with \"press enter to accept\"? -> hide when it fits: reuse silently when the record's option is one of the question's options. Show \"decided as X on DATE\" with the old answer, and ask again, only when that option no longer exists (failing tests 1 and 4).. How is a keyed question whose adj record is `open` held, and where does \"waits on adj N\" show? -> daemon, CLI and TUI: as option 1, and `specNote` shows \"waits on adj N\". This changes the spec-check pane text and the golden views, so it needs the UI pass (r14) the slice's Check mentions.."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`: all exit 0; gofmt prints no paths.\n- UI pass (r14) required: open adj records change the spec-check pane note to waits on adj N; reviewer/orchestrator runs the UI pass."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

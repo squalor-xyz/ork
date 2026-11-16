@@ -34,7 +34,7 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
-                           │  ork wave start ork A? [y/N] (Enter is No)  B waits on spec questions
+                           │  ork wave start ork A? [y/N] (Enter is No)  B waits on 2 spec questions
                            │[90m────────────────────────────────────────────────────────────────────────────────────────────[m
                            │ y [2mstart[m; n [2mcancel[m
                            │ 2 projects | refreshed 16:42:00

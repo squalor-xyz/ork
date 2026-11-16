@@ -4,14 +4,76 @@ package engine
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestSavedOrientationReachesOnlyLocalImplementer(t *testing.T) {
+	for _, vendor := range []string{"claude-local", "claude"} {
+		t.Run(vendor, func(t *testing.T) {
+			h := newHarness(t)
+			h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: vendor, Model: "model"}}
+			e, err := New(context.Background(), h.deps, h.cfg)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(h.deps.Store.RunDir(e.Snapshot().ID), "orientation.md"), []byte("quoted function and nearest test"), 0600); err != nil {
+				t.Fatal(err)
+			}
+			if err := e.Run(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			for _, req := range h.runner.requests() {
+				want := vendor == "claude-local" && req.Role == RoleImplementer
+				if strings.Contains(req.Brief, "## Orientation\n\nquoted function and nearest test") != want {
+					t.Errorf("orientation in %s %s brief: want %v", vendor, req.Role, want)
+				}
+			}
+		})
+	}
+}
+
+func TestLocalRunWithoutOrientation(t *testing.T) {
+	h := newHarness(t)
+	h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: "claude-local", Model: "model"}}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if strings.Contains(req.Brief, "## Orientation") {
+			t.Fatal("missing pack produced an Orientation section")
+		}
+	}
+}
+
+func TestOrientationBriefSelection(t *testing.T) {
+	for _, tc := range []struct {
+		role, vendor string
+		want         bool
+	}{
+		{RoleImplementer, "claude-local", true},
+		{RoleImplementer, "claude", false},
+		{RoleReviewer, "claude-local", false},
+	} {
+		t.Run(tc.role+"/"+tc.vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.Vendor, in.Orientation = tc.role, tc.vendor, "saved pack"
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(got, "## Orientation\n\nsaved pack") != tc.want {
+				t.Fatalf("orientation selection: want %v", tc.want)
+			}
+		})
+	}
+}
 
 func TestFirstRowBriefIsUnchanged(t *testing.T) {
 	h := fallbackHarness(t, RoleImplementer)
@@ -42,10 +104,179 @@ func baseBrief() BriefInput {
 	}
 }
 
+func localImplementerBrief(t *testing.T) string {
+	t.Helper()
+	in := baseBrief()
+	in.Vendor = "claude-local"
+	in.ProgressFile = "/state/runs/r1/tmp/progress-implementer.md"
+	in.Allow = []string{"Read", "Edit", "Write", "Bash(go test*)"}
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return got
+}
+
+func TestLocalImplementerStartsWithToolsAndNote(t *testing.T) {
+	got := localImplementerBrief(t)
+	_, rest, _ := strings.Cut(got, "\n")
+	t.Run("tool-rules-first", func(t *testing.T) {
+		if !strings.HasPrefix(rest, "\n## Tool rules\n\nAllowed forms, verbatim: Read; Edit; Write; Bash(go test*);") {
+			t.Fatal("tool rules are not first after the role line")
+		}
+	})
+	for _, phrase := range []string{"one plain command per call", "no pipes", "Write your progress note now", "/state/runs/r1/tmp/progress-implementer.md"} {
+		t.Run(phrase, func(t *testing.T) {
+			prefix := got[:max(0, strings.Index(got, "Read the project's"))]
+			if !strings.Contains(prefix, phrase) {
+				t.Fatalf("missing early instruction: %s", phrase)
+			}
+		})
+	}
+}
+
+func TestCloudImplementerByteBaseline(t *testing.T) {
+	for _, vendor := range []string{"claude", "codex", "grok"} {
+		t.Run(vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Vendor = vendor
+			in.Allow = []string{"Read", "Edit", "Write", "Bash(go test*)"}
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "a806631ced476e50afc2ff4e909810f526cbfc447a6aeb5949e8842ecf230b27"
+			if vendor == "claude" {
+				want = "4172e283479a9995869c476015e7996a5fc5068b14b72c36bd84a77259719d5f"
+			}
+			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
+				t.Fatalf("%s cloud brief changed", vendor)
+			}
+		})
+	}
+}
+
+func TestLocalImplementerTrustsCheckedAnchors(t *testing.T) {
+	got := localImplementerBrief(t)
+	_, work, _ := strings.Cut(got, "## Work\n")
+	work, _, _ = strings.Cut(work, "## Later rounds")
+	for _, phrase := range []string{"anchors were checked by the spec check", "trust the symbol names"} {
+		t.Run(phrase, func(t *testing.T) {
+			if !strings.Contains(work, phrase) {
+				t.Fatalf("local Work missing: %s", phrase)
+			}
+		})
+	}
+	for _, phrase := range []string{"Re-anchor", "slicer edit", "the files the slice names"} {
+		t.Run("omit/"+phrase, func(t *testing.T) {
+			if strings.Contains(work, phrase) {
+				t.Fatalf("local Work still requests %s", phrase)
+			}
+		})
+	}
+}
+
+func TestLocalImplementerOneTestAtATime(t *testing.T) {
+	got := localImplementerBrief(t)
+	_, got, _ = strings.Cut(got, "## Work\n")
+	got, _, _ = strings.Cut(got, "## Later rounds")
+	steps := []string{"write one listed test", "see it fail", "write the code", "see it pass", "update the note", "next test", "After the last test", "mutation-check every new assertion", "full test suite"}
+	for i, phrase := range steps {
+		t.Run(phrase, func(t *testing.T) {
+			pos := strings.Index(got, phrase)
+			previous := -1
+			if i > 0 {
+				previous = strings.Index(got, steps[i-1])
+			}
+			if pos < 0 || pos <= previous || (i > 0 && previous < 0) {
+				t.Fatalf("missing or out-of-order local step: %s", phrase)
+			}
+		})
+	}
+}
+
+func TestLocalImplementerAnchorLog(t *testing.T) {
+	got := localImplementerBrief(t)
+	for _, phrase := range []string{"Append an anchor log every few reads", "file:line symbol: purpose"} {
+		t.Run(phrase, func(t *testing.T) {
+			if !strings.Contains(got, phrase) {
+				t.Fatalf("missing note instruction: %s", phrase)
+			}
+		})
+	}
+}
+
+func TestLocalImplementerWorkspaceLimitNamesNote(t *testing.T) {
+	got := localImplementerBrief(t)
+	_, limit, ok := strings.Cut(got, "## Workspace limit\n")
+	if !ok {
+		t.Fatal("no workspace limit section")
+	}
+	limit, _, _ = strings.Cut(limit, "\n## ")
+	if !strings.Contains(limit, "/state/runs/r1/tmp/progress-implementer.md") {
+		t.Fatal("workspace limit does not name the progress note as a write exception")
+	}
+}
+
+func TestLocalImplementerMutationCheckRunsOnce(t *testing.T) {
+	in := baseBrief()
+	in.Vendor = "claude-local"
+	in.ProgressFile = "/state/runs/r1/tmp/progress-implementer.md"
+	in.Allow = []string{"Read", "Edit", "Write", "Bash(go test*)"}
+	in.SliceJSON = `{"id":"S04","slice":{"sections":[{"heading":"Failing tests","body":"- ` + "`TestA`" + `: first.\n- ` + "`TestB`" + `: second."}]}}`
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, done, ok := strings.Cut(got, "## Done when\n")
+	if !ok {
+		t.Fatal("no Done when section")
+	}
+	done, _, _ = strings.Cut(done, "\n## ")
+	if n := strings.Count(done, "mutation-check every new assertion"); n != 1 {
+		t.Fatalf("Done when names the mutation check %d times, want once", n)
+	}
+	for _, phrase := range []string{"TestA", "TestB"} {
+		if !strings.Contains(done, phrase+"`: first.") && !strings.Contains(done, phrase+"`: second.") {
+			t.Fatalf("Done when lost the %s item", phrase)
+		}
+	}
+	if !strings.Contains(done, "After the last listed test, mutation-check every new assertion once") || !strings.Contains(done, "full test suite of each affected project once") {
+		t.Fatal("Done when lacks the once-after-the-last-test item")
+	}
+	cloud := baseBrief()
+	cloud.Vendor = "claude"
+	cloud.Allow = in.Allow
+	cloud.SliceJSON = in.SliceJSON
+	cb, err := BuildBrief(cloud)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Count(cb, "mutation-check every new assertion") != 2 {
+		t.Fatal("cloud Done when no longer mutation-checks each failing test")
+	}
+}
+
+func TestLocalImplementerBriefIsShorter(t *testing.T) {
+	local := localImplementerBrief(t)
+	in := baseBrief()
+	in.Vendor = "claude"
+	in.ProgressFile = "/state/runs/r1/tmp/progress-implementer.md"
+	in.Allow = []string{"Read", "Edit", "Write", "Bash(go test*)"}
+	cloud, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Logf("local=%d bytes cloud=%d bytes", len(local), len(cloud))
+	if len(local) >= len(cloud) {
+		t.Fatal("local implementer brief is not shorter than cloud")
+	}
+}
+
 func TestReadOnlyProgressBriefException(t *testing.T) {
 	in := baseBrief()
 	in.Vendor, in.Role, in.ReadOnly = "claude-local", RoleReviewer, true
-	in.ProgressFile = "/p/.scratch/progress-run-reviewer.md"
+	in.ProgressFile = "/state/runs/r1/tmp/progress-reviewer.md"
 	got, err := BuildBrief(in)
 	if err != nil {
 		t.Fatal(err)
@@ -287,7 +518,7 @@ func TestGatePromptUsesOrkEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"must accept ork's round check result", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
+	for _, want := range []string{"must accept ork's round check result", "The slice's own Check rows are required tests-green evidence", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("gate brief lacks %q", want)
 		}

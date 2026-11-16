@@ -1,0 +1,39 @@
+{
+  "id": "S317",
+  "title": "Run the slice's own Check lines after each round, not only the project check command",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* ork's per-round check is the project's one `check_command` (`go vet ./... && go test ./...` for ork), or `slicer check --json` when unset (`runChecks`, `internal/engine/states.go:268-327`). A slice's Check section usually asks for more: `go test -race -count=1 ./...`, a focused `-run` list, `GOOS=linux go vet ./internal/engine` and `GOOS=darwin go vet ./internal/engine`, `gofmt -l .`. On S194 the gate could not run them and the orchestrator ran them by hand; since S309 the gate trusts ork's check result as the test evidence, which is weaker than what the slice asked for. S309 already splits a Check section into lines a role can run and lines only the orchestrator can run (`checkCommandRunnable`, `internal/engine/brief.go:327`).\n\nWhat this slice adds: ork itself runs the slice's Check lines.\n- After the last implementer round and before the gate, ork runs every Check line that is a plain command (no pipe, no shell syntax; an environment prefix such as `GOOS=linux` is parsed into the process environment) in the worktree, outside the role's sandbox, and records each as a check row beside the project check (`CheckRecord`, `internal/runrec/record.go:96-103`), with its command, exit and log.\n- The gate brief lists each row's result, so tests-green is the slice's own definition, not ork's default.\n- A line ork cannot parse into a plain command is listed as \"not run by ork: orchestrator\" in the brief, as S309 does.\n- A failing Check row fails the round like the project check does, with its log as the fix-round input.\n\nSlicer overlap: slicer has no runner for a slice's Check section (`slicer check` validates tracking only), so this is ork's.\n\nOpen questions:\n- Q1 which lines run. (a) every line that is one backticked command with optional leading `VAR=value` words (recommended). (b) only lines tagged in the section. (c) all lines, through a shell.\n- Q2 cost. A full `-race` suite takes about 2.5 minutes on this repo (S194 gate). (a) run once before the gate, not every round (recommended). (b) every round.\n- Q3 landing. (a) the landing re-check runs the same rows when the base moved (recommended). (b) only the project check.\n- Q4 slices with a Check line that needs the owner (a HUMAN CHECK) are untouched: confirm."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/states.go:435` (`runChecks`; `gate`, `runSliceChecks`, `productContent`)\n- `internal/engine/brief.go:371` (`sliceChecks`; shared splitter and `checkCommandRunnable`)\n- `internal/engine/round.go:438` (project evidence beside slice rows)\n- `internal/engine/land.go:160` (`mergeBaseIn` re-check)\n- `internal/runrec/record.go:121` (`CheckRecord`)\n- `internal/engine/slicechecks_test.go` (slice Check regression tests and review fixes)\n- `internal/engine/brief_test.go` (pinned gate evidence)\n- `internal/engine/approval_test.go` (show reply sequence adjustment)\n- `internal/engine/filescope_test.go` (show reply sequence adjustment)\n- `internal/roles/prompts/gate.md`\n- `docs/design.md:1305`\n- `docs/state.md:491`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestSliceChecksRunBeforeGateWithEnvironmentAndEvidence`: after review and architect, execute argv/environment in the worktree and include every row in gate evidence.\n- `TestSliceChecksFailuresReachFixBrief`: nonzero exit or output on a must-print-nothing row sends the row log to the fix brief.\n- `TestSliceChecksRecordUnsupportedCommands`: pipe, &&, absolute outside paths and cleaned relative escapes are recorded as not run by ork: orchestrator; unsupported tools do not execute. HUMAN CHECK and AFTER LAND stay untouched.\n- `TestGatePromptUsesOrkEvidence`: pinned gate prompt names slice rows as tests-green evidence.\n- `TestSliceChecksRepeatOnlyAfterProductChanges`: reuse rows for docs/ and .slicer/ fixes; rerun for product code, product Markdown, CHANGELOG.md and decisions/ changes.\n- `TestSliceChecksCancelledCommandRunsAgain`: cancellation returns the context error without recording a row or spending a round; the next live gate executes the unchanged command.\n- `TestSliceChecksMissingCommandPauses`: a binary that never starts pauses at gate without recording reusable evidence or spending a round.\n- `TestSliceChecksLandingRechecksMergedTree`: landing runs slice rows as part of the re-check after the moved base is merged."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Extract a `sliceChecks(item)` function that reads the slice's Check section (through `slicer show --json`, not the tracking file) and returns runnable `{env, argv}` rows, reusing the S309 splitter.\n2. Run them after the last implementer round through `clirun` in the worktree with a per-row timeout, record `CheckRecord`s, and add them to the gate and fix-round briefs.\n3. Do the same in the landing re-check when it runs.\n4. Update `gate.md` and its pinned test, docs and CHANGELOG, marked *proposed*.\n\nOwner decisions (2026-11-09, accepted the recommended answers): which lines run -> (a) every line that is one backticked command with optional leading `VAR=value` words (recommended) [checks.slice-check-lines, adj 235]. cost. A full `-race` suite takes about 2.5 minutes on this repo (S194 gate) -> (a) run once before the gate, not every round (recommended) [checks.slice-check-cost, adj 236]. landing -> (a) the landing re-check runs the same rows when the base moved (recommended) [checks.slice-check-landing, adj 237]. slices with a Check line that needs the owner (a HUMAN CHECK) are untouched: confirm. -> (a) Q4 slices with a Check line that needs the owner (a HUMAN CHECK) are untouched: confirm. [checks.human-check-untouched, adj 238].\n\nOwner decisions (2026-11-15): When do the slice's own Check rows run, and are they re-run in fix rounds? -> before-gate: run the rows once, when the state is about to go to the gate (after review and the architect), and again only if a later fix round changed files outside docs and tracking [checks.slice-check-schedule]. How should this slice's Check section say when it is done? -> tighten: keep line 1 as written and replace the `internal/tui` line with `git diff --name-only main -- internal/tui`; done when it prints nothing, unless the run pane lists check rows (then a UI pass is added)."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- `git diff --name-only main -- internal/tui` must print nothing, unless the run pane lists check rows (then add a UI pass)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

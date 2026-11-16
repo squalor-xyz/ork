@@ -1,0 +1,41 @@
+{
+  "id": "S363",
+  "title": "Local implementer brief: note first, anchor log, one test at a time",
+  "lead": [
+    "*Proposed.* Owner direction 2026-11-15 (relay session 8d711f67, chat: \"do (2)\", after the orchestrator's review of the local brief): a claude-local implementer gets a brief shaped for a small window. It writes its progress note before it reads anything, logs anchors as it reads, works one test at a time, and has the tool rules at the top. Cloud implementers do not change."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 3 (2026-11-14/15, S248, runs ork-20261114-224559-2b00 and ork-20261115-001834-20cf): the claude-local implementer ran 8 fresh sessions in 90 min and made no edit. Each session re-read the same 5-6 files and hit the 70k restart before its first edit; the progress note was written once and said only \"nothing survived\". The brief it gets is the cloud implementer prompt (20,358 chars) with a short local section added.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* What the trial 3 brief asked for, and why a local model loops on it:\n\n- Work step 1 (`internal/roles/prompts/implementer.md`) loads AGENTS.md, the slice end to end and *the files the slice names*; step 2 re-anchors every cited file:line and edits the spec. S248 cites about 10 anchors in 6 files. With about 26k fixed context and a 70k restart (S358), step 1 fills the session, and each fresh session restarts at step 1.\n- The progress note section (`internal/engine/brief.go:97`) says \"after each step\"; step 1 never ends, so nothing is saved. The restart brief (`internal/engine/round.go:567`) then says \"continue its saved work\" with \"No readable progress note is available\" and an empty diff stat.\n- The tool rules (\"no pipes, one plain command per call\") sit in `## Done when` at the very end (`internal/engine/brief.go:200`); the model piped `| head -5` twice.\n- One round asks for re-anchoring with spec edits, six tests, a mutation check of every assertion and the full race suite.\n\nThe spec check row (cloud) already checks a slice's anchors before the run (S258), so a local implementer can trust them."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/brief.go:79-107` (`BuildBrief`: local tool rules, note first and progress exception)\n- `internal/engine/brief.go:195-282` (`doneWhen`: avoid duplicated local tool rules)\n- `internal/engine/round.go:559-578` (`runRound`: progress read and fresh-session instructions)\n- `internal/roles/prompts/implementer.md` (unchanged cloud prompt baseline)\n- `internal/roles/roles.go:56-85` (`LocalImplementerPrompt`: compact local Work variant)\n- `internal/engine/brief_test.go`\n- `internal/engine/round_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestLocalImplementerStartsWithToolsAndNote`: claude-local implementer begins after the role line with tool rules (resolved allowed forms, one plain command per call, no pipes), then writes its progress note before any read.\n- `TestLocalImplementerTrustsCheckedAnchors`: local Work trusts spec-check anchors and symbol names; no re-anchoring or slicer edit.\n- `TestLocalImplementerOneTestAtATime`: local Work writes one listed test, observes red, implements, observes green, updates note, then proceeds; mutation checks and full suites follow the last test once.\n- `TestLocalImplementerAnchorLog` and `TestFreshLocalImplementerReadsNoteInsteadOfAnchors`: note appends an anchor log (`file:line symbol: purpose`) every few reads; restart reads the note instead of rereading listed files.\n- `TestFreshLocalImplementerWithoutSavedProgress`: absent or empty note says \"No progress was saved; start at step 1 and write the note first\" and does not claim saved work.\n- `TestCloudImplementerByteBaseline`: cloud output equals its pre-change byte baseline.\n- `TestLocalImplementerBriefIsShorter`: same-slice local brief is shorter than cloud; record lengths in slice notes after the review gate permits notes."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Red tests above.\n2. Build the local brief variant; keep the cloud brief unchanged.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- `[AFTER LAND]` S304 trial 4 runs a claude-local implementer on S248 with this brief and records sessions, restarts, edits and time in S304's notes."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -71,7 +71,8 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    the implementer's resolved allowlist. Use the brief's classification. Ask the
    owner to replace it with a runnable form or explicitly assign it to the
    orchestrator; an already recorded assignment settles that line.
-4. Ask the least. One question for each real open decision. Do not ask a question
+4. Before inventing a decision key, use `adj find` over decided records and reuse an existing key for the same topic.
+   Ask the least. One question for each real open decision. Do not ask a question
    about the same decision twice across slices; ask it under the first slice that
    needs it and say in the others' questions that they share it.
 5. Do not suggest extra scope and do not review code quality.
@@ -135,8 +136,8 @@ shows the question to the owner (and may file it). A decision key in a question 
 ork file the owner's answer in adj.
 
 When you finish, write your final report to {{report_path}} and exit. If you cannot
-write that file, put the whole report in your final message instead. End the report
-with `## Owner needed`: write "none" there, because your questions belong under
+write that file, put the whole report in your final message instead. End the readiness
+sections with `## Owner needed`: write "none" there, because your questions belong under
 their slices. Use it only for something that stopped the whole check, such as a slice
 you could not read, and say what.
 
@@ -145,6 +146,15 @@ The heading is exactly `## Owner needed`, with no number and nothing after it:
 ```text
 ## Owner needed
 ```
+
+When the brief requests an orientation pack for a local implementer, append one
+`## Orientation ID` section per requested slice after `## Owner needed`. Cloud
+implementers receive no pack. For each failing test, quote the code to change and
+the nearest existing test to copy, with its file path, line range and symbol.
+Then give a short implementation plan. Keep each whole pack within 300 lines and
+12,000 characters. Use headings below level two inside a pack. These sections
+are context for the implementer, separate from readiness and owner questions.
+When the brief requests no packs, add no orientation sections.
 
 You may end the report with up to 3 tool feedback lines, after `## Owner needed` and
 its body, about slicer or another tool you used. Write each on its own line as

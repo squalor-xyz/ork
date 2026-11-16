@@ -2,6 +2,58 @@
 
 ## Unreleased
 
+- S313 (*proposed*): reuse fitting decided adj options by exact decision key
+  during spec checks, record `[KEY, adj N]` in the slice and skip the prompt.
+  Open records hold daemon, CLI and TUI launches with `waits on adj N`;
+  stale options show their old answer and date before asking again. Lookup
+  failures keep the question with a notice. The spec-check prompt searches
+  decided records before inventing a key.
+
+- S366: honor run and wave lineup overrides when requesting orientation
+  packs, and recheck cached verdicts missing a pack for a local implementer.
+
+- *Proposed (S311):* store and clear per-project `notify_command`
+  with `ork projects set NAME --notify CMD`, including while runs are
+  unfinished. Execute the whole value as one program, without arguments,
+  on question, approval, pause, stop and landing events. Event data arrives
+  in ORK environment variables. Delivery has a ten-second timeout and a
+  persisted per-occurrence claim (adj 359), never blocks a run, and logs
+  failures without retrying. `ork projects list` and `ork doctor` display
+  it; doctor warns about unresolved executables. The `failed` event waits
+  for a ledger read.
+
+- *Proposed (S317):* run the slice's plain backticked Check commands before
+  the gate and at the landing re-check, with environment prefixes, per-row
+  deadlines, exit status and logs. The gate receives every row as tests-green
+  evidence. Failed rows send their logs to a fix round; docs/tracking-only
+  fixes reuse the earlier result. Unsupported shell commands stay with the
+  orchestrator. Human and after-land checks keep their existing workflow.
+
+- S365 (*proposed*): have the spec check write bounded orientation packs for
+  planned local implementers and include the saved pack in claude-local briefs.
+
+- *Proposed (S364; adj 351, 352):* a claude-local role gets ork's own short
+  system prompt (`--system-prompt-file`) in place of Claude Code's default and
+  only six built-in tools (`--tools Read,Grep,Glob,Edit,Write,Bash`; a
+  read-only role drops Edit and Write unless it holds its progress-note
+  grant; a UI pass adds Skill), replacing S360's `--disallowedTools`. The
+  daemon's `ORK_LOCAL_FRESH_TOKENS` overrides the 70,000-token fresh-session
+  threshold for a measurement. Cloud roles do not change.
+
+- *Proposed (S363):* shorten the claude-local implementer brief: tool rules
+  first, progress note before reads, an anchor log and one test at a time.
+  Fresh sessions use the note, or start at step 1 when no progress was saved.
+  Cloud implementer briefs are unchanged.
+
+- S362: allow missing-file Reads through the approval hook's line-count
+  check. Approval-point denials no longer block role fallback, including
+  across fresh local sessions; allowlist denials still stop unsuccessful rounds.
+
+- S361: keep claude-local progress notes in `RUNDIR/tmp/progress-ROLE.md`,
+  without creating project `.scratch/` directories. Allow simple read-only
+  commands on the role's own temp files, report and progress note without
+  an owner question; read-only roles retain their exact-note write grant.
+
 - S356: claude-local uses manual mode and an ork hook for every tool call.
   The hook enforces worktree boundaries and a 500-line Read cap, checks the
   role allowlist, and blocks uncovered calls on an owner answer without

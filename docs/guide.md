@@ -166,10 +166,28 @@ The registry holds optional per-project settings. Change them with
 | `--push on\|off` | push the base branch after landing; off by default |
 | `--auto-land on\|off` | ork approves and lands a run whose gate passes with no open owner finding and a green check, with no `ork approve`; on when unset, `off` is the opt-out (*proposed*, S331, adj 281). Refused while runs are unfinished: a started run reads it at its gate |
 | `--bell on\|off` | the terminal bell for the project's runs and counts; on when unset (*proposed*, S224). Allowed while runs are unfinished; the TUI reads it at start, so restart ork to apply it |
+| `--notify CMD` | *Proposed (S311):* run this executable when a run needs the owner or lands; `--notify ''` clears it. The whole value is one executable name or path, including spaces, with no arguments or implicit shell (adj 358). Allowed while runs are unfinished (adj 279). `ork projects list` and `ork doctor` display it; doctor warns if it cannot resolve to an executable |
 | `--ui-doc PATH` | the project's UI design doc, relative to the project; the UI pass reads it |
 | `--ui-pass-skills A,B` | comma-separated skill names stored in `ui_pass_skills`; only a Claude UI pass is advised to load them (*proposed*, S209) |
 | `--spec-check-rows rNN,rNN` | the matrix rows the spec check runs on, in order: the first with an adapter runs, the next is its fallback; **a row listed here leaves every run's reviewer and gate chains**; `""` clears it, and with none set ork uses every row the matrix's `Spec check row (rNN)` rules name, in rule order (*proposed*, S258) |
 | `--dry-run` | takes no value: every check a real call runs, including the busy check, still runs, and the output shows the project as it would be saved, without saving it; it still needs a field flag, so `--dry-run` alone is a usage error (*proposed*, S248) |
+
+*Proposed (S311):* the notification executable runs in the project directory
+with `ORK_EVENT`, `ORK_PROJECT`, `ORK_RUN`, `ORK_ITEM`, `ORK_STATE`,
+`ORK_REASON` and `ORK_NEXT` in its environment. `ORK_EVENT` is `question`,
+`awaiting-approval`, `paused`, `stopped` or `landed`; `ORK_STATE` is the raw
+run state. Reasons are cleaned to one line without terminal controls.
+`ORK_NEXT` holds the next owner command when one is available. Use an
+executable wrapper script when the integration needs arguments.
+Each fresh transition into a need is attempted once, including across daemon
+restarts (adj 359). A later question, pause or approval in the same run
+notifies again; same-state polls do not repeat an occurrence. Setting the
+command does not notify for an existing state.
+Delivery runs independently of the slice, has a ten-second timeout, and
+logs a failure without retrying or failing the run. Daemon shutdown cancels
+and joins outstanding deliveries. A recorded attempt may be lost if the
+daemon exits before delivery; notification is best effort. The `failed`
+event waits for a ledger read, as with `ork wait`.
 
 Give one flag value, for example `--ui-pass-skills tui-design,frontend-design`.
 The list replaces the previous list; `--ui-pass-skills ""` clears it.
@@ -642,6 +660,16 @@ appear in the **Questions** view and under **Needs you** on the Overview.
 
 Spec-check questions (before a wave) are answered in the sitting that opens
 at launch. See section 9.
+
+*Proposed (S313):* ork reuses an exact decision key's decided adj option when
+it still matches the question's label and summary. It records the reused
+answer with `[KEY, adj N]` in the slice and proceeds without asking again.
+When the option changed or disappeared, the question shows `decided as X on
+DATE` and asks again. An open record holds the item with `waits on adj N` in
+the CLI and spec pane; answer it in adj, then run the check again. Questions
+for that item wait until its open adj records resolve. Missing records are
+asked normally. A lookup failure keeps the question and prints one notice
+explaining the failure.
 
 ### Approve and land
 

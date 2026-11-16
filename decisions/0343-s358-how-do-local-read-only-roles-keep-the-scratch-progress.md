@@ -2,7 +2,7 @@
 {
   "id": 343,
   "title": "S358: how do local read-only roles keep the .scratch progress note?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.local-progress-permission",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -27,6 +27,7 @@
   },
   "decision": "scoped-write",
   "rationale": "Owner picked scoped-write in an interactive question on 2026-11-13 (ork relay session 8d711f67), answering S358 run ork-20261112-123335-e040; recorded as the owner's delegate (process.owner-answers, 316).",
+  "superseded_by": 348,
   "refs": [
     "S358"
   ],
@@ -38,6 +39,11 @@
     {
       "date": "2026-11-13",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-14",
+      "event": "supersede",
+      "note": "by 348"
     }
   ]
 }

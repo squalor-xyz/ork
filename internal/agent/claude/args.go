@@ -5,21 +5,32 @@ package claude
 import (
 	"errors"
 	"path/filepath"
-	"slices"
 	"strings"
 )
 
-// localDisallowedTools are the tools a relay role on claude-local never uses.
-// "Task" is the name the stream's init event lists (testdata/vendors/claude);
-// "Agent" is its newer name.
-var localDisallowedTools = []string{"WebFetch", "WebSearch", "Task", "Agent", "NotebookEdit", "Skill"}
+// localTools are the built-in tools a relay role on claude-local is sent
+// (S364, adj 352, *proposed*). A write role gets six. A read-only role loses
+// Edit and Write unless it holds the progress-note grant (AddDir): that grant
+// is an Edit rule the approval hook applies to Edit and Write. A UI pass loads
+// skills, so it keeps Skill.
+func (s Spec) localTools() []string {
+	tools := []string{"Read", "Grep", "Glob"}
+	if !s.ReadOnly || s.AddDir != "" {
+		tools = append(tools, "Edit", "Write")
+	}
+	tools = append(tools, "Bash")
+	if s.KeepSkills {
+		tools = append(tools, "Skill")
+	}
+	return tools
+}
 
 // Args returns the arguments after the binary. The shape follows the
 // measured commands (testdata/vendors/claude/*.cmd) and `claude --help`:
 //
 //	-p [--resume SESSION] --output-format stream-json --verbose
 //	   --include-partial-messages [--model M] [--effort E]
-//	   [--disallowedTools a,b [--disable-slash-commands]]   (claude-local only)
+//	   [--system-prompt-file F --tools a,b [--disable-slash-commands]]   (claude-local only)
 //	   (--allowedTools a,b --permission-prompts none | --permission-mode plan)
 //	   [--permission-mode manual --settings JSON]          (claude-local only)
 //	   PROMPT
@@ -54,15 +65,18 @@ func (s Spec) Args() ([]string, error) {
 	if s.Effort != "" {
 		args = append(args, "--effort", s.Effort)
 	}
-	// A local role starts with less fixed context (S360, *proposed*): the tools
-	// and commands it never uses are turned off. The flags come before
-	// --allowedTools because --disallowedTools takes a variadic value list.
+	// A local role starts with less fixed context (S360, S364, *proposed*):
+	// ork's own short system prompt replaces the default one, only the tools
+	// it uses are sent, and slash commands are off. The flags come before
+	// --allowedTools because --tools takes a variadic value list.
 	if s.Bin == "claude-local" {
-		denied := localDisallowedTools
-		if s.KeepSkills {
-			denied = slices.DeleteFunc(slices.Clone(denied), func(t string) bool { return t == "Skill" })
+		if s.SystemPromptFile != "" {
+			if !filepath.IsAbs(s.SystemPromptFile) {
+				return nil, errors.New("claude: system prompt file is not absolute")
+			}
+			args = append(args, "--system-prompt-file", s.SystemPromptFile)
 		}
-		args = append(args, "--disallowedTools", strings.Join(denied, ","))
+		args = append(args, "--tools", strings.Join(s.localTools(), ","))
 		if !s.KeepSkills {
 			args = append(args, "--disable-slash-commands")
 		}

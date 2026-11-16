@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -15,6 +16,61 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestApprovalDenialTimeoutFallback(t *testing.T) {
+	for _, tc := range []struct {
+		name                     string
+		approval, restart, mixed bool
+	}{
+		{"approval", true, false, false},
+		{"allowlist", false, false, false},
+		{"approval-restart", true, true, false},
+		{"mixed", true, false, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			clock := newVendorClock()
+			h := newHarness(t, withDiff)
+			h.deps.Now = clock.Now
+			h.deps.HungAfter = 4 * time.Millisecond
+			h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: "claude-local", Model: "local"}, {Vendor: "claude", Model: "sonnet"}}
+			session := 0
+			h.deps.Runner = &hangRunner{silent: func(req Request) bool { return req.Vendor == "claude-local" }, script: func(ctx context.Context, req Request) (Result, error) {
+				session++
+				res := Result{}
+				if session == 1 {
+					res.Denials = []runrec.DeniedCommand{{Tool: "Read", Command: "long.go"}}
+					if tc.approval {
+						res.ApprovalDenials = 1
+					}
+					if tc.mixed {
+						res.Denials = append(res.Denials, runrec.DeniedCommand{Tool: "Bash", Command: "unlisted"})
+					}
+				}
+				if tc.restart && session == 1 {
+					req.OnContext(70001)
+				} else {
+					clock.Advance(91 * time.Minute)
+				}
+				select {
+				case <-ctx.Done():
+					return res, ctx.Err()
+				case <-time.After(time.Second):
+					t.Error("local session was not canceled")
+					return res, context.DeadlineExceeded
+				}
+			}}
+			e := h.start()
+			rec := e.Snapshot()
+			if tc.approval && !tc.mixed {
+				if rec.State != runrec.StateAwaitingApproval || len(rec.Roles) < 2 || h.readReport(rec, rec.Roles[1].Report) != implReport {
+					t.Fatalf("approval denial blocked fallback report: state=%s reason=%s", rec.State, rec.Reason)
+				}
+			} else if rec.State != runrec.StateStopped || len(rec.Roles) != 1 || !strings.Contains(rec.Reason, "permission denied") {
+				t.Fatalf("allowlist denial did not stop round: state=%s roles=%+v reason=%s", rec.State, rec.Roles, rec.Reason)
+			}
+		})
+	}
+}
 
 // freshSessionRound uses the real round state machine and a cancelling runner.
 // Its first request resumes an older session, so forgetting to clear Resume
@@ -36,15 +92,19 @@ func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (
 					t.Fatal(err)
 				}
 			}
-			if req.ProgressFile != "" {
-				if err := os.WriteFile(req.ProgressFile, []byte("Done: edits saved. Next: run narrow checks."), 0600); err != nil {
+			if req.ProgressFile != "" && !(len(stale) > 1 && stale[1]) {
+				note := "Done: edits saved. Next: run narrow checks."
+				if len(stale) > 2 && stale[2] {
+					note = " \n"
+				}
+				if err := os.WriteFile(req.ProgressFile, []byte(note), 0600); err != nil {
 					t.Fatal(err)
 				}
 			}
 			if req.OnContext != nil {
 				req.OnContext(tokens)
 			}
-			if vendor == "claude" || tokens <= 70000 {
+			if vendor == "claude" || tokens <= localFreshLimit() {
 				if ctx.Err() != nil {
 					return Result{}, ctx.Err()
 				}
@@ -77,8 +137,34 @@ func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (
 	return e, h, requests, out
 }
 
+func TestFreshLocalImplementerReadsNoteInsteadOfAnchors(t *testing.T) {
+	_, _, requests, _ := freshSessionRound(t, "claude-local", 70001)
+	_, fresh, _ := strings.Cut(requests[1].Brief, "## Fresh local session")
+	if !strings.Contains(fresh, "Read the progress note first; do not reread the files listed in its anchor log") {
+		t.Fatal("restart does not use the note instead of rereading anchors")
+	}
+}
+
+func TestFreshLocalImplementerWithoutSavedProgress(t *testing.T) {
+	for _, missing := range []bool{true, false} {
+		for _, part := range []string{"start", "no-continue"} {
+			t.Run(fmt.Sprintf("missing=%t/%s", missing, part), func(t *testing.T) {
+				_, _, requests, _ := freshSessionRound(t, "claude-local", 70001, false, missing, !missing)
+				_, fresh, _ := strings.Cut(requests[1].Brief, "## Fresh local session")
+				if part == "start" {
+					if !strings.Contains(fresh, "No progress was saved; start at step 1 and write the note first") {
+						t.Fatal("restart without a note does not start at step 1")
+					}
+				} else if strings.Contains(fresh, "Continue its saved work") {
+					t.Fatal("restart without a note claims saved work")
+				}
+			})
+		}
+	}
+}
+
 func TestFreshSessionRestoresTheBrief(t *testing.T) {
-	for _, part := range []string{"original", "progress", "stat", "resume", "instructions", "accounting"} {
+	for _, part := range []string{"original", "progress", "stat", "resume", "instructions", "no-project-scratch", "no-scratch-permission", "accounting"} {
 		t.Run(part, func(t *testing.T) {
 			e, h, requests, out := freshSessionRound(t, "claude-local", 70001)
 			if !out.ok || len(requests) != 2 {
@@ -102,9 +188,17 @@ func TestFreshSessionRestoresTheBrief(t *testing.T) {
 					t.Fatalf("fresh request resumed %q", requests[1].Resume)
 				}
 			case "instructions":
-				want := filepath.Join(h.P, ".scratch", "progress-"+e.Snapshot().ID+"-implementer.md")
+				want := filepath.Join(e.run.Dir(), "tmp", "progress-implementer.md")
 				if requests[0].ProgressFile != want || !strings.Contains(requests[0].Brief, "After each step") || !strings.Contains(requests[0].Brief, want) {
 					t.Fatal("missing progress-file instructions or exact path")
+				}
+			case "no-project-scratch":
+				if _, err := os.Stat(filepath.Join(h.P, ".scratch")); !os.IsNotExist(err) {
+					t.Fatalf("project .scratch exists or stat failed: %v", err)
+				}
+			case "no-scratch-permission":
+				if requests[0].ProjectRoot != "" {
+					t.Fatalf("slice round grants project scratch: ProjectRoot=%q", requests[0].ProjectRoot)
 				}
 			case "accounting":
 				role := e.Snapshot().Roles[1]
@@ -167,6 +261,23 @@ func TestFreshSessionThresholdIsStrict(t *testing.T) {
 	_, _, at, atOut := freshSessionRound(t, "claude-local", 70000)
 	if !overOut.ok || len(over) != 2 || !atOut.ok || len(at) != 1 || atOut.text != overOut.text {
 		t.Fatalf("threshold differential: requests=%d/%d reports=%+v/%+v", len(over), len(at), overOut, atOut)
+	}
+}
+
+// ORK_LOCAL_FRESH_TOKENS moves the threshold for a measurement only (S364,
+// *proposed*); an unset or unusable value leaves 70,000 (adj 335).
+func TestFreshSessionThresholdEnvOverride(t *testing.T) {
+	t.Setenv("ORK_LOCAL_FRESH_TOKENS", "95000")
+	_, _, below, belowOut := freshSessionRound(t, "claude-local", 95000)
+	_, _, over, overOut := freshSessionRound(t, "claude-local", 95001)
+	if !belowOut.ok || len(below) != 1 || !overOut.ok || len(over) != 2 || belowOut.text != overOut.text {
+		t.Fatalf("override differential: requests=%d/%d reports=%+v/%+v", len(below), len(over), belowOut, overOut)
+	}
+	for _, bad := range []string{"", "abc", "0", "-5"} {
+		t.Setenv("ORK_LOCAL_FRESH_TOKENS", bad)
+		if got := localFreshLimit(); got != 70000 {
+			t.Errorf("ORK_LOCAL_FRESH_TOKENS=%q gives %d, want 70000", bad, got)
+		}
 	}
 }
 

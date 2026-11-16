@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"unicode/utf8"
 )
 
 // knownPlaceholders are the only {{name}} tokens a prompt may hold. The
@@ -95,7 +96,23 @@ func TestPromptUnknownName(t *testing.T) {
 	}
 }
 
-// The embedded prompts are exactly the named roles, one file each.
+// The local system prompt is embedded and short (S364, *proposed*): it
+// replaces Claude Code's default system prompt, whose size is the point.
+func TestLocalSystemPromptIsEmbeddedAndShort(t *testing.T) {
+	p := LocalSystemPrompt()
+	if strings.TrimSpace(p) == "" {
+		t.Fatal("the local system prompt is empty")
+	}
+	if n := utf8.RuneCountInString(p); n >= 2000 {
+		t.Fatalf("the local system prompt has %d characters, want under 2,000", n)
+	}
+	if _, err := Prompt("local-system"); err == nil {
+		t.Error("local-system is not a role, but Prompt returned it")
+	}
+}
+
+// The embedded prompts are exactly the named roles, one file each, plus the
+// local system prompt.
 func TestEmbeddedFilesMatchNames(t *testing.T) {
 	entries, err := promptFS.ReadDir("prompts")
 	if err != nil {
@@ -105,7 +122,7 @@ func TestEmbeddedFilesMatchNames(t *testing.T) {
 	for _, e := range entries {
 		got = append(got, strings.TrimSuffix(e.Name(), ".md"))
 	}
-	want := append([]string(nil), Names()...)
+	want := append(append([]string(nil), Names()...), "local-system")
 	sort.Strings(got)
 	sort.Strings(want)
 	if !reflect.DeepEqual(got, want) {
@@ -608,6 +625,7 @@ func TestSpecCheckPrompt(t *testing.T) {
 		"the whole batch in one pass",
 		"Put a blank line between the blocks of one slice",
 		"A decision the owner recorded is settled",
+		"Before inventing a decision key, use `adj find` over decided records and reuse an existing key for the same topic.",
 		"A gap you can close by reading the code is not a question",
 	} {
 		if !has(p, want) {
