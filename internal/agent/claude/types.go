@@ -83,14 +83,7 @@ const denialDetailMax = 200
 // characters and "...". The cap bounds the text only: a command can hold
 // secrets, and they are not removed (docs/state.md).
 func (d Denial) Detail() string {
-	var fields map[string]json.RawMessage
-	if err := json.Unmarshal(d.ToolInput, &fields); err != nil {
-		return ""
-	}
-	text := jsonString(fields["command"])
-	if text == "" {
-		text = jsonString(fields["file_path"])
-	}
+	text := d.rawDetail()
 	text = strings.Map(func(r rune) rune {
 		if unicode.IsControl(r) {
 			return -1
@@ -101,6 +94,18 @@ func (d Denial) Detail() string {
 		text = string(r[:denialDetailMax-3]) + "..."
 	}
 	return text
+}
+
+// rawDetail is the command, else the file path, of the tool input, as sent.
+func (d Denial) rawDetail() string {
+	var fields map[string]json.RawMessage
+	if err := json.Unmarshal(d.ToolInput, &fields); err != nil {
+		return ""
+	}
+	if text := jsonString(fields["command"]); text != "" {
+		return text
+	}
+	return jsonString(fields["file_path"])
 }
 
 // jsonString returns the string a raw JSON value holds, or "" when it holds

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-370 items · — 57 · done 278 · retired 35
+370 items · — 56 · done 279 · retired 35
 
 v1.2
 
@@ -138,7 +138,7 @@ v1.2
 | 88 | [S367](slices/S367.md) | Hook token scan: quoted operators, braces, tilde | S | 1 |  | S304 trial 4 (2026-11-15, run ork-20261115-144120-d581, S248): the claude-local implementer's `go -C WT test -run 'TestA\|TestB\|TestC' -v ./internal/cli` went to the owner as a permission question (owner allowed it). The allowlist rule `Bash(go -C * test*)` did not match because `shellOperators` (`internal/agent/claude/pretool.go:221-229`) counts the `\|` inside single quotes. S356 review (deferred): brace expansion (`/a/{b,c}`) and `~` paths are not split or expanded by the token scan (`internal/agent/claude/pretool.go:92-104`), so a path outside the worktree can pass it. · discovered from S304 | done |
 | 89 | [S368](slices/S368.md) | Apply spec-check answers that edit the slice | S | 2 |  | S241 (2026-11-16, run ork-20261116-015040-d93b): the owner answered the spec check's Check question with "tighten" (drop `go -C WORKTREE run ./cmd/ork help` and "the `--yes` flags"). The implementer did not edit the Check section, so S317's slice-check runner ran the backticked `--yes` as a command and the run paused ("exec: \"--yes\": executable file not found"). The orchestrator edited the Check by hand and retried. · discovered from S241 | done |
 | 90 | [S369](slices/S369.md) | UI pass in plan mode cannot write renders | S | 1 |  | S241 (2026-11-16, run ork-20261116-015040-d93b): the UI pass (claude opus, read-only, plan mode) was denied two Writes to `~/.local/state/ork/runs/RUN/` and reported tool feedback: "plan mode allowed writing only a plan file, so renders/*.txt could not be produced". · discovered from S241 | — |
-| 91 | [S370](slices/S370.md) | Permission question truncates the command | S | 1 |  | S304 trial 5 (2026-11-16, run ork-20261116-012801-28aa): the approval question title cut a six-path `wc -l` at `.worktrees/S2...`, so the orchestrator had to read the role's Claude transcript to see whether every path was inside the worktree before answering. · discovered from S304 | — |
+| 91 | [S370](slices/S370.md) | Permission question truncates the command | S | 1 |  | S304 trial 5 (2026-11-16, run ork-20261116-012801-28aa): the approval question title cut a six-path `wc -l` at `.worktrees/S2...`, so the orchestrator had to read the role's Claude transcript to see whether every path was inside the worktree before answering. · discovered from S304 | done |
 
 ---
 

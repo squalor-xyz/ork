@@ -32,20 +32,27 @@ type ApprovalPolicy struct {
 	Allowlist                              []string
 }
 
-// ApprovalDetail previews a call for the owner. Denial log details retain
-// their command/path-only contract; other approval inputs use compact JSON
-// with the same control-character handling and 200-rune cap.
+// ApprovalDetail is the whole tool input of a call, for the owner (S370): the
+// command of a Bash call, else the file path of a file tool, else the compact
+// JSON of the input. It is never cut, because an allow depends on every token.
+// Newlines and tabs stay, as a newline separates commands; CR becomes a newline
+// and other control characters are removed. Denial log details keep their
+// command/path-only contract and 200-character cap (Denial.Detail).
 func (c ToolCall) ApprovalDetail() string {
-	d := Denial{ToolInput: c.ToolInput}
-	if detail := d.Detail(); detail != "" {
-		return detail
+	text := (Denial{ToolInput: c.ToolInput}).rawDetail()
+	if text == "" {
+		var compact bytes.Buffer
+		if err := json.Compact(&compact, c.ToolInput); err != nil {
+			return ""
+		}
+		text = compact.String()
 	}
-	var compact bytes.Buffer
-	if err := json.Compact(&compact, c.ToolInput); err != nil {
-		return ""
-	}
-	encoded, _ := json.Marshal(map[string]string{"command": compact.String()})
-	return (Denial{ToolInput: encoded}).Detail()
+	return strings.Map(func(r rune) rune {
+		if r == '\n' || r == '\t' || !unicode.IsControl(r) {
+			return r
+		}
+		return -1
+	}, strings.NewReplacer("\r\n", "\n", "\r", "\n").Replace(text))
 }
 
 // Evaluate applies hard path/read rules before consulting the role allowlist.

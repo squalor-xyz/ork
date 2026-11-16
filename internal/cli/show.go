@@ -133,6 +133,9 @@ func writeShow(o *output, r daemon.ShowReply) {
 	fmt.Fprintf(w, "%s %s %s\n", r.ID, r.Item, r.State)
 	if p := r.Pending; p != nil {
 		head := p.Kind + " pause"
+		if p.Kind == "permission" {
+			head = "permission question" // the run keeps running while the call waits
+		}
 		if p.Role != "" {
 			head += ", " + p.Role
 			if p.Round > 0 {
@@ -147,7 +150,7 @@ func writeShow(o *output, r daemon.ShowReply) {
 		}
 		fmt.Fprintln(w, indent(r.Reason, "  "))
 	}
-	if p := r.Pending; p != nil && p.Kind == runrec.PendingQuestion {
+	if p := r.Pending; p != nil && (p.Kind == runrec.PendingQuestion || p.Kind == "permission") {
 		writeQuestion(o, p)
 	}
 	if r.Pending != nil && r.Pending.Key != "" {
@@ -235,7 +238,15 @@ func writeQuestion(o *output, p *daemon.ShowPending) {
 	if ask == nil || strings.Contains(p.Question, "Question: "+ask.Title) {
 		return
 	}
-	fmt.Fprintf(w, "  Question: %s\n  Options:\n", runrec.PlainText(ask.Title))
+	fmt.Fprintf(w, "  Question: %s\n", runrec.PlainText(ask.Title))
+	if ask.Detail != "" {
+		// The title of a permission question is a preview; this is the whole input (S370).
+		// Prefix each line only: PlainText would turn a tab into spaces and trim
+		// trailing spaces, so the owner would judge a different command. The
+		// daemon already removed the other control characters.
+		fmt.Fprintf(w, "  Input:\n    %s\n", strings.ReplaceAll(ask.Detail, "\n", "\n    "))
+	}
+	fmt.Fprintln(w, "  Options:")
 	for i, opt := range ask.Options {
 		fmt.Fprintf(w, "  %d. %s: %s\n", i+1, runrec.PlainText(opt.Label), runrec.PlainText(opt.Summary))
 	}

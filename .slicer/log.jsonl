@@ -4671,3 +4671,9 @@
 {"when": "2026-11-16T14:28:17Z", "item": "S368", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-16T14:40:40Z", "item": "S368", "action": "note", "from": "", "to": "", "note": "Spec-check answers that change a slice's text are now applie", "by": "Jon Robbins"}
 {"when": "2026-11-16T14:40:42Z", "item": "S368", "action": "status", "from": "started", "to": "done", "note": "Spec-check answers that change a slice's text are applied first (implementer apply section, reviewer confirm section); a backticked Check entry starting with '-' is recorded as not a command and not run. Both listed tests were red before the code and are green; go vet, gofmt, go test ./..., slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:02:14Z", "item": "S370", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:06:05Z", "item": "S370", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T15:06:06Z", "item": "S370", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T15:17:16Z", "item": "S370", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T15:21:40Z", "item": "S370", "action": "note", "from": "", "to": "", "note": "Permission question keeps a title of at most 120 characters ", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:21:42Z", "item": "S370", "action": "status", "from": "started", "to": "done", "note": "Permission question has a title of at most 120 characters and the whole tool input in OwnerQuestion.Detail, carried by ork status --json and run.show and printed as sent by ork show under Input:. Verified: go vet, gofmt, go test ./... (26 packages ok), slicer check, adj lint.", "by": "Jon Robbins"}

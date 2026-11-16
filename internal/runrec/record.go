@@ -149,7 +149,10 @@ type Approval struct {
 
 // OwnerQuestion is the structured form of an Owner needed block.
 type OwnerQuestion struct {
-	Title     string   `json:"title"`
+	Title string `json:"title"`
+	// Detail is the whole tool input of a permission question (S370). The
+	// title carries a short preview only. It is empty for other questions.
+	Detail    string   `json:"detail,omitempty"`
 	Options   []Option `json:"options"`
 	Recommend int      `json:"recommend"` // one-based option number
 	Reason    string   `json:"reason"`

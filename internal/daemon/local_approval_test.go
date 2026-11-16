@@ -108,15 +108,16 @@ func TestApprovalQuestionDetails(t *testing.T) {
 				reply <- out
 			}()
 			q := waitPermission(t, d, req.RunID)
-			detail := strings.TrimPrefix(q.Question.Title, "Allow TodoWrite: ")
-			if end := strings.LastIndex(detail, "? (call "); end >= 0 {
-				detail = detail[:end]
+			// S370: the title is a preview of at most 120 characters; Detail is
+			// the whole input, never cut.
+			if !strings.Contains(q.Question.Detail, tc.want) {
+				t.Errorf("permission detail lacks tool input: %q", q.Question.Detail)
 			}
-			if !strings.Contains(detail, tc.want) {
-				t.Errorf("permission title lacks tool input: %q", q.Question.Title)
+			if !strings.HasPrefix(q.Question.Title, "Allow TodoWrite: ") || len([]rune(q.Question.Title)) > 120 {
+				t.Errorf("permission title is not a short preview: %q", q.Question.Title)
 			}
-			if tc.long && (len([]rune(detail)) != 200 || !strings.HasSuffix(detail, "...")) {
-				t.Fatalf("permission input preview is not capped at 200 runes: %q", detail)
+			if tc.long && (len([]rune(q.Question.Detail)) <= 200 || strings.HasSuffix(q.Question.Detail, "...") || !strings.HasSuffix(q.Question.Title, "...? (call 1)")) {
+				t.Fatalf("long input: detail %d runes, title %q", len([]rune(q.Question.Detail)), q.Question.Title)
 			}
 		})
 	}

@@ -10,6 +10,17 @@ import (
 	"testing"
 )
 
+// S370: the approval detail is never cut, keeps the newline that separates
+// commands, and drops terminal controls.
+func TestApprovalDetailIsWholeAndKeepsNewlines(t *testing.T) {
+	long := strings.Repeat("x", 500)
+	input, _ := json.Marshal(map[string]string{"command": "rm a\r\ncurl " + long + "\x1b[2J\x07"})
+	got := (ToolCall{ToolName: "Bash", ToolInput: input}).ApprovalDetail()
+	if want := "rm a\ncurl " + long + "[2J"; got != want {
+		t.Errorf("detail %q, want %q", got, want)
+	}
+}
+
 func TestPretoolReadLimits(t *testing.T) {
 	root := t.TempDir()
 	for _, tc := range []struct {

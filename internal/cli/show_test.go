@@ -202,6 +202,41 @@ func TestShowQuestionPausePrintsTheOptions(t *testing.T) {
 	}
 }
 
+// S370: a live permission question prints the whole tool input, not the cut
+// title, so the owner can judge every path of the command.
+func TestShowPrintsTheFullApprovalCommand(t *testing.T) {
+	command := "wc -l " + strings.Repeat("/work/.worktrees/S2/internal/file.go ", 12) + "/work/.worktrees/S2/LAST.go"
+	ask := &runrec.OwnerQuestion{Title: "Allow Bash: wc -l /work/.worktrees/S2... (call 3)", Detail: command, Options: []runrec.Option{{Label: "Allow", Summary: "Allow this call once"}, {Label: "Deny", Summary: "Deny this call"}}, Recommend: 2, Reason: "call is not covered by the role allowlist"}
+	show := daemon.ShowReply{
+		ID: "r1", Item: "S9", State: "implement",
+		Pending: &daemon.ShowPending{Kind: "permission", State: "implement", Role: "implementer", Round: 1, Ask: ask},
+	}
+	log := showDouble(show, nil)
+	code, out, _ := runCLI(&App{Call: log.call}, "show", "r1")
+	if code != ExitOK {
+		t.Fatalf("code %d:\n%s", code, out)
+	}
+	if !strings.Contains(out, command) || !strings.Contains(out, "LAST.go") {
+		t.Errorf("show does not print the whole command:\n%s", out)
+	}
+	if !strings.Contains(out, "Allow Bash: wc -l /work/.worktrees/S2... (call 3)") {
+		t.Errorf("show lost the question title:\n%s", out)
+	}
+	// The run keeps running while the call waits: it is a question, not a pause.
+	if !strings.Contains(out, "permission question, implementer round 1\n") || strings.Contains(out, "pause") {
+		t.Errorf("show calls a permission wait a pause:\n%s", out)
+	}
+
+	// A tab and trailing spaces are part of the command and are printed as sent;
+	// only the indent is added to each line.
+	ask.Detail = "printf 'a\tb' \nrm x  \necho end"
+	log = showDouble(show, nil)
+	_, out, _ = runCLI(&App{Call: log.call}, "show", "r1")
+	if want := "  Input:\n    printf 'a\tb' \n    rm x  \n    echo end\n"; !strings.Contains(out, want) {
+		t.Errorf("show rewrote the command, want %q in:\n%q", want, out)
+	}
+}
+
 func TestShowTakesRunAndOptionalName(t *testing.T) {
 	for _, args := range [][]string{{"show"}, {"show", "r1", "a.md", "extra"}, {"show", "--json"}} {
 		log := &callLog{}

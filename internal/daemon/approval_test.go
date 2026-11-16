@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/agent/claude"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -166,4 +167,45 @@ func TestFailedOwnerActionKeepsTheErrorMarker(t *testing.T) {
 	if got := wireRunError(t, d.engineRuns(p.Name)[0]); !strings.Contains(got, "slicer note") && !strings.Contains(got, "human checks") {
 		t.Errorf("the failure is not on the run row: %q", got)
 	}
+}
+
+// S370: the owner judges an allow from every token of the command, so the
+// question keeps a short title and carries the whole command in Detail, on the
+// run row (status) and on run.show.
+func TestApprovalQuestionCarriesTheFullCommand(t *testing.T) {
+	d, req := approvalRun(t)
+	token, finish := d.registerApproval(context.Background(), req, claude.ApprovalPolicy{Worktree: req.Worktree, Allowlist: req.Allowlist})
+	defer finish()
+	command := "echo " + strings.Repeat("0123456789", 59) + "end00"
+	if len(command) != 600 {
+		t.Fatalf("test command is %d characters, want 600", len(command))
+	}
+	input, _ := json.Marshal(map[string]string{"command": command})
+	reply := make(chan claude.Approval, 1)
+	go func() {
+		a, _ := approvalRequest(d, context.Background(), ApprovalParams{Session: token, Call: claude.ToolCall{ToolName: "Bash", ToolInput: input}})
+		reply <- a
+	}()
+	row := waitPermission(t, d, req.RunID)
+	if n := len([]rune(row.Question.Title)); n > 120 {
+		t.Errorf("status title is %d characters, want at most 120: %q", n, row.Question.Title)
+	}
+	if !strings.HasPrefix(row.Question.Title, "Allow Bash: echo ") || !strings.Contains(row.Question.Title, "(call ") {
+		t.Errorf("status title lost its tool and call number: %q", row.Question.Title)
+	}
+	if row.Question.Detail != command {
+		t.Errorf("status detail is not the whole command: %q", row.Question.Detail)
+	}
+	show, err := d.runShow(RunAction{Run: req.RunID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if show.Pending == nil || show.Pending.Kind != "permission" || show.Pending.Ask == nil {
+		t.Fatalf("run.show has no live permission question: %+v", show.Pending)
+	}
+	if got := show.Pending.Ask; got.Detail != command || len([]rune(got.Title)) > 120 {
+		t.Errorf("run.show question: title %q, detail %q", got.Title, got.Detail)
+	}
+	finish() // the role ends: the waiting call is denied
+	<-reply
 }
