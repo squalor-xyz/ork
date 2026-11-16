@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 374,
+  "next_id": 375,
   "preamble": "",
   "passes": [
     {
@@ -20306,10 +20306,25 @@
       "id": "S370",
       "title": "Permission question shows the whole command",
       "short_title": "Permission question truncates the command",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d15825cc-9cca-4384-ac9f-51e7a7c56165",
+          "kind": "",
+          "text": "**2026-11-16** — Permission question keeps a title of at most 120 characters and carries the whole tool input in OwnerQuestion.Detail. ork status --json carries it; run.show includes the live permission question; ork show prints it as sent under Input: (tabs and trailing spaces kept) with heading 'permission question'. Docs updated: design.md, dashboard.md, CHANGELOG.md. Verified: go vet, gofmt, go test ./... (26 packages ok), slicer check, adj lint.",
+          "created_at": "2026-11-16T15:21:40Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20327,7 +20342,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -20410,6 +20425,34 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S374",
+      "title": "Grok cutover before the accounts end on 2026-12-09",
+      "short_title": "Grok cutover by 2026-12-09",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "Owner, 2026-11-16 (relay session 8d711f67, chat): \"my grok accounts will be cancelled effective December 9th. so let's ensure we maximize that account use through then\". Grok is first choice in ork's matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer's matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows.",
+        "discovered_from": "S305",
+        "parent": "",
+        "cites": [],
+        "key": "ork-grok-cutover",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }

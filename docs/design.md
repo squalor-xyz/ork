@@ -1922,7 +1922,15 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.
   Concurrent calls are presented in arrival order. Each question has a call
-  number so repeated calls remain distinct. The hook denies on a lost
+  number so repeated calls remain distinct. *Proposed (S370):* the question
+  title is a one-line preview of at most 120 characters (tool, start of the
+  input, call number). The whole tool input (the command, else the file path,
+  else the compact JSON of the input) is in the question's `detail` field,
+  never cut; newlines and tabs stay, a carriage return becomes a newline and
+  other control characters are removed. `ork show` prints it as sent, with
+  only an indent added to each line. `ork status
+  --json` carries it on the run's question, and `ork show RUN` prints it under
+  `Input:` while the call waits. The hook denies on a lost
   daemon, invalid input, role termination, or a 30-minute answer timeout.
   Claude's hook timeout is 31 minutes so ork can print the denial first;
   `onFailure: block` also blocks hook failures. See the vendor's

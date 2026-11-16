@@ -206,7 +206,7 @@ func (d *Daemon) approveTool(ctx context.Context, p ApprovalParams) (claude.Appr
 	answer := policy.Evaluate(p.Call)
 	if answer.Decision == "ask" {
 		detail := p.Call.ApprovalDetail()
-		wait := &permissionWait{reply: make(chan claude.Approval, 1), question: &runrec.OwnerQuestion{Title: "Allow " + p.Call.ToolName + ": " + detail + "?", Options: []runrec.Option{{Label: "Allow", Summary: "Allow this call once"}, {Label: "Deny", Summary: "Deny this call"}}, Recommend: 2, Reason: answer.Reason}}
+		wait := &permissionWait{reply: make(chan claude.Approval, 1), question: &runrec.OwnerQuestion{Detail: detail, Options: []runrec.Option{{Label: "Allow", Summary: "Allow this call once"}, {Label: "Deny", Summary: "Deny this call"}}, Recommend: 2, Reason: answer.Reason}}
 		d.runs.mu.Lock()
 		active := d.runs.approvals[p.Session] == s
 		run := d.runs.runs[s.req.RunID]
@@ -214,7 +214,7 @@ func (d *Daemon) approveTool(ctx context.Context, p ApprovalParams) (claude.Appr
 		if active && (run != nil && run.engine != nil || isSpec) {
 			d.runs.permissionSeq++
 			wait.seq = d.runs.permissionSeq
-			wait.question.Title += fmt.Sprintf(" (call %d)", wait.seq)
+			wait.question.Title = approvalTitle(p.Call.ToolName, detail, wait.seq)
 			s.waiting = append(s.waiting, wait)
 		} else {
 			active = false
@@ -256,6 +256,26 @@ func (d *Daemon) approveTool(ctx context.Context, p ApprovalParams) (claude.Appr
 		d.runs.mu.Unlock()
 	}
 	return answer, nil
+}
+
+// approvalTitleMax is the most characters a permission question's title holds.
+// The whole tool input is in OwnerQuestion.Detail (S370).
+const approvalTitleMax = 120
+
+// approvalTitle is a one-line preview: the tool, the start of the input and
+// the call number. The preview is cut so the title fits approvalTitleMax.
+func approvalTitle(tool, detail string, seq uint64) string {
+	if r := []rune(tool); len(r) > 40 {
+		tool = string(r[:37]) + "..."
+	}
+	prefix := "Allow " + tool + ": "
+	suffix := fmt.Sprintf("? (call %d)", seq)
+	room := approvalTitleMax - len([]rune(prefix)) - len([]rune(suffix))
+	preview := strings.Join(strings.Fields(detail), " ")
+	if r := []rune(preview); len(r) > room {
+		preview = string(r[:room-3]) + "..."
+	}
+	return prefix + preview + suffix
 }
 
 func permissionAnswer(text string) (claude.Approval, error) {

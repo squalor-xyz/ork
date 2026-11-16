@@ -4671,6 +4671,12 @@
 {"when": "2026-11-16T14:28:17Z", "item": "S368", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-16T14:40:40Z", "item": "S368", "action": "note", "from": "", "to": "", "note": "Spec-check answers that change a slice's text are now applie", "by": "Jon Robbins"}
 {"when": "2026-11-16T14:40:42Z", "item": "S368", "action": "status", "from": "started", "to": "done", "note": "Spec-check answers that change a slice's text are applied first (implementer apply section, reviewer confirm section); a backticked Check entry starting with '-' is recorded as not a command and not run. Both listed tests were red before the code and are green; go vet, gofmt, go test ./..., slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:02:14Z", "item": "S370", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:06:05Z", "item": "S370", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T15:06:06Z", "item": "S370", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T15:17:16Z", "item": "S370", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T15:21:40Z", "item": "S370", "action": "note", "from": "", "to": "", "note": "Permission question keeps a title of at most 120 characters ", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:21:42Z", "item": "S370", "action": "status", "from": "started", "to": "done", "note": "Permission question has a title of at most 120 characters and the whole tool input in OwnerQuestion.Detail, carried by ork status --json and run.show and printed as sent by ork show under Input:. Verified: go vet, gofmt, go test ./... (26 packages ok), slicer check, adj lint.", "by": "Jon Robbins"}
 {"when": "2026-11-16T15:03:45Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 5, 2026-11-16, run ork-20261116-012801-28aa, S246 (che", "by": "Jon Robbins"}
 {"when": "2026-11-16T15:11:55Z", "item": "S371", "action": "add", "from": "", "to": "open", "note": "Local roles: ork keeps the anchor log across fresh sessions"}
 {"when": "2026-11-16T15:11:55Z", "item": "S372", "action": "add", "from": "", "to": "open", "note": "Local roles: a smaller read cap"}
@@ -4689,3 +4695,5 @@
 {"when": "2026-11-16T15:31:23Z", "item": "S369", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-16T15:42:18Z", "item": "S369", "action": "note", "from": "", "to": "", "note": "A cloud UI pass can now write its renders: with Spec.WriteDi", "by": "Jon Robbins"}
 {"when": "2026-11-16T15:42:20Z", "item": "S369", "action": "status", "from": "started", "to": "done", "note": "A cloud UI pass can now write its renders: with Spec.WriteDir set (cloud claude, role ui, read-only, run temp dir) Args emits no permission mode and uses --add-dir TEMPDIR, --allowedTools (reviewer read-only list, Skill, Edit and Write under TEMPDIR) and --permission-prompts none. Reviewer, architect, gate and spec check keep plan mode (adj 372 and 374). Verified by unit tests with mutation checks, go vet, gofmt, go test ./..., slicer check and adj lint; not run against a live claude.", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:13:24Z", "item": "S369", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T15:28:12Z", "item": "S374", "action": "add", "from": "", "to": "open", "note": "Grok cutover before the accounts end on 2026-12-09"}

@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/approval.go`\n- `internal/agent/claude/pretool.go:38-51` (`ApprovalDetail`)\n- `internal/cli/show.go`\n- `internal/daemon/approval_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/daemon/approval.go`\n- `internal/daemon/runs.go` (`runShow`)\n- `internal/agent/claude/pretool.go:38-51` (`ApprovalDetail`)\n- `internal/agent/claude/types.go` (`Denial.rawDetail`)\n- `internal/runrec/record.go` (`OwnerQuestion.Detail`)\n- `internal/cli/show.go`\n- `internal/daemon/approval_test.go`\n- `internal/daemon/local_approval_test.go`\n- `internal/cli/show_test.go`\n- `internal/agent/claude/pretool_test.go`\n- `docs/design.md`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestApprovalQuestionCarriesTheFullCommand`: a Bash call with a 600-character command has a title at most 120 characters and a detail field equal to the whole command.\n- `TestShowPrintsTheFullApprovalCommand`: `ork show RUN` prints the detail in full."
+      "body": "- `TestApprovalQuestionCarriesTheFullCommand` (`internal/daemon/approval_test.go`): a Bash call with a 600-character command has a title at most 120 characters and a detail field equal to the whole command, on the status row and on `run.show`.\n- `TestShowPrintsTheFullApprovalCommand` (`internal/cli/show_test.go`): `ork show RUN` prints the detail in full.\n- `TestApprovalDetailIsWholeAndKeepsNewlines` (`internal/agent/claude/pretool_test.go`): the detail is never cut and keeps newlines."
     },
     {
       "heading": "Implement",

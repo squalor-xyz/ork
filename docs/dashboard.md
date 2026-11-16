@@ -1403,8 +1403,11 @@ round while it waits; it is not paused. Enter opens the same run detail
 pane from either view.
 
 The question names the tool and previews its command or file path. For other
-inputs, it shows compact input JSON. The preview is capped at 200 runes with
-`...`, followed by the call number. Titles wrap to the available width and
+inputs, it shows compact input JSON. The title is a preview of at most 120
+characters (tool, start of the input with newlines shown as spaces, `...`,
+call number). The whole input is in the question's `detail` field, which `ork
+status --json` carries and `ork show RUN` prints under `Input:`; the TUI shows
+only the preview (adj 369). Titles wrap to the available width and
 use the pane's existing scrolling and overflow behavior.
 
 The run pane offers `1-2 pick`: Allow or Deny for this call. Picking an option

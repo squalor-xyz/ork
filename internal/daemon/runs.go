@@ -2579,7 +2579,8 @@ const maxShownDenials = 3
 
 // runShow answers what the stored record says of a run (run.show, S297,
 // *proposed*). Like run.report it reads the stored record and does not wait for
-// the run. It serves no file and writes nothing.
+// the run. It serves no file and writes nothing. Besides the record it reads
+// the run's live permission question, which is memory-only (S370).
 func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
 	run, err := d.openRun(p.Run)
 	if err != nil {
@@ -2595,7 +2596,17 @@ func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
 		reply.Reason = pd.Reason
 		pendingRole, pendingRound = pd.Role, pd.Round
 	}
-	if rec.State == runrec.StatePaused {
+	// A live permission question is not in the record. It shows with the whole
+	// tool input, as ork status does (S370).
+	d.runs.mu.Lock()
+	permission := d.firstPermissionLocked(rec.ID)
+	d.runs.mu.Unlock()
+	if permission != nil {
+		ask := *permission.question
+		reply.Pending = &ShowPending{Ask: &ask, Kind: "permission", State: rec.State, Reason: ask.Reason}
+		reply.Next = "ork answer " + rec.ID + " allow|deny"
+	}
+	if rec.State == runrec.StatePaused && permission == nil {
 		reply.Next = pausedNext(rec) // as ork status, also for a record with no pending
 	}
 	if rec.State == runrec.StateStopped {
