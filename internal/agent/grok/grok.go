@@ -1,11 +1,15 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-// Package grok runs Grok role rounds on the grok CLI (S72, *proposed*). Grok
-// ignores engine.Request.Allowlist: --tools takes tool names, not the
-// claude-style patterns. Only read-only roles run, in --permission-mode plan
-// (testdata/vendors/grok/05-plan-mode-edit). A headless run refuses every write
-// under dontAsk and acceptEdits (probes 10 to 12), and the owner rules out
-// bypassPermissions and --always-approve (2026-11-03), so Args refuses a write role.
+// Package grok runs Grok role rounds on the grok CLI (S72, *proposed*). A
+// read-only role runs in --permission-mode plan
+// (testdata/vendors/grok/05-plan-mode-edit). A write role runs in
+// --permission-mode dontAsk with --allow rules built from the role's allowlist
+// (S305, adj 373): a headless run refuses every write under dontAsk and
+// acceptEdits without them (probes 10 to 12), and the owner rules out
+// bypassPermissions and --always-approve (2026-11-03). The rules do not contain
+// grok: it wrote outside the worktree and ran a shell command no rule allowed
+// (probes r1 and r2, 2026-11-07). ork relies on the tree fingerprint, the
+// project check, review and the gate, as for Codex (decision 100).
 package grok
 
 import (
@@ -16,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"slices"
 	"strings"
 	"time"
 
@@ -41,6 +46,7 @@ const creditsText = "used all available credits"
 type Spec struct {
 	Bin, Dir, Prompt, Model, Effort, Resume, ReportFile, FixtureDir string
 	Env                                                             []string
+	Allowlist                                                       []string
 	ReadOnly                                                        bool
 	OnStart                                                         func(int)
 	OnEvent                                                         func(Event)
@@ -59,9 +65,6 @@ func (s Spec) Args() ([]string, error) {
 	if strings.HasPrefix(s.Resume, "-") {
 		return nil, errors.New("grok: resume id starts with '-'")
 	}
-	if !s.ReadOnly {
-		return nil, errors.New("grok: write roles are not supported: a headless grok run cannot write under any permission mode the owner allows")
-	}
 	args := []string{"-p", s.Prompt, "--output-format", "streaming-messages-json", "--include-partial-messages"}
 	if s.Model != "" && !strings.EqualFold(s.Model, "latest") {
 		args = append(args, "-m", s.Model)
@@ -72,11 +75,45 @@ func (s Spec) Args() ([]string, error) {
 	if s.Resume != "" {
 		args = append(args, "--resume", s.Resume)
 	}
-	args = append(args, "--permission-mode", "plan")
+	if s.ReadOnly {
+		args = append(args, "--permission-mode", "plan")
+	} else {
+		args = append(args, "--permission-mode", "dontAsk")
+		for _, rule := range AllowRules(s.Allowlist) {
+			args = append(args, "--allow", rule)
+		}
+	}
 	if s.Dir != "" {
 		args = append(args, "--cwd", s.Dir)
 	}
 	return args, nil
+}
+
+// AllowRules maps a role's claude-style allowlist to grok --allow rules (adj
+// 373). Edit is search_replace and Write is write, Grok's own tool names
+// (probe q1, 2026-11-07; --allow Edit and --allow Write were not used). A bare
+// Bash(...) rule passes as it is. Read, Grep and Glob pass no rule, and a
+// scoped Edit(...) or Write(...) or any other entry is left out, because grok
+// cannot scope a write rule and widening it would grant more than the entry.
+// Each rule appears once, in the order its first entry appears.
+func AllowRules(allow []string) []string {
+	var rules []string
+	add := func(rule string) {
+		if !slices.Contains(rules, rule) {
+			rules = append(rules, rule)
+		}
+	}
+	for _, entry := range allow {
+		switch {
+		case entry == "Edit":
+			add("search_replace")
+		case entry == "Write":
+			add("write")
+		case strings.HasPrefix(entry, "Bash("):
+			add(entry)
+		}
+	}
+	return rules
 }
 
 // Usage holds the token counts of a result. The counts add up: in

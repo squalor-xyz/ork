@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-374 items · — 59 · done 280 · retired 35
+374 items · — 58 · done 281 · retired 35
 
 v1.2
 
@@ -80,7 +80,7 @@ v1.2
 | 30 | S286 | Read release target and wave from slicer: wave start, status and the Waves screen | M | 2 |  | Blocked on slicer s449 (release target and wave). Owner 2026-11-04 wants mini slices to target a version release and each release split into waves to execute. ork should read release_target and wave from slicer (never keep its own copy), fall back to pass when only pass is present, and use them: wave start suggests the next unfinished wave of a release target (wave.selection), status and the Waves screen show release target and wave per item, and the glossary names ork's launched wave against slicer's planned wave and parallel set. Check slicer first (slicer --root ../slicer find) that slicer does not already provide the suggestion. Spec step must run adj check on wave.selection and ask the owner if the key is decided differently. Acceptance: (1) with only pass in slicer data, behavior is unchanged; (2) with release_target and wave, wave start with no items suggests that wave's unfinished items within the cap; (3) status and the Waves screen show release target and wave, with goldens updated and reviewed; (4) docs/glossary.md, docs/design.md and docs/dashboard.md use the new terms; (5) go test ./..., go vet ./... and gofmt -l . are clean. | — |
 | 31 | [S303](slices/S303.md) | Local launcher unreachable: fall back to the next row | S | 2 | daemon, agent | S301 | — |
 | 32 | [S304](slices/S304.md) | Evaluate local launchers per role | M `[needs-owner]` | 2 | daemon |  | — |
-| 33 | [S305](slices/S305.md) | Grok and grok-local accept write roles | M | 2 | agent, daemon |  | — |
+| 33 | [S305](slices/S305.md) | Grok and grok-local accept write roles | M | 2 | agent, daemon |  | done |
 | 34 | [S307](slices/S307.md) | S258 and S274 later notes | M | 2 | daemon, tui, cli | S258 and S274 reviews and gates, 2026-11-07 · discovered from S274 | — |
 | 35 | [S308](slices/S308.md) | ork status lists stale manual relays | S | - |  |  | done |
 | 36 | [S309](slices/S309.md) | A slice Check line a role cannot run fails the gate | S | - |  |  | done |

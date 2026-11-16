@@ -17408,12 +17408,27 @@
       "id": "S305",
       "title": "Grok: allow write roles",
       "short_title": "Grok and grok-local accept write roles",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S301"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f756ac14-e725-4e7b-9a51-b4f137cc9637",
+          "kind": "",
+          "text": "**2026-11-16** — Grok and grok-local run write roles under --permission-mode dontAsk with --allow rules from the role's allowlist (Edit to search_replace, Write to write, Bash(...) as is; Read, Grep, Glob and scoped entries pass no rule), per adj 373 (agent.grok-write-mode, decided 2026-11-16). Read-only roles are unchanged (plan mode). The S268 plan skip, the override bad_params refusal and the matrix 'skipped: grok has no write mode' are removed; ork roles matrix shows used as grok / grok-local. The brief names the dontAsk limits. Docs updated (design, guide, how-it-works). Verified: go vet ./..., gofmt -l, go test ./... (26 packages ok), slicer check (warnings only on other slices), adj lint clean; each new assertion mutation-checked. Probe: no fresh headless write probe was run in this sandbox; the 2026-11-07 probe results (grok 1.0.77: dontAsk plus --allow write --allow search_replace edited notes.txt in the repo; not contained, wrote outside the worktree and ran touch; --sandbox untested, no bubblewrap) are the basis and are recorded in docs/design.md. Unverified: whether dontAsk allows read tools with no --allow rule.",
+          "created_at": "2026-11-16T16:07:00Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -17434,7 +17449,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

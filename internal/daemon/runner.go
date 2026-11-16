@@ -245,8 +245,9 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 }
 
 // grokRunner connects the engine's vendor-neutral request to the grok adapter
-// (S72, *proposed*). Request.Allowlist and TempDir are not used: grok runs
-// read-only roles in plan mode and refuses write roles.
+// (S72, *proposed*). TempDir is not used. A read-only role runs in plan mode;
+// a write role runs in dontAsk mode with allow rules built from
+// Request.Allowlist (S305, adj 373).
 type grokRunner struct {
 	fixtureDir string
 	env        []string
@@ -259,7 +260,7 @@ func (r grokRunner) Run(ctx context.Context, req engine.Request) (engine.Result,
 		call = grok.Run
 	}
 	live := newLiveRedactor(r.env, req.OnLive)
-	round, err := call(ctx, grok.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev grok.Event) {
+	round, err := call(ctx, grok.Spec{Bin: req.Vendor, Dir: req.Worktree, Env: r.env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, Allowlist: req.Allowlist, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev grok.Event) {
 		if text, ok := ev.TextDelta(); ok {
 			live.send(text, 0, false)
 		}

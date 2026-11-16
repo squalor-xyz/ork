@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -484,6 +485,75 @@ func TestGrokRunnerForwardsRequestAndClasses(t *testing.T) {
 		}
 	}
 }
+
+// A write role on grok or grok-local passes the request's allowlist and runs
+// in the slice worktree (S305, adj 373).
+func TestGrokRunnerForwardsAWriteRolesAllowlist(t *testing.T) {
+	for _, vendor := range []string{"grok", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			allow := engine.DefaultImplementerAllowlist("go test ./...")
+			req := engine.Request{Role: engine.RoleImplementer, Vendor: vendor, Worktree: "/work", Brief: "brief", Model: "latest", Effort: "high", Allowlist: allow}
+			r := grokRunner{round: func(_ context.Context, s grok.Spec) (grok.Round, error) {
+				if s.ReadOnly || s.Dir != "/work" || !reflect.DeepEqual(s.Allowlist, allow) || s.Bin != vendor {
+					t.Fatalf("spec %+v", s)
+				}
+				return grok.Round{Exit: grok.ExitOK}, nil
+			}}
+			if got, err := r.Run(context.Background(), req); err != nil || got.Exit != engine.ExitOK {
+				t.Fatalf("%+v %v", got, err)
+			}
+		})
+	}
+}
+
+// The command the fake binary sees: dontAsk with the mapped rules, in the
+// worktree, for both vendors; a read-only role gets plan mode and no rule.
+func TestGrokRunnerBuildsTheWriteCommand(t *testing.T) {
+	for _, vendor := range []string{"grok", "grok-local"} {
+		for _, readOnly := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/readonly=%v", vendor, readOnly), func(t *testing.T) {
+				dir := t.TempDir()
+				argsFile := filepath.Join(dir, "args")
+				script := "#!/bin/sh\npwd > \"$ORK_GROK_ARGS\"\nprintf '%s\\n' \"$@\" >> \"$ORK_GROK_ARGS\"\nprintf '%s' \"$ORK_GROK_OUTPUT\"\n"
+				if err := os.WriteFile(filepath.Join(dir, vendor), []byte(script), 0700); err != nil {
+					t.Fatal(err)
+				}
+				work := t.TempDir()
+				t.Setenv("PATH", dir+string(os.PathListSeparator)+"/bin"+string(os.PathListSeparator)+"/usr/bin")
+				t.Setenv("ORK_GROK_ARGS", argsFile)
+				t.Setenv("ORK_GROK_OUTPUT", `{"type":"result","subtype":"success","is_error":false,"result":"report","usage":{"input_tokens":1,"output_tokens":1}}`)
+				req := engine.Request{Vendor: vendor, Brief: "brief", Worktree: work, Model: "latest", Effort: "high", ReadOnly: readOnly, Allowlist: []string{"Edit", "Write", "Bash(go test*)"}}
+				if readOnly {
+					req.Allowlist = nil
+				}
+				got, err := (grokRunner{fixtureDir: filepath.Join(dir, "fixtures")}).Run(context.Background(), req)
+				if err != nil || got.Exit != engine.ExitOK {
+					t.Fatalf("result %+v %v", got, err)
+				}
+				b, err := os.ReadFile(argsFile)
+				if err != nil {
+					t.Fatal(err)
+				}
+				lines := strings.Split(strings.TrimSpace(string(b)), "\n")
+				wantDir, _ := filepath.EvalSymlinks(work)
+				if gotDir, _ := filepath.EvalSymlinks(lines[0]); gotDir != wantDir {
+					t.Errorf("ran in %q, want %q", lines[0], wantDir)
+				}
+				args := strings.Join(lines[1:], " ")
+				if readOnly {
+					if !strings.Contains(args, "--permission-mode plan") || strings.Contains(args, "--allow") {
+						t.Errorf("read-only args %q", args)
+					}
+					return
+				}
+				if want := "--permission-mode dontAsk --allow search_replace --allow write --allow Bash(go test*) --cwd " + work; !strings.Contains(args, want) {
+					t.Errorf("args %q lack %q", args, want)
+				}
+			})
+		}
+	}
+}
+
 func TestGrokRunnerStreamsTextAndTouchesTheWatchdog(t *testing.T) {
 	var live []engine.Live
 	events := 0

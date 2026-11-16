@@ -70,7 +70,7 @@ It prints the path of the ork binary first, then one line per check
 (`internal/cli/cli.go:204-210`, `docs/design.md:2368-2495`):
 
 - the slicer and adj versions;
-- each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude`, `codex` and `grok` (`docs/design.md:207-216`); grok runs read-only roles only, as an alternate row (*proposed*). A missing vendor is
+- each vendor CLI (claude, codex, grok) and its version. ork runs roles on `claude`, `codex` and `grok` (`docs/design.md:207-216`); grok runs read-only roles in plan mode and write roles under `dontAsk` with allow rules (*proposed*; adj 373, S305). A missing vendor is
   reported and does not fail the check, because ork needs only the vendors
   your lineup uses;
 - the slicer relay contract (`slicer ai relay --json`), for the directory you
@@ -262,9 +262,9 @@ ork does not edit it. Read it in ork: press `m` on the Roadmap, or run
 
 Both show slicer's matrix text and a short `ork` section that says, row by
 row, what ork does with it (the pane puts the `ork` section first, the command
-puts slicer's text first): `used as claude`, `used as codex` or `used as grok`, `skipped: no
-adapter for AGENT`, `skipped: grok has no write mode` for a Grok Implementer row
-(*proposed*, S268), `UI pass row` for every reviewer row that a rule or the
+puts slicer's text first): `used as claude`, `used as codex` or `used as grok`
+(a Grok Implementer row too, *proposed*, S305), `skipped: no
+adapter for AGENT`, `UI pass row` for every reviewer row that a rule or the
 project's `ui_pass_rows` names and `Spec check row` for every row that a rule
 or the project's `spec_check_rows`
 names, `not used: the gate runs the reviewer's lineup` for Gate rows
@@ -296,10 +296,12 @@ reviewer, gate, and an architect when the lineup has one (the matrix gives one o
 `internal/slicercli/write.go:108`). A matrix row for a vendor ork has no adapter
 for is skipped; ork runs `claude`, `codex` and `grok` (`docs/design.md:207-222`). Grok
 runs read-only roles (reviewer, gate, architect, spec check) in plan mode and
-refuses a write role, so a plan skips a Grok implementer row and says why in
-the plan's note, and a launch override that names Grok as the implementer is
-refused with `bad_params` (*proposed*, S72, S268). A project whose implementer
-is the `read-only` preset keeps its Grok row. A matrix model written `FAMILY@latest`, such as `gpt-*-sol@latest` or
+write roles (the implementer) under `--permission-mode dontAsk` with `--allow`
+rules (adj 373, S305, *proposed*): `Edit` becomes `search_replace`, `Write`
+becomes `write` and a `Bash(...)` entry passes as it is. A plan keeps a Grok
+implementer row, and a launch override may name Grok as the implementer. The
+rules do not contain Grok; ork relies on the tree fingerprint, the project
+check, review and the gate. A matrix model written `FAMILY@latest`, such as `gpt-*-sol@latest` or
 `grok-*@latest`, runs the newest model of that family: ork reads the vendor's
 model list when it builds the plan and shows the result in the lineup (*proposed*,
 S244). The plan, the launch pane and the lineup editor print such an entry as
