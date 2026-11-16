@@ -381,9 +381,27 @@ entries:
 			if class == ExitOutOfCredits {
 				exhausted[entry.Vendor] = true
 			}
+			// A rate limit or out of credits marks the vendor out for the rounds
+			// of every run too, as a role round does (S379, *proposed*).
+			if class == ExitRateLimited || class == ExitOutOfCredits {
+				reason := strings.TrimSpace(res.Reason)
+				if reason == "" {
+					reason = string(class)
+				}
+				d.Vendors.MarkOut(entry.Vendor, reason, d.now())
+			}
+			// The next row is the first whose vendor is not out. When every row
+			// left is on a vendor that is out, the first of them that is not
+			// exhausted is tried anyway, as skipVendorsOut does.
 			next := i + 1
-			for next < len(cfg.Lineup) && exhausted[cfg.Lineup[next].Vendor] {
+			for next < len(cfg.Lineup) && (exhausted[cfg.Lineup[next].Vendor] || d.Vendors.IsOut(cfg.Lineup[next].Vendor)) {
 				next++
+			}
+			if next >= len(cfg.Lineup) {
+				next = i + 1
+				for next < len(cfg.Lineup) && exhausted[cfg.Lineup[next].Vendor] {
+					next++
+				}
 			}
 			if fallbackExit(class) && next < len(cfg.Lineup) {
 				cfg.ledger.current = next

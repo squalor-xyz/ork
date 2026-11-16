@@ -1759,7 +1759,14 @@ separately.
   fallback), else every row that a rule naming "Spec check row (rNN)" gives,
   in rule order (u11 today: sonnet, medium; owner decision 2026-11-07).
   Those matrix rows, and every row a rule names, remain separate from every
-  run's reviewer and gate chains. With neither a setting nor a rule, or when
+  run's reviewer and gate chains. *Proposed (S379):* a row whose vendor is
+  marked out (`ork vendor out`, or a rate-limit or out-of-credits exit) is
+  left out of the chain, as run admission skips it, so the next listed row
+  runs. A spec-check round that exits rate-limited or out of credits marks its
+  vendor out, as a role round does, and the check moves to the next row whose
+  vendor is not out. When every row is on a vendor that is out, the check is
+  refused with code `refused`; the message names each vendor, when its mark
+  ends and why, and says `ork vendor back VENDOR` ends it. With neither a setting nor a rule, or when
   no listed row is among the reviewer rows with an adapter that slicer
   recommends, the check is refused with code `no_spec_check_row`. The message
   has one line each for the problem, `fix: ork projects set PROJECT

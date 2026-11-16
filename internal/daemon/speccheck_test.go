@@ -1599,6 +1599,137 @@ func TestSpecChainWithoutASettingUsesEveryRuleRowInOrder(t *testing.T) {
 	}
 }
 
+// grokFirstRig is a project whose spec check rows are r24 (grok) then r16
+// (claude), as in the S379 finding.
+func grokFirstRig(t *testing.T) *specRig {
+	t.Helper()
+	grok := `{"id":"r24","agent":"Grok","vendor":"xAI","model":"grok-4.7","reasoning":"medium"}`
+	recommend := `{"roles":[{"role":"reviewer","row":` + grok + `,"alternatives":[` + matrixRow("r16", "sonnet-spec", "low") + `]}]}`
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: recommend})
+	setSpecCheckRows(t, rig.d, "r24", "r16")
+	rig.report = "## Slice S1\nReady\n\n## Owner needed\n\nnone\n"
+	return rig
+}
+
+// A vendor marked out is skipped by the spec check, as run admission skips it
+// (S379, *proposed*).
+func TestSpecChainSkipsAVendorMarkedOut(t *testing.T) {
+	rig := grokFirstRig(t)
+	if err := rig.d.runs.deps.Vendors.MarkOutOwnerUntil("grok", "marked out by the owner", time.Now(), time.Now().Add(time.Hour)); err != nil {
+		t.Fatal(err)
+	}
+	chain, err := specChainOf(t, rig)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet-spec", Effort: "low"}}; !reflect.DeepEqual(chain, want) {
+		t.Fatalf("chain %+v, want %+v", chain, want)
+	}
+	if res := rig.check(t, "S1"); !rig.item(res, "S1").Ready {
+		t.Fatalf("result %+v", res)
+	}
+	if reqs := rig.requests(); len(reqs) != 1 || reqs[0].Vendor != "claude" || reqs[0].Model != "sonnet-spec" {
+		t.Fatalf("the spec check ran %+v, want one round on r16", reqs)
+	}
+}
+
+// A spec-check role that exits with the out class marks its vendor out and the
+// check moves to the next row (S379, *proposed*).
+func TestSpecCheckFallsBackOnAnOutExit(t *testing.T) {
+	for _, class := range []engine.ExitClass{engine.ExitOutOfCredits, engine.ExitRateLimited} {
+		t.Run(string(class), func(t *testing.T) {
+			rig := grokFirstRig(t)
+			var mu sync.Mutex
+			var vendors []string
+			rig.d.runs.deps.Runner = roundRunner(func(_ context.Context, req engine.Request) (engine.Result, error) {
+				mu.Lock()
+				defer mu.Unlock()
+				vendors = append(vendors, req.Vendor)
+				if req.Vendor == "grok" {
+					return engine.Result{Exit: class, Reason: "grok is out"}, nil
+				}
+				return engine.Result{Exit: engine.ExitOK, Report: rig.report}, nil
+			})
+			res := rig.check(t, "S1")
+			if !rig.item(res, "S1").Ready {
+				t.Fatalf("result %+v", res)
+			}
+			mu.Lock()
+			defer mu.Unlock()
+			if !reflect.DeepEqual(vendors, []string{"grok", "claude"}) {
+				t.Errorf("rounds on %v, want grok then claude", vendors)
+			}
+			if !rig.d.runs.deps.Vendors.IsOut("grok") {
+				t.Error("grok was not marked out")
+			}
+			if rig.d.runs.deps.Vendors.IsOut("claude") {
+				t.Error("claude was marked out")
+			}
+		})
+	}
+}
+
+// After a rate limit the check skips the vendor's other rows too: grok is out
+// now, so r16 runs and not a second grok row (S379, *proposed*).
+func TestSpecCheckSkipsTheOutVendorsOtherRowsAfterARateLimit(t *testing.T) {
+	grok := func(id string) string {
+		return `{"id":"` + id + `","agent":"Grok","vendor":"xAI","model":"grok-` + id + `","reasoning":"medium"}`
+	}
+	recommend := `{"roles":[{"role":"reviewer","row":` + grok("r24") + `,"alternatives":[` + grok("r25") + `,` + matrixRow("r16", "sonnet-spec", "low") + `]}]}`
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: recommend})
+	setSpecCheckRows(t, rig.d, "r24", "r25", "r16")
+	var mu sync.Mutex
+	var models []string
+	rig.d.runs.deps.Runner = roundRunner(func(_ context.Context, req engine.Request) (engine.Result, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		models = append(models, req.Model)
+		if req.Vendor == "grok" {
+			return engine.Result{Exit: engine.ExitRateLimited}, nil
+		}
+		return engine.Result{Exit: engine.ExitOK, Report: "## Slice S1\nReady\n\n## Owner needed\n\nnone\n"}, nil
+	})
+	if res := rig.check(t, "S1"); !rig.item(res, "S1").Ready {
+		t.Fatalf("result %+v", res)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if want := []string{"grok-r24", "sonnet-spec"}; !reflect.DeepEqual(models, want) {
+		t.Errorf("rounds on %v, want %v", models, want)
+	}
+}
+
+// When every spec check row is on a vendor that is out, the check is refused
+// and the message names the vendors and when each one ends (S379, *proposed*).
+func TestSpecCheckAllRowsOutRefuses(t *testing.T) {
+	rig := grokFirstRig(t)
+	now := time.Now()
+	grokUntil, claudeUntil := now.Add(time.Hour), now.Add(2*time.Hour)
+	vendors := rig.d.runs.deps.Vendors
+	if err := vendors.MarkOutOwnerUntil("grok", "marked out by the owner", now, grokUntil); err != nil {
+		t.Fatal(err)
+	}
+	if err := vendors.MarkOutOwnerUntil("claude", "marked out by the owner", now, claudeUntil); err != nil {
+		t.Fatal(err)
+	}
+	_, err := rig.d.handle(context.Background(), MethodSpecCheck, json.RawMessage(`{"project":"p","items":["S1"]}`))
+	if err == nil {
+		t.Fatal("the check ran with every row out")
+	}
+	got := ipc.ErrorOf(err)
+	if got.Code != CodeRefused {
+		t.Fatalf("error %v, want code %s", err, CodeRefused)
+	}
+	for _, want := range []string{"grok is out until " + grokUntil.Local().Format("15:04"), "claude is out until " + claudeUntil.Local().Format("15:04")} {
+		if !strings.Contains(got.Message, want) {
+			t.Errorf("message lacks %q:\n%s", want, got.Message)
+		}
+	}
+	if len(rig.requests()) != 0 {
+		t.Error("a role ran with every row out")
+	}
+}
+
 func TestPlanKeepsEveryRuleNamedSpecCheckRowOutOfEveryChain(t *testing.T) {
 	plan := uiPlan(t,
 		[]string{matrixRow("r3", "sonnet", "high")},

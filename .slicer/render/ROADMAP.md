@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-379 items · — 49 · done 295 · retired 35
+379 items · — 48 · done 296 · retired 35
 
 v1.2
 
@@ -147,7 +147,7 @@ v1.2
 | 97 | [S376](slices/S376.md) | Spec-check screen: overflow marker for tall detail | S | 1 |  | S375 (2026-11-16): the spec-check screen shows a permission question's whole detail (S375); a detail taller than the screen pushes other rows off it. S373's run pane drops a tall detail whole behind an overflow marker. Owner decision adj 383 (`ui.permission-detail-speccheck-overflow`, later). · discovered from S375 | done |
 | 98 | [S377](slices/S377.md) | Landing ff-only fails when main moves mid-landing | S | 2 |  | 2026-11-16, two landings paused on "git merge --ff-only B: ... Diverging branches can't be fast-forwarded": S373 (run ork-20261116-155524-4cf4), after the orchestrator committed to main during the landing; S206 (run ork-20261116-172629-3a8b), after a merge conflict was resolved by hand and the run retried: ork's own commit d6b72802 "Tracking edits on main before landing S206" (`.slicer/log.jsonl`, one line) moved main, and the fast-forward then failed. A plain `ork retry` landed both. · discovered from S206 | done |
 | 99 | [S378](slices/S378.md) | Grok usage limit counts as out | S | 1 |  | 2026-11-16 20:21: two runs with grok as first implementer (S179 run ork-20261116-200151-55ff, S359 run ork-20261116-202144-c7bb) stopped with "implementer round 1 exited unclassified" and made no edit. A headless write call reproduced it (orchestrator probe, `.scratch/grok-probe2/`, grok 1.0.77): exit 1, stderr "Error: You've reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build", and a stream `result` with `subtype` `error_during_execution` and the same text in `errors`. The classifier knows only "used all available credits" (`internal/agent/grok/grok.go:40-42,297`). · discovered from S305 | done |
-| 100 | [S379](slices/S379.md) | Spec check skips a vendor marked out | S | 1 |  | 2026-11-16 20:23: with grok marked out (`ork vendor out grok --until 21:22`), `ork run ork S359` and `ork run ork S179` failed at once with "spec check failed: spec-check (grok grok-4.7 medium) exited unclassified": the spec check still ran its first row (r24, grok). The orchestrator moved ork's spec-check rows to r16,r24 by hand to get past it. · discovered from S305 | — |
+| 100 | [S379](slices/S379.md) | Spec check skips a vendor marked out | S | 1 |  | 2026-11-16 20:23: with grok marked out (`ork vendor out grok --until 21:22`), `ork run ork S359` and `ork run ork S179` failed at once with "spec check failed: spec-check (grok grok-4.7 medium) exited unclassified": the spec check still ran its first row (r24, grok). The orchestrator moved ork's spec-check rows to r16,r24 by hand to get past it. · discovered from S305 | done |
 
 ---
 

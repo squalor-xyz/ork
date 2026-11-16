@@ -20905,10 +20905,25 @@
       "id": "S379",
       "title": "Spec check skips a vendor marked out",
       "short_title": "Spec check skips a vendor marked out",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "adf984ab-0515-45a0-bf74-a6b1c4415cbe",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: the spec check skips a vendor marked out. specChain leaves out rows on an out vendor; a spec-check round that exits rate-limited or out of credits marks its vendor out and moves to the next row whose vendor is not out; with every row out the check is refused (code refused) naming each vendor and its end. Four tests (TestSpecChainSkipsAVendorMarkedOut, TestSpecCheckFallsBackOnAnOutExit, TestSpecCheckSkipsTheOutVendorsOtherRowsAfterARateLimit, TestSpecCheckAllRowsOutRefuses) red before the code, green after, each mutation-checked. go vet, gofmt, go test ./... (26 packages), slicer check and adj lint pass. docs/design.md and CHANGELOG.md updated.",
+          "created_at": "2026-11-16T21:56:13Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20926,7 +20941,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

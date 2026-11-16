@@ -322,6 +322,19 @@ func (v *Vendors) IsOut(vendor string) bool {
 	return ok
 }
 
+// Lookup returns the mark of the vendor when it is out now (S379, *proposed*):
+// the spec check names the vendors and their end times when it refuses.
+func (v *Vendors) Lookup(vendor string) (VendorOut, bool) {
+	if v == nil {
+		return VendorOut{}, false
+	}
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	v.expireLocked()
+	entry, ok := v.out[vendor]
+	return entry, ok
+}
+
 // Out lists the vendors that are out now, sorted by vendor.
 func (v *Vendors) Out() []VendorOut {
 	if v == nil {

@@ -189,7 +189,9 @@ const noRowProblem = "no Spec check row is set: spec_check_rows is empty and no 
 // project's spec check rows in order (see specCheckRows), taken from the
 // reviewer rows slicer recommends for the item. A row without an adapter is
 // left out, so the next listed row is the fallback. When no row is left, the
-// error has code no_spec_check_row.
+// error has code no_spec_check_row. A row whose vendor is out is left out too
+// (S379, *proposed*); when that leaves no row, the error has code refused and
+// names the vendors and when each one ends.
 func (d *Daemon) specChain(ctx context.Context, deps engine.Deps, proj registry.Project, item string) ([]runrec.LineupEntry, error) {
 	rules, err := deps.Slicer.RelayRules(ctx, proj.Path)
 	if err != nil {
@@ -227,13 +229,29 @@ func (d *Daemon) specChain(ctx context.Context, deps engine.Deps, proj registry.
 		return nil, noSpecCheckRow(proj, noRowProblem, false, usableIDs)
 	}
 	var marked []chainEntry
+	var outVendors []VendorOut // the vendors that left a row out, in row order (S379)
 	for _, id := range wanted {
 		for _, r := range usable {
 			if r.ID == id {
 				entry := runrec.LineupEntry{Vendor: matrixAdapters[strings.ToLower(r.Agent)], Model: r.Model, Effort: r.Reasoning}
+				// A row on a vendor that is out is skipped, as run admission skips it.
+				if out, isOut := deps.Vendors.Lookup(entry.Vendor); isOut {
+					if !slices.ContainsFunc(outVendors, func(v VendorOut) bool { return v.Vendor == out.Vendor }) {
+						outVendors = append(outVendors, VendorOut{Vendor: out.Vendor, Reason: out.Reason, Since: out.Since.Local(), Until: out.Until.Local()})
+					}
+					continue
+				}
 				marked = appendChain(marked, chainEntry{entry, isLocalRow(r)})
 			}
 		}
+	}
+	if len(marked) == 0 && len(outVendors) > 0 {
+		lines := []string{"every spec check row is on a vendor that is out, so the check cannot run:"}
+		for _, v := range outVendors {
+			lines = append(lines, v.SentenceAt(d.cfg.Clock.Now()))
+		}
+		lines = append(lines, "end one with: ork vendor back VENDOR")
+		return nil, &ipc.Error{Code: CodeRefused, Message: strings.Join(lines, "\n")}
 	}
 	if len(marked) == 0 {
 		noun, verb := "row (%s) is", "rows (%s) are"

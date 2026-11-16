@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/speccheck.go:182-220` (`specChain`: skip out vendors)\n- `internal/engine/speccheck.go` (fall back on an out exit)\n- `internal/engine/vendors.go` (the out lookup)\n- `internal/daemon/speccheck_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/daemon/speccheck.go:188-269` (`specChain`: skip out vendors)\n- `internal/engine/speccheck.go:381-409` (`runSpecCheckOnce`: mark the vendor out and fall back on an out exit)\n- `internal/engine/vendors.go` (`Vendors.Lookup`, the out lookup)\n- `internal/daemon/speccheck_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestSpecChainSkipsAVendorMarkedOut`: rows r24 (grok) then r16 (claude) with grok marked out run the spec check on r16.\n- `TestSpecCheckFallsBackOnAnOutExit`: a fake grok spec-check role that exits out-of-credits marks grok out and the check finishes on r16.\n- `TestSpecCheckAllRowsOutRefuses`: every row out refuses with a message that names the vendors and their end times."
+      "body": "- `TestSpecChainSkipsAVendorMarkedOut`: rows r24 (grok) then r16 (claude) with grok marked out run the spec check on r16.\n- `TestSpecCheckFallsBackOnAnOutExit`: a fake grok spec-check role that exits out-of-credits (or rate-limited) marks grok out and the check finishes on r16.\n- `TestSpecCheckSkipsTheOutVendorsOtherRowsAfterARateLimit`: rows r24 and r25 (grok) then r16: after a rate-limited r24 the check runs r16, not r25.\n- `TestSpecCheckAllRowsOutRefuses`: every row out refuses with a message that names the vendors and their end times."
     },
     {
       "heading": "Implement",
