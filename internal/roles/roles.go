@@ -133,6 +133,40 @@ func CheckContractLine(line string) (int, error) {
 // AcceptedContractsPhrase returns the accepted versions as a readable list.
 func AcceptedContractsPhrase() string { return phrase(acceptedContracts) }
 
+// acceptedAdjContracts is the adj JSON contract ork accepts (adj 97,
+// boundary.contract-pin, decided ork-sets-checks).
+var acceptedAdjContracts = []int{1}
+
+// AcceptedAdjContracts returns the adj contract versions ork supports.
+func AcceptedAdjContracts() []int { return slices.Clone(acceptedAdjContracts) }
+
+// AdjContractAccepted reports whether v is in the accepted adj set.
+func AdjContractAccepted(v int) bool { return slices.Contains(acceptedAdjContracts, v) }
+
+// AcceptedAdjContractsPhrase returns the adj contract ork accepts.
+func AcceptedAdjContractsPhrase() string { return "adj-json v1" }
+
+// CheckAdjContract refuses a pin that is not the version adj speaks, a pin
+// outside the accepted set, or a spoken version outside it (adj 97). An
+// unpinned repo is checked against the accepted set alone. The error names
+// the versions.
+func CheckAdjContract(contract string, version int, pinned *int) error {
+	spoken := contract
+	if spoken == "" {
+		spoken = fmt.Sprintf("adj-json v%d", version)
+	}
+	if pinned != nil && *pinned != version {
+		return fmt.Errorf("this project pins adj-json v%d, but this adj speaks %s", *pinned, spoken)
+	}
+	if pinned != nil && !AdjContractAccepted(*pinned) {
+		return fmt.Errorf("adj pin v%d is outside what ork accepts (%s)", *pinned, AcceptedAdjContractsPhrase())
+	}
+	if !AdjContractAccepted(version) {
+		return fmt.Errorf("this adj speaks %s, which ork does not accept (%s)", spoken, AcceptedAdjContractsPhrase())
+	}
+	return nil
+}
+
 func phrase(versions []int) string {
 	parts := make([]string, len(versions))
 	for i, v := range versions {

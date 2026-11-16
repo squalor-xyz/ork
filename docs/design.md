@@ -2941,17 +2941,30 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   `boundary.contract-set`, adj 326, which supersedes adj 175). Any other version fails. The check runs
   for the directory doctor is run in, and again for each registered project
   with that project as `--root`, listed as `contract.projects` in the JSON
-  (`project`, `pinned`, `found`, `ok`, `error`) and as one `contract NAME` line
+  (`project`, `pinned`, `found`, `ok`, `error`; *proposed:* `adj_pinned`, `adj_found`, `adj_error`) and as one `contract NAME` line
   each in the text. A project fails when its pin is outside the accepted set
   or its slicer refuses with `contract_mismatch` (exit 2, no contract text;
   `slicer/docs/agents.md:712`); slicer's error object names the pinned and the
-  served version. An unpinned project is checked against the accepted set alone. A
-  project whose path is gone is skipped (its project finding says so). The pin
+  served version. An unpinned project is checked against the accepted set alone.
+  *Proposed* (S206): a project with adj on is also asked `adj contract --json
+  --root PATH` (see `adj contract --help`). The entry adds `adj_pinned` (null
+  when unpinned or when adj is off), `adj_found` (the contract string adj
+  speaks) and `adj_error`. It fails when adj refuses with `contract_mismatch`,
+  when the pin is not the version adj speaks, when the pin is outside the
+  accepted set, or when the version adj speaks is outside it. An unpinned adj
+  repo is checked against the accepted set alone (adj-json v1). An ok text
+  line names the slicer pin, and the next indented line is `adj-json v1
+  pinned`, `adj-json v1 unpinned`, or `adj -` when adj is off. A failed adj
+  check ends with `run ork projects pin NAME --adj 1` or `ork projects unpin
+  NAME --adj`. Engine start reads the same contract after the slicer
+  check and refuses on the same rules, before any other adj read and before a
+  run record exists. A project whose path is gone is skipped (its project finding says so). The pin
   is set with `ork projects pin NAME --relay N`, which refuses N outside the
   accepted set before it runs anything, runs `slicer config relay_contract N
   --root PROJECT`, and reports the `pinned` value that `slicer ai relay
   --json` then prints; `ork projects unpin NAME` runs `slicer config
-  relay_contract --unset --root PROJECT`. Neither needs the daemon, and ork
+  relay_contract --unset --root PROJECT` and, for a project with adj on,
+  `adj contract unpin`. Neither needs the daemon, and ork
   never writes the pin to `projects.json` or to slicer's config file itself
   (`boundary.contract-pin`, adj 97). Engine start reads the same string, and a
   `contract_mismatch` refuses the run with slicer's error and no run record.
@@ -3326,7 +3339,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `pin` (the `pinned` value that `slicer ai relay --json` prints after the
   set) and `{"project":"NAME","pinned":null}` for `unpin`. Text: `pinned NAME
   at relay vN` and `unpinned NAME`. Exit 2 (usage, before any tool runs): a
-  missing `--relay` (`projects pin needs --relay N (v11 or v12)`), an N
+  missing `--relay` and `--adj` (`projects pin needs --relay N (v11 or v12) or --adj M (adj-json v1)`), an N
   outside the accepted set, or a wrong argument count. An unregistered NAME
   is `not_found` (exit 1), with a hint to run `ork projects list`.
   Exit 1 also covers when slicer fails the set or unset call (its message is
@@ -3334,8 +3347,28 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   v11 on a slicer that serves v12. In that case the pin stays set, and the
   message names the project, quotes slicer's error and gives the next step,
   `ork projects pin NAME --relay N` with the version slicer serves or `ork
-  projects unpin NAME` (owner, 2026-10-31). `pin` also exits 1 when slicer
+  projects unpin NAME` (owner, 2026-10-31). On a project with adj on, that
+  `unpin NAME` clears the slicer pin and the adj pin, and the message says so.
+  `pin` also exits 1 when slicer
   prints no pin after a successful set.
+- `projects pin NAME [--relay N] [--adj M]` and `projects unpin NAME [--adj]`
+  (*proposed*, S206; adj 97): the adj contract pin, set through adj
+  (`adj contract --help`), not by writing `.adjudicate.json` or `projects.json`.
+  At least one of `--relay` and `--adj` is required. M outside the accepted set
+  (adj-json v1), or `--adj` on a project with adj off, is a usage error (exit 2)
+  before any call. With both flags the slicer pin runs first and the adj pin
+  only if that call succeeded; ork then reads `adj contract --json` and reports
+  the pin, not the version adj speaks. It exits 1 when that pin is not the
+  version adj speaks; the pin stays set. Text forms: `pinned NAME at relay vN`,
+  `pinned NAME at adj-json v1`, `pinned NAME at relay vN and adj-json v1`,
+  `unpinned NAME (adj)`, and `unpinned NAME (relay and adj)`. When adj's call
+  fails after slicer's call succeeded, pin says the relay pin stays set and
+  unpin says the relay pin was cleared and the adj pin is unchanged (`ork
+  projects unpin NAME --adj` remains the way to clear it). `unpin` with no
+  flag clears the slicer pin and, when the project has adj on, the adj pin
+  (slicer first, adj only if that succeeded). `--adj` clears only the adj pin.
+  A project with adj off keeps the slicer-only unpin (`unpinned NAME`). JSON
+  adds `adj_pinned` when an adj pin was set or cleared.
 - `settings show` and `settings set [--global-cap N] [--daemon-idle-minutes N]`
   (*proposed*, S174, owner decision 2026-10-29): the file-level registry
   settings, over `settings.get` and `settings.set`. `show` prints
@@ -3367,7 +3400,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   first, then slicer's text (owner, 2026-10-29).
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
   "ok","error"}],"contract":{"accepted":[10,11],"found","ok","error",
-  "projects":[{"project","pinned","found","ok","error"}]},"binary",
+  "projects":[{"project","pinned","found","ok","error","adj_pinned","adj_found","adj_error"}]},"binary",
   "projects":[{"name","path","findings":[]}],"registry_error"?}`,
   where `binary` is the path of the running ork binary (empty when it cannot
   be read). Text: one `[ok]`, `[--]`, `[WARN]` or `[FAIL]` line per check, and
@@ -3382,7 +3415,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   and `found` is the bare contract string ("relay vN"). Both formats are
   kept on purpose. A failed project's text line ends with ork's next step,
   `run ork projects pin NAME --relay N ... or ork projects unpin NAME`,
-  for a refused pin or a pin outside the accepted set.
+  for a refused slicer pin or a slicer pin outside the accepted set. On a
+  project with adj on, that `unpin NAME` clears the slicer pin and the adj
+  pin. An adj failure names `run ork projects pin NAME --adj 1 ... or ork
+  projects unpin NAME --adj`.
   Projects have one `project NAME  PATH` line each, with
   findings indented below. Every finding is stored on one line.
 

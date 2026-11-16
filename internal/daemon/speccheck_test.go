@@ -186,7 +186,9 @@ func TestSpecCheckReusesAdjDecision(t *testing.T) {
 			if tc.waiting {
 				route.Seq = []clitest.Reply{{Stdout: tc.output}, {Stdout: `{"decided":[{"id":42,"key":"cache.index-store","decision":"memory","options":[{"label":"memory","summary":"rebuilt at each start"}]}]}`}}
 			}
-			rig := newSpecRig(t, rulesJSON(u11), route)
+			rig := newSpecRig(t, rulesJSON(u11),
+				clitest.Route{Tool: "adj", Args: []string{"contract", "--json"}, Prefix: true, Stdout: `{"contract":"adj-json v1","version":1,"pinned":null}`},
+				route)
 			reg, err := registry.Load(rig.d.cfg.RegistryPath)
 			if err != nil {
 				t.Fatal(err)
