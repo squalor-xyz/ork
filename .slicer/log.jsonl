@@ -4672,3 +4672,6 @@
 {"when": "2026-11-16T14:40:40Z", "item": "S368", "action": "note", "from": "", "to": "", "note": "Spec-check answers that change a slice's text are now applie", "by": "Jon Robbins"}
 {"when": "2026-11-16T14:40:42Z", "item": "S368", "action": "status", "from": "started", "to": "done", "note": "Spec-check answers that change a slice's text are applied first (implementer apply section, reviewer confirm section); a backticked Check entry starting with '-' is recorded as not a command and not run. Both listed tests were red before the code and are green; go vet, gofmt, go test ./..., slicer check and adj lint pass.", "by": "Jon Robbins"}
 {"when": "2026-11-16T15:03:45Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 5, 2026-11-16, run ork-20261116-012801-28aa, S246 (che", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:11:55Z", "item": "S371", "action": "add", "from": "", "to": "open", "note": "Local roles: ork keeps the anchor log across fresh sessions"}
+{"when": "2026-11-16T15:11:55Z", "item": "S372", "action": "add", "from": "", "to": "open", "note": "Local roles: a smaller read cap"}
+{"when": "2026-11-16T15:11:55Z", "item": "S373", "action": "add", "from": "", "to": "open", "note": "TUI: show a permission call's whole command"}

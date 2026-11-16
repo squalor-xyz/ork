@@ -1,0 +1,41 @@
+{
+  "id": "S371",
+  "title": "Local roles: ork keeps the anchor log across fresh sessions",
+  "lead": [
+    "*Proposed.* Owner direction 2026-11-16 (relay session 8d711f67, interactive question, \"ork keeps anchor log\"): ork records what a local role read and searched in each session, from the calls its approval hook already sees, and puts that record in the next session's brief. The model's own progress note stays; ork's record does not depend on it."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 5 (2026-11-16, run ork-20261116-012801-28aa, S246): the claude-local implementer ran 5 sessions in 90 min with 0 Edits; each session made 16-24 Reads and 11-17 Greps and read internal/daemon/runs.go 7-12 times. Its progress note's anchor log stayed \"(none yet)\", so the restart brief (`internal/engine/round.go:599-606`) told each new session to trust a note that held nothing, and it re-read the same file.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* A local model does not keep the note's anchor log while it explores (trials 3 and 5). The approval hook (`internal/agent/claude/pretool.go`, `Evaluate`) sees every Read (path, offset, limit) and Grep (pattern, path) a claude-local role makes, so ork can write the log itself.\n\nOpen owner questions (the implementer asks them with `adj ask` first):\n\n- Q1 (`roles.local-read-log-content`): what goes in the record? (a) *recommended*: one line per Read (`path:start-end`) and per Grep (`pattern in path: N hits`), merged so a range read twice shows once, newest last, at most 80 lines. (b) also the first lines of each Grep's hits.\n- Q2 (`roles.local-read-log-reuse`): what does the restart brief say about it? (a) *recommended*: \"You already read these; do not read them again unless you are about to edit that range.\" (b) list only, no instruction."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/approval.go` (append each evaluated Read or Grep of a claude-local role to the run's read log)\n- `internal/agent/claude/pretool.go:53` (`Evaluate`: the call's path and range are already parsed)\n- `internal/engine/round.go:585-606` (restart brief: the read log under its own heading)\n- `internal/daemon/approval_test.go`\n- `internal/engine/round_test.go`\n- `docs/design.md`\n- `docs/state.md` (the read log file in the run dir)\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestApprovalRecordsLocalReads`: three Read calls and one Grep through the approval point leave four entries in the run's read log for that role and round.\n- `TestRestartBriefCarriesTheReadLog`: a fresh session's brief holds the merged read log under `## Already read`, after the progress note.\n- `TestReadLogMergesRepeatedRanges`: the same `path:1-500` read twice appears once.\n- `TestCloudRoleHasNoReadLog`: a cloud role's brief and run dir are unchanged."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Red tests, then the code.\n3. Docs: `docs/design.md`, `docs/state.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- `[AFTER LAND]` S304 trial 6 runs a local implementer on a slice with a large file and records sessions, reads and edits in S304's notes."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
