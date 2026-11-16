@@ -155,7 +155,7 @@ func (d *Daemon) prepareApproval(ctx context.Context, req engine.Request, allow 
 	if req.ProjectRoot != "" {
 		scratch = filepath.Join(req.ProjectRoot, ".scratch")
 	}
-	token, finish := d.registerApproval(ctx, req, claude.ApprovalPolicy{Worktree: req.Worktree, Scratch: scratch, AddDir: addDir, TempDir: req.TempDir, ReportFile: req.ReportPath, Allowlist: append([]string(nil), allow...)})
+	token, finish := d.registerApproval(ctx, req, claude.ApprovalPolicy{Worktree: req.Worktree, Scratch: scratch, AddDir: addDir, TempDir: req.TempDir, ReportFile: req.ReportPath, Allowlist: append([]string(nil), allow...), Role: req.Role})
 	return shellQuoteHook(exe) + " hook pretool --socket " + shellQuoteHook(d.cfg.Paths.Socket) + " --session " + shellQuoteHook(token), finish, nil
 }
 

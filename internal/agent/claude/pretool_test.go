@@ -8,6 +8,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/squalor-xyz/ork/internal/roles"
 )
 
 // S370: the approval detail is never cut, keeps the newline that separates
@@ -48,6 +50,79 @@ func TestPretoolReadLimits(t *testing.T) {
 				t.Fatalf("reason %q lacks count/500 guidance", got.Reason)
 			}
 		})
+	}
+}
+
+// S372: the implementer's Read cap is 150 lines, with a Grep-and-window
+// denial. A read-only role keeps the 500-line cap and today's denial.
+func TestEvaluateLocalReadCap(t *testing.T) {
+	root := t.TempDir()
+	path := filepath.Join(root, "file")
+	if err := os.WriteFile(path, []byte(strings.Repeat("line\n", 2000)), 0600); err != nil {
+		t.Fatal(err)
+	}
+	eval := func(role, extra string) Approval {
+		t.Helper()
+		input := json.RawMessage(`{"file_path":` + strconvQuote(path) + extra + `}`)
+		return (ApprovalPolicy{Worktree: root, Role: role, Allowlist: []string{"Read"}}).Evaluate(ToolCall{ToolName: "Read", ToolInput: input})
+	}
+	implOver := eval("implementer", `,"limit":151`)
+	if implOver.Decision != "deny" || implOver.Reason != "Read limit must be 1 to 150; Grep for the symbol and Read 150 lines around it" {
+		t.Fatalf("implementer over cap = %+v", implOver)
+	}
+	if got := eval("implementer", `,"limit":150`); got.Decision != "allow" {
+		t.Fatalf("implementer at cap = %+v, want allow", got)
+	}
+	if got := eval("reviewer", `,"limit":500`); got.Decision != "allow" {
+		t.Fatalf("read-only at cap = %+v, want allow", got)
+	}
+	roOver := eval("reviewer", `,"limit":501`)
+	if roOver.Decision != "deny" || roOver.Reason != "Read limit must be 1 to 500; Grep first, then Read with offset and limit (at most 500 lines)" {
+		t.Fatalf("read-only over cap = %+v", roOver)
+	}
+}
+
+func TestEvaluateUnlimitedReadOfABigFile(t *testing.T) {
+	root := t.TempDir()
+	write := func(name string, n int) string {
+		t.Helper()
+		path := filepath.Join(root, name)
+		if err := os.WriteFile(path, []byte(strings.Repeat("line\n", n)), 0600); err != nil {
+			t.Fatal(err)
+		}
+		return path
+	}
+	eval := func(role, path string) Approval {
+		t.Helper()
+		input := json.RawMessage(`{"file_path":` + strconvQuote(path) + `}`)
+		return (ApprovalPolicy{Worktree: root, Role: role, Allowlist: []string{"Read"}}).Evaluate(ToolCall{ToolName: "Read", ToolInput: input})
+	}
+	over := eval("implementer", write("over.go", 151))
+	if over.Decision != "deny" || over.Reason != "this file has 151 lines; Grep for the symbol and Read 150 lines around it" {
+		t.Fatalf("implementer unbounded = %+v", over)
+	}
+	if got := eval("implementer", write("at.go", 150)); got.Decision != "allow" {
+		t.Fatalf("implementer 150-line file = %+v, want allow", got)
+	}
+	if got := eval("reviewer", write("mid.go", 151)); got.Decision != "allow" {
+		t.Fatalf("read-only 151-line file = %+v, want allow", got)
+	}
+	ro := eval("reviewer", write("big.go", 501))
+	if ro.Decision != "deny" || ro.Reason != "this file has 501 lines; Grep first, then Read with offset and limit (at most 500 lines)" {
+		t.Fatalf("read-only unbounded = %+v", ro)
+	}
+}
+
+func TestLocalSystemPromptNamesTheCap(t *testing.T) {
+	p := roles.LocalSystemPrompt()
+	for _, sentence := range []string{
+		"The implementer may read at most 150 lines",
+		"Grep for the symbol and Read 150 lines around it",
+		"A read-only role may read at most 500 lines",
+	} {
+		if !strings.Contains(p, sentence) {
+			t.Fatalf("local system prompt lacks %q", sentence)
+		}
 	}
 }
 

@@ -163,6 +163,46 @@ func TestApprovalTimeout(t *testing.T) {
 	}
 }
 
+// The live hook uses the role on the approval session (S372). Removing
+// Role from prepareApproval lets an implementer read 151 lines.
+func TestApprovalImplementerReadCapIsSmaller(t *testing.T) {
+	for _, tc := range []struct {
+		name, role, want, reason string
+		lines                    int
+	}{
+		{"implementer", "implementer", "deny", "this file has 151 lines; Grep for the symbol and Read 150 lines around it", 151},
+		{"reviewer", "reviewer", "allow", "role allowlist", 151},
+		{"reviewer over 500", "reviewer", "deny", "this file has 501 lines; Grep first, then Read with offset and limit (at most 500 lines)", 501},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, req := approvalRun(t)
+			req.Role = tc.role
+			req.Allowlist = []string{"Read"}
+			path := filepath.Join(req.Worktree, "file.go")
+			if err := os.WriteFile(path, []byte(strings.Repeat("line\n", tc.lines)), 0600); err != nil {
+				t.Fatal(err)
+			}
+			var got claude.Approval
+			runner := claudeRunner{approval: d.prepareApproval, round: func(ctx context.Context, s claude.Spec) (claude.Round, error) {
+				words := strings.Fields(s.HookCommand)
+				if len(words) == 0 {
+					return claude.Round{}, fmt.Errorf("local runner did not wire approval hook")
+				}
+				token := strings.Trim(words[len(words)-1], "'")
+				answer, err := approvalRequest(d, ctx, ApprovalParams{Session: token, Call: claude.ToolCall{ToolName: "Read", ToolInput: json.RawMessage(`{"file_path":` + quoteJSON(path) + `}`)}})
+				got = answer
+				return claude.Round{Class: claude.ClassOK}, err
+			}}
+			if _, err := runner.Run(context.Background(), req); err != nil {
+				t.Fatal(err)
+			}
+			if got.Decision != tc.want || got.Reason != tc.reason {
+				t.Fatalf("hook read = %+v, want %s %q", got, tc.want, tc.reason)
+			}
+		})
+	}
+}
+
 func TestApprovalFakeClaudeDenialContinues(t *testing.T) {
 	d, store, project := runDaemon(t, nil)
 	runner := claudeRunner{approval: d.prepareApproval, round: func(ctx context.Context, s claude.Spec) (claude.Round, error) {
