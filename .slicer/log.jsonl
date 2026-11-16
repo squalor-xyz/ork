@@ -4675,3 +4675,4 @@
 {"when": "2026-11-16T15:11:55Z", "item": "S371", "action": "add", "from": "", "to": "open", "note": "Local roles: ork keeps the anchor log across fresh sessions"}
 {"when": "2026-11-16T15:11:55Z", "item": "S372", "action": "add", "from": "", "to": "open", "note": "Local roles: a smaller read cap"}
 {"when": "2026-11-16T15:11:55Z", "item": "S373", "action": "add", "from": "", "to": "open", "note": "TUI: show a permission call's whole command"}
+{"when": "2026-11-16T15:12:09Z", "item": "S373", "action": "edit", "from": "", "to": "", "note": "Files"}

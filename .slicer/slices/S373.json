@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/tui/questions.go`\n- `internal/tui/pane.go`\n- `internal/tui/testdata/golden/`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/tui/questions.go`\n- `internal/tui/pane.go`\n- `testdata/golden/`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",
