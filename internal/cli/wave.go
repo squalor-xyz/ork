@@ -502,6 +502,36 @@ func printWaveOutput(o *output, result daemon.WaveResult, launch bool) int {
 	return code
 }
 
+// printWaveApprove prints one line for each run of the wave, "ITEM RUN
+// OUTCOME", and what went wrong with a failed run on stderr. The exit is 1 when
+// any run failed or was not attempted (S222, *proposed*).
+func printWaveApprove(o *output, result daemon.WaveApproveResult) int {
+	code := ExitOK
+	for _, item := range result.Items {
+		if item.Outcome == daemon.WaveApproveFailed || item.Outcome == daemon.WaveApproveNotAttempted {
+			code = ExitFailure
+		}
+	}
+	if o.json {
+		if printed := o.printJSON(result); printed != ExitOK {
+			return printed
+		}
+		return code
+	}
+	for _, item := range result.Items {
+		fmt.Fprintf(o.stdout, "%s %s %s\n", item.Item, item.Run, item.Outcome)
+		if item.Outcome != daemon.WaveApproveFailed {
+			continue
+		}
+		if item.Error != nil {
+			fmt.Fprintf(o.stderr, "%s: %s (%s)\n", item.Item, item.Error.Message, item.Error.Code)
+		} else {
+			fmt.Fprintf(o.stderr, "%s: the run is %s, not committed\n", item.Item, item.State)
+		}
+	}
+	return code
+}
+
 // specCheck runs the spec check on the planned items (adj 164). A ready item
 // stays in the wave. For an item with open questions it asks them all in one
 // sitting, records the answers, and keeps the item once they are in. An item

@@ -122,6 +122,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.stopWave(ctx, p)
+	case MethodWaveApprove:
+		var p WaveAction
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.approveWave(ctx, p)
 	case MethodWaveSuggest:
 		var p WaveSuggestParams
 		if err := decode(params, &p); err != nil {

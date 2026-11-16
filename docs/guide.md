@@ -800,6 +800,23 @@ follow-up list and the `[AFTER LAND]` handling do not change. `later` means you
 have not looked: use the flag when you mean that. There is no `all ticked`;
 ticking stays per check.
 
+*Proposed (S222):* when a wave has two or more runs waiting at the card, you can
+approve them as one action instead of one after the other: `ork approve
+WAVE-ID`, or `A` on an Overview row or in a run pane (it acts on the wave of the
+selected run and asks `y/N` first, naming the runs in start order). ork approves
+the first run, waits until it has landed (or come back to its card after a fix
+round), then approves the next, in the order the runs were started. It stops at
+the first run that does not end committed: that run keeps its state (a fix
+round or a pause), the runs after it stay at their cards, and `ork approve`
+prints `failed` and `not-attempted` for them and exits 1. A run that landed
+stays landed. A run you started with `--stop-after commit` ends committed
+without landing; that counts as done, the wave goes on, and you land that run
+yourself later. It never ticks a check for you: if any waiting run has a human check
+that is neither ticked nor marked later, the whole call is refused, approving
+nothing, and names each run and its open checks. Mark them (`ork check RUN N`),
+then run it again. `--later-checks` is for one run and is refused with a wave
+id. For a single run use `a` or `ork approve RUN` as before.
+
 *Proposed (S238):* if the merge has a conflict, ork merges the `CHANGELOG.md`
 entries itself and pauses the run on any other file, with a one-line message
 that names the files and the worktree. Resolve them in the worktree (no need
@@ -868,6 +885,7 @@ them all (`internal/tui/keys.go:82-157`).
 | Lists | `j` `k`, `g` `G`, `pgup` `pgdown`, `ctrl+d` `ctrl+u` | move and scroll |
 | Overview | `enter`, `esc` | open / close a run |
 | Overview, run pane | `a`, `x`, `t`, `c` | approve, stop, retry, clean up a merged worktree |
+| Overview, run pane (*proposed*, S222) | `A` | approve every waiting run of the selected run's wave, in start order (asks first) |
 | Run pane | `1`-`9`, `F`, `v`, `f`, `o` | mark check, fix note, renders, file slice, answer owner finding |
 | Question | `1`-`4` then `y`; `t` then `enter`; `ctrl+a` | load an option and send it; type a free answer and send it; file in adj |
 | Running entry | `space`, `E` | expand a run, expand all |
@@ -917,6 +935,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork check RUN all later
     ork fix RUN TEXT
     ork approve RUN [--later-checks]
+    ork approve WAVE-ID
     ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
     ork stop RUN|WAVE
     ork dismiss RUN

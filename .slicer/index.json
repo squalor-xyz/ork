@@ -12605,7 +12605,7 @@
       "id": "S222",
       "title": "Approve a wave as one action: approve every waiting run in order and stop at the first failure",
       "short_title": "Approve a wave in order",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -12616,6 +12616,34 @@
           "created_at": "2026-11-01T00:58:29Z",
           "attempt": 0,
           "by": "Jon R",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "84f7c1bb-5030-4326-a6a8-52a053615a20",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S222):\n- later: deferred to land: With a real pair wave of two small slices, both at `awaiting-approval`: tick every human check, press the key, read the confirm at 100x30 and 80x24, confirm, and watch the first land and then the second. Then repeat with a pair whose second landing hits a conflict and confirm the first lands, the second goes to a fix round, and nothing else is approved.",
+          "created_at": "2026-11-16T19:47:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2ecbb770-8e9d-4a90-88f2-1f564c33d071",
+          "kind": "",
+          "text": "**2026-11-16** — Approve a wave in order is implemented and verified: ork approve WAVE-ID, the wave.approve daemon method and the A key (Overview row or run pane, after a y/N naming the runs and what each approval does) approve every waiting run of a wave one after the other in start order and stop at the first run that does not end committed. No human check is ticked or skipped; any open check refuses the whole call. The engine run rows carry wave. Verified: go test -race -count=1 ./... passed in all packages, go vet and gofmt clean, slicer check and adj lint clean for S222, go test -race -run TestWaveApproveKey ./internal/tui exits 0, and every new assertion was mutation-checked. The [AFTER LAND] pair-wave human check is left for the owner after landing.",
+          "created_at": "2026-11-16T19:47:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
           "stale_after": "",
@@ -12641,7 +12669,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

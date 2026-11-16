@@ -482,7 +482,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 				}
 			}
 		}
-		if r, ok := m.actionRow(); ok && msg.action.run != "" && (r.engineID == msg.action.run || (msg.action.verb == "end" && r.ledgerID == msg.action.run)) && r.name == msg.action.project {
+		if msg.action.verb == "approve-wave" {
+			// The status names every run of the wave, not the selected row's.
+			m.actionStatus = msg.action.waveDoneText(msg.err)
+		} else if r, ok := m.actionRow(); ok && msg.action.run != "" && (r.engineID == msg.action.run || (msg.action.verb == "end" && r.ledgerID == msg.action.run)) && r.name == msg.action.project {
 			switch {
 			case msg.err != nil && msg.action.verb == "end" && isRefused(msg.err):
 				m.actionStatus = actionError(msg.err) // the refusal names the run and its state
@@ -865,6 +868,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.requestAction("cleanup")
 	case key.Matches(msg, m.keys.Approve):
 		return m.requestAction("approve")
+	case key.Matches(msg, m.keys.ApproveWave):
+		return m.requestAction("approve-wave")
 	case key.Matches(msg, m.keys.Stop):
 		return m.requestAction("stop")
 	case key.Matches(msg, m.keys.Retry):
@@ -1415,9 +1420,13 @@ type runAction struct {
 	budgets                  *registry.Budgets
 	plan                     *daemon.RunPlan
 	wellSpecified, split     bool
-	push                     bool   // approve: the project's push setting is on
-	outcome                  string // approve: "committed", "landed", "fix round", or ""
-	rebuild                  bool   // landed self-host run: the refreshed build is behind main
+	push                     bool                      // approve: the project's push setting is on
+	outcome                  string                    // approve: "committed", "landed", "fix round", or ""
+	rebuild                  bool                      // landed self-host run: the refreshed build is behind main
+	wave                     string                    // approve-wave: the wave id (S222, *proposed*)
+	waveItems                []string                  // approve-wave: the waiting runs' items in start order
+	waveCommit               []bool                    // approve-wave: for each waiting run, whether it stops after its commit (committed, not landed)
+	waveResult               *daemon.WaveApproveResult // approve-wave: what the call did
 }
 
 // cleanupCommand is the git commands of the cleanup key that will run, one per
@@ -1479,6 +1488,9 @@ func (a runAction) command() string {
 	if a.verb == "cleanup" {
 		return a.cleanupCommand
 	}
+	if a.verb == "approve-wave" {
+		return "ork approve " + a.wave
+	}
 	if a.verb == "wave" {
 		cmd := "ork wave start " + a.project
 		for _, p := range a.items {
@@ -1518,7 +1530,7 @@ func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
 		return a.command() + "\n" + a.cleanupQuestion()
 	}
-	if a.verb == "approve" || a.verb == "file" || a.verb == "end" || a.verb == "decide" || a.verb == "relay-answer" {
+	if a.verb == "approve" || a.verb == "approve-wave" || a.verb == "file" || a.verb == "end" || a.verb == "decide" || a.verb == "relay-answer" {
 		return a.promptWidth(0)
 	}
 	if a.verb == "launch" && a.plan != nil && a.plan.CheckCommand == "" {
@@ -1582,6 +1594,23 @@ func (a runAction) promptWidth(w int) string {
 			return a.command() + "\n" + question + "\n" + keys
 		}
 		return a.command() + "\n" + question + " " + keys
+	}
+	if a.verb == "approve-wave" {
+		// The command, what each approval does (S119, adj 162, adj 152) and where
+		// the call stops, then the question naming the runs in start order. The
+		// keys stay whole, as for one run.
+		note, question := a.waveQuestion()
+		const keys = "[y/N] (Enter is No)"
+		lines := []string{a.command()}
+		if w > 0 {
+			lines = append(lines, wrapText(note, w)...)
+		} else {
+			lines = append(lines, note)
+		}
+		if w > 0 && lipgloss.Width(question+" "+keys) > w {
+			return strings.Join(append(append(lines, wrapText(question, w)...), keys), "\n")
+		}
+		return strings.Join(append(lines, question+" "+keys), "\n")
 	}
 	if a.verb != "approve" {
 		return a.prompt()
@@ -1672,6 +1701,15 @@ func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, ref
 	if verb == "stop" && r.state == "stopped" {
 		return "run is already stopped; clear with: ork dismiss " + r.engineID, true
 	}
+	if verb == "approve" {
+		// A wave approval in flight is about to approve this run too (S222).
+		if why := m.waveCallPending(r); why != "" {
+			return why, true
+		}
+	}
+	if verb == "approve-wave" {
+		return m.waveApproveRefusal(r)
+	}
 	if verb == "approve" && r.state != "awaiting-approval" {
 		return "approve needs " + stateWord("awaiting-approval") + "; run is " + stateWord(r.state), true
 	}
@@ -1743,6 +1781,11 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 				a.item, a.stopAfter = run.Item, run.StopAfter
 			}
 		}
+	}
+	if verb == "approve-wave" {
+		// The call approves and lands several runs: it always asks first, in the
+		// pane as on a row, and names the runs in start order (S222).
+		m.fillWave(&a, r)
 	}
 	if verb == "approve" && m.pane == nil {
 		// On an Overview row approval asks first: it lands the slice and
@@ -1823,6 +1866,14 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 				}
 			} else {
 				err = live.Approve(context.Background(), a.run)
+			}
+		case "approve-wave":
+			if wa, ok := live.(waveApprover); ok {
+				var result daemon.WaveApproveResult
+				result, err = wa.WaveApprove(context.Background(), a.wave)
+				a.waveResult = &result
+			} else {
+				err = errors.New("this daemon connection cannot approve a wave")
 			}
 		case "end":
 			err = endLedger(live, a)

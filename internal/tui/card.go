@@ -660,6 +660,9 @@ func (a runAction) pendingText() string {
 		}
 		return fmt.Sprintf("marking check %d %s", a.check, markWord(a.state))
 	}
+	if a.verb == "approve-wave" {
+		return "approving " + a.wave + ": " + strings.Join(a.waveItems, ", ") + ": pending"
+	}
 	if a.verb == "approve" && a.item != "" {
 		if a.stopAfter == runrec.StopAfterCommit {
 			return "committing " + a.item + ": pending"

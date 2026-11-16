@@ -133,6 +133,7 @@ ork (TUI)  ork status --json (CLI)
   | `wave.list` (proposed wire, S215) | `{"project"?}` | `{"waves":[{"project","name","items":[{"item","status","title"}],"created_at","updated_at","error"?}]}` in the order saved; `status` and `title` come from one `slicer list --all` for each project that has a wave to show, and a member that list lacks has status `missing`; a project whose slicer read fails (or that is no longer registered) puts `error` on its waves and the members carry no status, and the other projects still list; an unknown `project` filter is `not_found`; slicer runs on each call; nothing is written |
   | `wave.rm` (proposed wire, S215) | `{"project","name"}` | the saved wave that was removed; `not_found` when the project has no wave of that name |
   | `wave.stop` (proposed wire) | `{"wave"}` | the same wave result; stops each unfinished member through `run.stop`, skips final members |
+  | `wave.approve` (*proposed* wire, S222) | `{"wave"}` (a `wave-` id: anything else is `bad_params`; an unknown wave is `not_found`) | `{"wave","items":[{"item","run","outcome","error"?,"state"}]}`, every run of the wave in start order; approves each run that awaits approval one after the other through the path of `run.approve`, which returns once the run rests again, and stops at the first run that does not end `committed`; `outcome` is `landed` (committed with `landed_at`), `committed` (committed without a landing, `stop_after` `commit`), `failed` (an error, or the run rests in another state: a landing that went to its fix round is `awaiting-approval` with `land_fixes` above 0, and `state` says which; the loop stops here), `not-attempted` (waits for approval, after the stop), `not-waiting` (in another state, left alone) or `done` (already committed). A wave with no run awaiting approval, or with a human check open on any waiting run, is `refused` before anything is approved; the refusal names each run and its open checks. It never ticks or marks a check. The call checks its context between runs: when it is cancelled the runs not yet approved are `not-attempted` and the one in flight finishes |
   | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads, with a second engine, daemon or cmd slice of a wave moved into a wave of its own after it (S218, *proposed*; see Self-hosting); slicer runs on each call, not from the cache |
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","vendor","model","reasoning","note","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text (*proposed*, S173: `vendor`, `model`, `reasoning` and `note` are omitted when empty), and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's role row setting or a rule classifies), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
   | `matrix.edit` (*proposed* wire, S173) | `{"project","op","id"?,"fields"?,"before"?,"last"?,"text"?,"preview"?}`; `op` is `add`, `set`, `remove`, `move` or `rule-edit`; `fields` maps a flag name (`role size effort importance urgency well-specified split sliver agent vendor model reasoning note`) to a text value for `add` and `set`: an absent name is not passed, an empty value clears the field; `move` takes exactly one of `before` and `last`; `rule-edit` takes `id` and `text` | `{"command","warning"?,"id"?,"done"}`; previews (`preview`, `done` false) or runs one `slicer relay-roles` write in the registered project's main checkout with `--render`, with no run record; the change is left uncommitted for the owner, and slicer owns the file; `command` is the line the owner confirms, quoted for a shell; slicer's refusal comes back with its code and message; `warning` when `fields.agent` matches no adapter (`agent "X" has no ork adapter: a plan skips this row`), and the edit still runs; `id` is the new row after `add`; a missing project, an unknown op, a missing id, a field name outside the list, `fields` on `remove`, `move` or `rule-edit`, a blank text or a text that starts with `-` and has no space (slicer's parser would read it as a flag) is `bad_params`, with no slicer call; no cache refresh, because `roles.matrix` reads slicer on each call |
@@ -2353,6 +2354,9 @@ ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
                             keeps owner findings that have no options and
                             --again reruns the role (S298, proposed)
 ork stop RUN|WAVE           stop and record why
+ork approve WAVE-ID         approve each run of the wave that awaits approval,
+                            in start order, and stop at the first that does not
+                            land (S222, proposed)
 ork daemon run              serve the daemon in the foreground
 ork daemon status           show daemon build, state and running roles
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
@@ -2717,6 +2721,23 @@ it prints the reply. A plain `run.approve` is unchanged, and its refusal now
 names `--later-checks`. The flag is the owner's explicit choice, never a
 default. The follow-up list is built from the card at landing, so the later
 checks reach it as they do after `ork check RUN N later`.
+*Proposed (S222):* `wave.approve` (`ork approve WAVE-ID`, the `A` key) approves a
+wave as one action. Landing is serial anyway (the engines of a project share one
+`Landings` lock), so the call does what the owner did by hand: it approves the
+first waiting run, waits until the run rests again (landed, or back at its
+approval card after a fix round), then the next, in start order (`created_at`,
+then run id). It stops at the first run that does not end `committed` (a landing
+that went to its fix round, a pause, a stop or an error) and reports the rest
+`not-attempted`; a run that landed stays landed. A run with `stop_after`
+`commit` ends `committed` without a landing: that is outcome `committed`, it
+counts as done, and the wave goes on. It never marks a human check:
+with any check open on a waiting run it refuses the whole call and approves
+nothing, and it does not take `later_checks` (the CLI refuses `--later-checks`
+with a wave id). `Engine.Approve`, the landing and the single-run `run.approve`
+are unchanged. The engine run rows carry `wave` (omitted when empty), so the TUI
+can tell which runs share a wave. The CLI prints `ITEM RUN OUTCOME` for each run
+and exits 1 when any run is `failed` or `not-attempted`; `--json` prints the
+result.
 *Proposed (S121):* `run.render` takes `{run,name}` and returns `{name,text}`:
 the plain text of one render of the run's card, read from
 `tmp/ui-<ui_round>/renders/NAME` in the run directory. It reads the stored

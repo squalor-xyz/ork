@@ -188,6 +188,16 @@ func (c *Client) ApproveRecord(ctx context.Context, run string) (runrec.Record, 
 	return reply.Record, err
 }
 
+// WaveApprove approves each run of the wave that awaits approval, in start
+// order, and returns once the loop has ended: every run of the wave with what
+// the call did to it. It stops at the first run that does not land, and it is
+// refused, approving nothing, while a human check is open (S222, *proposed*).
+func (c *Client) WaveApprove(ctx context.Context, wave string) (WaveApproveResult, error) {
+	var result WaveApproveResult
+	err := c.Call(ctx, MethodWaveApprove, WaveAction{Wave: wave}, &result)
+	return result, err
+}
+
 // Fix sends the owner's note to a fix round of the run that awaits approval.
 // The call returns when the run rests again.
 func (c *Client) Fix(ctx context.Context, run, note string) error {
