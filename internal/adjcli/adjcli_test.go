@@ -263,3 +263,67 @@ func TestAdjRecordErrorsHideArgv(t *testing.T) {
 		}
 	}
 }
+
+func TestContractReadsVersionAndPin(t *testing.T) {
+	for _, tc := range []struct {
+		stdout string
+		pinned *int
+	}{
+		{`{"contract":"adj-json v1","version":1,"pinned":null}`, nil},
+		{`{"contract":"adj-json v1","version":1,"pinned":1,"extra":true}`, &[]int{1}[0]},
+	} {
+		c := client(t, clitest.Route{Tool: "adj", Args: []string{"contract", "--json", "--root", root}, Stdout: tc.stdout})
+		got, err := c.Contract(context.Background(), root)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.Version != 1 || got.Contract != "adj-json v1" {
+			t.Fatalf("contract: %+v", got)
+		}
+		if (got.Pinned == nil) != (tc.pinned == nil) || (got.Pinned != nil && *got.Pinned != *tc.pinned) {
+			t.Fatalf("pinned: %+v, want %v", got.Pinned, tc.pinned)
+		}
+	}
+}
+
+func TestSetPinAndUnsetPinRunTheAdjCommands(t *testing.T) {
+	fake := clitest.Install(t,
+		clitest.Route{Tool: "adj", Args: []string{"contract", "pin", "1", "--root", root}, Stdout: "pinned\n"},
+		clitest.Route{Tool: "adj", Args: []string{"contract", "unpin", "--root", root}, Stdout: "unpinned\n"},
+	)
+	c := Client{Bin: fake.Bin("adj")}
+	if err := c.SetPin(context.Background(), root, 1); err != nil {
+		t.Fatal(err)
+	}
+	if err := c.UnsetPin(context.Background(), root); err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{
+		{"contract", "pin", "1", "--root", root},
+		{"contract", "unpin", "--root", root},
+	}
+	var got [][]string
+	for _, call := range fake.CallsTo("adj") {
+		got = append(got, call.Args)
+	}
+	if len(got) != len(want) {
+		t.Fatalf("calls %v, want %v", got, want)
+	}
+	for i := range want {
+		if strings.Join(got[i], " ") != strings.Join(want[i], " ") {
+			t.Fatalf("calls %v, want %v", got, want)
+		}
+	}
+}
+
+func TestContractMismatchComesBackAsAToolError(t *testing.T) {
+	c := client(t, clitest.Route{
+		Tool: "adj", Args: []string{"inbox", "--json", "--root", root}, Exit: 1,
+		Stdout: `{"error":{"code":"contract_mismatch","message":"pins adj-json v2, speaks adj-json v1"}}`,
+	})
+	_, err := c.Inbox(context.Background(), root)
+	var te *clirun.ToolError
+	if !errors.As(err, &te) || te.Code != "contract_mismatch" {
+		t.Fatalf("error: %v", err)
+	}
+}

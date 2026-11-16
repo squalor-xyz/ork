@@ -77,7 +77,11 @@ It prints the path of the ork binary first, then one line per check
   run doctor in and for each registered project with its own pin. ork accepts
   v11 and v12 only; any other version fails, and so does a project whose slicer
   refuses its pin (`contract_mismatch`); an unpinned project is checked against
-  the accepted set alone (`docs/design.md:2412-2422`);
+  the accepted set alone (`docs/design.md:2412-2422`). *Proposed:* a project
+  with adj on is checked the same way (`adj contract --help`). An ok project
+  puts the adj column on the next indented line: `adj-json v1 pinned`,
+  `adj-json v1 unpinned`, or `adj -` when adj is off. A failed adj check
+  names `ork projects pin NAME --adj 1` or `ork projects unpin NAME --adj`;
 - each registered project: the path exists, the check command parses, and the
   worktree and branch patterns contain `{id}` or `{id_lower}`;
 - the owner ork files spec answers under in adj (`ADJ_DECIDED_BY`, else the
@@ -153,13 +157,29 @@ To pin the project's slicer relay contract, run
 `ork projects pin NAME --relay 12` (v11 or v12). ork runs
 `slicer config relay_contract 12 --root PROJECT` and prints the pin slicer
 then reports; the pin lives in the project's slicer config, not in
-`projects.json`. `ork projects unpin NAME` clears it (`--json` prints
-`{"project":NAME,"pinned":null}`). If your slicer serves a different version
-than the pin, slicer refuses and the command exits 1 naming both versions; the
-pin stays set, and `ork doctor` lists the project as failed until you run
-`ork projects pin NAME --relay N` with the version slicer serves,
-`ork projects unpin NAME`, or install a slicer that serves the pin. Neither
-command needs the daemon.
+`projects.json`. On a project with adj off, `ork projects unpin NAME` clears
+the slicer pin (`--json` prints `{"project":NAME,"pinned":null}`). On a
+project with adj on, that same command clears the slicer pin and the adj pin.
+If your slicer serves a different version than the pin, slicer refuses and the
+command exits 1 naming both versions; the pin stays set, and `ork doctor`
+lists the project as failed until you run `ork projects pin NAME --relay N`
+with the version slicer serves, or `ork projects unpin NAME` (on a project
+with adj on, that clears both pins), or install a slicer that serves the pin.
+Neither command needs the daemon.
+
+*Proposed:* `ork projects pin NAME --adj 1` pins the adj contract. The version
+ork accepts is adj-json v1 (`adj contract --help`). With `--relay` and `--adj`
+together, ork pins slicer first and pins adj only if that call succeeded, then
+prints both pins. The printed adj version is the pin, `adj-json vN`. A
+read-back whose pin is not the version adj speaks exits 1 and says the pin
+stays set. If adj's call fails after the slicer pin was set, the message says
+the relay pin stays set. `ork projects unpin NAME` clears the slicer pin and,
+when the project has adj on, the adj pin; that is the recovery after a refused
+slicer pin, and the message says so. If the adj unpin then fails, the message
+says the relay pin was cleared and the adj pin is unchanged. `ork projects
+unpin NAME --adj` clears only the adj pin. A project with adj off is unchanged:
+unpin clears the slicer pin only. None of these write the pin into
+`projects.json`.
 
 ## 5. Set a project's options
 
@@ -877,7 +897,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork show RUN [NAME]
     ork wait [RUN] [--until STATE,...] [--timeout D] [--project P]
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]
-    ork projects pin NAME --relay N | unpin NAME
+    ork projects pin NAME [--relay N] [--adj M] | unpin NAME [--adj]
     ork run P ID
     ork wave suggest P
     ork wave start P ITEM...

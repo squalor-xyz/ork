@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -1430,6 +1431,53 @@ func TestNewRefusesAProjectWhoseSlicerReportsContractMismatch(t *testing.T) {
 	}
 	if runs, _ := h.store.List(); len(runs) != 0 {
 		t.Errorf("a run record was created: %d", len(runs))
+	}
+}
+
+func TestNewRefusesAProjectWhoseAdjPinDoesNotMatch(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.Adj = true }
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: `{"contract":"adj-json v1","version":1,"pinned":2}`}}
+		}
+	})
+	h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
+	_, err := New(context.Background(), h.deps, h.cfg)
+	if err == nil || !strings.Contains(err.Error(), "v2") || !strings.Contains(err.Error(), "v1") {
+		t.Fatalf("error %v, want one naming both versions", err)
+	}
+	if runs, _ := h.store.List(); len(runs) != 0 {
+		t.Fatalf("a run record was created: %d", len(runs))
+	}
+}
+
+func TestNewRefusesAnAdjContractOutsideTheAcceptedSet(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.Adj = true }
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Stdout: `{"contract":"adj-json v2","version":2,"pinned":null}`}}
+		}
+	})
+	h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
+	_, err := New(context.Background(), h.deps, h.cfg)
+	if err == nil || !strings.Contains(err.Error(), "v2") {
+		t.Fatalf("error %v, want a refusal of v2", err)
+	}
+}
+
+func TestNewSkipsTheAdjCheckWhenAdjIsOff(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.Adj = false }
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{{Tool: "adj", Args: []string{"contract", "--json", "--root", P}, Exit: 1, Stdout: `{"error":{"code":"contract_mismatch","message":"pins v2 speaks v1"}}`}}
+		}
+	})
+	h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
+	if _, err := New(context.Background(), h.deps, h.cfg); err != nil {
+		t.Fatal(err)
+	}
+	if n := len(h.fake.CallsTo("adj")); n != 0 {
+		t.Fatalf("%d adj calls at start", n)
 	}
 }
 

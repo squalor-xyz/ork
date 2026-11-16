@@ -356,6 +356,17 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	if err := contract.Validate(); err != nil {
 		return nil, fmt.Errorf("slicer ai relay --json: %w", err)
 	}
+	// A project with adj on is checked the same way, before any other adj
+	// read and before the run record exists (adj 97, *proposed*).
+	if cfg.Project.Adj {
+		got, err := d.Adj.Contract(ctx, cfg.Project.Path)
+		if err != nil {
+			return nil, fmt.Errorf("adj contract --json: %w", err)
+		}
+		if err := roles.CheckAdjContract(got.Contract, got.Version, got.Pinned); err != nil {
+			return nil, err
+		}
+	}
 	ledgerRoles := map[string]string{}
 	for _, role := range append(roles.Names(), "orchestrator") {
 		ledgerRoles[role] = contract.LedgerRole(role)

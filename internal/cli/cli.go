@@ -50,7 +50,10 @@ const (
 	codeDaemon = "daemon_unavailable"
 )
 
-var usageText = strings.Replace(usageTemplate, "{CONTRACTS}", roles.AcceptedContractsPhrase(), 1)
+var usageText = strings.NewReplacer(
+	"{CONTRACTS}", roles.AcceptedContractsPhrase(),
+	"{ADJ}", roles.AcceptedAdjContractsPhrase(),
+).Replace(usageTemplate)
 
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
@@ -149,10 +152,13 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               list the projects below DIR; add the tracked
                               ones after a yes, or at once with --yes
   ork projects rm NAME        unregister a project
-  ork projects pin NAME --relay N
-                              pin the project's slicer relay contract at N
-                              ({CONTRACTS}) through slicer; needs no daemon
-  ork projects unpin NAME     clear the pin through slicer
+  ork projects pin NAME [--relay N] [--adj M]
+                              pin slicer at N ({CONTRACTS}) through slicer.
+                              Or adj at M ({ADJ}); at least one flag.
+                              needs no daemon
+  ork projects unpin NAME [--adj]
+                              clear both pins, or only the adj pin with
+                              --adj; a project with adj off clears slicer
   ork projects set NAME [--push on|off] [--ui-doc PATH] [--ui-pass-skills A,B]
                               [--bell on|off] [--auto-land on|off]
                               [--notify CMD]

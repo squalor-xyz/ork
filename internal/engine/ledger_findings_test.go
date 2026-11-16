@@ -414,6 +414,7 @@ func TestLedgerAnswerNeverOverwritesTheOwnersAnswer(t *testing.T) {
 
 func TestAnswerFromTheLedgerIsNotFiledInAdj(t *testing.T) {
 	adjRoutes := []clitest.Route{
+		{Tool: "adj", Args: []string{"contract", "--json"}, Prefix: true, Stdout: `{"contract":"adj-json v1","version":1,"pinned":null}`},
 		{Tool: "adj", Args: []string{"check"}, Prefix: true, Stdout: `{}`},
 		{Tool: "adj", Args: []string{"ask"}, Prefix: true, Stdout: "42\n"},
 		{Tool: "adj", Args: []string{"decide"}, Prefix: true},
@@ -436,7 +437,7 @@ func TestAnswerFromTheLedgerIsNotFiledInAdj(t *testing.T) {
 	if f := e.Snapshot().Findings[0]; f.Key != "cache.scope" || f.Answer != "keep" {
 		t.Fatalf("finding %+v", f)
 	}
-	if calls := h.fake.CallsTo("adj"); len(calls) != 0 {
+	if calls := h.fake.CallsTo("adj"); len(calls) != 1 || calls[0].Args[0] != "contract" {
 		t.Errorf("a ledger answer was filed in adj: %q", calls)
 	}
 
@@ -449,7 +450,7 @@ func TestAnswerFromTheLedgerIsNotFiledInAdj(t *testing.T) {
 	for _, c := range h.fake.CallsTo("adj") {
 		verbs = append(verbs, c.Args[0])
 	}
-	if !reflect.DeepEqual(verbs, []string{"check", "ask", "decide"}) {
+	if !reflect.DeepEqual(verbs, []string{"contract", "check", "ask", "decide"}) {
 		t.Errorf("adj calls %v", verbs)
 	}
 }
