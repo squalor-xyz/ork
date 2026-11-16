@@ -12,6 +12,7 @@
 | r4 | Implementer | split part | Claude Code | Claude | haiku | xhigh | per part of a split slice |
 | r29 | Implementer | split part | Codex | OpenAI | gpt-6.1-terra | medium | terra medium per part of a split slice (owner 2026-11-03) |
 | r30 | Implementer | split part | Codex | OpenAI | gpt-6.1-terra | high | terra high per part of a split slice (owner 2026-11-03) |
+| r37 | Implementer | whole slice, not a sliver | Grok | xAI | grok-*@latest | medium | Grok implementer, first choice until the grok accounts end on 2026-12-09 (owner 2026-11-16, relay session 8d711f67, adj 373 and 379); codex then claude sonnet fall back. Removed by S374 before 2026-12-09. Model 'latest' = the grok CLI default. |
 | r15 | Implementer | whole slice, not a sliver, size L | Codex | OpenAI | gpt-6.1-sol | high | owner lineup 2026-10-23: Codex implementer at high on a size L slice |
 | r12 | Implementer | whole slice, effort 3 | Codex | OpenAI | gpt-6.1-sol | high | effort 3 slice: Codex at high (owner 2026-10-29) |
 | r9 | Implementer | whole slice | Codex | OpenAI | gpt-6.1-sol | medium | default implementer for a whole slice (owner lineup 2026-10-23: medium); Codex sandbox cannot bind Unix sockets, so rerun socket-test packages outside it |
