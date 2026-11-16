@@ -2,7 +2,7 @@
 {
   "id": 370,
   "title": "Which mechanism lets a cloud UI pass write its renders, and under which path?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.ui-pass-write-mechanism",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -29,6 +29,7 @@
   },
   "decision": "accept-edits",
   "rationale": "Owner chose 'Accept edits' (not the recommendation) in an interactive question, relay session 8d711f67, 2026-11-16.",
+  "superseded_by": 371,
   "refs": [
     "S369"
   ],
@@ -40,6 +41,11 @@
     {
       "date": "2026-11-16",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-16",
+      "event": "supersede",
+      "note": "by 371"
     }
   ]
 }
