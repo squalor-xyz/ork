@@ -197,3 +197,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S222 (run ork-20261116-190149-a0bf, 2026-11-16)
 
 - [ ] [AFTER LAND] With a real pair wave of two small slices, both at `awaiting-approval`: tick every human check, press the key, read the confirm at 100x30 and 80x24, confirm, and watch the first land and then the second. Then repeat with a pair whose second landing hits a conflict and confirm the first lands, the second goes to a fix round, and nothing else is approved.
+
+## S179 (run ork-20261116-203847-b14e, 2026-11-16)
+
+- [ ] review the diff in testdata/golden/; the owner should see only the new spec-draft views
