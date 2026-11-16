@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 375,
+  "next_id": 376,
   "preamble": "",
   "passes": [
     {
@@ -20453,6 +20453,34 @@
         "reason": "",
         "importance": 3,
         "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S375",
+      "title": "TUI spec-check screen: show a permission call's whole command",
+      "short_title": "Spec-check screen shows full permission command",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S373 (2026-11-16): the run pane shows a permission question's `detail` in full; the spec-check screen still shows only the 120-character title. Owner decision adj 377 (`ui.permission-detail-speccheck`, follow-up).",
+        "discovered_from": "S373",
+        "parent": "",
+        "cites": [],
+        "key": "ork-tui-speccheck-permission-detail",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
         "effort": 1,
         "attempts": 0
       }
