@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-377 items · — 52 · done 290 · retired 35
+377 items · — 51 · done 291 · retired 35
 
 v1.2
 
@@ -52,7 +52,7 @@ v1.2
 | 2 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (needs ui.mouse) | M | 2 |  |  | — |
 | 3 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | — |
 | 4 | [S123](slices/S123.md) | Relay stats: thin display of slicer's | S | 1 |  |  | done |
-| 5 | [S179](slices/S179.md) | Spec drafting round | L | 3 |  | discovered from S165 | — |
+| 5 | [S179](slices/S179.md) | Spec drafting round | L | 3 |  | discovered from S165 | done |
 | 6 | S192 | S174 later notes: vendor_env masking in --json, error wording, removed-vendor label | S | - |  | discovered from S174 | — |
 | 7 | [S206](slices/S206.md) | Pin and check the adj contract | M | 2 |  | Owner 2026-10-30: adj half split out of S24. Adjudicate S45 has landed (adj v1.0.0 has adj contract; checked 2026-11-07), so the slice is specified against the real interface. · discovered from S24 | done |
 | 8 | [S221](slices/S221.md) | Daemon restart helper (options) | M | 2 |  |  | — |

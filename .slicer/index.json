@@ -10273,7 +10273,7 @@
       "id": "S179",
       "title": "Spec drafting round in ork",
       "short_title": "Spec drafting round",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -10304,6 +10304,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f1649e92-6a28-49b2-9522-1c7f6379b8fe",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S179):\n- later: review the diff in testdata/golden/; the owner should see only the new spec-draft views",
+          "created_at": "2026-11-16T21:28:15Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "bf895557-3697-40e5-9ce8-38d33e8e04a7",
+          "kind": "",
+          "text": "**2026-11-16** — Spec drafting round shipped: D in the Roadmap item pane and ork spec draft PROJECT ID drive a read-only spec-draft role (spec-check row) that proposes Why, Files, Failing tests, Implement and Check; ork writes nothing until each section is approved, then runs slicer edit --section NAME --text ... --render after a spec fingerprint re-check. Verified: go test -race -count=1 ./... green in all 26 packages, go vet and gofmt clean, adj lint clean, slicer check passes; every new assertion mutation-checked; only the 8 new spec-draft golden views were added.",
+          "created_at": "2026-11-16T21:28:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -10323,7 +10351,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

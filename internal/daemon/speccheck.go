@@ -396,20 +396,17 @@ func (d *Daemon) reuseSpecAnswers(ctx context.Context, deps engine.Deps, proj re
 	return nil
 }
 
-// runSpecCheck runs the role over items and remembers each verdict. The job
-// counts as active work, so the daemon does not stop or restart under it.
-func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj registry.Project, items, localItems []string) error {
-	chain, err := d.specChain(ctx, deps, proj, items[0])
-	if err != nil {
-		return err
-	}
+// beginSpecJob registers a read-only role job of the daemon (a spec check or a
+// spec draft) as active work, so the daemon does not stop or restart under it.
+// The job runs under the manager's context too, so closing the manager (a
+// forced daemon stop) cancels it without waiting for the role, and so does the
+// caller's context. The returned context is the job's; end releases it.
+func (d *Daemon) beginSpecJob(ctx context.Context) (context.Context, func(), error) {
 	d.runs.mu.Lock()
 	if d.runs.closed {
 		d.runs.mu.Unlock()
-		return errors.New("run manager is closed")
+		return nil, nil, errors.New("run manager is closed")
 	}
-	// The job runs under the manager's context too, so closing the manager (a
-	// forced daemon stop) cancels it without waiting for the role.
 	jobCtx, cancel := context.WithCancel(d.runs.ctx)
 	d.runs.specSeq++
 	id := d.runs.specSeq
@@ -418,7 +415,7 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 	d.runs.wg.Add(1)
 	d.runs.mu.Unlock()
 	stop := context.AfterFunc(ctx, cancel)
-	defer func() {
+	return jobCtx, func() {
 		stop()
 		cancel()
 		d.runs.mu.Lock()
@@ -426,8 +423,21 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 		d.runs.specJobs--
 		d.runs.mu.Unlock()
 		d.runs.wg.Done()
-	}()
-	ctx = jobCtx
+	}, nil
+}
+
+// runSpecCheck runs the role over items and remembers each verdict. The job
+// counts as active work, so the daemon does not stop or restart under it.
+func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj registry.Project, items, localItems []string) error {
+	chain, err := d.specChain(ctx, deps, proj, items[0])
+	if err != nil {
+		return err
+	}
+	ctx, end, err := d.beginSpecJob(ctx)
+	if err != nil {
+		return err
+	}
+	defer end()
 	d.runs.specStateMu.Lock()
 	if _, err := d.registered(proj.Name); err != nil {
 		d.runs.specStateMu.Unlock()

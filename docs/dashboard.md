@@ -5,7 +5,10 @@ and keys are *proposed* drafts to change after a prototype. v1.0 includes
 filing a slice (S170), adding notes (S171), and answering or asking adj records
 (S172, S185), as decided in `scope.v1-ork-edits` (#173). Roadmap reordering and
 parking (S67, including S68) are in v1.1. The role matrix editor (S173, S226)
-is in v1.1; spec drafting (S179) is in v1.2.
+is in v1.1; spec drafting (S179) is in v1.2. `scope.spec-drafting` (owner
+decision 2026-11-16) lifts the wait of `scope.v1` for slice spec text: ork
+may replace a section of a slice's spec with `slicer edit`, only after the
+owner approves that section.
 
 ## Principles
 
@@ -250,8 +253,10 @@ pane starts with `1-N pick; t free text` while no answer is in flight. Its
 free-text field shows `enter review` only for non-empty trimmed text, followed
 by `esc cancel`. Enter opens the confirmation; `y` confirms.
 The Roadmap item pane and the role matrix pane show
-`pgup/pgdown page; j/k line; ctrl+d/u half page` (S152; S190, *proposed*); on
-a narrow line the page and line hints go before `esc close`. The Waves item
+`pgup/pgdown page; j/k line; ctrl+d/u half page` (S152; S190, *proposed*), and
+the item pane also shows `D draft` when the daemon can draft (S179, see the
+Roadmap section); on a narrow line the page and line hints go before `esc
+close`. The Waves item
 hint ends with `esc close pane`.
 A pane of a relay started elsewhere shows `started elsewhere, read-only; esc close pane`;
 a stale one shows `x end run; started elsewhere; esc close pane`, with no
@@ -2164,7 +2169,8 @@ v1.0 includes filing a slice (S170), adding notes (S171), and answering or
 asking adj records (S172, S185), as decided in `scope.v1-ork-edits` (#173).
 Roadmap reordering and parking (S67, including S68) are in v1.1. The role
 matrix editor (S173, S226) is described with the matrix pane above; spec
-drafting (S179) is in v1.2.
+drafting (S179, `scope.spec-drafting`) is in v1.2 and is described below, with
+the item pane's `D` key.
 
 `n new slice` opens a form in the status area with Title and Why fields
 (S170). It is available on the Roadmap with a loaded, available project and
@@ -2181,6 +2187,48 @@ closes the form without stopping the write. An error keeps the fields for
 retry. Success says `Filed ID` or `ID is already filed` and refreshes the
 project. The row appears in slicer's order. The new hint uses tier 16,
 above note (15) and matrix (14); matrix stays visible at 80 and 100 columns.
+
+**Spec draft** (S179, *proposed*; `scope.spec-drafting`, `roles.spec-draft-row`,
+`roles.spec-draft-empty`, `ui.spec-draft-key`, decided 2026-11-16).
+`D` (shift-d) in the item pane of a Roadmap item opens the draft view and calls
+`spec.draft`: a read-only role, the spec-check row's lineup, proposes new text
+for the Why, Files, Failing tests, Implement and Check sections. It may draft
+every section from the title alone. The view shows `pending: spec.draft` while
+the role reads the checkout, which can take minutes, and then, for each section,
+its name, the text the slice has now (`Current:`) and the proposal
+(`Proposed:`). A section the role leaves says `unchanged`. A Files path that is
+not in the checkout (and is not marked `(new)`) is shown as a `Problem:` and the
+section cannot be approved. The role's `Owner needed` text follows the sections.
+`left` and `right` move between sections, and the screen scrolls so that the
+section under the cursor is at its top; `j`, `k`, `pgup`, `pgdown`, `g` and
+`G` scroll by hand. `y` on a section the daemon can apply asks in the status
+area with the exact command, `Run: slicer edit ID --section NAME --text ...
+--render`, and `[y/N] (Enter is No)`. A command longer than four lines is cut
+after its first three and a dim `+N more lines of the command` follows, so the
+question always shows; the whole text is the `Proposed:` text above. A second
+`y` sends `spec.draft-apply` for that one section. `n`, Enter or `esc` at the
+question cancels it (`Cancelled`) and keeps the draft. Outside the question,
+`esc` closes the draft view and returns to the item pane; a closed draft is
+gone, and `D` drafts again. ork writes nothing before that second `y`: the
+draft changes no file, and the edit is left uncommitted in the project. The
+daemon refuses the approval, `refused`, when the item's spec changed since the
+draft. The item pane reads the item again after an edit. The hint line lists
+`D draft` in the item pane, after the page field and before the line field, when
+it can act. `D` drops with the page field (tier `dropPage`), after the line,
+half-page and edit fields, so at 80 columns the line reads `pgup/pgdown page; D
+draft; q quit; esc close; ? help`. Help does not list `D`. In the draft view
+the line reads `y approve; left/right section; pgup/pgdown page; j/k line; esc
+close`, and at the question `y apply; n/esc cancel`. Without a daemon, `D` shows
+`No daemon connection; action unavailable`.
+
+`ork spec draft PROJECT ID` (S179, `cli.spec-draft`) does the same on the
+command line: it calls `spec.draft`, prints each section's current text, then
+its new text and any problem, and asks `Apply NAME? [y/N]` for each section
+that can be applied. A `y` calls `spec.draft-apply` for that section alone; any
+other answer, Enter, or the end of input skips it. It needs a terminal to ask
+on and refuses without one, before it calls the daemon. `--json` prints the draft
+and applies nothing. Without a daemon it prints `No daemon connection; action
+unavailable`.
 
 Filing from an existing note is CLI-only:
 `ork new PROJECT TITLE --from ITEM --from-note N`, with one-based N.

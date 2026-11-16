@@ -520,7 +520,7 @@ func TestRolesPrintOne(t *testing.T) {
 	}
 	_, stdout, _ = run(t, noDaemon(t), "roles", "print", "--json")
 	mustJSON(t, stdout, &out)
-	if len(out.Roles) != 8 || out.Roles[0].Name != "implementer" || out.Roles[5].Name != "spec-check" || out.Roles[6].Name != "lead" || out.Roles[7].Name != "part" {
+	if len(out.Roles) != 9 || out.Roles[0].Name != "implementer" || out.Roles[5].Name != "spec-check" || out.Roles[6].Name != "lead" || out.Roles[7].Name != "part" || out.Roles[8].Name != "spec-draft" {
 		t.Fatalf("--json for all: %s", stdout)
 	}
 }

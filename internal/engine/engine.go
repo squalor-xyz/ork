@@ -380,6 +380,9 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	}
 	ledgerRoles := map[string]string{}
 	for _, role := range append(roles.Names(), "orchestrator") {
+		if role == RoleSpecDraft {
+			continue // a draft is no step of a run, and the contract has no ledger role for it (S179)
+		}
 		ledgerRoles[role] = contract.LedgerRole(role)
 	}
 	// The contract has no lead and no part: the ledger records both as

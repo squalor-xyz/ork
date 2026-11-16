@@ -76,6 +76,11 @@ type keyMap struct {
 	Filter      key.Binding
 	Sidebar     key.Binding
 
+	// SpecDraft opens the draft view of a Roadmap item pane (S179, owner
+	// decision 2026-11-16, ui.spec-draft-key: D). The hint line lists it; the help
+	// view does not.
+	SpecDraft key.Binding
+
 	// The matrix pane's edit keys (S226, *proposed*).
 	MatrixEdit   key.Binding
 	MatrixAdd    key.Binding
@@ -106,6 +111,8 @@ func newKeyMap() keyMap {
 		SaveWave:   key.NewBinding(key.WithKeys("w"), key.WithHelp("w", "save the ticked items as a named wave (Waves)")),
 		SavedWaves: key.NewBinding(key.WithKeys("L", "shift+l"), key.WithHelp("L", "list saved waves; enter loads one (Waves)")),
 		Matrix:     key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "matrix")),
+
+		SpecDraft: key.NewBinding(key.WithKeys("D", "shift+d"), key.WithHelp("D", "draft the item's spec (Roadmap item pane)")),
 
 		MatrixEdit:   key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit a matrix row (matrix pane)")),
 		MatrixAdd:    key.NewBinding(key.WithKeys("n"), key.WithHelp("n", "add a matrix row (matrix pane)")),
@@ -409,6 +416,22 @@ func (m *Model) contextHints() []hintEntry {
 			l.add(dropRow, key.NewBinding(key.WithKeys("ctrl+s"), key.WithHelp("ctrl+s", "review")))
 			l.add(dropPinned, short(k.Close, "esc", "cancel"))
 		}
+	case m.specDraft != nil:
+		switch st := m.specDraft; {
+		case st.pending || st.applying:
+			l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
+			l.add(dropPinned, short(k.Close, "esc", "close"))
+		case st.confirming:
+			l.add(dropRow, short(k.Yes, "y", "apply"))
+			l.add(dropPinned, key.NewBinding(key.WithKeys("n", "esc"), key.WithHelp("n/esc", "cancel")))
+		default:
+			ready := st.ready()
+			l.add(dropRow, offer(ready && st.approvable(st.cursor) == "", k.Yes, "y", "approve"))
+			l.add(dropRow, offer(ready, k.TabNext, "left/right", "section"))
+			l.add(dropPage, offer(ready, k.PageDown, "pgup/pgdown", "page"))
+			l.add(dropLine, offer(ready, k.RowNext, "j/k", "line"))
+			l.add(dropPinned, short(k.Close, "esc", "close"))
+		}
 	case m.compose != nil:
 		if m.compose.kind == composeNew {
 			l.add(dropRow, offer(!m.compose.pending, k.NextView, "tab", "field"))
@@ -497,6 +520,11 @@ func (m *Model) contextHints() []hintEntry {
 			// The matrix pane's edit keys go after the page field; they drop before the line and page fields (S226, *proposed*).
 			_, editRefused := m.matrixEditRefusal()
 			l.add(dropMatrixEdit, offer(!editRefused, k.MatrixEdit, "e/n/d/m/r", "edit"))
+			// D opens the draft view of an item's spec (S179, ui.spec-draft-key).
+			_, draftRefused := m.specDraftRefusal()
+			// D outlasts the line field and drops with the page field, so that it
+			// is still on the line at 80 columns (the help view does not list it).
+			l.add(dropPage, offer(!draftRefused, k.SpecDraft, "D", "draft"))
 			l.add(dropLine, short(k.RowNext, "j/k", "line"))
 			l.add(dropHalf, short(k.ScrollDown, "ctrl+d/u", "half page"))
 			l.add(dropTab, short(k.NextView, "tab", "views"))

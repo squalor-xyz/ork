@@ -60,7 +60,7 @@ func recordedVersion(t *testing.T, file string) int {
 }
 
 func TestNames(t *testing.T) {
-	want := []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check", "lead", "part"}
+	want := []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check", "lead", "part", "spec-draft"}
 	if got := Names(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("Names() = %v, want %v", got, want)
 	}
@@ -383,7 +383,7 @@ func TestEveryRoleForbidsCd(t *testing.T) {
 
 func TestReadOnlyRoles(t *testing.T) {
 	ps := prompts(t)
-	for _, name := range []string{"reviewer", "gate", "architect", "ui", "spec-check"} {
+	for _, name := range []string{"reviewer", "gate", "architect", "ui", "spec-check", "spec-draft"} {
 		p := strings.ToLower(ps[name])
 		for _, want := range []string{"you are read-only", "must not change the tree", "no git writes", "no tracking writes"} {
 			if !has(p, want) {
@@ -713,6 +713,38 @@ func TestSpecCheckPromptDoesNotAskWhatTheCodeSettles(t *testing.T) {
 	}
 }
 
+// The spec draft is ork's own read-only role (S179, scope.spec-drafting): it
+// proposes the text of a slice's spec sections and ork writes nothing until the
+// owner approves each one.
+func TestSpecDraftPrompt(t *testing.T) {
+	p := prompts(t)["spec-draft"]
+	for _, want := range []string{
+		"## Section Why",
+		"## Section Files",
+		"## Section Failing tests",
+		"## Section Implement",
+		"## Section Check",
+		"A section you leave as it is has the single word `unchanged` under its heading",
+		"You may draft every section from the title alone",
+		"Trace each failing test to the file that must change",
+		"Every path under `Files` must exist in the checkout, or the line says `(new)`",
+		"Use no level-two heading inside a section",
+		"ork writes nothing until the owner approves each section",
+	} {
+		if !has(p, want) {
+			t.Errorf("spec-draft does not say %q", want)
+		}
+	}
+	for _, bad := range []string{"VERDICT", "[owner]", "[fix]", "## Slice S10"} {
+		if strings.Contains(p, bad) {
+			t.Errorf("spec-draft prompt mentions %q", bad)
+		}
+	}
+	if !ascii(p) {
+		t.Error("spec-draft prompt holds a non-ASCII character")
+	}
+}
+
 func TestAcceptedContractsPhrase(t *testing.T) {
 	for _, tc := range []struct {
 		versions []int
@@ -799,8 +831,8 @@ func TestOwnerNeededBlockWordingMatchesTheParser(t *testing.T) {
 			t.Errorf("%s lacks %q", name, want)
 		}
 	}
-	if n != 8 {
-		t.Errorf("%d prompts carry the Owner needed block rule, want 8", n)
+	if n != 9 {
+		t.Errorf("%d prompts carry the Owner needed block rule, want 9", n)
 	}
 }
 

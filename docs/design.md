@@ -353,6 +353,30 @@ ork (TUI)  ork status --json (CLI)
    each item's check, tied to the updated spec fingerprint. They survive a
    daemon restart and are removed when the run record takes them at run start,
    or when the spec changes (owner decisions, S143, 2026-10-27).
+   *Proposed (S179; `scope.spec-drafting`, `roles.spec-draft-row`,
+   `roles.spec-draft-empty`, `cli.spec-draft`, owner decisions 2026-11-16):* the
+   spec draft is a second read-only job of the same shape, for one slice. It is
+   not a run: no run record, no worktree. The `spec-draft` role has its own
+   prompt (`internal/roles/prompts/spec-draft.md`) and runs on the spec-check
+   row and its fallbacks, in the project checkout, under the same read-only
+   fingerprint (`git status --porcelain` and `HEAD` before and after; a change
+   fails the draft and keeps no proposal). It reports one `## Section NAME`
+   block for each of Why, Files, Failing tests, Implement and Check, each the
+   section's whole new text or `unchanged`, then `## Owner needed`; a report
+   with an unknown or missing block, or without the Owner needed ending, is a
+   shape error, and the role's session is resumed once with the error. ork
+   checks that every path a proposed Files section names is in the checkout
+   (`(new)` marks a file the slice creates) and attaches each failure to the
+   section as a problem. The daemon method `spec.draft` returns, for each
+   section, the current text, the proposal and the command an approval runs, and
+   remembers the proposal in memory with the fingerprint of the spec it was made
+   against. It writes nothing. `spec.draft-apply` names the sections the owner
+   approved and runs `slicer edit ID --section NAME --text TEXT --render`
+   (replace) for each one, in order, after it checks that the spec still has
+   that fingerprint (`refused` when it changed, when there is no draft, or when
+   a section is unchanged, has a problem or is already applied). Drafts, spec
+   checks and approvals run one at a time. The edit is left uncommitted. Slicer
+   still owns the spec; ork only writes the sections the owner approved.
 5. **Approve.** The owner approves the wave. This is checkpoint 1.
 6. **Run.** Items start as slots free up under the global cap (default 2, `engine.default-cap`, adj 172)
    and the per-project cap (`wave.limits`) for frontier-primary runs. The

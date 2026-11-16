@@ -67,7 +67,9 @@ v1 is the monitoring dashboard plus launching and supervising slice waves
 (`scope.v1`). v1.0 includes filing a slice (S170), adding slice notes (S171),
 and answering or asking adj records (S172, S185), as decided in
 `scope.v1-ork-edits` (#173). Roadmap reordering and parking (S67, including S68) and the role matrix editor (S173, S226) are in
-v1.1. Spec drafting (S179) is in v1.2.
+v1.1. Spec drafting (S179) is in v1.2: `scope.spec-drafting` (owner decision
+2026-11-16) lets ork replace a section of a slice's spec with `slicer edit`,
+only after the owner approves that section.
 
 **In v1:**
 - Dashboard over 4 registered projects: slicer, adjudicate, DataBall and
@@ -116,8 +118,11 @@ v1.1. Spec drafting (S179) is in v1.2.
 - The role matrix editor (S173, S226).
 - Changelog conflict resolution at landing (S180).
 
+**In v1.2:**
+- Spec drafting (S179): a read-only role proposes a slice's spec sections and
+  the owner approves each one before ork replaces it (`scope.spec-drafting`).
+
 **After v1:**
-- Spec drafting (S179, in v1.2).
 - Decision editing beyond asking and answering adj records.
 - Batched landing.
 - agentbox sandboxing.

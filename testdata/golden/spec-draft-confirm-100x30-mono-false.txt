@@ -1,0 +1,30 @@
+[1mork[m                        │ Overview[90m │ [mQuestions[90m │ [mWaves[90m │ [m[1;36mRoadmap[m[90m │ [mDecisions
+[90m  Running                0 [m│[90m────────────────────────────────────────────────────────────────────────[m
+[90m0[m Needs you              0 │[1;36mSpec draft S90  (esc returns)[m
+[1;7;97;44m1>ork                      [m│[1;36m> Why[m
+[90m2[m other                    │  Current:  [90mThe old why.[m
+                           │  Proposed: A new why.
+                           │  Files[90m  problem[m
+                           │  Current:  [90m- `a.go`[m
+                           │  Proposed: - `gone.go`
+                           │  Problem:  [33m`gone.go` is not in the checkout; mark a new file `(new)`[m
+                           │  Failing tests[90m  unchanged[m
+                           │  Implement
+                           │  Current:  [90m1. Old.[m
+                           │  Proposed: 1. New.
+                           │  Check[90m  unchanged[m
+                           │[1;36mOwner needed[m
+                           │  Question: Which store?
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │  Run: slicer edit S90 --section Why --text 'A new why.' --render
+                           │  [y/N] (Enter is No)
+                           │[90m────────────────────────────────────────────────────────────────────────[m
+                           │ y [2mapply[m; n/esc [2mcancel[m
+                           │ 2 projects | refreshed 16:42:00

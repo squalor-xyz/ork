@@ -173,6 +173,9 @@ func (m *Model) screen() string {
 		if m.matrixEdit != nil {
 			status = m.matrixEditView(max(mainW-len(indent)-2, 1))
 		}
+		if m.specDraft != nil {
+			status = m.specDraftView(max(mainW-len(indent)-2, 1))
+		}
 		if m.view == questionsView && m.pane != nil {
 			detail = m.paneLines(mainW, max(h-6, 1), status)
 		} else if status != "" {

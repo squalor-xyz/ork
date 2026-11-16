@@ -339,6 +339,10 @@ func doneWhen(in BriefInput) string {
 			add("Give one ## Slice ID section per slice in order, with Ready or structured owner questions. Only an unresolved owner decision is a question; close code-readable gaps yourself and respect settled decisions.")
 			add("End with the exact unnumbered heading ## Owner needed and none beneath it; questions belong under their slices. Use that final section only for a whole-check blocker.")
 			add("State any unreadable slice or blocked read with its verbatim command and denial text; never invent readiness.")
+		case RoleSpecDraft:
+			add("Give one ## Section NAME block for each of Why, Files, Failing tests, Implement and Check, in that order, holding the section's whole new text or the word unchanged. Every path under Files exists in the checkout or its line says (new).")
+			add("End with the exact unnumbered heading ## Owner needed and none beneath it, or one structured question for each decision that is the owner's.")
+			add("State any unreadable file or blocked read with its verbatim command and denial text; never invent a path.")
 		}
 	}
 	// Keep even large slice sections below 40 physical lines without dropping items.

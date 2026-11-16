@@ -418,6 +418,26 @@ func (c *Client) SpecAnswer(ctx context.Context, params SpecAnswerParams) (*Spec
 	return &out, nil
 }
 
+// SpecDraft drafts the item's spec sections with the spec-draft role and
+// returns the proposal; it writes nothing (S179).
+func (c *Client) SpecDraft(ctx context.Context, project, item string) (*SpecDraftResult, error) {
+	var out SpecDraftResult
+	if err := c.specCall(ctx, MethodSpecDraft, SpecDraftParams{Project: project, Item: item}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// SpecDraftApply replaces the sections of the item's draft that the owner
+// approved (S179).
+func (c *Client) SpecDraftApply(ctx context.Context, params SpecDraftApplyParams) (*SpecDraftApplyResult, error) {
+	var out SpecDraftApplyResult
+	if err := c.specCall(ctx, MethodSpecDraftApply, params, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // Cleanup removes a merged run's worktree and branch after owner confirmation.
 func (c *Client) Cleanup(ctx context.Context, run string) error {
 	return c.Call(ctx, MethodRunCleanup, RunAction{Run: run}, nil)

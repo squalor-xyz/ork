@@ -29,6 +29,10 @@ const (
 	RoleGate      = "gate"
 	RoleUI        = "ui"         // the UI pass, beside the reviewer on a slice that touches the UI
 	RoleSpecCheck = "spec-check" // the batch readiness check before a wave (adj 164)
+	// RoleSpecDraft is the read-only role that proposes a slice's spec sections
+	// for the owner to approve (S179, scope.spec-drafting). It runs on the spec
+	// check row, outside any run, and the contract has no ledger role for it.
+	RoleSpecDraft = "spec-draft"
 )
 
 // ExitClass is how a vendor adapter classifies a role process's exit

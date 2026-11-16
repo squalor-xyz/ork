@@ -94,6 +94,14 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               well specified y and split n unless overridden
                               show the plans and launch the chosen items;
                               refused with no check command, as ork run
+  ork spec draft P ID         draft the spec sections of one slice with the
+                              spec check's row (proposed: a read-only role;
+                              it may draft every section from the title
+                              alone), print each section's current text and
+                              its new text, and ask y or n for each; a y
+                              replaces that section with slicer edit, and
+                              nothing is written before it; needs a terminal;
+                              --json prints the draft and applies nothing
   ork approve RUN [--later-checks]
                               finish and commit a passed slice; it stops on an
                               open human check, unless --later-checks marks
@@ -266,6 +274,7 @@ type App struct {
 	Now     func() time.Time                              // the clock for working times in status (S235); nil uses time.Now
 
 	WaitPoll time.Duration // how often ork wait reads the run when no notice comes (S257); zero means 30s
+	Terminal func() bool   // whether an owner is at a terminal to approve each section of ork spec draft (S179); nil tests the standard input
 
 	Socket string                          // the daemon's socket
 	Pid    string                          // the daemon's pid file; used only for the stop hint
@@ -391,6 +400,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return a.runSlice(ctx, o, rest)
 	case "wave":
 		return a.wave(ctx, o, rest)
+	case "spec":
+		return a.spec(ctx, o, rest)
 	case "check", "fix":
 		return a.cardCommand(ctx, o, cmd, rest)
 	case "approve", "stop", "answer", "retry", "dismiss", "file":

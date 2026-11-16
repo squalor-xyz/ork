@@ -294,6 +294,8 @@ type specRig struct {
 	others []engine.Request // the rounds of the runs that start afterwards
 	gate   chan struct{}    // when set, the role waits for it
 	root   string
+	draft  string           // the report of the spec-draft role (S179)
+	drafts []engine.Request // the rounds the spec-draft role was asked for
 }
 
 func (r *specRig) requests() []engine.Request {
@@ -333,8 +335,16 @@ func newSpecRig(t *testing.T, rules string, extra ...clitest.Route) *specRig {
 		clitest.Route{Tool: "slicer", Args: []string{"show", "S1"}, Prefix: true, File: filepath.Join(rig.root, "S1.json")},
 		clitest.Route{Tool: "slicer", Args: []string{"show", "S2"}, Prefix: true, File: filepath.Join(rig.root, "S2.json")},
 		clitest.Route{Tool: "slicer", Args: []string{"edit", "S2"}, Prefix: true, Stdout: `{"id":"S2"}`},
+		clitest.Route{Tool: "slicer", Args: []string{"edit", "S1"}, Prefix: true, Stdout: `{"id":"S1"}`},
 	)
 	rig.d, rig.store, _ = runDaemon(t, func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		if r.Role == engine.RoleSpecDraft {
+			rig.mu.Lock()
+			rig.drafts = append(rig.drafts, r)
+			report := rig.draft
+			rig.mu.Unlock()
+			return engine.Result{Exit: engine.ExitOK, Report: report}, nil
+		}
 		if r.Role != engine.RoleSpecCheck {
 			rig.mu.Lock()
 			rig.others = append(rig.others, r)

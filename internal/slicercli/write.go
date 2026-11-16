@@ -460,6 +460,24 @@ func (c Client) EditAppend(ctx context.Context, w runrec.Writer, root, id, secti
 	return err
 }
 
+// EditReplaceArgs is the call of EditReplace from "edit" up to the text,
+// without --render, --json, --lean or --root. The client and the daemon's
+// preview line both come from here, so they cannot drift.
+func EditReplaceArgs(id, section, text string) []string {
+	return []string{"edit", id, "--section", section, "--text", text}
+}
+
+// EditReplace runs `slicer edit ID --section SECTION --text TEXT --render
+// --json --lean --root ROOT`: it replaces the section's body with TEXT (S179,
+// scope.spec-drafting). An empty TEXT would clear the section, so it is refused.
+func (c Client) EditReplace(ctx context.Context, w runrec.Writer, root, id, section, text string) error {
+	if strings.TrimSpace(text) == "" {
+		return fmt.Errorf("slicer edit %s: nothing to replace %s with", id, section)
+	}
+	_, err := c.write(ctx, w, root, append(EditReplaceArgs(id, section, text), "--render", "--json", "--lean")...)
+	return err
+}
+
 // Added is the item `slicer add` filed. Existing is true when the key matched
 // an item filed before, which the call then returns unchanged.
 type Added struct {

@@ -198,6 +198,9 @@ type Model struct {
 	matrixEditRequest uint64
 	closedRuns        map[uint64]closedMatrixRun // runs whose form esc closed while the run was out, by request
 
+	specDraft        *specDraftState // the draft view of the Roadmap item pane (S179)
+	specDraftRequest uint64
+
 	projectsReading  bool
 	projectsRevision uint64
 }
@@ -427,6 +430,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		}
 	case matrixEditMsg:
 		return m, m.applyMatrixEdit(msg)
+	case specDraftMsg:
+		m.applySpecDraft(msg)
+	case specApplyMsg:
+		return m, m.applySpecApply(msg)
 	case wavesMsg:
 		return m, m.applyWaves(msg)
 	case launchSpecMsg:
@@ -714,6 +721,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	if m.matrixEdit != nil {
 		return m.matrixEditKey(msg)
 	}
+	if m.specDraft != nil {
+		return m.specDraftKey(msg)
+	}
 	if m.compose != nil {
 		return m.composeKey(msg)
 	}
@@ -864,6 +874,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.openLaunch()
 	case key.Matches(msg, m.keys.Matrix):
 		return m.openMatrix()
+	case key.Matches(msg, m.keys.SpecDraft):
+		return m.openSpecDraft()
 	case key.Matches(msg, m.keys.Cleanup):
 		return m.requestAction("cleanup")
 	case key.Matches(msg, m.keys.Approve):
@@ -1161,6 +1173,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 	m.dropLaunch()
 	m.compose = nil
 	m.matrixEdit = nil
+	m.specDraft = nil
 	m.pane = nil
 	m.active = i
 	if !m.viewShown(m.view) {
@@ -1382,6 +1395,7 @@ func (m *Model) moveView(delta int) tea.Cmd {
 			m.dropLaunch()
 			m.compose = nil
 			m.matrixEdit = nil
+			m.specDraft = nil
 			m.view = i
 			m.roadmapCursor = 0
 			m.decisionsCursor = 0

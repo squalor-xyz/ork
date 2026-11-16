@@ -168,6 +168,7 @@ type runManager struct {
 	lastRegistry    *registry.File             // last successful run-manager read; guarded by mu
 	waveStops       map[string]int             // suppress queued members while a wave stop is in progress
 	specs           map[string]specEntry       // the spec checks the daemon remembers, by project and item; guarded by mu
+	drafts          map[string]specDraftEntry  // the spec drafts the owner has not approved yet, by project and item; guarded by mu (S179)
 	specJobs        int                        // spec checks in flight; guarded by mu
 	specSeq         int                        // numbers the spec check jobs; guarded by mu
 	specCancels     map[int]context.CancelFunc // cancels each spec check job; guarded by mu

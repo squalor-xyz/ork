@@ -209,6 +209,26 @@ func (d *Daemon) MatrixEdit(ctx context.Context, p daemon.MatrixEditParams) (*da
 	return c.MatrixEdit(ctx, p)
 }
 
+// SpecDraft drafts the item's spec sections; it writes nothing (S179).
+func (d *Daemon) SpecDraft(ctx context.Context, project, item string) (*daemon.SpecDraftResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.SpecDraft(ctx, project, item)
+}
+
+// SpecDraftApply replaces the sections of the item's draft that the owner approved (S179).
+func (d *Daemon) SpecDraftApply(ctx context.Context, p daemon.SpecDraftApplyParams) (*daemon.SpecDraftApplyResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.SpecDraftApply(ctx, p)
+}
+
 func (d *Daemon) WaveStart(ctx context.Context, params daemon.WaveStartParams) (*daemon.WaveResult, error) {
 	c, err := d.Connect(ctx)
 	if err != nil {

@@ -98,6 +98,9 @@ func (m *Model) openMatrix() tea.Cmd {
 // (scrollItemPane).
 func (m *Model) scrollRoadmapPane(msg tea.KeyPressMsg) {
 	pane := m.itemPane
+	if m.specDraft != nil {
+		pane = m.specDraft.pane // the draft view scrolls by itself (S179)
+	}
 	switch {
 	case key.Matches(msg, m.keys.First):
 		pane.offset = 0
@@ -242,6 +245,22 @@ func (m *Model) roadmap(w int) overviewView {
 			add("No role matrix returned")
 		}
 		m.scrollItemPane(pane, &out, head)
+		return out
+	}
+	if st := m.specDraft; st != nil && m.itemPane != nil {
+		heading("Spec draft " + st.item + "  (esc returns)")
+		head := len(out.body)
+		switch {
+		case st.pending:
+			add("pending: spec.draft (the role reads the checkout; this can take minutes)")
+		case st.err != nil:
+			add(actionError(st.err))
+		case st.result != nil:
+			m.specDraftLines(&out, st, w)
+		default:
+			add("No draft returned")
+		}
+		m.scrollItemPane(st.pane, &out, head)
 		return out
 	}
 	if pane := m.itemPane; pane != nil {
