@@ -177,3 +177,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S241 (run ork-20261116-015040-d93b, 2026-11-16)
 
 - [ ] After landing and a rebuild, the owner runs `ork wave start ork ITEM ITEM` for two slices where only one touches the engine paths, reads the plan before answering `n`, and confirms that the labels, the pair rule line and the spec check lines are clear at 80 columns.
+
+## S242 (run ork-20261116-015041-3103, 2026-11-16)
+
+- [ ] After landing and a rebuild of `~/bin/ork` and a restart, the owner runs `ork daemon status`, `ork doctor` and `ork status` once with the daemon running, and once after a commit that only touches `.slicer/` (no warning expected), and after a Go change (warning expected).

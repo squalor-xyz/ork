@@ -48,8 +48,18 @@ only on a terminal (a character-device stdout). Otherwise its first line is
 plain `ork VERSION` (`cmd/ork/main.go`, `run`).
 
 Keep the binary and the daemon in step. After you rebuild, run `ork daemon
-restart`. A daemon from an older build makes every command print a warning
-that names this command (`docs/design.md:59-75`). `ork daemon stop` refuses
+restart`. `ork daemon status` shows whether it runs, its pid and build,
+whether it is stale, whether roles run and whether the self-host project is
+behind main. It never starts a daemon, and exits 0 when none runs. Add
+`--json` for structured output. A failed status read omits roles and main
+but still shows the build and pid.
+A daemon from a different code build makes every command print a warning
+that names restart. Clean revisions that differ only in tracking, docs,
+root Markdown, tests, root testdata or GitHub configuration do not warn
+when a registered repository proves that difference. Embedded prompts still
+count; unknown, modified or unverifiable builds keep the warning. Doctor
+always shows a daemon line, and shows behind-main even while roles run.
+`ork daemon stop` refuses
 while a role is running unless you add `--force` (`docs/design.md:41-48`).
 
 ## 3. Check your tools: `ork doctor`
@@ -885,6 +895,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork vendor [list] | out NAME [--reason TEXT] [--until TIME] | back NAME
     ork roles print [ROLE]
     ork roles matrix PROJECT
+    ork daemon status
     ork daemon run | stop [--force] | restart [--force] [--rebuild]
     ork doctor
 

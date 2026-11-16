@@ -7,6 +7,13 @@
   it. A backticked Check entry that starts with `-` is recorded as not a
   command and not run, so it no longer pauses the run.
 
+- S242: add `ork daemon status` for daemon build, pid, stale state, running
+  roles and behind-main state without starting a daemon. Doctor always prints
+  a daemon line and shows behind-main while roles run. CLI stale checks ignore
+  clean revision differences proven to change only non-binary inputs;
+  embedded prompts still count. Unknown, modified or unverifiable builds keep
+  the existing warning. The TUI marker keeps its existing rule.
+
 - S241 (*proposed*): label fallback roles and show push, UI skills and engine
   paths in CLI launch plans. Check the wave pair rule before the visible spec
   check; print ready results, item names and follow/stop commands. Show push

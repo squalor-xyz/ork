@@ -31,14 +31,15 @@ func daemonBuild(ctx context.Context, call func(context.Context, string, any, an
 	return info.BuildID, err
 }
 
-// CheckDaemonBuild warns about a stale daemon without reading any projects.
+// CheckDaemonBuild warns about a stale daemon. It may compare committed files
+// in registered repositories, but does not request daemon project status.
 // An older daemon that does not know daemon.info has an unknown build.
 func (a *App) CheckDaemonBuild(ctx context.Context, c *daemon.Client, stderr io.Writer) (string, error) {
 	build, err := daemonBuild(ctx, c.Call)
 	if err != nil {
 		return "", err
 	}
-	a.warnStale(&output{stderr: stderr}, build)
+	a.warnStale(ctx, &output{stderr: stderr}, build)
 	return build, nil
 }
 
@@ -49,8 +50,8 @@ func (a *App) buildID() string {
 	return a.BuildID
 }
 
-func (a *App) staleWarning(build string) string {
-	if !daemon.StaleBuild(a.BuildID, build) {
+func (a *App) staleWarning(ctx context.Context, build string) string {
+	if stale, _ := a.staleBuild(ctx, build); !stale {
 		return ""
 	}
 	if build == "" {
@@ -59,8 +60,8 @@ func (a *App) staleWarning(build string) string {
 	return fmt.Sprintf("stale daemon build %s differs from CLI build %s; run ork daemon restart", build, a.buildID())
 }
 
-func (a *App) warnStale(o *output, build string) {
-	if warning := a.staleWarning(build); warning != "" {
+func (a *App) warnStale(ctx context.Context, o *output, build string) {
+	if warning := a.staleWarning(ctx, build); warning != "" {
 		fmt.Fprintf(o.stderr, "ork: warning: %s\n", warning)
 	}
 }
@@ -72,8 +73,14 @@ func (a *App) daemonCommand(ctx context.Context, o *output, args []string) int {
 		// ork daemon run is served by cmd/ork; its usage is still ork's own (S290).
 		return o.printHelp("daemon", "run")
 	}
-	if len(args) == 0 || (args[0] != "stop" && args[0] != "restart") {
-		return o.usage("daemon needs stop or restart [--force]")
+	if len(args) == 0 {
+		return o.usage("daemon needs status, stop, restart or run")
+	}
+	if args[0] == "status" {
+		return a.daemonStatus(ctx, o, args[1:])
+	}
+	if args[0] != "stop" && args[0] != "restart" {
+		return o.usage("unknown daemon command %q; use status, stop, restart or run", args[0])
 	}
 	sub := args[0]
 	fs := flag.NewFlagSet("daemon "+sub, flag.ContinueOnError)
