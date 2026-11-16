@@ -218,6 +218,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork roles matrix P          show the role matrix as slicer prints it, then
                               which rows ork uses, skips or does not run
   ork daemon run              serve the daemon in the foreground
+  ork daemon status           show daemon build, state and running roles
   ork daemon stop [--force]   stop the daemon
   ork daemon restart [--force] [--rebuild]
                               stop and start the daemon

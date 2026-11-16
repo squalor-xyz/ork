@@ -2311,6 +2311,19 @@ its leading space measures 52 columns. Below 52 columns, the status line uses
 `behind main: ork daemon restart`, then clips if that text still does not fit.
 Text `ork doctor`
 prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
+Doctor also prints this warning while roles run, with a second indented line
+`roles are running; restart waits` so neither line passes 80 columns. It always prints a daemon line:
+`[ok] daemon  running, build REV12 (pid N)` for a current daemon,
+the existing stale-build warning for a stale daemon, or
+`[--] daemon  not running; the next command starts it`. JSON adds
+`daemon_running` and, when known, `daemon_pid`.
+`ork daemon status` probes without starting a daemon and exits 0 when none
+runs. It shows build, socket, pid, stale state, roles and behind-main state;
+while behind it prints `main: behind (restart waits for the roles, or use --force)`.
+A failed status read omits roles and main. CLI stale checks ignore commits
+whose only changes are excluded binary inputs, when a registered repository
+can prove it. Embedded Markdown still counts. The TUI marker keeps its
+existing build-string rule.
 `ork status` prints `ork: warning: daemon behind main: restart with ork daemon restart`
 on stderr. ork never restarts on its own.
 

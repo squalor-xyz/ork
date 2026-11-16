@@ -64,15 +64,38 @@ ork (TUI)  ork status --json (CLI)
   engine jobs and unreadable run state. *Proposed:* `daemon.info` returns only
   `build_id`, without loading the registry or reading projects. Commands,
   TUI startup, stop/restart and doctor use this cheap call for build checks.
-  Doctor also reads status for the idle self-host restart notice; a failed
+  Doctor also reads status for the self-host restart notice, including while
+  roles run; a failed
   status read omits that notice and does not fail doctor.
   `ork status` makes one full status read. Commands warn on stderr when the
-  daemon build differs, including an older daemon with no build ID. The
+  daemon build is stale, including an older daemon with no build ID. The
   warning names `ork daemon restart`. An `unknown_method` reply from an older
   daemon means build `unknown`, which is stale. Doctor probes an existing
   daemon without starting one and reports a mismatch as a warning. A mismatch
   does not change the command's exit code. Revision plus modified state
   cannot distinguish two builds of different edits at the same revision.
+  CLI checks ignore revision differences when both builds have clean 40- or
+  64-hex revisions and a registered repository proves that no binary input
+  changed. In registry order, the first repository containing both commits
+  supplies `git diff --quiet R1 R2 -- . ':(exclude).slicer'
+  ':(exclude)docs' ':(exclude,glob)*.md' ':(exclude,glob)**/*_test.go'
+  ':(exclude)testdata' ':(exclude).github'`. Only exit 0 suppresses the
+  warning. Unknown revisions, modified builds and failed comparisons keep
+  the warning. Root Markdown is excluded; embedded Markdown such as role
+  prompts and CLI instructions counts. Each search is bounded to ten seconds.
+  Warnings still print once per command, including on stderr with `--json`.
+  The TUI keeps its build-string comparison.
+  `ork daemon status` probes without starting a daemon and exits 0 when none
+  runs. It prints the socket, pid (or unknown), short build, stale state,
+  running roles and self-host behind-main state. A failed status read leaves
+  the roles and main lines out but keeps the build and pid. Its JSON includes
+  `running`, `socket`, `cli_build_id` and, when running, `build_id`, `stale`
+  and a known `pid`; `roles_running` and `behind_main` are present only after
+  a successful status read. Doctor always prints a daemon line and includes
+  `daemon_running` and a known `daemon_pid` in JSON. Its behind-main warning
+  is followed by a line `       roles are running; restart waits` while roles
+  run, so no doctor line passes 80 columns; its JSON `behind_notice` keeps
+  the text as the suffix ` (roles are running; restart waits)`.
 - **Socket.** `$XDG_STATE_HOME/ork/ork.sock`, else
   `~/.local/state/ork/ork.sock`. The directory is created with mode 0700 and
   the socket is mode 0600.
@@ -2189,6 +2212,7 @@ ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
                             --again reruns the role (S298, proposed)
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
+ork daemon status           show daemon build, state and running roles
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
                             daemon.stop, print the pid and a kill hint
 ork daemon restart [--force] [--rebuild]
@@ -3289,6 +3313,9 @@ It fires on any landing on the base branch, not only engine landings, while
 no run is active. In the status line it replaces the stale-build marker while shown;
 otherwise the stale marker still shows for a differing build. Text doctor
 prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
+Doctor also shows it while roles run, adding the indented line
+`roles are running; restart waits` below it. `ork daemon status` shows behind-main
+while roles run too; neither command starts a daemon for this read.
 Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
 on stderr. ork never restarts the daemon on its own.
 

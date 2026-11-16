@@ -92,6 +92,8 @@ type DoctorReport struct {
 	Projects      []projectCheck `json:"projects"`
 	RegistryError string         `json:"registry_error,omitempty"`
 	DaemonBuildID string         `json:"daemon_build_id,omitempty"`
+	DaemonRunning bool           `json:"daemon_running"`
+	DaemonPID     int            `json:"daemon_pid,omitempty"`
 	BehindNotice  string         `json:"behind_notice,omitempty"`
 	Warning       string         `json:"warning,omitempty"`
 	Upgrade       []upgradeHint  `json:"upgrade"`
@@ -325,7 +327,7 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	probeStatus := func(call func(context.Context, string, any, any) error) {
 		var status daemon.StatusResult
 		if err := call(probeCtx, daemon.MethodStatus, daemon.StatusParams{}, &status); err == nil {
-			rep.BehindNotice = daemon.BehindWarning(&status)
+			rep.BehindNotice = doctorBehindNotice(status)
 		}
 	}
 	if a.Call != nil {
@@ -345,8 +347,10 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 		}
 	}
 	if probeErr == nil {
+		rep.DaemonRunning = true
+		rep.DaemonPID = a.daemonPID()
 		rep.DaemonBuildID = build
-		rep.Warning = a.staleWarning(build)
+		rep.Warning = a.staleWarning(ctx, build)
 	}
 	self, selfErr := ownBinary()
 	rep.Binary = self
@@ -470,9 +474,21 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 	}
 	if rep.Warning != "" {
 		fmt.Fprintf(o.stdout, "[WARN] daemon  %s\n", rep.Warning)
+	} else if rep.DaemonRunning {
+		pid := "unknown"
+		if rep.DaemonPID > 0 {
+			pid = fmt.Sprint(rep.DaemonPID)
+		}
+		fmt.Fprintf(o.stdout, "[ok] daemon  running, build %s (pid %s)\n", shortBuild(rep.DaemonBuildID), pid)
+	} else {
+		fmt.Fprintln(o.stdout, "[--] daemon  not running; the next command starts it")
 	}
 	if rep.BehindNotice != "" {
-		fmt.Fprintf(o.stdout, "[WARN] %s\n", rep.BehindNotice)
+		notice, rolesRun := strings.CutSuffix(rep.BehindNotice, behindRolesSuffix)
+		fmt.Fprintf(o.stdout, "[WARN] %s\n", notice)
+		if rolesRun {
+			fmt.Fprintln(o.stdout, "       roles are running; restart waits")
+		}
 	}
 	for _, tc := range rep.Tools {
 		switch {

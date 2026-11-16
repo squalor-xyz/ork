@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- S242: add `ork daemon status` for daemon build, pid, stale state, running
+  roles and behind-main state without starting a daemon. Doctor always prints
+  a daemon line and shows behind-main while roles run. CLI stale checks ignore
+  clean revision differences proven to change only non-binary inputs;
+  embedded prompts still count. Unknown, modified or unverifiable builds keep
+  the existing warning. The TUI marker keeps its existing rule.
+
 - S367: make approval-hook Bash path and operator scans quote-aware; allow
   quoted test-filter operators and ask before tilde or brace expansion.
   Known outside paths deny before expansion or incomplete-quoting questions.

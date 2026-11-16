@@ -449,13 +449,17 @@ func TestBehindNoticeOnlyWhenIdle(t *testing.T) {
 					t.Fatalf("code %d: %s %s", code, out, errout)
 				}
 				notice := "daemon behind main: restart with ork daemon restart"
-				if strings.Contains(out+errout, notice) != !active {
+				wantNotice := !active || command == "doctor"
+				if strings.Contains(out+errout, notice) != wantNotice {
 					t.Fatalf("active=%v: %s %s", active, out, errout)
 				}
-				if !active {
+				if wantNotice {
 					want, stream := "ork: warning: "+notice, errout
 					if command == "doctor" {
 						want, stream = "[WARN] "+notice, out
+						if active {
+							want += "\n       roles are running; restart waits"
+						}
 					}
 					if !strings.Contains("\n"+stream, "\n"+want+"\n") {
 						t.Fatalf("missing exact prefixed notice %q: stdout=%q stderr=%q", want, out, errout)

@@ -26,7 +26,7 @@ func (a *App) callWith(ctx context.Context, o *output, prefix, method string, pa
 		if method == daemon.MethodStatus {
 			if status, ok := result.(*daemon.StatusResult); ok {
 				if a.Call != nil {
-					a.warnStale(o, status.BuildID)
+					a.warnStale(ctx, o, status.BuildID)
 				}
 				if notice := daemon.BehindWarning(status); notice != "" {
 					fmt.Fprintf(o.stderr, "ork: warning: %s\n", notice)
