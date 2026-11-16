@@ -1,0 +1,41 @@
+{
+  "id": "S373",
+  "title": "TUI: show a permission call's whole command",
+  "lead": [
+    "*Proposed.* The TUI's run pane and question view show a permission question's `detail` in full, wrapped, under its title."
+  ],
+  "depends_note": null,
+  "findings_note": "S370 (2026-11-16): the permission question title is now a 120-character preview with the whole input in the question's `detail` field (adj 368); the TUI shows only the title. Owner decision adj 369 (`ui.permission-detail`, later-slice).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* An allow decision depends on every token of the command; the owner answers from the TUI as often as from the CLI."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/questions.go`\n- `internal/tui/pane.go`\n- `testdata/golden/`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestPermissionQuestionShowsDetail`: a pending permission question with a 300-character detail renders the whole detail, wrapped at the pane width, under the title (golden).\n- `TestQuestionWithoutDetailUnchanged`: a question with no detail renders as today."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Red tests, then the view.\n2. Docs: `docs/dashboard.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 371,
+  "next_id": 374,
   "preamble": "",
   "passes": [
     {
@@ -17364,6 +17364,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "afa97e5d-1513-4994-8a26-9957aeb7bad5",
+          "kind": "",
+          "text": "**2026-11-16** — Trial 5, 2026-11-16, run ork-20261116-012801-28aa, S246 (check command from slicer first; real size: 12 files, about 300 lines), claude-local qwen3.8-27b low then claude sonnet high. Live: S362-S367, orientation pack (S365/S366: 63 lines, 6.3k chars, code to change and tests to copy). Local implementer: 90 min (01:28-02:58), 5 sessions, restarts at 70.1k-73.2k (02:12, 02:24, 02:38, 02:52), 5.63M tokens, NO product edit. Per session (from the Claude transcripts): 28-34 turns, 16-24 Reads and 11-17 Greps, 0 Edits; internal/daemon/runs.go read 7-12 times in every session (it is over 2,000 lines, so the 500-line cap forces chunks). The first session lasted 44 min, partly waiting on permission calls: 7 denials, 4 of them owner questions that expired (the orchestrator's delegated allow was blocked by Claude Code's auto-mode check; fixed afterwards with a Bash(ork answer:*) rule). The progress note's anchor log stayed empty and its Next list never advanced, so each fresh session re-read runs.go. Sonnet fallback: 13.6 min, all six tests plus five more, 12 files; grok review, one fix round, grok gate PASS; landed 2026-11-16. Compared with trial 4 (S248, small files): the pack did not stop exploration; the big file and the empty anchor log did. Local implementation is not yet useful on a slice whose main file is over 2,000 lines.",
+          "created_at": "2026-11-16T15:03:45Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -20314,6 +20328,90 @@
         "urgency": 2,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S371",
+      "title": "Local roles: ork keeps the anchor log across fresh sessions",
+      "short_title": "ork-kept read log for local fresh sessions",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 5 (2026-11-16, run ork-20261116-012801-28aa, S246): the claude-local implementer ran 5 sessions in 90 min with 0 Edits; each session made 16-24 Reads and 11-17 Greps and read internal/daemon/runs.go 7-12 times. Its progress note's anchor log stayed \"(none yet)\", so the restart brief (`internal/engine/round.go:599-606`) told each new session to trust a note that held nothing, and it re-read the same file.",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-anchor-log",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S372",
+      "title": "Local roles: a smaller read cap",
+      "short_title": "Smaller Read cap for local roles",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S304 trial 5 (2026-11-16, run ork-20261116-012801-28aa, S246): sessions restarted at 70k after 28-34 turns; most of the window was 500-line chunks of internal/daemon/runs.go (over 2,000 lines). The approval point caps a local Read at 500 lines (`internal/agent/claude/pretool.go:117-133`, S356).",
+        "discovered_from": "S304",
+        "parent": "",
+        "cites": [],
+        "key": "ork-local-read-cap",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S373",
+      "title": "TUI: show a permission call's whole command",
+      "short_title": "TUI shows full permission command",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S370 (2026-11-16): the permission question title is now a 120-character preview with the whole input in the question's `detail` field (adj 368); the TUI shows only the title. Owner decision adj 369 (`ui.permission-detail`, later-slice).",
+        "discovered_from": "S370",
+        "parent": "",
+        "cites": [],
+        "key": "ork-tui-permission-detail",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],

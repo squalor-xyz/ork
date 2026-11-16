@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. `adj ask` the mechanism (an `Edit(DIR/**)` allow rule beside plan mode, or acceptEdits with a path rule) with `--ref` this slice; wait for the owner's answer.\n2. Red test, then the args.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+      "body": "1. `adj ask` the mechanism (an `Edit(DIR/**)` allow rule beside plan mode, or acceptEdits with a path rule) with `--ref` this slice; wait for the owner's answer.\n2. Red test, then the args.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-16): Which mechanism lets a cloud UI pass write its renders, and under which path? -> accept-edits: switch the UI pass to `--permission-mode acceptEdits`. Add path rules that deny `Edit`/`Write` outside TEMPDIR, so the worktree stays unwritable. [roles.ui-pass-write-mechanism]."
     },
     {
       "heading": "Check",

@@ -4677,3 +4677,9 @@
 {"when": "2026-11-16T15:17:16Z", "item": "S370", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-16T15:21:40Z", "item": "S370", "action": "note", "from": "", "to": "", "note": "Permission question keeps a title of at most 120 characters ", "by": "Jon Robbins"}
 {"when": "2026-11-16T15:21:42Z", "item": "S370", "action": "status", "from": "started", "to": "done", "note": "Permission question has a title of at most 120 characters and the whole tool input in OwnerQuestion.Detail, carried by ork status --json and run.show and printed as sent by ork show under Input:. Verified: go vet, gofmt, go test ./... (26 packages ok), slicer check, adj lint.", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:03:45Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 5, 2026-11-16, run ork-20261116-012801-28aa, S246 (che", "by": "Jon Robbins"}
+{"when": "2026-11-16T15:11:55Z", "item": "S371", "action": "add", "from": "", "to": "open", "note": "Local roles: ork keeps the anchor log across fresh sessions"}
+{"when": "2026-11-16T15:11:55Z", "item": "S372", "action": "add", "from": "", "to": "open", "note": "Local roles: a smaller read cap"}
+{"when": "2026-11-16T15:11:55Z", "item": "S373", "action": "add", "from": "", "to": "open", "note": "TUI: show a permission call's whole command"}
+{"when": "2026-11-16T15:12:09Z", "item": "S373", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T15:13:24Z", "item": "S369", "action": "edit", "from": "", "to": "", "note": "Implement"}
