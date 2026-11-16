@@ -1184,3 +1184,110 @@ func TestLandRedRecheckBriefHasTheFailureExcerpt(t *testing.T) {
 		t.Errorf("brief:\n%.2000s", brief)
 	}
 }
+
+// S377: a commit that lands on the base after the merge-in (the tree is clean,
+// so the dirty-tracking check does not see it) is merged in once more, and
+// the landing fast-forwards.
+func TestLandRemergesWhenBaseMovesBeforeFastForward(t *testing.T) {
+	env := newLandEnv(t)
+	env.moveBase("base.txt", "from main\n")
+	var moved string
+	n := 0
+	env.beforeCheck = func() {
+		n++
+		if n == 1 {
+			moved = env.moveBase("later.txt", "during the landing\n")
+		}
+	}
+	env.approve()
+	rec := env.e.Snapshot()
+	if rec.State != runrec.StateCommitted {
+		t.Errorf("state %q, reason %q", rec.State, rec.Reason)
+	}
+	if got := gitRun(t, env.P, "show", "main:later.txt"); got != "during the landing" {
+		t.Errorf("later.txt on main: %q", got)
+	}
+	if got := gitRun(t, env.P, "show", "main:feature.txt"); got != "the slice" {
+		t.Errorf("feature.txt on main: %q", got)
+	}
+	if got := gitRun(t, env.P, "rev-list", "--merges", "--count", "main"); got != "2" {
+		t.Errorf("%s merge commits on main, want the base move and the commit during the landing", got)
+	}
+	if len(env.seen) != 2 || !env.seen[1].hasBase || env.seen[1].mainTip != moved {
+		t.Errorf("re-checks %+v, want a second one that contains %s", env.seen, moved)
+	}
+}
+
+// S377, the S206 order: the retry commits a dirty log on main while the
+// conflict's merge is still open, so that commit is not in the settlement.
+// The landing merges main in again and fast-forwards.
+func TestLandAfterConflictRetryCommitsTrackingThenMerges(t *testing.T) {
+	env := newLandEnv(t)
+	writeFile(t, filepath.Join(env.P, ".slicer", "log.jsonl"), "a\n")
+	writeFile(t, filepath.Join(env.P, ".slicer", ".gitattributes"), "log.jsonl merge=union\n")
+	gitRun(t, env.P, "add", "-A")
+	gitRun(t, env.P, "commit", "-q", "-m", "tracking base")
+	gitRun(t, env.W, "merge", "--ff-only", "main")
+	appendLine(t, filepath.Join(env.W, ".slicer", "log.jsonl"), "branch\n")
+	writeFile(t, filepath.Join(env.W, "shared.txt"), "branch\n")
+	env.moveBase("shared.txt", "base\n")
+	env.approve()
+	requireConflictPause(t, env)
+	appendLine(t, filepath.Join(env.P, ".slicer", "log.jsonl"), "owner\n")
+	writeFile(t, filepath.Join(env.W, "shared.txt"), "resolved\n")
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	rec := env.e.Snapshot()
+	if rec.State != runrec.StateCommitted {
+		t.Errorf("state %q, reason %q", rec.State, rec.Reason)
+	}
+	commits := trackingCommits(t, env)
+	if len(commits) != 1 {
+		t.Fatalf("%d tracking commits, want 1", len(commits))
+	}
+	log := gitRun(t, env.P, "show", "main:.slicer/log.jsonl")
+	if strings.Count(log, "owner") != 1 || strings.Count(log, "branch") != 1 {
+		t.Errorf("log.jsonl on main: %q, want owner and branch once each", log)
+	}
+	if got := gitRun(t, env.P, "show", "main:shared.txt"); got != "resolved" {
+		t.Errorf("shared.txt on main: %q", got)
+	}
+	if got := gitRun(t, env.P, "rev-list", "--merges", "--count", "main"); got != "2" {
+		t.Errorf("%s merge commits on main, want the settled conflict and the merge after the tracking commit", got)
+	}
+	if len(env.seen) != 2 || env.seen[0].hasBase || env.seen[0].mainTip != commits[0] || !env.seen[1].hasBase || env.seen[1].mainTip != commits[0] {
+		t.Errorf("re-checks %+v, want the settlement to miss %s and the next merge to contain it", env.seen, commits[0])
+	}
+}
+
+// S377: a base that moves after every merge-in is merged once more, then the
+// fast-forward pauses with the same one-line reason as any other failed
+// fast-forward.
+func TestLandPausesWhenBaseKeepsMoving(t *testing.T) {
+	env := newLandEnv(t)
+	env.moveBase("base.txt", "from main\n")
+	texts := []string{"one\n", "two\n"}
+	n := 0
+	env.beforeCheck = func() {
+		env.moveBase("later.txt", texts[n])
+		n++
+	}
+	env.approve()
+	rec := requireState(t, env.e, runrec.StatePaused)
+	if len(env.seen) != 2 {
+		t.Errorf("%d re-checks, want 2", len(env.seen))
+	}
+	if strings.Contains(rec.Reason, "\n") || !strings.HasPrefix(rec.Reason, "git merge --ff-only "+item+": ") || !strings.Contains(rec.Reason, "fatal: Not possible to fast-forward, aborting.") {
+		t.Errorf("reason %q", rec.Reason)
+	}
+	if indexOf(env.gitCalls(), "P: merge --ff-only "+item) < 0 {
+		t.Errorf("the fast-forward did not run: %q", env.gitCalls())
+	}
+	if indexOf(env.log("slicer.log"), "land ") >= 0 {
+		t.Errorf("slicer land ran")
+	}
+	if got := gitRun(t, env.P, "rev-list", "--merges", "--count", item); got != "2" {
+		t.Errorf("%s merge commits on %s, want 2", got, item)
+	}
+}

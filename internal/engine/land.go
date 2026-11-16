@@ -65,9 +65,13 @@ func (e *Engine) land(ctx context.Context) error {
 		if _, reason := e.checkMain(ctx, P, base, B, rec.Item, true); reason != "" {
 			return pauseWith(reason)
 		}
-		// The same check right before the fast-forward, for an edit made during
-		// the merge-in or the re-check. A tracking edit there is committed and the
-		// landing goes back to the merge-in once; a further overlap pauses.
+		// Before the fast-forward, commit a tracking edit made during the
+		// merge-in or the re-check and merge the base in again. A commit that
+		// landed on the base in that gap (another writer, or this landing's
+		// own tracking commit while an older merge was still open) is the
+		// same kind of move: merge it in once more. One retry. A further
+		// overlap, or a base that moves again, pauses: the overlap as above,
+		// the commit at the fast-forward with git's own message (S377).
 		for first := true; ; first = false {
 			proceed, err := e.mergeBaseIn(ctx, e.run.Snapshot(), base)
 			if !proceed {
@@ -77,7 +81,14 @@ func (e *Engine) land(ctx context.Context) error {
 			if reason != "" {
 				return pauseWith(reason)
 			}
-			if !committed {
+			if committed {
+				continue
+			}
+			has, err := e.isAncestor(ctx, W, base, "HEAD")
+			if err != nil {
+				return pauseWith("git merge-base: " + err.Error())
+			}
+			if has || !first {
 				break
 			}
 		}

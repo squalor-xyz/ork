@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-377 items · — 53 · done 289 · retired 35
+377 items · — 52 · done 290 · retired 35
 
 v1.2
 
@@ -145,7 +145,7 @@ v1.2
 | 95 | [S374](slices/S374.md) | Grok cutover by 2026-12-09 | S | 1 |  | Owner, 2026-11-16 (relay session 8d711f67, chat): "my grok accounts will be cancelled effective December 9th. so let's ensure we maximize that account use through then". Grok is first choice in ork's matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer's matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305 | — |
 | 96 | [S375](slices/S375.md) | Spec-check screen shows full permission command | S | 1 |  | S373 (2026-11-16): the run pane shows a permission question's `detail` in full; the spec-check screen still shows only the 120-character title. Owner decision adj 377 (`ui.permission-detail-speccheck`, follow-up). · discovered from S373 | done |
 | 97 | [S376](slices/S376.md) | Spec-check screen: overflow marker for tall detail | S | 1 |  | S375 (2026-11-16): the spec-check screen shows a permission question's whole detail (S375); a detail taller than the screen pushes other rows off it. S373's run pane drops a tall detail whole behind an overflow marker. Owner decision adj 383 (`ui.permission-detail-speccheck-overflow`, later). · discovered from S375 | done |
-| 98 | [S377](slices/S377.md) | Landing ff-only fails when main moves mid-landing | S | 2 |  | 2026-11-16, two landings paused on "git merge --ff-only B: ... Diverging branches can't be fast-forwarded": S373 (run ork-20261116-155524-4cf4), after the orchestrator committed to main during the landing; S206 (run ork-20261116-172629-3a8b), after a merge conflict was resolved by hand and the run retried: ork's own commit d6b72802 "Tracking edits on main before landing S206" (`.slicer/log.jsonl`, one line) moved main, and the fast-forward then failed. A plain `ork retry` landed both. · discovered from S206 | — |
+| 98 | [S377](slices/S377.md) | Landing ff-only fails when main moves mid-landing | S | 2 |  | 2026-11-16, two landings paused on "git merge --ff-only B: ... Diverging branches can't be fast-forwarded": S373 (run ork-20261116-155524-4cf4), after the orchestrator committed to main during the landing; S206 (run ork-20261116-172629-3a8b), after a merge conflict was resolved by hand and the run retried: ork's own commit d6b72802 "Tracking edits on main before landing S206" (`.slicer/log.jsonl`, one line) moved main, and the fast-forward then failed. A plain `ork retry` landed both. · discovered from S206 | done |
 
 ---
 

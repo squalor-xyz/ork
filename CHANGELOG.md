@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- S377 (*proposed*): a landing whose base branch gains a commit after the
+  merge-in merges that commit in once and then fast-forwards, instead of
+  pausing. The same retry covers ork's own tracking commit when a landing
+  resumes with an older merge still open: the commit happens first, then the
+  settlement, so the landing merges the base in again before the
+  fast-forward. A base that moves again pauses at the fast-forward with the
+  same one-line `git merge --ff-only` reason. Docs updated: `docs/design.md`.
+
 - S206: ork pins and checks a project's adj contract (*proposed*). `ork projects
   pin NAME [--relay N] [--adj M]` sets the slicer pin, the adj pin, or both
   (slicer first). `ork projects unpin NAME` clears both when the project has

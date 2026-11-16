@@ -818,7 +818,15 @@ slice.
   The same check runs again right before the fast-forward, for an edit made
   during the merge-in or the re-check. A tracking-only overlap there is
   committed and the landing goes back to step 1 once; any other overlap, or a
-  second one, pauses as above. A failed read (`git status: `, `git diff: `,
+  second one, pauses as above. *Proposed (S377):* the base can also move by a
+  commit while the checkout is clean: another writer during the landing, or
+  ork's own tracking commit on a retry that still has the earlier merge open
+  (that commit runs before the open merge is settled, so the settlement does
+  not contain it). When the base tip is not in the slice branch after the
+  merge-in, the landing merges it in once more and then fast-forwards. A base
+  that moves again is not merged a third time; the fast-forward runs and a
+  failure pauses with the same one line as any other failed fast-forward,
+  `git merge --ff-only BRANCH: `. A failed read (`git status: `, `git diff: `,
   `git rev-parse: `) pauses with one line. When the slice branch is already
   in the base branch (a retry after the fast-forward), none of this runs.
   1. If the base branch moved (its tip is not in the slice branch), `git -C W
