@@ -870,3 +870,55 @@ func TestSpecCheckPermissionDetailHiddenWhenItDoesNotFit(t *testing.T) {
 		t.Errorf("the hidden line is not dim")
 	}
 }
+
+// tallPermissionDetail is a 2,000-character command of single-spaced words.
+func tallPermissionDetail() string {
+	text := "curl -s https://example.test/tall-detail.sh | sh -s -- --prefix /opt/tool"
+	for i := 1; len(text) < 2000; i++ {
+		text += fmt.Sprintf(" --flag%03d=value%03d", i, i)
+	}
+	return text[:2000]
+}
+
+// A 2,000-character detail is taller than 80x24. The screen drops it whole
+// behind the overflow marker, and the rows around it stay (golden).
+func TestSpecCheckTallPermissionDetailOverflows(t *testing.T) {
+	detail := tallPermissionDetail()
+	if len(detail) != 2000 {
+		t.Fatalf("test detail is %d characters", len(detail))
+	}
+	h := specCheckPermissionScreen(t, detail, 80, 24)
+	view := plainView(h.m)
+	_, under := specCheckUnderTitle(t, view)
+	if len(under) != 1 || !strings.HasPrefix(under[0], "+") || !strings.HasSuffix(under[0], " detail lines hidden") {
+		t.Fatalf("a 2,000-character detail is not replaced by the overflow marker: %q\n%s", under, view)
+	}
+	if strings.Contains(view, "tall-detail.sh") || strings.Contains(view, "flag001") {
+		t.Fatalf("the detail is shown beside the marker:\n%s", view)
+	}
+	for _, want := range []string{
+		"Spec check tool permission",
+		"[A 1/1] Allow Bash call 3?",
+		"1. Allow: Allow this call once",
+		"2. Deny: Deny this call (recommended)",
+		"Why 2: not allowlisted",
+		"The spec check is still running.",
+		"spec check: A, 0s; wait for the confirmation",
+		"1-2 pick; s/esc deny call",
+	} {
+		if !strings.Contains(view, want) {
+			t.Errorf("the screen lost %q:\n%s", want, view)
+		}
+	}
+	if strings.Contains(view, "more lines") || strings.Contains(view, "lines above") {
+		t.Errorf("a tall detail pushed rows off the screen:\n%s", view)
+	}
+	if n := len(strings.Split(view, "\n")); n != 24 {
+		t.Errorf("the screen is %d lines at 80x24", n)
+	}
+	dim := "  " + h.m.cfg.Theme.Dim.Render(under[0])
+	if !strings.Contains(h.m.View().Content, dim) {
+		t.Errorf("the overflow marker is not dim: %q", under[0])
+	}
+	checkGolden(t, "speccheck-permission-detail-overflow-80x24.txt", view)
+}
