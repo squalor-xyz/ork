@@ -44,6 +44,15 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 			allowlist = append(allowlist, "Bash(adj find*)")
 		}
 	}
+	// A cloud UI pass may write its renders under its run temp dir (S369,
+	// adj 372 and 374, *proposed*). Plan mode cannot allow that write, so the
+	// pass runs on an allowlist instead: the read-only tools a reviewer gets,
+	// Skill (it loads skills), plus the write rule Args adds.
+	writeDir := ""
+	if req.ReadOnly && req.Vendor == "claude" && req.Role == engine.RoleUI && req.TempDir != "" {
+		writeDir = req.TempDir
+		allowlist = append(engine.LocalReadOnlyAllowlist(), "Skill")
+	}
 	addDir := ""
 	if req.Vendor == "claude-local" && req.ProgressFile != "" {
 		if !filepath.IsAbs(req.ProgressFile) || filepath.Clean(req.ProgressFile) != req.ProgressFile {
@@ -88,7 +97,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	total := func(u claude.Usage) int {
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
-	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
+	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, WriteDir: writeDir, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
 		HookCommand: hookCommand, SystemPromptFile: systemFile,
 		ReadOnly: req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			if ev.ContextTokens > 0 {

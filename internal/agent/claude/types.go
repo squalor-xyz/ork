@@ -167,7 +167,13 @@ type Spec struct {
 	Effort      string // omitted when empty
 	ReadOnly    bool   // cloud: plan mode; claude-local: manual mode and read-only allowlist
 	Allowlist   []string
-	KeepSkills  bool // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
+	// WriteDir is the one directory a cloud read-only role may write (S369,
+	// *proposed*): the UI pass's run temp dir. Set, the role has no plan mode:
+	// it runs on Allowlist plus Edit and Write rules for this directory, with
+	// --permission-prompts none. Empty gives plain plan mode. claude-local
+	// ignores it (AddDir).
+	WriteDir   string
+	KeepSkills bool // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
 	// SystemPromptFile is the absolute path of the system prompt that replaces
 	// Claude Code's default one (claude-local only; S364, *proposed*).
 	SystemPromptFile string

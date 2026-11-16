@@ -1,0 +1,41 @@
+{
+  "id": "S369",
+  "title": "UI pass can write its renders to its run temp dir",
+  "lead": [
+    "*Proposed.* A cloud UI pass may write files only under its own run temp dir (for rendered views), as a claude-local read-only role may write its progress note (adj 348). It still may not change the worktree."
+  ],
+  "depends_note": null,
+  "findings_note": "S241 (2026-11-16, run ork-20261116-015040-d93b): the UI pass (claude opus, read-only, plan mode) was denied two Writes to `~/.local/state/ork/runs/RUN/` and reported tool feedback: \"plan mode allowed writing only a plan file, so renders/*.txt could not be produced\".",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* The UI pass prompt asks for rendered views to check layout; plan mode blocks every write but the plan file, so the pass reviews without them."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/args.go:90-91` (read-only cloud role: plan mode; now the `cloudReadOnly` branches in `Args`)\n- `internal/agent/claude/types.go` (`Spec.WriteDir`)\n- `internal/daemon/runner.go` (sets `WriteDir` and the read-only allowlist for a cloud UI pass)\n- `internal/daemon/runner_test.go`\n- `internal/agent/claude/args_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestUIPassMayWriteOnlyItsTempDir`: a cloud UI pass's args have no permission mode and allow Write and Edit only under its run temp dir (plus its allowlist, with `--permission-prompts none`); a reviewer's args are unchanged (plan mode).\n- `TestUIPassWriteDirNeedsAbsolutePaths` and `TestUIPassWriteDirEscapesPatternCharacters`: the write dir must be absolute and clean and hold no comma; pattern characters are escaped.\n- `TestClaudeRunnerGivesOnlyTheCloudUIPassAWriteDir`: the runner sets the write dir and the allowlist (read-only list plus Skill) for a cloud UI pass only (not a reviewer, not claude-local)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Owner decisions (2026-11-16, adj 372 and 374, which supersede adj 371 and 370): the orchestrator probed claude 2.1 (haiku) on 2026-11-16: in `--permission-mode plan`, a Write under an `Edit(TEMPDIR/**)` allow rule with `--add-dir` returns \"Cannot write to ... while in plan mode\". Accept-edits mode is out too (adj 371: it auto-approves mkdir, touch, rm, rmdir, mv, cp and sed in the working directory). So drop plan mode for the UI pass only: run it with a read-only allowlist (Read, Grep, Glob, the read-only Bash rules a reviewer gets) plus Skill (adj 374, the pass loads skills) plus `Edit(TEMPDIR/**)`, and `--permission-prompts none`, so every other call is denied. Reviewer, architect and gate keep plan mode.\n2. Red test, then the args.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

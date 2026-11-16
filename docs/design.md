@@ -1391,9 +1391,11 @@ separately.
     gate, architect, UI pass, spec check) the line says that ork saves the
     final message there and the role cannot write it, and another line asks
     for the whole report as the final message in plain text, with no code
-    fence. The role's permission mode is not a write mode on any vendor
-    (`--permission-mode plan` for cloud Claude and Grok, the fixed read-only
-    allowlist for claude-local, `-s read-only` for Codex),
+    fence. The role's permission mode does not let it write the report on any
+    vendor (`--permission-mode plan` for cloud Claude and Grok, the fixed
+    read-only allowlist for claude-local, `-s read-only` for Codex; a cloud
+    Claude UI pass has no mode flag but an allowlist with a write rule for its
+    temp directory (S369), and the report path is not under it),
     so the final message is the only route (`role.report-io`);
   - *proposed (S256):* for a resumed round, a `## Resumed session` section
     right after `## Your files`. It says that ork resumed the earlier
@@ -2037,7 +2039,24 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   read-only claude-local role (using its fixed read-only list). A local role
   also gets `--permission-mode manual --settings JSON`, containing the ork
   hook; it never gets plan or auto mode. Cloud roles retain their flags, with
-  `--permission-mode plan` for a cloud read-only role, then the prompt. `--effort
+  `--permission-mode plan` for a cloud read-only role, then the prompt.
+  *Proposed (S369; adj 372 and 374, owner decisions 2026-11-16, which
+  supersede adj 371 and 370):* a cloud Claude UI pass, which writes its
+  renders, has no permission mode flag. It runs as `--add-dir TEMPDIR
+  --allowedTools READONLY,Skill,Edit(//TEMPDIR/**),Write(//TEMPDIR/**)
+  --permission-prompts none`: READONLY is the fixed read-only list a reviewer
+  gets (`Read`, `Grep`, `Glob` and the read-only `Bash` rules), `Skill` is
+  there because the pass loads skills, TEMPDIR is its own run temp directory,
+  and every other call is denied. Plan mode does not work: the
+  orchestrator's probe of claude 2.1 (haiku) on 2026-11-16 found that in
+  `--permission-mode plan` a Write under an `Edit(TEMPDIR/**)` allow rule with
+  `--add-dir` returns "Cannot write to ... while in plan mode". `acceptEdits`
+  mode does not work either: it auto-approves `mkdir`, `touch`, `rm`, `rmdir`,
+  `mv`, `cp` and `sed` in the working directory, and a Bash deny rule is not a
+  boundary (adj 371, from the Claude Code docs). Every other cloud read-only
+  role (reviewer, architect, gate, spec check) keeps plain `--permission-mode
+  plan`. *Unverified:* that a UI pass run this way writes under TEMPDIR and is
+  denied in the worktree; the probe covered plan mode only. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
   session", claude 2.1.x). When the role has a temp directory, the process
   environment (the daemon's, plus the project's `vendor_env` for `claude`)

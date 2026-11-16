@@ -125,6 +125,39 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 
 const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(adj show*),Bash(adj check*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
 
+// Only a cloud UI pass gets a write directory, its run temp dir (S369).
+func TestClaudeRunnerGivesOnlyTheCloudUIPassAWriteDir(t *testing.T) {
+	for _, tc := range []struct {
+		name, vendor, role, want string
+	}{
+		{"cloud UI pass", "claude", engine.RoleUI, "temp"},
+		{"cloud reviewer", "claude", engine.RoleReviewer, ""},
+		{"local UI pass", "claude-local", engine.RoleUI, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			temp := t.TempDir()
+			if tc.want != "" {
+				tc.want = temp
+			}
+			var got claude.Spec
+			r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				got = s
+				return claude.Round{Class: claude.ClassOK}, nil
+			}}
+			_, err := r.Run(context.Background(), engine.Request{Vendor: tc.vendor, Role: tc.role, ReadOnly: true, Worktree: "/work/tree", TempDir: temp, Brief: "brief"})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.WriteDir != tc.want {
+				t.Fatalf("WriteDir = %q, want %q", got.WriteDir, tc.want)
+			}
+			if tc.want != "" && strings.Join(got.Allowlist, ",") != localReadOnlyTools+",Skill" {
+				t.Fatalf("UI pass allowlist = %q", got.Allowlist)
+			}
+		})
+	}
+}
+
 func TestClaudeContextReachesEngine(t *testing.T) {
 	got := 0
 	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
@@ -219,6 +252,12 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 						}
 						want = append(want, "--allowedTools", allowed, "--permission-prompts", "none")
 						want = append(want, "--permission-mode", "manual", "--settings", claude.HookSettings(""))
+					} else if role == engine.RoleUI {
+						// A cloud UI pass has no plan mode: a read-only allowlist plus
+						// a write rule for its temp dir, and no other call (S369).
+						want = append(want, "--add-dir", temp,
+							"--allowedTools", localReadOnlyTools+",Skill,Edit(/"+temp+"/**),Write(/"+temp+"/**)",
+							"--permission-prompts", "none")
 					} else {
 						want = append(want, "--permission-mode", "plan")
 					}

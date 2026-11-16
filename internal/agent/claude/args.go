@@ -5,6 +5,7 @@ package claude
 import (
 	"errors"
 	"path/filepath"
+	"slices"
 	"strings"
 )
 
@@ -25,18 +26,30 @@ func (s Spec) localTools() []string {
 	return tools
 }
 
+// patternEscape makes a path literal in a rule pattern (gitignore syntax).
+var patternEscape = strings.NewReplacer(`\`, `\\`, "*", `\*`, "?", `\?`, "[", `\[`, "]", `\]`, "!", `\!`)
+
+// editRules are the Edit and Write allow rules for everything under an
+// absolute directory. The leading // makes the path absolute in a rule.
+func editRules(dir string) []string {
+	path := "//" + patternEscape.Replace(strings.TrimPrefix(filepath.ToSlash(dir), "/")) + "/**"
+	return []string{"Edit(" + path + ")", "Write(" + path + ")"}
+}
+
 // Args returns the arguments after the binary. The shape follows the
 // measured commands (testdata/vendors/claude/*.cmd) and `claude --help`:
 //
 //	-p [--resume SESSION] --output-format stream-json --verbose
 //	   --include-partial-messages [--model M] [--effort E]
 //	   [--system-prompt-file F --tools a,b [--disable-slash-commands]]   (claude-local only)
-//	   (--allowedTools a,b --permission-prompts none | --permission-mode plan)
+//	   (--allowedTools a,b --permission-prompts none | --permission-mode plan |
+//	    --add-dir DIR --allowedTools a,b,Edit(//DIR/**),Write(//DIR/**) --permission-prompts none)
 //	   [--permission-mode manual --settings JSON]          (claude-local only)
 //	   PROMPT
 //
 // A write role needs an allowlist. A cloud read-only role runs in plan mode
-// and ignores it; claude-local uses manual mode and ork's PreToolUse hook
+// and ignores it (except a UI pass with a WriteDir, which uses it and has no
+// mode flag); claude-local uses manual mode and ork's PreToolUse hook
 // with a read-only allowlist for read-only roles (adj 307, 328-331).
 // `--include-partial-messages` gives the
 // text deltas for the output tail. `--effort <level>` is listed by
@@ -87,13 +100,30 @@ func (s Spec) Args() ([]string, error) {
 			args = append(args, "--add-dir", s.AddDir)
 		}
 	}
-	if s.ReadOnly && s.Bin != "claude-local" {
+	cloudReadOnly := s.ReadOnly && s.Bin != "claude-local"
+	if cloudReadOnly && s.WriteDir == "" {
 		args = append(args, "--permission-mode", "plan")
 	} else {
-		if len(s.Allowlist) == 0 {
+		allow := s.Allowlist
+		if cloudReadOnly {
+			// A cloud UI pass (S369, adj 372, *proposed*). Plan mode refuses
+			// every write, even under an allow rule (probe, claude 2.1,
+			// 2026-11-16), and accept-edits mode auto-approves shell file
+			// commands in the worktree (adj 371). So it has no permission
+			// mode flag: the allowlist (the caller's read-only tools plus
+			// Edit and Write under the write directory) and
+			// --permission-prompts none deny every other call. --add-dir
+			// matches the probe and the claude-local progress note, and comes
+			// before --allowedTools like there.
+			if !filepath.IsAbs(s.WriteDir) || filepath.Clean(s.WriteDir) != s.WriteDir {
+				return nil, errors.New("claude: write directory is not an absolute clean path")
+			}
+			args = append(args, "--add-dir", s.WriteDir)
+			allow = append(slices.Clone(allow), editRules(s.WriteDir)...)
+		} else if len(allow) == 0 {
 			return nil, errors.New("claude: a write role needs an allowlist")
 		}
-		for _, tool := range s.Allowlist {
+		for _, tool := range allow {
 			if strings.TrimSpace(tool) == "" {
 				return nil, errors.New("claude: empty allowlist entry")
 			}
@@ -101,7 +131,7 @@ func (s Spec) Args() ([]string, error) {
 				return nil, errors.New("claude: allowlist entry " + tool + " holds a comma")
 			}
 		}
-		args = append(args, "--allowedTools", strings.Join(s.Allowlist, ","), "--permission-prompts", "none")
+		args = append(args, "--allowedTools", strings.Join(allow, ","), "--permission-prompts", "none")
 	}
 	if s.Bin == "claude-local" {
 		args = append(args, "--permission-mode", "manual", "--settings", HookSettings(s.HookCommand))

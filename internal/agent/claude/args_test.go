@@ -85,6 +85,63 @@ func TestArgsLocalSystemPromptFileMustBeAbsolute(t *testing.T) {
 	}
 }
 
+// A cloud UI pass writes its renders to its run temp dir (S369, adj 372,
+// *proposed*). Plan mode refuses every write, even under an allow rule
+// (probe, claude 2.1, 2026-11-16), and accept-edits mode auto-approves shell
+// file commands in the worktree (adj 371), so the UI pass has no permission
+// mode flag: its allowlist (read-only tools plus Edit and Write under the
+// directory) and --permission-prompts none deny every other call. A reviewer,
+// with no write directory, keeps plain plan mode.
+func TestUIPassMayWriteOnlyItsTempDir(t *testing.T) {
+	base := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
+	ui, err := (Spec{Bin: "claude", Dir: "/work/tree", WriteDir: "/run/tmp/ui-1", Prompt: "ui", ReadOnly: true, KeepSkills: true, Allowlist: []string{"Read", "Bash(go test*)"}}).Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := append(slices.Clone(base), "--add-dir", "/run/tmp/ui-1",
+		"--allowedTools", "Read,Bash(go test*),Edit(//run/tmp/ui-1/**),Write(//run/tmp/ui-1/**)",
+		"--permission-prompts", "none", "ui")
+	if !reflect.DeepEqual(ui, want) {
+		t.Fatalf("UI pass argv: got %q; want %q", ui, want)
+	}
+	reviewer, err := (Spec{Bin: "claude", Dir: "/work/tree", Prompt: "review", ReadOnly: true}).Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = append(slices.Clone(base), "--permission-mode", "plan", "review")
+	if !reflect.DeepEqual(reviewer, want) {
+		t.Fatalf("reviewer argv: got %q; want %q", reviewer, want)
+	}
+}
+
+// The write directory must be absolute and clean: a relative path would turn
+// the rule into a pattern about the wrong place.
+func TestUIPassWriteDirNeedsAbsolutePaths(t *testing.T) {
+	for _, tc := range []struct{ name, write string }{
+		{"relative write dir", "tmp/ui-1"},
+		{"unclean write dir", "/run/tmp/../tmp/ui-1"},
+		{"comma in write dir", "/run/tmp,x/ui-1"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if _, err := (Spec{Bin: "claude", WriteDir: tc.write, Prompt: "ui", ReadOnly: true}).Args(); err == nil {
+				t.Fatal("accepted")
+			}
+		})
+	}
+}
+
+// Characters that mean something in a rule pattern are escaped in the path.
+func TestUIPassWriteDirEscapesPatternCharacters(t *testing.T) {
+	got, err := (Spec{Bin: "claude", WriteDir: "/run/a*b/ui-1", Prompt: "ui", ReadOnly: true}).Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+	i := slices.Index(got, "--allowedTools")
+	if i < 0 || got[i+1] != `Edit(//run/a\*b/ui-1/**),Write(//run/a\*b/ui-1/**)` {
+		t.Fatalf("allow rules in %q", got)
+	}
+}
+
 func TestArgsCloudRoleUnchanged(t *testing.T) {
 	for _, keep := range []bool{false, true} {
 		got, err := (Spec{Bin: "claude", Prompt: "implement", KeepSkills: keep, SystemPromptFile: localSystemPath, Allowlist: []string{"Read", "Edit"}}).Args()
