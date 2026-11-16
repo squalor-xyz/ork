@@ -20795,7 +20795,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "27fa2d26-15ae-474f-a427-6599a4223cd5",
+          "kind": "",
+          "text": "**2026-11-16** — Real sample for fixture 08-usage-limit (orchestrator probe 2026-11-16 20:22, grok 1.0.77, owner answer 'I copy it in'). Command: grok -p 'Append the line ok to a.txt using your edit tool, then reply done.' --output-format streaming-messages-json --include-partial-messages --permission-mode dontAsk --allow write --allow search_replace --allow 'Bash(go test*)' --cwd DIR. Exit: 1.\n\nstderr:\n```\nError: You’ve reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build\n\n```\n\nstdout (session ids kept as captured; redact them in the fixture):\n```\n{\"type\":\"system\",\"subtype\":\"init\",\"session_id\":\"01a1e606-9c2b-7241-b06a-4dee144eab54\",\"apiKeySource\":\"oauth\",\"model\":\"grok-4.7\",\"cwd\":\"/home/jon/code/squalor-xyz/ork/.scratch/grok-probe2\",\"permissionMode\":\"dontAsk\",\"tools\":[\"run_terminal_command\",\"read_file\",\"search_replace\",\"list_dir\",\"grep\",\"kill_command_or_subagent\",\"todo_write\",\"get_command_or_subagent_output\",\"spawn_subagent\",\"scheduler_create\",\"scheduler_delete\",\"scheduler_list\",\"monitor\",\"search_tool\",\"use_tool\",\"workflow\",\"enter_plan_mode\",\"exit_plan_mode\",\"ask_user_question\",\"send_feedback\",\"web_search\",\"web_fetch\",\"image_gen\",\"image_edit\",\"image_to_video\",\"reference_to_video\",\"write\"],\"slash_commands\":[\"compact\",\"always-approve\",\"context\",\"session-info\",\"feedback\",\"deep-research\",\"workflow\",\"goal\",\"loop\",\"built-in-browser\",\"chrome-browser\",\"computer-use\",\"user:deep-research\",\"user:docs\",\"google-workspace\",\"import-memory\",\"morning\",\"build-with-ai\",\"code-review\",\"create-skill\",\"create-workflow\",\"design\",\"execute-plan\",\"game-assets\",\"bundled:imagine\",\"implement\",\"learn\",\"long-running-background-tasks\",\"pr-babysit\",\"resume-claude\",\"resume-codex\",\"resume-cursor\",\"review\",\"skill-design-principles\",\"statusline\",\"threejs-frame-conventions\",\"learn-traces\"],\"mcp_servers\":[],\"skills\":[\"built-in-browser\",\"chrome-browser\",\"computer-use\",\"user:deep-research\",\"user:docs\",\"google-workspace\",\"import-memory\",\"morning\",\"build-with-ai\",\"code-review\",\"create-skill\",\"create-workflow\",\"design\",\"execute-plan\",\"game-assets\",\"bundled:imagine\",\"implement\",\"learn\",\"long-running-background-tasks\",\"pr-babysit\",\"resume-claude\",\"resume-codex\",\"resume-cursor\",\"review\",\"skill-design-principles\",\"statusline\",\"threejs-frame-conventions\"],\"uuid\":\"2dea529a-8c26-4650-9659-6264d062ee98\"}\n{\"type\":\"result\",\"subtype\":\"error_during_execution\",\"is_error\":true,\"duration_ms\":2645,\"duration_api_ms\":0,\"num_turns\":0,\"stop_reason\":null,\"total_cost_usd\":0.0,\"usage\":{\"input_tokens\":0,\"output_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation_input_tokens\":0,\"server_tool_use\":{\"web_search_requests\":0}},\"modelUsage\":{},\"errors\":[\"You’ve reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build\"],\"session_id\":\"01a1e606-9c2b-7241-b06a-4dee144eab54\",\"uuid\":\"533b8f39-bc54-4d29-b1f6-0970affd7f96\"}\n```",
+          "created_at": "2026-11-16T21:17:03Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
