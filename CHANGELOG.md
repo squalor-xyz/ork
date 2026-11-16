@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- S367: make approval-hook Bash path and operator scans quote-aware; allow
+  quoted test-filter operators and ask before tilde or brace expansion.
+  Known outside paths deny before expansion or incomplete-quoting questions.
+
 - S313 (*proposed*): reuse fitting decided adj options by exact decision key
   during spec checks, record `[KEY, adj N]` in the slice and skip the prompt.
   Open records hold daemon, CLI and TUI launches with `waits on adj N`;

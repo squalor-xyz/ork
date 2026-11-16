@@ -83,13 +83,16 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 	if call.CWD != "" && !p.contains(call.CWD) {
 		return deny("tool cwd is outside worktree " + p.Worktree)
 	}
-	// This parser validates every path itself, including quoted paths that
-	// the conservative general Bash token scan below would split at spaces.
+	// This parser validates every path itself before the general Bash scan.
 	if call.ToolName == "Bash" && p.readOnlyOwnFiles(in.Command) {
 		return Approval{"allow", "read-only on own files"}
 	}
 	if call.ToolName == "Bash" {
-		for _, token := range strings.FieldsFunc(in.Command, func(r rune) bool { return unicode.IsSpace(r) || strings.ContainsRune(";&|<>()`\"'", r) }) {
+		tokens, _, valid := scanShell(in.Command)
+		expansion := false
+		for _, word := range tokens {
+			expansion = expansion || word.expansion
+			token := word.text
 			// Flags such as --root=/path also name a path. ./... is a Go package
 			// pattern rather than a parent component and remains usable.
 			path := token
@@ -101,6 +104,13 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 					return deny(fmt.Sprintf("Bash token %q is outside worktree %s and its permitted directories", token, p.Worktree))
 				}
 			}
+		}
+		// A known outside path always denies, even when another word needs review.
+		if !valid {
+			return Approval{"ask", "Bash quoting is incomplete"}
+		}
+		if expansion {
+			return Approval{"ask", "Bash tilde or brace expansion requires owner approval"}
 		}
 	}
 	if call.ToolName == "Read" {
@@ -219,13 +229,88 @@ func wildcard(pattern, text string) bool {
 }
 
 func shellOperators(command string) string {
-	var out strings.Builder
-	for _, r := range command {
+	_, operators, _ := scanShell(command)
+	return operators
+}
+
+type shellWord struct {
+	text      string
+	expansion bool
+}
+
+// scanShell shares quote and escape handling between path and operator checks.
+// It does not execute expansions. Unquoted tilde and brace forms require review.
+func scanShell(command string) ([]shellWord, string, bool) {
+	var words []shellWord
+	var word, operators, braces strings.Builder
+	var quote rune
+	expansion := false
+	flush := func() {
+		if word.Len() > 0 {
+			brace := braces.String()
+			words = append(words, shellWord{word.String(), expansion || (strings.Contains(brace, "{") && strings.Contains(brace, ","))})
+		}
+		word.Reset()
+		braces.Reset()
+		expansion = false
+	}
+	runes := []rune(command)
+	for i := 0; i < len(runes); i++ {
+		r := runes[i]
+		if quote == '\'' {
+			if r == '\'' {
+				quote = 0
+			} else {
+				word.WriteRune(r)
+			}
+			continue
+		}
+		if r == '\\' {
+			if i+1 == len(runes) {
+				flush()
+				return words, operators.String(), false
+			}
+			next := runes[i+1]
+			if quote == 0 || strings.ContainsRune("$`\"\\\n", next) {
+				i++
+				if next != '\n' {
+					word.WriteRune(next)
+				}
+				continue
+			}
+		}
+		if quote == '"' {
+			if r == '"' {
+				quote = 0
+			} else {
+				word.WriteRune(r)
+				if r == '$' || r == '`' {
+					operators.WriteRune(r)
+				}
+			}
+			continue
+		}
+		if r == '\'' || r == '"' {
+			quote = r
+			continue
+		}
 		if strings.ContainsRune(";&|<>()`$\n\r", r) {
-			out.WriteRune(r)
+			operators.WriteRune(r)
+			flush()
+		} else if unicode.IsSpace(r) {
+			flush()
+		} else {
+			if r == '~' && (word.Len() == 0 || strings.HasSuffix(word.String(), "=")) {
+				expansion = true
+			}
+			if strings.ContainsRune("{,}", r) {
+				braces.WriteRune(r)
+			}
+			word.WriteRune(r)
 		}
 	}
-	return out.String()
+	flush()
+	return words, operators.String(), quote == 0
 }
 
 // contains resolves symlinked ancestors, including for a not-yet-created file.

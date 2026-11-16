@@ -1856,9 +1856,17 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Spec checks also retain the main checkout's `.scratch/` path exception;
   slice rounds do not grant that exception (S361).
   Symlinked ancestors are resolved. The transcript itself is denied.
-  Bash commands are split on whitespace and shell operators; a token naming
+  Bash path tokens and operator comparisons share a quote-aware scan.
+  Single-quoted characters are literal. Double-quoted operators are literal,
+  while dollar signs and backticks still mark substitutions. Escapes preserve
+  literal characters and quoted path spaces stay in one token. A token naming
   an outside absolute path or parent traversal is denied with that token in
-  the reason. A supplied `Read` limit must be at most 500. An unbounded read
+  the reason. Every scanned token is checked before asking: a known outside
+  path denies even alongside expansion or incomplete quoting. A trailing
+  backslash retains its preceding token for this check. If no token denies,
+  unquoted leading tilde (also after `=`), brace forms with a comma and
+  incomplete quoting ask the owner instead of passing as unexpanded paths.
+  A supplied `Read` limit must be at most 500. An unbounded read
   of a file with more than 500 lines is denied with its count and guidance
   to Grep first and Read a range. Bounded reads may start beyond line 500.
   A missing file passes the line-count check so Claude's Read can report
