@@ -293,7 +293,11 @@ func TestReadOnlyProgressBriefException(t *testing.T) {
 func TestLocalBriefHasTargetedReads(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local", "claude", "codex", "grok"} {
 		for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate, RoleArchitect, RoleSpecCheck, RoleUI} {
-			for _, phrase := range []string{"Read files in targeted ranges (offset and limit), or grep first.", "Never read a whole file over about 500 lines.", "Keep reasoning brief."} {
+			capPhrase := "Never read a whole file over about 500 lines."
+			if role == RoleImplementer {
+				capPhrase = "Never read a whole file over about 150 lines; Grep for the symbol and Read 150 lines around it."
+			}
+			for _, phrase := range []string{"Read files in targeted ranges (offset and limit), or grep first.", capPhrase, "Keep reasoning brief."} {
 				t.Run(vendor+"/"+role+"/"+phrase, func(t *testing.T) {
 					in := baseBrief()
 					in.Vendor, in.Role = vendor, role

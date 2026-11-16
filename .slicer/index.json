@@ -20421,10 +20421,25 @@
       "id": "S372",
       "title": "Local roles: a smaller read cap",
       "short_title": "Smaller Read cap for local roles",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b73499bd-a0eb-484a-ac25-3ca38872e967",
+          "kind": "",
+          "text": "**2026-11-16** — The implementer Read cap is 150 lines with the Grep-and-window denial. Read-only roles stay at 500 lines with the previous denial. The cap is role-keyed on the claude local approval hook, stored from the round role, and named in the local prompt, brief, design doc, and changelog.",
+          "created_at": "2026-11-16T17:16:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20442,7 +20457,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
