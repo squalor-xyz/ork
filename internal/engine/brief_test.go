@@ -1006,6 +1006,57 @@ func TestImplementerDoneWhenShowsTheAllowedCommands(t *testing.T) {
 	requireChecklistText(t, in, "may only read")
 }
 
+// S368: an owner answer that changes the slice's text (S241: "tighten" a Check
+// line) is applied to the slice before the Check lines run.
+func TestImplementerBriefSaysToApplySpecAnswersFirst(t *testing.T) {
+	h := newHarness(t)
+	h.cfg.Decisions = "Owner decisions (2026-11-16): Check question -> tighten: drop the `--yes` flags from the Check."
+	h.start()
+	implementers, reviewers := 0, 0
+	for _, r := range h.runner.requests() {
+		decisions := strings.Index(r.Brief, "## Owner decisions\n\n")
+		apply := strings.Index(r.Brief, "## Apply the owner's spec answers first\n\n")
+		confirm := strings.Index(r.Brief, "## Confirm the owner's spec answers were applied\n\n")
+		switch r.Role {
+		case RoleImplementer:
+			implementers++
+			if apply < 0 || decisions < 0 || apply < decisions {
+				t.Errorf("implementer brief: apply heading at %d, decisions at %d", apply, decisions)
+				continue
+			}
+			_, body, _ := strings.Cut(r.Brief[apply:], "\n\n")
+			body, _, _ = strings.Cut(body, "\n\n## ")
+			for _, want := range []string{"first step", "slicer edit " + item + " --section", "--render --strict", "Spec edits", "dropped backticked flag is recorded as not a command and is not run", "any other dropped command is still run by ork and can pause the run"} {
+				if !strings.Contains(body, want) {
+					t.Errorf("apply section lacks %q: %s", want, body)
+				}
+			}
+		case RoleReviewer:
+			reviewers++
+			if confirm < 0 || apply >= 0 {
+				t.Errorf("reviewer brief: confirm heading at %d, apply heading at %d", confirm, apply)
+			}
+		default:
+			if apply >= 0 || confirm >= 0 {
+				t.Errorf("%s brief has an apply or confirm heading", r.Role)
+			}
+		}
+	}
+	if implementers == 0 || reviewers == 0 {
+		t.Fatalf("implementer rounds %d, reviewer rounds %d", implementers, reviewers)
+	}
+}
+
+func TestARunWithoutDecisionsHasNoApplyAnswersSection(t *testing.T) {
+	h := newHarness(t)
+	h.start()
+	for _, r := range h.runner.requests() {
+		if strings.Contains(r.Brief, "spec answers") {
+			t.Errorf("%s brief names spec answers", r.Role)
+		}
+	}
+}
+
 func TestDoneWhenSaysWhatToWriteWhenACheckCannotRun(t *testing.T) {
 	requireChecklistText(t, baseBrief(), "denied or impossible check", "item 6", "verbatim command and denial text", "counts of tests actually run", "never a made-up zero", "ork re-runs the checks outside the sandbox")
 }

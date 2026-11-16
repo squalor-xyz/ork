@@ -64,15 +64,38 @@ ork (TUI)  ork status --json (CLI)
   engine jobs and unreadable run state. *Proposed:* `daemon.info` returns only
   `build_id`, without loading the registry or reading projects. Commands,
   TUI startup, stop/restart and doctor use this cheap call for build checks.
-  Doctor also reads status for the idle self-host restart notice; a failed
+  Doctor also reads status for the self-host restart notice, including while
+  roles run; a failed
   status read omits that notice and does not fail doctor.
   `ork status` makes one full status read. Commands warn on stderr when the
-  daemon build differs, including an older daemon with no build ID. The
+  daemon build is stale, including an older daemon with no build ID. The
   warning names `ork daemon restart`. An `unknown_method` reply from an older
   daemon means build `unknown`, which is stale. Doctor probes an existing
   daemon without starting one and reports a mismatch as a warning. A mismatch
   does not change the command's exit code. Revision plus modified state
   cannot distinguish two builds of different edits at the same revision.
+  CLI checks ignore revision differences when both builds have clean 40- or
+  64-hex revisions and a registered repository proves that no binary input
+  changed. In registry order, the first repository containing both commits
+  supplies `git diff --quiet R1 R2 -- . ':(exclude).slicer'
+  ':(exclude)docs' ':(exclude,glob)*.md' ':(exclude,glob)**/*_test.go'
+  ':(exclude)testdata' ':(exclude).github'`. Only exit 0 suppresses the
+  warning. Unknown revisions, modified builds and failed comparisons keep
+  the warning. Root Markdown is excluded; embedded Markdown such as role
+  prompts and CLI instructions counts. Each search is bounded to ten seconds.
+  Warnings still print once per command, including on stderr with `--json`.
+  The TUI keeps its build-string comparison.
+  `ork daemon status` probes without starting a daemon and exits 0 when none
+  runs. It prints the socket, pid (or unknown), short build, stale state,
+  running roles and self-host behind-main state. A failed status read leaves
+  the roles and main lines out but keeps the build and pid. Its JSON includes
+  `running`, `socket`, `cli_build_id` and, when running, `build_id`, `stale`
+  and a known `pid`; `roles_running` and `behind_main` are present only after
+  a successful status read. Doctor always prints a daemon line and includes
+  `daemon_running` and a known `daemon_pid` in JSON. Its behind-main warning
+  is followed by a line `       roles are running; restart waits` while roles
+  run, so no doctor line passes 80 columns; its JSON `behind_notice` keeps
+  the text as the suffix ` (roles are running; restart waits)`.
 - **Socket.** `$XDG_STATE_HOME/ork/ork.sock`, else
   `~/.local/state/ork/ork.sock`. The directory is created with mode 0700 and
   the socket is mode 0600.
@@ -308,7 +331,12 @@ ork (TUI)  ork status --json (CLI)
    ork settings set --owner NAME`. A filed answer says `filed in adj: KEY (adj
    N)` and its `--why` names the date and the slice. The paragraph is also stored in the item's
    run record and added to every role's brief, because the run's worktree does
-   not have the main checkout's edit. Only ready items, or items whose
+   not have the main checkout's edit. *Proposed (S368):* the implementer's
+   brief also has an "Apply the owner's spec answers first" section after
+   it: as its first step the implementer edits the slice's own text (a Check
+   line, a test name) to match any decision that changes it, with `slicer edit`,
+   and lists the edits under `Spec edits:`. The reviewer's brief has a "Confirm
+   the owner's spec answers were applied" section. Only ready items, or items whose
    questions are all answered, can be approved: the daemon refuses an item
    whose check, against its current spec, left questions open
    on both `wave.start` and `run.start`
@@ -1310,6 +1338,10 @@ entries. Quoted literal arguments are supported; shell operators, expansions
 and paths outside the worktree are left as "not run by ork: orchestrator".
 Relative arguments are resolved against the worktree and cleaned before this
 containment check.
+*Proposed (S368):* a backticked entry whose first word starts with `-` (a
+flag such as `--yes`, left in the Check after a spec answer dropped it) is not
+a command: ork records it as "not run by ork: not a command (starts with -)"
+with the entry named, does not run it, and does not pause the run.
 HUMAN CHECK and `[AFTER LAND]` entries keep their existing workflow.
 Each command has the project's check timeout (ten minutes when unset), an exit
 status and its own log and check row. A nonzero exit, timeout or output on a
@@ -2190,6 +2222,7 @@ ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
                             --again reruns the role (S298, proposed)
 ork stop RUN|WAVE           stop and record why
 ork daemon run              serve the daemon in the foreground
+ork daemon status           show daemon build, state and running roles
 ork daemon stop [--force]   stop the daemon; on a daemon that predates
                             daemon.stop, print the pid and a kill hint
 ork daemon restart [--force] [--rebuild]
@@ -2235,10 +2268,12 @@ other text is the answer, an empty line holds the item back). Each question
 is labeled with its item, as `[S1 1/2]`. An item whose questions stay open is
 left out of the wave and named as `held`; a wave with no item left does not start and exits 1. With
 `--json` the questions and the shared `Owner needed` text go to stderr.
-*Proposed (S264):* before it calls `spec.check`, `wave start` prints one line
-on the same stream, `spec check: S1, S2; wait for it to finish`, because the
-call returns only when the role has finished; `ork run` prints it the same way
-with its one item (`spec check: S1; wait for it to finish`).
+*Proposed (S241):* before it calls `spec.check`, `wave start` prints
+`spec check: reading S1, S2 (it runs even with --well-specified)` on the same
+stream. The call waits for the role to finish. It then prints
+`spec check: S1 ready, S2 ready` for the ready items; open questions keep
+their existing sitting. `ork run` uses the same lines with its one item.
+Neither `--well-specified` nor `--split` skips the check.
 The wave start or cancellation JSON result includes a `held` array of excluded
 item IDs; it is `[]` when nothing is held. The `--questions` result and an
 incomplete `--answer` batch instead return the spec-question object
@@ -2376,6 +2411,19 @@ engine runs only the first entry until S49. The gate uses the reviewer's
 lineup. The daemon refuses to start if the plan changed during confirmation. It starts one engine run
 in the background; CLI disconnection does not cancel it. The daemon owns
 the run store and reconciles stored runs before accepting clients.
+
+*Proposed (S241):* the CLI plan adds `push: on|off` after `stop:`, labels
+fallback entries with ` (fallback)`, and lists configured UI skills after
+the UI permissions. `run.plan` carries only the project name and path, so in
+text mode the CLI takes push and the skills from `projects.list` for the
+printed copy; the plan sent back at start is unchanged. Each plan is followed
+by a `files:` diagnostic using `item.show` and `EngineSlice`; read failures are
+diagnostic only. When a launch plans two or more wave items (`--questions`
+plans none), the CLI checks the daemon's pair rule before the spec check,
+prints its success line, or exits 1 with `EngineConflict`. JSON performs the
+same check without text plan additions. Started runs and waves print follow
+and stop commands; wave run lines also name the item. A wave in which no item
+started prints no commands. Stop output is unchanged.
 `approve` runs the finish step, then commits once (adj #81), then lands it (land state, adj #162); `answer`
 resumes a paused role that asked a question. `retry` calls `Engine.Retry`
 to rerun the role or step of a `shape`, `error`, `lost` or `interrupted`
@@ -2902,8 +2950,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   and exits 0. Project commands (`run`, `wave suggest`, `wave start`, and
   `status --project`) report that guide as an error and exit 1. JSON status
   keeps an empty projects array; JSON project errors use the usual error object.
-- `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
-  path, `adj` (or `-`), and `notify_command=CMD` when set, in columns.
+- `projects list`: `{"projects":[...]}`, each as in `projects.json`.
+  *Proposed (S241):* text columns are name, path, then space-joined `adj`,
+  `push`, `ui-pass-skills=a,b`, only when set, in that order. With none set,
+  the third column is `-`. `notify_command=CMD` still follows when set.
   The notification cell is cleaned to one line without terminal controls.
 - `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
@@ -3302,6 +3352,9 @@ It fires on any landing on the base branch, not only engine landings, while
 no run is active. In the status line it replaces the stale-build marker while shown;
 otherwise the stale marker still shows for a differing build. Text doctor
 prints `[WARN] daemon behind main: restart with ork daemon restart` on stdout.
+Doctor also shows it while roles run, adding the indented line
+`roles are running; restart waits` below it. `ork daemon status` shows behind-main
+while roles run too; neither command starts a daemon for this read.
 Status prints `ork: warning: daemon behind main: restart with ork daemon restart`
 on stderr. ork never restarts the daemon on its own.
 

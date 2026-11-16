@@ -67,6 +67,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               --allow-no-check
                               plans well specified y and split n unless the
                               flags say otherwise
+                              --well-specified and --split do not skip
+                              the spec check.
                               --questions prints all spec questions and starts
                               nothing; --answer KEY=N or KEY=text repeats for
                               every question (#N when there is no key)
@@ -218,6 +220,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork roles matrix P          show the role matrix as slicer prints it, then
                               which rows ork uses, skips or does not run
   ork daemon run              serve the daemon in the foreground
+  ork daemon status           show daemon build, state and running roles
   ork daemon stop [--force]   stop the daemon
   ork daemon restart [--force] [--rebuild]
                               stop and start the daemon

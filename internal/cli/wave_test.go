@@ -228,6 +228,10 @@ func TestWaveStartPlansChosenItemsBeforeConfirmation(t *testing.T) {
 			app := &App{Input: strings.NewReader(tc.input)}
 			app.Call = func(_ context.Context, method string, params, result any) error {
 				switch method {
+				case daemon.MethodItemShow:
+					return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+				case daemon.MethodProjectsList:
+					return json.Unmarshal([]byte(`{"projects":[]}`), result)
 				case "run.plan":
 					p := params.(daemon.RunParams)
 					want := []string{"S2", "S1"}[plans]
@@ -359,6 +363,8 @@ func (s *specStub) call(_ context.Context, method string, params, result any) er
 	switch method {
 	case "projects.list":
 		return json.Unmarshal([]byte(fmt.Sprintf(`{"projects":[{"name":"p","adj":%t}]}`, s.adj)), result)
+	case daemon.MethodItemShow:
+		return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
 	case "run.plan":
 		p := params.(daemon.RunParams)
 		if err := s.planErr[p.Item]; err != nil {
@@ -424,7 +430,7 @@ func TestWaveStartSaysToWaitForTheSpecCheck(t *testing.T) {
 	}}
 	code := app.Run(context.Background(), []string{"wave", "start", "p", "S2", "S1", "--well-specified", "yes", "--split", "no"}, &o, &e)
 	out, errs := o.String(), e.String()
-	if !strings.HasSuffix(atCall, "; wait for it to finish\n") {
+	if !strings.HasSuffix(atCall, "(it runs even with --well-specified)\n") {
 		t.Errorf("the wait line must come before the spec.check call; stdout then:\n%s", atCall)
 	}
 	if code != ExitOK {
@@ -432,11 +438,11 @@ func TestWaveStartSaysToWaitForTheSpecCheck(t *testing.T) {
 	}
 	var lines []string
 	for _, line := range strings.Split(out, "\n") {
-		if strings.HasPrefix(line, "spec check: ") {
+		if strings.HasPrefix(line, "spec check: reading ") {
 			lines = append(lines, line)
 		}
 	}
-	if len(lines) != 1 || !strings.Contains(lines[0], "S1") || !strings.Contains(lines[0], "S2") || !strings.HasSuffix(lines[0], "; wait for it to finish") {
+	if len(lines) != 1 || !strings.Contains(lines[0], "S1") || !strings.Contains(lines[0], "S2") || !strings.HasSuffix(lines[0], "(it runs even with --well-specified)") {
 		t.Fatalf("wait lines %q in:\n%s", lines, out)
 	}
 	if i, j := strings.Index(out, lines[0]), strings.Index(out, "[S1 1/2]"); i < 0 || j < 0 || i > j {
@@ -576,7 +582,7 @@ func TestWaveStartAsksTheSpecQuestionsInOneSittingThenStartsEveryItem(t *testing
 	if !reflect.DeepEqual(stub.started, []string{"S2", "S1"}) {
 		t.Errorf("started %v", stub.started)
 	}
-	want := []string{"run.plan", "run.plan", "spec.check", "projects.list", "spec.answer", "wave.start"}
+	want := []string{"run.plan", "projects.list", "item.show", "run.plan", "item.show", "spec.check", "projects.list", "spec.answer", "wave.start"}
 	if !reflect.DeepEqual(stub.calls, want) {
 		t.Errorf("calls %v, want %v", stub.calls, want)
 	}
@@ -710,7 +716,12 @@ func TestWaveStartPrintsTheBlockedRefusal(t *testing.T) {
 		t.Run(fmt.Sprint(jsonMode), func(t *testing.T) {
 			const text = `S2 waits on S1 "Title" (in this wave, not done); untick S2 or land S1 first`
 			app := &App{Input: strings.NewReader("y\n"), Call: func(_ context.Context, method string, params, result any) error {
+				if method == daemon.MethodItemShow {
+					return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+				}
 				switch method {
+				case daemon.MethodProjectsList:
+					return json.Unmarshal([]byte(`{"projects":[]}`), result)
 				case "run.plan":
 					*(result.(*daemon.RunPlan)) = daemon.RunPlan{CheckCommand: "go test ./...", Item: "S2"}
 					return nil
@@ -751,6 +762,10 @@ func TestWaveStartLineupFlagsApplyToEveryItem(t *testing.T) {
 	var started daemon.WaveStartParams
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case daemon.MethodRunPlan:
 			p := params.(daemon.RunParams)
 			plans = append(plans, p)
@@ -784,6 +799,10 @@ func TestWaveStartStopAfterFlag(t *testing.T) {
 	var started daemon.WaveStartParams
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case daemon.MethodRunPlan:
 			p := params.(daemon.RunParams)
 			plans = append(plans, p)
@@ -949,6 +968,10 @@ func (s *savedStub) call(_ context.Context, method string, params, result any) e
 		p := params.(daemon.WaveRmParams)
 		s.removed = append(s.removed, p)
 		*(result.(*daemon.SavedWave)) = daemon.SavedWave{Project: p.Project, Name: p.Name, Items: []string{"S1"}}
+	case daemon.MethodItemShow:
+		return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+	case daemon.MethodProjectsList:
+		return json.Unmarshal([]byte(`{"projects":[]}`), result)
 	case daemon.MethodRunPlan:
 		p := params.(daemon.RunParams)
 		s.planned = append(s.planned, p)

@@ -376,8 +376,8 @@ func TestProjectsAddListRemove(t *testing.T) {
 	}
 
 	code, stdout, _ = run(t, w.app, "projects", "list")
-	want := fmt.Sprintf("keep      %-*s  -\nwith-adj  %s  adj\nother     %-*s  -\n",
-		len(withAdj), "/p/keep", withAdj, len(withAdj), plain)
+	width := len(withAdj) + 2 // withAdj is the longest path; the third column follows it
+	want := fmt.Sprintf("keep      %-*s-\nwith-adj  %s  adj\nother     %-*s-\n", width, "/p/keep", withAdj, width, plain)
 	if code != 0 || stdout != want {
 		t.Fatalf("list text, exit %d:\n%q\nwant:\n%q", code, stdout, want)
 	}

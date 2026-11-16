@@ -1,0 +1,41 @@
+{
+  "id": "S368",
+  "title": "Spec-check answers that change a slice's text are applied before the run",
+  "lead": [
+    "*Proposed.* When an owner's spec-check answer changes a slice's text (a Check line, a test name), the change is made in the slice before its Check lines run: either ork tells the implementer to make it as its first step and the reviewer confirms it, or the slice-check runner refuses a backticked Check entry that is not a command and names it."
+  ],
+  "depends_note": null,
+  "findings_note": "S241 (2026-11-16, run ork-20261116-015040-d93b): the owner answered the spec check's Check question with \"tighten\" (drop `go -C WORKTREE run ./cmd/ork help` and \"the `--yes` flags\"). The implementer did not edit the Check section, so S317's slice-check runner ran the backticked `--yes` as a command and the run paused (\"exec: \\\"--yes\\\": executable file not found\"). The orchestrator edited the Check by hand and retried.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* S317 runs a slice's backticked Check lines; any unrunnable line left in the spec now pauses a run at the gate, after the whole relay has run."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/brief.go` (`specAnswersSection`: the implementer's \"apply the owner's spec answers first\" and the reviewer's confirm section; `sliceChecks`: an entry whose first word starts with `-` is not a command)\n- `internal/engine/round.go:483` (`runRound`: adds the section after the Owner decisions section)\n- `internal/engine/states.go:978` (`runSliceChecks`: unchanged; it records the row's not-run reason and runs no command)\n- `internal/engine/brief_test.go`\n- `internal/engine/slicechecks_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestImplementerBriefSaysToApplySpecAnswersFirst`: a run with a spec answer that names a Check change puts it under its own heading in the implementer brief, as the first step.\n- `TestSliceChecksSkipAFlagOnlyEntry`: a backticked Check entry that starts with `-` is reported as not a command, not run."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Red tests above.\n2. Code and brief text.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -12,6 +12,24 @@
   plan warning for a slicer command that cannot run names
   `slicer config check_command CMD --root PATH` as the fix.
 
+- S368 (*proposed*): tell the implementer to apply spec-check answers that
+  change the slice's text before anything else, and the reviewer to confirm
+  it. A backticked Check entry that starts with `-` is recorded as not a
+  command and not run, so it no longer pauses the run.
+
+- S242: add `ork daemon status` for daemon build, pid, stale state, running
+  roles and behind-main state without starting a daemon. Doctor always prints
+  a daemon line and shows behind-main while roles run. CLI stale checks ignore
+  clean revision differences proven to change only non-binary inputs;
+  embedded prompts still count. Unknown, modified or unverifiable builds keep
+  the existing warning. The TUI marker keeps its existing rule.
+
+- S241 (*proposed*): label fallback roles and show push, UI skills and engine
+  paths in CLI launch plans. Check the wave pair rule before the visible spec
+  check; print ready results, item names and follow/stop commands. Show push
+  and UI skills in project lists, and explain that planning flags do not skip
+  the spec check.
+
 - S367: make approval-hook Bash path and operator scans quote-aware; allow
   quoted test-filter operators and ask before tilde or brace expansion.
   Known outside paths deny before expansion or incomplete-quoting questions.

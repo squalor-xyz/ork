@@ -190,6 +190,36 @@ func TestSliceChecksRecordUnsupportedCommands(t *testing.T) {
 	}
 }
 
+// S241: an owner's "tighten" left a backticked `--yes` in the Check. It is not
+// a command: ork records and names it, does not run it, and does not pause.
+func TestSliceChecksSkipAFlagOnlyEntry(t *testing.T) {
+	h := sliceChecksHarness(t, "- `go vet ./...`\n- Drop the `--yes` flags from the plan check.")
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	var flagRow, goRow *runrec.CheckRecord
+	checks := e.Snapshot().Checks
+	for i := range checks {
+		switch checks[i].Command {
+		case "--yes":
+			flagRow = &checks[i]
+		case "go vet ./...":
+			goRow = &checks[i]
+		}
+	}
+	if flagRow == nil {
+		t.Fatalf("no row for the flag-only entry: %+v", checks)
+	}
+	if flagRow.OK || !strings.Contains(flagRow.NotRun, "not a command") || !strings.Contains(flagRow.NotRun, "--yes") {
+		t.Errorf("flag row = %+v, want NotRun naming it as not a command", *flagRow)
+	}
+	if b, err := os.ReadFile(filepath.Join(e.run.Dir(), flagRow.Log)); err != nil || !strings.Contains(string(b), "not a command") {
+		t.Errorf("flag row log = %q, %v", b, err)
+	}
+	if goRow == nil || !goRow.OK || goRow.NotRun != "" {
+		t.Errorf("the real command did not run: %+v", goRow)
+	}
+}
+
 func TestSliceChecksRepeatOnlyAfterProductChanges(t *testing.T) {
 	for _, name := range []string{"docs/guide.md", ".slicer/extra", "product.go", "internal/roles/prompts/gate.md", "CHANGELOG.md", "decisions/example.txt"} {
 		t.Run(name, func(t *testing.T) {
