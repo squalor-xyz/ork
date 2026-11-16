@@ -126,8 +126,10 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 			return code
 		}
 	} else {
-		printRunPlan(o.stdout, noCheckPlanText(plan, params.AllowNoCheck), params.Budgets != nil)
+		show := a.planSettings(ctx, o, params.Project)
+		printRunPlan(o.stdout, noCheckPlanText(show(plan), params.AllowNoCheck), params.Budgets != nil)
 	}
+	a.launchDetail(ctx, o, params.Project, params.Item)
 	// The daemon refuses the start too (adj 191); refusing here spares the
 	// prompts and the spec check.
 	if plan.CheckCommand == "" && !params.AllowNoCheck {
@@ -180,7 +182,11 @@ func (a *App) runSlice(ctx context.Context, o *output, args []string) int {
 			*specData
 		}{reply, spec.data})
 	}
-	return printRunReply(o, reply)
+	code = printRunReply(o, reply)
+	if !o.json {
+		printLaunch(o, params.Project, reply.Record.ID, false)
+	}
+	return code
 }
 
 // printRunReply prints the started run, and what the start did with a stopped
@@ -252,6 +258,11 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 		stop = "after commit (you land it)"
 	}
 	fmt.Fprintf(w, "stop: %s\n", stop)
+	push := "off"
+	if p.Project.Push {
+		push = "on"
+	}
+	fmt.Fprintf(w, "push: %s\n", push)
 	if budgetsOverridden {
 		fmt.Fprintf(w, "budgets: %d min, %d tokens\n", p.Budgets.Minutes, p.Budgets.Tokens)
 	}
@@ -259,14 +270,21 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 		if (role == "architect" || role == "ui") && len(p.Lineup[role]) == 0 {
 			continue
 		}
-		for _, entry := range p.Lineup[role] {
-			fmt.Fprintf(w, "%s: %s %s %s\n", role, entry.Vendor, runrec.ModelLabel(entry), entry.Effort)
+		for i, entry := range p.Lineup[role] {
+			fallback := ""
+			if i > 0 {
+				fallback = " (fallback)"
+			}
+			fmt.Fprintf(w, "%s: %s %s %s%s\n", role, entry.Vendor, runrec.ModelLabel(entry), entry.Effort, fallback)
 		}
 		perm := p.Permissions[role]
 		if perm.ReadOnly {
 			fmt.Fprintf(w, "  permissions: read-only\n")
 		} else {
 			fmt.Fprintf(w, "  allowlist: %s\n", strings.Join(perm.Allow, ", "))
+		}
+		if role == "ui" && len(p.Project.UIPassSkills) > 0 {
+			fmt.Fprintf(w, "  skills: %s\n", strings.Join(p.Project.UIPassSkills, ", "))
 		}
 	}
 	for _, warning := range p.Warnings {

@@ -40,6 +40,10 @@ func runPrompted(t *testing.T, input string, args ...string) promptRun {
 	var r promptRun
 	app := &App{Input: strings.NewReader(input), Call: func(_ context.Context, method string, params, result any) error {
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case "run.plan":
 			raw, _ := json.Marshal(params)
 			r.plan = string(raw)
@@ -162,6 +166,10 @@ func TestRunShowsPlanBeforeConfirmation(t *testing.T) {
 			app := &App{Input: strings.NewReader(answer + "\n")}
 			app.Call = func(_ context.Context, method string, params, result any) error {
 				switch method {
+				case daemon.MethodItemShow:
+					return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+				case daemon.MethodProjectsList:
+					return json.Unmarshal([]byte(`{"projects":[]}`), result)
 				case "run.plan":
 					raw, _ := json.Marshal(params)
 					if string(raw) != `{"project":"p","item":"S1","well_specified":true,"split":false}` {
@@ -199,6 +207,10 @@ func TestRunPlanTextShowsLatestResolution(t *testing.T) {
 	app := &App{Input: strings.NewReader("no\n")}
 	app.Call = func(_ context.Context, method string, params, result any) error {
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case "run.plan":
 			b := []byte(`{"project":{"name":"p"},"item":"S1","check_command":"go test ./...","lineup":{"implementer":[{"vendor":"codex","model":"gpt-6.2-sol","effort":"medium","requested":"gpt-*-sol@latest"}],"reviewer":[{"vendor":"claude","model":"opus","effort":"high"}]}}`)
 			return json.Unmarshal(b, result)
@@ -234,6 +246,9 @@ func TestRunYesStartsAndOwnerCommands(t *testing.T) {
 			app := &App{Call: func(_ context.Context, method string, params, result any) error {
 				if method == "run.plan" {
 					return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","check_command":"go test ./..."}`), result)
+				}
+				if method == daemon.MethodItemShow {
+					return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
 				}
 				if method == daemon.MethodSpecCheck {
 					return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
@@ -549,6 +564,12 @@ func overrideRun(t *testing.T, flags ...string) ([]daemon.RunParams, string) {
 	t.Helper()
 	var calls []daemon.RunParams
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+		if method == daemon.MethodItemShow {
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		}
+		if method == daemon.MethodProjectsList {
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
+		}
 		if method == daemon.MethodSpecCheck {
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
 		}
@@ -636,6 +657,12 @@ func TestLineupVendorIsCaseInsensitive(t *testing.T) {
 				t.Run(name, func(t *testing.T) {
 					var sent []daemon.RunParams
 					app := &App{Call: func(_ context.Context, method string, params, result any) error {
+						if method == daemon.MethodItemShow {
+							return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+						}
+						if method == daemon.MethodProjectsList {
+							return json.Unmarshal([]byte(`{"projects":[]}`), result)
+						}
 						switch method {
 						case daemon.MethodSpecCheck:
 							return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
@@ -737,6 +764,12 @@ func TestRunAndWavePlanShowOnlyOverriddenBudgets(t *testing.T) {
 				}
 				var out, errs bytes.Buffer
 				app := &App{Input: strings.NewReader("n\n"), Call: func(_ context.Context, method string, params, result any) error {
+					if method == daemon.MethodItemShow {
+						return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+					}
+					if method == daemon.MethodProjectsList {
+						return json.Unmarshal([]byte(`{"projects":[]}`), result)
+					}
 					switch method {
 					case daemon.MethodRunPlan:
 						*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: "S1", Budgets: effective}
@@ -783,7 +816,7 @@ func singleSpecRun(t *testing.T, input, check string, checkErr error, extra ...s
 			if !strings.Contains(out.String()+errs.String(), "/p/S1") || strings.Contains(out.String()+errs.String(), "Start this slice?") {
 				t.Fatal("spec check must follow plan and precede confirmation")
 			}
-			if !strings.Contains(out.String()+errs.String(), "spec check: S1; wait for it to finish\n") {
+			if !strings.Contains(out.String()+errs.String(), "spec check: reading S1 (it runs even with --well-specified)\n") {
 				t.Error("the wait line must come before the spec.check call")
 			}
 			p := params.(daemon.SpecCheckParams)
@@ -826,14 +859,14 @@ func TestRunCallsTheSpecCheckAfterThePlanAndBeforeConfirmation(t *testing.T) {
 			flags = append(flags, "--yes")
 		}
 		code, out, errs, stub := singleSpecRun(t, "y\n", `{"items":[{"item":"S1","ready":true}]}`, nil, flags...)
-		if code != ExitOK || !reflect.DeepEqual(stub.calls, []string{"run.plan", "spec.check", "run.start"}) {
+		if code != ExitOK || !reflect.DeepEqual(stub.calls, []string{"run.plan", "projects.list", "item.show", "spec.check", "run.start"}) {
 			t.Fatalf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
 		}
 	}
 }
 
 func TestRunSaysToWaitForTheSpecCheck(t *testing.T) {
-	const line = "spec check: S1; wait for it to finish"
+	const line = "spec check: reading S1 (it runs even with --well-specified)"
 	code, out, errs, _ := singleSpecRun(t, "y\n", `{"items":[{"item":"S1","ready":true}]}`, nil)
 	if code != ExitOK || strings.Count(out, line+"\n") != 1 || strings.Index(out, line) > strings.Index(out, "Start this slice?") {
 		t.Fatalf("exit %d, wait line missing or after the confirmation: %s %s", code, out, errs)
@@ -850,7 +883,7 @@ func TestRunSaysToWaitForTheSpecCheck(t *testing.T) {
 
 func TestRunAsksSpecQuestionsOnStdinThenStarts(t *testing.T) {
 	code, out, errs, stub := singleSpecRun(t, "2\ncustom flag\ny\n", specCheckTwoQuestions, nil)
-	want := []string{"run.plan", "spec.check", "projects.list", "spec.answer", "run.start"}
+	want := []string{"run.plan", "projects.list", "item.show", "spec.check", "projects.list", "spec.answer", "run.start"}
 	if code != ExitOK || !reflect.DeepEqual(stub.calls, want) || len(stub.answers) != 1 || !reflect.DeepEqual(stub.answers[0].Answers, []string{"memory: rebuilt at each start", "custom flag"}) {
 		t.Fatalf("exit %d calls %v answers %+v: %s %s", code, stub.calls, stub.answers, out, errs)
 	}
@@ -942,6 +975,10 @@ func TestRunRefusesBlockedItemBeforeConfirmation(t *testing.T) {
 			app := &App{Input: strings.NewReader("y\n"), Call: func(_ context.Context, method string, params, result any) error {
 				calls = append(calls, method)
 				switch method {
+				case daemon.MethodItemShow:
+					return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+				case daemon.MethodProjectsList:
+					return json.Unmarshal([]byte(`{"projects":[]}`), result)
 				case daemon.MethodRunPlan:
 					*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: "S2"}
 					return nil
@@ -961,7 +998,11 @@ func TestRunRefusesBlockedItemBeforeConfirmation(t *testing.T) {
 				args = append(args, "--json")
 			}
 			code := app.Run(context.Background(), args, &out, &errs)
-			if code != ExitFailure || !reflect.DeepEqual(calls, []string{daemon.MethodRunPlan, daemon.MethodSpecCheck}) {
+			want := []string{daemon.MethodRunPlan, daemon.MethodProjectsList, daemon.MethodItemShow, daemon.MethodSpecCheck}
+			if jsonMode { // the plan on stderr is the daemon's; no settings are read
+				want = []string{daemon.MethodRunPlan, daemon.MethodItemShow, daemon.MethodSpecCheck}
+			}
+			if code != ExitFailure || !reflect.DeepEqual(calls, want) {
 				t.Fatalf("exit %d calls %v: %s %s", code, calls, &out, &errs)
 			}
 			if strings.Contains(out.String()+errs.String(), "Start this slice?") {
@@ -1062,6 +1103,10 @@ func noCheckRun(t *testing.T, args ...string) (code int, out, errs string, metho
 	app := &App{Input: strings.NewReader("yes\n"), Call: func(_ context.Context, method string, params, result any) error {
 		methods = append(methods, method)
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case daemon.MethodRunPlan:
 			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","warnings":["no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"]}`), result)
 		case daemon.MethodSpecCheck:

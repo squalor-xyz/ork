@@ -2258,10 +2258,12 @@ other text is the answer, an empty line holds the item back). Each question
 is labeled with its item, as `[S1 1/2]`. An item whose questions stay open is
 left out of the wave and named as `held`; a wave with no item left does not start and exits 1. With
 `--json` the questions and the shared `Owner needed` text go to stderr.
-*Proposed (S264):* before it calls `spec.check`, `wave start` prints one line
-on the same stream, `spec check: S1, S2; wait for it to finish`, because the
-call returns only when the role has finished; `ork run` prints it the same way
-with its one item (`spec check: S1; wait for it to finish`).
+*Proposed (S241):* before it calls `spec.check`, `wave start` prints
+`spec check: reading S1, S2 (it runs even with --well-specified)` on the same
+stream. The call waits for the role to finish. It then prints
+`spec check: S1 ready, S2 ready` for the ready items; open questions keep
+their existing sitting. `ork run` uses the same lines with its one item.
+Neither `--well-specified` nor `--split` skips the check.
 The wave start or cancellation JSON result includes a `held` array of excluded
 item IDs; it is `[]` when nothing is held. The `--questions` result and an
 incomplete `--answer` batch instead return the spec-question object
@@ -2399,6 +2401,19 @@ engine runs only the first entry until S49. The gate uses the reviewer's
 lineup. The daemon refuses to start if the plan changed during confirmation. It starts one engine run
 in the background; CLI disconnection does not cancel it. The daemon owns
 the run store and reconciles stored runs before accepting clients.
+
+*Proposed (S241):* the CLI plan adds `push: on|off` after `stop:`, labels
+fallback entries with ` (fallback)`, and lists configured UI skills after
+the UI permissions. `run.plan` carries only the project name and path, so in
+text mode the CLI takes push and the skills from `projects.list` for the
+printed copy; the plan sent back at start is unchanged. Each plan is followed
+by a `files:` diagnostic using `item.show` and `EngineSlice`; read failures are
+diagnostic only. When a launch plans two or more wave items (`--questions`
+plans none), the CLI checks the daemon's pair rule before the spec check,
+prints its success line, or exits 1 with `EngineConflict`. JSON performs the
+same check without text plan additions. Started runs and waves print follow
+and stop commands; wave run lines also name the item. A wave in which no item
+started prints no commands. Stop output is unchanged.
 `approve` runs the finish step, then commits once (adj #81), then lands it (land state, adj #162); `answer`
 resumes a paused role that asked a question. `retry` calls `Engine.Retry`
 to rerun the role or step of a `shape`, `error`, `lost` or `interrupted`
@@ -2913,8 +2928,10 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   and exits 0. Project commands (`run`, `wave suggest`, `wave start`, and
   `status --project`) report that guide as an error and exit 1. JSON status
   keeps an empty projects array; JSON project errors use the usual error object.
-- `projects list`: `{"projects":[...]}`, each as in `projects.json`. Text: name,
-  path, `adj` (or `-`), and `notify_command=CMD` when set, in columns.
+- `projects list`: `{"projects":[...]}`, each as in `projects.json`.
+  *Proposed (S241):* text columns are name, path, then space-joined `adj`,
+  `push`, `ui-pass-skills=a,b`, only when set, in that order. With none set,
+  the third column is `-`. `notify_command=CMD` still follows when set.
   The notification cell is cleaned to one line without terminal controls.
 - `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A

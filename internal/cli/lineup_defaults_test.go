@@ -75,7 +75,7 @@ func TestRunYesStillRefusesNoCheckWithoutAskingAnything(t *testing.T) {
 	if code != ExitFailure || len(starts) != 0 || strings.Contains(out+errs, "Well specified?") || strings.Contains(out+errs, "Split?") {
 		t.Fatalf("code %d starts %v: %s %s", code, starts, out, errs)
 	}
-	if !reflect.DeepEqual(methods, []string{daemon.MethodRunPlan}) {
+	if !reflect.DeepEqual(methods, []string{daemon.MethodRunPlan, daemon.MethodProjectsList, daemon.MethodItemShow}) {
 		t.Fatalf("methods %v", methods)
 	}
 }
@@ -85,6 +85,10 @@ func TestWaveStartPlansEveryItemWithTheDefaults(t *testing.T) {
 	var started daemon.WaveStartParams
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case daemon.MethodRunPlan:
 			p := params.(daemon.RunParams)
 			plans = append(plans, p)
@@ -126,6 +130,10 @@ func TestWaveStartFlagsStillOverride(t *testing.T) {
 	var plans []daemon.RunParams
 	app := &App{Call: func(_ context.Context, method string, params, result any) error {
 		switch method {
+		case daemon.MethodItemShow:
+			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+		case daemon.MethodProjectsList:
+			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case daemon.MethodRunPlan:
 			p := params.(daemon.RunParams)
 			plans = append(plans, p)

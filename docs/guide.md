@@ -105,6 +105,10 @@ ork never reads vendor credentials. Log in with each vendor CLI's own login
 
 ## 4. Add a project
 
+*Proposed (S241):* `ork projects list` shows name and path, followed by
+the applicable words `adj`, `push`, `ui-pass-skills=a,b` in that order.
+With none set the third column is `-`. JSON output is unchanged.
+
 ork needs an existing absolute directory (`docs/design.md:2561-2568`). The
 TUI Welcome view offers the current directory only if it holds `.slicer` or
 `.adjudicate.json` (`docs/dashboard.md:31-35`), and the roadmap and ledger
@@ -357,8 +361,10 @@ Press `y` at the confirmation to start (`docs/dashboard.md:1374-1402`,
 
 It plans the slice as well specified and not split, prints the plan, and runs
 the spec check before asking `Start this slice? [y/N]` (*proposed*, adj 189).
-Before the check it prints `spec check: ID; wait for it to finish` (*proposed*,
-S264), because the call returns only when the check has finished. Answer each spec question
+*Proposed (S241):* before the check it prints
+`spec check: reading ID (it runs even with --well-specified)`, then
+`spec check: ID ready` for ready items. The call waits for the role to finish.
+`--well-specified` and `--split` do not skip it. Answer each spec question
 with an option number or text. An empty line or end of input holds the
 slice and exits 1. A failed check also blocks launch. Real spec-check failures
 carry the `spec check failed: ` prefix in text mode; refusals do not. Text
@@ -417,6 +423,17 @@ For example, to use a Codex primary with a Claude fallback for this run:
 
 The printed plan includes lineup overrides and, when overridden, budgets.
 It is the plan confirmed at start.
+
+*Proposed (S241):* the plan prints `push: on` or `push: off` after `stop:`;
+the CLI reads the setting and the UI skills from `projects.list`, because the
+daemon's plan carries only the project name and path (text mode only).
+Fallback role entries end in ` (fallback)`; permissions stay once per role.
+The UI role lists configured skills as `  skills: a, b` after permissions.
+After the plan, `files:` says whether the slice touches `internal/engine`,
+`internal/daemon` or `cmd`, has no engine path, lists no files, or could not
+be read. A failed file read does not block launch. A started run prints
+`RUNID STATE`, then `follow: ork status --project PROJECT` and
+`stop it: ork stop RUNID`. JSON results keep their existing shape.
 The run is now in the daemon. Closing the TUI or the shell does not stop it.
 
 The roles run in this order (`docs/design.md:391-631`):
@@ -616,9 +633,19 @@ with it.
 
 Like `ork run`, `wave start` asks the spec-check questions on standard input
 and prints each plan before it asks to start (`docs/design.md:1958-1973`,
-`internal/cli/wave.go:378-385`). `ork stop` takes the `wave-` id it prints and
+`internal/cli/wave.go:416-419`). `ork stop` takes the `wave-` id it prints and
 stops every unfinished run in that wave, queued ones included
 (`docs/design.md:2045-2051`).
+
+*Proposed (S241):* when a launch plans two or more items, it prints
+`pair rule: ok, no engine slice` or
+`pair rule: ok, one engine slice (ID)` before the spec check. Two engine
+slices are refused with exit 1 before the spec check, including with `--yes`
+or `--json`. `--questions` plans nothing, so it prints no pair rule line and
+refuses nothing. A started wave prints its wave id, one `ITEM RUNID STATE`
+line per successful item, `follow: ork status --project PROJECT` and
+`stop the wave: ork stop WAVEID`. Item errors stay on stderr. When no item
+started, the two commands are not printed.
 
 An item that has no slice spec does not fail the wave (S283, *proposed*, adj
 245). `wave start` leaves it out, prints `ID: no slice spec; run slicer

@@ -1469,6 +1469,12 @@ running (`wave.failure`). `ork stop WAVE` uses the `wave-` prefix
 (`wave.stop-target`) and stops each unfinished member once, including
 queued members without tool writes.
 
+*Proposed (S241):* CLI plans label fallback entries, show push and UI skills,
+and say whether each slice lists an engine path. Before checking specs, a
+multi-item launch prints the pair rule result or refuses two engine slices.
+The spec check prints its reading step and ready results. Started waves
+print `ITEM RUNID STATE` lines and commands to follow or stop the wave.
+
 The composer uses `wave.suggest` and `wave.overlap` reads from S81 and
 `wave.start` with per-item plans (well specified = yes, split = no) and
 confirmed plans (`run.launch-wire`).
