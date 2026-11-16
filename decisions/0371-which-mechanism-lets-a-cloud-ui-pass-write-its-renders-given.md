@@ -2,7 +2,7 @@
 {
   "id": 371,
   "title": "Which mechanism lets a cloud UI pass write its renders, given acceptEdits auto-approves rm, mv, cp, sed, mkdir, touch and rmdir in the working directory?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.ui-pass-write-mechanism",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -32,6 +32,7 @@
   "supersedes": [
     370
   ],
+  "superseded_by": 372,
   "refs": [
     "S369"
   ],
@@ -48,6 +49,11 @@
       "date": "2026-11-16",
       "event": "supersede",
       "note": "supersedes 370"
+    },
+    {
+      "date": "2026-11-16",
+      "event": "supersede",
+      "note": "by 372"
     }
   ]
 }
