@@ -945,7 +945,7 @@ func (e *Engine) gate(ctx context.Context) error {
 		// S331 (*proposed*; adj 281): a run that qualifies is approved here, with
 		// no approve call. Its human checks never block: each open one is marked
 		// later, and the landing adds them to the todo file.
-		auto := e.autoLandReady(e.run.Snapshot(), card)
+		auto := chainMid(e.run.Snapshot()) || e.autoLandReady(e.run.Snapshot(), card) // a mid sliver of a chain is accepted here whatever the auto-land setting (S62)
 		if auto {
 			for i := range card.HumanChecks {
 				if !card.HumanChecks[i].Resolved() {
@@ -1212,7 +1212,8 @@ func (e *Engine) commit(ctx context.Context) error {
 		r.Pending = nil
 		r.Commit = &runrec.Commit{SHA: strings.TrimSpace(sha), Title: title, At: e.d.now()}
 		r.State = runrec.StateLand
-		if r.StopAfter == runrec.StopAfterCommit {
+		// A mid sliver of a chain is committed and does not land (S62).
+		if r.StopAfter == runrec.StopAfterCommit || chainMid(*r) {
 			r.State = runrec.StateCommitted
 		}
 	})
@@ -1240,7 +1241,11 @@ func (e *Engine) finish(ctx context.Context) error {
 	default:
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateFinish, Reason: fmt.Sprintf("implement_finish is %q; ork knows done and handoff", mode)})
 	}
-	body := fmt.Sprintf("The gate returned `VERDICT: PASS`, the owner approved, and the finish step must precede ork's commit (adj #81). The slice is final. "+
+	approved := "the owner approved"
+	if chainMid(rec) {
+		approved = "this sliver passed with no owner stop (the owner approves once, after the last sliver of the chain)"
+	}
+	body := fmt.Sprintf("The gate returned `VERDICT: PASS`, "+approved+", and the finish step must precede ork's commit (adj #81). The slice is final. "+
 		"Run the closing note, then the finish step, and nothing else:\n\n"+
 		"1. `slicer note %s --text \"Describe the verified outcome\" --render`\n"+
 		"2. %s\n\n"+

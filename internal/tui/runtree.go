@@ -4,6 +4,7 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -131,6 +132,79 @@ func (m *Model) paneSteps() []runTreeStep {
 		}
 	}
 	return nil
+}
+
+// paneTreeSteps is the open pane's steps for the tree. A sliver run's roles go
+// under its sliver node and the parent. The stage bar and the pipeline use the
+// plain role steps, so they read as the row does (S62).
+func (m *Model) paneTreeSteps(steps []runTreeStep) []runTreeStep {
+	r, ok := m.paneEngineRun()
+	if !ok || r.Parent == "" {
+		return steps
+	}
+	p := m.byName[m.pane.project]
+	return m.nestSlivers(steps, r, p.snap.EngineRuns)
+}
+
+// nestSlivers puts a sliver's roles under the parent, and under this sliver's
+// own node. Sibling slivers of the same chain are listed in order (S62).
+func (m *Model) nestSlivers(steps []runTreeStep, r source.EngineRun, runs []source.EngineRun) []runTreeStep {
+	if r.Parent == "" {
+		return steps
+	}
+	parentID := "sliver-parent"
+	// The parent node is neutral: it is not done while its chain runs.
+	out := []runTreeStep{{Step: slicercli.Step{ID: parentID, Role: r.Parent, Phase: "chain"}}}
+	members := []source.EngineRun{r}
+	if r.Chain != "" {
+		members = nil
+		for _, other := range runs {
+			if other.Chain == r.Chain && other.Parent == r.Parent {
+				members = append(members, other)
+			}
+		}
+		if len(members) == 0 {
+			members = []source.EngineRun{r}
+		}
+		sort.Slice(members, func(i, j int) bool {
+			return members[i].SliverIndex < members[j].SliverIndex
+		})
+	}
+	for _, member := range members {
+		id := "sliver-" + member.Item
+		if member.ID != "" {
+			id = "sliver-" + member.ID
+		}
+		role := member.Item
+		if member.SliverCount > 0 {
+			role = fmt.Sprintf("%s %d of %d", member.Item, member.SliverIndex, member.SliverCount)
+		}
+		out = append(out, runTreeStep{Step: slicercli.Step{ID: id, Role: role, Phase: sliverPhase(member.State), Parent: parentID}})
+		if member.ID == r.ID {
+			for i := range steps {
+				if steps[i].Parent == "" {
+					steps[i].Parent = id
+				}
+			}
+		}
+	}
+	return append(out, steps...)
+}
+
+// sliverPhase is the tree phase of a sliver node from its run's state: a run
+// that has not started is queued, not waiting on the owner (S62).
+func sliverPhase(state string) string {
+	switch state {
+	case runrec.StateQueued:
+		return "queued"
+	case runrec.StateStopped:
+		return "stopped"
+	case runrec.StateCommitted:
+		return "done"
+	case runrec.StateAwaitingApproval, runrec.StatePaused:
+		return "wait"
+	}
+	return "start"
 }
 
 // runTreeLines preserves sibling order and visits every step once, including

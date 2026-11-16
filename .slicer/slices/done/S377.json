@@ -14,11 +14,11 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "*Proposed.* `land` (`internal/engine/land.go:62-87`) commits tracking edits in `checkMain` and loops back to `mergeBaseIn`, but in the S206 case the fast-forward still ran against a base that had moved. Each such pause needs the owner or orchestrator to run `ork retry`, though nothing needs deciding."
+      "body": "*Proposed.* `land` (`internal/engine/land.go:62-98`) commits tracking edits in `checkMain` and loops back to `mergeBaseIn`, but in the S206 case the fast-forward still ran against a base that had moved. Each such pause needs the owner or orchestrator to run `ork retry`, though nothing needs deciding."
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/land.go:62-87` (merge-in, re-check, fast-forward)\n- `internal/engine/landdirty.go:167-187` (`checkMain`, the tracking commit)\n- `internal/engine/land_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/land.go:62-98` (merge-in, re-check, fast-forward)\n- `internal/engine/landdirty.go:167-187` (`checkMain`, the tracking commit)\n- `internal/engine/land_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

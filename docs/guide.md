@@ -385,14 +385,16 @@ Press `y` at the confirmation to start (`docs/dashboard.md:1374-1402`,
 
 **On the command line.**
 
-    ork run PROJECT ID
+    ork run PROJECT ID [--slivers]
 
 It plans the slice as well specified and not split, prints the plan, and runs
 the spec check before asking `Start this slice? [y/N]` (*proposed*, adj 189).
 *Proposed (S241):* before the check it prints
 `spec check: reading ID (it runs even with --well-specified)`, then
 `spec check: ID ready` for ready items. The call waits for the role to finish.
-`--well-specified` and `--split` do not skip it. Answer each spec question
+`--well-specified` and `--split` do not skip it. `--slivers` (*proposed*, S62)
+runs the parent's slivers one after another in the parent's worktree and
+branch, as one plan and one landing. Answer each spec question
 with an option number or text. An empty line or end of input holds the
 slice and exits 1. A failed check also blocks launch. Real spec-check failures
 carry the `spec check failed: ` prefix in text mode; refusals do not. Text
@@ -923,7 +925,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]
     ork projects show NAME
     ork projects pin NAME [--relay N] [--adj M] | unpin NAME [--adj]
-    ork run P ID
+    ork run P ID [--slivers]
     ork wave suggest P
     ork wave start P ITEM...
     ork wave define --project P NAME ITEM... [--replace]

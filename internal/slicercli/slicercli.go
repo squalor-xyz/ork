@@ -55,6 +55,16 @@ func (c Client) List(ctx context.Context, root string) ([]Item, error) {
 	return items, nil
 }
 
+// ListChildren runs `slicer list --parent PARENT --json --lean --root ROOT`.
+// The order is slicer's order for that parent (S62).
+func (c Client) ListChildren(ctx context.Context, root, parent string) ([]Item, error) {
+	var items []Item
+	if err := clirun.RunJSON(ctx, c.call("list", "--parent", parent, "--json", "--lean", "--root", root), &items); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 // ListAll runs `slicer list --all --json --lean --root ROOT`. Unlike List it
 // keeps done and retired items (S215, *proposed*).
 func (c Client) ListAll(ctx context.Context, root string) ([]Item, error) {

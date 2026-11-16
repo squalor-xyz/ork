@@ -312,7 +312,9 @@ func (m *Model) boardLines(steps []runTreeStep, width int) []string {
 	return lines
 }
 
-func (m *Model) boardTail(steps []runTreeStep, width, roleWidth int) []string {
+// boardTail lists the roles that have not begun. In a sliver's tree (nested)
+// they sit under the sliver node, two levels in (S62).
+func (m *Model) boardTail(steps []runTreeStep, width, roleWidth int, nested bool) []string {
 	if !boardLive(m.paneBoardRun().State) {
 		return nil
 	}
@@ -327,6 +329,9 @@ func (m *Model) boardTail(steps []runTreeStep, width, roleWidth int) []string {
 		}
 		if !begun {
 			text := fmt.Sprintf(". %-*s queued", roleWidth, role)
+			if nested {
+				text = "    " + text
+			}
 			if plan := plannedEntry(run.Lineup, role); plan != "" {
 				text += "  " + plan
 			}

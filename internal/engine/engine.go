@@ -121,6 +121,14 @@ type Config struct {
 	// *proposed*). The lineup then needs a part chain beside the lead's, which is
 	// the implementer chain.
 	Split bool
+	// Worktree and Branch override the patterns filled from Item. Empty keeps
+	// the pattern. A sliver sets them to the parent's (S62, record 124).
+	Worktree    string
+	Branch      string
+	Parent      string // the slice this sliver was carved from
+	Chain       string // set for a sliver of `ork run PARENT --slivers`; empty for a lone sliver
+	SliverIndex int
+	SliverCount int
 }
 
 // Engine runs one slice. The methods that move it (Run, Approve, Reject,
@@ -405,9 +413,17 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	if cfg.Budgets.Tokens != 0 {
 		budgets.Tokens = cfg.Budgets.Tokens
 	}
+	worktree, branch := cfg.Worktree, cfg.Branch
+	if worktree == "" {
+		worktree = worktreePath(cfg.Project, cfg.Item)
+	}
+	if branch == "" {
+		branch = branchName(cfg.Project, cfg.Item)
+	}
 	run, err := d.Store.Create(runrec.Record{
 		ID: id, StopAfter: cfg.StopAfter, Wave: cfg.Wave, WaveName: cfg.WaveName, Project: cfg.Project.Name, Item: cfg.Item,
-		Worktree: worktreePath(cfg.Project, cfg.Item), Branch: branchName(cfg.Project, cfg.Item),
+		Parent: cfg.Parent, Chain: cfg.Chain, SliverIndex: cfg.SliverIndex, SliverCount: cfg.SliverCount,
+		Worktree: worktree, Branch: branch,
 		Split: cfg.Split, Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
 	})
 	if err != nil {
@@ -421,6 +437,14 @@ func Load(d Deps, proj registry.Project, run *runrec.Run) *Engine { return newEn
 
 // Snapshot returns a copy of the run record.
 func (e *Engine) Snapshot() runrec.Record { return e.run.Snapshot() }
+
+// chainMid reports a sliver that is not the last of its chain. The owner
+// approves once, after the last sliver (S62), so a mid sliver is accepted at
+// its gate with no owner stop, runs its finish step, is committed and does not
+// land; the chain then goes on to the next sliver.
+func chainMid(rec runrec.Record) bool {
+	return rec.Chain != "" && rec.SliverIndex < rec.SliverCount
+}
 
 // Dismiss records the owner's dismissal on the managed run handle.
 func (e *Engine) Dismiss() error { return e.run.Dismiss() }

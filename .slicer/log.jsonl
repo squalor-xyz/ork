@@ -4763,6 +4763,13 @@
 {"when": "2026-11-16T18:31:53Z", "item": "S247", "action": "note", "from": "", "to": "", "note": "Verified: ork projects show NAME [--json] and the daemon met", "by": "Jon Robbins"}
 {"when": "2026-11-16T18:31:55Z", "item": "S247", "action": "status", "from": "started", "to": "done", "note": "Verified: ork projects show NAME [--json] and the daemon method projects.show read one project's settings from the ork registry, ork's global settings, slicer config and role matrix (through the slicer CLI) and adj state (registry flag plus a stat of .adjudicate.json); nothing is written. A part slicer cannot read is null with slicer's code and message. Text has one block per owner and leaves out vendor_env values; --json prints them unmasked. go test -race ./..., go vet, gofmt, slicer check and adj lint pass; the human check against the owner's running daemon is left for approval.", "by": "Jon Robbins"}
 {"when": "2026-11-16T17:55:14Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T18:35:14Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T18:35:16Z", "item": "S62", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T19:07:49Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T19:07:49Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-16T19:35:57Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:07:20Z", "item": "S62", "action": "note", "from": "", "to": "", "note": "Verified: ork run PARENT --slivers plans and runs a sliver c", "by": "Jon Robbins"}
+{"when": "2026-11-16T20:07:21Z", "item": "S62", "action": "status", "from": "started", "to": "done", "note": "Slivers run as a chain under the cap: one record per sliver, one slot, one landing of the parent after the last sliver. Verified with go test -race ./internal/..., go vet, gofmt, slicer check, adj lint.", "by": "Jon Robbins"}
 {"when": "2026-11-16T18:21:29Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-16T19:02:23Z", "item": "S222", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-16T19:02:24Z", "item": "S222", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
@@ -4784,3 +4791,23 @@
 {"when": "2026-11-16T21:28:15Z", "item": "S179", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S179):", "by": "Jon Robbins"}
 {"when": "2026-11-16T21:28:25Z", "item": "S179", "action": "note", "from": "", "to": "", "note": "Spec drafting round shipped: D in the Roadmap item pane and ", "by": "Jon Robbins"}
 {"when": "2026-11-16T21:28:27Z", "item": "S179", "action": "status", "from": "started", "to": "done", "note": "Spec drafting round: spec-draft role, spec.draft and spec.draft-apply, EditReplace, TUI D draft view, ork spec draft CLI; tests, vet, gofmt, adj lint and slicer check green.", "by": "Jon Robbins"}
+{"when": "2026-11-16T19:21:33Z", "item": "S377", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T19:34:15Z", "item": "S377", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T19:37:12Z", "item": "S377", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-16T19:59:46Z", "item": "S377", "action": "note", "from": "", "to": "", "note": "A landing whose base gains a commit after the merge-in merge", "by": "Jon Robbins"}
+{"when": "2026-11-16T19:59:49Z", "item": "S377", "action": "status", "from": "started", "to": "done", "note": "A landing whose base gains a commit after the merge-in merges that commit in once more and then fast-forwards. A conflict retry that commits tracking edits while an older merge is still open takes the same extra merge-in. A base that moves again pauses at git merge --ff-only with the existing one-line reason.", "by": "Jon Robbins"}
+{"when": "2026-11-16T20:01:50Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:01:50Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:21:43Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:24:41Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:25:32Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:30:39Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:32:58Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T20:38:47Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T21:15:28Z", "item": "S378", "action": "add", "from": "", "to": "open", "note": "Grok: classify the usage-limit error as out"}
+{"when": "2026-11-16T21:15:28Z", "item": "S379", "action": "add", "from": "", "to": "open", "note": "Spec check skips a vendor marked out"}
+{"when": "2026-11-16T21:17:03Z", "item": "S378", "action": "note", "from": "", "to": "", "note": "Real sample for fixture 08-usage-limit (orchestrator probe 2", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:17:24Z", "item": "S378", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:27:45Z", "item": "S378", "action": "note", "from": "", "to": "", "note": "Verified: a grok error_during_execution result whose errors ", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:27:47Z", "item": "S378", "action": "status", "from": "started", "to": "done", "note": "Verified: a grok error_during_execution result whose errors hold the free usage-limit text now classifies as out_of_credits (fixed reason, no URL), so the role falls back to its next row; other error text stays unclassified. Real sample in testdata/vendors/grok/08-usage-limit. go vet, go test ./..., gofmt -l . and adj lint clean; slicer check passes.", "by": "Jon Robbins"}
+{"when": "2026-11-16T21:17:06Z", "item": "S378", "action": "edit", "from": "", "to": "", "note": "Implement"}

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 378,
+  "next_id": 380,
   "preamble": "",
   "passes": [
     {
@@ -2722,7 +2722,7 @@
       "id": "S62",
       "title": "Slivers as their own items under the cap",
       "short_title": "Slivers as their own items under the cap",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S61"
@@ -2755,6 +2755,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1f2478f7-b542-4650-be51-0f0f5957bfd0",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: ork run PARENT --slivers plans and runs a sliver chain, one run record per sliver (chain id, parent worktree and branch), one cap slot held until the last sliver ends (a stop releases it). A non-last sliver is accepted at its gate, finishes and commits without landing; the last sliver waits for one owner approval and lands the parent once; a lone sliver lands its own item. A stopped chain keeps its worktree and later slivers stay queued across a restart; a restart between slivers keeps the slot. TUI rows and run tree show the parent and position; the plan lists each sliver's rows. go test -race ./internal/..., go vet, gofmt, slicer check and adj lint were green.",
+          "created_at": "2026-11-16T20:07:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2774,7 +2788,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -20763,10 +20777,25 @@
       "id": "S377",
       "title": "Landing: fast-forward fails after main moves during the landing",
       "short_title": "Landing ff-only fails when main moves mid-landing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b7b8b226-038a-4e23-aaa9-a86ffff5ccf0",
+          "kind": "",
+          "text": "**2026-11-16** — A landing whose base gains a commit after the merge-in merges that commit in once more and then fast-forwards. A conflict retry that commits tracking edits while an older merge is still open takes the same extra merge-in. A base that moves again pauses at git merge --ff-only with the existing one-line reason.",
+          "created_at": "2026-11-16T19:59:46Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20784,6 +20813,91 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S378",
+      "title": "Grok: classify the usage-limit error as out",
+      "short_title": "Grok usage limit counts as out",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "27fa2d26-15ae-474f-a427-6599a4223cd5",
+          "kind": "",
+          "text": "**2026-11-16** — Real sample for fixture 08-usage-limit (orchestrator probe 2026-11-16 20:22, grok 1.0.77, owner answer 'I copy it in'). Command: grok -p 'Append the line ok to a.txt using your edit tool, then reply done.' --output-format streaming-messages-json --include-partial-messages --permission-mode dontAsk --allow write --allow search_replace --allow 'Bash(go test*)' --cwd DIR. Exit: 1.\n\nstderr:\n```\nError: You’ve reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build\n\n```\n\nstdout (session ids kept as captured; redact them in the fixture):\n```\n{\"type\":\"system\",\"subtype\":\"init\",\"session_id\":\"01a1e606-9c2b-7241-b06a-4dee144eab54\",\"apiKeySource\":\"oauth\",\"model\":\"grok-4.7\",\"cwd\":\"/home/jon/code/squalor-xyz/ork/.scratch/grok-probe2\",\"permissionMode\":\"dontAsk\",\"tools\":[\"run_terminal_command\",\"read_file\",\"search_replace\",\"list_dir\",\"grep\",\"kill_command_or_subagent\",\"todo_write\",\"get_command_or_subagent_output\",\"spawn_subagent\",\"scheduler_create\",\"scheduler_delete\",\"scheduler_list\",\"monitor\",\"search_tool\",\"use_tool\",\"workflow\",\"enter_plan_mode\",\"exit_plan_mode\",\"ask_user_question\",\"send_feedback\",\"web_search\",\"web_fetch\",\"image_gen\",\"image_edit\",\"image_to_video\",\"reference_to_video\",\"write\"],\"slash_commands\":[\"compact\",\"always-approve\",\"context\",\"session-info\",\"feedback\",\"deep-research\",\"workflow\",\"goal\",\"loop\",\"built-in-browser\",\"chrome-browser\",\"computer-use\",\"user:deep-research\",\"user:docs\",\"google-workspace\",\"import-memory\",\"morning\",\"build-with-ai\",\"code-review\",\"create-skill\",\"create-workflow\",\"design\",\"execute-plan\",\"game-assets\",\"bundled:imagine\",\"implement\",\"learn\",\"long-running-background-tasks\",\"pr-babysit\",\"resume-claude\",\"resume-codex\",\"resume-cursor\",\"review\",\"skill-design-principles\",\"statusline\",\"threejs-frame-conventions\",\"learn-traces\"],\"mcp_servers\":[],\"skills\":[\"built-in-browser\",\"chrome-browser\",\"computer-use\",\"user:deep-research\",\"user:docs\",\"google-workspace\",\"import-memory\",\"morning\",\"build-with-ai\",\"code-review\",\"create-skill\",\"create-workflow\",\"design\",\"execute-plan\",\"game-assets\",\"bundled:imagine\",\"implement\",\"learn\",\"long-running-background-tasks\",\"pr-babysit\",\"resume-claude\",\"resume-codex\",\"resume-cursor\",\"review\",\"skill-design-principles\",\"statusline\",\"threejs-frame-conventions\"],\"uuid\":\"2dea529a-8c26-4650-9659-6264d062ee98\"}\n{\"type\":\"result\",\"subtype\":\"error_during_execution\",\"is_error\":true,\"duration_ms\":2645,\"duration_api_ms\":0,\"num_turns\":0,\"stop_reason\":null,\"total_cost_usd\":0.0,\"usage\":{\"input_tokens\":0,\"output_tokens\":0,\"cache_read_input_tokens\":0,\"cache_creation_input_tokens\":0,\"server_tool_use\":{\"web_search_requests\":0}},\"modelUsage\":{},\"errors\":[\"You’ve reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build\"],\"session_id\":\"01a1e606-9c2b-7241-b06a-4dee144eab54\",\"uuid\":\"533b8f39-bc54-4d29-b1f6-0970affd7f96\"}\n```",
+          "created_at": "2026-11-16T21:17:03Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "19061fc8-9dc7-4def-9e0b-7392b6bcd53b",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: a grok error_during_execution result whose errors hold the free usage-limit text now classifies as out_of_credits (fixed reason, no URL), so the role falls back to its next row; other error text stays unclassified. Real sample in testdata/vendors/grok/08-usage-limit. go vet, go test ./..., gofmt -l . and adj lint clean; slicer check passes.",
+          "created_at": "2026-11-16T21:27:45Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-16 20:21: two runs with grok as first implementer (S179 run ork-20261116-200151-55ff, S359 run ork-20261116-202144-c7bb) stopped with \"implementer round 1 exited unclassified\" and made no edit. A headless write call reproduced it (orchestrator probe, `.scratch/grok-probe2/`, grok 1.0.77): exit 1, stderr \"Error: You've reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build\", and a stream `result` with `subtype` `error_during_execution` and the same text in `errors`. The classifier knows only \"used all available credits\" (`internal/agent/grok/grok.go:40-42,297`).",
+        "discovered_from": "S305",
+        "parent": "",
+        "cites": [],
+        "key": "ork-grok-usage-limit",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S379",
+      "title": "Spec check skips a vendor marked out",
+      "short_title": "Spec check skips a vendor marked out",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-16 20:23: with grok marked out (`ork vendor out grok --until 21:22`), `ork run ork S359` and `ork run ork S179` failed at once with \"spec check failed: spec-check (grok grok-4.7 medium) exited unclassified\": the spec check still ran its first row (r24, grok). The orchestrator moved ork's spec-check rows to r16,r24 by hand to get past it.",
+        "discovered_from": "S305",
+        "parent": "",
+        "cites": [],
+        "key": "ork-speccheck-vendor-out",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }

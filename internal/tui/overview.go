@@ -304,6 +304,7 @@ func runCells(r ovRow, room int) []runCell {
 // the stage bar, pipeline, round, last heard and activity (S110).
 type liveRun struct {
 	item     string
+	sliver   string // `parent S1 2 of 4` for a sliver run, else "" (S62)
 	ledger   slicercli.RelayRun
 	steps    []runTreeStep
 	activity []int
@@ -434,7 +435,11 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 				}
 			}
 			rest := strings.Join(parts, "  ")
-			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, resumeWaiting: r.ResumeWaiting, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: r.Item + "  " + rest, text: r.ID + "  " + r.Item + "  " + rest, runID: true}
+			item := r.Item
+			if label := sliverLabel(r); label != "" {
+				item += "  " + label
+			}
+			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, resumeWaiting: r.ResumeWaiting, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: item + "  " + rest, text: r.ID + "  " + item + "  " + rest, runID: true}
 			ledger, steps := engineBoard(r)
 			for _, linked := range boardLedgers(s) {
 				if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -448,7 +453,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 			// The engine's state tells a fix round from the finish step (S145).
 			steps = withEngineState(steps, r.State)
 			if !r.Unavailable {
-				row.live = &liveRun{item: r.Item, ledger: ledger, steps: steps, activity: r.Activity, vendorWait: r.VendorWait, roles: engineRoleFacts(r)}
+				row.live = &liveRun{item: r.Item, sliver: sliverLabel(r), ledger: ledger, steps: steps, activity: r.Activity, vendorWait: r.VendorWait, roles: engineRoleFacts(r)}
 				if r.UsageKnown || r.Tokens != 0 {
 					row.live.tokens = "tokens " + compactTokens(r.Tokens)
 				}
@@ -973,12 +978,28 @@ func (m *Model) newRunRow(id, title string, ledger slicercli.RelayRun, steps []r
 	return rr
 }
 
+// sliverLabel names the parent, and the position in a chain (`2 of 4`).
+func sliverLabel(r source.EngineRun) string {
+	if r.Parent == "" {
+		return ""
+	}
+	label := "parent " + r.Parent
+	if r.SliverCount > 0 {
+		label += fmt.Sprintf(" %d of %d", r.SliverIndex, r.SliverCount)
+	}
+	return label
+}
+
 // engineRunRow is the two-line form of an engine run. The role working now is
 // the engine's own, with its model; between roles the engine's state stands in.
 // Line 2 is a denial when there is one, otherwise the newest line of the S99
 // output tail.
 func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slicercli.RelayRun, steps []runTreeStep) *runRow {
-	rr := m.newRunRow(r.Item, sliceTitle(s.Items.Value, r.Item), ledger, steps)
+	id := r.Item
+	if label := sliverLabel(r); label != "" {
+		id += " " + label
+	}
+	rr := m.newRunRow(id, sliceTitle(s.Items.Value, r.Item), ledger, steps)
 	if r.UsageKnown || r.Tokens != 0 {
 		rr.tokens = "tokens " + compactTokens(r.Tokens)
 	}
@@ -1518,6 +1539,14 @@ func (m *Model) readyRows() []ovRow {
 			if run.State != "committed" || run.Cleaned || (run.Landed && run.CleanupFailed == "") {
 				continue // ork landed it (S119) or the cleanup removed it (S95): nothing is left to do
 			}
+			if run.Chain != "" && run.SliverIndex < run.SliverCount {
+				continue // a mid sliver of a chain does not land; the last one lands the parent (S62)
+			}
+			// The last sliver of a chain lands the parent, as the engine does (S62).
+			landItem := run.Item
+			if run.Chain != "" && run.Parent != "" {
+				landItem = run.Parent
+			}
 			rest := run.Branch
 			var commands []string
 			var note, detail string
@@ -1537,14 +1566,14 @@ func (m *Model) readyRows() []ovRow {
 				rest = "branch unknown"
 			case run.Merged != nil && !*run.Merged:
 				rest += "  merge first"
-			case slicerLanded(p.snap, run.Item):
+			case slicerLanded(p.snap, landItem):
 				// Slicer no longer lists the item: `slicer land` ran outside ork, or
 				// the item was retired (the default list hides both). The landing
 				// and render lines have nothing left to do; c still removes the
 				// branch and worktree (S153).
 				rest += "  not listed"
 			default:
-				commands = append(commands, fmt.Sprintf("slicer land %s --branch %s --note %s", shellQuote(run.Item), shellQuote(run.Branch), shellQuote("Landed "+run.Branch)))
+				commands = append(commands, fmt.Sprintf("slicer land %s --branch %s --note %s", shellQuote(landItem), shellQuote(run.Branch), shellQuote("Landed "+run.Branch)))
 				if run.Merged == nil {
 					rest += "  merge state unknown"
 				} else {
@@ -1763,7 +1792,8 @@ func countsAsLive(r ovRow) bool {
 func liveFacts(r ovRow) []string {
 	var cells []string
 	for _, c := range strings.Split(strings.TrimPrefix(r.rest, r.live.item+"  "), "  ") {
-		if c != "" && c != r.live.item {
+		// The sliver label is in the row's item cell (S62).
+		if c != "" && c != r.live.item && (r.live.sliver == "" || c != r.live.sliver) {
 			cells = append(cells, c)
 		}
 	}
@@ -1962,6 +1992,9 @@ func (m *Model) liveText(r ovRow) liveText {
 	// row names it (the bar keeps the steps as they are).
 	shown := stoppedOn(lv.steps, lv.ledger.State)
 	t := liveText{item: lv.item, pipeline: m.pipeline(shown, stale, true)}
+	if lv.sliver != "" {
+		t.item += " " + lv.sliver
+	}
 	t.bar = stageBar(lv.steps, m.treeFrame, !stale && boardLive(lv.ledger.State))
 	if !stale {
 		t.role = runningRole(shown)

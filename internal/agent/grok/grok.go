@@ -41,6 +41,11 @@ const (
 // No rate-limit sample exists, so no rate-limit class is mapped (adj 77).
 const creditsText = "used all available credits"
 
+// usageLimitText is in the `errors` of the error_during_execution result of
+// testdata/vendors/grok/08-usage-limit (exit 1). The text starts "You've"
+// with a typographic apostrophe, so the match starts after it.
+const usageLimitText = "reached your free Grok Build usage limit"
+
 // Spec describes one CLI round. Env is the full environment; nil inherits.
 // A Model of "" or "latest" passes no model flag, so the CLI default applies.
 type Spec struct {
@@ -140,6 +145,7 @@ type Event struct {
 	SessionID   string          `json:"session_id"`
 	IsError     bool            `json:"is_error"`
 	Result      string          `json:"result"`
+	Errors      []string        `json:"errors"`  // an error_during_execution result has these, not a result
 	Message     json.RawMessage `json:"message"` // a string in an error line, an object in an assistant line
 	Usage       *Usage          `json:"usage"`
 	StreamEvent *struct {
@@ -280,7 +286,7 @@ func (r *stream) line(line []byte) {
 		}
 		r.round.Report = e.Result
 		if e.IsError {
-			r.fail(e.Result)
+			r.fail(e.Result + "\n" + strings.Join(e.Errors, "\n"))
 		}
 	case "error":
 		r.fail(e.errorMessage())
@@ -297,6 +303,9 @@ func (r *stream) fail(message string) {
 	if strings.Contains(message, creditsText) {
 		r.credits = true
 		r.round.Reason = "grok: the team has used all available credits or reached its spending limit"
+	} else if strings.Contains(message, usageLimitText) {
+		r.credits = true
+		r.round.Reason = "grok: the usage limit is reached"
 	}
 }
 

@@ -97,7 +97,9 @@ func appendHumanChecksTodo(path, item, run, date string, lines []string) (err er
 // owner finding is still open. It is read when the gate has passed, so the
 // verdict is PASS.
 func (e *Engine) autoLandReady(rec runrec.Record, card *runrec.ApprovalCard) bool {
-	if !e.proj.AutoLandOn() || rec.StopAfter == runrec.StopAfterCommit || card.ChecksError != "" {
+	// A mid sliver of a chain is accepted at its gate and does not land (S62);
+	// the gate code handles it before this is asked.
+	if !e.proj.AutoLandOn() || rec.StopAfter == runrec.StopAfterCommit || card.ChecksError != "" || chainMid(rec) {
 		return false
 	}
 	if n := len(rec.Checks); n == 0 || !rec.Checks[n-1].OK {

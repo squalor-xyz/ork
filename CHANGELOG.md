@@ -17,6 +17,21 @@
   `scope.v1` for spec text), `roles.spec-draft-row`, `roles.spec-draft-empty`,
   `ui.spec-draft-key`, `cli.spec-draft`.
 
+- S378 (*proposed*): a grok round that stops on the free usage limit ("You've
+  reached your free Grok Build usage limit") is classed out, like out of
+  credits, so the role falls back to its next row instead of stopping the run
+  as unclassified. The text arrives in the `errors` of an
+  `error_during_execution` result, which ork now reads. Fixture:
+  `testdata/vendors/grok/08-usage-limit`. Docs updated: `docs/design.md`.
+
+- S377 (*proposed*): a landing whose base branch gains a commit after the
+  merge-in merges that commit in once and then fast-forwards, instead of
+  pausing. The same retry covers ork's own tracking commit when a landing
+  resumes with an older merge still open: the commit happens first, then the
+  settlement, so the landing merges the base in again before the
+  fast-forward. A base that moves again pauses at the fast-forward with the
+  same one-line `git merge --ff-only` reason. Docs updated: `docs/design.md`.
+
 - S222 (*proposed*): Approve a wave in order. `ork approve WAVE-ID`, the daemon
   method `wave.approve` and the `A` key (Overview row or run pane, after a
   `y/N` that names the runs) approve every run of a wave that waits for

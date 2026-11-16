@@ -417,6 +417,10 @@ type Record struct {
 	Decisions        string                   `json:"decisions,omitempty"` // the owner's spec check answers, for every brief (S116)
 	Project          string                   `json:"project"`
 	Item             string                   `json:"item"`
+	Parent           string                   `json:"parent,omitempty"`       // the slice this sliver was carved from (S62)
+	Chain            string                   `json:"chain,omitempty"`        // links the slivers of one `ork run PARENT --slivers` (S62); empty for a lone sliver
+	SliverIndex      int                      `json:"sliver_index,omitempty"` // one-based position in the chain
+	SliverCount      int                      `json:"sliver_count,omitempty"` // slivers in the chain
 	Worktree         string                   `json:"worktree"`
 	Branch           string                   `json:"branch"`
 	RelayRun         string                   `json:"relay_run,omitempty"`
