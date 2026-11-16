@@ -4794,3 +4794,5 @@
 {"when": "2026-11-16T20:30:39Z", "item": "S359", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-16T20:32:58Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-16T20:38:47Z", "item": "S179", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T21:15:28Z", "item": "S378", "action": "add", "from": "", "to": "open", "note": "Grok: classify the usage-limit error as out"}
+{"when": "2026-11-16T21:15:28Z", "item": "S379", "action": "add", "from": "", "to": "open", "note": "Spec check skips a vendor marked out"}

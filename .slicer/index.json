@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 378,
+  "next_id": 380,
   "preamble": "",
   "passes": [
     {
@@ -20786,6 +20786,62 @@
         "urgency": 2,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S378",
+      "title": "Grok: classify the usage-limit error as out",
+      "short_title": "Grok usage limit counts as out",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-16 20:21: two runs with grok as first implementer (S179 run ork-20261116-200151-55ff, S359 run ork-20261116-202144-c7bb) stopped with \"implementer round 1 exited unclassified\" and made no edit. A headless write call reproduced it (orchestrator probe, `.scratch/grok-probe2/`, grok 1.0.77): exit 1, stderr \"Error: You've reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build\", and a stream `result` with `subtype` `error_during_execution` and the same text in `errors`. The classifier knows only \"used all available credits\" (`internal/agent/grok/grok.go:40-42,297`).",
+        "discovered_from": "S305",
+        "parent": "",
+        "cites": [],
+        "key": "ork-grok-usage-limit",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S379",
+      "title": "Spec check skips a vendor marked out",
+      "short_title": "Spec check skips a vendor marked out",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-16 20:23: with grok marked out (`ork vendor out grok --until 21:22`), `ork run ork S359` and `ork run ork S179` failed at once with \"spec check failed: spec-check (grok grok-4.7 medium) exited unclassified\": the spec check still ran its first row (r24, grok). The orchestrator moved ork's spec-check rows to r16,r24 by hand to get past it.",
+        "discovered_from": "S305",
+        "parent": "",
+        "cites": [],
+        "key": "ork-speccheck-vendor-out",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
       }
     }
   ],
