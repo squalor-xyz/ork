@@ -446,6 +446,8 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	switch {
 	case key.Matches(msg, m.keys.Approve):
 		return m.requestAction("approve")
+	case key.Matches(msg, m.keys.ApproveWave):
+		return m.requestAction("approve-wave")
 	case key.Matches(msg, m.keys.Stop):
 		return m.requestAction("stop")
 	case key.Matches(msg, m.keys.Retry):

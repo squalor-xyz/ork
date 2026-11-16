@@ -33,44 +33,48 @@ type keyMap struct {
 	SavedWaves key.Binding
 	Matrix     key.Binding
 	Approve    key.Binding
-	Stop       key.Binding
-	Retry      key.Binding
-	FileSlice  key.Binding
-	Owner      key.Binding
-	Fix        key.Binding
-	MarkCheck  key.Binding
-	Report     key.Binding
-	Renders    key.Binding
-	Next       key.Binding
-	Prev       key.Binding
-	TabNext    key.Binding
-	TabPrev    key.Binding
-	NextView   key.Binding
-	PrevView   key.Binding
-	Jump       key.Binding
-	RowNext    key.Binding
-	RowPrev    key.Binding
-	First      key.Binding
-	Last       key.Binding
-	PageDown   key.Binding
-	PageUp     key.Binding
-	ScrollDown key.Binding
-	ScrollUp   key.Binding
-	NextGroup  key.Binding
-	PrevGroup  key.Binding
-	Select     key.Binding
-	Answer     key.Binding
-	PickOption key.Binding
-	FreeAnswer key.Binding
-	FileAdj    key.Binding
-	Refresh    key.Binding
-	Help       key.Binding
-	Close      key.Binding
-	Quit       key.Binding
-	Yes        key.Binding
-	No         key.Binding
-	Filter     key.Binding
-	Sidebar    key.Binding
+	// ApproveWave approves every waiting run of the selected run's wave, in
+	// start order (S222, *proposed*; owner decision 2026-11-07, AW-Q4: A). It is
+	// the same key as AllProjects, which acts only on Decisions and Waves.
+	ApproveWave key.Binding
+	Stop        key.Binding
+	Retry       key.Binding
+	FileSlice   key.Binding
+	Owner       key.Binding
+	Fix         key.Binding
+	MarkCheck   key.Binding
+	Report      key.Binding
+	Renders     key.Binding
+	Next        key.Binding
+	Prev        key.Binding
+	TabNext     key.Binding
+	TabPrev     key.Binding
+	NextView    key.Binding
+	PrevView    key.Binding
+	Jump        key.Binding
+	RowNext     key.Binding
+	RowPrev     key.Binding
+	First       key.Binding
+	Last        key.Binding
+	PageDown    key.Binding
+	PageUp      key.Binding
+	ScrollDown  key.Binding
+	ScrollUp    key.Binding
+	NextGroup   key.Binding
+	PrevGroup   key.Binding
+	Select      key.Binding
+	Answer      key.Binding
+	PickOption  key.Binding
+	FreeAnswer  key.Binding
+	FileAdj     key.Binding
+	Refresh     key.Binding
+	Help        key.Binding
+	Close       key.Binding
+	Quit        key.Binding
+	Yes         key.Binding
+	No          key.Binding
+	Filter      key.Binding
+	Sidebar     key.Binding
 
 	// The matrix pane's edit keys (S226, *proposed*).
 	MatrixEdit   key.Binding
@@ -109,45 +113,46 @@ func newKeyMap() keyMap {
 		MatrixMove:   key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "move a matrix row (matrix pane)")),
 		MatrixRule:   key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "edit a matrix rule (matrix pane)")),
 
-		Approve:    key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
-		Stop:       key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
-		Retry:      key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
-		Owner:      key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "answer owner finding")),
-		FileSlice:  key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "file slice")),
-		Fix:        key.NewBinding(key.WithKeys("F", "shift+f"), key.WithHelp("F", "fix round")),
-		MarkCheck:  key.NewBinding(key.WithKeys("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
-		Report:     key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "report")),
-		Renders:    key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "view renders")),
-		Filter:     key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
-		Sidebar:    key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
-		Next:       key.NewBinding(key.WithKeys("]"), key.WithHelp("]", "next project or entry")),
-		Prev:       key.NewBinding(key.WithKeys("["), key.WithHelp("[", "previous project or entry")),
-		TabNext:    key.NewBinding(key.WithKeys("right")),
-		TabPrev:    key.NewBinding(key.WithKeys("left")),
-		NextView:   key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "next view")),
-		PrevView:   key.NewBinding(key.WithKeys("shift+tab"), key.WithHelp("shift+tab", "previous view")),
-		Jump:       key.NewBinding(key.WithKeys("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "jump to project; 0 Needs you")),
-		RowNext:    key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("j/k", "down/up row; g/G home/end first/last")),
-		RowPrev:    key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("up/k", "previous row")),
-		First:      key.NewBinding(key.WithKeys("g", "home"), key.WithHelp("g/home", "first row")),
-		Last:       key.NewBinding(key.WithKeys("G", "shift+g", "end"), key.WithHelp("G/end", "last row")),
-		PageDown:   key.NewBinding(key.WithKeys("pgdown"), key.WithHelp("pgdown/pgup", "page rows or scroll a pane")),
-		PageUp:     key.NewBinding(key.WithKeys("pgup"), key.WithHelp("pgup", "page up")),
-		ScrollDown: key.NewBinding(key.WithKeys("ctrl+d"), key.WithHelp("ctrl+d/u", "scroll a pane half a page")),
-		ScrollUp:   key.NewBinding(key.WithKeys("ctrl+u"), key.WithHelp("ctrl+u", "scroll a pane back half a page")),
-		NextGroup:  key.NewBinding(key.WithKeys("}"), key.WithHelp("}/{", "next/previous group, pass or wave")),
-		PrevGroup:  key.NewBinding(key.WithKeys("{"), key.WithHelp("{", "previous group")),
-		Select:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, question, item or decision; other rows select project")),
-		FileAdj:    key.NewBinding(key.WithKeys("ctrl+a"), key.WithHelp("ctrl+a (answer)", "toggle filing the answer in adj")),
-		PickOption: key.NewBinding(key.WithKeys("1", "2", "3", "4"), key.WithHelp("1-4 (question)", "pick an option; y sends")),
-		FreeAnswer: key.NewBinding(key.WithKeys("t"), key.WithHelp("t (question)", "type a free answer")),
-		Answer:     key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter (answer)", "submit free text")),
-		Refresh:    key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh now")),
-		Help:       key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show or hide this help")),
-		Close:      key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "close run, question, item, decision, help or message")),
-		Quit:       key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
-		Yes:        key.NewBinding(key.WithKeys("y", "Y"), key.WithHelp("y", "confirm")),
-		No:         key.NewBinding(key.WithKeys("n", "N", "enter", "esc"), key.WithHelp("n", "cancel")),
+		Approve:     key.NewBinding(key.WithKeys("a"), key.WithHelp("a", "approve")),
+		ApproveWave: key.NewBinding(key.WithKeys("A", "shift+a"), key.WithHelp("A", "approve wave")),
+		Stop:        key.NewBinding(key.WithKeys("x"), key.WithHelp("x", "stop")),
+		Retry:       key.NewBinding(key.WithKeys("t"), key.WithHelp("t", "retry")),
+		Owner:       key.NewBinding(key.WithKeys("o"), key.WithHelp("o", "answer owner finding")),
+		FileSlice:   key.NewBinding(key.WithKeys("f"), key.WithHelp("f", "file slice")),
+		Fix:         key.NewBinding(key.WithKeys("F", "shift+f"), key.WithHelp("F", "fix round")),
+		MarkCheck:   key.NewBinding(key.WithKeys("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "mark check")),
+		Report:      key.NewBinding(key.WithKeys("p"), key.WithHelp("p", "report")),
+		Renders:     key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "view renders")),
+		Filter:      key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
+		Sidebar:     key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
+		Next:        key.NewBinding(key.WithKeys("]"), key.WithHelp("]", "next project or entry")),
+		Prev:        key.NewBinding(key.WithKeys("["), key.WithHelp("[", "previous project or entry")),
+		TabNext:     key.NewBinding(key.WithKeys("right")),
+		TabPrev:     key.NewBinding(key.WithKeys("left")),
+		NextView:    key.NewBinding(key.WithKeys("tab"), key.WithHelp("tab", "next view")),
+		PrevView:    key.NewBinding(key.WithKeys("shift+tab"), key.WithHelp("shift+tab", "previous view")),
+		Jump:        key.NewBinding(key.WithKeys("0", "1", "2", "3", "4", "5", "6", "7", "8", "9"), key.WithHelp("1-9", "jump to project; 0 Needs you")),
+		RowNext:     key.NewBinding(key.WithKeys("down", "j"), key.WithHelp("j/k", "down/up row; g/G home/end first/last")),
+		RowPrev:     key.NewBinding(key.WithKeys("up", "k"), key.WithHelp("up/k", "previous row")),
+		First:       key.NewBinding(key.WithKeys("g", "home"), key.WithHelp("g/home", "first row")),
+		Last:        key.NewBinding(key.WithKeys("G", "shift+g", "end"), key.WithHelp("G/end", "last row")),
+		PageDown:    key.NewBinding(key.WithKeys("pgdown"), key.WithHelp("pgdown/pgup", "page rows or scroll a pane")),
+		PageUp:      key.NewBinding(key.WithKeys("pgup"), key.WithHelp("pgup", "page up")),
+		ScrollDown:  key.NewBinding(key.WithKeys("ctrl+d"), key.WithHelp("ctrl+d/u", "scroll a pane half a page")),
+		ScrollUp:    key.NewBinding(key.WithKeys("ctrl+u"), key.WithHelp("ctrl+u", "scroll a pane back half a page")),
+		NextGroup:   key.NewBinding(key.WithKeys("}"), key.WithHelp("}/{", "next/previous group, pass or wave")),
+		PrevGroup:   key.NewBinding(key.WithKeys("{"), key.WithHelp("{", "previous group")),
+		Select:      key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter", "open run, question, item or decision; other rows select project")),
+		FileAdj:     key.NewBinding(key.WithKeys("ctrl+a"), key.WithHelp("ctrl+a (answer)", "toggle filing the answer in adj")),
+		PickOption:  key.NewBinding(key.WithKeys("1", "2", "3", "4"), key.WithHelp("1-4 (question)", "pick an option; y sends")),
+		FreeAnswer:  key.NewBinding(key.WithKeys("t"), key.WithHelp("t (question)", "type a free answer")),
+		Answer:      key.NewBinding(key.WithKeys("enter"), key.WithHelp("enter (answer)", "submit free text")),
+		Refresh:     key.NewBinding(key.WithKeys("r"), key.WithHelp("r", "refresh now")),
+		Help:        key.NewBinding(key.WithKeys("?"), key.WithHelp("?", "show or hide this help")),
+		Close:       key.NewBinding(key.WithKeys("esc"), key.WithHelp("esc", "close run, question, item, decision, help or message")),
+		Quit:        key.NewBinding(key.WithKeys("q", "ctrl+c"), key.WithHelp("q", "quit")),
+		Yes:         key.NewBinding(key.WithKeys("y", "Y"), key.WithHelp("y", "confirm")),
+		No:          key.NewBinding(key.WithKeys("n", "N", "enter", "esc"), key.WithHelp("n", "cancel")),
 	}
 }
 
@@ -206,6 +211,7 @@ const (
 	dropLine       = 11
 	dropPage       = 10
 	dropAppr       = 9
+	dropApprWave   = dropAppr // A approve wave drops with a approve, and only shows when the wave has two runs waiting (S222); on an approval card it drops with x stop, just before it (dropStopCard, adj 390)
 	dropClean      = 8
 	dropResume     = 6 // the pane's retry on a paused run: it outlasts the scroll keys (S134)
 	dropWavesEnter = 6 // the Waves enter hint goes before the row keys and the saved-wave keys (adj 270)
@@ -242,6 +248,8 @@ func confirmWord(verb string) string {
 		return "start"
 	case "approve", "stop", "retry", "file", "decide", "park", "unpark", "move":
 		return verb
+	case "approve-wave":
+		return "approve wave"
 	case "cleanup":
 		return "clean up"
 	case "end":
@@ -605,11 +613,24 @@ func (l *hintList) rowActions(m *Model, r ovRow, ok, cleanup bool) {
 		return !refused
 	}
 	appr, stop := dropAppr, dropStop
-	if !cleanup && m.paneCard() != nil {
+	apprWave := dropApprWave
+	onCard := !cleanup && m.paneCard() != nil
+	if onCard {
 		appr, stop = dropApprCard, dropStopCard // stopping a run at its approval card stays one key away (S306)
+		// A approve wave ranks just after x stop (adj 390): it shares x's drop
+		// and stands to its right, so it goes first of the two, and it outlasts
+		// p report and the scroll keys.
+		apprWave = dropStopCard
 	}
 	l.add(appr, offer(allowed("approve"), k.Approve, "a", "approve"))
+	wave := offer(allowed("approve-wave"), k.ApproveWave, "A", "approve wave")
+	if !onCard {
+		l.add(apprWave, wave)
+	}
 	l.add(stop, offer(allowed("stop"), k.Stop, "x", "stop"))
+	if onCard {
+		l.add(apprWave, wave)
+	}
 	retry := dropRetry
 	if !cleanup && r.state == "paused" {
 		retry = dropResume // a pane: the reason no longer carries the CLI form

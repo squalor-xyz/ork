@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-376 items · — 53 · done 288 · retired 35
+376 items · — 52 · done 289 · retired 35
 
 v1.2
 
@@ -56,7 +56,7 @@ v1.2
 | 6 | S192 | S174 later notes: vendor_env masking in --json, error wording, removed-vendor label | S | - |  | discovered from S174 | — |
 | 7 | [S206](slices/S206.md) | Pin and check the adj contract | M | 2 |  | Owner 2026-10-30: adj half split out of S24. Adjudicate S45 has landed (adj v1.0.0 has adj contract; checked 2026-11-07), so the slice is specified against the real interface. · discovered from S24 | — |
 | 8 | [S221](slices/S221.md) | Daemon restart helper (options) | M | 2 |  |  | — |
-| 9 | [S222](slices/S222.md) | Approve a wave in order | M | 2 |  |  | — |
+| 9 | [S222](slices/S222.md) | Approve a wave in order | M | 2 |  |  | done |
 | 10 | S227 | Polish carried from S182, S176, S169, S171 later notes (v1.2) | S | 1 |  |  | — |
 | 11 | S228 | Sub-items dropped from the v1.1 sweeps (S214, S125, S114, S187, S190, S191, S193, S199, S201, S202, S203) | S | 1 |  |  | — |
 | 12 | S230 | S180 and S130 later notes: landing brief header, CRLF test, combined-tab collapse, six-line overflow, golden realism | S | 1 |  | discovered from S180 | — |

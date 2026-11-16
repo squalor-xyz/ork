@@ -95,6 +95,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               finish and commit a passed slice; it stops on an
                               open human check, unless --later-checks marks
                               every open one later first and names each
+  ork approve WAVE-ID         approve each run of a wave that awaits approval,
+                              in start order; stops at the first run that does
+                              not end committed; refused, approving nothing,
+                              while any human check is open
   ork check RUN N [ticked|later|open]
                               mark human check N of a slice that awaits approval
   ork check RUN all later     mark every open human check later; approve nothing

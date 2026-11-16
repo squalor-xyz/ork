@@ -21,6 +21,7 @@ const (
 	MethodAdjAsk       = "adj.ask"       // proposed; params AdjAskParams, result AdjAskResult
 	MethodWaveStart    = "wave.start"    // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
 	MethodWaveStop     = "wave.stop"     // proposed wire; params WaveAction, result WaveResult
+	MethodWaveApprove  = "wave.approve"  // proposed wire (S222); params WaveAction, result WaveApproveResult
 	MethodWaveSuggest  = "wave.suggest"  // proposed wire; params WaveSuggestParams, result slicercli.ParallelPlan
 	MethodWaveOverlap  = "wave.overlap"  // proposed wire; params WaveOverlapParams, result slicercli.Overlap
 	MethodWaveDefine   = "wave.define"   // proposed wire (S215); params WaveDefineParams, result SavedWave
