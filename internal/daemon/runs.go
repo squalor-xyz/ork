@@ -54,6 +54,7 @@ const defaultGlobalCap = 2
 // RunParams are the owner's launch inputs (run.lineup-inputs, run.launch-wire).
 type RunParams struct {
 	StopAfter     string                          `json:"stop_after,omitempty"`
+	chained       bool                            // daemon-assigned: this plan is one sliver of a chain, which is never carved (S359)
 	wave          string                          // daemon-assigned; never accepted from a run.start client
 	waveName      string                          // daemon-assigned from WaveStartParams.Name (S215, *proposed*)
 	Project       string                          `json:"project"`
@@ -101,6 +102,8 @@ type RunPlan struct {
 	Parent            string                          `json:"parent,omitempty"`  // set when the item is a sliver, or the parent of a sliver chain (S62)
 	Split             bool                            `json:"split,omitempty"`   // a lead and parts in one worktree (S61, *proposed*); the lineup then has a part chain
 	Slivers           []SliverPlan                    `json:"slivers,omitempty"` // the chain, in slicer's order; empty for one item
+	carved            []engine.CarvedSliver           // the saved carve report whose filing a start finishes (S359); private to the daemon
+	Carve             bool                            `json:"carve,omitempty"` // a local implementer on a slice above size S: the start has the spec check row carve slivers first (S359, *proposed*)
 	Worktree          string                          `json:"worktree"`
 	Branch            string                          `json:"branch"`
 	CheckCommand      string                          `json:"check_command"`
@@ -776,12 +779,75 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		}
 		plan.Parent = detail.Parent
 	}
+	// A local implementer takes a slice above size S as slivers (S359, *proposed*).
+	if !rec.Sliver && !p.Split && !p.chained && engine.IsLocalRun(plan.Lineup) {
+		chain, err := d.localSliverGate(ctx, p, proj, plan)
+		if err != nil {
+			return nil, err
+		}
+		if chain != nil {
+			return chain, nil
+		}
+	}
 	treeID := p.Item
 	if plan.Parent != "" {
 		treeID = plan.Parent
 	}
 	plan.Worktree, plan.Branch = filledTree(proj, treeID)
 	return plan, nil
+}
+
+// localSliverGate decides what a local implementer may take of a slice that is
+// not a sliver (S359, *proposed*; adj 338, owner decision 2026-11-16, rule u6):
+//   - an effort 3 slice is refused, whatever its size: rule u6 never slivers it;
+//   - a slice above size S that already has slivers is planned as the chain of
+//     those slivers, which is returned;
+//   - a slice above size S with none is marked in the plan to be carved when
+//     the run starts (plan.Carve), and nil is returned;
+//   - any other slice goes whole, and nil is returned.
+//
+// A slice with no size or no effort is not above size S and not effort 3.
+func (d *Daemon) localSliverGate(ctx context.Context, p RunParams, proj registry.Project, plan *RunPlan) (*RunPlan, error) {
+	detail, err := d.runs.deps.Slicer.Show(ctx, proj.Path, p.Item)
+	if err != nil {
+		return nil, err
+	}
+	if detail.Fields.Effort >= 3 {
+		return nil, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("%s is an effort 3 slice. Rule u6 never slivers one, and a local implementer takes only slivers or a slice of size S, so ork does not run it on a local implementer. Pick a cloud implementer for it.", p.Item)}
+	}
+	size := detail.Fields.Size
+	if size == "" && detail.Slice != nil {
+		size = detail.Slice.Size
+	}
+	if size != "M" && size != "L" {
+		return nil, nil
+	}
+	kids, err := d.runs.deps.Slicer.ListChildren(ctx, proj.Path, p.Item)
+	if err != nil {
+		return nil, err
+	}
+	if len(kids) > 0 {
+		// A carve whose filing failed part way saved its report: when it holds
+		// more slivers than are filed, the start files the rest from it, so the
+		// chain does not land the parent with part of its work.
+		saved := d.savedCarve(proj.Name, p.Item)
+		if len(saved) <= len(kids) {
+			p.Slivers = true
+			return d.planSliverChain(ctx, p, proj)
+		}
+		plan.Carve, plan.carved = true, saved
+		if plan.Note != "" {
+			plan.Note += "; "
+		}
+		plan.Note += fmt.Sprintf("%s has %d of the %d slivers of its saved carve filed: the start files the rest from that report, with no new carve, then runs them as one chain", p.Item, len(kids), len(saved))
+		return nil, nil
+	}
+	plan.Carve = true
+	if plan.Note != "" {
+		plan.Note += "; "
+	}
+	plan.Note += fmt.Sprintf("%s is size %s and the implementer is local: the start has the spec check row carve slivers (size S, effort 1) and file them under %s with no confirmation, then runs them as one chain", p.Item, size, p.Item)
+	return nil, nil
 }
 
 // filledTree is the project's worktree and branch patterns with id filled.
@@ -819,6 +885,7 @@ func (d *Daemon) planSliverChain(ctx context.Context, p RunParams, proj registry
 		child := p
 		child.Item = kid.ID
 		child.Slivers = false
+		child.chained = true
 		child.Split = false
 		child.Expected = nil
 		cp, err := d.planRun(ctx, child)
@@ -917,6 +984,22 @@ func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, erro
 			return RunReply{}, errors.New("plan changed; run the command again to confirm it")
 		}
 	}
+	// A local implementer on a slice above size S runs its slivers: the spec
+	// check row carves them and ork files them first, with no confirmation
+	// (S359, *proposed*; adj 337). The plan the owner confirmed was checked
+	// above; the chain is planned again from the filed slivers.
+	carved := ""
+	if plan.Carve {
+		ids, err := d.carveSlivers(ctx, plan.project.Name, p.Item, plan.carved)
+		if err != nil {
+			return RunReply{}, err
+		}
+		carved = fmt.Sprintf("carved %s into %d slivers (%s); ", p.Item, len(ids), strings.Join(ids, ", "))
+		p.Slivers = true
+		if plan, err = d.planRun(ctx, p); err != nil {
+			return RunReply{}, fmt.Errorf("%sthe chain could not be planned: %w", carved, err)
+		}
+	}
 	// The tree is fingerprinted here, outside the locks; admitRun re-checks
 	// under the lock that the run it probed is unchanged.
 	probe := d.probeResume(ctx, plan.effective, p.Item, plan.Worktree)
@@ -948,7 +1031,7 @@ func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, erro
 		}
 		rec = resumed.m.engine.Snapshot()
 	}
-	return RunReply{Record: rec, Message: message}, nil
+	return RunReply{Record: rec, Message: carved + message}, nil
 }
 
 // resumeLaunch is a stopped run an admission resumed: its job started, and

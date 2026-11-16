@@ -41,6 +41,16 @@ var localSystem string
 // LocalSystemPrompt returns ork's own system prompt for a claude-local role.
 func LocalSystemPrompt() string { return localSystem }
 
+// carve is the spec check row's task when a local implementer's slice above
+// size S is cut into slivers (S359, *proposed*). It is not a role: ork briefs
+// it as the spec-check role, and its placeholders are the closed set above.
+//
+//go:embed prompts/carve.md
+var carve string
+
+// CarvePrompt returns the carve prompt, with its placeholders unfilled.
+func CarvePrompt() string { return carve }
+
 // ContractVersion is the version of slicer's relay contract that the prompts
 // are written against. It matches each prompt's first line. ork accepts the
 // versions in AcceptedContracts, which include this one.

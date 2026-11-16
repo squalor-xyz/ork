@@ -403,31 +403,11 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 	if err != nil {
 		return err
 	}
-	d.runs.mu.Lock()
-	if d.runs.closed {
-		d.runs.mu.Unlock()
-		return errors.New("run manager is closed")
+	ctx, end, err := d.beginSpecJob(ctx)
+	if err != nil {
+		return err
 	}
-	// The job runs under the manager's context too, so closing the manager (a
-	// forced daemon stop) cancels it without waiting for the role.
-	jobCtx, cancel := context.WithCancel(d.runs.ctx)
-	d.runs.specSeq++
-	id := d.runs.specSeq
-	d.runs.specCancels[id] = cancel
-	d.runs.specJobs++
-	d.runs.wg.Add(1)
-	d.runs.mu.Unlock()
-	stop := context.AfterFunc(ctx, cancel)
-	defer func() {
-		stop()
-		cancel()
-		d.runs.mu.Lock()
-		delete(d.runs.specCancels, id)
-		d.runs.specJobs--
-		d.runs.mu.Unlock()
-		d.runs.wg.Done()
-	}()
-	ctx = jobCtx
+	defer end()
 	d.runs.specStateMu.Lock()
 	if _, err := d.registered(proj.Name); err != nil {
 		d.runs.specStateMu.Unlock()
@@ -478,6 +458,105 @@ func (d *Daemon) runSpecCheck(ctx context.Context, deps engine.Deps, proj regist
 		d.runs.specs[specKey(proj.Name, v.Item)] = specEntry{fingerprint: res.Specs[v.Item], ready: v.Ready, questions: v.Questions, ownerNeeded: res.OwnerNeeded}
 	}
 	return nil
+}
+
+// beginSpecJob counts a read-only role job as active work, so the daemon does
+// not stop or restart under it. The job runs under the manager's context too,
+// so closing the manager (a forced daemon stop) cancels it without waiting for
+// the role. The caller runs the returned func when the job ends.
+func (d *Daemon) beginSpecJob(ctx context.Context) (context.Context, func(), error) {
+	d.runs.mu.Lock()
+	if d.runs.closed {
+		d.runs.mu.Unlock()
+		return nil, nil, errors.New("run manager is closed")
+	}
+	jobCtx, cancel := context.WithCancel(d.runs.ctx)
+	d.runs.specSeq++
+	id := d.runs.specSeq
+	d.runs.specCancels[id] = cancel
+	d.runs.specJobs++
+	d.runs.wg.Add(1)
+	d.runs.mu.Unlock()
+	stop := context.AfterFunc(ctx, cancel)
+	return jobCtx, func() {
+		stop()
+		cancel()
+		d.runs.mu.Lock()
+		delete(d.runs.specCancels, id)
+		d.runs.specJobs--
+		d.runs.mu.Unlock()
+		d.runs.wg.Done()
+	}, nil
+}
+
+// carveSlivers has the spec check row carve item into slivers and files each
+// under it, with no owner confirmation (S359, *proposed*; adj 337). It returns
+// the filed ids, in the order the slivers run. The role is read-only and a
+// carve that fails files nothing. A filing that fails part way leaves the
+// slivers filed so far under item and the report saved in the item's spec
+// directory: the next start sees that the report has more slivers than are
+// filed (localSliverGate) and passes it here as saved, so the rest is filed
+// from it with no new carve (slicer's add key returns the slivers already
+// filed). The carve holds the spec check lock through the filing: slicer's
+// writes change the project checkout, which a spec check's read-only
+// fingerprint watches.
+func (d *Daemon) carveSlivers(ctx context.Context, project, item string, saved []engine.CarvedSliver) ([]string, error) {
+	d.runs.specMu.Lock()
+	defer d.runs.specMu.Unlock()
+	proj, err := d.registered(project)
+	if err != nil {
+		return nil, err
+	}
+	deps := d.runDeps(proj)
+	var chain []runrec.LineupEntry
+	if len(saved) == 0 {
+		if chain, err = d.specChain(ctx, deps, proj, item); err != nil {
+			return nil, err
+		}
+	}
+	ctx, end, err := d.beginSpecJob(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer end()
+	dir := d.specDir(proj.Name, item)
+	slivers := saved
+	if len(slivers) == 0 {
+		slivers, err = engine.RunCarve(ctx, deps, engine.CarveConfig{Project: proj, Item: item, Lineup: chain, Dir: dir})
+		if err != nil {
+			return nil, fmt.Errorf("carve %s: %w. The carve changes nothing; run it again", item, err)
+		}
+	}
+	if err := os.MkdirAll(filepath.Join(dir, "tmp"), 0o700); err != nil {
+		return nil, fmt.Errorf("carve %s: temp directory: %w", item, err)
+	}
+	var ids []string
+	for i, sl := range slivers {
+		id, err := engine.FileSliver(ctx, deps, proj, item, i+1, sl, filepath.Join(dir, "tmp"))
+		if err != nil {
+			filed := "none"
+			if len(ids) > 0 {
+				filed = strings.Join(ids, ", ")
+			}
+			return nil, fmt.Errorf("carve %s: sliver %d of %d (%s) was not filed: %w. Filed so far: %s; they stay under %s. Run %s again to file the rest from the saved carve report", item, i+1, len(slivers), sl.Title, err, filed, item, item)
+		}
+		ids = append(ids, id)
+	}
+	return ids, nil
+}
+
+// savedCarve is the carve report that RunCarve saved in item's spec directory,
+// or nil when there is none or it does not parse.
+func (d *Daemon) savedCarve(project, item string) []engine.CarvedSliver {
+	text, err := os.ReadFile(filepath.Join(d.specDir(project, item), "carve.md"))
+	if err != nil {
+		return nil
+	}
+	slivers, err := engine.ParseCarve(string(text))
+	if err != nil {
+		return nil
+	}
+	return slivers
 }
 
 // specAnswer writes the owner's answers into the item's spec and marks the

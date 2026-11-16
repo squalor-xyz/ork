@@ -111,8 +111,40 @@ func TestLocalSystemPromptIsEmbeddedAndShort(t *testing.T) {
 	}
 }
 
+// The carve prompt (S359, *proposed*) is the spec check row's task when a local
+// implementer's slice above size S is cut into slivers. It is no role of its
+// own: ork's engine briefs it as the spec-check role.
+func TestCarvePromptCutsASliceIntoSliversReadOnly(t *testing.T) {
+	p := CarvePrompt()
+	first, _, _ := strings.Cut(p, "\n")
+	if first != "Role: carve. Contract: relay v12" {
+		t.Errorf("first line %q", first)
+	}
+	for _, want := range []string{
+		"You are read-only", "## Slivers", "### N. Title", "`Files:`", "`Failing tests:`", "`Check:`",
+		"one or two files", "size S and effort 1", "relay rule u6", "## Owner needed", "{{report_path}}", "{{temp_dir}}", "{{slice_id}}", "{{worktree}}",
+	} {
+		if !strings.Contains(p, want) {
+			t.Errorf("the carve prompt does not say %q", want)
+		}
+	}
+	for _, bad := range []string{"## Slice ID", "`Ready`", "Question:"} {
+		if strings.Contains(p, bad) {
+			t.Errorf("the carve prompt holds the spec check's %q", bad)
+		}
+	}
+	for i, r := range p {
+		if r > 127 {
+			t.Fatalf("the carve prompt holds a non-ASCII character at %d", i)
+		}
+	}
+	if _, err := Prompt("carve"); err == nil {
+		t.Error("carve is not a role, but Prompt returned it")
+	}
+}
+
 // The embedded prompts are exactly the named roles, one file each, plus the
-// local system prompt.
+// local system prompt and the carve prompt.
 func TestEmbeddedFilesMatchNames(t *testing.T) {
 	entries, err := promptFS.ReadDir("prompts")
 	if err != nil {
@@ -122,7 +154,7 @@ func TestEmbeddedFilesMatchNames(t *testing.T) {
 	for _, e := range entries {
 		got = append(got, strings.TrimSuffix(e.Name(), ".md"))
 	}
-	want := append(append([]string(nil), Names()...), "local-system")
+	want := append(append([]string(nil), Names()...), "local-system", "carve")
 	sort.Strings(got)
 	sort.Strings(want)
 	if !reflect.DeepEqual(got, want) {

@@ -574,13 +574,14 @@ func (c Client) RelayAnswerGet(ctx context.Context, root, run, question string) 
 // AddSpec contains the optional fields of an owner-filed item.
 type AddSpec struct {
 	Title, DiscoveredFrom, Key, Size string
+	Parent                           string // the existing item this one is a sliver of (`--parent`, S359)
 	Importance, Urgency, Effort      int
 }
 
 // AddItem files an item, leaving unspecified fields to slicer.
 func (c Client) AddItem(ctx context.Context, w runrec.Writer, root string, spec AddSpec) (*Added, error) {
 	args := []string{"add", strings.TrimLeft(spec.Title, "- ")}
-	for _, field := range []struct{ name, value string }{{"discovered-from", spec.DiscoveredFrom}, {"key", spec.Key}, {"size", spec.Size}} {
+	for _, field := range []struct{ name, value string }{{"discovered-from", spec.DiscoveredFrom}, {"parent", spec.Parent}, {"key", spec.Key}, {"size", spec.Size}} {
 		if field.value != "" {
 			args = append(args, "--"+field.name, field.value)
 		}

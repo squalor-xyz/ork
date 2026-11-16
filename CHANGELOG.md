@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- S359 (*proposed*): a local implementer takes a slice above size S as
+  slivers. The start of such a run has the spec check row carve the slice
+  (read-only, with its own carve prompt), files each sliver with `slicer add
+  --parent PARENT --size S --effort 1` with no owner confirmation (adj 337,
+  338), and runs them as one chain in the parent's worktree (S62). Slivers that
+  already exist are run, not carved again, except that a filing that failed
+  part way is finished from the saved carve report first. An effort 3 slice is refused on a
+  local implementer (rule u6) and a cloud implementer is not slivered. The plan
+  shows `carve`. Docs updated: `docs/design.md`.
+
 - S377 (*proposed*): a landing whose base branch gains a commit after the
   merge-in merges that commit in once and then fast-forwards, instead of
   pausing. The same retry covers ork's own tracking commit when a landing
