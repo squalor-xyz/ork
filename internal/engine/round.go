@@ -438,9 +438,16 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		in.Orientation = string(pack)
 	}
 	progressFile := ""
+	readLog := ""
 	if entry.Vendor == "claude-local" {
 		progressFile = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("progress-%s.md", r.role))
 		in.ProgressFile = progressFile
+		// ork keeps the log of what this local role reads (S371). Each attempt
+		// starts a new one; a fresh session of the attempt keeps adding to it.
+		readLog = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("readlog-%s-%d.txt", r.role, r.n))
+		if err := os.Remove(readLog); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fail("old read log", err)
+		}
 	}
 	if r.role == RoleGate {
 		implementerPerm, err := ResolvePermission(e.proj, RoleImplementer)
@@ -560,7 +567,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			RunID: rec.ID,
 			Role:  r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
-			ProgressFile: progressFile,
+			ProgressFile: progressFile, ReadLog: readLog,
 			OnContext: func(tokens int) {
 				if entry.Vendor == "claude-local" && tokens > localFreshLimit() && contextTokens.CompareAndSwap(0, int64(tokens)) {
 					endSession()
@@ -603,7 +610,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 				instruction = "No progress was saved; start at step 1 and write the note first."
 			}
 		}
-		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. " + instruction + "\n\nProgress note:\n\n" + progress + "\n\nGit diff --stat:\n\n" + stat + "\n"
+		read, err := readLogSection(readLog)
+		if err != nil {
+			runErr = fmt.Errorf("restart read log: %w", err)
+			break
+		}
+		brief = originalBrief + "\n## Fresh local session\n\nThe previous session ended at its context threshold. " + instruction + "\n\nProgress note:\n\n" + progress + "\n\n" + read + "Git diff --stat:\n\n" + stat + "\n"
 		session = ""
 		spentTokens, spentCost, denials = res.Tokens, res.CostUSD, res.Denials
 		approvalDenials = res.ApprovalDenials

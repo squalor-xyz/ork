@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -166,6 +168,53 @@ func TestFailedOwnerActionKeepsTheErrorMarker(t *testing.T) {
 	waitIdle(t, d, rec.ID)
 	if got := wireRunError(t, d.engineRuns(p.Name)[0]); !strings.Contains(got, "slicer note") && !strings.Contains(got, "human checks") {
 		t.Errorf("the failure is not on the run row: %q", got)
+	}
+}
+
+// S371, *proposed*: the approval point records each allowed Read and Grep of a
+// local role in the role's read log, from the call alone.
+func TestApprovalRecordsLocalReads(t *testing.T) {
+	d, req := approvalRun(t)
+	req.ReadLog = filepath.Join(t.TempDir(), "readlog-implementer-1.txt")
+	token, finish := d.registerApproval(context.Background(), req, claude.ApprovalPolicy{Worktree: req.Worktree, Allowlist: []string{"Read", "Grep"}})
+	defer finish()
+	call := func(tool string, input map[string]any) claude.Approval {
+		t.Helper()
+		raw, _ := json.Marshal(input)
+		a, err := approvalRequest(d, context.Background(), ApprovalParams{Session: token, Call: claude.ToolCall{ToolName: tool, ToolInput: raw}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		return a
+	}
+	abs := filepath.Join(req.Worktree, "internal", "a.go")
+	for _, c := range []struct {
+		tool  string
+		input map[string]any
+	}{
+		{"Read", map[string]any{"file_path": abs, "offset": 1, "limit": 500}},
+		{"Read", map[string]any{"file_path": "internal/a.go", "offset": 501, "limit": 100}},
+		{"Read", map[string]any{"file_path": "b.go", "limit": 20}},
+		{"Grep", map[string]any{"pattern": "func Foo", "path": "internal"}},
+	} {
+		if a := call(c.tool, c.input); a.Decision != "allow" {
+			t.Fatalf("%s %v: %+v", c.tool, c.input, a)
+		}
+	}
+	// A denied call read nothing, and only Read and Grep are recorded.
+	if a := call("Read", map[string]any{"file_path": "/etc/passwd"}); a.Decision != "deny" {
+		t.Fatalf("outside read: %+v", a)
+	}
+	if a := call("Read", map[string]any{"file_path": "c.go", "limit": 501}); a.Decision != "deny" {
+		t.Fatalf("over-limit read: %+v", a)
+	}
+	got, err := engine.ReadReadLog(req.ReadLog)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"internal/a.go:1-500", "internal/a.go:501-600", "b.go:1-20", "func Foo in internal"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("read log = %q, want %q", got, want)
 	}
 }
 

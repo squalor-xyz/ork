@@ -14,7 +14,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "*Proposed.* A local model does not keep the note's anchor log while it explores (trials 3 and 5). The approval hook (`internal/agent/claude/pretool.go`, `Evaluate`) sees every Read (path, offset, limit) and Grep (pattern, path) a claude-local role makes, so ork can write the log itself.\n\nOpen owner questions (the implementer asks them with `adj ask` first):\n\n- Q1 (`roles.local-read-log-content`): what goes in the record? (a) *recommended*: one line per Read (`path:start-end`) and per Grep (`pattern in path: N hits`), merged so a range read twice shows once, newest last, at most 80 lines. (b) also the first lines of each Grep's hits.\n- Q2 (`roles.local-read-log-reuse`): what does the restart brief say about it? (a) *recommended*: \"You already read these; do not read them again unless you are about to edit that range.\" (b) list only, no instruction."
+      "body": "*Proposed.* A local model does not keep the note's anchor log while it explores (trials 3 and 5). The approval hook (`internal/agent/claude/pretool.go`, `Evaluate`) sees every Read (path, offset, limit) and Grep (pattern, path) a claude-local role makes, so ork can write the log itself.\n\nOwner decisions (2026-11-16), both answered:\n\n- Q1 (`roles.local-read-log-content`): one line per Read (`path:start-end`) and per Grep (`pattern in path`), calls only, no hit counts (the hook does not see results). Identical entries merge, newest last, at most 80 lines.\n- Q2 (`roles.local-read-log-reuse`): the restart brief says \"You already read these; do not read them again unless you are about to edit that range.\""
     },
     {
       "heading": "Files",
@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. `adj ask` Q1 and Q2 with `--ref` this slice; wait for the owner's answers.\n2. Red tests, then the code.\n3. Docs: `docs/design.md`, `docs/state.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-16): What does ork's read record hold for a Grep, given the hook sees the call but not its result? -> calls only: one line per Read (`path:start-end`) and per Grep (`pattern in path`), with no hit counts. Identical entries merge, newest last, at most 80 lines. Built only from the calls the approval hook already sees. [roles.local-read-log-content]. What does the restart brief say about the read record? -> do not reread: \"You already read these; do not read them again unless you are about to edit that range.\" [roles.local-read-log-reuse]."
+      "body": "1. Q1 and Q2 are answered (see Why); no `adj ask`.\n2. Red tests, then the code.\n3. Docs: `docs/design.md`, `docs/state.md`. CHANGELOG.md: one bullet under `## Unreleased`."
     },
     {
       "heading": "Check",

@@ -250,6 +250,11 @@ func (d *Daemon) approveTool(ctx context.Context, p ApprovalParams) (claude.Appr
 			d.runs.mu.Unlock()
 		}
 	}
+	if answer.Decision == "allow" && s.req.ReadLog != "" {
+		// Best effort: a failed write costs the next session its reminder, not
+		// the call. The call carries all the log has (S371).
+		_ = engine.AppendReadLog(s.req.ReadLog, policy.ReadLogEntry(p.Call))
+	}
 	if answer.Decision == "deny" {
 		d.runs.mu.Lock()
 		s.denials = append(s.denials, runrec.DeniedCommand{Tool: p.Call.ToolName, Command: (claude.Denial{ToolInput: p.Call.ToolInput}).Detail()})

@@ -77,6 +77,13 @@ func TestApprovalDenialTimeoutFallback(t *testing.T) {
 // cannot accidentally pass the fresh-session assertion.
 func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (*Engine, *harness, []Request, outcome) {
 	t.Helper()
+	return freshSessionRoundWith(t, vendor, tokens, nil, stale...)
+}
+
+// freshSessionRoundWith runs onFirst in the first session, as the approval
+// point does while a role works.
+func freshSessionRoundWith(t *testing.T, vendor string, tokens int, onFirst func(Request), stale ...bool) (*Engine, *harness, []Request, outcome) {
+	t.Helper()
 	h := newHarness(t, withDiff)
 	h.cfg.Lineup[RoleImplementer] = []runrec.LineupEntry{{Vendor: vendor, Model: "local", Effort: "medium"}}
 	at := time.Date(2026, 11, 13, 0, 0, 0, 0, time.UTC)
@@ -87,6 +94,9 @@ func freshSessionRound(t *testing.T, vendor string, tokens int, stale ...bool) (
 	hr.script = func(ctx context.Context, req Request) (Result, error) {
 		requests = append(requests, req)
 		if len(requests) == 1 {
+			if onFirst != nil {
+				onFirst(req)
+			}
 			if len(stale) > 0 && stale[0] {
 				if err := os.WriteFile(req.ReportPath, []byte("interrupted report"), 0600); err != nil {
 					t.Fatal(err)
@@ -142,6 +152,120 @@ func TestFreshLocalImplementerReadsNoteInsteadOfAnchors(t *testing.T) {
 	_, fresh, _ := strings.Cut(requests[1].Brief, "## Fresh local session")
 	if !strings.Contains(fresh, "Read the progress note first; do not reread the files listed in its anchor log") {
 		t.Fatal("restart does not use the note instead of rereading anchors")
+	}
+}
+
+func appendReadLog(t *testing.T, req Request, entries ...string) {
+	t.Helper()
+	for _, entry := range entries {
+		if err := AppendReadLog(req.ReadLog, entry); err != nil {
+			t.Fatal(err)
+		}
+	}
+}
+
+// S371, *proposed*: ork keeps the log of what a local role read; the model's
+// own note does not have to.
+func TestRestartBriefCarriesTheReadLog(t *testing.T) {
+	_, _, requests, _ := freshSessionRoundWith(t, "claude-local", 70001, func(req Request) {
+		appendReadLog(t, req, "internal/daemon/runs.go:1-500", "runs_test.go:1-40", "internal/daemon/runs.go:1-500", "func Start in internal")
+	})
+	_, fresh, _ := strings.Cut(requests[1].Brief, "## Fresh local session")
+	note := strings.Index(fresh, "Done: edits saved. Next: run narrow checks.")
+	read := strings.Index(fresh, "## Already read")
+	stat := strings.Index(fresh, "Git diff --stat:")
+	if note < 0 || read < note || stat < read {
+		t.Fatalf("want the progress note, then ## Already read, then the diff stat; got note=%d read=%d stat=%d in %q", note, read, stat, fresh)
+	}
+	section := fresh[read:stat]
+	want := "## Already read\n\nYou already read these; do not read them again unless you are about to edit that range.\n\nruns_test.go:1-40\ninternal/daemon/runs.go:1-500\nfunc Start in internal\n"
+	if strings.TrimSpace(section) != strings.TrimSpace(want) {
+		t.Fatalf("read log section:\n%q\nwant:\n%q", section, want)
+	}
+}
+
+// A new attempt of the round starts a new log: its fresh session has not read
+// what the earlier attempt read.
+func TestNewAttemptStartsANewReadLog(t *testing.T) {
+	e, _, requests, _ := freshSessionRoundWith(t, "claude-local", 70001, func(req Request) { appendReadLog(t, req, "a.go:1-500") })
+	if got, _ := ReadReadLog(requests[0].ReadLog); len(got) != 1 {
+		t.Fatalf("first attempt log = %q", got)
+	}
+	if _, err := e.runRound(context.Background(), round{role: RoleImplementer, n: 1, state: runrec.StateImplement, resumeFrom: []string{RoleImplementer}}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := ReadReadLog(requests[0].ReadLog); len(got) != 0 {
+		t.Fatalf("second attempt kept the first attempt's log: %q", got)
+	}
+}
+
+func TestReadLogMergesRepeatedRanges(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "readlog.txt")
+	for _, entry := range []string{"a.go:1-500", "b.go:1-20", "a.go:1-500", "a.go:501-600"} {
+		if err := AppendReadLog(path, entry); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := ReadReadLog(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := []string{"b.go:1-20", "a.go:1-500", "a.go:501-600"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("merged log = %q, want %q", got, want)
+	}
+}
+
+func TestReadLogKeepsTheNewest80(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "readlog.txt")
+	for i := 1; i <= 100; i++ {
+		if err := AppendReadLog(path, fmt.Sprintf("f%d.go:1-10", i)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	got, err := ReadReadLog(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(got) != 80 || got[0] != "f21.go:1-10" || got[79] != "f100.go:1-10" {
+		t.Fatalf("log has %d entries: %q", len(got), got)
+	}
+}
+
+func TestMissingReadLogIsEmpty(t *testing.T) {
+	got, err := ReadReadLog(filepath.Join(t.TempDir(), "none.txt"))
+	if err != nil || len(got) != 0 {
+		t.Fatalf("missing log = %q, %v", got, err)
+	}
+}
+
+// A local role that read nothing gets no empty section.
+func TestRestartBriefOmitsAnEmptyReadLog(t *testing.T) {
+	_, _, requests, _ := freshSessionRound(t, "claude-local", 70001)
+	if strings.Contains(requests[1].Brief, "## Already read") {
+		t.Fatal("restart brief holds a read log section for a role that read nothing")
+	}
+}
+
+func TestCloudRoleHasNoReadLog(t *testing.T) {
+	var logPath string
+	e, _, requests, out := freshSessionRoundWith(t, "claude", 70001, func(req Request) { logPath = req.ReadLog })
+	if !out.ok || len(requests) != 1 {
+		t.Fatalf("cloud round: requests=%d outcome=%+v", len(requests), out)
+	}
+	if logPath != "" || requests[0].ReadLog != "" {
+		t.Fatalf("cloud request names a read log: %q", requests[0].ReadLog)
+	}
+	if strings.Contains(requests[0].Brief, "Already read") {
+		t.Fatal("cloud brief mentions a read log")
+	}
+	found, err := filepath.Glob(filepath.Join(e.run.Dir(), "tmp", "*readlog*"))
+	if err != nil || len(found) != 0 {
+		t.Fatalf("cloud run dir holds read logs: %q, %v", found, err)
+	}
+	_, _, local, _ := freshSessionRound(t, "claude-local", 70001)
+	if local[0].ReadLog == "" {
+		t.Fatal("local request names no read log")
 	}
 }
 

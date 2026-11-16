@@ -1479,6 +1479,24 @@ separately.
   guards used for reports, refusing links and special files. ork retains the
   note for later sessions; it is a run artifact, outside run.json.
 
+  *Proposed (S371; owner decisions `roles.local-read-log-content` and
+  `roles.local-read-log-reuse`, 2026-11-16):* ork keeps the read log of a
+  claude-local role, because a local model does not keep the note's anchor log
+  (S304 trials 3 and 5). The approval point already sees every call; each
+  allowed Read or Grep is appended to `RUNDIR/tmp/readlog-ROLE-ROUND.txt`, from
+  the call alone. A Read is one line `path:start-end` (a Read without a limit
+  is the whole file from its offset, at most 500 lines); a Grep is one line
+  `pattern in path`, with no hit count, since the hook does not see results.
+  A path in the worktree shows relative to it. A denied call is not recorded.
+  A new attempt of the round removes the old log. The restart brief adds a
+  `## Already read` section after the progress note and before the diff stat:
+  "You already read these; do not read them again unless you are about to edit
+  that range.", then the entries merged. An entry that repeats shows once, at
+  its newest place, newest last, and at most the newest 80 remain. A role that
+  read nothing gets no section. The log does not replace the note; ork's
+  record does not depend on the model. Cloud roles have no read log and their
+  briefs and run directories do not change.
+
   *Proposed (S363):* the claude-local implementer gets a shorter Work variant
   of the shared role prompt. Its resolved tool rules come immediately after the
   role line. Before any reads, it writes the progress note with done, next and
