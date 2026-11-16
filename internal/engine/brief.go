@@ -179,6 +179,24 @@ func BuildBrief(in BriefInput) (string, error) {
 	return strings.TrimRight(b.String(), "\n") + "\n", nil
 }
 
+// specAnswersSection tells the implementer to apply the owner's spec-check
+// answers to the slice's own text as its first step, and the reviewer to
+// confirm that it did (S368). It is nil for the other roles and for the finish
+// step, which edits no spec. The worktree's spec lacks the owner's answers, so
+// a Check line or test name that an answer changed stays stale until then.
+func specAnswersSection(role, slice string, finish bool) *BriefSection {
+	if finish {
+		return nil
+	}
+	switch role {
+	case RoleImplementer:
+		return &BriefSection{Title: "Apply the owner's spec answers first", Body: "As your first step, before any other work, apply every Owner decision above that changes the slice's own text (a Check line, a Failing test name, a Files entry) to the slice. Use `slicer edit " + slice + " --section NAME --text \"Body\" --render --strict`. ork runs a slice's backticked Check entries as commands. A dropped backticked flag is recorded as not a command and is not run, but any other dropped command is still run by ork and can pause the run. List each change under `Spec edits:` in report part 6. If no decision changes the slice's text, change nothing."}
+	case RoleReviewer:
+		return &BriefSection{Title: "Confirm the owner's spec answers were applied", Body: "Check that the slice's text (`slicer show " + slice + "`) matches every Owner decision above that changes it, and that the implementer listed those changes under `Spec edits:`. A decision that changed the slice's text and is missing from it is a [fix]."}
+	}
+	return nil
+}
+
 // deferredSection tells a role about the slicer check problems the newest
 // round check deferred (adj 178, S279). It is nil when that check deferred
 // nothing. The reviewer and the gate name the problems in their reports as
@@ -412,6 +430,10 @@ func sliceChecks(raw, worktree string) []sliceCheck {
 			}
 			if len(row.argv) == 0 {
 				row.notRun = "not run by ork: orchestrator"
+			} else if strings.HasPrefix(row.argv[0], "-") {
+				// A backticked flag, such as a spec answer left in the Check
+				// ("drop the `--yes` flags"), is not a command (S368).
+				row.notRun = "not run by ork: not a command (starts with -): " + row.argv[0]
 			}
 		}
 		rows = append(rows, row)

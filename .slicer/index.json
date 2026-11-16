@@ -20162,10 +20162,25 @@
       "id": "S368",
       "title": "Spec-check answers that change a slice's text are applied before the run",
       "short_title": "Apply spec-check answers that edit the slice",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cd11c251-69f9-401e-a401-7f62c1fd266b",
+          "kind": "",
+          "text": "**2026-11-16** — Spec-check answers that change a slice's text are now applied first: with owner decisions in the run, the implementer brief has an 'Apply the owner's spec answers first' section after 'Owner decisions' and the reviewer brief a confirm section (finish step and other roles get neither). A backticked Check entry that starts with '-' is recorded as 'not run by ork: not a command' and is not run, so it no longer pauses the run. TestImplementerBriefSaysToApplySpecAnswersFirst and TestSliceChecksSkipAFlagOnlyEntry were red before the code and are green; go vet, gofmt, go test ./... (26 packages), slicer check and adj lint pass.",
+          "created_at": "2026-11-16T14:40:40Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20183,7 +20198,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- S368 (*proposed*): tell the implementer to apply spec-check answers that
+  change the slice's text before anything else, and the reviewer to confirm
+  it. A backticked Check entry that starts with `-` is recorded as not a
+  command and not run, so it no longer pauses the run.
+
 - S241 (*proposed*): label fallback roles and show push, UI skills and engine
   paths in CLI launch plans. Check the wave pair rule before the visible spec
   check; print ready results, item names and follow/stop commands. Show push

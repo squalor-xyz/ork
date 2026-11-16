@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/brief.go` (the owner's spec answers in the implementer brief, with \"edit the slice first\")\n- `internal/engine/states.go:978` (`runSliceChecks`: an entry that does not start with a known command)\n- `internal/engine/brief_test.go`\n- `internal/engine/slicechecks_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/brief.go` (`specAnswersSection`: the implementer's \"apply the owner's spec answers first\" and the reviewer's confirm section; `sliceChecks`: an entry whose first word starts with `-` is not a command)\n- `internal/engine/round.go:483` (`runRound`: adds the section after the Owner decisions section)\n- `internal/engine/states.go:978` (`runSliceChecks`: unchanged; it records the row's not-run reason and runs no command)\n- `internal/engine/brief_test.go`\n- `internal/engine/slicechecks_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

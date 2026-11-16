@@ -308,7 +308,12 @@ ork (TUI)  ork status --json (CLI)
    ork settings set --owner NAME`. A filed answer says `filed in adj: KEY (adj
    N)` and its `--why` names the date and the slice. The paragraph is also stored in the item's
    run record and added to every role's brief, because the run's worktree does
-   not have the main checkout's edit. Only ready items, or items whose
+   not have the main checkout's edit. *Proposed (S368):* the implementer's
+   brief also has an "Apply the owner's spec answers first" section after
+   it: as its first step the implementer edits the slice's own text (a Check
+   line, a test name) to match any decision that changes it, with `slicer edit`,
+   and lists the edits under `Spec edits:`. The reviewer's brief has a "Confirm
+   the owner's spec answers were applied" section. Only ready items, or items whose
    questions are all answered, can be approved: the daemon refuses an item
    whose check, against its current spec, left questions open
    on both `wave.start` and `run.start`
@@ -1309,6 +1314,10 @@ entries. Quoted literal arguments are supported; shell operators, expansions
 and paths outside the worktree are left as "not run by ork: orchestrator".
 Relative arguments are resolved against the worktree and cleaned before this
 containment check.
+*Proposed (S368):* a backticked entry whose first word starts with `-` (a
+flag such as `--yes`, left in the Check after a spec answer dropped it) is not
+a command: ork records it as "not run by ork: not a command (starts with -)"
+with the entry named, does not run it, and does not pause the run.
 HUMAN CHECK and `[AFTER LAND]` entries keep their existing workflow.
 Each command has the project's check timeout (ten minutes when unset), an exit
 status and its own log and check row. A nonzero exit, timeout or output on a
