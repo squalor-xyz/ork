@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-367 items · — 59 · done 273 · retired 35
+367 items · — 58 · done 274 · retired 35
 
 v1.2
 
@@ -135,7 +135,7 @@ v1.2
 | 85 | [S364](slices/S364.md) | Local tuning: minimal system prompt, tools, window | M | 2 |  | S304 trial 3 (2026-11-14/15, S248): each claude-local session started at 23.1k-23.3k input tokens before reading anything, ran 61-96 model turns for about 30 tool calls, produced 20k-68k output tokens, and averaged 13-35 s per turn. S360's --disallowedTools cut the first turn only 12% (30.2k to 26.7k, cloud haiku measure). · discovered from S304 | done |
 | 86 | [S365](slices/S365.md) | Orientation pack for a local implementer | M | 2 |  | S304 trial 3 (2026-11-14/15, S248): every claude-local session spent its window reading the same 5-6 files (wire.go, handlers.go, daemoncmds.go, cli.go, daemon_test.go) in 12-220 line ranges and restarted before its first edit. · discovered from S304 | done |
 | 87 | [S366](slices/S366.md) | Orientation pack ignores --implementer override | S | 1 |  | S304 trial 4 (2026-11-15, run ork-20261115-144120-d581, S248): `ork run ork S248 --implementer claude-local:qwen3.8-27b:low --implementer claude:sonnet:high` ran its spec check after S365 landed, but no `orientation.md` was saved, so the local implementer got no `## Orientation` section. The spec check job plans each item with `RunParams{Project, Item}` only (`internal/daemon/speccheck.go:359`), so the planned lineup is the matrix default (cloud) and the item is not in `LocalItems`. · discovered from S365 | done |
-| 88 | [S367](slices/S367.md) | Hook token scan: quoted operators, braces, tilde | S | 1 |  | S304 trial 4 (2026-11-15, run ork-20261115-144120-d581, S248): the claude-local implementer's `go -C WT test -run 'TestA\|TestB\|TestC' -v ./internal/cli` went to the owner as a permission question (owner allowed it). The allowlist rule `Bash(go -C * test*)` did not match because `shellOperators` (`internal/agent/claude/pretool.go:221-229`) counts the `\|` inside single quotes. S356 review (deferred): brace expansion (`/a/{b,c}`) and `~` paths are not split or expanded by the token scan (`internal/agent/claude/pretool.go:92-104`), so a path outside the worktree can pass it. · discovered from S304 | — |
+| 88 | [S367](slices/S367.md) | Hook token scan: quoted operators, braces, tilde | S | 1 |  | S304 trial 4 (2026-11-15, run ork-20261115-144120-d581, S248): the claude-local implementer's `go -C WT test -run 'TestA\|TestB\|TestC' -v ./internal/cli` went to the owner as a permission question (owner allowed it). The allowlist rule `Bash(go -C * test*)` did not match because `shellOperators` (`internal/agent/claude/pretool.go:221-229`) counts the `\|` inside single quotes. S356 review (deferred): brace expansion (`/a/{b,c}`) and `~` paths are not split or expanded by the token scan (`internal/agent/claude/pretool.go:92-104`), so a path outside the worktree can pass it. · discovered from S304 | done |
 
 ---
 
