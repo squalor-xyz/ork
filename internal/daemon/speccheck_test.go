@@ -290,12 +290,16 @@ type specRig struct {
 	fake   *clitest.Fake
 	mu     sync.Mutex
 	report string
-	reqs   []engine.Request
-	others []engine.Request // the rounds of the runs that start afterwards
-	gate   chan struct{}    // when set, the role waits for it
-	root   string
-	draft  string           // the report of the spec-draft role (S179)
-	drafts []engine.Request // the rounds the spec-draft role was asked for
+	carve  string // when set, the answer to a carve round (S359); the other rounds answer report
+	// onCarve runs when a carve round starts, before it answers (S359): a test
+	// uses it to change what `slicer list` finds afterwards.
+	onCarve func()
+	reqs    []engine.Request
+	others  []engine.Request // the rounds of the runs that start afterwards
+	gate    chan struct{}    // when set, the role waits for it
+	root    string
+	draft   string           // the report of the spec-draft role (S179)
+	drafts  []engine.Request // the rounds the spec-draft role was asked for
 }
 
 func (r *specRig) requests() []engine.Request {
@@ -354,7 +358,16 @@ func newSpecRig(t *testing.T, rules string, extra ...clitest.Route) *specRig {
 		rig.mu.Lock()
 		rig.reqs = append(rig.reqs, r)
 		report, gate := rig.report, rig.gate
+		onCarve := rig.onCarve
+		if rig.carve != "" && strings.Contains(r.Brief, "Role: carve.") {
+			report = rig.carve
+		} else {
+			onCarve = nil
+		}
 		rig.mu.Unlock()
+		if onCarve != nil {
+			onCarve()
+		}
 		if gate != nil {
 			select {
 			case <-gate:

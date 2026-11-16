@@ -1619,7 +1619,10 @@ pass for the whole batch (adj 164). `l` stays refused while the check runs, and
 the line goes when the reply comes: the confirmation or the sitting takes its
 place. The daemon asks the role only about specs with no check
 yet or changed since it, so a ready item is asked again at no cost, and one
-whose spec changed is not trusted. A ready item's row says `spec ready` after
+whose spec changed is not trusted. *Proposed (S359, adj 401):* the check sends
+each ticked item's lineup, and an item the check or its answers carved into
+slivers is planned again before the confirmation; its Lineup column adds
+`slivers: N` and `y` starts the plan that lists them. A ready item's row says `spec ready` after
 its title; an item with open questions says `waits on N spec questions`.
 *Proposed (S313):* an item held on an open adj record says `waits on adj N`;
 the sitting opens no question for it, and a question whose decided option
@@ -1946,7 +1949,14 @@ specified = yes and split = no. The TUI calls `run.plan` and shows
 After the plan, it calls `spec.check` for the selected slice and shows
 `spec check: ID, 1m12s; wait for the confirmation` (*proposed*, S264; the clock
 counts from the plan reply and moves with the poll tick) in the launch body
-only, with an empty status line, before confirmation (S184). A ready slice proceeds to confirmation. Questions
+only, with an empty status line, before confirmation (S184). A ready slice proceeds to confirmation. *Proposed
+(S359, adj 401):* the check and the answers carry the slice's lineup, so a local
+implementer's slice above size S is carved into slivers by the check (see
+design.md, Carving for a local implementer). The TUI then calls `run.plan` again
+and confirms the plan that lists them: after `branch:` it shows one wrapped
+line, `slivers: N, one landing of ID: ID, ID, ...`, so a long chain does not
+push the roles and the warnings out of the pane, and `y` starts the whole chain. A lineup edit that makes the implementer local runs the
+check once more, to carve. Questions
 open the same sitting as Waves: `1`-`N` picks an option, `t` types an answer
 and `enter` submits it. The last answer is
 recorded with `spec.answer` before confirmation. `s` or `esc` skips the rest

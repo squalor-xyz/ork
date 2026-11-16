@@ -519,6 +519,57 @@ slice.
   lists each sliver's own rows. The Overview and Running rows name
   the parent and the position (`2 of 4`), and the run tree nests the slivers
   under the parent.
+  - **Carving for a local implementer** (*proposed*, S359; adj 337 roles.local-sliver-carver,
+    adj 338 roles.local-sliver-when; owner decisions 2026-11-16
+    roles.local-sliver-carver-role, roles.local-sliver-ineligible,
+    roles.local-sliver-carve-timing adj 396). A local
+    implementer (the admitted implementer row's vendor is `claude-local`,
+    `codex-local` or `grok-local`) cannot finish a slice above size S, so the
+    spec check that runs before the start slivers it first, with no owner
+    confirmation of the filing. The owner approves once, on the chain plan that
+    lists the filed slivers (adj 388):
+    - A slice of size M or L, with no slivers, is carved. Before the spec check
+      the plan shows `carve` and says so in its note, and files nothing: a plan
+      is a checkpoint. The spec check then carves once the item is Ready: an
+      item with open questions is not carved, because its spec may change when
+      the owner answers, so the answers that make it Ready carve it
+      (`spec.answer` takes the lineup for that). The carve runs the spec check
+      row (r16, its fallbacks too) once, read-only,
+      under the spec check's lock and fingerprint, with ork's own carve prompt
+      (`internal/roles/prompts/carve.md`) in place of the spec check's. The role
+      writes a `## Slivers` report: one `### N. Title` block for each sliver, in
+      run order, with its `Files:` (one or two), `Failing tests:` and `Check:`.
+      ork refuses a report that breaks that shape, or that says under `## Owner
+      needed` that it cannot carve, and files nothing. Otherwise ork files each
+      sliver with `slicer add --parent PARENT --size S --effort 1` and gives it
+      its sections with `slicer promote`. The check reports the filed ids
+      (`carved`). The carve role changes nothing in the checkout; ork's filing is
+      slicer's own write. The carve is not a run record. ork saves the role's
+      report in the slice's spec directory (`carve.md`) before it files.
+    - The command line then plans again, shows the plan that lists the slivers
+      (`slivers: N`, one `sliver I of N` block each, as for `--slivers`) and
+      takes it as the plan the start compares: the owner's one approval is of
+      that chain. The TUI does the same (owner decision adj 401, ui.local-sliver-carve):
+      its spec check and answer calls send the lineup, it plans again after a
+      carve, and the launch confirmation names the slivers (one wrapped `slivers:`
+      line) while the Waves table shows `slivers: N` for the item. A start never carves: a start of a plan that still says `carve`
+      is refused, naming the spec check, because the owner has not seen the
+      chain.
+    - A slice that already has slivers is not carved again: the plan is the chain
+      of those slivers, as `--slivers` plans it. The exception is a
+      filing that failed part way: the saved report then holds more slivers
+      than are filed, so the plan shows `carve` and says it will file the rest,
+      and the next spec check files the rest from the saved report, with no new
+      carve (slicer's add key returns the slivers already filed), before the
+      plan lists the whole chain. The chain never starts short, so it cannot land
+      the parent with part of its work. A filing error names the slivers filed
+      so far.
+    - A slice of size S, or with no size, runs whole. A cloud implementer is not
+      slivered, whatever the size.
+    - An effort 3 slice is refused on a local implementer, whatever its size: rule
+      u6 never slivers one. The refusal tells the owner to pick a cloud
+      implementer. (A slice with no effort is not effort 3.) A split run, which
+      the owner asks for with `--split y`, is not slivered.
   - **Split run** (*proposed*, S61; owner decisions 2026-10-28). A split is
     opt-in per run: `ork run ID --split y` (and the same flag on `ork wave
     start`), or the `s` key on the TUI launch confirm, which flips split and

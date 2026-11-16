@@ -43,6 +43,7 @@ type BriefInput struct {
 	Resumed      bool   // ork resumed the role's earlier session (S256, *proposed*)
 	Tree         string // `git status --porcelain` when the round started; read only for a resumed round
 	Lead         bool   // the implementer's slot is the lead of a split run: the lead's prompt (S61, *proposed*)
+	Carve        bool   // the spec-check role carves the slice into slivers: the carve prompt and its checklist (S359, *proposed*)
 }
 
 // fenceFor returns a code fence longer than any backtick run in text.
@@ -81,6 +82,12 @@ func BuildBrief(in BriefInput) (string, error) {
 	prompt, err := roles.Prompt(promptName)
 	if err != nil {
 		return "", err
+	}
+	if in.Carve {
+		if in.Role != RoleSpecCheck {
+			return "", fmt.Errorf("brief for %s: only the spec-check role carves", in.Role)
+		}
+		prompt = roles.CarvePrompt()
 	}
 	localImplementer := in.Role == RoleImplementer && !in.Lead && in.Vendor == "claude-local"
 	if localImplementer {
@@ -172,7 +179,7 @@ func BuildBrief(in BriefInput) (string, error) {
 			b.WriteString("`slicer check` after the round, outside your sandbox.\n\n")
 		}
 	}
-	if in.Role == RoleGate || in.Role == RoleSpecCheck {
+	if in.Role == RoleGate || (in.Role == RoleSpecCheck && !in.Carve) {
 		b.WriteString(checkCommandSections(in))
 	}
 	b.WriteString(doneWhen(in))
@@ -336,6 +343,12 @@ func doneWhen(in BriefInput) string {
 			add("End with the exact unnumbered heading ## Owner needed and questions or none; give no verdict. Each [later] has proposed Importance, Urgency and Effort scores (1 to 3).")
 			add("Name checks or views you could not run or see, with the verbatim command and denial text when blocked.")
 		case RoleSpecCheck:
+			if in.Carve {
+				add("Give a ## Slivers section with one ### N. Title block per sliver, in the order they run. Each has Files (one or two backticked paths), Failing tests and Check lists. Cut the slice so that every sliver is size S and effort 1; read the files the slice names so that each sliver names real files.")
+				add("End with the exact unnumbered heading ## Owner needed and none beneath it when you carved the slice. When you cannot carve it into slivers of one or two files each, write no ## Slivers section and say why there.")
+				add("State any unreadable slice or blocked read with its verbatim command and denial text; never invent a sliver.")
+				break
+			}
 			add("Give one ## Slice ID section per slice in order, with Ready or structured owner questions. Only an unresolved owner decision is a question; close code-readable gaps yourself and respect settled decisions.")
 			add("End with the exact unnumbered heading ## Owner needed and none beneath it; questions belong under their slices. Use that final section only for a whole-check blocker.")
 			add("State any unreadable slice or blocked read with its verbatim command and denial text; never invent readiness.")

@@ -96,6 +96,7 @@ func TestAddItemArguments(t *testing.T) {
 		{AddSpec{Title: "--Title", Key: "K", Size: "M", Importance: 2, Urgency: 2, Effort: 1}, []string{"add", "Title", "--key", "K", "--size", "M", "--importance", "2", "--urgency", "2", "--effort", "1"}, `{"id":"S184"}`, false},
 		{AddSpec{Title: "Title"}, []string{"add", "Title"}, `{"id":"S184"}`, false},
 		{AddSpec{Title: "Title", DiscoveredFrom: "S12"}, []string{"add", "Title", "--discovered-from", "S12"}, `{"id":"S184"}`, false},
+		{AddSpec{Title: "Title", Parent: "S12", Size: "S", Effort: 1}, []string{"add", "Title", "--parent", "S12", "--size", "S", "--effort", "1"}, `{"id":"S184"}`, false},
 		{AddSpec{Title: "Title"}, []string{"add", "Title"}, `{}`, true},
 	} {
 		c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: tc.output})

@@ -19847,7 +19847,7 @@
       "id": "S359",
       "title": "Local implementer: sliver a larger slice first",
       "short_title": "Sliver a slice for a local implementer",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S62"
@@ -19880,6 +19880,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5fe437ec-e7a9-4039-bca1-7881c40cf105",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: a local implementer on a size M or L slice has the spec check row carve slivers (read-only, own carve prompt), ork files each with slicer add --parent --size S --effort 1 with no confirmation (adj 337, 338), then runs them as one chain in the parent's worktree (S62). Existing slivers run without a new carve; a filing that failed part way is finished from the saved carve report before the chain runs. An effort 3 slice is refused on a local implementer and a cloud implementer is not slivered. go vet, go test ./..., gofmt, slicer check and adj lint were green.",
+          "created_at": "2026-11-16T20:56:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c4604d60-ec86-44da-aaf3-3aa35cd879c2",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: a local implementer on a size M or L slice has the spec check carve slivers once the item is Ready (read-only, own carve prompt); ork files each with slicer add --parent --size S --effort 1 with no confirmation (adj 337, 338). ork run and ork wave start, and the TUI launch and Waves (adj 401), then plan again, list the filed slivers and the owner approves that chain once (adj 388, 396); it runs in the parent's worktree (S62). A start never carves and refuses a plan that still carves. --questions says which slivers it filed. Existing slivers run without a new carve; a filing that failed part way is finished from the saved carve report by the next spec check. An effort 3 slice is refused on a local implementer and a cloud implementer is not slivered. go vet, go test ./..., gofmt, slicer check and adj lint were green.",
+          "created_at": "2026-11-16T21:29:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -19899,7 +19927,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

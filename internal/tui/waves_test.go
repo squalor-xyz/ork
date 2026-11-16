@@ -31,7 +31,9 @@ type wavesLive struct {
 	writes                                    int
 	suggestErr, overlapErr, planErr, startErr error
 	result                                    *daemon.WaveResult
-	checks                                    [][]string // the items of each spec check
+	checks                                    [][]string                                   // the items of each spec check
+	lineups                                   []map[string]map[string][]runrec.LineupEntry // the lineups of each spec check (S359)
+	chain                                     map[string][]daemon.SliverPlan               // the slivers a plan lists, once a check carved them (S359)
 	check                                     func(items []string) (*daemon.SpecCheckResult, error)
 	answers                                   []daemon.SpecAnswerParams
 	answerErr                                 error
@@ -56,8 +58,9 @@ func (l *wavesLive) WaveList(_ context.Context, project string) ([]daemon.SavedW
 }
 
 // SpecCheck answers that every item is ready unless the test sets check.
-func (l *wavesLive) SpecCheck(_ context.Context, project string, items []string) (*daemon.SpecCheckResult, error) {
+func (l *wavesLive) SpecCheck(_ context.Context, project string, items []string, lineups map[string]map[string][]runrec.LineupEntry) (*daemon.SpecCheckResult, error) {
 	l.checks = append(l.checks, append([]string{project}, items...))
+	l.lineups = append(l.lineups, lineups)
 	if l.check != nil {
 		return l.check(items)
 	}
@@ -97,6 +100,9 @@ func (l *wavesLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPlan
 	plan.Lineup["gate"] = append([]runrec.LineupEntry(nil), plan.Lineup["reviewer"]...)
 	if p.Budgets != nil {
 		plan.Budgets = *p.Budgets
+	}
+	if slivers, ok := l.chain[p.Item]; ok {
+		plan.Parent, plan.Slivers = p.Item, slivers
 	}
 	return plan, l.planErr
 }

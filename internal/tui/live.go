@@ -30,7 +30,7 @@ type Live interface {
 	WaveStart(context.Context, daemon.WaveStartParams) (*daemon.WaveResult, error)
 	WaveDefine(context.Context, daemon.WaveDefineParams) (*daemon.SavedWave, error)
 	WaveList(ctx context.Context, project string) ([]daemon.SavedWaveView, error)
-	SpecCheck(ctx context.Context, project string, items []string) (*daemon.SpecCheckResult, error)
+	SpecCheck(ctx context.Context, project string, items []string, lineups map[string]map[string][]runrec.LineupEntry) (*daemon.SpecCheckResult, error)
 	SpecAnswer(context.Context, daemon.SpecAnswerParams) (*daemon.SpecAnswerResult, error)
 	Plan(context.Context, daemon.RunParams) (*daemon.RunPlan, error)
 	Start(context.Context, daemon.RunParams) (runrec.Record, error)

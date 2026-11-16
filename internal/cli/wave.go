@@ -560,8 +560,12 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 	}
 	open := map[string]daemon.SpecItemResult{}
 	missing := map[string]bool{}
+	carved := map[string][]string{}
 	var ready []string
 	for _, r := range check.Items {
+		if len(r.Carved) > 0 {
+			carved[r.Item] = r.Carved
+		}
 		if r.Ready && !r.NoSpec {
 			ready = append(ready, r.Item+" ready")
 		}
@@ -603,6 +607,13 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		}
 	}
 	if flags.questions {
+		// The listing starts nothing, but the check files a local slice's
+		// slivers (S359, *proposed*): say which, since nothing else shows it.
+		for _, item := range params.Items {
+			if ids := carved[item.Item]; len(ids) > 0 {
+				fmt.Fprintf(w, "spec check: carved %s into %d slivers: %s\n", item.Item, len(ids), strings.Join(ids, ", "))
+			}
+		}
 		for _, item := range params.Items {
 			if r, ok := open[item.Item]; ok {
 				if len(r.WaitsOn) > 0 {
@@ -686,20 +697,60 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 			}
 		}
 		var out daemon.SpecAnswerResult
-		p := daemon.SpecAnswerParams{Project: item.Project, Item: r.Item, Answers: answers, Adj: adj, By: by}
+		p := daemon.SpecAnswerParams{Project: item.Project, Item: r.Item, Answers: answers, Adj: adj, By: by, Lineup: item.Lineup}
 		if code := a.call(ctx, o, daemon.MethodSpecAnswer, p, &out); code != ExitOK {
 			return held, noSpec, code
 		}
 		for _, n := range out.Notices {
 			fmt.Fprintln(w, n)
 		}
+		if len(out.Carved) > 0 {
+			carved[r.Item] = out.Carved
+		}
 		for i, answer := range answers {
 			flags.data.Answered = append(flags.data.Answered, specAccepted{Item: r.Item, Key: questionKey(r.Questions[i], i), Answer: answer})
 		}
 		kept = append(kept, item)
 	}
+	if code := a.replanCarved(ctx, o, w, kept, carved); code != ExitOK {
+		return held, noSpec, code
+	}
 	params.Items = kept
 	return held, noSpec, ExitOK
+}
+
+// replanCarved plans again each kept item whose spec check filed slivers, shows
+// the plan that now lists them, and takes it as the plan the item's start
+// compares (S359, *proposed*; owner decision 2026-11-16, adj 396). The plan the
+// owner saw before the check showed no slivers, and the start refuses a plan
+// that changed, so this is the plan the owner confirms.
+func (a *App) replanCarved(ctx context.Context, o *output, w io.Writer, items []daemon.RunParams, carved map[string][]string) int {
+	var show func(daemon.RunPlan) daemon.RunPlan
+	for i := range items {
+		ids := carved[items[i].Item]
+		if len(ids) == 0 {
+			continue
+		}
+		var plan daemon.RunPlan
+		p := items[i]
+		p.Expected = nil
+		if code := a.call(ctx, o, daemon.MethodRunPlan, p, &plan); code != ExitOK {
+			return code
+		}
+		fmt.Fprintf(w, "spec check: carved %s into %d slivers: %s\n", p.Item, len(ids), strings.Join(ids, ", "))
+		if o.json {
+			if code := (&output{stdout: o.stderr, stderr: o.stderr, json: true}).printJSON(plan); code != ExitOK {
+				return code
+			}
+		} else {
+			if show == nil {
+				show = a.planSettings(ctx, o, p.Project)
+			}
+			printRunPlan(o.stdout, noCheckPlanText(show(plan), p.AllowNoCheck), p.Budgets != nil)
+		}
+		items[i].Expected = &plan
+	}
+	return ExitOK
 }
 
 func plural(n int, noun string) string {
