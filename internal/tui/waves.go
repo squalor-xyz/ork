@@ -503,7 +503,7 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 		return m.savedListBody(width), nil
 	}
 	if w != nil && w.sitting != nil {
-		return m.sittingParts(&w.specState, width)
+		return m.sittingParts(&w.specState, width, m.specCheckBodyLines(width))
 	}
 	add := func(text string) {
 		for _, line := range wrapText(text, max(width-2, 1)) {

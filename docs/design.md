@@ -1553,7 +1553,8 @@ separately.
   (S304 trials 3 and 5). The approval point already sees every call; each
   allowed Read or Grep is appended to `RUNDIR/tmp/readlog-ROLE-ROUND.txt`, from
   the call alone. A Read is one line `path:start-end` (a Read without a limit
-  is the whole file from its offset, at most 500 lines); a Grep is one line
+  is the whole file from its offset, at most the role's Read cap: 150 lines
+  for the implementer and 500 for a read-only role); a Grep is one line
   `pattern in path`, with no hit count, since the hook does not see results.
   A path in the worktree shows relative to it. A denied call is not recorded.
   A new attempt of the round removes the old log. The restart brief adds a
@@ -1866,9 +1867,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `fixtures/<local-vendor>/`, and run-tree costs say `local` without dollars.
   New endpoint-error classification remains S303 and quality measurements
   remain S304.
-  Local briefs add targeted-read guidance (adj 308): use offset and limit or
-  grep first, never read a whole file over about 500 lines, and keep reasoning
-  brief. Cloud briefs omit that paragraph.
+  Local briefs add targeted-read guidance (adj 308; *proposed* S372,
+  roles.local-read-cap): use offset and limit or grep first, never read a
+  whole file over about 150 lines for the implementer (Grep for the symbol
+  and Read 150 lines around it) or about 500 lines for a read-only role, and
+  keep reasoning brief. Cloud briefs omit that paragraph.
 - **Vendor slots and the vendor-out memory** (S169, *proposed*; owner decisions
   2026-10-29). One `engine.Vendors` value in `engine.Deps` is shared by every
   run of the daemon, as `Landings` is. It is in memory only, so a daemon
@@ -1989,9 +1992,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   backslash retains its preceding token for this check. If no token denies,
   unquoted leading tilde (also after `=`), brace forms with a comma and
   incomplete quoting ask the owner instead of passing as unexpanded paths.
-  A supplied `Read` limit must be at most 500. An unbounded read
-  of a file with more than 500 lines is denied with its count and guidance
-  to Grep first and Read a range. Bounded reads may start beyond line 500.
+  A read-only role's supplied `Read` limit must be at most 500. An unbounded
+  read of a file with more than 500 lines is denied with its count and
+  guidance to Grep first and Read a range. Bounded reads may start beyond
+  line 500. *Proposed (S372, roles.local-read-cap):* the implementer's cap
+  is 150 lines. A larger limit, or an unbounded read of a longer file, is
+  denied with its count and guidance to Grep for the symbol and Read 150
+  lines around it. Bounded reads may start beyond line 150.
   A missing file passes the line-count check so Claude's Read can report
   its absence; path boundaries and the role allowlist still apply.
   An allowlisted call proceeds. Bash wildcards cannot introduce shell

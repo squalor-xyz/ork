@@ -30,7 +30,16 @@ type ApprovalPolicy struct {
 	Worktree, Scratch, AddDir, ToolResults string
 	TempDir, ReportFile                    string
 	Allowlist                              []string
+	// Role selects the Read cap (roles.local-read-cap, *proposed*). The
+	// implementer is capped at 150 lines. Every other role, including an
+	// empty role, keeps the 500-line cap.
+	Role string
 }
+
+const (
+	implementerReadCap = 150
+	readOnlyReadCap    = 500
+)
 
 // ApprovalDetail is the whole tool input of a call, for the owner (S370): the
 // command of a Bash call, else the file path of a file tool, else the compact
@@ -121,8 +130,9 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 		}
 	}
 	if call.ToolName == "Read" {
-		if in.Limit != nil && (*in.Limit < 1 || *in.Limit > 500) {
-			return deny("Read limit must be 1 to 500; Grep first, then Read with offset and limit (at most 500 lines)")
+		capLines := p.readCap()
+		if in.Limit != nil && (*in.Limit < 1 || *in.Limit > capLines) {
+			return deny(p.readLimitDenial())
 		}
 		if in.Offset != nil && *in.Offset < 1 {
 			return deny("Read offset must be positive")
@@ -136,8 +146,8 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 			if err != nil && !os.IsNotExist(err) {
 				return deny("cannot count Read lines: " + err.Error())
 			}
-			if n > 500 {
-				return deny(fmt.Sprintf("this file has %d lines; Grep first, then Read with offset and limit (at most 500 lines)", n))
+			if n > capLines {
+				return deny(p.unboundedReadDenial(n))
 			}
 		}
 	}
@@ -159,6 +169,29 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 		}
 	}
 	return Approval{"ask", "call is not covered by the role allowlist"}
+}
+
+// readCap is the most lines one Read may take. The implementer gets the
+// smaller cap so one session spends less of its window on one file.
+func (p ApprovalPolicy) readCap() int {
+	if p.Role == "implementer" {
+		return implementerReadCap
+	}
+	return readOnlyReadCap
+}
+
+func (p ApprovalPolicy) readLimitDenial() string {
+	if p.Role == "implementer" {
+		return fmt.Sprintf("Read limit must be 1 to %d; Grep for the symbol and Read %d lines around it", implementerReadCap, implementerReadCap)
+	}
+	return fmt.Sprintf("Read limit must be 1 to %d; Grep first, then Read with offset and limit (at most %d lines)", readOnlyReadCap, readOnlyReadCap)
+}
+
+func (p ApprovalPolicy) unboundedReadDenial(n int) string {
+	if p.Role == "implementer" {
+		return fmt.Sprintf("this file has %d lines; Grep for the symbol and Read %d lines around it", n, implementerReadCap)
+	}
+	return fmt.Sprintf("this file has %d lines; Grep first, then Read with offset and limit (at most %d lines)", n, readOnlyReadCap)
 }
 
 // ReadLogEntry is one line for a local role's read log (S371, *proposed*), built
@@ -207,8 +240,8 @@ func (p ApprovalPolicy) ReadLogEntry(call ToolCall) string {
 	if in.Limit != nil {
 		return fmt.Sprintf("%s:%d-%d", path, start, start+*in.Limit-1)
 	}
-	// Without a limit Evaluate allows only a file of at most 500 lines: the
-	// whole file from the offset.
+	// Without a limit Evaluate allows only a file of at most the role's Read
+	// cap: the whole file from the offset.
 	abs := in.FilePath
 	if !filepath.IsAbs(abs) {
 		abs = filepath.Join(p.Worktree, abs)

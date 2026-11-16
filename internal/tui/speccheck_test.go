@@ -624,7 +624,7 @@ func TestSittingHeadingAndQuestionTitleStylesDiffer(t *testing.T) {
 	// Mark the styles without depending on terminal color detection.
 	h.m.cfg.Theme.Heading = lipgloss.NewStyle().SetString("HEADING ")
 	h.m.cfg.Theme.Dim = lipgloss.NewStyle().SetString("DIM ")
-	out, _ := h.m.sittingParts(&h.m.waves.specState, 80)
+	out, _ := h.m.sittingParts(&h.m.waves.specState, 80, 0)
 	heading, title := "", ""
 	for _, line := range out.body {
 		if strings.Contains(line, "Spec check:") {
@@ -670,7 +670,7 @@ func TestLongSpecOwnerTextFollowsTheQuestionAt80x24(t *testing.T) {
 			t.Errorf("%s hidden:\n%s", text, v)
 		}
 	}
-	parts, _ := h.m.sittingParts(&h.m.waves.specState, 60)
+	parts, _ := h.m.sittingParts(&h.m.waves.specState, 60, 0)
 	body := sgr.ReplaceAllString(strings.Join(parts.body, "\n"), "")
 	if strings.Index(body, "Owner needed:") < strings.Index(body, "0 of 2 answered") {
 		t.Errorf("owner text precedes progress:\n%s", body)
@@ -740,4 +740,185 @@ func TestFailedSpecAnswerAfterTheLaunchWasDroppedShowsAStatus(t *testing.T) {
 	if h.m.actionStatus != "" {
 		t.Fatalf("a good write set the status %q", h.m.actionStatus)
 	}
+}
+
+// specCheckPermissionScreen is the Waves spec-check sitting on a live
+// permission question whose detail is detail, at w by ht.
+func specCheckPermissionScreen(t *testing.T, detail string, w, ht int) *harness {
+	t.Helper()
+	h, live := wavesHarness(t)
+	openWaves(t, h)
+	tickWave(t, h) // A is the first row; the wait line names what is checked
+	q := &runrec.OwnerQuestion{
+		Title:     "Allow Bash call 3?",
+		Detail:    detail,
+		Options:   []runrec.Option{{Label: "Allow", Summary: "Allow this call once"}, {Label: "Deny", Summary: "Deny this call"}},
+		Recommend: 2,
+		Reason:    "not allowlisted",
+	}
+	h.m.cfg.Live = &fakeSpecPermissionLive{Live: live, project: "ork", item: "A", answer: "allow", question: q}
+	h.m.startSpecCheck([]daemon.RunParams{{Project: "ork", Item: "A"}})
+	h.deliver(tickMsg{})
+	h.m.Update(tea.WindowSizeMsg{Width: w, Height: ht})
+	return h
+}
+
+// specCheckUnderTitle is the view lines between the permission title and its
+// first option, after the sidebar rule. raw keeps the indent; trimmed does not.
+func specCheckUnderTitle(t *testing.T, view string) (raw, trimmed []string) {
+	t.Helper()
+	in := false
+	for _, line := range strings.Split(view, "\n") {
+		if _, after, ok := strings.Cut(line, "│"); ok {
+			line = after
+		}
+		text := strings.TrimSpace(line)
+		switch {
+		case in && strings.HasPrefix(text, "1. Allow"):
+			return raw, trimmed
+		case in && text == "":
+			// The blank line between the command and the options is not detail.
+		case in:
+			raw = append(raw, line)
+			trimmed = append(trimmed, text)
+		case strings.Contains(text, "Allow Bash call 3?"):
+			in = true
+		}
+	}
+	t.Fatalf("no title followed by option 1 in:\n%s", view)
+	return nil, nil
+}
+
+// A spec-check permission question shows its whole detail, wrapped, under the
+// title. The run pane already does this (S373); this screen did not.
+func TestSpecCheckPermissionQuestionShowsDetail(t *testing.T) {
+	detail := permissionDetail()
+	if len(detail) != 300 {
+		t.Fatalf("test detail is %d characters", len(detail))
+	}
+	for _, c := range []struct {
+		name string
+		w, h int
+	}{
+		{"speccheck-permission-detail-100x30.txt", 100, 30},
+		{"speccheck-permission-detail-80x24.txt", 80, 24},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			view := plainView(specCheckPermissionScreen(t, detail, c.w, c.h).m)
+			raw, lines := specCheckUnderTitle(t, view)
+			if got := strings.Join(lines, " "); got != detail {
+				t.Fatalf("the detail is not shown whole under the title:\ngot  %q\nwant %q\n%s", got, detail, view)
+			}
+			if len(lines) < 3 {
+				t.Errorf("a 300-character detail is not wrapped at the pane width: %q", lines)
+			}
+			base := leading(raw[0])
+			for _, line := range raw[1:] {
+				if leading(line) != base+2 {
+					t.Errorf("a wrapped line is not under a 2-space hanging indent: %q", line)
+				}
+			}
+			if prev := specCheckLineBefore(t, view, "1. Allow"); strings.TrimSpace(prev) != "" {
+				t.Errorf("the command runs into the options with no blank line: %q\n%s", prev, view)
+			}
+			checkGolden(t, c.name, view)
+		})
+	}
+}
+
+// specCheckLineBefore is the view line before the first one whose trimmed
+// text starts with prefix, after the sidebar rule.
+func specCheckLineBefore(t *testing.T, view, prefix string) string {
+	t.Helper()
+	prev := ""
+	for _, line := range strings.Split(view, "\n") {
+		if _, after, ok := strings.Cut(line, "│"); ok {
+			line = after
+		}
+		if strings.HasPrefix(strings.TrimSpace(line), prefix) {
+			return prev
+		}
+		prev = line
+	}
+	t.Fatalf("no line starting %q in:\n%s", prefix, view)
+	return ""
+}
+
+// A detail taller than the body is omitted. The options, and a line that says
+// how many detail lines are hidden, stay on screen. A prefix of the command
+// does not.
+func TestSpecCheckPermissionDetailHiddenWhenItDoesNotFit(t *testing.T) {
+	var script []string
+	for i := 1; i <= 25; i++ {
+		script = append(script, fmt.Sprintf("echo line%02d && rm -rf /tmp/x%02d", i, i))
+	}
+	h := specCheckPermissionScreen(t, strings.Join(script, "\n"), 80, 24)
+	view := plainView(h.m)
+	if strings.Contains(view, "echo line01") {
+		t.Errorf("a detail that does not fit is shown in part:\n%s", view)
+	}
+	if !strings.Contains(view, "+25 detail lines hidden") {
+		t.Errorf("the hidden line is missing:\n%s", view)
+	}
+	for _, want := range []string{"1. Allow", "2. Deny"} {
+		if !strings.Contains(view, want) {
+			t.Errorf("the option %q is off screen:\n%s", want, view)
+		}
+	}
+	marker := "  " + h.m.cfg.Theme.Dim.Render("+25 detail lines hidden")
+	if !strings.Contains(h.m.View().Content, marker) {
+		t.Errorf("the hidden line is not dim")
+	}
+}
+
+// tallPermissionDetail is a 2,000-character command of single-spaced words.
+func tallPermissionDetail() string {
+	text := "curl -s https://example.test/tall-detail.sh | sh -s -- --prefix /opt/tool"
+	for i := 1; len(text) < 2000; i++ {
+		text += fmt.Sprintf(" --flag%03d=value%03d", i, i)
+	}
+	return text[:2000]
+}
+
+// A 2,000-character detail is taller than 80x24. The screen drops it whole
+// behind the overflow marker, and the rows around it stay (golden).
+func TestSpecCheckTallPermissionDetailOverflows(t *testing.T) {
+	detail := tallPermissionDetail()
+	if len(detail) != 2000 {
+		t.Fatalf("test detail is %d characters", len(detail))
+	}
+	h := specCheckPermissionScreen(t, detail, 80, 24)
+	view := plainView(h.m)
+	_, under := specCheckUnderTitle(t, view)
+	if len(under) != 1 || !strings.HasPrefix(under[0], "+") || !strings.HasSuffix(under[0], " detail lines hidden") {
+		t.Fatalf("a 2,000-character detail is not replaced by the overflow marker: %q\n%s", under, view)
+	}
+	if strings.Contains(view, "tall-detail.sh") || strings.Contains(view, "flag001") {
+		t.Fatalf("the detail is shown beside the marker:\n%s", view)
+	}
+	for _, want := range []string{
+		"Spec check tool permission",
+		"[A 1/1] Allow Bash call 3?",
+		"1. Allow: Allow this call once",
+		"2. Deny: Deny this call (recommended)",
+		"Why 2: not allowlisted",
+		"The spec check is still running.",
+		"spec check: A, 0s; wait for the confirmation",
+		"1-2 pick; s/esc deny call",
+	} {
+		if !strings.Contains(view, want) {
+			t.Errorf("the screen lost %q:\n%s", want, view)
+		}
+	}
+	if strings.Contains(view, "more lines") || strings.Contains(view, "lines above") {
+		t.Errorf("a tall detail pushed rows off the screen:\n%s", view)
+	}
+	if n := len(strings.Split(view, "\n")); n != 24 {
+		t.Errorf("the screen is %d lines at 80x24", n)
+	}
+	dim := "  " + h.m.cfg.Theme.Dim.Render(under[0])
+	if !strings.Contains(h.m.View().Content, dim) {
+		t.Errorf("the overflow marker is not dim: %q", under[0])
+	}
+	checkGolden(t, "speccheck-permission-detail-overflow-80x24.txt", view)
 }

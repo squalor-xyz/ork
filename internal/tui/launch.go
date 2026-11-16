@@ -458,7 +458,7 @@ func (m *Model) launchView(w int) overviewView {
 	out := overviewView{sel: -1}
 	th, l := m.cfg.Theme, m.launch
 	if l.sitting != nil {
-		out, _ := m.sittingParts(&l.specState, w)
+		out, _ := m.sittingParts(&l.specState, w, m.specCheckBodyLines(w))
 		return out
 	}
 	if l.stage == launchEdit {

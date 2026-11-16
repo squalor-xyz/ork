@@ -1431,6 +1431,14 @@ because the role and round were already running. The CLI equivalents are
 Before a run exists, Roadmap and Waves show a live permission question in
 their pending spec-check sitting. The heading is `Spec check tool permission`,
 with the same tool preview, Allow/Deny options, recommendation and reason.
+*Proposed (S375, adj 377):* that screen shows the question's whole `detail`
+under the title, the same way the run pane does: every token, wrapped at the
+pane width, a tab as four spaces, and a wrapped line under a 2-space hanging
+indent. A blank line separates the command from the Allow and Deny options.
+When the wrapped command does not leave room for the options, the Why line
+and the footer, the screen omits the command and shows one dim line
+`+N detail lines hidden` (`line` when one line is hidden). It does not name
+a run; this screen is before a run exists. The options stay on screen.
 Here `1` or `2` sends the answer immediately; `s/esc deny call` denies it.
 There is no free-text action. The footer says `The spec check is still
 running.` or `Sending permission answer`; while sending, only `ctrl+c quit`

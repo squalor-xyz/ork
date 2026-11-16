@@ -119,7 +119,11 @@ func BuildBrief(in BriefInput) (string, error) {
 		fmt.Fprintf(&b, "## Local progress note\n\nThe sole exception to the read-only and workspace rules above is `%s`. After each step, replace this short note with what is done, what is next, and any open problems. Update the note with Edit or Write. For a read-only role, this note is the only file it may change. ork may end this session when its context passes 70,000 tokens and start a fresh session with the same brief and this note. Keep the note current.\n\n", in.ProgressFile)
 	}
 	if IsLocalVendor(in.Vendor) {
-		b.WriteString("## Local role\n\nRead files in targeted ranges (offset and limit), or grep first. Never read a whole file over about 500 lines. Keep reasoning brief.\n\n")
+		if in.Role == RoleImplementer {
+			b.WriteString("## Local role\n\nRead files in targeted ranges (offset and limit), or grep first. Never read a whole file over about 150 lines; Grep for the symbol and Read 150 lines around it. Keep reasoning brief.\n\n")
+		} else {
+			b.WriteString("## Local role\n\nRead files in targeted ranges (offset and limit), or grep first. Never read a whole file over about 500 lines. Keep reasoning brief.\n\n")
+		}
 	}
 	if len(in.EnvLines) > 0 {
 		b.WriteString("## Environment\n\n")

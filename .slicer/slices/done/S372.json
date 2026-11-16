@@ -1,0 +1,42 @@
+{
+  "id": "S372",
+  "title": "Local roles: a smaller read cap",
+  "lead": [
+    "*Proposed.* Owner direction 2026-11-16 (relay session 8d711f67, interactive question, \"Smaller reads\"): a local role's Read cap is lower than 500 lines, so one session spends less of its window on one big file and greps first.",
+    "Owner decision 2026-11-16 (`roles.local-read-cap`): the implementer is capped at 150 lines with the Grep-and-window denial, and read-only roles stay at 500 with today's denial."
+  ],
+  "depends_note": null,
+  "findings_note": "S304 trial 5 (2026-11-16, run ork-20261116-012801-28aa, S246): sessions restarted at 70k after 28-34 turns; most of the window was 500-line chunks of internal/daemon/runs.go (over 2,000 lines). The approval point caps a local Read at 500 lines (`internal/agent/claude/pretool.go:117-133`, S356).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": ""
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/pretool.go:132-195` (the cap and its denial text)\n- `internal/agent/claude/pretool_test.go`\n- `internal/roles/prompts/local-system.md` (the stated limit)\n- `internal/engine/brief.go` (the local tool rules, if they name 500)\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestEvaluateLocalReadCap`: an implementer Read with a limit over 150 is denied with the Grep-for-the-symbol and Read-150-lines-around-it text; a limit of 150 is allowed. A read-only role's limit of 500 is allowed, and 501 is denied with today's 500-line text.\n- `TestEvaluateUnlimitedReadOfABigFile`: an implementer Read with no limit of a file over 150 lines is denied. A read-only role's Read with no limit is denied only when the file is over 500 lines.\n- `TestLocalSystemPromptNamesTheCap`: the embedded local system prompt states 150 for the implementer and 500 for a read-only role."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. The cap is decided (`roles.local-read-cap`): the implementer is 150 lines with the Grep-and-window denial, and read-only roles stay at 500 with today's denial.\n2. Red tests, then the cap and the texts.\n3. Docs: `docs/design.md`. CHANGELOG.md: one bullet under `## Unreleased`.\n\nOwner decisions (2026-11-16): What line cap replaces the 500-line local Read limit? -> split: the implementer is capped at 150 lines with the Grep-and-window denial, and read-only roles stay at 500 with today's denial [roles.local-read-cap]."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
