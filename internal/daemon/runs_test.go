@@ -63,6 +63,8 @@ func runDaemonIn(t *testing.T, root string, runner roundRunner, routes ...clites
 		clitest.Route{Tool: "slicer", Args: []string{"relay-roles"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"Unknown","vendor":"Claude","model":"wrong"},"alternatives":[{"agent":"Claude Code","vendor":"Acme","model":"sonnet","reasoning":"high"},{"agent":"Codex","vendor":"OpenAI","model":"gpt","reasoning":"high"}]},{"role":"reviewer","row":{"agent":"Claude Code","vendor":"Claude","model":"opus","reasoning":"medium"}},{"role":"architect","row":null,"alternatives":[],"selected_by":"unmatched"}]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", p.Path}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v12.json")},
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: `{"title":"Title","slice":{"sections":[{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`},
+		// slicer has no check_command here, so the registry's stays in force (S246).
+		slicerCheckRoute(p.Path, ""),
 		clitest.Route{Tool: "slicer", Args: []string{"config"}, Prefix: true, Stdout: `{"value":"done"}`},
 		clitest.Route{Tool: "slicer", Args: []string{"check"}, Prefix: true, Stdout: `{"ok":true}`},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "begin"}, Prefix: true, Stdout: `{"run":{"id":"relay-1"}}`},
@@ -155,6 +157,131 @@ func TestRunPlanKeepsEveryRowWithAnAdapter(t *testing.T) {
 	runs, err := store.List()
 	if err != nil || len(runs) != 0 {
 		t.Fatalf("plan created run: %v %v", runs, err)
+	}
+}
+
+// slicerCheckRoute makes `slicer config check_command --json --root PATH`
+// answer with value (S246).
+func slicerCheckRoute(path, value string) clitest.Route {
+	return clitest.Route{Tool: "slicer", Args: []string{"config", "check_command", "--json", "--root", path}, Stdout: fmt.Sprintf(`{"key":"check_command","value":%q}`, value)}
+}
+
+const planParams = `{"project":"p","item":"S1","well_specified":true,"split":false}`
+
+func planOf(t *testing.T, d *Daemon) RunPlan {
+	t.Helper()
+	var plan RunPlan
+	if err := json.Unmarshal(request(t, d, "run.plan", planParams), &plan); err != nil {
+		t.Fatal(err)
+	}
+	return plan
+}
+
+func TestRunPlanPrefersSlicersCheckCommand(t *testing.T) {
+	root := t.TempDir()
+	d, _, p := runDaemonIn(t, root, nil, slicerCheckRoute(filepath.Join(root, "p"), "make test"))
+	plan, err := d.planRun(context.Background(), RunParams{Project: "p", Item: "S1", WellSpecified: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plan.CheckCommand != "make test" || plan.CheckSource != "slicer" {
+		t.Fatalf("plan check = %q from %q, want make test from slicer (registry has %q)", plan.CheckCommand, plan.CheckSource, p.CheckCommand)
+	}
+	if plan.project.CheckCommand != "go test ./..." {
+		t.Fatalf("plan.project must stay the raw registry entry: %q", plan.project.CheckCommand)
+	}
+	if got := plan.Permissions[engine.RoleImplementer].Allow; !slices.Contains(got, "Bash(make test*)") {
+		t.Fatalf("the implementer allowlist lacks the effective command: %v", got)
+	}
+}
+
+func TestRunPlanFallsBackToTheRegistryCheckCommand(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	plan := planOf(t, d)
+	if plan.CheckCommand != "go test ./..." || plan.CheckSource != "registry" {
+		t.Fatalf("slicer empty: plan check = %q from %q", plan.CheckCommand, plan.CheckSource)
+	}
+	request(t, d, "projects.set", `{"name":"p","check_command":""}`)
+	plan = planOf(t, d)
+	if plan.CheckCommand != "" || plan.CheckSource != "none" {
+		t.Fatalf("both empty: plan check = %q from %q", plan.CheckCommand, plan.CheckSource)
+	}
+}
+
+func TestRunPlanCheckCommandReadFailureKeepsTheRegistry(t *testing.T) {
+	root := t.TempDir()
+	d, _, _ := runDaemonIn(t, root, nil, clitest.Route{Tool: "slicer", Args: []string{"config", "check_command", "--json", "--root", filepath.Join(root, "p")}, Stderr: "no config", Exit: 3})
+	plan := planOf(t, d)
+	if plan.CheckCommand != "go test ./..." || plan.CheckSource != "registry" {
+		t.Fatalf("failed read: plan check = %q from %q", plan.CheckCommand, plan.CheckSource)
+	}
+	if !strings.Contains(plan.Note, "slicer config check_command failed") {
+		t.Fatalf("the plan note does not name the failure: %q", plan.Note)
+	}
+}
+
+func TestRunStartPassesTheEffectiveCheckCommandToTheEngine(t *testing.T) {
+	root := t.TempDir()
+	d, store, _ := runDaemonIn(t, root, retryRunner, slicerCheckRoute(filepath.Join(root, "p"), "make test"))
+	var mu sync.Mutex
+	var checks []string
+	d.runs.deps.Check = func(_ context.Context, _, command string, _ time.Duration) (engine.CheckOutput, error) {
+		mu.Lock()
+		checks = append(checks, command)
+		mu.Unlock()
+		return engine.CheckOutput{OK: true}, nil
+	}
+	// The owner confirms the plan as shown: the start must not call it changed.
+	shown := request(t, d, "run.plan", planParams)
+	b := request(t, d, "run.start", `{"project":"p","item":"S1","well_specified":true,"split":false,"expected":`+string(shown)+`}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	waitState(t, store, rec.ID, runrec.StateAwaitingApproval)
+	waitIdle(t, d, rec.ID)
+	mu.Lock()
+	defer mu.Unlock()
+	if len(checks) == 0 {
+		t.Fatal("the engine ran no check")
+	}
+	for _, c := range checks {
+		if c != "make test" {
+			t.Fatalf("the engine ran %q, want make test: %v", c, checks)
+		}
+	}
+}
+
+func TestReloadedRunUsesTheEffectiveCheckCommand(t *testing.T) {
+	root := t.TempDir()
+	d, store, p := runDaemonIn(t, root, retryRunner, slicerCheckRoute(filepath.Join(root, "p"), "make test"))
+	lineup := map[string][]runrec.LineupEntry{}
+	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate} {
+		lineup[role] = []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet"}}
+	}
+	if _, err := store.Create(runrec.Record{
+		ID: "r1", Project: p.Name, Item: "S1", Worktree: filepath.Join(p.Path, ".worktrees", "S1"),
+		State: runrec.StatePaused, Round: 1, Lineup: lineup,
+		Pending: &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateChecks, Reason: "check failed"},
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var mu sync.Mutex
+	var checks []string
+	d.runs.deps.Check = func(_ context.Context, _, command string, _ time.Duration) (engine.CheckOutput, error) {
+		mu.Lock()
+		checks = append(checks, command)
+		mu.Unlock()
+		return engine.CheckOutput{OK: true}, nil
+	}
+	if err := d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	request(t, d, "run.retry", `{"run":"r1"}`)
+	mu.Lock()
+	defer mu.Unlock()
+	if len(checks) == 0 || checks[0] != "make test" {
+		t.Fatalf("the reloaded run ran %v, want make test", checks)
 	}
 }
 
@@ -716,6 +843,10 @@ func TestRunPlanRefusesBadOverride(t *testing.T) {
 					t.Errorf("invalid override created run: %v %v", runs, err)
 				}
 				for _, call := range lastFake.CallsTo("slicer") {
+					// The read of slicer's check_command (S246) comes before the override is checked.
+					if len(call.Args) >= 2 && call.Args[0] == "config" && call.Args[1] == "check_command" {
+						continue
+					}
 					if len(call.Args) < 2 || call.Args[0] != "relay-roles" || (call.Args[1] != "recommend" && call.Args[1] != "show") {
 						t.Errorf("invalid override caused slicer call: %v", call.Args)
 					}
@@ -3683,6 +3814,45 @@ func TestPausedNextOfTheSetupPauseIsAStop(t *testing.T) {
 	}
 }
 
+// S246: the fix of a check command that came from slicer is slicer's config,
+// not `ork projects set --check`, which writes the registry that slicer's value
+// overrides (adj 367). The round check stays a registry setting.
+func TestRunPlanCannotRunWarningNamesWhereToFixIt(t *testing.T) {
+	for _, tc := range []struct {
+		name, slicer, round string
+		want, notWant       string
+	}{
+		{"slicer check", "go build App.slnx", "", "(fix: slicer config check_command CMD --root ", "ork projects set"},
+		{"registry check", "", "", "(fix: ork projects set p --check CMD)", "slicer config"},
+		{"round check", "go version", "go build App.slnx", "(fix: ork projects set p --round-check CMD)", "slicer config"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			root := t.TempDir()
+			d, _, p := runDaemonIn(t, root, nil, slicerCheckRoute(filepath.Join(root, "p"), tc.slicer))
+			if err := os.MkdirAll(p.Path, 0o755); err != nil {
+				t.Fatal(err)
+			}
+			if err := os.WriteFile(filepath.Join(p.Path, "go.mod"), nil, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			editProject(t, d, func(p *registry.Project) {
+				// The registry's check is the broken one unless slicer or the round check is.
+				p.CheckCommand, p.RoundCheckCommand = "go build App.slnx", tc.round
+				if tc.slicer != "" || tc.round != "" {
+					p.CheckCommand = "go version"
+				}
+			})
+			plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+			if len(plan.Warnings) != 1 {
+				t.Fatalf("warnings %q, want one", plan.Warnings)
+			}
+			if w := plan.Warnings[0]; !strings.Contains(w, tc.want) || strings.Contains(w, tc.notWant) {
+				t.Fatalf("warning %q, want it to contain %q and not %q", w, tc.want, tc.notWant)
+			}
+		})
+	}
+}
+
 func TestRunStartAcceptsAPlanWithWarnings(t *testing.T) {
 	d, _, _ := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
 		<-ctx.Done()
@@ -3698,6 +3868,136 @@ func TestRunStartAcceptsAPlanWithWarnings(t *testing.T) {
 	if err := json.Unmarshal(request(t, d, MethodRunStart, `{"project":"p","item":"S1","expected":`+string(shown)+`}`), &rec); err != nil || rec.ID == "" {
 		t.Fatalf("start with a warned plan: %+v, %v", rec, err)
 	}
+}
+
+// S246: slicer's check_command counts where the start refuses a project with no
+// check command, in a run start and in a wave start.
+func TestStartsAcceptASlicerCheckCommandWhenTheRegistryHasNone(t *testing.T) {
+	for _, method := range []string{MethodRunStart, MethodWaveStart} {
+		t.Run(method, func(t *testing.T) {
+			root := t.TempDir()
+			d, store, _ := runDaemonIn(t, root, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+				<-ctx.Done()
+				return engine.Result{}, ctx.Err()
+			}, slicerCheckRoute(filepath.Join(root, "p"), "make test"))
+			editProject(t, d, func(p *registry.Project) { p.CheckCommand = "" })
+			raw := `{"project":"p","item":"S1"}`
+			if method == MethodWaveStart {
+				raw = `{"items":[` + raw + `]}`
+			}
+			if _, err := d.handle(context.Background(), method, json.RawMessage(raw)); err != nil {
+				t.Fatalf("%s with slicer's check_command: %v", method, err)
+			}
+			if runs, err := store.List(); err != nil || len(runs) != 1 {
+				t.Fatalf("runs: %v %v", runs, err)
+			}
+		})
+	}
+}
+
+// S246: a stopped run that is retried, held by the manager or not, runs slicer's
+// check command, not the registry's.
+func TestRunRetryOfAStoppedRunUsesSlicersCheckCommand(t *testing.T) {
+	for _, managed := range []bool{true, false} {
+		t.Run(fmt.Sprintf("managed=%v", managed), func(t *testing.T) {
+			root := t.TempDir()
+			rig := stoppedDaemonIn(t, root, retryRunner, managed, stoppedDiff, nil, slicerCheckRoute(filepath.Join(root, "p"), "make test"))
+			request(t, rig.d, "run.retry", `{"run":"r1"}`)
+			if checks := rig.ranChecks(); len(checks) != 1 || checks[0] != "make test" {
+				t.Fatalf("checks after the retry: %v", checks)
+			}
+		})
+	}
+}
+
+// S246: a retry reads slicer's check command with no manager lock held, so a
+// slow `slicer config` does not stall status, starts or queue admission.
+func TestRunRetryReadsSlicersCheckCommandWithoutTheManagerLock(t *testing.T) {
+	rig, started, release := blockedCheckRead(t)
+	done := make(chan error, 1)
+	go func() {
+		_, err := rig.d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"r1"}`))
+		done <- err
+	}()
+	waitForFile(t, started, release)
+	locked := make(chan struct{})
+	go func() {
+		rig.d.runs.mu.Lock()
+		rig.d.runs.mu.Unlock()
+		close(locked)
+	}()
+	select {
+	case <-locked:
+	case <-time.After(2 * time.Second):
+		t.Error("the manager lock was held while slicer config check_command was blocked")
+	}
+	if err := os.WriteFile(release, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; err != nil {
+		t.Fatalf("run.retry: %v", err)
+	}
+	if checks := rig.ranChecks(); len(checks) != 1 || checks[0] != "make test" {
+		t.Fatalf("checks after the retry: %v", checks)
+	}
+}
+
+// A project edited while the retry reads slicer's command is not resumed with
+// the copy that was read: the retry is refused and says why.
+func TestRunRetryRefusedWhenTheProjectChangesDuringTheRead(t *testing.T) {
+	rig, started, release := blockedCheckRead(t)
+	done := make(chan error, 1)
+	go func() {
+		_, err := rig.d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"r1"}`))
+		done <- err
+	}()
+	waitForFile(t, started, release)
+	editProject(t, rig.d, func(p *registry.Project) { p.CheckCommand = "go vet ./..." })
+	if err := os.WriteFile(release, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	err := <-done
+	if re := ipc.ErrorOf(err); err == nil || re.Code != CodeRefused || !strings.Contains(re.Message, "changed while the retry was being prepared") {
+		t.Fatalf("run.retry: %v", err)
+	}
+	if checks := rig.ranChecks(); len(checks) != 0 {
+		t.Fatalf("a refused retry ran checks: %v", checks)
+	}
+}
+
+// waitForFile waits for the marker the blocked read leaves; on a timeout it
+// releases the read so no goroutine stays blocked.
+func waitForFile(t *testing.T, marker, release string) {
+	t.Helper()
+	deadline := time.Now().Add(5 * time.Second)
+	for {
+		if _, err := os.Stat(marker); err == nil {
+			return
+		}
+		if time.Now().After(deadline) {
+			os.WriteFile(release, nil, 0o644)
+			t.Fatal("the retry never read check_command")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+}
+
+// blockedCheckRead is a stopped-run rig whose slicer blocks the read of
+// check_command until the release file exists, and leaves the started file
+// once it is blocked there. Every other slicer call goes to the fake slicer.
+func blockedCheckRead(t *testing.T) (rig *stoppedRig, started, release string) {
+	t.Helper()
+	root := t.TempDir()
+	rig = stoppedDaemonIn(t, root, retryRunner, false, stoppedDiff, nil, slicerCheckRoute(filepath.Join(root, "p"), "make test"))
+	dir := t.TempDir()
+	started, release = filepath.Join(dir, "started"), filepath.Join(dir, "release")
+	script := "#!/bin/sh\nif [ \"$1\" = config ] && [ \"$2\" = check_command ]; then\n  : > '" + started + "'\n  while [ ! -e '" + release + "' ]; do sleep 0.02; done\nfi\nexec '" + rig.d.runs.deps.Slicer.Bin + "' \"$@\"\n"
+	wrapper := filepath.Join(dir, "slicer")
+	if err := os.WriteFile(wrapper, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	rig.d.runs.deps.Slicer = slicercli.Client{Bin: wrapper}
+	return rig, started, release
 }
 
 func TestRunStartRefusesAProjectWithoutACheckCommand(t *testing.T) {

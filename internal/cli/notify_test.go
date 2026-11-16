@@ -37,7 +37,7 @@ func TestNotifyDoctorMissingExecutable(t *testing.T) {
 	if err := os.Remove(command); err != nil {
 		t.Fatal(err)
 	}
-	got := checkProject(context.Background(), p)
+	got := checkProject(context.Background(), p, "registry")
 	if !strings.Contains(strings.Join(got.Findings, "\n"), "notify_command: executable not found") {
 		t.Fatalf("doctor did not warn about missing notify executable: %v", got.Findings)
 	}
@@ -113,7 +113,7 @@ func TestNotifyDoctorFindingClean(t *testing.T) {
 	p, _ := notifyProject(t)
 	p.NotifyCommand = filepath.Join(p.Path, "missing\x1b[2J\nnext\x07")
 	var findings []string
-	for _, finding := range checkProject(context.Background(), p).Findings {
+	for _, finding := range checkProject(context.Background(), p, "registry").Findings {
 		if strings.HasPrefix(finding, "notify_command:") {
 			findings = append(findings, finding)
 		}

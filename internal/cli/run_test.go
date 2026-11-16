@@ -1091,6 +1091,22 @@ func TestPlanShowsTheRoundCheckCommand(t *testing.T) {
 	}
 }
 
+// The plan names where its check command came from (S246).
+func TestPlanNamesTheCheckCommandSource(t *testing.T) {
+	for _, tc := range []struct{ command, source, want string }{
+		{"make test", "slicer", "check: make test (from slicer)\n"},
+		{"make test", "registry", "check: make test (from registry)\n"},
+		{"", "none", "check: none\n"},
+		{"make test", "", "check: make test\n"},
+	} {
+		var b bytes.Buffer
+		printRunPlan(&b, daemon.RunPlan{Project: registry.Project{Name: "p"}, Item: "S1", CheckCommand: tc.command, CheckSource: tc.source}, false)
+		if !strings.Contains(b.String(), tc.want) {
+			t.Errorf("source %q: plan\n%s\nwant it to contain %q", tc.source, b.String(), tc.want)
+		}
+	}
+}
+
 func TestRunRefusesAPlanWithNoCheckCommand(t *testing.T) {
 	for name, args := range map[string][]string{
 		"run":  {"run", "p", "S1", "--yes", "--well-specified", "y", "--split", "n"},

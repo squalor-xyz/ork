@@ -445,8 +445,9 @@ slice.
 - **checks:** ork runs the project check command and `slicer check --json`
   in the worktree (`checks.deterministic`). A red result goes back to the
   implementer, with the failing output in the brief, without spending a
-  review. The check command comes from `slicer config` once slicer has the
-  key; until then it comes from the registry (`project.check-command`).
+  review. The check command comes from `slicer config check_command` when
+  slicer has it set, and from the registry when slicer's is empty
+  (`project.check-command`, adj 32; S246).
   *Proposed (S285):* a project may also set `round_check_command`, a faster
   command. The checks after implementer rounds run it in place of the check
   command. When the round command is set and differs from the check command,
@@ -2404,8 +2405,16 @@ left its pause, and the job goes on under the daemon; a failure of the job
 shows in `ork status` as the run's error. A refusal or a failure that comes
 first is the reply. Without it (the TUI), the reply waits until the run rests.
 A second owner action is refused as busy until the job ends.
-Plan returns `{project,item,worktree,branch,check_command,round_check_command?,
+Plan returns `{project,item,worktree,branch,check_command,check_source?,round_check_command?,
 lineup,budgets,permissions,note?,warnings?}`; the project contains only its name and path.
+`check_command` is the effective command (S246): slicer's `check_command` key
+when it is set, else the registry's. `check_source` names where it came from,
+`slicer`, `registry` or `none`. A failed read of the key keeps the registry's
+command and adds the note `slicer config check_command failed: ...`. The daemon
+reads the key at the plan, at the start and when it loads a run again, and the
+engine gets the effective command; the registry entry the `expected` plan check
+compares stays the raw one. `ork run` prints `check: CMD (from slicer)` or
+`(from registry)`.
 Each lineup entry is `{vendor,model,effort,requested?}`: `requested` (S244,
 *proposed*) is the matrix text that `model` was resolved from, and is absent for
 a pinned model.
@@ -2424,7 +2433,10 @@ by the check line instead of after the roles, where a long plan can clip it), wh
 the static check (`engine.VerifyCheck`) of the check command, or of the round
 check command, fails in the project path; the worktree does not exist yet, so
 the project's folder of the main checkout stands in for the folder the check
-runs in, and setup verifies again in the worktree. The daemon checks the project path for `go.mod` and
+runs in, and setup verifies again in the worktree. When the check command came
+from slicer (S246, adj 367), the fix names slicer's config instead of the
+registry: `(fix: slicer config check_command CMD --root PATH)`; a failing round
+check command keeps `ork projects set NAME --round-check CMD`. The daemon checks the project path for `go.mod` and
 `pyproject.toml` when it plans. `ork run` prints each as `warning: LINE` after
 the role rows and before the note, and the TUI launch confirm shows each in
 the Warn style, wrapped. Both show an empty check command as `check: none`.
@@ -2760,8 +2772,9 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   only when the engine accepts the round; otherwise it closes without one, and
   the retried round is a new ledger step. Embedded role prompts
   are written against v12;
-- each project's path exists and is a directory; a configured check command
-  passes `sh -n -c` and its first word after leading `VAR=value` assignments
+- each project's path exists and is a directory; the effective check command
+  (slicer's `check_command` when set, else the registry's, S246; a finding from
+  slicer's reads `check_command (slicer): ...`) passes `sh -n -c` and its first word after leading `VAR=value` assignments
   resolves on PATH, or against the project directory when it contains `/`.
   Lookup is skipped for POSIX reserved words and special builtins, plus `cd`
   and `command`, plus `time`, and words containing `$` or a backtick or

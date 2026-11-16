@@ -961,6 +961,39 @@ func TestDoctorChecksEachProjectCheckCommand(t *testing.T) {
 	}
 }
 
+// S246: doctor checks the command a run would use, slicer's check_command when
+// it is set, and names its source. The tools below exist nowhere on PATH, so the
+// finding says which command doctor looked at.
+func TestDoctorChecksTheEffectiveCheckCommand(t *testing.T) {
+	for _, tc := range []struct {
+		name, slicer, finding string
+	}{
+		{"slicer", "zz-slicer-tool test", `check_command (slicer): "zz-slicer-tool" not found on PATH`},
+		{"registry", "", `check_command: "zz-registry-tool" not found on PATH`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			P := t.TempDir()
+			p := setUpProject(t, registry.Project{Name: "p", Path: P, CheckCommand: "zz-registry-tool test"})
+			app, fake, _ := pinWorld(t, []clitest.Route{
+				{Tool: "slicer", Args: []string{"config", "check_command", "--json", "--root", P}, Stdout: fmt.Sprintf(`{"key":"check_command","value":%q}`, tc.slicer)},
+			}, p)
+			d := projectReport(t, app)
+			if got := strings.Join(d.Projects[0].Findings, "\n"); got != tc.finding {
+				t.Fatalf("findings %q, want %q", got, tc.finding)
+			}
+			asked := 0
+			for _, args := range slicerArgs(fake) {
+				if len(args) == 5 && args[0] == "config" && args[1] == "check_command" && args[4] == P {
+					asked++
+				}
+			}
+			if asked != 1 {
+				t.Fatalf("slicer asked for check_command %d times with --root %s: %v", asked, P, slicerArgs(fake))
+			}
+		})
+	}
+}
+
 // The findings of the shared static check (S295, *proposed*), read from
 // checkProject without a daemon: a later command's first word, and a named file
 // in the project directory.
@@ -972,7 +1005,7 @@ func TestDoctorFindsWhatTheStaticCheckFinds(t *testing.T) {
 		{"go build ./...", ""},
 	} {
 		t.Run(tc.command, func(t *testing.T) {
-			d := checkProject(context.Background(), setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: tc.command}))
+			d := checkProject(context.Background(), setUpProject(t, registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: tc.command}), "registry")
 			if got := strings.Join(d.Findings, "\n"); !strings.Contains(got, tc.finding) || tc.finding == "" && got != "" {
 				t.Fatalf("findings %q, want %q", got, tc.finding)
 			}
@@ -981,7 +1014,7 @@ func TestDoctorFindsWhatTheStaticCheckFinds(t *testing.T) {
 }
 
 func TestDoctorCheckCommandSyntaxError(t *testing.T) {
-	d := checkProject(context.Background(), registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("})
+	d := checkProject(context.Background(), registry.Project{Name: "demo", Path: t.TempDir(), CheckCommand: "go test ("}, "registry")
 	if got := strings.Join(d.Findings, " "); !strings.Contains(strings.ToLower(got), "syntax") {
 		t.Fatalf("want syntax finding: %q", got)
 	}

@@ -186,7 +186,7 @@ func TestDoctorBuildExecutable(t *testing.T) {
 	if err := json.Unmarshal([]byte(fmt.Sprintf(`{"name":"ork","path":%q,"build_command":"./plain"}`, dir)), &p); err != nil {
 		t.Fatal(err)
 	}
-	got := checkProject(context.Background(), p)
+	got := checkProject(context.Background(), p, "registry")
 	if !strings.Contains(strings.Join(got.Findings, "\n"), `build_command: "./plain" not executable`) {
 		t.Fatalf("build doctor findings: %v", got.Findings)
 	}

@@ -96,13 +96,19 @@ Notes on the fields:
   as `false`, which turns that filing off. `ork settings set --owner NAME` and
   `--file-answers on|off` write them. An ork without S314 refuses a version 3
   file with a version error.
-- `check_command` is a fallback. ork prefers slicer's config key once
-  slicer has one (`project.check-command`). The `check_minutes` value sets
+- `check_command` is a fallback. ork prefers slicer's config key
+  (`slicer config check_command --json --root PATH`, adj 32,
+  `project.check-command`): a run, a resumed run, `run.plan` and `ork doctor`
+  use slicer's value when it is set, and the registry's only when slicer's is
+  empty (S246). The registry file is never written from slicer's value, and
+  `ork projects set --check` still writes the registry. The `check_minutes` value sets
   the check command timeout (`internal/engine/states.go:198-202`).
-  *Proposed* (S265, adj 191): with no `check_command`, `run.start` and
-  `wave.start` refuse the start unless the call carries `allow_no_check`
-  (`ork run` and `ork wave start --allow-no-check`), and `ork doctor` reports
-  the missing command. Without it only `slicer check` runs after a landing.
+  *Proposed* (S265, adj 191): with no effective check command (slicer's key
+  and the registry's both empty, S246), `run.start` and `wave.start` refuse
+  the start unless the call carries `allow_no_check` (`ork run` and `ork wave
+  start --allow-no-check`), and `ork doctor` reports the missing command. A
+  project whose only command is slicer's is not refused. Only an empty
+  effective command leaves landing on `slicer check` alone.
 - `build_command` (*proposed*, S315; adj 231) is an optional shell command
   for an explicit self-host rebuild. `ork projects set NAME --build CMD`
   stores it; `--build ''` clears it. A started run does not read it, so it

@@ -110,7 +110,26 @@ func (p *projectCheck) addFinding(format string, args ...any) {
 	p.Findings = append(p.Findings, strings.Join(strings.Fields(fmt.Sprintf(format, args...)), " "))
 }
 
-func checkProject(ctx context.Context, p registry.Project) projectCheck {
+// effectiveCheckCommand is p with the check command a run of it uses, and where
+// the command came from (S246; adj 32): slicer's `check_command` when it is
+// set, else the registry's. The read is `slicer config check_command --json
+// --root PATH`; a project folder that is gone, or a read that fails, keeps the
+// registry's command, and the contract check already reports a slicer that does
+// not answer for the project.
+func effectiveCheckCommand(ctx context.Context, client slicercli.Client, p registry.Project) (registry.Project, string) {
+	source := "registry"
+	if info, err := os.Stat(p.Path); err == nil && info.IsDir() {
+		if value, err := client.Config(ctx, p.Path, "check_command"); err == nil && strings.TrimSpace(value) != "" {
+			p.CheckCommand = strings.TrimSpace(value)
+			return p, "slicer"
+		}
+	}
+	return p, source
+}
+
+// checkProject checks p, whose CheckCommand is the effective one that source
+// names, "slicer" or "registry" (S246).
+func checkProject(ctx context.Context, p registry.Project, source string) projectCheck {
 	check := projectCheck{Name: p.Name, Path: p.Path, NotifyCommand: p.NotifyCommand, Findings: []string{}}
 	if p.NotifyCommand != "" {
 		command := p.NotifyCommand
@@ -133,8 +152,12 @@ func checkProject(ctx context.Context, p registry.Project) projectCheck {
 		// The shared static check (S295): `sh -n` parses only, even substitutions
 		// and redirects must never execute; the first word of each command
 		// resolves; the files the command names exist in the project directory.
+		label := "check_command"
+		if source == "slicer" {
+			label += " (slicer)"
+		}
 		for _, fault := range engine.CheckFaults(ctx, p.Path, p.CheckCommand, "project directory") {
-			check.addFinding("check_command: %s", fault.Text())
+			check.addFinding("%s: %s", label, fault.Text())
 		}
 	}
 	if p.BuildCommand != "" {
@@ -312,8 +335,10 @@ func (a *App) doctor(ctx context.Context, o *output, args []string) int {
 				rep.OwnerSource = "setting"
 			}
 			rep.FileAnswers = file.FileAnswersOn()
+			slicer := slicercli.Client{Bin: t.Slicer, Timeout: versionTimeout}
 			for _, p := range file.Projects {
-				rep.Projects = append(rep.Projects, checkProject(ctx, p))
+				effective, source := effectiveCheckCommand(ctx, slicer, p)
+				rep.Projects = append(rep.Projects, checkProject(ctx, effective, source))
 			}
 		}
 	}

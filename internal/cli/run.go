@@ -242,6 +242,8 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 	check := p.CheckCommand
 	if check == "" {
 		check = "none"
+	} else if p.CheckSource == "slicer" || p.CheckSource == "registry" {
+		check += " (from " + p.CheckSource + ")" // S246
 	}
 	fmt.Fprintf(w, "%s %s\nworktree: %s\nbranch: %s\ncheck: %s\n", p.Project.Name, p.Item, p.Worktree, p.Branch, check)
 	if p.RoundCheckCommand != "" {

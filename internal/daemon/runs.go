@@ -94,11 +94,13 @@ type RunAction struct {
 type RunPlan struct {
 	StopAfter         string                          `json:"stop_after,omitempty"`
 	project           registry.Project                // registry settings are private to the daemon
+	effective         registry.Project                // project with the check command the run uses (S246); the engine gets this one
 	Project           registry.Project                `json:"project"`
 	Item              string                          `json:"item"`
 	Worktree          string                          `json:"worktree"`
 	Branch            string                          `json:"branch"`
 	CheckCommand      string                          `json:"check_command"`
+	CheckSource       string                          `json:"check_source,omitempty"`        // S246: where CheckCommand came from, "slicer", "registry" or "none"
 	RoundCheckCommand string                          `json:"round_check_command,omitempty"` // S285, *proposed*: the faster check after implementer rounds
 	Lineup            map[string][]runrec.LineupEntry `json:"lineup"`
 	Budgets           registry.Budgets                `json:"budgets"`
@@ -327,7 +329,9 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 			}
 			continue
 		}
-		e := engine.Load(d.runDeps(p), p, r)
+		// A run loaded again uses the same check command rule as a new one (S246).
+		ep := d.runProject(ctx, p)
+		e := engine.Load(d.runDeps(ep), ep, r)
 		if rec.State == runrec.StateQueued {
 			// A queued run has no process and wrote nothing; it keeps its place.
 			d.runs.mu.Lock()
@@ -474,10 +478,14 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	if err != nil {
 		return nil, err
 	}
-	proj, ok := find(f, p.Project)
+	registered, ok := find(f, p.Project)
 	if !ok {
 		return nil, notFound(p.Project, f)
 	}
+	// proj is the project the run uses: the registry entry with the check
+	// command slicer names, when it names one (S246). registered stays the
+	// entry the plan-changed checks compare.
+	proj, checkSource, checkErr := d.effectiveProject(ctx, registered)
 	rec, err := d.runs.deps.Slicer.RecommendRoles(ctx, proj.Path, p.Item, p.WellSpecified, p.Split)
 	if err != nil {
 		return nil, err
@@ -499,9 +507,15 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// (vendor column Local), and become plan.Lineup once their models are
 	// resolved (S244).
 	chains := map[string][]chainEntry{}
-	plan := &RunPlan{StopAfter: p.StopAfter, project: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, RoundCheckCommand: proj.RoundCheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
+	plan := &RunPlan{StopAfter: p.StopAfter, project: registered, effective: proj, Project: registry.Project{Name: proj.Name, Path: proj.Path}, Item: p.Item, CheckCommand: proj.CheckCommand, CheckSource: checkSource, RoundCheckCommand: proj.RoundCheckCommand, Lineup: map[string][]runrec.LineupEntry{}, Permissions: map[string]engine.Permission{}}
+	if checkErr != nil {
+		plan.Note = checkErr.Error()
+	}
 	if rulesErr != nil {
-		plan.Note = "slicer relay-roles show failed; planning without UI or spec-check rules: " + rulesErr.Error()
+		if plan.Note != "" {
+			plan.Note += "; "
+		}
+		plan.Note += "slicer relay-roles show failed; planning without UI or spec-check rules: " + rulesErr.Error()
 	}
 	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect} {
 		sourceRole := role
@@ -676,8 +690,15 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	// runs in (the same folder, S293); setup verifies again in the worktree.
 	if info, err := os.Stat(proj.Path); err == nil && info.IsDir() && !proj.NoVerifyCheck {
 		if problems, flag := engine.CheckCommandProblems(ctx, proj, proj.Path, nil); len(problems) > 0 {
-			plan.Warnings = append(plan.Warnings, fmt.Sprintf(engine.CheckCannotRunPrefix+"%s: %s (fix: ork projects set %s %s CMD)",
-				proj.Path, strings.Join(problems, "; "), engine.ShellWord(proj.Name), flag))
+			// A command that came from slicer is fixed in slicer's config: ork
+			// projects set --check writes the registry, which slicer's value
+			// overrides (S246, adj 367). The round check stays in the registry.
+			fix := fmt.Sprintf("ork projects set %s %s CMD", engine.ShellWord(proj.Name), flag)
+			if checkSource == "slicer" && flag == "--check" {
+				fix = fmt.Sprintf("slicer config check_command CMD --root %s", engine.ShellWord(proj.Path))
+			}
+			plan.Warnings = append(plan.Warnings, fmt.Sprintf(engine.CheckCannotRunPrefix+"%s: %s (fix: %s)",
+				proj.Path, strings.Join(problems, "; "), fix))
 		}
 	}
 	plan.Budgets = proj.Budgets
@@ -709,6 +730,38 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 	return plan, nil
 }
 
+// effectiveProject is p with the check command a run of it uses (S246; adj 32,
+// project.check-command, slicer-then-registry): slicer's `check_command` when
+// it is set, else the registry's. The source is "slicer", "registry", or
+// "none" when both are empty. A failed read keeps the registry value and
+// returns the failure for the caller to show. It never writes the registry.
+func (d *Daemon) effectiveProject(ctx context.Context, p registry.Project) (registry.Project, string, error) {
+	source := "registry"
+	if p.CheckCommand == "" {
+		source = "none"
+	}
+	value, err := d.runs.deps.Slicer.Config(ctx, p.Path, "check_command")
+	if err != nil {
+		return p, source, fmt.Errorf("slicer config check_command failed: %w", err)
+	}
+	if value = strings.TrimSpace(value); value != "" {
+		p.CheckCommand = value
+		source = "slicer"
+	}
+	return p, source, nil
+}
+
+// runProject is effectiveProject for a run that is loaded again, where there
+// is no plan to show a failed read in: it is logged, and the registry's
+// command stays.
+func (d *Daemon) runProject(ctx context.Context, p registry.Project) registry.Project {
+	eff, _, err := d.effectiveProject(ctx, p)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "project %s: %v; using the registry's check command\n", p.Name, err)
+	}
+	return eff
+}
+
 // NoCheckRefusalMessage is why a start on a project with no check command is
 // refused, and how to fix it (adj 191, launch.no-check-command). The command
 // line and the daemon say it the same way.
@@ -733,7 +786,7 @@ func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, erro
 	if err != nil {
 		return RunReply{}, err
 	}
-	if !p.AllowNoCheck && plan.project.CheckCommand == "" {
+	if !p.AllowNoCheck && plan.effective.CheckCommand == "" {
 		return RunReply{}, noCheckRefusal(plan.project.Name)
 	}
 	if err := d.restoreRunSpecAnswers(ctx, plan.project, p.Item); err != nil {
@@ -748,7 +801,7 @@ func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, erro
 	}
 	// The tree is fingerprinted here, outside the locks; admitRun re-checks
 	// under the lock that the run it probed is unchanged.
-	probe := d.probeResume(ctx, plan.project, p.Item, plan.Worktree)
+	probe := d.probeResume(ctx, plan.effective, p.Item, plan.Worktree)
 	rec, message, resumed, err := d.admitRun(ctx, plan, p, probe)
 	if err != nil {
 		return RunReply{}, err
@@ -834,7 +887,9 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	if wave == "" {
 		wave = newWaveID(time.Now())
 	}
-	message, resumed, err := d.autoResumeLocked(ctx, f, current, p.Item, plan.Worktree, wave, p.waveName, stored, probe)
+	// current equals plan.project here, so the plan's effective project is
+	// current with the check command the run uses (S246).
+	message, resumed, err := d.autoResumeLocked(ctx, f, plan.effective, p.Item, plan.Worktree, wave, p.waveName, stored, probe)
 	if err != nil {
 		return runrec.Record{}, "", nil, err
 	}
@@ -850,7 +905,7 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	queued := local || !d.hasRoomLocked(f, plan.project.Name)
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
-	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.project, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
+	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.effective, Item: p.Item, Lineup: plan.Lineup, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions}
 	var orientation []byte
 	if local {
 		orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, p.Item), "orientation.md"))
@@ -858,7 +913,7 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 			return runrec.Record{}, "", nil, fmt.Errorf("read orientation: %w", err)
 		}
 	}
-	e, err := engine.New(ctx, d.runDeps(plan.project), cfg)
+	e, err := engine.New(ctx, d.runDeps(plan.effective), cfg)
 	if err != nil {
 		return runrec.Record{}, "", nil, err
 	}
@@ -1054,63 +1109,99 @@ func (d *Daemon) unfinishedOfItemLocked(project, item, except string) (string, e
 // reaches the resumed run. Anything else, a run that is not stopped, busy or
 // unknown, is left to the retry that follows. The record lock keeps a
 // finding action from writing through an older handle meanwhile.
-func (d *Daemon) prepareResume(p RunAction) error {
+//
+// The read of slicer's check command (S246) is a command with a deadline, so
+// it runs with no lock held: a first pass under the locks decides whether
+// there is anything to prepare and copies the registry project, the read
+// follows, and a second pass under the locks checks again and installs the
+// engine only when the run is still resumable and the project is unchanged.
+func (d *Daemon) prepareResume(ctx context.Context, p RunAction) error {
+	proj, ok, err := d.resumableProject(p)
+	if err != nil || !ok {
+		return err
+	}
+	effective := d.runProject(ctx, proj)
 	lock := d.runRecordLock(p.Run)
 	lock.Lock()
 	defer lock.Unlock()
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
-	if d.runs.closed {
-		return nil
-	}
-	var rec runrec.Record
-	if m := d.runs.runs[p.Run]; m != nil {
-		if m.busy || m.stopping || m.filing || m.engine == nil {
-			return nil
-		}
-		rec = m.engine.Snapshot()
-	} else {
-		run, err := d.runs.deps.Store.Open(p.Run)
-		if err != nil {
-			return nil // no such run, or not readable: the retry says so
-		}
-		rec = run.Snapshot()
-	}
-	if rec.State == runrec.StateCommitted {
-		return &ipc.Error{Code: CodeRefused, Message: "run " + p.Run + " is committed; there is nothing to resume"}
-	}
-	if rec.State != runrec.StateStopped {
-		return nil
-	}
-	if why := engine.NotResumable(rec); why != "" {
-		return &ipc.Error{Code: CodeRefused, Message: why}
-	}
-	if other, err := d.unfinishedOfItemLocked(rec.Project, rec.Item, rec.ID); err != nil {
-		return err
-	} else if other != "" {
-		return &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("run %s cannot resume while run %s of %s is unfinished; ork stop %s first", p.Run, other, rec.Item, other)}
-	}
-	stored, err := d.runs.deps.Store.List()
-	if err != nil {
+	again, ok, err := d.resumableProjectLocked(p)
+	if err != nil || !ok {
 		return err
 	}
-	if newer := supersededBy(rec, stored); newer != "" {
-		return &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("run %s is superseded by run %s, which uses the same worktree; resume or stop %s instead", p.Run, newer, newer)}
-	}
-	f, err := d.loadRunRegistryLocked()
-	if err != nil {
-		return err
-	}
-	proj, ok := find(f, rec.Project)
-	if !ok {
-		return notFound(rec.Project, f)
+	if !reflect.DeepEqual(again, proj) {
+		return &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("project %s or run %s changed while the retry was being prepared; retry again", proj.Name, p.Run)}
 	}
 	run, err := d.runs.deps.Store.Open(p.Run)
 	if err != nil {
 		return err
 	}
-	d.runs.runs[p.Run] = &managedRun{engine: engine.Load(d.runDeps(proj), proj, run)}
+	d.runs.runs[p.Run] = &managedRun{engine: engine.Load(d.runDeps(effective), effective, run)}
 	return nil
+}
+
+// resumableProject is resumableProjectLocked under the record and manager locks.
+func (d *Daemon) resumableProject(p RunAction) (registry.Project, bool, error) {
+	lock := d.runRecordLock(p.Run)
+	lock.Lock()
+	defer lock.Unlock()
+	d.runs.mu.Lock()
+	defer d.runs.mu.Unlock()
+	return d.resumableProjectLocked(p)
+}
+
+// resumableProjectLocked refuses a run that cannot be resumed and returns the
+// registry project of one that can. ok is false when there is nothing to
+// prepare and the retry that follows says the rest. The caller holds the
+// record lock and the manager lock.
+func (d *Daemon) resumableProjectLocked(p RunAction) (proj registry.Project, ok bool, err error) {
+	if d.runs.closed {
+		return proj, false, nil
+	}
+	var rec runrec.Record
+	if m := d.runs.runs[p.Run]; m != nil {
+		if m.busy || m.stopping || m.filing || m.engine == nil {
+			return proj, false, nil
+		}
+		rec = m.engine.Snapshot()
+	} else {
+		run, err := d.runs.deps.Store.Open(p.Run)
+		if err != nil {
+			return proj, false, nil // no such run, or not readable: the retry says so
+		}
+		rec = run.Snapshot()
+	}
+	if rec.State == runrec.StateCommitted {
+		return proj, false, &ipc.Error{Code: CodeRefused, Message: "run " + p.Run + " is committed; there is nothing to resume"}
+	}
+	if rec.State != runrec.StateStopped {
+		return proj, false, nil
+	}
+	if why := engine.NotResumable(rec); why != "" {
+		return proj, false, &ipc.Error{Code: CodeRefused, Message: why}
+	}
+	if other, err := d.unfinishedOfItemLocked(rec.Project, rec.Item, rec.ID); err != nil {
+		return proj, false, err
+	} else if other != "" {
+		return proj, false, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("run %s cannot resume while run %s of %s is unfinished; ork stop %s first", p.Run, other, rec.Item, other)}
+	}
+	stored, err := d.runs.deps.Store.List()
+	if err != nil {
+		return proj, false, err
+	}
+	if newer := supersededBy(rec, stored); newer != "" {
+		return proj, false, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("run %s is superseded by run %s, which uses the same worktree; resume or stop %s instead", p.Run, newer, newer)}
+	}
+	f, err := d.loadRunRegistryLocked()
+	if err != nil {
+		return proj, false, err
+	}
+	found, isRegistered := find(f, rec.Project)
+	if !isRegistered {
+		return proj, false, notFound(rec.Project, f)
+	}
+	return found, true, nil
 }
 
 // supersededBy names a newer run of the same item that uses the same worktree
@@ -1258,7 +1349,7 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 	}
 	// A project with no check command refuses the whole wave, before any
 	// member is admitted, unless every item carries allow_no_check.
-	if proj.CheckCommand == "" {
+	if proj.CheckCommand == "" && d.runProject(ctx, proj).CheckCommand == "" { // slicer's check_command counts too (S246)
 		for _, item := range p.Items {
 			if !item.AllowNoCheck {
 				return nil, noCheckRefusal(project)
@@ -2023,7 +2114,10 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 		// A project with no check command refuses the start before the spec
 		// gate asks the owner anything (adj 191). startRun checks it again.
 		if proj, err := d.registered(p.Project); err == nil && proj.CheckCommand == "" && !p.AllowNoCheck {
-			return nil, noCheckRefusal(proj.Name)
+			// slicer's check_command counts too (S246).
+			if eff := d.runProject(ctx, proj); eff.CheckCommand == "" {
+				return nil, noCheckRefusal(proj.Name)
+			}
 		}
 		if err := d.specGate(ctx, p.Project, p.Item); err != nil {
 			return nil, err
@@ -2044,7 +2138,7 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 		return d.findingAction(ctx, p, true)
 	}
 	if method == MethodRunRetry {
-		if err := d.prepareResume(p); err != nil {
+		if err := d.prepareResume(ctx, p); err != nil {
 			return nil, err
 		}
 	}

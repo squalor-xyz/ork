@@ -298,6 +298,20 @@ func TestStatusNamesTheResumeOfAStoppedRun(t *testing.T) {
 	}
 }
 
+// S246: the run that a start resumes runs slicer's check command.
+func TestRunStartResumedRunUsesSlicersCheckCommand(t *testing.T) {
+	root := t.TempDir()
+	rig := stoppedDaemonIn(t, root, retryRunner, false, stoppedDiff, nil, slicerCheckRoute(filepath.Join(root, "p"), "make test"))
+	var reply RunReply
+	if err := json.Unmarshal(request(t, rig.d, "run.start", `{"project":"p","item":"S1"}`), &reply); err != nil || reply.ID != "r1" {
+		t.Fatalf("run.start: %+v %v", reply, err)
+	}
+	waitIdle(t, rig.d, "r1")
+	if checks := rig.ranChecks(); len(checks) != 1 || checks[0] != "make test" {
+		t.Fatalf("checks of the resumed run: %v", checks)
+	}
+}
+
 // ---- ork run and ork wave start on an item with a stopped run ----
 // Owner decision 2026-11-07 (S296 Q1, option b): resume when the worktree's
 // tree hash equals the last implementer round's tree_sha256, otherwise start

@@ -13831,10 +13831,25 @@
       "id": "S246",
       "title": "Prefer slicer's check_command over the registry's, as adj 32 decided",
       "short_title": "Check command from slicer first",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "96f7cb59-3a9b-4d80-bc46-24622440ba38",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: a run's check command is slicer's check_command config key when set, else the registry's (adj 32). run.plan carries check_source (slicer, registry, none) and ork run prints it; a failed read keeps the registry command with a plan note. Engine start, auto-resume, retry and daemon-restart reload use the same rule; the no-check refusals count slicer's value. A cannot-run plan warning for a slicer command names slicer config check_command; prepareResume reads slicer with no manager lock held. ork doctor checks the effective command and labels a slicer source. go test -race ./..., go vet, gofmt, slicer check and adj lint passed.",
+          "created_at": "2026-11-16T14:41:43Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -13852,7 +13867,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
