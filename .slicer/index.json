@@ -17262,6 +17262,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "d001a0c1-4807-443e-98af-65d6da1a0eda",
+          "kind": "",
+          "text": "**2026-11-16** — Trial 4, 2026-11-15, run ork-20261115-144120-d581, S248, claude-local qwen3.8-27b low then claude sonnet high. Live: S362 (missing-file Read allowed; approval denials do not block fallback), S363 (local brief: note first, one test at a time), S364 (ork system prompt, six tools). No orientation pack: the --implementer override did not reach the spec check (fixed by S366). Local implementer: 90 min (14:41-16:11), 4 fresh sessions at 70.1k-73.0k tokens (14:49, 15:01, 15:10, 15:43), 6.77M tokens in all. First code edit at about 28 min. At 16:00 it had 9 files changed (+188 -19): all six listed tests, the wire field, the handler copy, the CLI flag and usage text. It hit the 90 min limit while running the full race suite. 7 permission calls: 1 denied by the orchestrator (a real pipe, 'go test ... 2>&1 | tail -5'); 5 quoted -run 'A|B' go test calls allowed (owner, then delegated; S367 removes these); 1 full-suite redirect into the role's temp dir, whose owner answer came after the run had moved on, so it counted as a denial. Despite 2 denials the sonnet fallback took over (S362 works) and finished the implementation in 5.4 min; reviewer grok, gate grok PASS round 2, the slice's own checks (S317) all green. Landing merge conflicted with S311 in internal/cli/cli.go usage text and internal/daemon/handlers.go setProject; the orchestrator kept both sides. Compared with trial 3 (8 sessions, no edit in 90 min): the local implementer now does most of a size-S slice, but still restarts every 8-30 min at 70k and does not finish within the time limit. Next: trial 5 with the orientation pack (S366) and no quoted-pipe questions (S367).",
+          "created_at": "2026-11-16T01:11:22Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,

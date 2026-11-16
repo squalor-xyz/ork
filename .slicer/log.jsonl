@@ -4628,3 +4628,4 @@
 {"when": "2026-11-15T16:49:36Z", "item": "S367", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-15T16:53:27Z", "item": "S367", "action": "note", "from": "", "to": "", "note": "Verified quote-aware Bash path and operator scanning, tilde ", "by": "Jon Robbins"}
 {"when": "2026-11-15T16:53:27Z", "item": "S367", "action": "status", "from": "started", "to": "done", "note": "Verified quote-aware Bash scanning and deny-before-ask path boundaries, with regression tests, mutation checks, and matching documentation. Gate returned PASS and owner approved.", "by": "Jon Robbins"}
+{"when": "2026-11-16T01:11:22Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 4, 2026-11-15, run ork-20261115-144120-d581, S248, cla", "by": "Jon Robbins"}
