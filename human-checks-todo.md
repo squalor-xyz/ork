@@ -181,3 +181,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S242 (run ork-20261116-015041-3103, 2026-11-16)
 
 - [ ] After landing and a rebuild of `~/bin/ork` and a restart, the owner runs `ork daemon status`, `ork doctor` and `ork status` once with the daemon running, and once after a commit that only touches `.slicer/` (no warning expected), and after a Go change (warning expected).
+
+## S371 (run ork-20261116-155616-1207, 2026-11-16)
+
+- [ ] [AFTER LAND] `` S304 trial 6 runs a local implementer on a slice with a large file and records sessions, reads and edits in S304's notes.
