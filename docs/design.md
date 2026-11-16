@@ -141,6 +141,7 @@ ork (TUI)  ork status --json (CLI)
   | `run.landcheck` (*proposed*, S217) | `{"run"}` | `{"base"?,"blockers"?,"reason"?,"error"?}`; current advisory landing check; absent fields are empty |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
+  | `projects.show` (*proposed*, S247) | `{"name"}` | `{"project","global","slicer":{"config","matrix","errors"},"adj"}`, in that key order, every part present: `project` is the registry entry as `projects.list` returns it (`vendor_env` values included, until S192 decides the masking, owner 2026-11-16); `global` is the `settings.get` result; `slicer.config` is the object `slicer config --json` prints, unchanged; `slicer.matrix` is `{"rows":[...as roles.matrix...],"rules":[...],"revision"?}` from `slicer relay-roles show --json`, with `revision` copied when slicer prints one and omitted otherwise; a part slicer could not read is `null` and `slicer.errors` holds `{"part":"config"\|"matrix","code","message"}` with slicer's own code and message (a project without `.slicer/` has both null), and the call still succeeds; `adj` is `{"enabled","config_file"}`: `enabled` is the registry flag and `config_file` is true when `.adjudicate.json` is a regular file (a stat; ork does not read it); a blank name is `bad_params` and an unknown project `not_found`, with no slicer call; read-only, nothing is written and no lock is held beyond the registry read; slicer runs on each call |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
   | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `ui_pass_rows` (a list, S344), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`), and `dry_run` (a boolean, S248, *proposed*), which the field check ignores | with `dry_run` the project as it would be saved, without saving it, every check of a real call running; otherwise the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`, `spec_check_rows` or `ui_pass_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
@@ -213,7 +214,12 @@ ork (TUI)  ork status --json (CLI)
    --well-specified ... --split ...`; ork passes well specified = yes and
    split = no unless the owner overrides them with `--well-specified` or
    `--split` (*proposed*, adj 189, `launch.well-specified-default`; the
-   spec check holds an item that is not Ready). The primary row per role becomes the
+   spec check holds an item that is not Ready). `--split y` makes the run a
+   split run (*proposed*, S61; see the implement state): ork then asks the
+   matrix twice, with split no for the lead, the reviewer, the gate and the
+   architect, and with split yes for the part rows. The plan shows the lead
+   (the implementer's chain, the matrix's split no row) and the part chain, and the
+   owner confirms it as any plan; a split run is never chosen by ork alone. The primary row per role becomes the
    lineup, and the alternatives, in order, become that role's fallback
    chain (`lineup.source`). The owner can edit both.
    An edit at launch applies to that run only (`lineup.override-scope`).
@@ -223,7 +229,7 @@ ork (TUI)  ork status --json (CLI)
    (`run.launch-wire`). The Waves editor and Roadmap launch confirmation
    share the same run-only editor (`e`). Neither writes the matrix or registry.
    The daemon accepts implementer, reviewer and architect chains on
-   `run.plan`, `run.start` and `wave.start`. An empty architect chain drops
+   `run.plan`, `run.start` and `wave.start`, and a part chain on a split run. An empty architect chain drops
    the architect; an omitted override keeps the recommendation. Adding an
    architect resolves its read-only permissions. A matched architect row
    with no ork adapter refuses planning, even with an override. Each entry
@@ -467,6 +473,71 @@ slice.
     starts the item).
 - **implement:** one implementer, or a lead and parts in a split
   (`slice.options`). Slivers run as their own items, under the cap.
+  - **Split run** (*proposed*, S61; owner decisions 2026-10-28). A split is
+    opt-in per run: `ork run ID --split y` (and the same flag on `ork wave
+    start`), or the `s` key on the TUI launch confirm, which flips split and
+    plans again (the confirm then shows `split: yes`, the `lead:` and `part:`
+    rows, and a `part` row in the lineup editor). There is no Split? prompt
+    (adj 189 removed it). ork never chooses a split, and it counts as one run
+    against the project and global caps. The slicer contract puts the parts in the slice worktree
+    (`slicer ai relay`, Order), so a split makes no worktree beyond the slice's.
+    The lead is the implementer's slot in the state machine: its chain, its
+    records, its fix rounds and its finish step are the implementer's, with the
+    lead prompt (`roles/prompts/lead.md`) and the ledger role `implementer`,
+    because the contract has no lead role. The lead's first round starts the
+    slice and ends its report with a `## Parts` section, one line per part:
+    `- ID: files PATH, PATH; tests NAME, NAME` (or `none`).
+    ork checks the list: each id once, each part with at least one file and one
+    test, each file a path inside the worktree and covered by the slice's Files
+    section. A list that fails pauses the run with every problem named, and no
+    part runs; a retry runs the lead again. ork then groups the parts into
+    batches: a part joins the first batch that has room (at most 3, matrix rule
+    u7) and no part whose files overlap its own (the same file, or a directory
+    that holds the other). The parts of a batch run at the same time in the
+    slice worktree, the batches one after another, so overlapping parts run one
+    after another (`slicer ai relay`: in parallel only when the files are
+    disjoint). A part has the implementer's allowlist less the slicer commands
+    that write, and the part prompt (`roles/prompts/part.md`) tells it to change
+    only its own files, run only its own tests and run no slicer command that
+    writes. Each part is a ledger step under the lead's step (`--parent`), role
+    `implementer`, and a role record with the part's id (`part` on the record's
+    roles; the run record keeps the `parts` list with each part's done mark), so the run
+    tree shows the parts under the lead.
+    A part's own check is its report (no failed test in its `Tests:` line) and
+    the tree: after a batch ork compares the changed files before and after.
+    A path that is still changed and is on none of the batch's lists fails the
+    part that changed it. With one part in the batch that is known. With
+    several, parts that share a tree cannot be told apart by one reading, so
+    ork runs the parts whose own tests passed one after another, each with the
+    stray paths named, and fails the part whose own run leaves a path outside
+    its own list changed; the others stay done. (A part that never touches the
+    stray path again is not blamed; the path stays for the review and the
+    gate's out-of-scope warning.) A path that a round put back is not a
+    violation. File lists are compared as cleaned paths (`internal/a/../b.go`
+    is `internal/b.go`). A part whose round ended clean is judged and marked
+    done even when a sibling of its batch pauses (unless a stray path makes
+    that unclear), so a retry runs only the part that paused. A part that fails
+    goes back once, with the reason; a second failure pauses the run. Then the
+    ordinary states follow for the whole slice: one round check on the combined
+    tree, one review, the architect when the lineup has one (the matrix gives it
+    to size L only; it runs once, not once per part), one gate. A part runs no
+    review and no gate of its own.
+    Findings go to the lead by default (owner decision, adj 385): the fix round
+    is the lead's, who may change any file. The lead may instead hand a file's
+    findings back to the part that owns the file, for that round only (slicer
+    contract, ai.py:920: accepted findings go back to the part that owns the
+    file). The fix-round brief lists the parts and their files; the lead's report
+    then has a `## Hand back` section, one `- ID: findings` line per part (or
+    `none`); indented lines after it, blank lines included, go on with that
+    part's findings. ork checks the section (each id a part of the run, once, with
+    findings), and a bad one pauses the run with no part run. After the lead's
+    round ork runs the named parts, in batches as above, with a brief section of
+    the handed-back findings; each is checked like any part and goes back once, a
+    second failure pauses the run, and a retry runs only the parts that still owe
+    the findings (the part's `hand_back` on the run record, cleared when it
+    passes), never the lead's round again. Each such part is a ledger step under
+    the lead's fix-round step. The round check, review and gate follow as in any
+    fix round.
 - **checks:** ork runs the project check command and `slicer check --json`
   in the worktree (`checks.deterministic`). A red result goes back to the
   implementer, with the failing output in the brief, without spending a
@@ -526,7 +597,8 @@ slice.
   (`role.readonly-fingerprint`). The architect runs after accepted findings
   have been addressed and before the gate (`slice.architect-order`, adj #123),
   exactly when the lineup has an architect entry. ork does not read the slice
-  size (`slice.architect-size`, adj #151).
+  size (`slice.architect-size`, adj #151); in a split run the entry comes from
+  the matrix's split no call, which gives the architect to size L only.
   - **UI pass** (`roles.ui-pass`, adj #165). When the lineup has a `ui` entry
     and the slice's Files section names a UI path, the UI pass starts with
     the reviewer, at the same time, and neither waits for the other. A UI
@@ -3020,6 +3092,27 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `push`, `ui-pass-skills=a,b`, only when set, in that order. With none set,
   the third column is `-`. `notify_command=CMD` still follows when set.
   The notification cell is cleaned to one line without terminal controls.
+- `projects show NAME` (S247, *proposed*): every setting of one project, from
+  every tool that owns one, in one read through `projects.show`. `--json`
+  prints the wire result unchanged, `vendor_env` values included as
+  `projects list --json` prints them (owner 2026-11-16; S192 changes
+  `projects list`, `projects set` and `projects show` together). Text has one
+  block per owner, in this order, with a blank line between blocks and no
+  indent: `ork (projects.json)`, `ork (global)`, `slicer config`,
+  `slicer relay-roles` and `adj`. A line is `KEY  VALUE`; an empty string or
+  a zero number prints `unset`, while `bell` and `auto_land` print `on` or
+  `off` because an absent value means on. `vendor_env` prints a line per
+  vendor with the names of its keys and never a value. The matrix is one line
+  per row, as `r9 implementer Codex gpt-6.1-sol medium  used as codex`: id,
+  role, agent, then the model and reasoning when set, two spaces, and what ork
+  does with the row. The matrix block starts with `revision  VALUE` when
+  slicer printed one and prints `no rows` when the matrix has none; slicer's
+  rules are in `--json` only. A config with no keys prints one line `no keys`.
+  The adj block prints `enabled on|off` and `config_file present|absent`. A
+  part slicer could not read is one line `unavailable  MESSAGE (CODE)` in its
+  block. Strings are cleaned to one line without terminal
+  controls. No NAME or more than one is a usage error (exit 2) and calls no
+  daemon; an unknown project is `not_found` (exit 1).
 - `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
   duplicate name, a relative path, or a path that is not an existing

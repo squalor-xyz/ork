@@ -112,6 +112,106 @@ func TestRunTreeReadOnly(t *testing.T) {
 
 const treeEngine = `{"id":"engine","item":"S55","state":"implement","roles":[{"role":"implementer","round":1,"vendor":"claude","model":"sonnet","effort":"high","step":"2","started_at":"2026-10-19T16:40:00Z","ended_at":"2026-10-19T16:41:00Z","exit":"ok"},{"role":"reviewer","round":1,"vendor":"claude","model":"opus","started_at":"2026-10-19T16:41:00Z"},{"role":"gate","round":1,"vendor":"codex","model":"sol","started_at":"2026-10-19T16:40:00Z","ended_at":"2026-10-19T16:40:30Z","exit":"error"}]}`
 
+// S61 (*proposed*): a split run's parts show in the run tree under the lead,
+// each as a part with its id. The ledger run holds each part's step under the
+// lead's step; a run with no ledger has the same nesting from its role records.
+const treeSplitEngine = `{"id":"engine","item":"S61","state":"checks","roles":[` +
+	`{"role":"implementer","round":1,"vendor":"claude","model":"sonnet","effort":"high","step":"2","started_at":"2026-10-19T16:40:00Z","ended_at":"2026-10-19T16:41:00Z","exit":"ok"},` +
+	`{"role":"part","part":"P1","round":1,"vendor":"claude","model":"haiku","effort":"medium","step":"3","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:42:00Z","exit":"ok"},` +
+	`{"role":"part","part":"P2","round":1,"vendor":"claude","model":"haiku","effort":"medium","step":"4","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:43:00Z","exit":"ok"}]}`
+
+func TestRunTreeNestsPartsUnderTheLead(t *testing.T) {
+	h := treeHarness(t, nil, treeSplitEngine)
+	tree := sgr.ReplaceAllString(strings.Join(h.m.runTreeLines(h.m.paneSteps(), 100, 0), "\n"), "")
+	lines := strings.Split(tree, "\n")
+	indent := func(line string) int { return len(line) - len(strings.TrimLeft(line, " ")) }
+	lead := -1
+	var parts []int
+	for i, line := range lines {
+		switch {
+		case strings.Contains(line, "implementer"):
+			lead = i
+		case strings.Contains(line, "part P1") || strings.Contains(line, "part P2"):
+			parts = append(parts, i)
+		}
+	}
+	if lead < 0 || len(parts) != 2 {
+		t.Fatalf("the tree lacks the lead or its two parts:\n%s", tree)
+	}
+	for _, p := range parts {
+		if p < lead || indent(lines[p]) <= indent(lines[lead]) {
+			t.Errorf("part row %q is not nested under the lead row %q", lines[p], lines[lead])
+		}
+	}
+}
+
+// The ledger holds the parts' steps under the lead's step as implementers
+// (slicer's contract has no part role); the engine record names each part.
+func TestRunTreeNamesTheLedgerStepOfEachPart(t *testing.T) {
+	ledger := slicercli.RelayRun{ID: "run-1", State: "active", Steps: []slicercli.Step{
+		{ID: "1", Role: "orchestrator", Agent: "ork", Phase: "start"},
+		{ID: "2", Role: "implementer", Vendor: "claude", Model: "sonnet", Parent: "1", Phase: "done"},
+		{ID: "3", Role: "implementer", Vendor: "claude", Model: "haiku", Parent: "2", Phase: "done"},
+		{ID: "4", Role: "implementer", Vendor: "claude", Model: "haiku", Parent: "2", Phase: "done"},
+	}}
+	raw := strings.TrimSuffix(treeSplitEngine, "}") + `,"relay_run":"run-1"}`
+	h := treeHarness(t, []slicercli.RelayRun{ledger}, raw)
+	tree := sgr.ReplaceAllString(strings.Join(h.m.runTreeLines(h.m.paneSteps(), 100, 0), "\n"), "")
+	for _, want := range []string{"part P1", "part P2"} {
+		if !strings.Contains(tree, want) {
+			t.Errorf("the ledger tree lacks %q:\n%s", want, tree)
+		}
+	}
+	for _, line := range strings.Split(tree, "\n") {
+		if strings.Contains(line, "part P1") && !strings.HasPrefix(line, "    ") {
+			t.Errorf("part row %q is not nested under the lead", line)
+		}
+	}
+}
+
+// UI pass: the part id is in the role column, which is never clipped before the
+// details, so a narrow tree still tells one part row from another.
+func TestRunTreeNamesEachPartInTheRoleColumnWhenNarrow(t *testing.T) {
+	const engineJSON = `{"id":"engine","item":"S61","state":"checks","roles":[` +
+		`{"role":"implementer","round":1,"vendor":"claude","model":"sonnet","effort":"high","step":"2","started_at":"2026-10-19T16:40:00Z","ended_at":"2026-10-19T16:41:00Z","exit":"ok"},` +
+		`{"role":"part","part":"P1","round":1,"vendor":"codex","model":"gpt-5.1-codex-max","effort":"xhigh","step":"3","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:42:00Z","exit":"ok"},` +
+		`{"role":"part","part":"P2","round":1,"vendor":"codex","model":"gpt-5.1-codex-max","effort":"xhigh","step":"4","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:45:00Z","exit":"error"}]}`
+	for _, width := range []int{80, 60, 40} {
+		h := treeHarness(t, nil, engineJSON)
+		tree := sgr.ReplaceAllString(strings.Join(h.m.runTreeLines(h.m.paneSteps(), width, 0), "\n"), "")
+		for _, want := range []string{"part P1", "part P2"} {
+			if !strings.Contains(tree, want) {
+				t.Errorf("width %d: the tree lacks %q:\n%s", width, want, tree)
+			}
+		}
+	}
+}
+
+// UI pass: a fallback note belongs to the part whose attempts it describes.
+func TestRunTreeFallbackNotesStayWithTheirPart(t *testing.T) {
+	roles := func(list ...string) string {
+		return `{"id":"engine","item":"S61","state":"checks","roles":[` + strings.Join(list, ",") + `]}`
+	}
+	lead := `{"role":"implementer","round":1,"vendor":"claude","model":"sonnet","effort":"high","step":"2","started_at":"2026-10-19T16:40:00Z","ended_at":"2026-10-19T16:41:00Z","exit":"ok"}`
+	part := func(id, step, vendor, model, exit string) string {
+		return `{"role":"part","part":"` + id + `","round":1,"vendor":"` + vendor + `","model":"` + model + `","effort":"high","step":"` + step + `","started_at":"2026-10-19T16:41:00Z","ended_at":"2026-10-19T16:42:00Z","exit":"` + exit + `"}`
+	}
+	render := func(raw string) string {
+		h := treeHarness(t, nil, raw)
+		return sgr.ReplaceAllString(strings.Join(h.m.runTreeLines(h.m.paneSteps(), 100, 0), "\n"), "")
+	}
+	// P2 ran out of credits on codex and nothing of P2 followed; P3 is another part on claude.
+	tree := render(roles(lead, part("P2", "3", "codex", "gpt", "out_of_credits"), part("P3", "4", "claude", "opus", "ok")))
+	if strings.Contains(tree, "fell back") {
+		t.Errorf("a part that did not fall back shows a fallback note:\n%s", tree)
+	}
+	// P2 went on to claude after P3 ran: one note, and it names P2.
+	tree = render(roles(lead, part("P2", "3", "codex", "gpt", "out_of_credits"), part("P3", "4", "claude", "opus", "ok"), part("P2", "5", "claude", "opus", "ok")))
+	if strings.Count(tree, "fell back") != 1 || !strings.Contains(tree, "part P2 out of credits, fell back to claude opus high") {
+		t.Errorf("want one fallback note that names part P2:\n%s", tree)
+	}
+}
+
 func TestRunTreeEngine(t *testing.T) {
 	for _, linked := range []string{"", "missing", "tree"} {
 		t.Run(linked, func(t *testing.T) {

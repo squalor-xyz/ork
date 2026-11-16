@@ -289,6 +289,17 @@ func (c *Client) RolesMatrix(ctx context.Context, project string) (*RolesMatrixR
 	return &out, nil
 }
 
+// ProjectsShow reads every setting of one project, from ork, slicer and adj
+// (S247, *proposed*). A part that slicer could not read is in the result's
+// Slicer.Errors; only an unknown project or a registry fault is an error.
+func (c *Client) ProjectsShow(ctx context.Context, name string) (*ProjectsShowResult, error) {
+	var out ProjectsShowResult
+	if err := c.Call(ctx, MethodProjectsShow, ProjectsShowParams{Name: name}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // MatrixEdit previews (p.Preview) or runs one relay-roles write in the
 // registered project (S173, *proposed*). Slicer's refusal comes back as the
 // error it sent.

@@ -185,3 +185,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S371 (run ork-20261116-155616-1207, 2026-11-16)
 
 - [ ] [AFTER LAND] `` S304 trial 6 runs a local implementer on a slice with a large file and records sessions, reads and edits in S304's notes.
+
+## S247 (run ork-20261116-175515-ebde, 2026-11-16)
+
+- [ ] `ork projects show ork` and `ork projects show ork --json` against the owner's running daemon after rebuild: the matrix lines match `slicer relay-roles show`.

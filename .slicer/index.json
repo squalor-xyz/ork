@@ -2435,7 +2435,7 @@
       "id": "S61",
       "title": "Split parts: lead and parts in one worktree",
       "short_title": "Split parts: lead and parts in one worktree",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S08"
@@ -2468,6 +2468,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "05dcba50-8489-42c3-9ef8-4b8ad901b1d5",
+          "kind": "",
+          "text": "**2026-11-16** — Split run verified: a lead and parts share the slice worktree; parts run in batches of at most 3 and only when their files are disjoint (cleaned paths); one review, architect (lineup only) and gate cover the combined diff; the lead gets each fix round and may hand a file's findings back to its part; finished parts stay done when a sibling pauses; a stray file fails only the part that changed it; the plan shows lead and part rows and the TUI launch confirm has an s split toggle. go test -race ./internal/... green, go vet and gofmt clean.",
+          "created_at": "2026-11-16T18:08:03Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2487,7 +2501,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -13960,10 +13974,39 @@
       "id": "S247",
       "title": "ork projects show: every setting of one project, from ork, slicer and adj, in one read",
       "short_title": "ork projects show",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7b976b29-fc71-420b-81c2-610521a9ae80",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S247):\n- later: `ork projects show ork` and `ork projects show ork --json` against the owner's running daemon after rebuild: the matrix lines match `slicer relay-roles show`.",
+          "created_at": "2026-11-16T18:31:49Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c2edda12-e6e6-4034-9871-df7ef96a94ea",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: ork projects show NAME [--json] and the daemon method projects.show read one project's settings from the ork registry, ork's global settings, slicer config and role matrix (through the slicer CLI) and adj state (registry flag plus a stat of .adjudicate.json); nothing is written. A part slicer cannot read is null with slicer's code and message. Text has one block per owner and leaves out vendor_env values; --json prints them unmasked. go test -race ./..., go vet, gofmt, slicer check and adj lint pass; the human check against the owner's running daemon is left for approval.",
+          "created_at": "2026-11-16T18:31:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13981,7 +14024,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -20621,10 +20664,25 @@
       "id": "S376",
       "title": "TUI spec-check screen: overflow marker for a tall permission detail",
       "short_title": "Spec-check screen: overflow marker for tall detail",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d3f0c542-c1ca-4a60-8850-ca84053cd1b4",
+          "kind": "",
+          "text": "**2026-11-16** — At 80x24 a 2,000-character spec-check permission detail drops whole behind a dim +36 detail lines hidden line, and the options, Why line, footer, status, and hint stay. TestSpecCheckTallPermissionDetailOverflows and testdata/golden/speccheck-permission-detail-overflow-80x24.txt lock that screen. The view was already S375's marker; this slice adds the regression golden.",
+          "created_at": "2026-11-16T17:38:44Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -20642,7 +20700,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

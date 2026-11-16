@@ -692,7 +692,7 @@ func TestHintBarUsesTheScreensOwnWords(t *testing.T) {
 // the rest, so the hint does not repeat "enter is no".
 func TestHintBarConfirmNamesWhatYDoes(t *testing.T) {
 	for verb, want := range map[string]string{
-		"launch": "y run; n cancel; e edit lineup", "wave": "y start; n cancel", "approve": "y approve; n cancel",
+		"launch": "y run; n cancel; e edit lineup; s split", "wave": "y start; n cancel", "approve": "y approve; n cancel",
 		"stop": "y stop; n cancel", "retry": "y retry; n cancel", "cleanup": "y clean up; n cancel",
 		"answer": "y send; n cancel", "file": "y file; n cancel", "other": "y confirm; n cancel",
 	} {

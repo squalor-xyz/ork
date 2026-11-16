@@ -255,6 +255,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.setProject(ctx, p)
+	case MethodProjectsShow:
+		var p ProjectsShowParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.showProject(ctx, p)
 	case MethodVendorsList:
 		return d.listVendors()
 	case MethodVendorsSet:

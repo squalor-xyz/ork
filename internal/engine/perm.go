@@ -4,6 +4,7 @@ package engine
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -76,6 +77,29 @@ func DefaultImplementerAllowlist(checkCommand string) []string {
 	return list
 }
 
+// partSlicerReads are the slicer commands that only read. A part keeps these
+// in place of the implementer's `Bash(slicer *)`: it runs no slicer command
+// that writes (slicer ai.py, Roles; S61, *proposed*).
+var partSlicerReads = []string{"Bash(slicer show*)", "Bash(slicer goals*)", "Bash(slicer list*)", "Bash(slicer deps*)", "Bash(slicer find*)"}
+
+// partAllowlist is the implementer's allowlist with the slicer entry that
+// writes replaced by the entries that only read. Any other slicer entry stays
+// only when it is one of those reads.
+func partAllowlist(implementer []string) []string {
+	var out []string
+	for _, entry := range implementer {
+		switch {
+		case entry == "Bash(slicer *)":
+			out = append(out, partSlicerReads...)
+		case strings.HasPrefix(entry, "Bash(slicer ") && !slices.Contains(partSlicerReads, entry):
+			// a slicer entry that may write
+		default:
+			out = append(out, entry)
+		}
+	}
+	return out
+}
+
 func readOnlyRole(role string) bool {
 	return role == RoleReviewer || role == RoleGate || role == RoleArchitect || role == RoleUI || role == RoleSpecCheck
 }
@@ -86,6 +110,15 @@ func readOnlyRole(role string) bool {
 // architect, the UI pass and the spec check are read-only; a registry entry that gives one of them an
 // allowlist is an error.
 func ResolvePermission(p registry.Project, role string) (Permission, error) {
+	if role == RolePart {
+		// A part has the implementer's permission, less the slicer writes.
+		perm, err := ResolvePermission(p, RoleImplementer)
+		if err != nil {
+			return Permission{}, err
+		}
+		perm.Allow = partAllowlist(perm.Allow)
+		return perm, nil
+	}
 	entry, has := p.Permissions[role]
 	switch {
 	case readOnlyRole(role):

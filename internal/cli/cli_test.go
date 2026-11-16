@@ -11,6 +11,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"testing"
@@ -21,6 +22,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -518,7 +520,7 @@ func TestRolesPrintOne(t *testing.T) {
 	}
 	_, stdout, _ = run(t, noDaemon(t), "roles", "print", "--json")
 	mustJSON(t, stdout, &out)
-	if len(out.Roles) != 6 || out.Roles[0].Name != "implementer" || out.Roles[5].Name != "spec-check" {
+	if len(out.Roles) != 8 || out.Roles[0].Name != "implementer" || out.Roles[5].Name != "spec-check" || out.Roles[6].Name != "lead" || out.Roles[7].Name != "part" {
 		t.Fatalf("--json for all: %s", stdout)
 	}
 }
@@ -2365,6 +2367,220 @@ func TestProjectsSetUIPassSkillsRejectsControlCharacters(t *testing.T) {
 				t.Fatalf("%q exit %d: %s", bad, code, stderr)
 			}
 		})
+	}
+}
+
+// ---- projects show (S247, proposed) ----
+
+// showSecret is a vendor_env value: --json prints it as projects list --json
+// does, and the text never does.
+const showSecret = "http://secret-host.example"
+
+var showFixture = daemon.ProjectsShowResult{
+	Project: registry.Project{
+		Name: "ork", Path: "/p/ork", Adj: true, Push: true, Cap: 2, CheckCommand: "go test ./...",
+		VendorEnv: map[string]map[string]string{"claude": {"ANTHROPIC_BASE_URL": showSecret}},
+	},
+	Global: daemon.SettingsResult{GlobalCap: 3, EffectiveGlobalCap: 3, EffectiveDaemonIdleMinutes: 10, Owner: "jon", FileAnswers: true},
+	Slicer: daemon.ShowSlicer{
+		Config: json.RawMessage(`{"implement_finish":"done","relay_contract":11}`),
+		Matrix: &daemon.ShowMatrix{
+			Rows: []daemon.MatrixRow{
+				{ID: "r9", Role: "implementer", Agent: "Codex", Vendor: "OpenAI", Model: "gpt-6.1-sol", Reasoning: "medium", Use: "used as codex"},
+				{ID: "r6", Role: "gate", Agent: "Claude Code", Use: "not used: the gate runs the reviewer's lineup"},
+			},
+			Rules:    []slicercli.Rule{{ID: "u1", Text: "A reviewer never wrote code."}},
+			Revision: "rev-1",
+		},
+		Errors: []daemon.PartError{},
+	},
+	Adj: daemon.ShowAdj{Enabled: true, ConfigFile: true},
+}
+
+// showApp answers projects.show for project ork with res, and fails the test on
+// any other call.
+func showApp(t *testing.T, res daemon.ProjectsShowResult, calls *[]any) *App {
+	t.Helper()
+	return &App{Call: func(_ context.Context, method string, params, result any) error {
+		if method != daemon.MethodProjectsShow {
+			t.Errorf("unexpected method %s", method)
+		}
+		if calls != nil {
+			*calls = append(*calls, params)
+		}
+		if p, ok := params.(daemon.ProjectsShowParams); !ok || p.Name != "ork" {
+			return &ipc.Error{Code: daemon.CodeNotFound, Message: `no project named "nope"`}
+		}
+		b, err := json.Marshal(res)
+		if err != nil {
+			return err
+		}
+		return json.Unmarshal(b, result)
+	}}
+}
+
+// showBlock is the lines of the block that starts at the line heading: up to
+// the next blank line, with each line's runs of spaces made single.
+func showBlock(t *testing.T, stdout, heading string) []string {
+	t.Helper()
+	lines := strings.Split(stdout, "\n")
+	for i, line := range lines {
+		if line != heading {
+			continue
+		}
+		var block []string
+		for _, l := range lines[i+1:] {
+			if l == "" {
+				break
+			}
+			block = append(block, strings.Join(strings.Fields(l), " "))
+		}
+		return block
+	}
+	t.Fatalf("no block %q in:\n%s", heading, stdout)
+	return nil
+}
+
+func TestProjectsShowTextHasOneBlockPerOwner(t *testing.T) {
+	var calls []any
+	code, stdout, stderr := run(t, showApp(t, showFixture, &calls), "projects", "show", "ork")
+	if code != ExitOK || stderr != "" {
+		t.Fatalf("exit %d\nstderr: %s", code, stderr)
+	}
+	if !reflect.DeepEqual(calls, []any{daemon.ProjectsShowParams{Name: "ork"}}) {
+		t.Fatalf("calls %+v", calls)
+	}
+	at := -1
+	lines := strings.Split(stdout, "\n")
+	for _, heading := range []string{"ork (projects.json)", "ork (global)", "slicer config", "slicer relay-roles", "adj"} {
+		i := slices.Index(lines, heading)
+		if i <= at {
+			t.Fatalf("heading %q at line %d, after line %d, in:\n%s", heading, i, at, stdout)
+		}
+		at = i
+	}
+	for _, want := range []string{
+		"r9 implementer Codex gpt-6.1-sol medium  used as codex",
+		"r6 gate Claude Code  not used: the gate runs the reviewer's lineup",
+	} {
+		if !slices.Contains(lines, want) {
+			t.Errorf("no matrix line %q in:\n%s", want, stdout)
+		}
+	}
+	if strings.Contains(stdout, showSecret) {
+		t.Errorf("text prints a vendor_env value:\n%s", stdout)
+	}
+	for heading, want := range map[string][]string{
+		"ork (projects.json)": {"name ork", "path /p/ork", "adj on", "check_command go test ./...", "cap 2", "push on", "vendor_env claude: ANTHROPIC_BASE_URL"},
+		"ork (global)":        {"global_cap 3 (effective 3)", "owner jon"},
+		"slicer config":       {"implement_finish done", "relay_contract 11"},
+		"slicer relay-roles":  {"revision rev-1"},
+		"adj":                 {"enabled on", "config_file present"},
+	} {
+		block := showBlock(t, stdout, heading)
+		for _, line := range want {
+			if !slices.Contains(block, line) {
+				t.Errorf("block %q has no line %q: %q", heading, line, block)
+			}
+		}
+	}
+}
+
+func TestProjectsShowTextNamesAPartSlicerCouldNotRead(t *testing.T) {
+	res := showFixture
+	res.Slicer = daemon.ShowSlicer{Config: json.RawMessage("null"), Errors: []daemon.PartError{
+		{Part: "config", Code: "no_slicer", Message: "no .slicer directory"},
+		{Part: "matrix", Code: "no_relay_roles", Message: "no relay roles file"},
+	}}
+	code, stdout, stderr := run(t, showApp(t, res, nil), "projects", "show", "ork")
+	if code != ExitOK || stderr != "" {
+		t.Fatalf("exit %d\nstderr: %s", code, stderr)
+	}
+	for heading, want := range map[string]string{
+		"slicer config":      "unavailable no .slicer directory (no_slicer)",
+		"slicer relay-roles": "unavailable no relay roles file (no_relay_roles)",
+	} {
+		if block := showBlock(t, stdout, heading); !reflect.DeepEqual(block, []string{want}) {
+			t.Errorf("block %q: %q, want %q", heading, block, want)
+		}
+	}
+	if block := showBlock(t, stdout, "adj"); !slices.Contains(block, "enabled on") {
+		t.Errorf("adj block: %q", block)
+	}
+}
+
+func TestProjectsShowTextSaysSlicerHasNoConfigKeys(t *testing.T) {
+	res := showFixture
+	res.Slicer.Config = json.RawMessage("{}")
+	code, stdout, stderr := run(t, showApp(t, res, nil), "projects", "show", "ork")
+	if code != ExitOK || stderr != "" {
+		t.Fatalf("exit %d\nstderr: %s", code, stderr)
+	}
+	if block := showBlock(t, stdout, "slicer config"); !reflect.DeepEqual(block, []string{"no keys"}) {
+		t.Errorf("block %q, want one no keys line", block)
+	}
+}
+
+func TestProjectsShowJSONIsTheWireResult(t *testing.T) {
+	code, stdout, stderr := run(t, showApp(t, showFixture, nil), "projects", "show", "ork", "--json")
+	if code != ExitOK || stderr != "" {
+		t.Fatalf("exit %d\nstderr: %s", code, stderr)
+	}
+	var got, want any
+	dec := json.NewDecoder(strings.NewReader(stdout))
+	if err := dec.Decode(&got); err != nil {
+		t.Fatalf("output is not JSON: %v\n%s", err, stdout)
+	}
+	if dec.More() {
+		t.Fatalf("more than one value:\n%s", stdout)
+	}
+	b, err := json.Marshal(showFixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	mustJSON(t, string(b), &want)
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("got %s\nwant the daemon's result %s", stdout, b)
+	}
+	// vendor_env is printed as projects list --json prints it (owner, 2026-11-16).
+	if !strings.Contains(stdout, showSecret) {
+		t.Errorf("--json leaves out the vendor_env value:\n%s", stdout)
+	}
+}
+
+func TestProjectsShowUsage(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		args []string
+		code int
+		want string
+	}{
+		{"no name", []string{"projects", "show"}, ExitUsage, "NAME"},
+		{"two names", []string{"projects", "show", "ork", "other"}, ExitUsage, "NAME"},
+		{"no subcommand", []string{"projects"}, ExitUsage, "show"},
+		{"unknown project", []string{"projects", "show", "nope"}, ExitFailure, `no project named "nope"`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var calls []any
+			code, stdout, stderr := run(t, showApp(t, showFixture, &calls), tc.args...)
+			if code != tc.code || stdout != "" || !strings.Contains(stderr, tc.want) {
+				t.Fatalf("exit %d, want %d\nstdout: %q\nstderr: %q", code, tc.code, stdout, stderr)
+			}
+			if tc.code == ExitUsage && len(calls) != 0 {
+				t.Fatalf("a usage error called the daemon: %+v", calls)
+			}
+		})
+	}
+}
+
+func TestUsageTextNamesProjectsShow(t *testing.T) {
+	if !strings.Contains(usageText, "  ork projects show NAME") {
+		t.Errorf("usage lacks ork projects show NAME:\n%s", usageText)
+	}
+	for _, line := range strings.Split(usageText, "\n") {
+		if len(line) > 80 {
+			t.Errorf("usage line of %d columns: %q", len(line), line)
+		}
 	}
 }
 

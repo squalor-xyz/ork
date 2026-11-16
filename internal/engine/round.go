@@ -42,6 +42,9 @@ type round struct {
 	state    string // the state the round belongs to; a pause re-enters it
 	task     string // the ledger step's label
 	finish   bool   // the implementer's finish step
+	lead     bool   // the implementer's slot is the lead of a split run (S61, *proposed*)
+	part     string // the split part's id, for a RolePart round (S61, *proposed*)
+	parent   string // the ledger step the round's step goes under; empty means the orchestrator's
 	sections []BriefSection
 	// resumeFrom lists the roles whose latest session this round resumes. A
 	// pause on a question or a shape error also lets the round resume its own
@@ -60,11 +63,31 @@ type outcome struct {
 	file     string // the report file name in the run directory
 }
 
-// latestSession returns the newest session id among the roles.
-func latestSession(rec runrec.Record, from []string, vendor, model string) string {
+// label names the round in file names: the role, then the part's id for a
+// part, so parts that run at the same time keep their own files.
+func (r round) label() string {
+	if r.part == "" {
+		return r.role
+	}
+	return r.role + "-" + r.part
+}
+
+// is reports whether a role record is a round of r: the same role, round and
+// part.
+func (r round) is(old runrec.RoleRecord) bool {
+	return old.Role == r.role && old.Round == r.n && old.Part == r.part
+}
+
+// latestSession returns the newest session id among the roles. A part never
+// resumes another part's session.
+func latestSession(rec runrec.Record, from []string, vendor, model string, partID ...string) string {
+	part := ""
+	if len(partID) > 0 {
+		part = partID[0]
+	}
 	for i := len(rec.Roles) - 1; i >= 0; i-- {
 		r := rec.Roles[i]
-		if r.Session != "" && contains(from, r.Role) && r.Vendor == vendor && r.Model == model {
+		if r.Part == part && r.Session != "" && contains(from, r.Role) && r.Vendor == vendor && r.Model == model {
 			return r.Session
 		}
 	}
@@ -291,7 +314,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if pend == nil {
 		for i := len(rec.Roles) - 1; i >= 0; i-- {
 			old := rec.Roles[i]
-			if old.Role == r.role && old.Round == r.n {
+			if r.is(old) {
 				if old.ShapeRetry != nil {
 					p := *old.ShapeRetry
 					pend = &p
@@ -302,7 +325,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	// The owner kept the refused report as it is (S298, *proposed*): no role
 	// runs, so no budget, slot or lineup row is needed.
-	if pend != nil && pend.AcceptShape && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n {
+	if pend != nil && pend.AcceptShape && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n && pend.Part == r.part {
 		return e.acceptShape(ctx, r)
 	}
 	// A retry of a budget pause grants this round. Its pending context is
@@ -362,7 +385,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	connectionRetried := false
 	for i := len(rec.Roles) - 1; i >= max(rec.ChainFrom, 0); i-- {
 		old := rec.Roles[i]
-		if old.Role != r.role {
+		if old.Role != r.role || old.Part != r.part {
 			continue
 		}
 		if old.Round != r.n || fallbackExit(ExitClass(old.Exit)) || old.Vendor != entry.Vendor || old.Model != entry.Model || old.Effort != entry.Effort {
@@ -380,18 +403,18 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return outcome{}, e.pauseError(r, what+": "+err.Error())
 	}
 
-	reportName := fmt.Sprintf("%s-%d.md", r.role, r.n)
+	reportName := fmt.Sprintf("%s-%d.md", r.label(), r.n)
 	attempt := 1
 	for _, old := range rec.Roles {
-		if old.Role == r.role && old.Round == r.n {
+		if r.is(old) {
 			attempt++
 		}
 	}
 	if attempt > 1 {
-		reportName = fmt.Sprintf("%s-%d-attempt-%d.md", r.role, r.n, attempt)
+		reportName = fmt.Sprintf("%s-%d-attempt-%d.md", r.label(), r.n, attempt)
 	}
 	reportPath := filepath.Join(e.run.Dir(), reportName)
-	tempDir := filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("%s-%d", r.role, r.n))
+	tempDir := filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("%s-%d", r.label(), r.n))
 	if err := os.MkdirAll(tempDir, 0o700); err != nil {
 		return fail("temp directory", err)
 	}
@@ -413,7 +436,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if pend != nil && (pend.Kind == runrec.PendingQuestion || pend.Kind == runrec.PendingShape) {
 		allowed = append([]string{r.role}, allowed...)
 	}
-	session := latestSession(rec, allowed, entry.Vendor, entry.Model)
+	session := latestSession(rec, allowed, entry.Vendor, entry.Model, r.part)
 
 	sliceJSON, err := e.d.Slicer.ShowRaw(ctx, rec.Worktree, rec.Item)
 	if err != nil {
@@ -428,6 +451,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Vendor:       entry.Vendor,
 		UIPassSkills: e.proj.UIPassSkills,
 		Finish:       r.finish,
+		Lead:         r.lead,
 		Sections:     append(pendingSection(pend), r.sections...),
 	}
 	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
@@ -440,11 +464,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	progressFile := ""
 	readLog := ""
 	if entry.Vendor == "claude-local" {
-		progressFile = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("progress-%s.md", r.role))
+		progressFile = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("progress-%s.md", r.label()))
 		in.ProgressFile = progressFile
 		// ork keeps the log of what this local role reads (S371). Each attempt
 		// starts a new one; a fresh session of the attempt keeps adding to it.
-		readLog = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("readlog-%s-%d.txt", r.role, r.n))
+		readLog = filepath.Join(e.run.Dir(), "tmp", fmt.Sprintf("readlog-%s-%d.txt", r.label(), r.n))
 		if err := os.Remove(readLog); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return fail("old read log", err)
 		}
@@ -526,13 +550,13 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		retry := automaticShapeRetry(pend)
 		if retry != nil {
 			for i := range rr.Roles {
-				if rr.Roles[i].Role == r.role && rr.Roles[i].Round == r.n {
+				if r.is(rr.Roles[i]) {
 					rr.Roles[i].ShapeRetry = nil
 				}
 			}
 		}
 		rr.Roles = append(rr.Roles, runrec.RoleRecord{
-			Role: r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
+			Role: r.role, Part: r.part, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			ShapeRetry: retry,
 			Step:       stepID, StartedAt: e.d.now(),
 		})
@@ -551,7 +575,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	defer kill()
 	watch, stopWatch, hung := e.watchRole(runCtx, kill, entry.Vendor)
 	defer stopWatch()
-	endWork := e.beginWork(fmt.Sprintf("%s round %d", r.role, r.n), watch)
+	what := fmt.Sprintf("%s round %d", r.role, r.n)
+	if r.part != "" {
+		what = fmt.Sprintf("%s %s round %d", r.role, r.part, r.n)
+	}
+	endWork := e.beginWork(what, watch)
 	defer endWork()
 	originalBrief := brief
 	var res Result
@@ -565,7 +593,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		var contextTokens atomic.Int64
 		res, runErr = e.d.Runner.Run(sessionCtx, Request{
 			RunID: rec.ID,
-			Role:  r.role, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
+			Role:  r.role, Part: r.part, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
 			ProgressFile: progressFile, ReadLog: readLog,
 			OnContext: func(tokens int) {
@@ -818,14 +846,14 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if bad != nil {
 		plain := bad.Error()
 		p := runrec.Pending{
-			Kind: runrec.PendingShape, State: r.state, Role: r.role, Round: r.n,
+			Kind: runrec.PendingShape, State: r.state, Role: r.role, Part: r.part, Round: r.n,
 			Reason: plain, ShapeError: plain, ShapeFinding: shapeFindingText(bad.Findings),
 			Asked: reportAsksOwner(text),
 		}
 		// A report that also asks the owner is retried too (S287, *proposed*):
 		// the retry brief tells the role to keep its question. Only the one
 		// automatic retry per role and round runs.
-		if !(pend != nil && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n) {
+		if !(pend != nil && pend.Kind == runrec.PendingShape && pend.Role == r.role && pend.Round == r.n && pend.Part == r.part) {
 			p.AutomaticShapeRetry = true
 			return outcome{}, e.run.Update(func(rr *runrec.Record) {
 				rr.Roles[idx].ShapeRetry = &p
@@ -908,8 +936,8 @@ func (e *Engine) routeReport(r round, rep *Report, tri *Triaged, findings, text,
 			return outcome{}, err
 		}
 		return outcome{}, e.pause(runrec.Pending{
-			Kind: runrec.PendingQuestion, State: r.state, Role: r.role, Round: r.n,
-			Reason:   fmt.Sprintf("%s round %d needs the owner", r.role, r.n),
+			Kind: runrec.PendingQuestion, State: r.state, Role: r.role, Part: r.part, Round: r.n,
+			Reason:   fmt.Sprintf("%s round %d needs the owner", r.label(), r.n),
 			Question: rep.Question, Ask: rep.Ask, Key: rep.Key,
 		})
 	}
@@ -950,7 +978,7 @@ func (e *Engine) routeReport(r round, rep *Report, tri *Triaged, findings, text,
 // refused attempt's step closed without one, S204).
 func (e *Engine) acceptShape(ctx context.Context, r round) (outcome, error) {
 	rec := e.run.Snapshot()
-	text, file, err := e.refusedReport(rec, r.role, r.n)
+	text, file, err := e.refusedReport(rec, r.role, r.n, r.part)
 	if err != nil {
 		return outcome{}, e.pauseError(r, "accept-shape: "+err.Error())
 	}
@@ -978,7 +1006,7 @@ func (e *Engine) acceptShape(ctx context.Context, r round) (outcome, error) {
 	}
 	err = e.run.Update(func(rr *runrec.Record) {
 		for i := len(rr.Roles) - 1; i >= 0; i-- {
-			if rr.Roles[i].Role == r.role && rr.Roles[i].Round == r.n {
+			if r.is(rr.Roles[i]) {
 				rr.Roles[i].ShapeAccepted = true
 				rr.Roles[i].ShapeRetry = nil // the counted context is spent
 				break
@@ -1000,9 +1028,9 @@ func (e *Engine) acceptShape(ctx context.Context, r round) (outcome, error) {
 
 // refusedReport reads the newest report of the role in the round, the one the
 // shape check refused.
-func (e *Engine) refusedReport(rec runrec.Record, role string, round int) (text, file string, err error) {
+func (e *Engine) refusedReport(rec runrec.Record, role string, round int, part string) (text, file string, err error) {
 	for i := len(rec.Roles) - 1; i >= 0; i-- {
-		if old := rec.Roles[i]; old.Role == role && old.Round == round {
+		if old := rec.Roles[i]; old.Role == role && old.Round == round && old.Part == part {
 			file = old.Report
 			break
 		}
@@ -1026,7 +1054,7 @@ func (e *Engine) acceptShapeCheck(rec runrec.Record) error {
 	if p.Role != RoleReviewer && p.Role != RoleUI && p.Role != RoleGate {
 		return refusef("%s; the %s's report has no findings", only, p.Role)
 	}
-	text, _, err := e.refusedReport(rec, p.Role, p.Round)
+	text, _, err := e.refusedReport(rec, p.Role, p.Round, p.Part)
 	if err != nil {
 		return refusef("%s: %v", only, err)
 	}
@@ -1100,7 +1128,7 @@ func (e *Engine) readReport(path, name, fallback string) (text, file string) {
 // pauseError pauses the slice on a failure the engine cannot go on from. The
 // owner retries the state or stops the slice.
 func (e *Engine) pauseError(r round, reason string) error {
-	return e.pause(runrec.Pending{Kind: runrec.PendingError, State: r.state, Role: r.role, Round: r.n, Reason: reason})
+	return e.pause(runrec.Pending{Kind: runrec.PendingError, State: r.state, Role: r.role, Part: r.part, Round: r.n, Reason: reason})
 }
 
 // stepStart records a role round as a ledger step under the orchestrator step
@@ -1116,9 +1144,14 @@ func (e *Engine) stepStart(ctx context.Context, rec runrec.Record, r round, entr
 	if role == "" {
 		role = r.role
 	} // records created before the contract snapshot
+	// A part is a step under the lead's step (S61, *proposed*).
+	parent := rec.OrchestratorStep
+	if r.parent != "" {
+		parent = r.parent
+	}
 	step, err := e.d.Slicer.RelayStep(ctx, e.wr, rec.Worktree, rec.RelayRun, slicercli.StepSpec{
 		Role: role, Agent: entry.Vendor, Vendor: entry.Vendor, Model: entry.Model, Reasoning: entry.Effort,
-		Parent: rec.OrchestratorStep, Phase: "start", Task: r.task,
+		Parent: parent, Phase: "start", Task: r.task,
 	})
 	if err != nil {
 		return ""

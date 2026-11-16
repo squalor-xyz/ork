@@ -16,11 +16,19 @@ import (
 // Role names.
 const (
 	RoleImplementer = "implementer"
-	RoleReviewer    = "reviewer"
-	RoleArchitect   = "architect"
-	RoleGate        = "gate"
-	RoleUI          = "ui"         // the UI pass, beside the reviewer on a slice that touches the UI
-	RoleSpecCheck   = "spec-check" // the batch readiness check before a wave (adj 164)
+	// RoleLead is the lead of a split run (S61, *proposed*). It is the
+	// implementer's slot in the state machine (same lineup chain, records, fix
+	// rounds and finish step) and differs in its prompt; the ledger records it as
+	// an implementer, because slicer's contract has no lead role.
+	RoleLead = "lead"
+	// RolePart is one part of a split run (S61, *proposed*). Parts run in the
+	// slice worktree, change only their own files and run no slicer write.
+	RolePart      = "part"
+	RoleReviewer  = "reviewer"
+	RoleArchitect = "architect"
+	RoleGate      = "gate"
+	RoleUI        = "ui"         // the UI pass, beside the reviewer on a slice that touches the UI
+	RoleSpecCheck = "spec-check" // the batch readiness check before a wave (adj 164)
 )
 
 // ExitClass is how a vendor adapter classifies a role process's exit
@@ -49,6 +57,7 @@ type Request struct {
 	ReadLog      string    // file the approval point appends the role's Read and Grep calls to (S371); empty for a cloud role
 	OnContext    func(int) // current context input tokens, including cached input
 	Role         string
+	Part         string // the split part's id when Role is RolePart (S61, *proposed*)
 	Round        int
 	Vendor       string
 	Model        string

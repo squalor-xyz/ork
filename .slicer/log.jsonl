@@ -4730,6 +4730,13 @@
 {"when": "2026-11-16T17:03:58Z", "item": "S375", "action": "status", "from": "started", "to": "done", "note": "The spec-check screen shows a pending permission question's whole command under the title, wrapped like the run pane, with a blank line before Allow and Deny. A command that does not leave room for the options, the Why line and the footer is omitted, and one dim line says +N detail lines hidden, so the owner can still allow or deny.", "by": "Jon Robbins"}
 {"when": "2026-11-16T16:36:56Z", "item": "S374", "action": "note", "from": "", "to": "", "note": "Hold: owner 2026-11-16 (relay session 8d711f67, 'Hold until ", "by": "Jon Robbins"}
 {"when": "2026-11-16T16:36:57Z", "item": "S372", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T16:54:22Z", "item": "S61", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T17:20:39Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T17:20:41Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T17:34:59Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T17:59:49Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T18:08:03Z", "item": "S61", "action": "note", "from": "", "to": "", "note": "Split run verified: a lead and parts share the slice worktre", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:08:07Z", "item": "S61", "action": "status", "from": "started", "to": "done", "note": "Split run verified: lead and parts share the slice worktree, batches of at most 3 on disjoint files, one review, architect (lineup only) and gate on the combined diff, hand-back of findings to the owning part, TUI s split toggle. go test -race ./internal/... green.", "by": "Jon Robbins"}
 {"when": "2026-11-16T16:51:24Z", "item": "S376", "action": "add", "from": "", "to": "open", "note": "TUI spec-check screen: overflow marker for a tall permission detail"}
 {"when": "2026-11-16T17:29:05Z", "item": "S206", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-16T17:29:10Z", "item": "S206", "action": "edit", "from": "", "to": "", "note": "Implement"}
@@ -4742,3 +4749,18 @@
 {"when": "2026-11-16T18:52:05Z", "item": "S206", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S206):", "by": "Jon Robbins"}
 {"when": "2026-11-16T18:52:29Z", "item": "S206", "action": "note", "from": "", "to": "", "note": "ork pins and checks a project's adj contract (adj-json v1). ", "by": "Jon Robbins"}
 {"when": "2026-11-16T18:52:32Z", "item": "S206", "action": "status", "from": "started", "to": "done", "note": "ork pins and checks a project's adj contract (adj-json v1). projects pin NAME takes --relay N, --adj M, or both, slicer first. unpin NAME clears both pins when adj is on; --adj clears only the adj pin. Doctor shows the adj pin, and a run refuses a pin or a spoken version outside adj-json v1 before a run record exists.", "by": "Jon Robbins"}
+{"when": "2026-11-16T17:14:03Z", "item": "S376", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T17:38:44Z", "item": "S376", "action": "note", "from": "", "to": "", "note": "At 80x24 a 2,000-character spec-check permission detail drop", "by": "Jon Robbins"}
+{"when": "2026-11-16T17:38:48Z", "item": "S376", "action": "status", "from": "started", "to": "done", "note": "At 80x24 a 2,000-character spec-check permission detail drops whole behind a dim +36 detail lines hidden line, and the options, Why line, footer, status, and hint stay. TestSpecCheckTallPermissionDetailOverflows and testdata/golden/speccheck-permission-detail-overflow-80x24.txt lock that screen. The view was already S375's marker; this slice adds the regression golden.", "by": "Jon Robbins"}
+{"when": "2026-11-16T17:26:29Z", "item": "S206", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T17:56:12Z", "item": "S247", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:05:42Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T18:05:53Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T18:05:58Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T18:20:23Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T18:20:33Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T18:31:49Z", "item": "S247", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S247):", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:31:53Z", "item": "S247", "action": "note", "from": "", "to": "", "note": "Verified: ork projects show NAME [--json] and the daemon met", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:31:55Z", "item": "S247", "action": "status", "from": "started", "to": "done", "note": "Verified: ork projects show NAME [--json] and the daemon method projects.show read one project's settings from the ork registry, ork's global settings, slicer config and role matrix (through the slicer CLI) and adj state (registry flag plus a stat of .adjudicate.json); nothing is written. A part slicer cannot read is null with slicer's code and message. Text has one block per owner and leaves out vendor_env values; --json prints them unmasked. go test -race ./..., go vet, gofmt, slicer check and adj lint pass; the human check against the owner's running daemon is left for approval.", "by": "Jon Robbins"}
+{"when": "2026-11-16T17:55:14Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T18:21:29Z", "item": "S62", "action": "edit", "from": "", "to": "", "note": "Implement"}
