@@ -4719,3 +4719,4 @@
 {"when": "2026-11-16T16:17:25Z", "item": "relay-roles.r37", "action": "relay-roles", "from": "31", "to": "7", "note": "move"}
 {"when": "2026-11-16T16:36:56Z", "item": "S374", "action": "note", "from": "", "to": "", "note": "Hold: owner 2026-11-16 (relay session 8d711f67, 'Hold until ", "by": "Jon Robbins"}
 {"when": "2026-11-16T16:36:57Z", "item": "S372", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T16:51:24Z", "item": "S376", "action": "add", "from": "", "to": "open", "note": "TUI spec-check screen: overflow marker for a tall permission detail"}

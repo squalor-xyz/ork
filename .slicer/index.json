@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 376,
+  "next_id": 377,
   "preamble": "",
   "passes": [
     {
@@ -20554,6 +20554,34 @@
         "group": "",
         "reason": "",
         "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S376",
+      "title": "TUI spec-check screen: overflow marker for a tall permission detail",
+      "short_title": "Spec-check screen: overflow marker for tall detail",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S375 (2026-11-16): the spec-check screen shows a permission question's whole detail (S375); a detail taller than the screen pushes other rows off it. S373's run pane drops a tall detail whole behind an overflow marker. Owner decision adj 383 (`ui.permission-detail-speccheck-overflow`, later).",
+        "discovered_from": "S375",
+        "parent": "",
+        "cites": [],
+        "key": "ork-tui-speccheck-detail-overflow",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
         "urgency": 1,
         "effort": 1,
         "attempts": 0
