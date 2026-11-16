@@ -221,18 +221,26 @@ func deferredSection(checks []runrec.CheckRecord, finish bool) *BriefSection {
 func doneWhen(in BriefInput) string {
 	var items []string
 	add := func(text string) { items = append(items, strings.Join(strings.Fields(text), " ")) }
+	isGrok := in.Vendor == "grok" || in.Vendor == "grok-local"
 	if in.Resumed {
 		add("First re-run git status and git diff and re-read every cited file before judging or changing anything.")
 	}
 	if in.ReadOnly || readOnlyRole(in.Role) {
 		add("You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.")
-		if in.Vendor == "grok" || in.Vendor == "grok-local" {
+		if isGrok {
 			add("Grok plan mode: the fixtures show git status --short, git diff -- PATH and git diff --check -- PATH running, plus the built-in file tools read_file, grep and list_dir. rg, slicer and test commands remain unverified.")
 			add("Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.")
 			add("A command that needs approval ends the run and loses the report unless a finished report was already produced. Do not issue one. Give the complete report as your final message.")
 		}
 	} else if !(in.Role == RoleImplementer && in.Vendor == "claude-local") {
 		items = append(items, "Allowed forms, verbatim: "+strings.Join(in.Allow, "; ")+"; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.")
+		if isGrok {
+			// S305, adj 373: dontAsk mode with allow rules. A compound command is
+			// denied (probe p2, 2026-11-07) and a denied command may end the run.
+			add("Grok dontAsk mode: change files with the write and search_replace tools only (the Edit and Write entries above), never with a shell redirect, sed or a script.")
+			add("Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.")
+			add("A command that needs approval ends the run and loses the report unless a finished report was already produced. Do not issue one. Give the complete report as your final message.")
+		}
 	}
 	if in.Role == RoleImplementer && in.Vendor == "claude" && !in.ReadOnly {
 		add("Change files with the Edit and Write tools only: no `sed -i`, no scripts (python or others), no heredocs, no redirects into files.")

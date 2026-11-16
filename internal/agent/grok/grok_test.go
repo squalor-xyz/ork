@@ -10,6 +10,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strconv"
 	"strings"
 	"syscall"
@@ -150,26 +151,101 @@ func TestGrokArgsResume(t *testing.T) {
 	}
 }
 
-// Headless grok refuses every write under dontAsk and acceptEdits (probes 10 to
-// 12) and bypassPermissions is ruled out, so a write role is refused.
-func TestGrokArgsRefuseWriteRoles(t *testing.T) {
-	_, err := (Spec{Dir: "/work", Prompt: "brief"}).Args()
-	if err == nil || !strings.Contains(err.Error(), "write") {
-		t.Fatalf("err %v", err)
-	}
-	if _, err := Run(context.Background(), Spec{Dir: "/work", Prompt: "brief"}); err == nil {
-		t.Fatal("Run accepted a write role")
-	}
-	for _, flag := range []string{"bypassPermissions", "acceptEdits", "auto"} {
-		got, _ := (Spec{Prompt: "brief", ReadOnly: true}).Args()
-		if strings.Contains(strings.Join(got, " "), flag) {
-			t.Fatalf("args carry %s: %q", flag, got)
-		}
+// A write role runs under --permission-mode dontAsk with --allow rules built
+// from the role's allowlist (adj 373, S305). Edit and Write map to Grok's own
+// tool names search_replace and write (probe q1, 2026-11-07); a Bash rule is
+// passed as it is; Read, Grep and Glob and any other entry pass no rule.
+func TestGrokWriteRoleUsesDontAskWithAllowRules(t *testing.T) {
+	allow := []string{"Read", "Grep", "Glob", "Edit", "Write", "Bash(slicer *)", "Bash(go -C * test*)", "Bash(gofmt *)"}
+	got, err := (Spec{Dir: "/work", Prompt: "brief", Model: "m", Effort: "high", Allowlist: allow}).Args()
+	want := []string{"-p", "brief", "--output-format", "streaming-messages-json", "--include-partial-messages", "-m", "m", "--reasoning-effort", "high",
+		"--permission-mode", "dontAsk",
+		"--allow", "search_replace", "--allow", "write", "--allow", "Bash(slicer *)", "--allow", "Bash(go -C * test*)", "--allow", "Bash(gofmt *)",
+		"--cwd", "/work"}
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("args %q %v, want %q", got, err, want)
 	}
 }
 
-// The refusal above rests on these probes: the write was refused, nothing was
-// written, and the run still exited 0 with stopReason cancelled.
+func TestGrokWriteRuleMapping(t *testing.T) {
+	for name, tc := range map[string]struct{ allow, want []string }{
+		"edit only":             {[]string{"Edit"}, []string{"search_replace"}},
+		"write only":            {[]string{"Write"}, []string{"write"}},
+		"duplicates collapse":   {[]string{"Edit", "Edit", "Write", "Write", "Bash(a*)", "Bash(a*)"}, []string{"search_replace", "write", "Bash(a*)"}},
+		"scoped edit is unsafe": {[]string{"Edit(/x/y)", "Write(/x/y)", "Skill", "Bash(go test*)"}, []string{"Bash(go test*)"}},
+		"no entries":            {nil, nil},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := AllowRules(tc.allow); !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("AllowRules(%q) = %q, want %q", tc.allow, got, tc.want)
+			}
+		})
+	}
+}
+
+// No write role carries a flag the owner rules out (S72, adj 373), and a
+// read-only role passes no allow rule even when the request has an allowlist.
+func TestGrokArgsKeepRuledOutFlagsAndReadOnlyUnchanged(t *testing.T) {
+	write, err := (Spec{Dir: "/work", Prompt: "brief", Allowlist: []string{"Edit", "Bash(go test*)"}}).Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, flag := range []string{"bypassPermissions", "acceptEdits", "auto", "--always-approve", "--sandbox", "plan"} {
+		if slices.Contains(write, flag) {
+			t.Errorf("write args carry %s: %q", flag, write)
+		}
+	}
+	read, err := (Spec{Dir: "/work", Prompt: "brief", ReadOnly: true, Allowlist: []string{"Edit", "Bash(go test*)"}}).Args()
+	if err != nil || slices.Contains(read, "--allow") || slices.Contains(read, "dontAsk") || !slices.Contains(read, "plan") {
+		t.Fatalf("read-only args %q %v", read, err)
+	}
+}
+
+// The round runs in the slice worktree: the process working directory and
+// --cwd both name it.
+func TestGrokWriteRoleRunsInTheWorktree(t *testing.T) {
+	s := fake(t, out(t, "02-stream-messages-json"), false)
+	s.ReadOnly = false
+	s.Allowlist = []string{"Write", "Bash(go test*)"}
+	capture := filepath.Join(t.TempDir(), "capture.json")
+	t.Setenv("ORK_GROK_CAPTURE", capture)
+	got, err := Run(context.Background(), s)
+	if err != nil || got.Exit != ExitOK {
+		t.Fatalf("%+v %v", got, err)
+	}
+	b, err := os.ReadFile(capture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var seen struct {
+		Dir  string
+		Args []string
+	}
+	if err := json.Unmarshal(b, &seen); err != nil {
+		t.Fatal(err)
+	}
+	wantDir, _ := filepath.EvalSymlinks(s.Dir)
+	gotDir, _ := filepath.EvalSymlinks(seen.Dir)
+	if gotDir != wantDir || !slices.Contains(seen.Args, "dontAsk") || !slices.Contains(seen.Args, s.Dir) || !slices.Contains(seen.Args, "write") {
+		t.Fatalf("grok ran in %q with %q; want %q, dontAsk, write", seen.Dir, seen.Args, s.Dir)
+	}
+}
+
+// S280: a write round that ends cancelled on a permission prompt keeps its
+// finished report, as a read-only round does.
+func TestGrokWriteRoleKeepsTheCancelHandling(t *testing.T) {
+	report := "Done.\n## Owner needed\nnone\n"
+	s := permissionCancelSpec(t, assistantText(report))
+	s.ReadOnly = false
+	got, err := Run(context.Background(), s)
+	if err != nil || got.Exit != ExitOK || got.Report != report || got.Reason != cancelReason {
+		t.Fatalf("%+v %v", got, err)
+	}
+}
+
+// These S72 probes ran dontAsk and acceptEdits with no --allow rule: the write
+// was refused, nothing was written, and the run still exited 0 with stopReason
+// cancelled. A write role therefore needs the allow rules above (adj 373).
 func TestGrokWriteProbesWereAllRefused(t *testing.T) {
 	for _, name := range []string{"10-write-dontask", "11-write-acceptedits", "12-write-outside"} {
 		if got := fixture(t, name, "stderr"); !strings.Contains(got, "headless run cannot ask for approval") {

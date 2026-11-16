@@ -146,11 +146,15 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 				t.Fatal(err)
 			}
 			want := "a806631ced476e50afc2ff4e909810f526cbfc447a6aeb5949e8842ecf230b27"
-			if vendor == "claude" {
+			switch vendor {
+			case "claude":
 				want = "4172e283479a9995869c476015e7996a5fc5068b14b72c36bd84a77259719d5f"
+			case "grok":
+				// S305: a grok implementer's checklist names dontAsk mode.
+				want = "7a329bb2bc088e73fdef021add2750c8f164006987389a1bbdfcfe2bb155938a"
 			}
 			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
-				t.Fatalf("%s cloud brief changed", vendor)
+				t.Fatalf("%s cloud brief changed %x", vendor, sha256.Sum256([]byte(got)))
 			}
 		})
 	}
@@ -953,6 +957,34 @@ func TestGrokReadOnlyDoneWhenNamesTheFormsThatRun(t *testing.T) {
 			}
 			if strings.Contains(got, "Bash(") || strings.Contains(got, "Allowed forms") {
 				t.Errorf("Grok got Allow entries: %s", got)
+			}
+		})
+	}
+}
+
+// A grok implementer runs in dontAsk mode with allow rules (S305, adj 373): the
+// checklist keeps the allowed forms and adds what grok does with them.
+func TestGrokWriteDoneWhenNamesTheDontAskLimits(t *testing.T) {
+	for _, vendor := range []string{"grok", "grok-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.Vendor, in.ReadOnly = RoleImplementer, vendor, false
+			in.Allow = DefaultImplementerAllowlist("go test ./...")
+			got := checklist(t, in)
+			for _, want := range []string{
+				"Allowed forms, verbatim: " + strings.Join(in.Allow, "; "),
+				"Grok dontAsk mode: change files with the write and search_replace tools only",
+				"Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.",
+				"A command that needs approval ends the run",
+			} {
+				if !strings.Contains(got, want) {
+					t.Errorf("Grok write checklist lacks %q:\n%s", want, got)
+				}
+			}
+			for _, bad := range []string{"Grok plan mode", "You may only read the tree", "sed -i"} {
+				if strings.Contains(got, bad) {
+					t.Errorf("Grok write checklist has %q", bad)
+				}
 			}
 		})
 	}

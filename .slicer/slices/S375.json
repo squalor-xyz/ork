@@ -1,0 +1,41 @@
+{
+  "id": "S375",
+  "title": "TUI spec-check screen: show a permission call's whole command",
+  "lead": [
+    "*Proposed.* The spec-check screen shows a pending permission question's `detail` the same way S373's run pane does."
+  ],
+  "depends_note": null,
+  "findings_note": "S373 (2026-11-16): the run pane shows a permission question's `detail` in full; the spec-check screen still shows only the 120-character title. Owner decision adj 377 (`ui.permission-detail-speccheck`, follow-up).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* The owner answers spec-check permission questions from that screen too; a cut command cannot be judged."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/speccheck.go`\n- `internal/tui/speccheck_test.go`\n- `testdata/golden/`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestSpecCheckPermissionQuestionShowsDetail`: a spec-check permission question with a 300-character detail renders the whole detail, wrapped, under its title (golden)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Red test, then the view, reusing S373's rendering.\n2. Docs: `docs/dashboard.md`. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -105,16 +105,20 @@ model of that family, which ork resolves from the vendor's model list when it
 builds the plan (*proposed*, S244; `docs/design.md`, lineup section). A bare
 `latest` is refused.
 
-Grok runs read-only roles today, in `--permission-mode plan`, and ork
-refuses a Grok write role (*proposed*, S72, no adj record yet). A plan skips
-a Grok implementer row with a reason, and a launch override that names Grok
-as the implementer gets `bad_params` (*proposed*, S268). Probes of
-`dontAsk` and `acceptEdits` refused a headless edit because the run cannot
-ask for approval. Plan mode wrote nothing in the one edit probe. The owner
-ruled out `bypassPermissions` and `--always-approve` on 3 November 2026.
-Modes that would skip the prompt were not measured, so this is ork's rule
-on those probes and that instruction, not a measured limit of every
-headless mode. Wave 7 and 8 fixtures show single `git status --short`,
+Grok runs read-only roles in `--permission-mode plan`. It runs a write role,
+such as the implementer, for `grok` and `grok-local`, under `--permission-mode
+dontAsk` with `--allow` rules built from the role's allowlist: `Edit`
+becomes `search_replace`, `Write` becomes `write`, and a `Bash(...)` entry
+passes as it is. `Read`, `Grep`, `Glob`, a scoped `Edit(...)` or `Write(...)`
+and any other entry pass no rule (*proposed*, S305, adj 373). Without those rules a headless
+edit is refused, because the run cannot ask for approval (probes 10 to 12).
+The rules do not contain Grok: in the 7 November 2026 probes it wrote a
+file outside the working directory and ran a shell command no rule allowed.
+ork relies on the tree fingerprint, the project check, review and the gate, as
+it does for Codex. The owner ruled out `bypassPermissions` and
+`--always-approve` on 3 November 2026. `--sandbox workspace` needs
+bubblewrap, which was not installed on the probe host, so it is untested.
+Wave 7 and 8 fixtures show single `git status --short`,
 `git diff -- PATH` and `git diff --check -- PATH` commands running, plus
 `read_file`, `grep` and `list_dir`. `rg`, `slicer` and tests remain unverified.
 Grok read-only briefs name those verified forms and require one command per
