@@ -4717,3 +4717,5 @@
 {"when": "2026-11-16T16:00:36Z", "item": "S375", "action": "add", "from": "", "to": "open", "note": "TUI spec-check screen: show a permission call's whole command"}
 {"when": "2026-11-16T16:17:21Z", "item": "relay-roles.r37", "action": "relay-roles", "from": "", "to": "implementer", "note": "add"}
 {"when": "2026-11-16T16:17:25Z", "item": "relay-roles.r37", "action": "relay-roles", "from": "31", "to": "7", "note": "move"}
+{"when": "2026-11-16T16:36:56Z", "item": "S374", "action": "note", "from": "", "to": "", "note": "Hold: owner 2026-11-16 (relay session 8d711f67, 'Hold until ", "by": "Jon Robbins"}
+{"when": "2026-11-16T16:36:57Z", "item": "S372", "action": "edit", "from": "", "to": "", "note": "Implement"}
