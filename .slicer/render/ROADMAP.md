@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-375 items · — 57 · done 283 · retired 35
+375 items · — 56 · done 284 · retired 35
 
 v1.2
 
@@ -143,7 +143,7 @@ v1.2
 | 93 | [S372](slices/S372.md) | Smaller Read cap for local roles | S | 1 |  | S304 trial 5 (2026-11-16, run ork-20261116-012801-28aa, S246): sessions restarted at 70k after 28-34 turns; most of the window was 500-line chunks of internal/daemon/runs.go (over 2,000 lines). The approval point caps a local Read at 500 lines (`internal/agent/claude/pretool.go:117-133`, S356). · discovered from S304 | — |
 | 94 | [S373](slices/S373.md) | TUI shows full permission command | S | 1 |  | S370 (2026-11-16): the permission question title is now a 120-character preview with the whole input in the question's `detail` field (adj 368); the TUI shows only the title. Owner decision adj 369 (`ui.permission-detail`, later-slice). · discovered from S370 | done |
 | 95 | [S374](slices/S374.md) | Grok cutover by 2026-12-09 | S | 1 |  | Owner, 2026-11-16 (relay session 8d711f67, chat): "my grok accounts will be cancelled effective December 9th. so let's ensure we maximize that account use through then". Grok is first choice in ork's matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer's matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305 | — |
-| 96 | [S375](slices/S375.md) | Spec-check screen shows full permission command | S | 1 |  | S373 (2026-11-16): the run pane shows a permission question's `detail` in full; the spec-check screen still shows only the 120-character title. Owner decision adj 377 (`ui.permission-detail-speccheck`, follow-up). · discovered from S373 | — |
+| 96 | [S375](slices/S375.md) | Spec-check screen shows full permission command | S | 1 |  | S373 (2026-11-16): the run pane shows a permission question's `detail` in full; the spec-check screen still shows only the 120-character title. Owner decision adj 377 (`ui.permission-detail-speccheck`, follow-up). · discovered from S373 | done |
 
 ---
 
