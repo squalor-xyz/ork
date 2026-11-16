@@ -110,6 +110,24 @@
       "note": "terra high per part of a split slice (owner 2026-11-03)"
     },
     {
+      "id": "r37",
+      "role": "implementer",
+      "when": {
+        "size": [],
+        "effort": [],
+        "importance": [],
+        "urgency": [],
+        "well_specified": null,
+        "split": false,
+        "sliver": false
+      },
+      "agent": "Grok",
+      "vendor": "xAI",
+      "model": "grok-*@latest",
+      "reasoning": "medium",
+      "note": "Grok implementer, first choice until the grok accounts end on 2026-12-09 (owner 2026-11-16, relay session 8d711f67, adj 373 and 379); codex then claude sonnet fall back. Removed by S374 before 2026-12-09. Model 'latest' = the grok CLI default."
+    },
+    {
       "id": "r15",
       "role": "implementer",
       "when": {
@@ -616,6 +634,6 @@
       "text": "Local spec check row (r35) and Local UI pass row (r36) are S304 trial rows (adj 296, 341, 342). They never enter reviewer or gate chains. Only project spec_check_rows and ui_pass_rows select them; normal runs keep the cloud rows."
     }
   ],
-  "next_row": 37,
+  "next_row": 38,
   "next_rule": 13
 }
