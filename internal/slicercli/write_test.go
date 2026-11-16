@@ -101,6 +101,48 @@ func TestConfigReturnsTheValue(t *testing.T) {
 	}
 }
 
+func TestConfigAllReturnsTheObjectAsPrinted(t *testing.T) {
+	const printed = `{"implement_finish":"done","check_command":"go test ./...","relay_contract":11}`
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"config", "--json", "--root", root}, Stdout: printed + "\n"})
+	got, err := c.ConfigAll(context.Background(), root)
+	if err != nil || string(got) != printed {
+		t.Fatalf("%s, %v; want %s", got, err, printed)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, []string{"config", "--json", "--root", root}) {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestConfigAllKeepsSlicersError(t *testing.T) {
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"config", "--json", "--root", root}, Exit: 2,
+		Stdout: `{"error":{"code":"no_slicer","message":"no .slicer directory"}}`})
+	got, err := c.ConfigAll(context.Background(), root)
+	if got != nil || err == nil || !strings.Contains(err.Error(), "no .slicer directory") {
+		t.Fatalf("got %s, err %v; want no object and slicer's message", got, err)
+	}
+}
+
+func TestRelayMatrixReadsTheRevisionWhenSlicerPrintsOne(t *testing.T) {
+	show := func(extra string) string {
+		return `{"relay_roles":"# Relay roles","rows":[],"rules":[]` + extra + `}`
+	}
+	for name, tc := range map[string]struct{ extra, want string }{
+		"printed": {`,"revision":"abc123"`, "abc123"},
+		"absent":  {``, ""},
+	} {
+		t.Run(name, func(t *testing.T) {
+			c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "show", "--json", "--root", root}, Stdout: show(tc.extra)})
+			got, err := c.RelayMatrix(context.Background(), root)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.Revision != tc.want {
+				t.Fatalf("revision %q; want %q", got.Revision, tc.want)
+			}
+		})
+	}
+}
+
 func TestCheckGreenAndRed(t *testing.T) {
 	args := []string{"check", "--json", "--root", root}
 	c, _ := client(t, rawRoute(args, "check-ok.json"))

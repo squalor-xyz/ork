@@ -143,8 +143,14 @@ another row has the same name (a tracked project keeps it ahead of a plain git
 repo; add the other with `--name`). The scan looks at 500
 folders at most, and says when it stopped.
 
-Other commands: `ork projects list` and `ork projects rm NAME`. Removal is
-refused while the project has unfinished runs (`docs/design.md:2604-2608`).
+Other commands: `ork projects list`, `ork projects show NAME` and
+`ork projects rm NAME`. Removal is refused while the project has unfinished
+runs (`docs/design.md:2604-2608`).
+
+*Proposed (S247):* `ork projects show NAME` prints every setting of one
+project in one read: ork's registry entry and global settings, slicer's config
+and role matrix, and adj's state. It changes nothing. Text leaves out the
+`vendor_env` values; `--json` prints the whole result.
 
 The first add creates `~/.config/ork/projects.json`; ork never seeds it
 (`docs/state.md:34-36`).
@@ -877,6 +883,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork show RUN [NAME]
     ork wait [RUN] [--until STATE,...] [--timeout D] [--project P]
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]
+    ork projects show NAME
     ork projects pin NAME --relay N | unpin NAME
     ork run P ID
     ork wave suggest P

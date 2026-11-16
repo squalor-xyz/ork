@@ -13932,10 +13932,39 @@
       "id": "S247",
       "title": "ork projects show: every setting of one project, from ork, slicer and adj, in one read",
       "short_title": "ork projects show",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7b976b29-fc71-420b-81c2-610521a9ae80",
+          "kind": "",
+          "text": "**2026-11-16** — Human checks at approval (S247):\n- later: `ork projects show ork` and `ork projects show ork --json` against the owner's running daemon after rebuild: the matrix lines match `slicer relay-roles show`.",
+          "created_at": "2026-11-16T18:31:49Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c2edda12-e6e6-4034-9871-df7ef96a94ea",
+          "kind": "",
+          "text": "**2026-11-16** — Verified: ork projects show NAME [--json] and the daemon method projects.show read one project's settings from the ork registry, ork's global settings, slicer config and role matrix (through the slicer CLI) and adj state (registry flag plus a stat of .adjudicate.json); nothing is written. A part slicer cannot read is null with slicer's code and message. Text has one block per owner and leaves out vendor_env values; --json prints them unmasked. go test -race ./..., go vet, gofmt, slicer check and adj lint pass; the human check against the owner's running daemon is left for approval.",
+          "created_at": "2026-11-16T18:31:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13953,7 +13982,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

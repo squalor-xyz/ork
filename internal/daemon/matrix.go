@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
@@ -53,19 +54,27 @@ func (d *Daemon) rolesMatrix(ctx context.Context, p RolesMatrixParams) (*RolesMa
 	if err != nil {
 		return nil, err
 	}
+	rows, rules := matrixRows(project, m)
+	return &RolesMatrixResult{Markdown: m.Markdown, Rows: rows, Rules: rules}, nil
+}
+
+// matrixRows is ork's reading of the matrix m of project: each row with what
+// ork does with it, and the rules. Neither is nil.
+func matrixRows(project registry.Project, m *slicercli.Matrix) ([]MatrixRow, []slicercli.Rule) {
 	uiRows, specRows := uiPassRowSet(project, m.Rules), specCheckRowSet(project, m.Rules)
-	out := &RolesMatrixResult{Markdown: m.Markdown, Rows: []MatrixRow{}, Rules: m.Rules}
-	if out.Rules == nil {
-		out.Rules = []slicercli.Rule{}
-	}
+	rows := []MatrixRow{}
 	for _, row := range m.Rows {
-		out.Rows = append(out.Rows, MatrixRow{
+		rows = append(rows, MatrixRow{
 			ID: row.ID, Role: row.Role, Agent: row.Agent,
 			Vendor: row.Vendor, Model: row.Model, Reasoning: row.Reasoning, Note: row.Note,
 			Use: matrixUse(row, uiRows, specRows),
 		})
 	}
-	return out, nil
+	rules := m.Rules
+	if rules == nil {
+		rules = []slicercli.Rule{}
+	}
+	return rows, rules
 }
 
 // MatrixEditParams is one edit of the project's role matrix (S173,

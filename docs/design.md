@@ -141,6 +141,7 @@ ork (TUI)  ork status --json (CLI)
   | `run.landcheck` (*proposed*, S217) | `{"run"}` | `{"base"?,"blockers"?,"reason"?,"error"?}`; current advisory landing check; absent fields are empty |
   | `refresh` | `{"project"}` | none; reads every part of the project now and returns once they are read |
   | `projects.list` | none | `{"projects":[...]}`; an empty registry is valid |
+  | `projects.show` (*proposed*, S247) | `{"name"}` | `{"project","global","slicer":{"config","matrix","errors"},"adj"}`, in that key order, every part present: `project` is the registry entry as `projects.list` returns it (`vendor_env` values included, until S192 decides the masking, owner 2026-11-16); `global` is the `settings.get` result; `slicer.config` is the object `slicer config --json` prints, unchanged; `slicer.matrix` is `{"rows":[...as roles.matrix...],"rules":[...],"revision"?}` from `slicer relay-roles show --json`, with `revision` copied when slicer prints one and omitted otherwise; a part slicer could not read is `null` and `slicer.errors` holds `{"part":"config"\|"matrix","code","message"}` with slicer's own code and message (a project without `.slicer/` has both null), and the call still succeeds; `adj` is `{"enabled","config_file"}`: `enabled` is the registry flag and `config_file` is true when `.adjudicate.json` is a regular file (a stat; ork does not read it); a blank name is `bad_params` and an unknown project `not_found`, with no slicer call; read-only, nothing is written and no lock is held beyond the registry read; slicer runs on each call |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
   | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `ui_pass_rows` (a list, S344), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`), and `dry_run` (a boolean, S248, *proposed*), which the field check ignores | with `dry_run` the project as it would be saved, without saving it, every check of a real call running; otherwise the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`, `spec_check_rows` or `ui_pass_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
@@ -3007,6 +3008,27 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `push`, `ui-pass-skills=a,b`, only when set, in that order. With none set,
   the third column is `-`. `notify_command=CMD` still follows when set.
   The notification cell is cleaned to one line without terminal controls.
+- `projects show NAME` (S247, *proposed*): every setting of one project, from
+  every tool that owns one, in one read through `projects.show`. `--json`
+  prints the wire result unchanged, `vendor_env` values included as
+  `projects list --json` prints them (owner 2026-11-16; S192 changes
+  `projects list`, `projects set` and `projects show` together). Text has one
+  block per owner, in this order, with a blank line between blocks and no
+  indent: `ork (projects.json)`, `ork (global)`, `slicer config`,
+  `slicer relay-roles` and `adj`. A line is `KEY  VALUE`; an empty string or
+  a zero number prints `unset`, while `bell` and `auto_land` print `on` or
+  `off` because an absent value means on. `vendor_env` prints a line per
+  vendor with the names of its keys and never a value. The matrix is one line
+  per row, as `r9 implementer Codex gpt-6.1-sol medium  used as codex`: id,
+  role, agent, then the model and reasoning when set, two spaces, and what ork
+  does with the row. The matrix block starts with `revision  VALUE` when
+  slicer printed one and prints `no rows` when the matrix has none; slicer's
+  rules are in `--json` only. A config with no keys prints one line `no keys`.
+  The adj block prints `enabled on|off` and `config_file present|absent`. A
+  part slicer could not read is one line `unavailable  MESSAGE (CODE)` in its
+  block. Strings are cleaned to one line without terminal
+  controls. No NAME or more than one is a usage error (exit 2) and calls no
+  daemon; an unknown project is `not_found` (exit 1).
 - `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
   duplicate name, a relative path, or a path that is not an existing

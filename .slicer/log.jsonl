@@ -4735,3 +4735,12 @@
 {"when": "2026-11-16T17:38:44Z", "item": "S376", "action": "note", "from": "", "to": "", "note": "At 80x24 a 2,000-character spec-check permission detail drop", "by": "Jon Robbins"}
 {"when": "2026-11-16T17:38:48Z", "item": "S376", "action": "status", "from": "started", "to": "done", "note": "At 80x24 a 2,000-character spec-check permission detail drops whole behind a dim +36 detail lines hidden line, and the options, Why line, footer, status, and hint stay. TestSpecCheckTallPermissionDetailOverflows and testdata/golden/speccheck-permission-detail-overflow-80x24.txt lock that screen. The view was already S375's marker; this slice adds the regression golden.", "by": "Jon Robbins"}
 {"when": "2026-11-16T17:26:29Z", "item": "S206", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T17:56:12Z", "item": "S247", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:05:42Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T18:05:53Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T18:05:58Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T18:20:23Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T18:20:33Z", "item": "S247", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T18:31:49Z", "item": "S247", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S247):", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:31:53Z", "item": "S247", "action": "note", "from": "", "to": "", "note": "Verified: ork projects show NAME [--json] and the daemon met", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:31:55Z", "item": "S247", "action": "status", "from": "started", "to": "done", "note": "Verified: ork projects show NAME [--json] and the daemon method projects.show read one project's settings from the ork registry, ork's global settings, slicer config and role matrix (through the slicer CLI) and adj state (registry flag plus a stat of .adjudicate.json); nothing is written. A part slicer cannot read is null with slicer's code and message. Text has one block per owner and leaves out vendor_env values; --json prints them unmasked. go test -race ./..., go vet, gofmt, slicer check and adj lint pass; the human check against the owner's running daemon is left for approval.", "by": "Jon Robbins"}

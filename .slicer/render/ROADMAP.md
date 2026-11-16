@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-376 items · — 55 · done 286 · retired 35
+376 items · — 54 · done 287 · retired 35
 
 v1.2
 
@@ -68,7 +68,7 @@ v1.2
 | 18 | [S241](slices/S241.md) | Plan and launch output | M | 2 |  |  | done |
 | 19 | [S242](slices/S242.md) | Daemon status and stale rule | M | 2 |  |  | done |
 | 20 | [S246](slices/S246.md) | Check command from slicer first | S | 1 |  |  | done |
-| 21 | [S247](slices/S247.md) | ork projects show | M | 2 |  |  | — |
+| 21 | [S247](slices/S247.md) | ork projects show | M | 2 |  |  | done |
 | 22 | [S248](slices/S248.md) | projects set --dry-run | S | 1 |  |  | done |
 | 23 | [S249](slices/S249.md) | Project setup steps | M | 2 |  |  | — |
 | 24 | [S250](slices/S250.md) | Matrix change sets | M | 2 |  |  | — |

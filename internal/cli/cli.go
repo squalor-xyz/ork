@@ -143,6 +143,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               the only registered project); exit 0 changed,
                               3 question pending, 4 nothing active, 5 timeout
   ork projects list           list the registered projects
+  ork projects show NAME      print every setting of a project, one block per
+                              owner: ork's registry entry and global settings,
+                              slicer's config and role matrix, and adj; text
+                              leaves out vendor_env values, --json prints them
   ork projects add [PATH] [--name N]
                               register a project
   ork projects add --scan DIR [--yes]
