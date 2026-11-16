@@ -60,7 +60,7 @@ func recordedVersion(t *testing.T, file string) int {
 }
 
 func TestNames(t *testing.T) {
-	want := []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check"}
+	want := []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check", "lead", "part"}
 	if got := Names(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("Names() = %v, want %v", got, want)
 	}
@@ -779,8 +779,8 @@ func TestOwnerNeededBlockWordingMatchesTheParser(t *testing.T) {
 			t.Errorf("%s lacks %q", name, want)
 		}
 	}
-	if n != 6 {
-		t.Errorf("%d prompts carry the Owner needed block rule, want 6", n)
+	if n != 8 {
+		t.Errorf("%d prompts carry the Owner needed block rule, want 8", n)
 	}
 }
 
@@ -796,6 +796,68 @@ func TestPromptsSayTMPDIRAlreadyPointsAtTheTempDir(t *testing.T) {
 			if !has(p, want) {
 				t.Errorf("%s lacks %q", name, want)
 			}
+		}
+	}
+}
+
+// S61 (carried from S10): the lead's and the part's prompts say, as the
+// implementer's does, that no note, handoff or done runs before review.
+func TestSplitPromptsSayNoHandoffBeforeReview(t *testing.T) {
+	ps := prompts(t)
+	for _, name := range []string{"implementer", "lead", "part"} {
+		if !has(ps[name], "Run no `slicer note`, `slicer handoff` or `slicer done` before review") {
+			t.Errorf("%s lacks the no handoff before review rule", name)
+		}
+	}
+}
+
+// S61: a part changes only its own files and runs no slicer command that
+// writes (slicer ai.py, Roles); the lead owns the tracking and names the parts.
+func TestPartPromptChangesOnlyItsOwnFilesAndWritesNoTracking(t *testing.T) {
+	part := prompts(t)["part"]
+	for _, want := range []string{
+		"Change only the files your part lists in the brief.",
+		"Run no slicer command that writes: not `slicer start`, `edit`, `note`, `handoff` or `done`.",
+		"Do not run the full suite",
+	} {
+		if !has(part, want) {
+			t.Errorf("part prompt lacks %q", want)
+		}
+	}
+	if strings.Contains(strings.ToLower(part), "you are read-only") {
+		t.Error("part prompt says it is read-only")
+	}
+}
+
+// S61 (owner decision, adj 385): the lead may hand a file's findings back to
+// the part that owns the file; the part prompt says it may receive them.
+func TestLeadPromptNamesTheHandBackSectionAndPartPromptTheHandedFindings(t *testing.T) {
+	ps := prompts(t)
+	for _, want := range []string{
+		"hand a file's findings back to the part that owns the file",
+		"Add the section `## Hand back` before `## Owner needed`",
+		"- P2: internal/b/b.go:3 the nil case is wrong; return the error.",
+		"do not change a file you hand back",
+	} {
+		if !has(ps["lead"], want) {
+			t.Errorf("lead prompt lacks %q", want)
+		}
+	}
+	if !has(ps["part"], "findings the lead handed back to your part") {
+		t.Error("part prompt does not say the lead may hand findings back")
+	}
+}
+
+func TestLeadPromptNamesTheOnePartsSectionOrkReads(t *testing.T) {
+	lead := prompts(t)["lead"]
+	for _, want := range []string{
+		"add the section `## Parts` before `## Owner needed`",
+		"- P1: files internal/a/a.go, internal/a/a_test.go; tests TestA, TestAEdge",
+		"You alone run the slicer commands that write; the parts run none.",
+		"ork runs parts that list a common file one after another",
+	} {
+		if !has(lead, want) {
+			t.Errorf("lead prompt lacks %q", want)
 		}
 	}
 }

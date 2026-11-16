@@ -19,12 +19,37 @@ import (
 
 var lineupRoles = [...]string{"implementer", "reviewer", "architect"}
 
+// maxLineupRoles is the rows an editor can have: the three roles and, for a
+// split plan, the part chain (S61, *proposed*).
+const maxLineupRoles = len(lineupRoles) + 1
+
+// lineupRolesFor is the roles the editor of a plan lets the owner change. A
+// split plan adds the part chain after the others; its implementer row is the
+// lead's.
+func lineupRolesFor(plan *daemon.RunPlan) []string {
+	roles := lineupRoles[:]
+	if plan != nil && plan.Split {
+		roles = append(append([]string(nil), roles...), "part")
+	}
+	return roles
+}
+
+// roleLabel is what the editor and the launch confirm call a role: the
+// implementer's slot is the lead in a split run.
+func roleLabel(role string, split bool) string {
+	if role == "implementer" && split {
+		return "lead"
+	}
+	return role
+}
+
 type lineupEditor struct {
 	stopAfter string
 	item      string
 	plan      *daemon.RunPlan
-	chains    [len(lineupRoles)][]runrec.LineupEntry
-	choice    [len(lineupRoles)]int
+	roles     []string
+	chains    [maxLineupRoles][]runrec.LineupEntry
+	choice    [maxLineupRoles]int
 	budgets   [2]textField
 	row       int
 	custom    bool
@@ -79,11 +104,11 @@ const (
 )
 
 func newLineupEditor(item string, plan *daemon.RunPlan) *lineupEditor {
-	e := &lineupEditor{item: item, plan: plan, stopAfter: plan.StopAfter}
+	e := &lineupEditor{item: item, plan: plan, stopAfter: plan.StopAfter, roles: lineupRolesFor(plan)}
 	if e.stopAfter == "" {
 		e.stopAfter = runrec.StopAfterLand
 	}
-	for i, role := range lineupRoles {
+	for i, role := range e.roles {
 		e.chains[i] = append([]runrec.LineupEntry(nil), plan.Lineup[role]...)
 	}
 	e.budgets[0].insert(strconv.Itoa(plan.Budgets.Minutes))
@@ -133,11 +158,11 @@ func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
 	case "esc":
 		return lineupDiscard
 	case "down", "tab":
-		e.row = (e.row + 1) % (len(lineupRoles) + len(e.budgets) + 1)
+		e.row = (e.row + 1) % (len(e.roles) + len(e.budgets) + 1)
 	case "up", "shift+tab":
-		e.row = (e.row + len(lineupRoles) + len(e.budgets)) % (len(lineupRoles) + len(e.budgets) + 1)
+		e.row = (e.row + len(e.roles) + len(e.budgets)) % (len(e.roles) + len(e.budgets) + 1)
 	case "left", "right":
-		if e.row == len(lineupRoles) {
+		if e.row == len(e.roles) {
 			if e.stopAfter == runrec.StopAfterLand {
 				e.stopAfter = runrec.StopAfterCommit
 			} else {
@@ -145,11 +170,11 @@ func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
 			}
 			break
 		}
-		if e.row > len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
-			e.budgets[e.row-len(lineupRoles)-1].update(msg)
+		if e.row > len(e.roles) && e.row <= len(e.roles)+len(e.budgets) {
+			e.budgets[e.row-len(e.roles)-1].update(msg)
 			break
 		}
-		chain := e.plan.Lineup[lineupRoles[e.row]]
+		chain := e.plan.Lineup[e.roles[e.row]]
 		if len(chain) == 0 {
 			break
 		}
@@ -162,12 +187,12 @@ func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
 		e.chains[e.row] = append([]runrec.LineupEntry{chain[choice]}, chain[:choice]...)
 		e.chains[e.row] = append(e.chains[e.row], chain[choice+1:]...)
 	case "d":
-		if e.row < len(lineupRoles) && lineupRoles[e.row] == "architect" {
+		if e.row < len(e.roles) && e.roles[e.row] == "architect" {
 			e.chains[e.row] = nil
 			e.choice[e.row] = 0
 		}
 	case "c":
-		if e.row < len(lineupRoles) {
+		if e.row < len(e.roles) {
 			entry := runrec.LineupEntry{}
 			if len(e.chains[e.row]) > 0 {
 				entry = e.chains[e.row][0]
@@ -184,8 +209,8 @@ func editLineup(e *lineupEditor, msg tea.KeyPressMsg) lineupEditResult {
 	case "enter":
 		return lineupSave
 	default:
-		if e.row > len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
-			e.budgets[e.row-len(lineupRoles)-1].update(msg)
+		if e.row > len(e.roles) && e.row <= len(e.roles)+len(e.budgets) {
+			e.budgets[e.row-len(e.roles)-1].update(msg)
 		}
 	}
 	return lineupNone
@@ -204,13 +229,13 @@ func lineupOverrides(e *lineupEditor, p daemon.RunParams) (daemon.RunParams, boo
 	for i := range values {
 		value, err := strconv.Atoi(e.budgets[i].Value())
 		if err != nil || value < 0 {
-			e.row = i + len(lineupRoles) + 1
+			e.row = i + len(e.roles) + 1
 			return p, false, false
 		}
 		values[i] = value
 	}
 	p.Lineup = maps.Clone(p.Lineup)
-	for i, role := range lineupRoles {
+	for i, role := range e.roles {
 		if !reflect.DeepEqual(e.chains[i], e.plan.Lineup[role]) {
 			if p.Lineup == nil {
 				p.Lineup = map[string][]runrec.LineupEntry{}
@@ -270,7 +295,7 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 	}
 	out.body = append(out.body, th.Heading.Render("Edit lineup: "+e.item+"  "+title))
 	add("Run only; gate follows reviewer.")
-	for i, role := range lineupRoles {
+	for i, role := range e.roles {
 		entry := runrec.LineupEntry{}
 		if len(e.chains[i]) > 0 {
 			entry = e.chains[i][0]
@@ -281,7 +306,7 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 			prefix = "> "
 			out.sel = len(out.body)
 		}
-		label := role
+		label := roleLabel(role, e.plan.Split)
 		if !reflect.DeepEqual(e.chains[i], e.plan.Lineup[role]) {
 			label += "*"
 		}
@@ -317,7 +342,7 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 		add("  ui: " + strings.Join(rows, " -> ") + " (UI slices only; from the matrix)")
 	}
 	prefix, label := "  ", "stop"
-	if e.row == len(lineupRoles) {
+	if e.row == len(e.roles) {
 		prefix = "> "
 		out.sel = len(out.body)
 	}
@@ -329,19 +354,19 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 		label += "*"
 	}
 	value := e.stopAfter
-	if e.row == len(lineupRoles) {
+	if e.row == len(e.roles) {
 		value = "< " + value + " >"
 	}
 	start := len(out.body)
 	add(prefix + label + ": " + value)
-	if e.row == len(lineupRoles) {
+	if e.row == len(e.roles) {
 		for j := start; j < len(out.body); j++ {
 			out.body[j] = th.TabActive.Render(out.body[j])
 		}
 	}
 	for i, label := range []string{"Budget minutes", "Budget tokens"} {
 		prefix := "  "
-		if e.row != i+len(lineupRoles)+1 {
+		if e.row != i+len(e.roles)+1 {
 			add(prefix + label + ": " + e.budgets[i].Value())
 			continue
 		}
@@ -359,7 +384,7 @@ func (m *Model) editorBody(e *lineupEditor, title string, width int) overviewVie
 	}
 	add("Zero budget uses the project default.")
 	if e.custom {
-		add("Custom " + lineupRoles[e.row] + ":")
+		add("Custom " + roleLabel(e.roles[e.row], e.plan.Split) + ":")
 		for i, label := range []string{"Vendor", "Model", "Effort"} {
 			prefix, value := "  ", e.fields[i].Value()
 			if e.focus == i {

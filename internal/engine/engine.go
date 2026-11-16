@@ -117,6 +117,10 @@ type Config struct {
 	// in the main checkout's spec of the item (S116). The run keeps it and
 	// gives it to every role, because its worktree lacks the edit.
 	Decisions string
+	// Split makes the run a split: a lead and parts in one worktree (S61,
+	// *proposed*). The lineup then needs a part chain beside the lead's, which is
+	// the implementer chain.
+	Split bool
 }
 
 // Engine runs one slice. The methods that move it (Run, Approve, Reject,
@@ -338,6 +342,13 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	if _, ok := lineup(cfg.Lineup, RoleUI); ok {
 		roleList = append(roleList, RoleUI)
 	}
+	if cfg.Split {
+		// The lead has the implementer's chain; the parts need their own (S61).
+		if _, ok := lineup(cfg.Lineup, RolePart); !ok {
+			return nil, fmt.Errorf("the lineup has no %s", RolePart)
+		}
+		roleList = append(roleList, RolePart)
+	}
 	for _, role := range roleList {
 		if _, err := ResolvePermission(cfg.Project, role); err != nil {
 			return nil, err
@@ -360,6 +371,10 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	for _, role := range append(roles.Names(), "orchestrator") {
 		ledgerRoles[role] = contract.LedgerRole(role)
 	}
+	// The contract has no lead and no part: the ledger records both as
+	// implementers, a part's step under the lead's (S61, *proposed*).
+	ledgerRoles[RoleLead] = ledgerRoles[RoleImplementer]
+	ledgerRoles[RolePart] = ledgerRoles[RoleImplementer]
 	copied := map[string][]runrec.LineupEntry{}
 	for role, entries := range cfg.Lineup {
 		copied[role] = append([]runrec.LineupEntry(nil), entries...)
@@ -379,7 +394,7 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	run, err := d.Store.Create(runrec.Record{
 		ID: id, StopAfter: cfg.StopAfter, Wave: cfg.Wave, WaveName: cfg.WaveName, Project: cfg.Project.Name, Item: cfg.Item,
 		Worktree: worktreePath(cfg.Project, cfg.Item), Branch: branchName(cfg.Project, cfg.Item),
-		Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
+		Split: cfg.Split, Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
 	})
 	if err != nil {
 		return nil, err
@@ -846,7 +861,8 @@ func (e *Engine) pauseShape(p runrec.Pending) error {
 		keep := func(role string, round int, ctx runrec.Pending) {
 			ctx.AutomaticShapeRetry = false
 			for i := len(r.Roles) - 1; i >= 0; i-- {
-				if r.Roles[i].Role == role && r.Roles[i].Round == round {
+				// Parts share a role: the record is the part's own (S61).
+				if r.Roles[i].Role == role && r.Roles[i].Round == round && r.Roles[i].Part == ctx.Part {
 					r.Roles[i].ShapeRetry = &ctx
 					return
 				}
@@ -855,7 +871,7 @@ func (e *Engine) pauseShape(p runrec.Pending) error {
 		switch cur := r.Pending; {
 		case r.State != runrec.StatePaused:
 			r.State, r.Reason, r.Pending = runrec.StatePaused, p.Reason, &p
-		case cur != nil && cur.Kind == runrec.PendingShape && cur.Role != p.Role && p.ShapePauses > cur.ShapePauses:
+		case cur != nil && cur.Kind == runrec.PendingShape && (cur.Role != p.Role || cur.Part != p.Part) && p.ShapePauses > cur.ShapePauses:
 			keep(cur.Role, cur.Round, *cur)
 			r.Reason, r.Pending = p.Reason, &p
 		default:

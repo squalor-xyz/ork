@@ -46,7 +46,10 @@ func LocalSystemPrompt() string { return localSystem }
 // versions in AcceptedContracts, which include this one.
 const ContractVersion = 12
 
-var names = []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check"}
+// names lists the roles. lead and part are the roles of a split run (S61,
+// *proposed*): the lead is the one implementer of the slice, and a part
+// changes only its own files and runs no slicer command that writes.
+var names = []string{"implementer", "reviewer", "gate", "architect", "ui", "spec-check", "lead", "part"}
 
 // Names returns the role names, in the order ork lists them.
 func Names() []string { return slices.Clone(names) }

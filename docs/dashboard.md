@@ -278,8 +278,9 @@ Neither Waves nor Launch asks well specified or split, so neither has an
 input hint (*proposed*, adj 189). The lineup editor and spec
 question sitting also show their current keys in this line. A confirmation
 names what `y` does and, at the Roadmap launch, `e`, since the prompt above
-it carries the rest: `y run; n cancel; e edit lineup`, `y start; n cancel`, `y approve; n
-cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor.
+it carries the rest: `y run; n cancel; e edit lineup; s split`, `y start; n cancel`, `y approve; n
+cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor and
+`s` turns split (a lead and parts, S61, *proposed*) on or off and plans again.
 The help screen shows `? or esc close help; q quit`.
 
 The header shows the version next to ork (ui.version-mark, adj #130).
@@ -1710,8 +1711,9 @@ questions all send the items with no name, as a hand-ticked set does.
 
 `e` edits the selected ticked item after its plan is ready (S83).
 The Roadmap launch confirmation uses the same editor with `e` (S166).
-The editor starts from that item's plan: implementer, reviewer and architect,
-then budget minutes and tokens. The architect shows `off` when absent.
+The editor starts from that item's plan: implementer, reviewer and architect
+(and, for a split plan, the part chain after them; the implementer row is
+then the lead's), then budget minutes and tokens. The architect shows `off` when absent.
 The gate follows the reviewer and has no field.
 When the plan has a `ui` entry (the matrix's UI pass rows, in `ui_pass_rows`
 order or rule order), a line below the architect lists its chain for
@@ -1781,8 +1783,25 @@ s374  review  round 1  23m  41k tok  $0.62   [■■■■■□□□] ▁▃�
 The detail pane shows ledger steps under their parent, with the orchestrator
 at the root (`ui.run-tree`). Unknown parents appear at the root. Cycles visit
 each step once. An engine run uses its linked ledger tree when available;
-otherwise its recorded role rounds appear flat under the run. The two sources
-are never combined.
+otherwise its recorded role rounds appear flat under the run, except the parts
+of a split run (below). The two sources are never combined.
+
+*Proposed (S61):* a split run's parts show under the lead. The ledger records
+the lead and each part as an `implementer` step, a part's with the lead's step
+as its parent, so a linked tree nests the parts under the lead. Each part's node
+says `part ID` in the role column in place of the role (read from the engine's
+role record by step id), so a clipped row still names its part. Without a
+ledger, the role records give the same nesting: a part's record names its id,
+and its node sits under the lead's record of the same round. A fallback note
+(`fell back from`, `out of credits, fell back to`) describes the attempts of one
+part only, and the out-of-credits note names the part.
+The launch confirm and `ork run` show the lead (the implementer's chain) and the
+part chain as `lead:` and `part:` rows when the plan is a split, with `split:
+yes` on the TUI confirm; the second entry of a chain is marked `(fallback)`.
+The confirm's `s` key flips split and plans again (`esc` during the new plan keeps
+the plan on screen); turning split off drops a `part` override. The lineup
+editor of a split plan has a `part` row after the architect, and its
+implementer row reads `lead`.
 
 Each node shows `glyph role phase elapsed  vendor model effort` in that order.
 Role and phase columns use text widths to align the phase and elapsed time,

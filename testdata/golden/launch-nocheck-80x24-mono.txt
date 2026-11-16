@@ -20,5 +20,5 @@
                    │[2m────────────────────────────────────────────────────────────[m
                    │  ork run ork S90: refused (n or esc closes)
                    │[2m────────────────────────────────────────────────────────────[m
-                   │ n [2mcancel[m; e [2medit lineup[m
+                   │ n [2mcancel[m; e [2medit lineup[m; s [2msplit[m
                    │ 2 projects | refreshed 16:42:00

@@ -42,6 +42,7 @@ type BriefInput struct {
 	ReadOnly     bool   // the role cannot write its report path: it reports in its final message (S256, *proposed*)
 	Resumed      bool   // ork resumed the role's earlier session (S256, *proposed*)
 	Tree         string // `git status --porcelain` when the round started; read only for a resumed round
+	Lead         bool   // the implementer's slot is the lead of a split run: the lead's prompt (S61, *proposed*)
 }
 
 // fenceFor returns a code fence longer than any backtick run in text.
@@ -73,11 +74,15 @@ func BuildBrief(in BriefInput) (string, error) {
 			return "", fmt.Errorf("brief for %s: %s is empty", in.Role, f.name)
 		}
 	}
-	prompt, err := roles.Prompt(in.Role)
+	promptName := in.Role
+	if in.Lead && in.Role == RoleImplementer {
+		promptName = RoleLead // the implementer's slot in a split run, with the lead's prompt (S61)
+	}
+	prompt, err := roles.Prompt(promptName)
 	if err != nil {
 		return "", err
 	}
-	localImplementer := in.Role == RoleImplementer && in.Vendor == "claude-local"
+	localImplementer := in.Role == RoleImplementer && !in.Lead && in.Vendor == "claude-local"
 	if localImplementer {
 		prompt, err = roles.LocalImplementerPrompt()
 		if err != nil {
@@ -232,7 +237,7 @@ func doneWhen(in BriefInput) string {
 			add("Use one command per call. Do not use &&, ;, a pipe, echo, a redirect or python3 -c.")
 			add("A command that needs approval ends the run and loses the report unless a finished report was already produced. Do not issue one. Give the complete report as your final message.")
 		}
-	} else if !(in.Role == RoleImplementer && in.Vendor == "claude-local") {
+	} else if !(in.Role == RoleImplementer && !in.Lead && in.Vendor == "claude-local") {
 		items = append(items, "Allowed forms, verbatim: "+strings.Join(in.Allow, "; ")+"; any other command is denied; no pipes, no cd, no env prefix unless an entry allows it.")
 		if isGrok {
 			// S305, adj 373: dontAsk mode with allow rules. A compound command is
@@ -242,7 +247,7 @@ func doneWhen(in BriefInput) string {
 			add("A command that needs approval ends the run and loses the report unless a finished report was already produced. Do not issue one. Give the complete report as your final message.")
 		}
 	}
-	if in.Role == RoleImplementer && in.Vendor == "claude" && !in.ReadOnly {
+	if (in.Role == RoleImplementer || in.Role == RolePart) && in.Vendor == "claude" && !in.ReadOnly {
 		add("Change files with the Edit and Write tools only: no `sed -i`, no scripts (python or others), no heredocs, no redirects into files.")
 		add("Run one plain command per shell call: no pipes, no `&&` or `;`, no command substitution, no `cd` (use absolute paths, `go -C DIR` and `git -C DIR`).")
 		add("If a command is denied, use an allowed form; do not retry it another way.")
@@ -261,7 +266,15 @@ func doneWhen(in BriefInput) string {
 		add("End the report with the exact heading ## Owner needed, or none beneath it when no question is open. Do not commit.")
 	} else {
 		switch in.Role {
+		case RolePart:
+			add("Change only your part's files, listed under Your part; run no slicer command that writes; run only your own tests, not the full suite.")
+			add("Complete the report parts in the prompt in their stated order; self-check concurrency and handle lifetime, docs and mutation evidence for your files.")
+			add("Item 4 has the literal line Tests: N passed, M failed, with integer counts of your own tests actually run; nothing may follow the counts. End with the exact unnumbered heading ## Owner needed. Both lines stand alone; skipped tests go under item 6.")
+			add("Each test of your part is red before the code and green after; mutation-check every new assertion.")
 		case RoleImplementer:
+			if in.Lead {
+				add("In a first round, list every part under `## Parts`, before `## Owner needed`, one `- ID: files PATH, PATH; tests NAME, NAME` line each, or write `none`. In a fix round or the finish step, write no `## Parts` section. In a fix round you may hand a file's findings back to its part under `## Hand back` (or write `none`).")
+			}
 			add("Complete the report parts in the prompt in their stated order; docs updated with code in the same diff; self-check concurrency and handle lifetime, docs and mutation evidence.")
 			add("Item 4 has the literal line Tests: N passed, M failed, with integer counts of tests actually run; nothing may follow the counts. End with the exact unnumbered heading ## Owner needed. Both lines stand alone; skipped tests go under item 6.")
 			add("A denied or impossible check goes under item 6 with the verbatim command and denial text; never a made-up zero. Try allowed command forms; ork re-runs the checks outside the sandbox. Sandbox-limited checks are not owner questions.")

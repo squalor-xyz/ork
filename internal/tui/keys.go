@@ -19,6 +19,7 @@ type keyMap struct {
 	Add        key.Binding
 	Cleanup    key.Binding
 	EditLineup key.Binding
+	Split      key.Binding // the launch confirm's split toggle (S61, *proposed*)
 	Tick       key.Binding
 	Expand     key.Binding
 	ExpandAll  key.Binding
@@ -88,6 +89,7 @@ func newKeyMap() keyMap {
 		Add:        key.NewBinding(key.WithKeys("+"), key.WithHelp("+", "add project")),
 		Cleanup:    key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "remove merged worktree and branch (Ready)")),
 		EditLineup: key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit lineup (Waves, launch)")),
+		Split:      key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "split (launch)")),
 		Tick:       key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "tick item and plan it (Waves)")),
 		Expand:     key.NewBinding(key.WithKeys("space"), key.WithHelp("space", "expand or collapse a run, or show the stale rows (Running)")),
 		ExpandAll:  key.NewBinding(key.WithKeys("E", "shift+e"), key.WithHelp("E", "expand or collapse all")),
@@ -318,7 +320,7 @@ func (m *Model) contextHints() []hintEntry {
 			l.add(dropRow, short(k.Yes, "y", confirmWord(m.confirm.verb)), short(k.No, "n", "cancel"))
 		}
 		if m.confirm.verb == "launch" {
-			l.add(dropRow, short(k.EditLineup, "e", "edit lineup"))
+			l.add(dropRow, short(k.EditLineup, "e", "edit lineup"), short(k.Split, "s", "split"))
 		}
 	case spec != nil && spec.permissionSending:
 		l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
@@ -353,20 +355,20 @@ func (m *Model) contextHints() []hintEntry {
 		} else {
 			// The value hint outranks navigation on stop and budget rows (S152).
 			rowDrop := dropRow
-			if e.row >= len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
+			if e.row >= len(e.roles) && e.row <= len(e.roles)+len(e.budgets) {
 				rowDrop = dropRow + 1
 			}
 			l.add(rowDrop, short(k.NextView, "up/down/tab", "row"))
-			if e.row > len(lineupRoles) && e.row <= len(lineupRoles)+len(e.budgets) {
+			if e.row > len(e.roles) && e.row <= len(e.roles)+len(e.budgets) {
 				l.add(dropRow, short(k.MarkCheck, "type", "a whole number")) // the budget fields (S152)
 			}
-			if e.row == len(lineupRoles) {
+			if e.row == len(e.roles) {
 				l.add(dropRow, short(k.TabNext, "left/right", "cycle"))
 			}
-			if e.row < len(lineupRoles) {
-				l.add(dropRow, offer(len(e.plan.Lineup[lineupRoles[e.row]]) > 1, k.TabNext, "left/right", "cycle"), key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "custom")))
+			if e.row < len(e.roles) {
+				l.add(dropRow, offer(len(e.plan.Lineup[e.roles[e.row]]) > 1, k.TabNext, "left/right", "cycle"), key.NewBinding(key.WithKeys("c"), key.WithHelp("c", "custom")))
 			}
-			if e.row < len(lineupRoles) && lineupRoles[e.row] == "architect" && len(e.chains[e.row]) > 0 {
+			if e.row < len(e.roles) && e.roles[e.row] == "architect" && len(e.chains[e.row]) > 0 {
 				l.add(dropRow+1, key.NewBinding(key.WithKeys("d"), key.WithHelp("d", "drop architect")))
 			}
 			l.add(dropRow-1, short(k.Select, "enter", "save and replan"))

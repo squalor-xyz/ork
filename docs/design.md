@@ -213,7 +213,12 @@ ork (TUI)  ork status --json (CLI)
    --well-specified ... --split ...`; ork passes well specified = yes and
    split = no unless the owner overrides them with `--well-specified` or
    `--split` (*proposed*, adj 189, `launch.well-specified-default`; the
-   spec check holds an item that is not Ready). The primary row per role becomes the
+   spec check holds an item that is not Ready). `--split y` makes the run a
+   split run (*proposed*, S61; see the implement state): ork then asks the
+   matrix twice, with split no for the lead, the reviewer, the gate and the
+   architect, and with split yes for the part rows. The plan shows the lead
+   (the implementer's chain, the matrix's split no row) and the part chain, and the
+   owner confirms it as any plan; a split run is never chosen by ork alone. The primary row per role becomes the
    lineup, and the alternatives, in order, become that role's fallback
    chain (`lineup.source`). The owner can edit both.
    An edit at launch applies to that run only (`lineup.override-scope`).
@@ -223,7 +228,7 @@ ork (TUI)  ork status --json (CLI)
    (`run.launch-wire`). The Waves editor and Roadmap launch confirmation
    share the same run-only editor (`e`). Neither writes the matrix or registry.
    The daemon accepts implementer, reviewer and architect chains on
-   `run.plan`, `run.start` and `wave.start`. An empty architect chain drops
+   `run.plan`, `run.start` and `wave.start`, and a part chain on a split run. An empty architect chain drops
    the architect; an omitted override keeps the recommendation. Adding an
    architect resolves its read-only permissions. A matched architect row
    with no ork adapter refuses planning, even with an override. Each entry
@@ -467,6 +472,71 @@ slice.
     starts the item).
 - **implement:** one implementer, or a lead and parts in a split
   (`slice.options`). Slivers run as their own items, under the cap.
+  - **Split run** (*proposed*, S61; owner decisions 2026-10-28). A split is
+    opt-in per run: `ork run ID --split y` (and the same flag on `ork wave
+    start`), or the `s` key on the TUI launch confirm, which flips split and
+    plans again (the confirm then shows `split: yes`, the `lead:` and `part:`
+    rows, and a `part` row in the lineup editor). There is no Split? prompt
+    (adj 189 removed it). ork never chooses a split, and it counts as one run
+    against the project and global caps. The slicer contract puts the parts in the slice worktree
+    (`slicer ai relay`, Order), so a split makes no worktree beyond the slice's.
+    The lead is the implementer's slot in the state machine: its chain, its
+    records, its fix rounds and its finish step are the implementer's, with the
+    lead prompt (`roles/prompts/lead.md`) and the ledger role `implementer`,
+    because the contract has no lead role. The lead's first round starts the
+    slice and ends its report with a `## Parts` section, one line per part:
+    `- ID: files PATH, PATH; tests NAME, NAME` (or `none`).
+    ork checks the list: each id once, each part with at least one file and one
+    test, each file a path inside the worktree and covered by the slice's Files
+    section. A list that fails pauses the run with every problem named, and no
+    part runs; a retry runs the lead again. ork then groups the parts into
+    batches: a part joins the first batch that has room (at most 3, matrix rule
+    u7) and no part whose files overlap its own (the same file, or a directory
+    that holds the other). The parts of a batch run at the same time in the
+    slice worktree, the batches one after another, so overlapping parts run one
+    after another (`slicer ai relay`: in parallel only when the files are
+    disjoint). A part has the implementer's allowlist less the slicer commands
+    that write, and the part prompt (`roles/prompts/part.md`) tells it to change
+    only its own files, run only its own tests and run no slicer command that
+    writes. Each part is a ledger step under the lead's step (`--parent`), role
+    `implementer`, and a role record with the part's id (`part` on the record's
+    roles; the run record keeps the `parts` list with each part's done mark), so the run
+    tree shows the parts under the lead.
+    A part's own check is its report (no failed test in its `Tests:` line) and
+    the tree: after a batch ork compares the changed files before and after.
+    A path that is still changed and is on none of the batch's lists fails the
+    part that changed it. With one part in the batch that is known. With
+    several, parts that share a tree cannot be told apart by one reading, so
+    ork runs the parts whose own tests passed one after another, each with the
+    stray paths named, and fails the part whose own run leaves a path outside
+    its own list changed; the others stay done. (A part that never touches the
+    stray path again is not blamed; the path stays for the review and the
+    gate's out-of-scope warning.) A path that a round put back is not a
+    violation. File lists are compared as cleaned paths (`internal/a/../b.go`
+    is `internal/b.go`). A part whose round ended clean is judged and marked
+    done even when a sibling of its batch pauses (unless a stray path makes
+    that unclear), so a retry runs only the part that paused. A part that fails
+    goes back once, with the reason; a second failure pauses the run. Then the
+    ordinary states follow for the whole slice: one round check on the combined
+    tree, one review, the architect when the lineup has one (the matrix gives it
+    to size L only; it runs once, not once per part), one gate. A part runs no
+    review and no gate of its own.
+    Findings go to the lead by default (owner decision, adj 385): the fix round
+    is the lead's, who may change any file. The lead may instead hand a file's
+    findings back to the part that owns the file, for that round only (slicer
+    contract, ai.py:920: accepted findings go back to the part that owns the
+    file). The fix-round brief lists the parts and their files; the lead's report
+    then has a `## Hand back` section, one `- ID: findings` line per part (or
+    `none`); indented lines after it, blank lines included, go on with that
+    part's findings. ork checks the section (each id a part of the run, once, with
+    findings), and a bad one pauses the run with no part run. After the lead's
+    round ork runs the named parts, in batches as above, with a brief section of
+    the handed-back findings; each is checked like any part and goes back once, a
+    second failure pauses the run, and a retry runs only the parts that still owe
+    the findings (the part's `hand_back` on the run record, cleared when it
+    passes), never the lead's round again. Each such part is a ledger step under
+    the lead's fix-round step. The round check, review and gate follow as in any
+    fix round.
 - **checks:** ork runs the project check command and `slicer check --json`
   in the worktree (`checks.deterministic`). A red result goes back to the
   implementer, with the failing output in the brief, without spending a
@@ -526,7 +596,8 @@ slice.
   (`role.readonly-fingerprint`). The architect runs after accepted findings
   have been addressed and before the gate (`slice.architect-order`, adj #123),
   exactly when the lineup has an architect entry. ork does not read the slice
-  size (`slice.architect-size`, adj #151).
+  size (`slice.architect-size`, adj #151); in a split run the entry comes from
+  the matrix's split no call, which gives the architect to size L only.
   - **UI pass** (`roles.ui-pass`, adj #165). When the lineup has a `ui` entry
     and the slice's Files section names a UI path, the UI pass starts with
     the reviewer, at the same time, and neither waits for the other. A UI

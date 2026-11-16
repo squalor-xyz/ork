@@ -4719,3 +4719,10 @@
 {"when": "2026-11-16T16:17:25Z", "item": "relay-roles.r37", "action": "relay-roles", "from": "31", "to": "7", "note": "move"}
 {"when": "2026-11-16T16:36:56Z", "item": "S374", "action": "note", "from": "", "to": "", "note": "Hold: owner 2026-11-16 (relay session 8d711f67, 'Hold until ", "by": "Jon Robbins"}
 {"when": "2026-11-16T16:36:57Z", "item": "S372", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-16T16:54:22Z", "item": "S61", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-16T17:20:39Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T17:20:41Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T17:34:59Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-16T17:59:49Z", "item": "S61", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-16T18:08:03Z", "item": "S61", "action": "note", "from": "", "to": "", "note": "Split run verified: a lead and parts share the slice worktre", "by": "Jon Robbins"}
+{"when": "2026-11-16T18:08:07Z", "item": "S61", "action": "status", "from": "started", "to": "done", "note": "Split run verified: lead and parts share the slice worktree, batches of at most 3 on disjoint files, one review, architect (lineup only) and gate on the combined diff, hand-back of findings to the owning part, TUI s split toggle. go test -race ./internal/... green.", "by": "Jon Robbins"}

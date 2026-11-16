@@ -1075,6 +1075,31 @@ func TestRunHeldLineStartsOnItsOwnLineAtEOF(t *testing.T) {
 	}
 }
 
+// S61 (*proposed*): the plan of a split run shows the lead (the implementer's
+// slot) and the part rows; a plan with no split shows neither.
+func TestPrintRunPlanShowsTheLeadAndPartRowsOfASplit(t *testing.T) {
+	plan := daemon.RunPlan{Project: registry.Project{Name: "p"}, Item: "S1", Split: true,
+		Lineup: map[string][]runrec.LineupEntry{
+			"implementer": {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
+			"part":        {{Vendor: "claude", Model: "haiku", Effort: "medium"}},
+		},
+		Permissions: map[string]engine.Permission{"implementer": {Allow: []string{"Read", "Bash(slicer *)"}}, "part": {Allow: []string{"Read", "Bash(slicer show*)"}}}}
+	var out bytes.Buffer
+	printRunPlan(&out, plan, false)
+	want := "lead: claude sonnet high\n  allowlist: Read, Bash(slicer *)\npart: claude haiku medium\n  allowlist: Read, Bash(slicer show*)\n"
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("the plan lacks the lead and part rows:\n%s", out.String())
+	}
+	plan.Split = false
+	delete(plan.Lineup, "part")
+	out.Reset()
+	printRunPlan(&out, plan, false)
+	// The part's permission line must not print without its row either.
+	if got := out.String(); !strings.Contains(got, "implementer: claude sonnet high\n") || strings.Contains(got, "lead:") || strings.Contains(got, "part:") || strings.Contains(got, "slicer show*") {
+		t.Errorf("a plan with no split shows split rows:\n%s", got)
+	}
+}
+
 func TestPrintRunPlanShowsWarnings(t *testing.T) {
 	plan := daemon.RunPlan{Project: registry.Project{Name: "p"}, Item: "S1", Lineup: map[string][]runrec.LineupEntry{"implementer": {{Vendor: "codex", Model: "sol", Effort: "high"}}},
 		Permissions: map[string]engine.Permission{"implementer": {Allow: []string{"Read"}}, "reviewer": {ReadOnly: true}, "gate": {ReadOnly: true}}, Note: "a note", Warnings: []string{"first warning", "second warning"}}

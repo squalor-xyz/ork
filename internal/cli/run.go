@@ -268,16 +268,21 @@ func printRunPlan(w io.Writer, p daemon.RunPlan, budgetsOverridden bool) {
 	if budgetsOverridden {
 		fmt.Fprintf(w, "budgets: %d min, %d tokens\n", p.Budgets.Minutes, p.Budgets.Tokens)
 	}
-	for _, role := range []string{"implementer", "reviewer", "ui", "architect", "gate"} {
-		if (role == "architect" || role == "ui") && len(p.Lineup[role]) == 0 {
+	for _, role := range []string{"implementer", "part", "reviewer", "ui", "architect", "gate"} {
+		if (role == "architect" || role == "ui" || role == "part") && len(p.Lineup[role]) == 0 {
 			continue
+		}
+		// In a split run (S61, *proposed*) the implementer's slot is the lead.
+		label := role
+		if role == "implementer" && p.Split {
+			label = "lead"
 		}
 		for i, entry := range p.Lineup[role] {
 			fallback := ""
 			if i > 0 {
 				fallback = " (fallback)"
 			}
-			fmt.Fprintf(w, "%s: %s %s %s%s\n", role, entry.Vendor, runrec.ModelLabel(entry), entry.Effort, fallback)
+			fmt.Fprintf(w, "%s: %s %s %s%s\n", label, entry.Vendor, runrec.ModelLabel(entry), entry.Effort, fallback)
 		}
 		perm := p.Permissions[role]
 		if perm.ReadOnly {

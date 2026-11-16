@@ -1,0 +1,39 @@
+{
+  "id": "S61",
+  "title": "Split parts: lead and parts in one worktree",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A split lets a large slice use a lead and parts with disjoint files, so parts can change different files at once. ork runs one implementer today and has no split run. The slicer contract puts the parts in the slice worktree (../slicer/src/slicer/ai.py:400), so this slice must not give each part its own worktree.\n\nFrom S10 (carried here from S08): split-part and sliver prompts need the same 'no handoff before review' wording as the implementer prompt."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/roles.go` (the names list: lead and part added after spec-check; was :37) and `internal/roles/prompts/lead.md`, `internal/roles/prompts/part.md` (new; architect.md exists).\n- `internal/engine/perm.go` (ResolvePermission: a part has the implementer allowlist less the slicer writes; was :39,45), `internal/engine/runner.go` (RoleLead, RolePart, Request.Part), `internal/engine/report.go` (a part report has a Tests line).\n- `internal/engine/split.go` (new: parts list, batches, runParts, hand back), `internal/engine/states.go` (implement, finish), `internal/engine/round.go` (round.part, ledger parent), `internal/engine/brief.go` (lead prompt, part Done when), `internal/engine/engine.go` (Config.Split, ledger roles, pauseShape per part).\n- `internal/runrec/record.go` (Split, Parts, RoleRecord.Part, Pending.Part).\n- `internal/daemon/runs.go` (RunPlan.Split, the second RecommendRoles call, the part chain; was :37,205); `internal/slicercli/write.go` needs no change: RecommendRoles already passes --split yes or no.\n- `internal/cli/run.go` and `internal/tui/launch.go` (lead and part rows of a split plan, the s toggle on the launch confirm), `internal/tui/lineup.go` (a part row in the editor), `internal/tui/keys.go` and `internal/tui/model.go` (the s key and its hint), `internal/tui/runtree.go` and `internal/source/source.go` (parts under the lead in the run tree).\n- `internal/engine/split_test.go`, `internal/daemon/split_test.go`, `internal/roles/roles_test.go`, `internal/cli/run_test.go`, `internal/cli/cli_test.go`, `internal/tui/launch_test.go`, `internal/tui/runtree_test.go`, `internal/tui/hint_test.go`.\n- `testdata/golden/launch-100x30-color.txt`, `testdata/golden/launch-100x30-mono.txt`, `testdata/golden/launch-nocheck-100x30-color.txt`, `testdata/golden/launch-nocheck-100x30-mono.txt`, `testdata/golden/launch-nocheck-80x24-color.txt`, `testdata/golden/launch-nocheck-80x24-mono.txt` (the s split hint).\n- `docs/design.md` (Lineup step, implement state, review state: the architect order is record 123), `docs/glossary.md` (Lead and part implementers, Split), `docs/dashboard.md` (run tree, launch confirm keys, lineup editor)."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestSplitPartsShareTheSliceWorktree`: a lead and two parts run in one worktree.\n- `TestPartsRunInParallelOnlyWhenFilesAreDisjoint`: overlapping parts run one after another (ai.py:917, the split rule in Order); at most 3 at once.\n- `TestPartRoundRunsNoSlicerWriteCommand`: a part round records no slicer write (ai.py:834-837).\n- `TestSplitReviewSeesTheCombinedDiffOnce`: one review and one gate cover the whole slice.\n- `TestSplitArchitectRunsOnlyOnSizeL`: architect only on size L (the matrix gives it; ork reads no size, adj 151); once, not once per part.\n- `TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart`: a fix round goes to the lead, who may hand a file findings back to the part that owns it for that round (owner decision, adj 385; ai.py:920); a bad hand back pauses, a retry runs only the part.\n- The architect position follows record 123 (after accepted findings, before the gate): covered by S08."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner decisions 2026-10-28 (interactive): a split run is opt-in per run (`ork run ID --split` and a toggle in the launch confirm; never automatic); parts run at the same time only when their files are disjoint, at most 3 at once (matrix rule u7), otherwise one after another; a split run counts as one run against the project and global caps. Tests first; re-anchor line numbers from the code. 1. Roles: add lead and part to internal/roles/roles.go with prompts lead.md and part.md (both carry the 'no handoff before review' wording from S10; a part changes only its own files and runs no slicer write command, ai.py:334-336). 2. Plan: with --split the daemon asks RecommendRoles with split yes for the parts' rows and no for the lead's; the plan shows lead and part rows and the owner confirms as for any plan; a plan that changed since the confirm is refused (S161 rule). 3. Engine: the lead round returns a parts list (part id, files, tests); ork checks the files against the slice's Files section and for overlap, groups disjoint parts into batches of at most 3, runs each batch's parts in the one slice worktree, then runs one review and one gate on the combined diff; the architect only on size L (record 123). A part that fails its own check or touches a file outside its list fails the round and goes back to that part once. 4. Ledger and record: each part is a step with --parent on the lead's step; the run record keeps parts so the TUI run tree shows them (internal/tui/runtree.go). 5. Docs: design.md:184-193, glossary.md:31-35 and 151, dashboard.md run tree. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "go test -race ./internal/... ; goldens (go test ./internal/tui -update then review); go vet; gofmt -l; slicer check; adj lint."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

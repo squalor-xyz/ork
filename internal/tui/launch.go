@@ -5,6 +5,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"maps"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -404,23 +405,53 @@ func (m *Model) launchLineupKey(msg tea.KeyPressMsg) tea.Cmd {
 			m.confirmLaunch()
 			return nil
 		}
-		l.prev, l.prevParams = l.plan, l.params
-		l.params, l.stage = p, launchPlanPending
-		// Each replan gets a new request so cancelled replies cannot replace a newer one.
-		m.launchRequest++
-		l.request = m.launchRequest
-		ctx, cancel := context.WithCancel(l.ctx)
-		l.replanCancel = cancel
-		live, request := m.cfg.Live, l.request
-		return func() tea.Msg {
-			if ctx.Err() != nil {
-				return nil
-			}
-			plan, err := live.Plan(ctx, p)
-			return launchMsg{request: request, plan: plan, err: err}
-		}
+		return m.replanLaunch(p)
 	}
 	return nil
+}
+
+// replanLaunch asks for a new plan with params p. The plan the owner was looking
+// at stays until the new one arrives, and comes back on esc or an error.
+func (m *Model) replanLaunch(p daemon.RunParams) tea.Cmd {
+	l := m.launch
+	l.prev, l.prevParams = l.plan, l.params
+	l.params, l.stage = p, launchPlanPending
+	// Each replan gets a new request so cancelled replies cannot replace a newer one.
+	m.launchRequest++
+	l.request = m.launchRequest
+	ctx, cancel := context.WithCancel(l.ctx)
+	l.replanCancel = cancel
+	live, request := m.cfg.Live, l.request
+	return func() tea.Msg {
+		if ctx.Err() != nil {
+			return nil
+		}
+		plan, err := live.Plan(ctx, p)
+		return launchMsg{request: request, plan: plan, err: err}
+	}
+}
+
+// toggleLaunchSplit flips split on the launch confirm and plans again (S61,
+// *proposed*; owner decision 2026-10-28: a toggle in the launch confirm). The
+// new plan has the lead and part rows, or none of them; the daemon refuses a part
+// override on a run with no split, so it goes when the split goes.
+func (m *Model) toggleLaunchSplit() tea.Cmd {
+	l := m.launch
+	if l == nil || l.stage != launchConfirm || l.plan == nil {
+		return nil
+	}
+	p := l.params
+	p.Split = !p.Split
+	if _, has := p.Lineup["part"]; has && !p.Split {
+		p.Lineup = maps.Clone(p.Lineup)
+		delete(p.Lineup, "part")
+		if len(p.Lineup) == 0 {
+			p.Lineup = nil
+		}
+	}
+	m.confirm = nil
+	m.actionStatus = ""
+	return m.replanLaunch(p)
 }
 
 func (m *Model) launchView(w int) overviewView {
@@ -516,15 +547,25 @@ func (m *Model) launchView(w int) overviewView {
 			stop = "after commit (you land it)"
 		}
 		add("stop: " + stop)
+		if p.Split {
+			add("split: yes (a lead and parts in one worktree)")
+		}
 		if l.params.Budgets != nil {
 			add(fmt.Sprintf("budgets: %d min, %d tokens", p.Budgets.Minutes, p.Budgets.Tokens))
 		}
-		for _, role := range []string{"implementer", "reviewer", "ui", "architect", "gate"} {
-			if (role == "architect" || role == "ui") && len(p.Lineup[role]) == 0 {
+		for _, role := range []string{"implementer", "part", "reviewer", "ui", "architect", "gate"} {
+			if (role == "architect" || role == "ui" || role == "part") && len(p.Lineup[role]) == 0 {
 				continue
 			}
-			for _, e := range p.Lineup[role] {
-				add(fmt.Sprintf("%s: %s %s %s", role, e.Vendor, runrec.ModelLabel(e), e.Effort))
+			// In a split run (S61, *proposed*) the implementer's slot is the lead.
+			label := roleLabel(role, p.Split)
+			for i, e := range p.Lineup[role] {
+				// The second entry of a chain is a fallback, not another part.
+				fallback := ""
+				if i > 0 {
+					fallback = " (fallback)"
+				}
+				add(fmt.Sprintf("%s: %s %s %s%s", label, e.Vendor, runrec.ModelLabel(e), e.Effort, fallback))
 			}
 			perm := p.Permissions[role]
 			if perm.ReadOnly {

@@ -42,13 +42,13 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-375 items · — 57 · done 283 · retired 35
+375 items · — 56 · done 284 · retired 35
 
 v1.2
 
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
-| 1 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | — |
+| 1 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | done |
 | 2 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (needs ui.mouse) | M | 2 |  |  | — |
 | 3 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | — |
 | 4 | [S123](slices/S123.md) | Relay stats: thin display of slicer's | S | 1 |  |  | done |
