@@ -46,6 +46,7 @@ type Request struct {
 	RunID        string    // ork run identity for live local permission questions
 	ProjectRoot  string    // main checkout, for spec-check path permissions
 	ProgressFile string    // sole progress-note write exception for a local role
+	ReadLog      string    // file the approval point appends the role's Read and Grep calls to (S371); empty for a cloud role
 	OnContext    func(int) // current context input tokens, including cached input
 	Role         string
 	Round        int

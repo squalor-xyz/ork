@@ -51,6 +51,37 @@ func TestPretoolReadLimits(t *testing.T) {
 	}
 }
 
+// S371, *proposed*: the read log line comes from the call alone.
+func TestReadLogEntry(t *testing.T) {
+	root := t.TempDir()
+	if err := os.WriteFile(filepath.Join(root, "short.go"), []byte(strings.Repeat("line\n", 42)), 0600); err != nil {
+		t.Fatal(err)
+	}
+	for _, tc := range []struct {
+		name, tool, input, want string
+	}{
+		{"range", "Read", `{"file_path":"a.go","offset":10,"limit":20}`, "a.go:10-29"},
+		{"limit only", "Read", `{"file_path":"a.go","limit":500}`, "a.go:1-500"},
+		{"absolute path in the worktree", "Read", `{"file_path":` + strconvQuote(filepath.Join(root, "x", "a.go")) + `,"limit":5}`, "x/a.go:1-5"},
+		{"whole file", "Read", `{"file_path":"short.go"}`, "short.go:1-42"},
+		{"whole file from an offset", "Read", `{"file_path":"short.go","offset":30}`, "short.go:30-42"},
+		{"file that does not exist", "Read", `{"file_path":"new.go"}`, "new.go"},
+		{"path outside the worktree", "Read", `{"file_path":"/elsewhere/a.go","limit":3}`, "/elsewhere/a.go:1-3"},
+		{"grep with a path", "Grep", `{"pattern":"func Foo","path":"internal"}`, "func Foo in internal"},
+		{"grep without a path", "Grep", `{"pattern":"TODO"}`, "TODO in ."},
+		{"grep pattern with a newline", "Grep", `{"pattern":"a\nb","path":"."}`, "a b in ."},
+		{"other tool", "Glob", `{"pattern":"*.go"}`, ""},
+		{"bad input", "Read", `{`, ""},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := (ApprovalPolicy{Worktree: root}).ReadLogEntry(ToolCall{ToolName: tc.tool, ToolInput: json.RawMessage(tc.input)})
+			if got != tc.want {
+				t.Fatalf("entry %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func strconvQuote(s string) string { b, _ := json.Marshal(s); return string(b) }
 
 func TestEvaluateQuotedPipeIsNotAnOperator(t *testing.T) {

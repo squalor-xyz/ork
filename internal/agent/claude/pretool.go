@@ -161,6 +161,65 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 	return Approval{"ask", "call is not covered by the role allowlist"}
 }
 
+// ReadLogEntry is one line for a local role's read log (S371, *proposed*), built
+// from the call alone: `path:start-end` for a Read and `pattern in path` for a
+// Grep, with a path inside the worktree shown relative to it. A call of another
+// tool, or one whose input cannot be read, gives "". Call it for an allowed call.
+func (p ApprovalPolicy) ReadLogEntry(call ToolCall) string {
+	var in struct {
+		FilePath string `json:"file_path"`
+		Path     string `json:"path"`
+		Pattern  string `json:"pattern"`
+		Limit    *int   `json:"limit"`
+		Offset   *int   `json:"offset"`
+	}
+	if (call.ToolName != "Read" && call.ToolName != "Grep") || json.Unmarshal(call.ToolInput, &in) != nil {
+		return ""
+	}
+	shown := func(path string) string {
+		if path == "" {
+			return "."
+		}
+		abs := path
+		if !filepath.IsAbs(abs) {
+			abs = filepath.Join(p.Worktree, abs)
+		}
+		if rel, err := filepath.Rel(p.Worktree, filepath.Clean(abs)); err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return rel
+		}
+		return filepath.Clean(abs)
+	}
+	oneLine := strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ").Replace
+	if call.ToolName == "Grep" {
+		if in.Pattern == "" {
+			return ""
+		}
+		return oneLine(in.Pattern) + " in " + oneLine(shown(in.Path))
+	}
+	if in.FilePath == "" {
+		return ""
+	}
+	start := 1
+	if in.Offset != nil {
+		start = *in.Offset
+	}
+	path := oneLine(shown(in.FilePath))
+	if in.Limit != nil {
+		return fmt.Sprintf("%s:%d-%d", path, start, start+*in.Limit-1)
+	}
+	// Without a limit Evaluate allows only a file of at most 500 lines: the
+	// whole file from the offset.
+	abs := in.FilePath
+	if !filepath.IsAbs(abs) {
+		abs = filepath.Join(p.Worktree, abs)
+	}
+	n, err := countLines(abs)
+	if err != nil {
+		return path
+	}
+	return fmt.Sprintf("%s:%d-%d", path, start, max(n, start))
+}
+
 // progressPath decodes the runner's exact, escaped Edit grant (also for Write).
 func progressPath(rule string) string {
 	if !strings.HasPrefix(rule, "Edit(/") || !strings.HasSuffix(rule, ")") {

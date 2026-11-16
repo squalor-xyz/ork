@@ -54,8 +54,6 @@ func (d *Daemon) rolesMatrix(ctx context.Context, p RolesMatrixParams) (*RolesMa
 		return nil, err
 	}
 	uiRows, specRows := uiPassRowSet(project, m.Rules), specCheckRowSet(project, m.Rules)
-	implPerm, permErr := engine.ResolvePermission(project, engine.RoleImplementer)
-	implReadOnly := permErr != nil || implPerm.ReadOnly
 	out := &RolesMatrixResult{Markdown: m.Markdown, Rows: []MatrixRow{}, Rules: m.Rules}
 	if out.Rules == nil {
 		out.Rules = []slicercli.Rule{}
@@ -64,7 +62,7 @@ func (d *Daemon) rolesMatrix(ctx context.Context, p RolesMatrixParams) (*RolesMa
 		out.Rows = append(out.Rows, MatrixRow{
 			ID: row.ID, Role: row.Role, Agent: row.Agent,
 			Vendor: row.Vendor, Model: row.Model, Reasoning: row.Reasoning, Note: row.Note,
-			Use: matrixUse(row, uiRows, specRows, implReadOnly),
+			Use: matrixUse(row, uiRows, specRows),
 		})
 	}
 	return out, nil
@@ -175,12 +173,9 @@ func quoteWord(s string) string {
 // matrixUse is what ork does with a row. The gate follows the reviewer's
 // lineup (S83), ork is the orchestrator, and a row maps to an engine adapter
 // by its agent (adj 155). The UI pass row and the Spec check row are
-// reviewer rows that a rule names; they use the same adapters.
-//
-// implementerReadOnly is whether the project gives the implementer a read-only
-// permission; a grok row of the implementer is skipped unless it does (S268,
-// *proposed*).
-func matrixUse(row slicercli.Row, uiRows, specRows []string, implementerReadOnly bool) string {
+// reviewer rows that a rule names; they use the same adapters. A grok row of
+// the implementer is used as grok: it runs a write role (S305, adj 373).
+func matrixUse(row slicercli.Row, uiRows, specRows []string) string {
 	switch row.Role {
 	case engine.RoleGate:
 		return "not used: the gate runs the reviewer's lineup"
@@ -193,9 +188,7 @@ func matrixUse(row slicercli.Row, uiRows, specRows []string, implementerReadOnly
 	use := "skipped: no adapter for " + row.Agent
 	if adapter := matrixAdapters[strings.ToLower(row.Agent)]; adapter != "" {
 		use = "used as " + adapter
-		if row.Role == engine.RoleImplementer && !implementerReadOnly && isGrokVendor(adapter) {
-			use = "skipped: " + grokNoWrite
-		} else if reason := launcherMissing(adapter); reason != "" {
+		if reason := launcherMissing(adapter); reason != "" {
 			use = reason
 		}
 	}

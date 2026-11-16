@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/agent/grok/grok.go:61-62`\n- `internal/agent/grok/grok.go:282`\n- `internal/daemon/runner.go:157`\n- `internal/daemon/matrix.go:75-78`\n- `internal/engine/brief.go:161`\n- `docs/design.md`\n- `docs/guide.md`"
+      "body": "- `internal/agent/grok/grok.go`: `Spec.Args` refusal, `AllowRules`\n- `internal/daemon/runner.go`: `grokRunner.Run`\n- `internal/daemon/runs.go`: `planRun` grok skip and override refusal\n- `internal/daemon/matrix.go`: `matrixUse`\n- `internal/engine/brief.go`: `doneWhen`\n- `docs/design.md`\n- `docs/guide.md`\n- `docs/how-it-works.md`"
     },
     {
       "heading": "Failing tests",
