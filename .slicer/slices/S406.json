@@ -1,0 +1,41 @@
+{
+  "id": "S406",
+  "title": "Check lines ork runs itself are never asked about",
+  "lead": [
+    "The brief splits Check commands three ways, in code: implementer-runnable (the implementer allowlist), run by ork (a plain command that `sliceChecks` runs outside the sandbox: quoted arguments, `VAR=value` prefixes and paths inside the worktree), and orchestrator (shell syntax ork does not run). A chain of plain commands joined only by `&&` is run by ork as its parts in order, stopping at the first failure. The spec check raises nothing for implementer-runnable or ork-run lines, and lists the orchestrator lines as orchestrator-run without asking."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-17: the spec check asked \"how should the Check commands the implementer's sandbox cannot run be handled?\" on S387 and S380, and the owner answered orchestrator both times (`slicer show S387` Implement, \"Owner decisions (2026-11-17)\"; `slicer show S380` Implement). The lines were `go test ... -run 'A|B' -v` (a quoted pipe), `rg -n 'credential' testdata/vendors` and `go vet ./... && go test ./...`. ork already runs the first two itself before the gate and at landing (S317, `internal/engine/states.go:1039-1120`, `sliceChecks` at `internal/engine/brief.go:435-482` is quote-aware), but the brief's split uses a quote-unaware test against the implementer allowlist (`internal/engine/brief.go:524-559`), so it lists them as orchestrator-only and the spec-check prompt asks about each (`internal/roles/prompts/spec-check.md:69-73`).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner rule (2026-11-17): deterministic, regular steps are code. What ork does today:\n\n- Before the gate (`internal/engine/states.go:884`) and at landing (`internal/engine/land.go:244`) ork runs each backticked plain Check command in the worktree with no shell (`internal/engine/states.go:1039-1120`; docs/design.md:1522-1528). `sliceChecks` (`internal/engine/brief.go:435-482`) accepts single-quoted text, so `go test ./internal/x -run 'A|B' -v` and `rg -n 'credential' testdata/vendors` are run by ork. Lines with shell operators outside quotes (`&&`, `|`, `$`, globs) or paths outside the worktree get `not run by ork: orchestrator`, are recorded with `NotRun` and do not fail the check (`internal/engine/states.go:1131-1133`); nobody runs them unless the orchestrator does.\n- The brief's split (`checkCommandSections`, `internal/engine/brief.go:369-404`) instead calls `checkCommandRunnable` (`internal/engine/brief.go:524-559`), which treats any `|` as a compound command even inside quotes and knows only the implementer allowlist. So a line ork itself runs is listed under \"Orchestrator-only Check commands\", and the spec-check prompt raises a finding and asks for each such line (`internal/roles/prompts/spec-check.md:69-73`). The answer is the same every time (findings), and adj 280 (`process.orchestrator-check-lines-v2`) asked for a runnable rewrite instead.\n\nOwner decisions (2026-11-17): the brief splits Check lines three ways (implementer-runnable, run by ork, orchestrator-run); lines ork runs are never asked about; other shell lines are listed as orchestrator-run without a question; ork runs a plain `&&` chain as its parts, in order, stopping at the first failure [checks.three-way-split, adj 454, supersedes adj 280]."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/brief.go:369-404` (`checkCommandSections`: three groups)\n- `internal/engine/brief.go:435-482` (`sliceChecks`: split a plain `&&` chain into parts)\n- `internal/engine/brief.go:484-522` (`plainCheckSyntax`, reused for the ork-run test)\n- `internal/engine/brief.go:524-559` (`checkCommandRunnable`: quote-aware compound test)\n- `internal/engine/states.go:1039-1120` (`runSliceChecks`: run chain parts, one record per part)\n- `internal/engine/brief_test.go:466-529`\n- `internal/engine/slicechecks_test.go`\n- `internal/roles/prompts/spec-check.md:69-73`\n- `internal/roles/prompts/gate.md:48-56`\n- `internal/roles/roles_test.go`\n- `docs/design.md:1522-1566`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestCheckSectionsSplitThreeWays` (`internal/engine/brief_test.go`): spec-check brief for a slice whose Check holds `go vet ./...` (allowlisted), `go test ./internal/x -run 'A|B' -v` and `rg -n 'credential' testdata/vendors` (not allowlisted, plain), `go vet ./... && go test ./...` (plain chain), and `go test ./... | tee out` (shell). Expected sections in order: `## Implementer-runnable Check commands` with `- go vet ./...`; `## Check commands ork runs` with the `-run 'A|B'`, `rg` and `&&` lines; `## Orchestrator-run Check commands` with `- go test ./... | tee out`. Red: today the four non-allowlisted lines are all under `## Orchestrator-only Check commands`.\n- `TestCheckCommandRunnableQuotedPipe`: with allowlist `Bash(go test:*)`, `go test ./x -run 'A|B'` is implementer-runnable. Red: the `|` inside quotes makes it compound today (`internal/engine/brief.go:547-552`).\n- `TestSliceChecksRunAnAndChain` (`internal/engine/slicechecks_test.go`): Check line `true && false && true` gives three check records with commands `true`, `false`, `true`; the first OK, the second failed with exit 1, the third `NotRun` `not run by ork: an earlier part of the chain failed`; the check fails. Red: today the line is one `not run by ork: orchestrator` record.\n- `TestSpecCheckPromptAsksOnlyAboutOrchestratorLines` (`internal/roles/roles_test.go`): the spec-check prompt says to raise no finding for implementer-runnable or ork-run lines and to list orchestrator-run lines in the report without a question; it no longer contains \"Ask the owner to replace it with a runnable form\". Red: today's prompt asks.\n- Existing `TestSliceChecksRecordUnsupportedCommands` (`internal/engine/slicechecks_test.go:146`) is updated only for the `&&` case."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Red tests above.\n2. `checkCommandRunnable`: use the quote-aware scan of `plainCheckSyntax` to decide whether a command is compound.\n3. Add `checkRunByOrk(command, worktree)`: true when `sliceChecks` would run it (no `notRun`), including a chain of plain parts joined by `&&` outside quotes. `checkCommandSections` puts a line in the first group that fits: implementer-runnable, ork-run, else orchestrator-run.\n4. `sliceChecks` and `runSliceChecks`: a plain `&&` chain becomes one row per part, run in order; after a failure the rest are recorded as not run.\n5. Prompts: spec-check raises a finding only for an orchestrator-run line whose command looks wrong or risky, and otherwise only lists them; gate names ork-run lines from ork's recorded rows. Role prompts are ork's own text (`roles.prompts`).\n6. Docs: `docs/design.md` (S309 and S317 paragraphs). CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- A spec check on a slice whose Check lines are all plain commands (quoted pipes, 'rg', '&&' chains included) asks no Check-line question.\n- ork runs a plain '&&' chain as its parts and records each part's result before the gate.\n- Lines with real shell syntax are listed as orchestrator-run in the brief and the spec-check report without a question.\n\nCommands:\n- `go -C /home/jon/code/squalor-xyz/ork test ./internal/engine ./internal/roles` exits 0.\n- `go -C /home/jon/code/squalor-xyz/ork vet ./...` exits 0.\n- `go -C /home/jon/code/squalor-xyz/ork test ./...` exits 0.\n- `gofmt -l /home/jon/code/squalor-xyz/ork` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint --root /home/jon/code/squalor-xyz/ork` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -4894,3 +4894,37 @@
 {"when": "2026-11-17T12:19:58Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-17T12:30:20Z", "item": "S380", "action": "note", "from": "", "to": "", "note": "Verified outcome: a resumed step now records its own usage. ", "by": "Jon Robbins"}
 {"when": "2026-11-17T12:30:23Z", "item": "S380", "action": "status", "from": "started", "to": "done", "note": "Verified outcome: a resumed step records its own cost and tokens, not the session total. Claude cost and Codex tokens are stored as the total minus the latest earlier nonzero total of the same session id (session_tokens and session_cost_usd on the role record); gate PASS, go vet, go test ./... , gofmt and slicer check green.", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:19:46Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:19:53Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-17T02:20:01Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T02:24:13Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T02:24:21Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 6 started 2026-11-17 02:24 (owner: 'S380 now'): run or", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:26:39Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:39Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:39Z", "item": "S387", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:40Z", "item": "S388", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:40Z", "item": "S389", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:40Z", "item": "S390", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:40Z", "item": "S391", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:41Z", "item": "S392", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:41Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:41Z", "item": "S394", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:42Z", "item": "S395", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:42Z", "item": "S396", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:42Z", "item": "S397", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:43Z", "item": "S398", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:43Z", "item": "S399", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:43Z", "item": "S400", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:43Z", "item": "S401", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:49Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:50Z", "item": "S381", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:50Z", "item": "S382", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:50Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:51Z", "item": "S385", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:51Z", "item": "S386", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T12:15:39Z", "item": "S403", "action": "add", "from": "", "to": "open", "note": "ork wait: several runs, every run of a project, and stage ends"}
+{"when": "2026-11-17T12:15:39Z", "item": "S404", "action": "add", "from": "", "to": "open", "note": "Spec answers by option label; piped answers refused"}
+{"when": "2026-11-17T12:15:39Z", "item": "S405", "action": "add", "from": "", "to": "open", "note": "ork tracking commit: commit the tracking files on the base branch"}
+{"when": "2026-11-17T12:15:39Z", "item": "S406", "action": "add", "from": "", "to": "open", "note": "Check lines ork runs itself are never asked about"}
+{"when": "2026-11-17T12:15:39Z", "item": "S407", "action": "add", "from": "", "to": "open", "note": "Slice checks skip the Acceptance criteria list"}
+{"when": "2026-11-17T12:18:02Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Bug evidence 2026-11-17: ork's own tracking commit before la", "by": "Jon Robbins"}
