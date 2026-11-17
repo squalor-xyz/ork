@@ -4830,3 +4830,10 @@
 {"when": "2026-11-16T21:50:22Z", "item": "S379", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-16T21:56:13Z", "item": "S379", "action": "note", "from": "", "to": "", "note": "Verified: the spec check skips a vendor marked out. specChai", "by": "Jon Robbins"}
 {"when": "2026-11-16T21:56:16Z", "item": "S379", "action": "status", "from": "started", "to": "done", "note": "Spec check skips a vendor marked out: specChain drops rows on an out vendor, an out-class spec-check exit marks the vendor out and falls back to the next row, and with every row out the check is refused naming the vendors and their end times. Verified by four mutation-checked tests, go vet, gofmt, go test ./..., slicer check and adj lint.", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:12:56Z", "item": "S387", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:20:18Z", "item": "S387", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T02:24:02Z", "item": "S387", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:26:44Z", "item": "S387", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:28:24Z", "item": "S387", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S387):", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:28:28Z", "item": "S387", "action": "note", "from": "", "to": "", "note": "Verified: a role's friction or deterministic-check tool feed", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:28:30Z", "item": "S387", "action": "status", "from": "started", "to": "done", "note": "Verified: a role's friction or deterministic-check tool feedback is filed as an unscored slice in the registered project the tool names, else in the run's own project as 'TOOL: PROPOSAL' with --discovered-from. Entries get a stable key, repeats are skipped, feature entries are only kept, and a failed filing sets file_error without changing the run. go vet, gofmt and go test ./... passed; the 11 new tests were red first and each assertion was mutation-checked.", "by": "Jon Robbins"}

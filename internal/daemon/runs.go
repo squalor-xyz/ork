@@ -262,10 +262,32 @@ func (d *Daemon) watchLocalSlots() {
 		}
 	}()
 }
+
+// toolProject resolves the registered project that a tool feedback entry's tool
+// slug names (S387, *proposed*; adj 412). The registry is read when an entry is
+// filed; a project is matched by its name's slug, so case does not matter. An
+// unreadable registry resolves nothing, and the entry is filed in the run's own
+// project.
+func (d *Daemon) toolProject(slug string) (registry.Project, bool) {
+	f, err := d.loadRegistry()
+	if err != nil {
+		return registry.Project{}, false
+	}
+	for _, p := range f.Projects {
+		if engine.ToolFeedbackSlug(p.Name) == slug {
+			return p, true
+		}
+	}
+	return registry.Project{}, false
+}
+
 func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 	deps := d.runs.deps
 	if deps.HungAfter == 0 {
 		deps.HungAfter = engine.DefaultHungAfter // a role silent for 30 minutes is killed (S182); not a setting
+	}
+	if deps.Project == nil {
+		deps.Project = d.toolProject
 	}
 	if deps.Runner == nil {
 		envFor := func(vendor string) []string {

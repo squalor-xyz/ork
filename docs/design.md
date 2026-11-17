@@ -1323,6 +1323,34 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   and the next brief do not carry them, and nothing runs `slicer feedback` for
   them. A spec check has no run, so its lines are dropped. Showing them in the
   TUI or `ork show` is not built.
+
+  *Proposed* (S387, owner decisions of 2026-11-17: adj 410 `feedback.auto-file`,
+  411 `feedback.safe-kinds`, 412 `feedback.target`, 413 `feedback.when`, 414
+  `feedback.dedupe`): ork files the entries of a report as it routes the
+  report, with no confirmation.
+  - **Key.** Each entry gets `key`, `tool-feedback-SLUG-HASH`: SLUG is the tool
+    in lower case with every rune outside `[a-z0-9-]` made `-` and trimmed of `-`
+    (`tool` when nothing is left), HASH the first 8 hex digits of the sha256 of the
+    slug, the kind and the proposal (lower case, white space folded), joined by NUL.
+    The run keeps no second entry with a key it holds, and a skipped repeat does
+    not count against the 3.
+  - **Safe kinds.** An entry of kind `friction` or `deterministic-check` is
+    filed; a `feature` entry is only kept, with its key and no `filed`.
+  - **Target.** The registered project that the tool's slug names, else the run's
+    own project. In the run's own project the title is `SLUG: PROPOSAL` unless the
+    tool is that project, and `--discovered-from ITEM` is passed; in another
+    project no `--discovered-from` is passed (`Client.Add` leaves the flag out
+    when it is empty).
+  - **Filing.** `slicer add TITLE --key KEY` then `slicer promote` with a Why
+    section that names the role, the run, the project, the item and the
+    evidence; no scores. A key that slicer already knows, with its spec, returns
+    that item and promotes nothing, so the same proposal in a later run files
+    nothing new. The entry gets `filed` (the item id) and `filed_at`. The
+    writes are logged in `writes[]` like any other slicer write
+    (`FileToolFeedback`, `internal/engine/toolfeedback.go`).
+  - **Failure.** Filing is advisory. A failed call is written on the entry as
+    `file_error`; it never pauses, fails or stops the run, and a failed entry is
+    not filed again by a later repeat in the same run.
 - **Structured questions** (`ui.structured-questions`, adj #168). Roles write
   this block under `## Owner needed`, with 2 to 4 options, distinct labels,
   consecutive numbers starting at 1, and a recommendation naming an option:

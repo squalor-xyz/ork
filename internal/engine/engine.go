@@ -64,6 +64,7 @@ type Deps struct {
 	Landings       *Landings                                        // one landing per project at a time; nil means one shared by the process
 	Vendors        *Vendors                                         // the per-vendor slot cap and vendor-out memory (S169); nil means no cap and no memory
 	Wake           *Wake                                            // the sleep detector (S235); nil means sleep is not detected
+	Project        func(name string) (registry.Project, bool)       // the registered project a tool feedback entry names (S387, *proposed*); nil resolves nothing, so the run's own project is used
 }
 
 func (d Deps) now() time.Time {

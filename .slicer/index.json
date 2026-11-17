@@ -21258,10 +21258,39 @@
       "id": "S387",
       "title": "File a role's safe tool feedback as a slice",
       "short_title": "Auto-file safe tool feedback",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ca1b29be-490b-411b-989e-998fb7fdae25",
+          "kind": "",
+          "text": "**2026-11-17** — Human checks at approval (S387):\n- later: Run one real slice whose role reports a friction line; the filed item reads as a usable roadmap entry and nothing else in the run changed.",
+          "created_at": "2026-11-17T02:28:24Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "008451ea-d8dd-4b7e-b8c7-3d42cfcde4ec",
+          "kind": "",
+          "text": "**2026-11-17** — Verified: a role's friction or deterministic-check tool feedback is filed as an unscored slice (slicer add --key, then promote with a Why naming role, run, project, item and evidence) in the registered project the tool names, else in the run's own project as 'TOOL: PROPOSAL' with --discovered-from. Entries get a stable key, repeats are skipped, feature entries are only kept, and a failed filing sets file_error without changing the run. go vet, gofmt and go test ./... passed (26 packages); the 11 new tests were red first and each assertion was mutation-checked.",
+          "created_at": "2026-11-17T02:28:28Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -21279,7 +21308,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
