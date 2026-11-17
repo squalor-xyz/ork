@@ -209,3 +209,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S66 (run ork-20261117-022055-182f, 2026-11-17)
 
 - [ ] At 100x30 and 80x24 in a real terminal: select text with the mouse at launch, press `M`, click a tab, a project and a row, press `M` again and select text again.
+
+## S397 (run ork-20261117-215731-f05c, 2026-11-17)
+
+- [ ] In an 80x24 terminal, run `ork run ork ID` on a slice whose spec check asks a question with an option longer than one line: the option's second line starts under the label, and the `Answer 1-N` prompt fits within 80 columns with the cursor after `back): `.

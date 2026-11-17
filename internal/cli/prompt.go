@@ -67,6 +67,50 @@ func plainLine(s string) string {
 	return strings.Join(strings.Fields(runrec.PlainText(s)), " ")
 }
 
+// writePlainLines prints role text at 80 columns. prefix leads the first
+// kept line and hang is only that line's wrapLines continuation. later
+// leads each following role line. Those lines wrap with an empty hang, so
+// the lead is not added twice. runrec.PlainText filters the text, and empty
+// lines are dropped. An empty text still prints the prefix, which is the
+// question heading.
+func writePlainLines(w io.Writer, prefix, text, hang, later string) {
+	var lines []string
+	for _, line := range strings.Split(runrec.PlainText(text), "\n") {
+		if line != "" {
+			lines = append(lines, line)
+		}
+	}
+	if len(lines) == 0 {
+		lines = []string{""}
+	}
+	for i, line := range lines {
+		lead := later
+		wrapHang := ""
+		if i == 0 {
+			lead = prefix
+			wrapHang = hang
+		}
+		for _, wrapped := range wrapLines(lead+line, 80, wrapHang) {
+			fmt.Fprintln(w, wrapped)
+		}
+	}
+}
+
+// writeWrappedPrompt wraps a sitting prompt with a two-space hang. The body
+// wraps at 79 columns so the last line's trailing space stays within 80.
+// Lines before the last end with a newline. The last line is printed with
+// one trailing space and no newline, which is where the answer is read.
+func writeWrappedPrompt(w io.Writer, text string) {
+	lines := wrapLines(strings.TrimRight(text, " "), 79, "  ")
+	for i, line := range lines {
+		if i == len(lines)-1 {
+			fmt.Fprintf(w, "%s ", line)
+			return
+		}
+		fmt.Fprintln(w, line)
+	}
+}
+
 func (o *output) failErrWith(prefix string, err error) int {
 	if o.json {
 		return o.failErr(err)

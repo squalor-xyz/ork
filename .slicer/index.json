@@ -21735,7 +21735,7 @@
       "id": "S397",
       "title": "Spec-check questions: filter role text, keep its line breaks, align wrapped lines",
       "short_title": "Safe spec-check question text",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
@@ -21747,6 +21747,48 @@
           "text": "**2026-11-17** — Owner 2026-11-17 (relay session 8d711f67): wrap the 'needs N answers' header at 80 too; Implement step 4 updated. Waits on S409 (adj 456).",
           "created_at": "2026-11-17T14:20:51Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b9a33586-f629-4582-9892-35f94ab74ee9",
+          "kind": "",
+          "text": "**2026-11-17** — Human checks at approval (S397):\n- later: In an 80x24 terminal, run `ork run ork ID` on a slice whose spec check asks a question with an option longer than one line: the option's second line starts under the label, and the `Answer 1-N` prompt fits within 80 columns with the cursor after `back): `.",
+          "created_at": "2026-11-17T23:02:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d3a8dd3c-22a4-4c44-8c78-292600b3c8d6",
+          "kind": "",
+          "text": "**2026-11-17** — Spec-check questions show role text as plain text, keep its line breaks, and wrap each line at 80 columns. An option continues under its label, including after a role line break. The answer prompt and the needs-N header wrap within 80 columns, and the prompt waits on its last line.",
+          "created_at": "2026-11-17T23:03:05Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "856d181b-7744-4ab5-a7ca-cb28c564f73f",
+          "kind": "",
+          "text": "**2026-11-17** — Landing check is green. S412-S415 were marked as slices with no file after the merge from main; promote --force recreated the slice files and render refreshed them. Spec-check questions still show role text as plain text, keep line breaks, and wrap at 80 columns. An option continues under its label, and the answer prompt and the needs-N header stay within 80 columns.",
+          "created_at": "2026-11-17T23:19:44Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -21773,7 +21815,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22030,6 +22072,20 @@
           "kind": "",
           "text": "**2026-11-17** — Bug evidence 2026-11-17: ork's own tracking commit before landing S387 (71323590) committed .slicer/index.json listing S403-S407 but not their new untracked slice and render files, so the merged tree failed 'slicer check' ('S403: marked as having a slice, but no file exists') and S387 went back to the implementer. The tracking commit (and commitTracking) must include untracked files under .slicer/ and decisions/.",
           "created_at": "2026-11-17T12:18:02Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b38f2c25-84c7-4984-84df-f33ff12a1fc3",
+          "kind": "",
+          "text": "**2026-11-17** — Bug evidence 2026-11-17 23:20: S402 and S396 landing re-checks went red on 'S412-S415: marked as having a slice, but no file exists' - ork's auto-filed tool-feedback slices (S387) were in main's index but their slice files were untracked when the landing merged main. The same four were also written into the S397 worktree with empty bodies, so S397's merge of main conflicted (AA) on all four; resolved by taking main's copies.",
+          "created_at": "2026-11-17T23:21:01Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",

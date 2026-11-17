@@ -12,7 +12,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": ""
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-220113-e6de, project ork, item S396:\n\nLet the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt.\n\nEvidence: Done when says a command that needs approval ends the run, and that rg, slicer, and test commands stay unverified, so this review could not run the slice Check."
     },
     {
       "heading": "Files",
