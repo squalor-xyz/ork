@@ -6,6 +6,10 @@ package slicercli
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
@@ -127,6 +131,42 @@ func (c Client) RelayRuns(ctx context.Context, root string, activeOnly bool) ([]
 		return nil, err
 	}
 	return out.Runs, nil
+}
+
+// Snapshot runs `slicer snapshot --json --lean --parts PARTS --root ROOT...`:
+// one process that reads the named parts of every root. Slicer prints each
+// project, and exits non-zero when any one has an error, so a reply that holds
+// projects is returned with that project's Error set, and the others usable.
+// An error is a call that failed as a whole, a reply of another schema
+// version, or one whose project count differs from the roots.
+func (c Client) Snapshot(ctx context.Context, roots, parts []string) (*SnapshotReply, error) {
+	args := []string{"snapshot", "--json", "--lean", "--parts", strings.Join(parts, ",")}
+	for _, r := range roots {
+		args = append(args, "--root", r)
+	}
+	call := c.call(args...)
+	res, err := clirun.Run(ctx, call)
+	if err != nil {
+		var exit *clirun.ExitError
+		if !errors.As(err, &exit) || exit.Tool != nil {
+			return nil, err
+		}
+		// A non-zero exit with no error envelope is a reply with project errors.
+	}
+	var reply SnapshotReply
+	if jerr := json.Unmarshal(res.Stdout, &reply); jerr != nil {
+		if err != nil {
+			return nil, err
+		}
+		return nil, fmt.Errorf("%s: decode output: %w", call, jerr)
+	}
+	if reply.Schema != SnapshotSchema {
+		return nil, fmt.Errorf("%s: snapshot schema %d, want %d", call, reply.Schema, SnapshotSchema)
+	}
+	if len(reply.Projects) != len(roots) {
+		return nil, fmt.Errorf("%s: %d projects for %d roots", call, len(reply.Projects), len(roots))
+	}
+	return &reply, nil
 }
 
 // RelayStats reads slicer's aggregate statistics, without caching or computing.

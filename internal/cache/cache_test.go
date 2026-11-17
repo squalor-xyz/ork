@@ -4,8 +4,11 @@ package cache
 
 import (
 	"context"
+	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"sort"
 	"sync"
 	"testing"
@@ -1129,5 +1132,369 @@ func TestLedgerRefreshIsTwoSecondsForEveryVisibleProjectWithALiveRun(t *testing.
 	}
 	if _, max := f.now(); max > Limit {
 		t.Fatalf("%d calls ran at once with %d projects visible, limit %d", max, len(projects), Limit)
+	}
+}
+
+// batchFetcher is a fakeFetcher that also reads Items, Goals and Runs in one
+// call, as source.Direct does over `slicer snapshot` (poll.batch-shape). Its
+// revision of a part is a hash of the part's value, and a part whose revision
+// the request already holds comes back Unchanged with no value, as slicer's does.
+type batchFetcher struct {
+	*fakeFetcher
+	bmu         sync.Mutex
+	batches     [][]source.BatchRequest
+	fail        error            // the whole batched call fails
+	failProject map[string]error // a project that the snapshot reports an error for
+}
+
+func newBatchFetcher() *batchFetcher { return &batchFetcher{fakeFetcher: newFetcher()} }
+
+func (b *batchFetcher) FetchBatch(ctx context.Context, reqs []source.BatchRequest) ([]source.BatchResult, error) {
+	b.bmu.Lock()
+	b.batches = append(b.batches, append([]source.BatchRequest(nil), reqs...))
+	fail, failProject := b.fail, b.failProject
+	b.bmu.Unlock()
+	if fail != nil {
+		return nil, fail
+	}
+	b.fakeFetcher.mu.Lock()
+	answer := b.fakeFetcher.answer
+	b.fakeFetcher.mu.Unlock()
+	out := make([]source.BatchResult, len(reqs))
+	for i, r := range reqs {
+		if err := failProject[r.Project.Name]; err != nil {
+			out[i] = source.BatchResult{Err: err}
+			continue
+		}
+		res := source.BatchResult{Parts: map[source.Part]source.BatchPart{}}
+		for _, part := range r.Parts {
+			v, err := answer(r.Project, part)
+			if err != nil {
+				res.Parts[part] = source.BatchPart{Err: err}
+				continue
+			}
+			j, _ := json.Marshal(v)
+			rev := fmt.Sprintf("%x", sha256.Sum256(j))[:12]
+			if r.Have[part] == rev {
+				res.Parts[part] = source.BatchPart{Revision: rev, Unchanged: true}
+			} else {
+				res.Parts[part] = source.BatchPart{Revision: rev, Value: v}
+			}
+		}
+		out[i] = res
+	}
+	return out, nil
+}
+
+func (b *batchFetcher) batchCount() int {
+	b.bmu.Lock()
+	defer b.bmu.Unlock()
+	return len(b.batches)
+}
+
+func (b *batchFetcher) lastBatch() []source.BatchRequest {
+	b.bmu.Lock()
+	defer b.bmu.Unlock()
+	if len(b.batches) == 0 {
+		return nil
+	}
+	return b.batches[len(b.batches)-1]
+}
+
+func (b *batchFetcher) setBatchFailure(err error, projects map[string]error) {
+	b.bmu.Lock()
+	defer b.bmu.Unlock()
+	b.fail, b.failProject = err, projects
+}
+
+func newBatchCache(t *testing.T, b *batchFetcher, clock *fakeClock, onChange func(string, source.Part)) *Cache {
+	t.Helper()
+	c := New(Options{Clock: clock, Fetcher: b, OnChange: onChange})
+	t.Cleanup(c.Close)
+	return c
+}
+
+// waitBatches waits until the fetcher has seen n batched calls and no read is
+// in flight or queued. Like waitRead, it keeps a test from moving the fake clock
+// on while a read still runs.
+func waitBatches(t *testing.T, c *Cache, b *batchFetcher, n int) {
+	t.Helper()
+	waitFor(t, fmt.Sprintf("batch %d ended", n), func() bool {
+		if b.batchCount() != n {
+			return false
+		}
+		c.mu.Lock()
+		defer c.mu.Unlock()
+		if len(c.queue) != 0 {
+			return false
+		}
+		for _, e := range c.entries {
+			if e.flight != nil {
+				return false
+			}
+		}
+		return true
+	})
+}
+
+func partNames(r source.BatchRequest) []string {
+	var out []string
+	for _, p := range r.Parts {
+		out = append(out, string(p))
+	}
+	sort.Strings(out)
+	return out
+}
+
+// noteLog collects the change notices of a cache.
+type noteLog struct {
+	mu    sync.Mutex
+	notes []string
+}
+
+func (n *noteLog) add(project string, part source.Part) {
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	n.notes = append(n.notes, project+"/"+string(part))
+}
+
+func (n *noteLog) take() []string {
+	settle()
+	n.mu.Lock()
+	defer n.mu.Unlock()
+	out := n.notes
+	n.notes = nil
+	return out
+}
+
+func TestDueItemsGoalsAndRunsOfThreeProjectsAreOneBatchedCall(t *testing.T) {
+	bf := newBatchFetcher()
+	clock := &fakeClock{}
+	c := newBatchCache(t, bf, clock, nil)
+	gamma := registry.Project{Name: "gamma", Path: "/p/gamma"}
+	projects := []registry.Project{alpha, beta, gamma}
+	for _, p := range projects {
+		readAll(t, c, p)
+	}
+	before := bf.batchCount()
+
+	clock.Advance(GoalInterval) // every part of every project is due at once
+	waitBatches(t, c, bf, before+1)
+	settle()
+	if n := bf.batchCount(); n != before+1 {
+		t.Fatalf("%d batched calls for three due projects, want 1", n-before)
+	}
+	last := bf.lastBatch()
+	if len(last) != 3 {
+		t.Fatalf("the batch has %d projects, want 3: %+v", len(last), last)
+	}
+	for _, r := range last {
+		if got := fmt.Sprint(partNames(r)); got != "[goals items runs]" {
+			t.Errorf("%s: batch parts %s, want [goals items runs]", r.Project.Name, got)
+		}
+	}
+	for _, p := range projects {
+		for _, part := range []source.Part{source.Items, source.Goals, source.Runs} {
+			if n := bf.count(p.Name, part); n != 0 {
+				t.Errorf("%s/%s: %d part calls, want 0 (batched)", p.Name, part, n)
+			}
+		}
+		if n := bf.count(p.Name, source.Deps); n != 2 {
+			t.Errorf("%s/deps: %d calls, want 2 (deps stays per project)", p.Name, n)
+		}
+	}
+}
+
+func TestAPartWhoseRevisionIsUnchangedKeepsItsValueAndGivesNoNotice(t *testing.T) {
+	bf := newBatchFetcher()
+	clock := &fakeClock{}
+	var log noteLog
+	c := newBatchCache(t, bf, clock, log.add)
+	readAll(t, c, alpha)
+	waitBatches(t, c, bf, 1)
+	log.take()
+	first := c.Get(context.Background(), alpha, source.Items)
+	if first.Err != nil || first.ReadAt != epoch {
+		t.Fatalf("first read: %+v", first)
+	}
+
+	clock.Advance(SlowInterval) // items and runs read again, with the same data
+	waitBatches(t, c, bf, 2)
+	for _, r := range bf.lastBatch() {
+		if r.Have[source.Items] == "" || r.Have[source.Runs] == "" {
+			t.Fatalf("the request does not hold the last revisions: %+v", r.Have)
+		}
+	}
+	if got := log.take(); len(got) != 0 {
+		t.Fatalf("an unchanged revision gave notices %v", got)
+	}
+	again := c.Get(context.Background(), alpha, source.Items)
+	if again.Err != nil || !reflect.DeepEqual(again.Value, first.Value) || again.Value == nil {
+		t.Fatalf("an unchanged part lost its value: %+v", again)
+	}
+	if want := epoch.Add(SlowInterval); !again.ReadAt.Equal(want) {
+		t.Fatalf("ReadAt %v after an unchanged read, want %v", again.ReadAt, want)
+	}
+
+	bf.setAnswer(func(p registry.Project, part source.Part) (any, error) {
+		if part == source.Items {
+			return []slicercli.Item{{ID: "S1"}, {ID: "S2"}}, nil
+		}
+		return defaultAnswer(p, part)
+	})
+	clock.Advance(SlowInterval)
+	waitBatches(t, c, bf, 3)
+	if got := log.take(); len(got) != 1 || got[0] != "alpha/items" {
+		t.Fatalf("a changed revision gave notices %v, want [alpha/items]", got)
+	}
+	changed := c.Get(context.Background(), alpha, source.Items)
+	if items, _ := changed.Value.([]slicercli.Item); len(items) != 2 {
+		t.Fatalf("a changed part kept its old value: %+v", changed)
+	}
+}
+
+func TestAnUnchangedRevisionAfterAFailedReadClearsTheError(t *testing.T) {
+	bf := newBatchFetcher()
+	clock := &fakeClock{}
+	var log noteLog
+	c := newBatchCache(t, bf, clock, log.add)
+	readAll(t, c, alpha)
+	waitBatches(t, c, bf, 1)
+	log.take()
+
+	bf.setBatchFailure(nil, map[string]error{"alpha": &clirun.ToolError{Code: "io", Message: "disk"}})
+	clock.Advance(SlowInterval)
+	waitBatches(t, c, bf, 2)
+	if got := c.Get(context.Background(), alpha, source.Items); got.Err == nil || got.Value == nil {
+		t.Fatalf("after a failed read: %+v", got)
+	}
+	log.take()
+
+	bf.setBatchFailure(nil, nil)
+	clock.Advance(SlowInterval)
+	waitBatches(t, c, bf, 3)
+	got := c.Get(context.Background(), alpha, source.Items)
+	if got.Err != nil || got.Value == nil {
+		t.Fatalf("after the recovery: %+v", got)
+	}
+	if notes := log.take(); !reflect.DeepEqual(notes, []string{"alpha/items", "alpha/runs"}) && !reflect.DeepEqual(notes, []string{"alpha/runs", "alpha/items"}) {
+		t.Fatalf("a part that recovered gave notices %v, want items and runs", notes)
+	}
+}
+
+func TestAFailedBatchedCallFallsBackToPartCallsForThatTick(t *testing.T) {
+	bf := newBatchFetcher()
+	clock := &fakeClock{}
+	c := newBatchCache(t, bf, clock, nil)
+	readAll(t, c, alpha)
+	readAll(t, c, beta)
+	waitBatches(t, c, bf, 2)
+
+	bf.setBatchFailure(errors.New("slicer snapshot: exit 2"), nil)
+	clock.Advance(SlowInterval)
+	waitFor(t, "part calls for items and runs", func() bool {
+		return bf.count("alpha", source.Items) == 1 && bf.count("alpha", source.Runs) == 1 &&
+			bf.count("beta", source.Items) == 1 && bf.count("beta", source.Runs) == 1
+	})
+	waitBatches(t, c, bf, 3)
+	if n := bf.count("alpha", source.Goals); n != 0 {
+		t.Fatalf("goals was not due and was read %d times", n)
+	}
+	for _, p := range []registry.Project{alpha, beta} {
+		for _, part := range []source.Part{source.Items, source.Runs} {
+			if got := c.Get(context.Background(), p, part); got.Err != nil || !got.ReadAt.Equal(epoch.Add(SlowInterval)) {
+				t.Fatalf("%s/%s after the fallback: %+v", p.Name, part, got)
+			}
+		}
+	}
+
+	bf.setBatchFailure(nil, nil)
+	clock.Advance(SlowInterval)
+	waitBatches(t, c, bf, 4)
+	if n := bf.count("alpha", source.Items); n != 1 {
+		t.Fatalf("the next tick made part calls again: %d", n)
+	}
+}
+
+func TestASnapshotProjectErrorMarksOnlyThatProjectsPartsFailed(t *testing.T) {
+	bf := newBatchFetcher()
+	clock := &fakeClock{}
+	var log noteLog
+	c := newBatchCache(t, bf, clock, log.add)
+	readAll(t, c, alpha)
+	readAll(t, c, beta)
+	waitBatches(t, c, bf, 2)
+	log.take()
+	prior := c.Get(context.Background(), beta, source.Items)
+
+	boom := &clirun.ToolError{Code: "io", Message: "cannot read", Command: "snapshot"}
+	bf.setBatchFailure(nil, map[string]error{"beta": boom})
+	clock.Advance(SlowInterval)
+	waitBatches(t, c, bf, 3)
+
+	for _, part := range []source.Part{source.Items, source.Runs} {
+		b := c.Get(context.Background(), beta, part)
+		var te *clirun.ToolError
+		if !errors.As(b.Err, &te) || te.Code != "io" || b.Value == nil || !b.ReadAt.Equal(epoch) {
+			t.Fatalf("beta/%s: %+v, want its old value, its old age and the project's error", part, b)
+		}
+		a := c.Get(context.Background(), alpha, part)
+		if a.Err != nil || a.Value == nil || !a.ReadAt.Equal(epoch.Add(SlowInterval)) {
+			t.Fatalf("alpha/%s: %+v, want a good read", part, a)
+		}
+	}
+	if got := c.Get(context.Background(), beta, source.Items); !reflect.DeepEqual(got.Value, prior.Value) {
+		t.Fatalf("beta items changed: %+v", got)
+	}
+	if got := log.take(); len(got) != 2 {
+		t.Fatalf("notices %v, want beta items and runs", got)
+	}
+	for _, p := range []string{"alpha", "beta"} {
+		if n := bf.count(p, source.Items) + bf.count(p, source.Runs); n != 0 {
+			t.Fatalf("%s: %d part calls after a project error, want 0 (no fallback)", p, n)
+		}
+	}
+}
+
+func TestLiveRunStateChangeIsDeliveredWithinOneBatchedTick(t *testing.T) {
+	bf := newBatchFetcher()
+	var mu sync.Mutex
+	state := "running"
+	bf.setAnswer(func(p registry.Project, part source.Part) (any, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		if part == source.Runs {
+			return []slicercli.RelayRun{{ID: "run-1", State: state}}, nil
+		}
+		return defaultAnswer(p, part)
+	})
+	clock := &fakeClock{}
+	var log noteLog
+	c := newBatchCache(t, bf, clock, log.add)
+	readAll(t, c, alpha)
+	readAll(t, c, beta)
+	c.SetVisible([]string{"alpha"})
+	waitFor(t, "goals read again on tab open", func() bool { return bf.batchCount() == 3 })
+	waitBatches(t, c, bf, 3)
+	log.take()
+
+	mu.Lock()
+	state = "waiting"
+	mu.Unlock()
+	clock.Advance(LiveInterval)
+	waitBatches(t, c, bf, 4)
+	last := bf.lastBatch()
+	if len(last) != 1 || last[0].Project.Name != "alpha" || fmt.Sprint(partNames(last[0])) != "[runs]" {
+		t.Fatalf("the live tick batch: %+v, want alpha's runs only", last)
+	}
+	if got := log.take(); len(got) != 1 || got[0] != "alpha/runs" {
+		t.Fatalf("notices %v, want [alpha/runs]", got)
+	}
+	runs, _ := c.Get(context.Background(), alpha, source.Runs).Value.([]slicercli.RelayRun)
+	if len(runs) != 1 || runs[0].State != "waiting" {
+		t.Fatalf("runs after one live tick: %+v", runs)
+	}
+	if n := bf.count("alpha", source.Runs); n != 0 {
+		t.Fatalf("runs read by a part call: %d", n)
 	}
 }

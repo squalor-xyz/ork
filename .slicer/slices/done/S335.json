@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/source/source.go:104-121` (`Direct.Fetch`; a batched fetch beside it)\n- `internal/slicercli` (a `Snapshot(ctx, roots, parts)` call and its types)\n- `internal/cache/cache.go` (group due Items, Runs and Goals reads into one batched call per tick; keep each part's schedule; skip `OnChange` when a part's revision is unchanged)\n- `internal/cache/cache_test.go`\n- `internal/source/source_test.go`\n- `testdata/cli/slicer/` (a recorded `slicer snapshot --json` reply)\n- `docs/design.md` (dash.refresh)\n- `CHANGELOG.md`"
+      "body": "- `internal/source/source.go` (`Direct.Fetch`; `Batcher`, `BatchRequest` and `Direct.FetchBatch` beside it)\n- `internal/slicercli/slicercli.go` and `internal/slicercli/types.go` (`Client.Snapshot(ctx, roots, parts)` and its types)\n- `internal/slicercli/slicercli_test.go`\n- `internal/cache/cache.go` (`flush` and `BatchWindow` group due Items, Runs and Goals reads into one batched call; `finishRead` keeps each part's schedule and skips `OnChange` when a part's revision is unchanged)\n- `internal/cache/cache_test.go`\n- `internal/source/source_test.go`\n- `internal/daemon/landed.go` (`newLandingFetcher` keeps the source's batched read visible to the cache)\n- `internal/daemon/daemon.go`\n- `internal/daemon/landed_batch_test.go`\n- `testdata/cli/slicer/snapshot.json` (a recorded `slicer snapshot --json` reply)\n- `docs/design.md` (dash.refresh)\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

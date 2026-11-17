@@ -235,6 +235,79 @@ func TestRelayRunsActiveOnlyPassesFlag(t *testing.T) {
 	}
 }
 
+func TestSnapshotPassesRootsPartsAndDecodesTheRecordedReply(t *testing.T) {
+	c, fake := client(t, route("snapshot.json", "snapshot", "--json", "--lean", "--parts", "items,goals,runs", "--root", root))
+	reply, err := c.Snapshot(context.Background(), []string{root}, []string{"items", "goals", "runs"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("calls: %+v", calls)
+	}
+	if len(reply.Projects) != 1 || reply.Projects[0].Root != root || reply.Projects[0].Error != nil {
+		t.Fatalf("projects: %+v", reply.Projects)
+	}
+	parts := reply.Projects[0].Parts
+	if parts["items"].Revision != "a3f90c1b7e52" || parts["goals"].Revision != "7be2d4410c8f" || parts["runs"].Revision != "c90b3a6e18d5" {
+		t.Fatalf("revisions: %+v", parts)
+	}
+	items, err := parts["items"].Items()
+	if err != nil || len(items) != 11 || items[0].Title != "Core: registry and CLI adapters" || items[1].DependsOn[0] != "S01" {
+		t.Fatalf("items: %d, %v", len(items), err)
+	}
+	goals, err := parts["goals"].Goals()
+	if err != nil || len(goals.Records.Goal) != 11 || len(goals.Records.NonGoal) != 7 {
+		t.Fatalf("goals: %+v, %v", goals, err)
+	}
+	runs, err := parts["runs"].RelayRuns()
+	if err != nil || len(runs) != 3 || runs[1].Steps[1].Vendor != "claude" || runs[1].Steps[1].BeganAt != "2026-10-19T02:42:11Z" {
+		t.Fatalf("runs: %+v, %v", runs, err)
+	}
+}
+
+func TestSnapshotKeepsTheOtherProjectsWhenOneFails(t *testing.T) {
+	// slicer prints every project and exits non-zero when one has an error.
+	reply := `{"snapshot":2,"slicer":"1.22.1","contract":12,"projects":[` +
+		`{"root":"/a","revision":"r","parts":{"runs":{"revision":"x","fingerprint":null,"value":{"runs":[]}}},"error":null},` +
+		`{"root":"/b","revision":null,"parts":{},"error":{"code":"io","message":"cannot read","command":"snapshot"}}]}`
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"snapshot", "--json", "--lean", "--parts", "runs", "--root", "/a", "--root", "/b"}, Stdout: reply, Exit: 3})
+	got, err := c.Snapshot(context.Background(), []string{"/a", "/b"}, []string{"runs"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.Projects[0].Error != nil || got.Projects[0].Parts["runs"].Revision != "x" {
+		t.Fatalf("first project: %+v", got.Projects[0])
+	}
+	if e := got.Projects[1].Error; e == nil || e.Code != "io" || len(got.Projects[1].Parts) != 0 {
+		t.Fatalf("second project: %+v", got.Projects[1])
+	}
+}
+
+func TestSnapshotUsageErrorKeepsItsCode(t *testing.T) {
+	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"snapshot", "--json", "--lean", "--parts", "bogus", "--root", root},
+		Stdout: `{"error":{"code":"usage","message":"unknown snapshot part(s) bogus","command":"snapshot"}}`, Exit: 2})
+	_, err := c.Snapshot(context.Background(), []string{root}, []string{"bogus"})
+	var te *clirun.ToolError
+	if !errors.As(err, &te) || te.Code != "usage" {
+		t.Fatalf("error: %v", err)
+	}
+}
+
+func TestSnapshotOfAnOtherSchemaOrProjectCountIsAnError(t *testing.T) {
+	for name, reply := range map[string]string{
+		"schema 1":      `{"snapshot":1,"projects":[{"root":"/projects/ork","parts":{},"error":null}]}`,
+		"missing":       `{"projects":[{"root":"/projects/ork","parts":{},"error":null}]}`,
+		"fewer results": `{"snapshot":2,"projects":[]}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"snapshot", "--json", "--lean", "--parts", "items", "--root", root}, Stdout: reply})
+			if got, err := c.Snapshot(context.Background(), []string{root}, []string{"items"}); err == nil {
+				t.Fatalf("decoded without an error: %+v", got)
+			}
+		})
+	}
+}
+
 func TestListReadsFlags(t *testing.T) {
 	c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", root},
 		Stdout: `[{"id":"X1","title":"t","status":"open","has_slice":false,"fields":{"flags":["needs-owner","other"]}},` +

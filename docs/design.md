@@ -171,8 +171,23 @@ ork (TUI)  ork status --json (CLI)
   Running entry, which makes every project visible, reads the runs of each
   project with a live run every 2 s and no other part faster (*proposed*,
   S110); the 4-process limit holds however many projects that is. Only the runs part speeds up; a change in it
-  reaches the clients through the usual notice. Each read is one CLI call. A read that is already running is
-  shared, and at most 4 CLI processes run at once across all projects. A
+  reaches the clients through the usual notice. Each read is one CLI call,
+  except the items, goals and runs parts (*proposed*, S335, adj 299, 305, 306).
+  Those reads that come due within 10 ms of each other, across projects, are
+  one `slicer snapshot --parts ... --root ...` process (slicer snapshot schema 2,
+  whose three parts equal `list --json --lean`, `goals --json` and `relay-run
+  list --json --active`). Each part keeps its own interval and its own read
+  time. The cache sends the revision it holds of each part, and a part whose
+  revision is unchanged is not decoded: its read time moves, its value stays and
+  no notice goes out (after a failed read, the recovery is still a change). The
+  source implements this with the optional `source.Batcher` interface, which the
+  cache finds by type assertion; a fetcher without it is read part by part, as are
+  deps, open and decided records and git HEAD. A batched call that fails as a
+  whole is read part by part for that tick; a project that the reply marks with
+  an `error` fails only that project's parts, and the others keep their values
+  (adj 300). A read that is already running is
+  shared, and at most 4 CLI processes run at once across all projects, a batched
+  call counting as one. A
   read that comes due, or that a HEAD change asks for, while another runs for
   its part starts when that one ends, so a part never has two reads at once. A
   failed read keeps the last good value, with its error and the time it was

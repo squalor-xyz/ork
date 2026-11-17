@@ -4,6 +4,9 @@ package slicercli
 
 import (
 	"encoding/json"
+	"fmt"
+
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -180,6 +183,67 @@ type RelayRun struct {
 	Outcome   string   `json:"outcome"`
 	Counts    Counts   `json:"counts"`
 	Steps     []Step   `json:"steps"`
+}
+
+// SnapshotSchema is the one `slicer snapshot` schema version Snapshot reads.
+// Version 2 gives the items, goals and runs parts the shapes of `list --json
+// --lean`, `goals --json` and `relay-run list --json --active` (slicer s459).
+const SnapshotSchema = 2
+
+// SnapshotPart is one part of one project in a snapshot reply. Value is kept
+// raw, so a caller that holds the part's Revision decodes nothing for a part
+// that did not change.
+type SnapshotPart struct {
+	Revision string          `json:"revision"`
+	Value    json.RawMessage `json:"value"`
+}
+
+// Items decodes an items part, the rows of `slicer list --json --lean`.
+func (p SnapshotPart) Items() ([]Item, error) {
+	var items []Item
+	if err := json.Unmarshal(p.Value, &items); err != nil {
+		return nil, fmt.Errorf("snapshot items: decode: %w", err)
+	}
+	return items, nil
+}
+
+// Goals decodes a goals part, the output of `slicer goals --json`.
+func (p SnapshotPart) Goals() (*Goals, error) {
+	var g Goals
+	if err := json.Unmarshal(p.Value, &g); err != nil {
+		return nil, fmt.Errorf("snapshot goals: decode: %w", err)
+	}
+	return &g, nil
+}
+
+// RelayRuns decodes a runs part, the output of `slicer relay-run list --json
+// --active`.
+func (p SnapshotPart) RelayRuns() ([]RelayRun, error) {
+	var out struct {
+		Runs []RelayRun `json:"runs"`
+	}
+	if err := json.Unmarshal(p.Value, &out); err != nil {
+		return nil, fmt.Errorf("snapshot runs: decode: %w", err)
+	}
+	return out.Runs, nil
+}
+
+// SnapshotProject is one project's answer. Error is set, and Parts is empty,
+// when slicer could not read that project.
+type SnapshotProject struct {
+	Root     string                  `json:"root"`
+	Revision string                  `json:"revision"`
+	Parts    map[string]SnapshotPart `json:"parts"`
+	Error    *clirun.ToolError       `json:"error"`
+}
+
+// SnapshotReply is `slicer snapshot --json`. Projects are in the order of the
+// roots the call named.
+type SnapshotReply struct {
+	Schema   int               `json:"snapshot"`
+	Slicer   string            `json:"slicer"`
+	Contract int               `json:"contract"`
+	Projects []SnapshotProject `json:"projects"`
 }
 
 // RelayStats is slicer's aggregate output. per_run is deliberately omitted.

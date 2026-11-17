@@ -42,6 +42,41 @@ type Fetcher interface {
 	Fetch(ctx context.Context, p registry.Project, part Part) (any, error)
 }
 
+// BatchRequest asks for some parts of one project in a batched read. Have holds
+// the revision of the caller's last good value of a part, if it has one.
+type BatchRequest struct {
+	Project registry.Project
+	Parts   []Part
+	Have    map[Part]string
+}
+
+// BatchPart is one part of one project from a batched read. Revision is the
+// part's content revision. Unchanged means Revision equals the one in Have: Value
+// is nil and was not decoded. Value is typed as Fetch types it.
+type BatchPart struct {
+	Value     any
+	Err       error
+	Revision  string
+	Unchanged bool
+}
+
+// BatchResult is one project's answer. A non-nil Err fails every part of the
+// project, and Parts is then empty.
+type BatchResult struct {
+	Err   error
+	Parts map[Part]BatchPart
+}
+
+// Batcher is an optional interface of a Fetcher: it reads several parts of
+// several projects with one call (poll.batch-shape, adj 306). The cache finds
+// it by type assertion, and a Fetcher without it is read part by part. Only
+// Items, Goals and Runs can be batched (poll.snapshot-parts, adj 299). The
+// results are in the order of reqs. An error means the whole call failed, and the
+// caller reads each part on its own (poll.snapshot-errors, adj 300).
+type Batcher interface {
+	FetchBatch(ctx context.Context, reqs []BatchRequest) ([]BatchResult, error)
+}
+
 // Result is one call's value and its own error. A failed call leaves Value at
 // its zero value. ReadAt is when Value was read: a failed call after a good
 // read keeps that value and its ReadAt, which makes the result stale.
@@ -119,6 +154,92 @@ func (d *Direct) Fetch(ctx context.Context, p registry.Project, part Part) (any,
 		return d.head(ctx, p.Path)
 	}
 	return nil, fmt.Errorf("unknown part %q", part)
+}
+
+// batchParts are the parts one `slicer snapshot` call reads, with the name
+// slicer gives each, in the order the call names them.
+var batchParts = []struct {
+	part Part
+	name string
+}{{Items, "items"}, {Goals, "goals"}, {Runs, "runs"}}
+
+// FetchBatch reads the requested parts of every project with one `slicer
+// snapshot` call. A part whose revision equals the request's Have is not decoded.
+func (d *Direct) FetchBatch(ctx context.Context, reqs []BatchRequest) ([]BatchResult, error) {
+	asked := map[Part]bool{}
+	roots := make([]string, len(reqs))
+	for i, r := range reqs {
+		roots[i] = r.Project.Path
+		for _, part := range r.Parts {
+			if snapshotName(part) == "" {
+				return nil, fmt.Errorf("part %q cannot be read in a batch", part)
+			}
+			asked[part] = true
+		}
+	}
+	var names []string
+	for _, bp := range batchParts {
+		if asked[bp.part] {
+			names = append(names, bp.name)
+		}
+	}
+	if len(names) == 0 {
+		return make([]BatchResult, len(reqs)), nil
+	}
+	reply, err := d.Slicer.Snapshot(ctx, roots, names)
+	if err != nil {
+		return nil, err
+	}
+	out := make([]BatchResult, len(reqs))
+	for i, r := range reqs {
+		proj := reply.Projects[i]
+		if proj.Error != nil {
+			out[i] = BatchResult{Err: proj.Error}
+			continue
+		}
+		res := BatchResult{Parts: make(map[Part]BatchPart, len(r.Parts))}
+		for _, part := range r.Parts {
+			res.Parts[part] = batchPart(proj, part, r.Have[part])
+		}
+		out[i] = res
+	}
+	return out, nil
+}
+
+func snapshotName(part Part) string {
+	for _, bp := range batchParts {
+		if bp.part == part {
+			return bp.name
+		}
+	}
+	return ""
+}
+
+// batchPart reads one part of a project's snapshot. It decodes the value only
+// when its revision differs from have.
+func batchPart(proj slicercli.SnapshotProject, part Part, have string) BatchPart {
+	name := snapshotName(part)
+	sp, ok := proj.Parts[name]
+	if !ok {
+		return BatchPart{Err: fmt.Errorf("slicer snapshot of %s has no %s part", proj.Root, name)}
+	}
+	if have != "" && sp.Revision == have {
+		return BatchPart{Revision: sp.Revision, Unchanged: true}
+	}
+	var v any
+	var err error
+	switch part {
+	case Items:
+		v, err = sp.Items()
+	case Goals:
+		v, err = sp.Goals()
+	case Runs:
+		v, err = sp.RelayRuns()
+	}
+	if err != nil {
+		return BatchPart{Err: err}
+	}
+	return BatchPart{Value: v, Revision: sp.Revision}
 }
 
 // head returns the commit HEAD points at (boundary.git-head). The daemon

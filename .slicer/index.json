@@ -18967,7 +18967,7 @@
       "id": "S335",
       "title": "Polling: one slicer snapshot call for all due projects, skipping parts whose revision did not change",
       "short_title": "Batched snapshot polling",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -18977,6 +18977,34 @@
           "text": "**2026-11-17** — 2026-11-17: slicer s459 landed (slicer 1.22.1, snapshot schema 2: items, runs and goals parts equal list --json --lean, relay-run list --json --active and goals --json). Owner (interactive, relay session 8d711f67): queue S335; spec check next, new questions go to the owner.",
           "created_at": "2026-11-17T01:36:22Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d10ea1c4-60a0-4f21-844c-75a088d0779b",
+          "kind": "",
+          "text": "**2026-11-17** — Human checks at approval (S335):\n- later: deferred to land: With the TUI open on a project with a live run, the run's state changes still show within about a second, and `ps` sampling shows far fewer slicer processes than before.",
+          "created_at": "2026-11-17T02:18:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c0ba2271-2adf-40bb-8494-80e2b6eaf8d3",
+          "kind": "",
+          "text": "**2026-11-17** — Verified: the daemon's cache reads items, goals and runs of every due project with one slicer snapshot call (schema 2) and skips decode and notice for a part whose revision did not change; a failed batched call falls back to per-part calls for that tick and a project error fails only that project's parts (adj 299, 300, 306). go vet, gofmt and go test ./... pass; the daemon socket tests skip in the sandbox. The human check (live run within about a second, fewer slicer processes) is deferred to land.",
+          "created_at": "2026-11-17T02:18:55Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19003,7 +19031,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
