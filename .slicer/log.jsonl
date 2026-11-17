@@ -4835,3 +4835,54 @@
 {"when": "2026-11-17T02:18:51Z", "item": "S335", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S335):", "by": "Jon Robbins"}
 {"when": "2026-11-17T02:18:55Z", "item": "S335", "action": "note", "from": "", "to": "", "note": "Verified: the daemon's cache reads items, goals and runs of ", "by": "Jon Robbins"}
 {"when": "2026-11-17T02:18:57Z", "item": "S335", "action": "status", "from": "started", "to": "done", "note": "Batched snapshot polling: items, goals and runs of every due project are read with one slicer snapshot call, unchanged revisions are not decoded or announced, with per-part fallback on a failed call (adj 299, 300, 306). Tests, vet and gofmt pass.", "by": "Jon Robbins"}
+{"when": "2026-11-17T01:36:21Z", "item": "S229", "action": "note", "from": "", "to": "", "note": "Owner decisions (2026-11-17, interactive, relay session 8d71", "by": "Jon Robbins"}
+{"when": "2026-11-17T01:36:21Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Owner decisions (2026-11-17, interactive, relay session 8d71", "by": "Jon Robbins"}
+{"when": "2026-11-17T01:36:22Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Owner decision (2026-11-17, interactive, relay session 8d711", "by": "Jon Robbins"}
+{"when": "2026-11-17T01:36:22Z", "item": "S303", "action": "note", "from": "", "to": "", "note": "Owner decision (2026-11-17, interactive, relay session 8d711", "by": "Jon Robbins"}
+{"when": "2026-11-17T01:36:22Z", "item": "S335", "action": "note", "from": "", "to": "", "note": "2026-11-17: slicer s459 landed (slicer 1.22.1, snapshot sche", "by": "Jon Robbins"}
+{"when": "2026-11-17T01:36:29Z", "item": "S66", "action": "set", "from": "", "to": "", "note": "title Mouse support: click tabs, rows and keys (needs ui.mouse)→Mouse support: click tabs, rows and keys (M toggles capture, off at launch); short_title Mouse support: click tabs, rows and keys (needs ui.mouse)→Mouse support: click tabs, rows and keys (M toggles capture, off at launch)"}
+{"when": "2026-11-17T01:36:29Z", "item": "S304", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-11-17T01:36:29Z", "item": "S332", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-11-17T01:36:29Z", "item": "S335", "action": "set", "from": "", "to": "", "note": "flags needs-owner→-"}
+{"when": "2026-11-17T01:41:27Z", "item": "S229", "action": "note", "from": "", "to": "", "note": "Correction (2026-11-17): S229 had already landed (820945c0) ", "by": "Jon Robbins"}
+{"when": "2026-11-17T01:43:16Z", "item": "S380", "action": "add", "from": "", "to": "open", "note": "Usage: record a step's own cost and tokens, not the session total"}
+{"when": "2026-11-17T01:43:16Z", "item": "S381", "action": "add", "from": "", "to": "open", "note": "Fix round: a section that opens with nothing is empty"}
+{"when": "2026-11-17T01:43:16Z", "item": "S382", "action": "add", "from": "", "to": "open", "note": "Cloud Claude roles: a smaller fixed context"}
+{"when": "2026-11-17T01:43:16Z", "item": "S383", "action": "add", "from": "", "to": "open", "note": "Reviewer and architect: a direction digest in the brief"}
+{"when": "2026-11-17T01:43:16Z", "item": "S384", "action": "add", "from": "", "to": "open", "note": "Finish step without a model round"}
+{"when": "2026-11-17T01:43:16Z", "item": "S385", "action": "add", "from": "", "to": "open", "note": "Docs citations by symbol, checked by a test"}
+{"when": "2026-11-17T01:43:16Z", "item": "S386", "action": "add", "from": "", "to": "open", "note": "ork stats: usage, exits and fix-round causes per role and model"}
+{"when": "2026-11-17T02:09:06Z", "item": "S387", "action": "add", "from": "", "to": "open", "note": "File a role's safe tool feedback as a slice"}
+{"when": "2026-11-17T02:09:06Z", "item": "S388", "action": "add", "from": "", "to": "open", "note": "Ask about feature tool feedback in adj and file it when answered"}
+{"when": "2026-11-17T02:09:06Z", "item": "S389", "action": "add", "from": "", "to": "open", "note": "Show tool feedback in ork show and file a spec check's tool feedback"}
+{"when": "2026-11-17T02:09:10Z", "item": "S388", "action": "set", "from": "", "to": "", "note": "depends_on -→S387"}
+{"when": "2026-11-17T02:09:11Z", "item": "S389", "action": "set", "from": "", "to": "", "note": "depends_on -→S388"}
+{"when": "2026-11-17T02:09:11Z", "item": "S320", "action": "note", "from": "", "to": "", "note": "2026-11-17: specified as three slices from the owner's decis", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:09:30Z", "item": "S390", "action": "add", "from": "", "to": "open", "note": "Recent outcome glyphs follow the ASCII option; Waves overlap lines hang-indent"}
+{"when": "2026-11-17T02:09:36Z", "item": "S228", "action": "retire", "from": "open", "to": "retired", "note": "Verified at f48a6154 on 2026-11-17: 16 items present, 5 fixed (S229 fc8bbfad, 8b9b1122), 2 obsolete, 6 decided earlier. Owner answers adj 418-420, 444. Kept items specced as S390; field cue moved to the S227 specs; the rest retired (evidence in the S390 spec draft)."}
+{"when": "2026-11-17T02:12:45Z", "item": "S387", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T02:12:46Z", "item": "S391", "action": "add", "from": "", "to": "open", "note": "Engine: lost brief for every hung sibling, FIFO-safe report reads, multi-waiter test"}
+{"when": "2026-11-17T02:12:46Z", "item": "S392", "action": "add", "from": "", "to": "open", "note": "Daemon: writes survive a failed refresh, dash-leading slicer values, vendor note sentences"}
+{"when": "2026-11-17T02:12:46Z", "item": "S393", "action": "add", "from": "", "to": "open", "note": "TUI: report viewer and Roadmap notes text polish"}
+{"when": "2026-11-17T02:12:46Z", "item": "S394", "action": "add", "from": "", "to": "open", "note": "TUI: text field start cue, short build notice, heard cue from last output"}
+{"when": "2026-11-17T02:12:46Z", "item": "S395", "action": "add", "from": "", "to": "open", "note": "Docs: guide keys and commands, parity and diagram cites by symbol"}
+{"when": "2026-11-17T02:12:50Z", "item": "S227", "action": "retire", "from": "open", "to": "retired", "note": "Verified at f48a6154 on 2026-11-17; owner answers adj 422-435, 444. Kept items specced as S391-S395; dropped and retired items with evidence in the S227 drafting record (.scratch/spec-S227-dropped.md)."}
+{"when": "2026-11-17T02:12:54Z", "item": "C11", "action": "catalog", "from": "", "to": "title", "note": "edit"}
+{"when": "2026-11-17T02:12:55Z", "item": "C12", "action": "catalog", "from": "", "to": "title", "note": "edit"}
+{"when": "2026-11-17T02:13:14Z", "item": "S396", "action": "add", "from": "", "to": "open", "note": "Park re-checks for a run, and slicer calls refuse an id that starts with a dash"}
+{"when": "2026-11-17T02:13:14Z", "item": "S397", "action": "add", "from": "", "to": "open", "note": "Spec-check questions: filter role text, keep its line breaks, align wrapped lines"}
+{"when": "2026-11-17T02:13:14Z", "item": "S398", "action": "add", "from": "", "to": "open", "note": "Pin changelog and files-scope edges; doctor reason and spec-check wording"}
+{"when": "2026-11-17T02:13:14Z", "item": "S399", "action": "add", "from": "", "to": "open", "note": "slicer tui: O leads the Roadmap hint; drop a stale cursor restore; share the O condition"}
+{"when": "2026-11-17T02:13:14Z", "item": "S400", "action": "add", "from": "", "to": "open", "note": "Run tree and Overview text: realistic fix-round goldens, engine detail wrap, parked count"}
+{"when": "2026-11-17T02:13:14Z", "item": "S401", "action": "add", "from": "", "to": "open", "note": "Scrollable help overlay"}
+{"when": "2026-11-17T02:13:14Z", "item": "S402", "action": "add", "from": "", "to": "open", "note": "Merged-run spec cleanup keeps a later spec check"}
+{"when": "2026-11-17T02:13:18Z", "item": "S230", "action": "retire", "from": "open", "to": "retired", "note": "Verified at f48a6154 on 2026-11-17; owner answers adj 436-443. Kept items specced as S396-S402; dropped and retired items with evidence in .scratch/spec-S230-S232-dropped.md."}
+{"when": "2026-11-17T02:13:18Z", "item": "S231", "action": "retire", "from": "open", "to": "retired", "note": "Verified at f48a6154 on 2026-11-17; owner answers adj 436-443. Kept items specced as S396-S402; dropped and retired items with evidence in .scratch/spec-S230-S232-dropped.md."}
+{"when": "2026-11-17T02:13:19Z", "item": "S232", "action": "retire", "from": "open", "to": "retired", "note": "Verified at f48a6154 on 2026-11-17; owner answers adj 436-443. Kept items specced as S396-S402; dropped and retired items with evidence in .scratch/spec-S230-S232-dropped.md."}
+{"when": "2026-11-17T02:15:04Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-17T02:15:04Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T02:15:04Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-17T02:15:04Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Owner decisions (2026-11-17, interactive, relay session 8d71", "by": "Jon Robbins"}

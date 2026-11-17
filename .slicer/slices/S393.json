@@ -1,0 +1,41 @@
+{
+  "id": "S393",
+  "title": "TUI: report viewer and Roadmap notes text polish",
+  "lead": [
+    "*Proposed.* The report and render viewers say a missing file without the wire code. The report heading names the file once. A wrapped list item in a report keeps a hanging indent. A note's leading `**DATE**` shows as the date."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-17: re-verified at HEAD f48a6154. The report and render viewers show the wire code (`not_found: no report ...`), the report heading repeats the file name's role and round, a wrapped markdown list item continues at the left margin, and the Roadmap item pane shows slicer's raw `**date**` note markup.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "TUI half (text in panes) of the S227 notes row. Re-verified at HEAD `f48a6154`:\n\n- S176 item 2 (still present). `reportArrived` and `renderArrived` store `actionError(msg.err)` (`internal/tui/report.go:111-113`, `internal/tui/card.go:267`), which writes `CODE: MESSAGE` (`internal/tui/model.go:1931-1941`). The viewer reads `Could not read gate-1.md: not_found: no report gate-1.md` (`internal/tui/report_test.go:126`) and `Could not read launch-80x24.txt: not_found: no render ...` (`internal/tui/renders_test.go:307`).\n- S176 item 3 (still present). `reportTitle` writes `Report %d of %d: %s  %s round %d` (`internal/tui/report.go:136-141`); report names are `LABEL-N.md` or `LABEL-N-attempt-K.md` (`internal/engine/round.go:406,414`), so the role and round show twice (`testdata/golden/report-80x24-mono-true.txt:21`: `Report 1 of 3: gate-1.md  gate round 1`).\n- S176 item 4 (still present). `reportLines` wraps every non-table line with `breakReportLine` and `wrapText` (`internal/tui/report.go:170-176`); neither knows a list marker, so the continuation of `- long item` starts at the margin.\n- S171 item 7 (still present). The item pane writes each note through `wrapText` as is (`internal/tui/roadmap.go:291-300`); slicer's notes start `**2026-11-01** — ...` (`slicer show S227 --json`, `notes[0]`).\n\nOwner decisions (2026-11-17): drop the `not_found:` code in the viewers (adj 423); the heading names the file once, with role and round only when the name lacks them (adj 424); a note's leading `**DATE**` shows as a plain date (adj 432); non-ASCII report text stays as written, so S176 item 5 is retired (adj 425).\n\nNot in this slice: the `internal:` wording of an unreadable record (S229 owns it), any daemon change."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/report.go:100-115` (`reportArrived`)\n- `internal/tui/report.go:136-142` (`reportTitle`)\n- `internal/tui/report.go:155-178` (`reportLines`)\n- `internal/tui/card.go:257-270` (`renderArrived`)\n- `internal/tui/model.go:1931-1941` (`actionError`: read only; add `viewerError` beside it)\n- `internal/tui/roadmap.go:291-300` (notes)\n- `internal/tui/report_test.go:122-139` (`TestPaneReportFailedReadShowsTheError`)\n- `internal/tui/report_test.go:358-367` (wrap tests)\n- `internal/tui/renders_test.go:300-330`\n- `internal/tui/roadmap_test.go:500-540` (notes tests)\n- `testdata/golden/report-80x24-mono-true.txt`\n- `testdata/golden/report-80x24-mono-false.txt`\n- `docs/dashboard.md:1313-1320` (report viewer heading and error)\n- `docs/dashboard.md:1330-1335` (render error example)\n- `docs/dashboard.md:2269-2271` (notes)\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestPaneReportFailedReadShowsTheError` (existing, `report_test.go:122`): want `Could not read gate-1.md: no report gate-1.md` and no `not_found`. Fails first: the code is shown.\n- `TestRenderViewerFailedReadHasNoWireCode` (`renders_test.go`): as the test at `:307`; want `Could not read launch-80x24.txt: no render` and no `not_found`. A daemon `internal` error still reads `internal: ...` (unchanged). Fails first: `not_found:` is shown.\n- `TestReportTitleNamesTheFileOnce` (`report_test.go`): table on `reportTitle` text (strip SGR): `gate-1.md` gate round 1 gives `Report 1 of 3: gate-1.md`; `reviewer-2-attempt-2.md` reviewer round 2 gives `Report 1 of 1: reviewer-2-attempt-2.md`; `owner-fix-2.md` implementer round 2 gives `Report 1 of 1: owner-fix-2.md  implementer round 2`. Fails first: the first two repeat `ROLE round N`.\n- `TestPaneReportListItemsHangTheirContinuation` (`report_test.go`): `reportLines(20)` of `- one two three four five six\\n1. alpha beta gamma delta epsilon\\n  - nested words wrap here too` is `[\"- one two three four\", \"  five six\", \"1. alpha beta gamma\", \"   delta epsilon\", \"  - nested words\", \"    wrap here too\"]`. `TestPaneReportWrapsProseAndClipsTables` keeps passing. Fails first: continuations start at column 0.\n- `TestItemPaneNoteShowsALeadingDateWithoutMarkup` (`roadmap_test.go`): note `**2026-11-01** — first note` gives the line `indent + \"- 2026-11-01 — first note\"`; a note `see **this** word` keeps its `**`. Fails first: the line starts `- **2026-11-01**`.\n- `TestPaneReportGoldens` (existing): `go test ./internal/tui -update` rewrites `report-80x24-mono-*.txt`; the only diff is the heading line `Report 1 of 3: gate-1.md`."
+    },
+    {
+      "heading": "Implement",
+      "body": "Tests first, then:\n\n1. `internal/tui/model.go`: add `viewerError(err error) string`: for an `*ipc.Error` with code `daemon.CodeNotFound`, the message alone; otherwise `actionError(err)`. Use it in `reportArrived` and `renderArrived` only.\n2. `reportTitle`: drop `  ROLE round N` when the name starts with `ROLE-` and holds `-N.md` or `-N-attempt-` (N the round). Otherwise keep it.\n3. `reportLines`: for a non-table line that matches `^( *)([-*+]|[0-9]+[.)]) ` (marker plus one space), wrap the text after the marker at `width - w` (w the width of the leading spaces, marker and space) and prefix later lines with `w` spaces. Fall back to the current path when `width - w < 10`. Keep the layout cache as it is.\n4. `roadmap.go` notes: before wrapping, replace a leading `**YYYY-MM-DD**` with `YYYY-MM-DD`. Leave any other `**` as written.\n5. Docs: `docs/dashboard.md` heading `Report N of M: NAME` (role and round only when the name does not hold them), the error example without the code, the hanging indent of list items, and the note date (*proposed*).\n6. CHANGELOG.md: one new bullet at the end of `## Unreleased` (S227).\n7. UI slice: UI pass (r14)."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- A missing report or render reads `Could not read NAME: no report NAME ...` / `no render NAME ...`, with no `not_found:`.\n- The report heading at 80x24 reads `Report 1 of 3: gate-1.md`.\n- A wrapped list item in a report continues under its text, not at the margin.\n- A note that starts `**2026-11-01**` shows `- 2026-11-01 — ...`.\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test -race -count=1 ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0.\n- `adj lint` exits 0.\n- `rg -n 'not_found: no (report|render)' internal/tui docs/dashboard.md` prints nothing.\n- `rg -n 'gate-1.md  gate round 1' testdata/golden` prints nothing.\n- [HUMAN CHECK] At 100x30, open a run with reports (`enter` on the run, then `p`): the heading names the file once; a report with a long `- ` list item wraps under the text. At 80x24, `4` (Roadmap), `enter` on an item with notes: each note starts with its plain date."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Report viewer and notes text polish\"."
+    }
+  ],
+  "notes": []
+}
