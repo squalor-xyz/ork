@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 409,
+  "next_id": 410,
   "preamble": "",
   "passes": [
     {
@@ -18883,7 +18883,9 @@
       "short_title": "Adopt landed-changed entries",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [
         {
           "id": "1e6ee9e2-2877-43a7-b03f-da495fd36f7d",
@@ -21459,7 +21461,8 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S387"
+        "S387",
+        "S409"
       ],
       "note_records": [],
       "claim": null,
@@ -21518,7 +21521,9 @@
       "short_title": "ASCII Recent glyphs, overlap hang",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21688,7 +21693,9 @@
       "short_title": "Park race and dash-leading ids",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21716,8 +21723,25 @@
       "short_title": "Safe spec-check question text",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
-      "note_records": [],
+      "depends_on": [
+        "S409"
+      ],
+      "note_records": [
+        {
+          "id": "e841caa2-2f18-4e2c-9f55-bc012f0ebfff",
+          "kind": "",
+          "text": "**2026-11-17** — Owner 2026-11-17 (relay session 8d711f67): wrap the 'needs N answers' header at 80 too; Implement step 4 updated. Waits on S409 (adj 456).",
+          "created_at": "2026-11-17T14:20:51Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -21858,7 +21882,9 @@
       "short_title": "Merged spec cleanup guard",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -22061,6 +22087,34 @@
         "reason": "",
         "importance": 3,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S409",
+      "title": "Check commands: a quoted | is not a pipe, and the implementer may run rg",
+      "short_title": "Runnable Check lines",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-17: the spec check flagged orchestrator-only Check lines on S402, S396, S397, S390, S332 and S388, the same question as adj 249, 255, 256 and 259. Two causes: `checkCommandRunnable` (`internal/engine/brief.go:546-552`) treats any `;|&<>` or backtick or `$` as a compound command even inside quotes, so `go test ./internal/daemon -run 'A|B' -v` is orchestrator-only, while `plainCheckSyntax` (`internal/engine/brief.go:486-522`), which decides what ork itself runs, already accepts a quoted `|`. And `ImplementerPreset` (`internal/engine/perm.go:45-71`) has no `rg` entry, so every `rg -n ...` Check line is orchestrator-only.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "check-runnable-quoted-pipe-rg",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }

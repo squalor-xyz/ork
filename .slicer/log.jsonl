@@ -4943,3 +4943,13 @@
 {"when": "2026-11-17T12:18:02Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Bug evidence 2026-11-17: ork's own tracking commit before la", "by": "Jon Robbins"}
 {"when": "2026-11-17T12:31:10Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 6 result, 2026-11-17, S380 (size S; round.go, watchdog", "by": "Jon Robbins"}
 {"when": "2026-11-17T12:34:39Z", "item": "S408", "action": "add", "from": "", "to": "open", "note": "ork retry re-lands a committed run whose landing was blocked"}
+{"when": "2026-11-17T14:20:34Z", "item": "S409", "action": "add", "from": "", "to": "open", "note": "Check commands: a quoted | is not a pipe, and the implementer may run rg"}
+{"when": "2026-11-17T14:20:34Z", "item": "S402", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:34Z", "item": "S396", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S397", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S390", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S332", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S388", "action": "set", "from": "", "to": "", "note": "depends_on S387→S409"}
+{"when": "2026-11-17T14:20:51Z", "item": "S388", "action": "set", "from": "", "to": "", "note": "depends_on S409→S387,S409"}
+{"when": "2026-11-17T14:20:51Z", "item": "S397", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T14:20:51Z", "item": "S397", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-17 (relay session 8d711f67): wrap the 'needs N", "by": "Jon Robbins"}
