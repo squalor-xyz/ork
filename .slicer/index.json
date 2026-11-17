@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 410,
+  "next_id": 411,
   "preamble": "",
   "passes": [
     {
@@ -22129,6 +22129,34 @@
         "group": "",
         "reason": "",
         "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S410",
+      "title": "Flaky test: a split part's round 2 step sometimes hangs off the wrong parent",
+      "short_title": "Flaky split part parent",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-17: `TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart` (`internal/engine/split_test.go:539`) failed once in a full `go test ./...` of the S407 worktree and once in 10 runs on main (a409ee76), with \"the round 2 part step has parent \"9\", want the lead's fix step \"10\"\" and parent \"6\" on another run; 20 further runs passed on each. Not caused by S407.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "flaky-split-part-parent",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 3,
         "effort": 1,
         "attempts": 0
