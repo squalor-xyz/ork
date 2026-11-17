@@ -345,6 +345,10 @@
   whose worktree or branch is gone, stays refused. `ork run` does not resume
   it.
 
+- S397 (*proposed*): Spec-check question text from a role is shown as plain
+  text, with its line breaks kept. Each line wraps at 80 columns, an option
+  continues under its label, and the answer prompt wraps on its last line.
+
 ## v1.1.0 (2026-11-11)
 
 - Docs: re-anchor file:line citations in `docs/guide.md` (S219).

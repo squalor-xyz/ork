@@ -911,14 +911,17 @@ func printSpecQuestion(w io.Writer, r daemon.SpecItemResult, i int, q engine.Spe
 			fmt.Fprintln(w, line)
 		}
 	}
-	prefix := fmt.Sprintf("[%s %d/%d] ", r.Item, i+1, len(r.Questions))
+	item := plainLine(r.Item)
+	key := plainLine(q.Key)
+	address = plainLine(address)
+	prefix := fmt.Sprintf("[%s %d/%d] ", item, i+1, len(r.Questions))
 	if q.Ask == nil {
-		printLine("%s%s", prefix, q.Text)
+		writePlainLines(w, prefix, q.Text, "  ", "  ")
 	} else {
-		printLine("%s%s", prefix, q.Ask.Title)
+		writePlainLines(w, prefix, q.Ask.Title, "  ", "  ")
 	}
 	if q.Previous != "" {
-		printLine("  %s", q.Previous)
+		writePlainLines(w, "  ", q.Previous, "  ", "  ")
 	}
 	if q.Ask != nil {
 		for n, o := range q.Ask.Options {
@@ -926,20 +929,22 @@ func printSpecQuestion(w io.Writer, r daemon.SpecItemResult, i int, q engine.Spe
 			if n+1 == q.Ask.Recommend {
 				mark = " (recommended)"
 			}
-			printLine("  %d. %s: %s%s", n+1, o.Label, o.Summary, mark)
+			num := fmt.Sprintf("%d. ", n+1)
+			gap := strings.Repeat(" ", len(num))
+			writePlainLines(w, "  "+num, o.Label+": "+o.Summary+mark, gap, "  "+gap)
 		}
-		printLine("  Why %d: %s", q.Ask.Recommend, q.Ask.Reason)
+		writePlainLines(w, fmt.Sprintf("  Why %d: ", q.Ask.Recommend), q.Ask.Reason, "  ", "    ")
 	}
 	if interactive {
-		if q.Ask != nil && q.Key != "" {
-			printLine("  Decision key: %s", q.Key)
+		if q.Ask != nil && key != "" {
+			printLine("  Decision key: %s", key)
 		}
-	} else if q.Key == "" {
+	} else if key == "" {
 		printLine("  Answer as: %s", address)
-	} else if address != q.Key {
-		printLine("  Decision key: %s (answer as %s)", q.Key, address)
+	} else if address != key {
+		printLine("  Decision key: %s (answer as %s)", key, address)
 	} else {
-		printLine("  Decision key: %s", q.Key)
+		printLine("  Decision key: %s", key)
 	}
 }
 
@@ -948,14 +953,18 @@ func printSpecQuestion(w io.Writer, r daemon.SpecItemResult, i int, q engine.Spe
 // the options is asked again. An empty line, or the end of the input, holds
 // the item back and returns nil.
 func askSpecQuestions(in *bufio.Reader, w io.Writer, r daemon.SpecItemResult) []string {
-	fmt.Fprintf(w, "%s needs %d %s before it can start.\n", r.Item, len(r.Questions), plural(len(r.Questions), "answer"))
+	item := plainLine(r.Item)
+	header := fmt.Sprintf("%s needs %d %s before it can start.", item, len(r.Questions), plural(len(r.Questions), "answer"))
+	for _, line := range wrapLines(header, 80, "  ") {
+		fmt.Fprintln(w, line)
+	}
 	var answers []string
 	for i, q := range r.Questions {
 		printSpecQuestion(w, r, i, q, true, "")
 		if q.Ask == nil {
-			fmt.Fprintf(w, "Answer in text (empty holds %s back): ", r.Item)
+			writeWrappedPrompt(w, fmt.Sprintf("Answer in text (empty holds %s back): ", item))
 		} else {
-			fmt.Fprintf(w, "Answer 1-%d, or type text (empty holds %s back): ", len(q.Ask.Options), r.Item)
+			writeWrappedPrompt(w, fmt.Sprintf("Answer 1-%d, or type text (empty holds %s back): ", len(q.Ask.Options), item))
 		}
 		answer := ""
 		for answer == "" {
@@ -974,7 +983,7 @@ func askSpecQuestions(in *bufio.Reader, w io.Writer, r daemon.SpecItemResult) []
 			if q.Ask != nil {
 				if n, err := strconv.Atoi(line); err == nil {
 					if n < 1 || n > len(q.Ask.Options) {
-						fmt.Fprintf(w, "Pick 1-%d, or type text: ", len(q.Ask.Options))
+						writeWrappedPrompt(w, fmt.Sprintf("Pick 1-%d, or type text: ", len(q.Ask.Options)))
 						answer = ""
 						continue
 					}

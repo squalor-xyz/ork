@@ -21735,7 +21735,7 @@
       "id": "S397",
       "title": "Spec-check questions: filter role text, keep its line breaks, align wrapped lines",
       "short_title": "Safe spec-check question text",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
@@ -21747,6 +21747,34 @@
           "text": "**2026-11-17** — Owner 2026-11-17 (relay session 8d711f67): wrap the 'needs N answers' header at 80 too; Implement step 4 updated. Waits on S409 (adj 456).",
           "created_at": "2026-11-17T14:20:51Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b9a33586-f629-4582-9892-35f94ab74ee9",
+          "kind": "",
+          "text": "**2026-11-17** — Human checks at approval (S397):\n- later: In an 80x24 terminal, run `ork run ork ID` on a slice whose spec check asks a question with an option longer than one line: the option's second line starts under the label, and the `Answer 1-N` prompt fits within 80 columns with the cursor after `back): `.",
+          "created_at": "2026-11-17T23:02:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d3a8dd3c-22a4-4c44-8c78-292600b3c8d6",
+          "kind": "",
+          "text": "**2026-11-17** — Spec-check questions show role text as plain text, keep its line breaks, and wrap each line at 80 columns. An option continues under its label, including after a role line break. The answer prompt and the needs-N header wrap within 80 columns, and the prompt waits on its last line.",
+          "created_at": "2026-11-17T23:03:05Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -21773,7 +21801,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

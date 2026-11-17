@@ -1720,7 +1720,7 @@ func TestSpecCheckAllRowsOutRefuses(t *testing.T) {
 	if got.Code != CodeRefused {
 		t.Fatalf("error %v, want code %s", err, CodeRefused)
 	}
-	for _, want := range []string{"grok is out until " + grokUntil.Local().Format("15:04"), "claude is out until " + claudeUntil.Local().Format("15:04")} {
+	for _, want := range []string{"grok is out until " + vendorUntilText(now, grokUntil), "claude is out until " + vendorUntilText(now, claudeUntil)} {
 		if !strings.Contains(got.Message, want) {
 			t.Errorf("message lacks %q:\n%s", want, got.Message)
 		}

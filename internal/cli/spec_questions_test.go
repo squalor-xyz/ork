@@ -3,6 +3,7 @@
 package cli
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
@@ -10,9 +11,11 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"unicode/utf8"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 const batchQuestions = `{"items":[{"item":"S1","ready":false,"questions":[
@@ -285,6 +288,193 @@ func TestBatchAnswersRefused(t *testing.T) {
 				t.Fatalf("must refuse %s before recording: exit %d answers %+v started %v: %s %s", tc.key, code, stub.answers, stub.started, out, errs)
 			}
 		})
+	}
+}
+
+func TestSpecQuestionDropsControlCharacters(t *testing.T) {
+	q := engine.SpecQuestion{
+		Ask: &engine.OwnerQuestion{
+			Title:     "Store\x1b[31m it?\x07",
+			Options:   []runrec.Option{{Label: "file", Summary: "on\x1b]0;t\x07 disk"}},
+			Recommend: 1,
+			Reason:    "fast",
+		},
+		Key: "k1",
+	}
+	var out bytes.Buffer
+	printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{q}}, 0, q, true, "")
+	const want = "[S1 1/1] Store it?\n  1. file: on disk (recommended)\n  Why 1: fast\n  Decision key: k1\n"
+	if out.String() != want {
+		t.Fatalf("spec question:\n%q\nwant:\n%q", out.String(), want)
+	}
+}
+
+func TestSpecQuestionKeepsTheRoleLineBreaks(t *testing.T) {
+	q := engine.SpecQuestion{Text: "First line\nsecond line", Previous: "old\nanswer"}
+	var out bytes.Buffer
+	printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{q}}, 0, q, false, "#1")
+	const want = "[S1 1/1] First line\n  second line\n  old\n  answer\n  Answer as: #1\n"
+	if out.String() != want {
+		t.Fatalf("spec question:\n%q\nwant:\n%q", out.String(), want)
+	}
+}
+
+func TestSpecOptionWrapsUnderItsLabel(t *testing.T) {
+	words := make([]string, 20)
+	for i := range words {
+		words[i] = "word"
+	}
+	summary := strings.Join(words, " ")
+	one := engine.SpecQuestion{
+		Ask: &engine.OwnerQuestion{
+			Title:     "Store?",
+			Options:   []runrec.Option{{Label: "file", Summary: summary}},
+			Recommend: 1,
+			Reason:    "fast",
+		},
+	}
+	var out bytes.Buffer
+	printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{one}}, 0, one, true, "")
+	const want = "  1. file: word word word word word word word word word word word word word word\n     word word word word word word (recommended)\n"
+	if !strings.Contains(out.String(), want) {
+		t.Fatalf("option lines:\n%q", out.String())
+	}
+
+	options := make([]runrec.Option, 10)
+	for i := range options {
+		options[i] = runrec.Option{Label: "file", Summary: summary}
+	}
+	ten := engine.SpecQuestion{
+		Ask: &engine.OwnerQuestion{Title: "Store?", Options: options, Recommend: 1, Reason: "fast"},
+	}
+	out.Reset()
+	printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{ten}}, 0, ten, true, "")
+	var next string
+	lines := strings.Split(strings.TrimSuffix(out.String(), "\n"), "\n")
+	for i, line := range lines {
+		if strings.HasPrefix(line, "  10. file:") && i+1 < len(lines) {
+			next = lines[i+1]
+		}
+	}
+	indent := len(next) - len(strings.TrimLeft(next, " "))
+	if indent != 6 {
+		t.Fatalf("option 10 continuation indent %d: %q", indent, next)
+	}
+}
+
+func TestSpecAnswerPromptWrapsAt80(t *testing.T) {
+	const item = "ork-a-very-long-item-key-for-the-prompt-wrap-test"
+	r := daemon.SpecItemResult{
+		Item: item,
+		Questions: []engine.SpecQuestion{{
+			Ask: &engine.OwnerQuestion{
+				Title: "Store?",
+				Options: []runrec.Option{
+					{Label: "file", Summary: "on disk"},
+					{Label: "memory", Summary: "in RAM"},
+				},
+				Recommend: 1,
+				Reason:    "fast",
+			},
+		}},
+	}
+	var out bytes.Buffer
+	askSpecQuestions(bufio.NewReader(strings.NewReader("1\n")), &out, r)
+	const want = "Answer 1-2, or type text (empty holds\n  ork-a-very-long-item-key-for-the-prompt-wrap-test back): "
+	if !strings.Contains(out.String(), want) {
+		t.Errorf("prompt:\n%q", out.String())
+	}
+	if !strings.HasSuffix(out.String(), "back): ") {
+		t.Errorf("answer is not read on the prompt's last line: %q", out.String())
+	}
+	for _, line := range strings.Split(out.String(), "\n") {
+		if utf8.RuneCountInString(line) > 80 {
+			t.Errorf("line longer than 80 (%d): %q", utf8.RuneCountInString(line), line)
+		}
+	}
+}
+
+func TestSpecDecisionKeyLineWraps(t *testing.T) {
+	const key = "storage.a-very-long-decision-topic-name-for-the-wrap"
+	q := engine.SpecQuestion{Text: "Where?", Key: key}
+	var out bytes.Buffer
+	printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{q}}, 0, q, false, "S1:"+key)
+	const want = "  Decision key: storage.a-very-long-decision-topic-name-for-the-wrap (answer as\n    S1:storage.a-very-long-decision-topic-name-for-the-wrap)\n"
+	if !strings.Contains(out.String(), want) {
+		t.Fatalf("decision key:\n%q", out.String())
+	}
+}
+
+func TestSpecQuestionSecondLineWrapStaysAtTwoSpaces(t *testing.T) {
+	words := make([]string, 30)
+	for i := range words {
+		words[i] = "word"
+	}
+	q := engine.SpecQuestion{Text: "First line\n" + strings.Join(words, " ")}
+	var out bytes.Buffer
+	printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{q}}, 0, q, true, "")
+	lines := strings.Split(strings.TrimSuffix(out.String(), "\n"), "\n")
+	if len(lines) < 3 || lines[0] != "[S1 1/1] First line" {
+		t.Fatalf("second role line did not wrap:\n%q", out.String())
+	}
+	for i, line := range lines[1:] {
+		indent := len(line) - len(strings.TrimLeft(line, " "))
+		if indent != 2 {
+			t.Fatalf("line %d indent %d: %q", i+2, indent, line)
+		}
+	}
+}
+
+func TestSpecOptionRoleBreakSitsUnderTheLabel(t *testing.T) {
+	summary := "on disk\nmore detail"
+	t.Run("option 1", func(t *testing.T) {
+		q := engine.SpecQuestion{
+			Ask: &engine.OwnerQuestion{
+				Title:     "Store?",
+				Options:   []runrec.Option{{Label: "file", Summary: summary}},
+				Recommend: 1,
+				Reason:    "fast",
+			},
+		}
+		var out bytes.Buffer
+		printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{q}}, 0, q, true, "")
+		const want = "  1. file: on disk\n     more detail (recommended)\n"
+		if !strings.Contains(out.String(), want) {
+			t.Fatalf("option 1:\n%q", out.String())
+		}
+	})
+	t.Run("option 10", func(t *testing.T) {
+		options := make([]runrec.Option, 10)
+		for i := range options {
+			options[i] = runrec.Option{Label: "file", Summary: "short"}
+		}
+		options[9].Summary = summary
+		q := engine.SpecQuestion{
+			Ask: &engine.OwnerQuestion{Title: "Store?", Options: options, Recommend: 1, Reason: "fast"},
+		}
+		var out bytes.Buffer
+		printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{q}}, 0, q, true, "")
+		const want = "  10. file: on disk\n      more detail\n"
+		if !strings.Contains(out.String(), want) {
+			t.Fatalf("option 10:\n%q", out.String())
+		}
+	})
+}
+
+func TestSpecReasonRoleBreakMatchesItsWrap(t *testing.T) {
+	q := engine.SpecQuestion{
+		Ask: &engine.OwnerQuestion{
+			Title:     "Store?",
+			Options:   []runrec.Option{{Label: "file", Summary: "on disk"}},
+			Recommend: 1,
+			Reason:    "fast\nsecond reason line",
+		},
+	}
+	var out bytes.Buffer
+	printSpecQuestion(&out, daemon.SpecItemResult{Item: "S1", Questions: []engine.SpecQuestion{q}}, 0, q, true, "")
+	const want = "  Why 1: fast\n    second reason line\n"
+	if !strings.Contains(out.String(), want) {
+		t.Fatalf("reason:\n%q", out.String())
 	}
 }
 
