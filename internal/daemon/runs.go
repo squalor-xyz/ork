@@ -1293,7 +1293,7 @@ func (d *Daemon) resumeCandidateLocked(proj registry.Project, item, worktree str
 			newest = &c
 		}
 	}
-	if newest == nil || newest.State != runrec.StateStopped || !newest.DismissedAt.IsZero() || engine.NotResumable(*newest) != "" || newest.Worktree != worktree {
+	if newest == nil || newest.State != runrec.StateStopped || !newest.DismissedAt.IsZero() || engine.NotResumable(*newest) != "" || engine.RelandsOnRetry(*newest) || newest.Worktree != worktree {
 		return nil
 	}
 	if m := d.runs.runs[newest.ID]; m != nil && (m.busy || m.stopping || m.filing || m.engine == nil) {
@@ -1538,7 +1538,7 @@ func supersededBy(rec runrec.Record, stored []*runrec.Run) string {
 // stoppedNext is the command that resumes a stopped run, as ork status and
 // ork show print it, or "" when the run cannot be resumed (S296, *proposed*).
 func stoppedNext(rec runrec.Record, stored []*runrec.Run) string {
-	if engine.NotResumable(rec) != "" || supersededBy(rec, stored) != "" {
+	if engine.NotResumable(rec) != "" || engine.RelandsOnRetry(rec) || supersededBy(rec, stored) != "" {
 		return ""
 	}
 	if info, err := os.Stat(rec.Worktree); err != nil || !info.IsDir() {

@@ -820,7 +820,15 @@ because `Store.Open` uses strict keys.
 *Proposed (S296):* `stopped_from` is the state a stop left: the state the run
 was in, or for a paused run its `pending.state`. It is omitted until a stop.
 `ork retry RUN` resumes a stopped run that has no `commit`, whose
-`stopped_from` is not `setup` or `queued`, and whose worktree is intact. The
+`stopped_from` is not `setup` or `queued`, and whose worktree is intact.
+A stopped run that has a `commit` and `stopped_from` `land`, with its
+worktree and branch still there, is the exception (adj 458, adj 459):
+`ork retry RUN` sets `land_fixes` to 0, `land_recheck` to true and `state`
+to `land`, and does not change `round`. When the run is already at the
+round cap, it sets `round_limit` to `round` + 1 so the one land fix can
+start; otherwise it does not change `round_limit`. `--rounds` is
+refused. `ork run` and `ork wave start` do not resume that run. Any other committed run stays
+refused. For a run with no commit, the
 resume clears `stopped_from`, `reason` and `dismissed_at`, advances `round`
 (to the next round for the checks; unchanged when no implementer round ran
 and the run re-enters `implement`), sets `round_limit` to that round plus the

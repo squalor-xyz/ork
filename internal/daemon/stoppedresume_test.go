@@ -296,6 +296,19 @@ func TestStatusNamesTheResumeOfAStoppedRun(t *testing.T) {
 	if show := string(request(t, rig.d, "run.show", `{"run":"r1"}`)); strings.Contains(show, `"next"`) {
 		t.Fatalf("run.show of a setup-stopped run names a retry: %s", show)
 	}
+	// A committed run stopped in land is retried with ork retry, not resumed
+	// by ork run, and status does not offer --rounds (adj 458, adj 459).
+	rig = stoppedDaemon(t, nil, false, stoppedDiff, func(r *runrec.Record) {
+		r.StoppedFrom = runrec.StateLand
+		r.Commit = &runrec.Commit{SHA: "abc123"}
+		r.LandFixes = 1
+	})
+	if b := string(request(t, rig.d, "status", `{"project":"p"}`)); strings.Contains(b, "ork retry r1 [--rounds N]") {
+		t.Fatalf("status offers --rounds on a re-landable run: %s", b)
+	}
+	if show := string(request(t, rig.d, "run.show", `{"run":"r1"}`)); strings.Contains(show, `"next"`) {
+		t.Fatalf("run.show of a re-landable run names a resume: %s", show)
+	}
 }
 
 // S246: the run that a start resumes runs slicer's check command.
@@ -387,6 +400,11 @@ func TestRunStartNeverResumesADismissedOrUnresumableRun(t *testing.T) {
 		"dismissed":        func(r *runrec.Record) { r.DismissedAt = time.Date(2026, 11, 7, 10, 0, 0, 0, time.UTC) },
 		"stopped at setup": func(r *runrec.Record) { r.StoppedFrom = runrec.StateSetup },
 		"committed":        func(r *runrec.Record) { r.State = runrec.StateCommitted; r.StoppedFrom = "" },
+		"re-landable": func(r *runrec.Record) {
+			r.StoppedFrom = runrec.StateLand
+			r.Commit = &runrec.Commit{SHA: "abc123"}
+			r.LandFixes = 1
+		},
 	} {
 		t.Run(name, func(t *testing.T) {
 			rig := stoppedDaemon(t, retryRunner, false, stoppedDiff, change)

@@ -479,7 +479,7 @@ func TestLandStopsOnRedRecheck(t *testing.T) {
 	// The second landing is red again: stopped in Needs you, worktree kept.
 	env.approve()
 	rec = requireState(t, env.e, runrec.StateStopped)
-	if rec.Reason != "land blocked: checks red after merging main" {
+	if rec.Reason != "land blocked: checks red after merging main; ork retry "+rec.ID+" re-lands with one more fix round" {
 		t.Errorf("reason %q", rec.Reason)
 	}
 	if indexOf(env.gitCalls(), "P: merge --ff-only") >= 0 {
@@ -756,7 +756,7 @@ func TestLandConflictTwiceStopsAndKeepsTheWorktree(t *testing.T) {
 	requireState(t, env.e, runrec.StateAwaitingApproval)
 	env.approve()
 	rec := requireState(t, env.e, runrec.StateStopped)
-	if rec.Reason != "land blocked: checks red after merging main" {
+	if rec.Reason != "land blocked: checks red after merging main; ork retry "+rec.ID+" re-lands with one more fix round" {
 		t.Errorf("reason %q", rec.Reason)
 	}
 	if _, err := os.Stat(env.W); err != nil {

@@ -22123,10 +22123,25 @@
       "id": "S408",
       "title": "ork retry re-lands a committed run whose landing was blocked",
       "short_title": "ork retry re-lands a committed run whose landing was blocked",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1dd6c3af-6a87-49ee-b443-4f6dd081b29f",
+          "kind": "",
+          "text": "**2026-11-17** — ork retry re-lands a committed run stopped in land: it resets land_fixes and lands when the re-check is green. A red re-check gets one implementer fix round, then stops land-blocked if still red, and the stop names ork retry RUN. Other committed runs, a missing worktree or branch, and --rounds are refused. ork run and ork wave start do not resume that run. At the round cap, retry sets round_limit to round plus 1 and leaves round unchanged. adj 458, adj 459.",
+          "created_at": "2026-11-17T20:51:55Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -22144,7 +22159,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

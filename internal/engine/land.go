@@ -256,13 +256,14 @@ func (e *Engine) mergeBaseIn(ctx context.Context, rec runrec.Record, base string
 }
 
 // landBlocked sends a landing whose re-check is red to its one implementer
-// fix round, or stops the slice when it already had one. A merge conflict does
-// not come here: it pauses for the owner (settleMerge). The worktree and the
-// branch stay.
+// fix round, or stops the slice when it already had one. The stop names
+// ork retry, which re-lands the run and resets that one fix round (adj 458).
+// A merge conflict does not come here: it pauses for the owner (settleMerge).
+// The worktree and the branch stay.
 func (e *Engine) landBlocked(ctx context.Context, what, detail string) error {
 	rec := e.run.Snapshot()
 	if rec.LandFixes >= 1 {
-		return e.stop(ctx, "land blocked: "+what)
+		return e.stop(ctx, fmt.Sprintf("land blocked: %s; ork retry %s re-lands with one more fix round", what, rec.ID))
 	}
 	name := fmt.Sprintf("land-%d.md", rec.Round)
 	text := "Landing blocked: " + what + "\n\n" + detail + "\n"

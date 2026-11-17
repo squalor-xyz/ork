@@ -4034,3 +4034,42 @@ func TestRunStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
 		t.Fatalf("allow_no_check: %+v, %v", rec, err)
 	}
 }
+
+// A committed run that stopped in land is retried back into land. The main
+// checkout's symbolic-ref blocks until release, so the reply is the record
+// as retry sets it, before landing goes on.
+func TestDaemonRetryRelandsCommittedRun(t *testing.T) {
+	rig := stoppedDaemon(t, nil, false, stoppedDiff, func(r *runrec.Record) {
+		r.StoppedFrom = runrec.StateLand
+		r.Commit = &runrec.Commit{SHA: "abc123", Title: "S1: slice"}
+		r.LandFixes = 1
+		r.Reason = "land blocked: checks red after merging main"
+	})
+	dir := t.TempDir()
+	release := filepath.Join(dir, "release")
+	main := filepath.Join(rig.root, "p")
+	orig := rig.d.runs.deps.GitBin
+	script := "#!/bin/sh\nif [ \"$1\" = -C ] && [ \"$2\" = '" + main + "' ] && [ \"$3\" = symbolic-ref ]; then\n  while [ ! -e '" + release + "' ]; do sleep 0.02; done\n  echo 'not on a branch' >&2\n  exit 1\nfi\nexec '" + orig + "' \"$@\"\n"
+	wrapper := filepath.Join(dir, "git")
+	if err := os.WriteFile(wrapper, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	rig.d.runs.deps.GitBin = wrapper
+
+	v, err := rig.d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"r1","no_wait":true}`))
+	if wire := ipc.ErrorOf(err); err != nil {
+		t.Fatalf("retry refused: code %s: %v", wire.Code, err)
+	}
+	b, err := json.Marshal(v)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := decodeRecord(t, b)
+	if got.State != runrec.StateLand || got.LandFixes != 0 || !got.LandRecheck {
+		t.Fatalf("state %s land_fixes %d recheck %v, want land, 0, true", got.State, got.LandFixes, got.LandRecheck)
+	}
+	if err := os.WriteFile(release, nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	waitIdle(t, rig.d, "r1")
+}

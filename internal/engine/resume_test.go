@@ -4,6 +4,9 @@ package engine
 
 import (
 	"context"
+	"fmt"
+	"os"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -235,4 +238,268 @@ func TestRetryNoteIsRefusedForAQuestion(t *testing.T) {
 	if rec := e.Snapshot(); rec.Pending == nil || rec.Pending.Note != "" {
 		t.Errorf("a refused note was stored: %+v", rec.Pending)
 	}
+}
+
+// stopCommittedAtLand is a committed run that stopped in land with its one
+// fix round already spent, and a base branch that has moved since the commit.
+func stopCommittedAtLand(t *testing.T, env *landEnv) runrec.Record {
+	t.Helper()
+	gitRun(t, env.W, "add", "-A")
+	gitRun(t, env.W, "commit", "-q", "-m", "slice")
+	sha := gitRun(t, env.W, "rev-parse", "HEAD")
+	env.moveBase("base.txt", "from main\n")
+	if err := env.run.Update(func(r *runrec.Record) {
+		r.State = runrec.StateStopped
+		r.StoppedFrom = runrec.StateLand
+		r.Reason = "land blocked: checks red after merging main"
+		r.Commit = &runrec.Commit{SHA: sha, Title: "slice"}
+		r.LandFixes = 1
+		r.LandRecheck = false
+	}); err != nil {
+		t.Fatal(err)
+	}
+	return env.run.Snapshot()
+}
+
+func TestRetryRelandsACommittedRunStoppedAtLand(t *testing.T) {
+	env := newLandEnv(t)
+	before := stopCommittedAtLand(t, env)
+	var resumed runrec.Record
+	var mid runrec.Record
+	var rolesAtCheck int
+	env.beforeCheck = func() {
+		if mid.State == "" {
+			mid = env.e.Snapshot()
+			rolesAtCheck = len(env.runner.requests())
+		}
+	}
+
+	err := env.e.Retry(WithApplied(context.Background(), func() { resumed = env.e.Snapshot() }))
+	if err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	if resumed.State != runrec.StateLand || resumed.LandFixes != 0 || !resumed.LandRecheck {
+		t.Fatalf("after retry: state %q land_fixes %d recheck %v, want land, 0, true", resumed.State, resumed.LandFixes, resumed.LandRecheck)
+	}
+	if mid.State != runrec.StateLand || mid.LandFixes != 0 || !mid.LandRecheck {
+		t.Fatalf("at the re-check: state %q land_fixes %d recheck %v, want land, 0, true", mid.State, mid.LandFixes, mid.LandRecheck)
+	}
+	if resumed.Round != before.Round || resumed.RoundLimit != before.RoundLimit || resumed.StoppedFrom != "" || resumed.Reason != "" {
+		t.Fatalf("resume changed the round or left the stop: round %d/%d stopped_from %q reason %q", resumed.Round, resumed.RoundLimit, resumed.StoppedFrom, resumed.Reason)
+	}
+	if mid.Round != before.Round || mid.RoundLimit != before.RoundLimit {
+		t.Fatalf("landing changed the round before the re-check: round %d/%d", mid.Round, mid.RoundLimit)
+	}
+	if rolesAtCheck != 0 {
+		t.Fatalf("roles before the landing re-check: %v", env.runner.roles())
+	}
+	if len(env.seen) < 1 || !env.seen[0].hasBase || env.seen[0].dir != env.W {
+		t.Fatalf("re-check did not run on the merged worktree: %+v", env.seen)
+	}
+	if indexOf(env.gitCalls(), "W: merge -m ") < 0 {
+		t.Fatalf("ork did not merge main again: %q", env.gitCalls())
+	}
+	rec := requireState(t, env.e, runrec.StateCommitted)
+	if rec.LandedAt.IsZero() {
+		t.Fatal("the record did not end landed")
+	}
+	if got := gitRun(t, env.P, "show", "main:feature.txt"); got != "the slice" {
+		t.Errorf("feature.txt on main: %q", got)
+	}
+	if got := gitRun(t, env.P, "show", "main:base.txt"); got != "from main" {
+		t.Errorf("base.txt on main: %q", got)
+	}
+	if len(env.runner.requests()) != 0 {
+		t.Errorf("roles ran on a green re-check: %v", env.runner.roles())
+	}
+}
+
+func TestRetryRelandGetsOneFixRound(t *testing.T) {
+	env := newLandEnv(t, onAutoLand)
+	stopCommittedAtLand(t, env)
+	red := CheckOutput{Output: "FAIL TestGolden sidebar\n"}
+	env.setCheckOutputs(red, red, CheckOutput{OK: true, Output: "ok\n"}, red, red)
+	var kinds []string
+	env.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
+			kind := ""
+			if rec := env.e.Snapshot(); rec.Feedback != nil {
+				kind = rec.Feedback.Kind
+			}
+			kinds = append(kinds, kind)
+			env.moveBase("later.txt", "main moves again\n")
+		}
+		return Result{}, nil
+	}
+
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	if len(kinds) != 1 || kinds[0] != "land" {
+		t.Fatalf("landing fix rounds %q, want one with feedback kind land; roles %v", kinds, env.runner.roles())
+	}
+	rec := requireState(t, env.e, runrec.StateStopped)
+	want := "land blocked: checks red after merging main; ork retry " + rec.ID + " re-lands with one more fix round"
+	if rec.Reason != want {
+		t.Fatalf("reason %q, want %q", rec.Reason, want)
+	}
+	if rec.LandFixes != 1 {
+		t.Errorf("land fixes %d, want 1", rec.LandFixes)
+	}
+	if _, err := os.Stat(env.W); err != nil {
+		t.Errorf("worktree gone: %v", err)
+	}
+	if exec.Command("git", "-C", env.P, "merge-base", "--is-ancestor", item, "main").Run() == nil {
+		t.Error("the slice branch reached main")
+	}
+}
+
+// A re-land already at the round cap still gets its one land fix. The resume
+// raises round_limit by one and leaves round unchanged.
+func TestRetryRelandAtTheRoundCapGetsOneFixRound(t *testing.T) {
+	for _, limit := range []int{0, 3} {
+		t.Run(fmt.Sprintf("limit %d", limit), func(t *testing.T) {
+			env := newLandEnv(t, onAutoLand)
+			stopCommittedAtLand(t, env)
+			if err := env.run.Update(func(r *runrec.Record) {
+				r.Round = 3
+				r.RoundLimit = limit
+			}); err != nil {
+				t.Fatal(err)
+			}
+			before := env.run.Snapshot()
+			red := CheckOutput{Output: "FAIL TestGolden sidebar\n"}
+			env.setCheckOutputs(red, red, CheckOutput{OK: true, Output: "ok\n"}, red, red)
+			var kinds []string
+			var resumed runrec.Record
+			env.runner.script = func(req Request, n int) (Result, error) {
+				if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
+					kind := ""
+					if rec := env.e.Snapshot(); rec.Feedback != nil {
+						kind = rec.Feedback.Kind
+					}
+					kinds = append(kinds, kind)
+					env.moveBase("later.txt", "main moves again\n")
+				}
+				return Result{}, nil
+			}
+
+			if err := env.e.Retry(WithApplied(context.Background(), func() { resumed = env.e.Snapshot() })); err != nil {
+				t.Fatalf("retry: %v", err)
+			}
+			if len(kinds) != 1 || kinds[0] != "land" {
+				t.Fatalf("landing fix rounds %q, want one with feedback kind land; roles %v state %s reason %q", kinds, env.runner.roles(), env.e.Snapshot().State, env.e.Snapshot().Reason)
+			}
+			rec := requireState(t, env.e, runrec.StateStopped)
+			want := "land blocked: checks red after merging main; ork retry " + rec.ID + " re-lands with one more fix round"
+			if rec.Reason != want {
+				t.Fatalf("reason %q, want %q", rec.Reason, want)
+			}
+			if resumed.Round != before.Round || resumed.RoundLimit != before.Round+1 {
+				t.Fatalf("at resume: round %d/%d, want round %d and limit %d", resumed.Round, resumed.RoundLimit, before.Round, before.Round+1)
+			}
+			if rec.RoundLimit != before.Round+1 {
+				t.Fatalf("round_limit %d, want %d", rec.RoundLimit, before.Round+1)
+			}
+		})
+	}
+}
+
+func TestRetryStillRefusesOtherCommittedRuns(t *testing.T) {
+	for _, from := range []string{
+		runrec.StateImplement, runrec.StateChecks, runrec.StateReview, runrec.StateGate,
+		runrec.StateCommit, runrec.StateAwaitingApproval, runrec.StateSetup, runrec.StateFinish,
+	} {
+		t.Run("stopped from "+from, func(t *testing.T) {
+			h := resumeHarness(t)
+			h.mkWorktree()
+			h.seed("run-a", runrec.StateStopped)
+			run, err := h.store.Open("run-a")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if err := run.Update(func(r *runrec.Record) {
+				r.StoppedFrom = from
+				r.Commit = &runrec.Commit{SHA: "0123abc"}
+			}); err != nil {
+				t.Fatal(err)
+			}
+			_, err = h.resume("run-a", h.proj, "")
+			if err == nil || !IsRefusal(err) || err.Error() != "run run-a committed its slice; there is nothing to resume" {
+				t.Fatalf("error %v, want today's committed-run refusal", err)
+			}
+		})
+	}
+	t.Run("worktree gone", func(t *testing.T) {
+		h := resumeHarness(t)
+		h.seed("run-a", runrec.StateStopped)
+		run, err := h.store.Open("run-a")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := run.Update(func(r *runrec.Record) {
+			r.StoppedFrom = runrec.StateLand
+			r.Commit = &runrec.Commit{SHA: "0123abc"}
+			r.LandFixes = 1
+		}); err != nil {
+			t.Fatal(err)
+		}
+		_, err = h.resume("run-a", h.proj, "")
+		if err == nil || !IsRefusal(err) || !strings.Contains(err.Error(), "no worktree") || !strings.Contains(err.Error(), h.W) {
+			t.Fatalf("error %v, want a refusal naming the missing worktree %s", err, h.W)
+		}
+	})
+	t.Run("branch gone", func(t *testing.T) {
+		h := resumeHarness(t, func(o *harnessOpts) {
+			o.routesFor = func(P, W string) []clitest.Route {
+				return []clitest.Route{
+					{Tool: "git", Args: []string{"-C", W, "symbolic-ref", "--short", "HEAD"}, Exit: 1, Stderr: "fatal: ref HEAD is not a symbolic ref\n"},
+				}
+			}
+		})
+		h.mkWorktree()
+		h.seed("run-a", runrec.StateStopped)
+		run, err := h.store.Open("run-a")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := run.Update(func(r *runrec.Record) {
+			r.StoppedFrom = runrec.StateLand
+			r.Commit = &runrec.Commit{SHA: "0123abc"}
+			r.LandFixes = 1
+		}); err != nil {
+			t.Fatal(err)
+		}
+		_, err = h.resume("run-a", h.proj, "")
+		if err == nil || !IsRefusal(err) || !strings.Contains(err.Error(), "no branch") || !strings.Contains(err.Error(), item) {
+			t.Fatalf("error %v, want a refusal naming the missing branch %s", err, item)
+		}
+	})
+	t.Run("rounds", func(t *testing.T) {
+		h := resumeHarness(t)
+		h.mkWorktree()
+		h.seed("run-a", runrec.StateStopped)
+		run, err := h.store.Open("run-a")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := run.Update(func(r *runrec.Record) {
+			r.StoppedFrom = runrec.StateLand
+			r.Commit = &runrec.Commit{SHA: "0123abc"}
+			r.LandFixes = 1
+		}); err != nil {
+			t.Fatal(err)
+		}
+		_, err = h.resume("run-a", h.proj, "", 3)
+		if err == nil || !IsRefusal(err) || !strings.Contains(err.Error(), "one fix round") {
+			t.Fatalf("error %v, want a refusal that landing gets one fix round", err)
+		}
+		saved, err := h.store.Open("run-a")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got := saved.Snapshot(); got.State != runrec.StateStopped || got.LandFixes != 1 {
+			t.Fatalf("a refused retry changed the run: state %s land_fixes %d", got.State, got.LandFixes)
+		}
+	})
 }

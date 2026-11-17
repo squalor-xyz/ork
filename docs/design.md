@@ -1065,8 +1065,14 @@ slice.
   gate and a new approval follow. `land_fixes` counts that round only, and
   `ork status` says the approval is a repeat (`again: the landing was blocked
   and its fix round is done`). If the second re-check is red, the slice stops
-  with `land blocked: checks red after merging BASE`, in Needs you, with the
-  worktree and the branch kept.
+  with `land blocked: checks red after merging BASE; ork retry RUN re-lands with one more fix round`,
+  in Needs you, with the worktree and the branch kept.
+  `ork retry RUN` on that stopped run re-enters landing and sets `land_fixes`
+  back to 0, so the next red re-check gets one implementer fix round again
+  (land.retry-relands, adj 458). `ork retry RUN --rounds N` is refused: landing
+  gets one fix round. A committed run that stopped in any other state, or whose
+  worktree or branch is gone, stays refused (land.retry-scope, adj 459).
+  `ork run` and `ork wave start` do not resume it.
 
 *Proposed (S263):* merge detection (`docs/state.md`) prints a given run's
 error once, not on every HEAD change. A committed run whose worktree path and
@@ -1190,15 +1196,20 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   hook `Deps.MaxRounds` overrides only the first pause threshold.
   To change the check, stop the run, set the check (`ork projects set P
   --check CMD`; a stopped run does not block it), then resume the stopped
-  run with `ork retry RUN` (S296, below).
+  run with `ork retry RUN` (S296, below). A committed run that stopped in
+  land is not this resume: `ork retry RUN` re-lands it (adj 458, adj 459; see
+  the landing steps above) and does not grant implementer rounds. When the
+  run is already at the round cap, the retry sets `round_limit` to `round` + 1
+  and leaves `round` unchanged, so that one land fix can start. Under the
+  cap it does not change `round_limit`.
 - **Resume a stopped run** (S296, *proposed*). `ork retry RUN [--rounds N]`
   also accepts a stopped run that has no commit, did not stop in setup or
   while queued (`stopped_from`), and whose worktree path exists and passes
   the same check as `ensureWorktree` (path, branch and git dir; ork never
   creates the worktree on a resume). Anything else is refused in one line
-  of the form `run ID <fact>; <action>`: a committed run, a run stopped
-  during setup, a missing or foreign worktree (the line adds `ork dismiss ID
-  to start a new run`), a role still running, another unfinished run of the
+  of the form `run ID <fact>; <action>`: a committed run that did not stop
+  in land, a run stopped during setup, a missing or foreign worktree (the line
+  adds `ork dismiss ID to start a new run`), a role still running, another unfinished run of the
   item, or a newer run of the item that uses the same worktree (the older run
   is superseded: its status hint and `run.show` name no retry). A retry note
   is refused for a stopped run. `Engine.CanResume` makes these checks

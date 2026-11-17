@@ -247,7 +247,7 @@ func TestResumeRefusesACommittedOrSetupStoppedRun(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if err := run.Update(func(r *runrec.Record) { r.StoppedFrom = runrec.StateLand; r.Commit = &runrec.Commit{SHA: "0123abc"} }); err != nil {
+		if err := run.Update(func(r *runrec.Record) { r.StoppedFrom = runrec.StateReview; r.Commit = &runrec.Commit{SHA: "0123abc"} }); err != nil {
 			t.Fatal(err)
 		}
 		_, err = h.resume("run-a", h.proj, "")
