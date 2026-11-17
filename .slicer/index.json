@@ -21345,6 +21345,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "35ad83f9-079c-4bb0-83a6-bbf02274a71e",
+          "kind": "",
+          "text": "**2026-11-17** — Verified: a role's friction or deterministic-check tool feedback is filed as an unscored slice in the registered project the tool names, else in the run's own project as 'TOOL: PROPOSAL' with --discovered-from. Entries get a stable key, repeats are skipped, feature entries are only kept, and a failed filing sets file_error without changing the run. go vet and go test ./... passed in all 26 packages; the new tests were red first and each assertion was mutation-checked.",
+          "created_at": "2026-11-17T12:30:35Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
