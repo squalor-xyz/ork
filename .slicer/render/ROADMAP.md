@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-410 items · — 67 · done 303 · retired 40
+410 items · — 66 · done 304 · retired 40
 
 ## v1.3
 
@@ -304,7 +304,7 @@ v1.2
 | 240 | [S330](slices/S330.md) | Launch with uncommitted tracking edits | S | 1 |  | S268 was promoted on main but not committed; its worktree lacked the spec and the landing stopped. · discovered from S254 | done |
 | 241 | [S331](slices/S331.md) | Auto-land a passing run | M | 2 |  | Every v1.1 landing was a hand approve after VERDICT: PASS under the owner's standing rule. | done |
 | 242 | [S333](slices/S333.md) | Running view declutter | M | 2 |  | Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284. | done |
-| 243 | [S409](slices/S409.md) | Runnable Check lines | S | 1 |  | 2026-11-17: the spec check flagged orchestrator-only Check lines on S402, S396, S397, S390, S332 and S388, the same question as adj 249, 255, 256 and 259. Two causes: `checkCommandRunnable` (`internal/engine/brief.go:546-552`) treats any `;\|&<>` or backtick or `$` as a compound command even inside quotes, so `go test ./internal/daemon -run 'A\|B' -v` is orchestrator-only, while `plainCheckSyntax` (`internal/engine/brief.go:486-522`), which decides what ork itself runs, already accepts a quoted `\|`. And `ImplementerPreset` (`internal/engine/perm.go:45-71`) has no `rg` entry, so every `rg -n ...` Check line is orchestrator-only. | — |
+| 243 | [S409](slices/S409.md) | Runnable Check lines | S | 1 |  | 2026-11-17: the spec check flagged orchestrator-only Check lines on S402, S396, S397, S390, S332 and S388, the same question as adj 249, 255, 256 and 259. Two causes: `checkCommandRunnable` (`internal/engine/brief.go:546-552`) treats any `;\|&<>` or backtick or `$` as a compound command even inside quotes, so `go test ./internal/daemon -run 'A\|B' -v` is orchestrator-only, while `plainCheckSyntax` (`internal/engine/brief.go:486-522`), which decides what ork itself runs, already accepts a quoted `\|`. And `ImplementerPreset` (`internal/engine/perm.go:45-71`) has no `rg` entry, so every `rg -n ...` Check line is orchestrator-only. | done |
 | 244 | [S410](slices/S410.md) | Flaky split part parent | S | 1 |  | 2026-11-17: `TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart` (`internal/engine/split_test.go:539`) failed once in a full `go test ./...` of the S407 worktree and once in 10 runs on main (a409ee76), with "the round 2 part step has parent "9", want the lead's fix step "10"" and parent "6" on another run; 20 further runs passed on each. Not caused by S407. | done |
 
 ---
