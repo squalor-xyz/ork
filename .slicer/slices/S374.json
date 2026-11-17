@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- `[AFTER LAND]` On 2026-12-08 the orchestrator runs `ork vendor out grok --reason \"accounts end 2026-12-09\"` and `ork vendor` shows grok out with no end time."
+      "body": "- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` and `adj lint` exit 0.\n- `[AFTER LAND]` On 2026-12-08 the orchestrator runs `ork vendor out grok --reason \"accounts end 2026-12-09\"` and `ork vendor` shows grok out with no end time."
     },
     {
       "heading": "Git",

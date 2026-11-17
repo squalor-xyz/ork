@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n- A spec check on a slice whose Check lines are all plain commands (quoted pipes, 'rg', '&&' chains included) asks no Check-line question.\n- ork runs a plain '&&' chain as its parts and records each part's result before the gate.\n- Lines with real shell syntax are listed as orchestrator-run in the brief and the spec-check report without a question.\n\nCommands:\n- `go -C /home/jon/code/squalor-xyz/ork test ./internal/engine ./internal/roles` exits 0.\n- `go -C /home/jon/code/squalor-xyz/ork vet ./...` exits 0.\n- `go -C /home/jon/code/squalor-xyz/ork test ./...` exits 0.\n- `gofmt -l /home/jon/code/squalor-xyz/ork` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint --root /home/jon/code/squalor-xyz/ork` exit 0."
+      "body": "Acceptance criteria:\n- A spec check on a slice whose Check lines are all plain commands (quoted pipes, 'rg', '&&' chains included) asks no Check-line question.\n- ork runs a plain '&&' chain as its parts and records each part's result before the gate.\n- Lines with real shell syntax are listed as orchestrator-run in the brief and the spec-check report without a question.\n\nCommands:\n- `go test ./internal/engine ./internal/roles` exits 0.\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` and `adj lint` exit 0."
     },
     {
       "heading": "Git",

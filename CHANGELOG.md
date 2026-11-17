@@ -7,6 +7,11 @@
   `go test -run 'A|B'`, no longer makes a Check command orchestrator-only; an
   unquoted one still does. `rg` Check lines stay orchestrator-only: the
   implementer presets do not allow `rg` (`launch.allowlist-rg`).
+- S407 (*proposed*): Slice checks skip the Acceptance criteria list. In a
+  slice's Check section, entries after a line `Acceptance criteria:` and up to
+  a line `Commands:` are prose: ork no longer runs a backticked word in them
+  before the gate, and no longer lists them as Check commands in a brief. Docs
+  updated: `docs/design.md`.
 - S380 (*proposed*): A step records its own cost and tokens, not the session
   total. A resumed Claude session reports its running cost and a resumed Codex
   thread its running tokens; ork now stores the step's part (new role fields

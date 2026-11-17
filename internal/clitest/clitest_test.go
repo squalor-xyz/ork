@@ -5,7 +5,9 @@ package clitest
 import (
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"sync"
 	"testing"
 )
 
@@ -42,6 +44,38 @@ func TestPrefixRouteMatchesLongerCalls(t *testing.T) {
 	}
 	if out, code := run(t, f, "git", "status", "-x"); out != "" || code != 97 {
 		t.Errorf("a different argument must not match the prefix route: %q, exit %d", out, code)
+	}
+}
+
+// Concurrent calls (an engine's parts run at the same time) must each get their
+// own Seq reply, and the reply of a call must be its place in the call log.
+func TestSeqAnswersConcurrentCallsOnceEachInLogOrder(t *testing.T) {
+	const n = 40
+	var seq []Reply
+	for i := 1; i <= n; i++ {
+		seq = append(seq, Reply{Stdout: strconv.Itoa(i)})
+	}
+	f := Install(t, Route{Tool: "slicer", Args: []string{"x"}, Prefix: true, Seq: seq})
+	replies := make([]string, n)
+	var wg sync.WaitGroup
+	for i := range n {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			out, _ := run(t, f, "slicer", "x", strconv.Itoa(i))
+			replies[i] = out
+		}()
+	}
+	wg.Wait()
+	calls := f.CallsTo("slicer")
+	if len(calls) != n {
+		t.Fatalf("%d calls logged, want %d", len(calls), n)
+	}
+	for k, c := range calls {
+		i, _ := strconv.Atoi(c.Args[1])
+		if want := strconv.Itoa(k + 1); replies[i] != want {
+			t.Fatalf("the call logged at place %d got reply %q, want %q", k+1, replies[i], want)
+		}
 	}
 }
 

@@ -10,12 +10,15 @@ package clitest
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 )
 
 const (
@@ -135,6 +138,10 @@ func Main() {
 		return
 	}
 	args := os.Args[1:]
+	// Calls can overlap (an engine runs parts at the same time). One call at a
+	// time logs itself and takes its Seq reply, so a reply is the call's place in
+	// the log and no two calls get the same one.
+	release = lock(filepath.Join(filepath.Dir(routesPath), "lock"))
 	if logPath := os.Getenv(envLog); logPath != "" {
 		line, _ := json.Marshal(Call{Tool: tool, Args: args})
 		if f, err := os.OpenFile(logPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644); err == nil {
@@ -157,9 +164,7 @@ func Main() {
 		if len(r.Seq) > 0 {
 			n := nextCount(filepath.Join(filepath.Dir(routesPath), fmt.Sprintf("seq-%d", i)))
 			rep := r.Seq[min(n, len(r.Seq)-1)]
-			os.Stdout.WriteString(rep.Stdout)
-			os.Stderr.WriteString(rep.Stderr)
-			os.Exit(rep.Exit)
+			exit(rep.Exit, rep.Stdout, rep.Stderr)
 		}
 		out := []byte(r.Stdout)
 		if r.File != "" {
@@ -167,9 +172,7 @@ func Main() {
 				fail("cannot read %s: %v", r.File, err)
 			}
 		}
-		os.Stdout.Write(out)
-		os.Stderr.WriteString(r.Stderr)
-		os.Exit(r.Exit)
+		exit(r.Exit, string(out), r.Stderr)
 	}
 	fail("no route for %s %s", tool, strings.Join(args, " "))
 }
@@ -182,7 +185,7 @@ func matches(r Route, args []string) bool {
 }
 
 // nextCount returns how many times it was called before, counting in a file.
-// Calls to a fake are sequential, so the file needs no lock.
+// The caller holds the call lock (see lock).
 func nextCount(path string) int {
 	n := 0
 	if b, err := os.ReadFile(path); err == nil {
@@ -192,9 +195,36 @@ func nextCount(path string) int {
 	return n
 }
 
+// release drops the call lock Main took.
+var release = func() {}
+
+// lock takes a lock file that only one fake process holds at a time and
+// returns the function that drops it. A process that fails to create the file
+// for another reason than its existence goes on without the lock.
+func lock(path string) func() {
+	for {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
+		if err == nil {
+			f.Close()
+			return func() { os.Remove(path) }
+		}
+		if !errors.Is(err, fs.ErrExist) {
+			return func() {}
+		}
+		time.Sleep(time.Millisecond)
+	}
+}
+
+// exit writes the answer, drops the call lock and ends the process.
+func exit(code int, stdout, stderr string) {
+	os.Stdout.WriteString(stdout)
+	os.Stderr.WriteString(stderr)
+	release()
+	os.Exit(code)
+}
+
 func fail(format string, a ...any) {
-	fmt.Fprintf(os.Stderr, "clitest: "+format+"\n", a...)
-	os.Exit(97)
+	exit(97, "", fmt.Sprintf("clitest: "+format+"\n", a...))
 }
 
 func equal(a, b []string) bool {

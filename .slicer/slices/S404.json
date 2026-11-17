@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n- 'printf '1\\n1\\n' | ork run P ID' with open spec questions starts nothing, records nothing, prints every question with its answer address and exits 3.\n- 'ork run P ID --answer KEY=LABEL ... --yes' records the option with that label.\n- A batch that leaves a question out exits 3 and prints that question's full text and options.\n- An interactive terminal prompt works as before.\n\nCommands:\n- `go -C /home/jon/code/squalor-xyz/ork test ./internal/cli -run 'Piped|Batch|SpecQuestions'` exits 0.\n- `go -C /home/jon/code/squalor-xyz/ork vet ./...` exits 0.\n- `go -C /home/jon/code/squalor-xyz/ork test ./...` exits 0.\n- `gofmt -l /home/jon/code/squalor-xyz/ork` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint --root /home/jon/code/squalor-xyz/ork` exit 0."
+      "body": "Acceptance criteria:\n- 'printf '1\\n1\\n' | ork run P ID' with open spec questions starts nothing, records nothing, prints every question with its answer address and exits 3.\n- 'ork run P ID --answer KEY=LABEL ... --yes' records the option with that label.\n- A batch that leaves a question out exits 3 and prints that question's full text and options.\n- An interactive terminal prompt works as before.\n\nCommands:\n- `go test ./internal/cli -run 'Piped|Batch|SpecQuestions'` exits 0.\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` and `adj lint` exit 0."
     },
     {
       "heading": "Git",

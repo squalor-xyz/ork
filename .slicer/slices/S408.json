@@ -1,0 +1,39 @@
+{
+  "id": "S408",
+  "title": "ork retry re-lands a committed run whose landing was blocked",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "2026-11-17: S387 (run ork-20261117-021246-a004) committed, then its landing re-check went red because main's adj records were uncommitted (orchestrator error, fixed in 037800d8). landBlocked (internal/engine/land.go:262-266) stopped the run after its one land fix; NotResumable (internal/engine/resume.go:24-25) refuses retry for any committed run, so the orchestrator merged main, re-ran the checks and fast-forwarded main by hand (dae60175). Owner rule 2026-11-17: deterministic work runs as code.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "2026-11-17: S387 committed, then its landing re-check went red after merging main (main's `adj lint` failed on uncommitted supersede edits, fixed in 037800d8). It had already used its one land fix round, so `landBlocked` stopped it (`internal/engine/land.go:262-266`). `ork retry` then refused it: `NotResumable` returns \"committed its slice; there is nothing to resume\" for any record with a commit (`internal/engine/resume.go:24-25`), and the daemon refuses the same way (`internal/daemon/runs.go:1496`). The orchestrator had to merge main into the worktree, render, run the checks and fast-forward main by hand. Owner rule (2026-11-17): regular, deterministic steps are code.\n\nOwner decisions (2026-11-17): `ork retry RUN` on such a run re-enters landing and resets the land fix count, so a red re-check gets one more implementer fix round before it stops again [land.retry-relands, adj 458]. Only a committed run that stopped in the land stage, with its worktree and branch still there, qualifies; any other committed run keeps today's refusal [land.retry-scope, adj 459].\n"
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/resume.go:20-32` (`NotResumable`: allow committed + stopped_from land)\n- `internal/engine/resume.go:101-156` (`resumeStopped`: re-enter `land`, reset `LandFixes`)\n- `internal/engine/land.go:258-276` (`landBlocked`: unchanged rule, one fix round per retry)\n- `internal/daemon/runs.go:1488-1500` (retry refusal path)\n- `internal/daemon/runs.go:1296` and `:1541` (other `NotResumable` callers: a re-landable run is not resumed by `ork run`)\n- `internal/engine/resume_test.go`\n- `internal/daemon/runs_test.go`\n- `docs/guide.md` (ork retry)\n- `docs/design.md` (landing blocked; retry)\n"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestRetryRelandsACommittedRunStoppedAtLand` in `internal/engine/resume_test.go`: a record in state stopped, `stopped_from` land, a commit, `land_fixes` 1, worktree and branch present; `ork retry` puts it in state land with `land_fixes` 0, and with a green re-check the branch lands and the record ends landed.\n- `TestRetryRelandGetsOneFixRound` in `internal/engine/resume_test.go`: same record, the re-check is red; the run gets one implementer fix round (feedback kind land), and if the re-check is red again it stops with \"land blocked\".\n- `TestRetryStillRefusesOtherCommittedRuns` in `internal/engine/resume_test.go`: a committed run stopped from any state but land, or with a missing worktree or branch, is refused with today's message or one naming what is missing.\n- `TestDaemonRetryRelandsCommittedRun` in `internal/daemon/runs_test.go`: the daemon's retry of such a run is accepted (no CodeRefused) and the run returns to land.\n"
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests above and see them red for the stated reason.\n2. `NotResumable`: return \"\" for a stopped record with a commit and `StoppedFrom == runrec.StateLand`; keep the refusal for every other committed record.\n3. `resumeStopped`: for such a record, check the worktree and branch exist (refuse naming the missing one), reject `--rounds` with a refusal that says landing gets one fix round, set `LandFixes = 0`, `LandRecheck = true`, clear the stop fields as today, and set the state to land. Do not reset the round limit or rerun implement or checks before landing.\n4. `ork run ITEM` and `ork wave start` do not pick up a re-landable run as a resume (`internal/daemon/runs.go:1296`, `:1541`); only `ork retry RUN` re-lands it. Keep their current behaviour for that record.\n5. The stop reason \"land blocked: ...\" names the next step: `ork retry RUN` re-lands with one more fix round.\n6. Docs: `docs/guide.md` ork retry entry and `docs/design.md` landing section, citing adj 458 and 459. CHANGELOG.md: one bullet at the end of `## Unreleased`, written by hand.\n"
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- ork retry on a committed run stopped in land merges main again, reruns the landing checks and lands when they are green.\n- A red re-check after that retry gets exactly one implementer fix round, then stops with land blocked if still red.\n- ork retry on any other committed run, or one whose worktree or branch is gone, is refused with a message that says why.\n- ork retry --rounds N on a re-landable run is refused with a message that names the one fix round.\n- ork run ITEM does not resume a re-landable run.\n\nCommands:\n- `go test ./internal/engine -run TestRetryRelandsACommittedRunStoppedAtLand -v`\n- `go test ./internal/engine -run TestRetryRelandGetsOneFixRound -v`\n- `go test ./internal/engine -run TestRetryStillRefusesOtherCommittedRuns -v`\n- `go test ./internal/daemon -run TestDaemonRetryRelandsCommittedRun -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` must print nothing.\n"
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"S408: ork retry re-lands a committed run stopped at land\".\n"
+    }
+  ],
+  "notes": []
+}

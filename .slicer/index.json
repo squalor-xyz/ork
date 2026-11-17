@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 410,
+  "next_id": 411,
   "preamble": "",
   "passes": [
     {
@@ -21206,7 +21206,9 @@
       "short_title": "Nothing-plus-prose is no finding",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21236,7 +21238,9 @@
       "short_title": "Smaller fixed context for cloud Claude roles",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21266,7 +21270,9 @@
       "short_title": "Direction digest in the brief",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21296,7 +21302,9 @@
       "short_title": "ork runs the finish step",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21551,7 +21559,9 @@
       "short_title": "Lost brief for siblings, FIFO-safe report reads",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21579,7 +21589,9 @@
       "short_title": "Write results, dash values, vendor note",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21607,7 +21619,9 @@
       "short_title": "Report viewer and notes text polish",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21768,7 +21782,9 @@
       "short_title": "Changelog and scope edge tests, doctor wording",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21796,7 +21812,9 @@
       "short_title": "slicer tui hint and restore fixes",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21824,7 +21842,9 @@
       "short_title": "Fix-round goldens, detail wrap, parked count",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21912,7 +21932,9 @@
       "short_title": "ork wait on several runs",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21940,7 +21962,9 @@
       "short_title": "Spec answers by label, no piped answers",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21968,7 +21992,9 @@
       "short_title": "ork tracking commit",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [
         {
           "id": "51fbdf92-822f-4410-a521-6d8b462a63e2",
@@ -22012,9 +22038,24 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S407"
+        "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d689976f-882d-4b40-8654-2221f2230259",
+          "kind": "",
+          "text": "**2026-11-17** — 2026-11-17: S409 (owner: fix first, adj 456) makes checkCommandRunnable quote-aware; build the three-way split on it. adj 457 dropped rg from the presets, so rg lines are run by ork or the orchestrator, never the implementer.",
+          "created_at": "2026-11-17T19:38:51Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -22039,10 +22080,25 @@
       "id": "S407",
       "title": "Slice checks skip the Acceptance criteria list",
       "short_title": "Slice checks skip Acceptance criteria",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "cb76d3f1-1925-4160-b958-eeab9826bf11",
+          "kind": "",
+          "text": "**2026-11-17** — Slice checks now skip the Acceptance criteria list: sliceCheckCommands drops lines from an 'Acceptance criteria:' line to a 'Commands:' line or the section end before reading backticked commands, so criteria are neither run before the gate nor listed as Check commands in briefs. Verified: 4 new tests red before the code and green after, 3 mutations each turned tests red, go vet, gofmt and go test ./... clean, reviewer found nothing.",
+          "created_at": "2026-11-17T14:23:23Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -22060,7 +22116,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22068,12 +22124,12 @@
       "title": "ork retry re-lands a committed run whose landing was blocked",
       "short_title": "ork retry re-lands a committed run whose landing was blocked",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22143,6 +22199,49 @@
         "group": "",
         "reason": "",
         "importance": 3,
+        "urgency": 3,
+        "effort": 1,
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S410",
+      "title": "Flaky test: a split part's round 2 step sometimes hangs off the wrong parent",
+      "short_title": "Flaky split part parent",
+      "status": "done",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "64d245b7-d396-4141-9911-1873aaa7aa0c",
+          "kind": "",
+          "text": "**2026-11-17** — Cause: the fake slicer/adj/git CLI in internal/clitest had an unlocked Seq counter and a separate call log, so overlapping step calls (round 1 parts run at the same time) could get the same reply id and replies that no longer matched the call's place in the log; the engine's parent was correct. Fix: each fake call holds a lock file from logging through its Seq reply. Verified: new TestSeqAnswersConcurrentCallsOnceEachInLogOrder red before and green after (red again with the lock removed); the target test failed 7 of 200 runs before and passes -count=200 and -race -count=50 after; go vet, gofmt and go test ./... are clean.",
+          "created_at": "2026-11-17T14:41:42Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-17: `TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart` (`internal/engine/split_test.go:539`) failed once in a full `go test ./...` of the S407 worktree and once in 10 runs on main (a409ee76), with \"the round 2 part step has parent \"9\", want the lead's fix step \"10\"\" and parent \"6\" on another run; 20 further runs passed on each. Not caused by S407.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "flaky-split-part-parent",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
         "urgency": 3,
         "effort": 1,
         "attempts": 1
