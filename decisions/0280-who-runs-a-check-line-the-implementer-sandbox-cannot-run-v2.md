@@ -2,7 +2,7 @@
 {
   "id": 280,
   "title": "Who runs a Check line the implementer sandbox cannot run? (v2)",
-  "status": "decided",
+  "status": "superseded",
   "key": "process.orchestrator-check-lines-v2",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -29,6 +29,7 @@
   "supersedes": [
     263
   ],
+  "superseded_by": 454,
   "refs": [
     "S298"
   ],
@@ -45,6 +46,11 @@
       "date": "2026-11-11",
       "event": "supersede",
       "note": "supersedes 263"
+    },
+    {
+      "date": "2026-11-17",
+      "event": "supersede",
+      "note": "by 454"
     }
   ]
 }
