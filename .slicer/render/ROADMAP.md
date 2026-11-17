@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-402 items · — 65 · done 297 · retired 40
+402 items · — 64 · done 298 · retired 40
 
 ## v1.3
 
@@ -157,7 +157,7 @@ v1.2
 | 100 | [S377](slices/S377.md) | Landing ff-only fails when main moves mid-landing | S | 2 |  | 2026-11-16, two landings paused on "git merge --ff-only B: ... Diverging branches can't be fast-forwarded": S373 (run ork-20261116-155524-4cf4), after the orchestrator committed to main during the landing; S206 (run ork-20261116-172629-3a8b), after a merge conflict was resolved by hand and the run retried: ork's own commit d6b72802 "Tracking edits on main before landing S206" (`.slicer/log.jsonl`, one line) moved main, and the fast-forward then failed. A plain `ork retry` landed both. · discovered from S206 | done |
 | 101 | [S378](slices/S378.md) | Grok usage limit counts as out | S | 1 |  | 2026-11-16 20:21: two runs with grok as first implementer (S179 run ork-20261116-200151-55ff, S359 run ork-20261116-202144-c7bb) stopped with "implementer round 1 exited unclassified" and made no edit. A headless write call reproduced it (orchestrator probe, `.scratch/grok-probe2/`, grok 1.0.77): exit 1, stderr "Error: You've reached your free Grok Build usage limit for now. Get SuperGrok for much higher limits, or try again later: https://grok.com/supergrok?referrer=grok-build", and a stream `result` with `subtype` `error_during_execution` and the same text in `errors`. The classifier knows only "used all available credits" (`internal/agent/grok/grok.go:40-42,297`). · discovered from S305 | done |
 | 102 | [S379](slices/S379.md) | Spec check skips a vendor marked out | S | 1 |  | 2026-11-16 20:23: with grok marked out (`ork vendor out grok --until 21:22`), `ork run ork S359` and `ork run ork S179` failed at once with "spec check failed: spec-check (grok grok-4.7 medium) exited unclassified": the spec check still ran its first row (r24, grok). The orchestrator moved ork's spec-check rows to r16,r24 by hand to get past it. · discovered from S305 | done |
-| 103 | [S380](slices/S380.md) | Per-step cost and tokens | S | 1 | daemon, agent | docs/review-2026-11-12-workflow.md F1: Claude cost monotonic in 63 of 63 resumed sequences, Codex tokens in 20 of 20; $542 recorded is about $194. | — |
+| 103 | [S380](slices/S380.md) | Per-step cost and tokens | S | 1 | daemon, agent | docs/review-2026-11-12-workflow.md F1: Claude cost monotonic in 63 of 63 resumed sequences, Codex tokens in 20 of 20; $542 recorded is about $194. | done |
 | 104 | [S381](slices/S381.md) | Nothing-plus-prose is no finding | S | 1 | daemon | docs/review-2026-11-12-workflow.md F2: 29 of 65 landed runs ran a fix round with no [fix] tag; at least 12 look like the parser. Decided: adj 406 (review.nothing-section). | — |
 | 105 | [S382](slices/S382.md) | Smaller fixed context for cloud Claude roles | S | 1 | agent | docs/review-2026-11-12-workflow.md F4: S360 measured 30211 to 26692 first-turn tokens (12%), claude-local only; Claude ran 245 role steps in five days. Decided: adj 408 (roles.cloud-fixed-context). · discovered from S360 | — |
 | 106 | [S383](slices/S383.md) | Direction digest in the brief | M | 2 | daemon | docs/review-2026-11-12-workflow.md F5: slicer list --json --lean is 85139 bytes for ork; section (C) gave 1 fix finding in 55 reports; the reviewer is 153M tokens and the slowest step. Grok review ends 2026-12-09, after which this read is billed. | — |

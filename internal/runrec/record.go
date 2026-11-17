@@ -81,10 +81,19 @@ type RoleRecord struct {
 	StartedAt  time.Time        `json:"started_at"`
 	EndedAt    time.Time        `json:"ended_at,omitzero"`
 	Exit       string           `json:"exit,omitempty"`
-	Tokens     int              `json:"tokens,omitempty"`
-	CostUSD    float64          `json:"cost_usd,omitempty"`
-	Report     string           `json:"report,omitempty"`
-	Denials    []string         `json:"denials,omitempty"`
+	// Tokens and CostUSD are this round's own usage. Where a vendor reports a
+	// running total for a resumed session (Claude's cost, Codex's tokens), the
+	// round holds the total minus the session's last total (S380, *proposed*).
+	Tokens  int     `json:"tokens,omitempty"`
+	CostUSD float64 `json:"cost_usd,omitempty"`
+	// SessionTokens and SessionCostUSD are the vendor's reported session total
+	// for Session, as the round ended (S380, *proposed*; adj usage.session-total-fields).
+	// The next round of the same session subtracts them. Zero for a vendor whose
+	// value is per step, and in a record written before S380.
+	SessionTokens  int      `json:"session_tokens,omitempty"`
+	SessionCostUSD float64  `json:"session_cost_usd,omitempty"`
+	Report         string   `json:"report,omitempty"`
+	Denials        []string `json:"denials,omitempty"`
 	// DeniedCommands holds one entry per denial, in the same order as Denials.
 	DeniedCommands []DeniedCommand `json:"denied_commands,omitempty"`
 

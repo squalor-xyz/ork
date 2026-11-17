@@ -106,7 +106,9 @@ func ParseLine(line []byte) (Event, error) {
 				OutputTokens:        w.Usage.OutputTokens,
 				CacheCreationTokens: w.Usage.CacheCreationTokens,
 				CacheReadTokens:     w.Usage.CacheReadTokens,
-				CostUSD:             w.TotalCostUSD,
+				// total_cost_usd is the session's running cost: a resumed session
+				// reports its earlier steps too (S380). The usage block is per step.
+				CostUSD: w.TotalCostUSD,
 			},
 			Raw: ev.Raw,
 		}

@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- S380 (*proposed*): A step records its own cost and tokens, not the session
+  total. A resumed Claude session reports its running cost and a resumed Codex
+  thread its running tokens; ork now stores the step's part (new role fields
+  `session_tokens` and `session_cost_usd` keep the vendor's total), so run
+  totals and token budgets stop counting the same usage twice. Older run
+  records are read as they are.
 - S335 (*proposed*): Batched snapshot polling. The daemon reads the items,
   goals and runs parts of every project that is due with one `slicer snapshot`
   process (slicer 1.22.1, snapshot schema 2) instead of one process per part per

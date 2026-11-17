@@ -4886,3 +4886,11 @@
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Git"}
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Owner decisions (2026-11-17, interactive, relay session 8d71", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:26:44Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T02:32:54Z", "item": "S380", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T04:01:00Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T12:17:16Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T12:17:25Z", "item": "S380", "action": "note", "from": "", "to": "", "note": "Fixture findings (existing captures reused; no new vendor ru", "by": "Jon Robbins"}
+{"when": "2026-11-17T12:19:58Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T12:30:20Z", "item": "S380", "action": "note", "from": "", "to": "", "note": "Verified outcome: a resumed step now records its own usage. ", "by": "Jon Robbins"}
+{"when": "2026-11-17T12:30:23Z", "item": "S380", "action": "status", "from": "started", "to": "done", "note": "Verified outcome: a resumed step records its own cost and tokens, not the session total. Claude cost and Codex tokens are stored as the total minus the latest earlier nonzero total of the same session id (session_tokens and session_cost_usd on the role record); gate PASS, go vet, go test ./... , gofmt and slicer check green.", "by": "Jon Robbins"}

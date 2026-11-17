@@ -97,8 +97,10 @@ type Result struct {
 	Exit            ExitClass
 	Session         string                 // the vendor session id, for a later resume
 	Report          string                 // the final result text; the report file takes precedence
-	Tokens          int                    // total tokens used
-	CostUSD         float64                // cost, when the vendor reports one
+	Tokens          int                    // tokens used; the vendor's value at first, the round's own after stepUsage
+	CostUSD         float64                // cost, when the vendor reports one; likewise
+	SessionTokens   int                    // the vendor's session total, when Tokens is one (set by stepUsage, S380)
+	SessionCostUSD  float64                // the vendor's session total, when CostUSD is one (set by stepUsage, S380)
 	Denials         []runrec.DeniedCommand // permission denials, one per denied call
 	ApprovalDenials int                    // denials from ork's approval point, included in Denials; not persisted
 }
