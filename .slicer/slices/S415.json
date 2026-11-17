@@ -1,0 +1,39 @@
+{
+  "id": "S415",
+  "title": "Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt.",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-220113-e6de, project ork, item S396:\n\nLet the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt.\n\nEvidence: Done when says a command that needs approval ends the run, and that rg, slicer, and test commands stay unverified, so this review could not run the slice Check."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
