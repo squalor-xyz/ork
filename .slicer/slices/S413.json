@@ -1,0 +1,39 @@
+{
+  "id": "S413",
+  "title": "In a plan-mode review, allow slicer goals, slicer list, and go test without an approval prompt.",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-215731-f05c, project ork, item S397:\n\nIn a plan-mode review, allow slicer goals, slicer list, and go test without an approval prompt.\n\nEvidence: The brief says an approval ends the run, and Done when says slicer and test commands stay unverified, so this review traced the five tests and did not execute them."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
