@@ -1,0 +1,41 @@
+{
+  "id": "S389",
+  "title": "Show tool feedback in ork show and file a spec check's tool feedback",
+  "lead": [
+    "*Proposed.* Depends on `ork-tool-feedback-file` and `ork-tool-feedback-ask`. `ork show RUN` lists each kept tool feedback entry with its filed item or its adj question, and a spec check files its own tool feedback through the same stateless filer."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-17 spec draft of S320 at f48a6154. `ork show RUN` prints findings with `filed as ID` (`internal/cli/show.go:206-220`) from `ShowReply.Findings` (`internal/daemon/runs.go:2863-2872`, `:3057-3058`); `ShowReply` has no tool feedback, and `docs/orchestrator-parity.md:148` marks v12.3 \"not built\". A spec check drops its tool feedback (`internal/engine/speccheck.go:424`, `:581`; `docs/design.md:1324-1325`).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner decisions (2026-11-17, relay session 8d711f67): both extras (adj 417 `feedback.scope-extras`, `both`): `ork show` lists the entries with their filed item or question, and spec-check tool feedback is filed too. Targets, key and question follow adj 410-416 as in the first two slices.\n\nWhat the code shows:\n\n- `writeShow` prints `findings:` then one line per finding and `filed as ID` (`internal/cli/show.go:206-220`).\n- `runSpecCheckOnce` parses the accepted report (`internal/engine/speccheck.go:417`) and then strips tool feedback with `splitToolFeedback(\"\", text)` (`:424`); `SpecCheckConfig` carries `Project` and `Items` (`:45-52`). A spec check has no run record (`docs/design.md:1324-1325`).\n\n*Proposed:*\n\n- Wire: `ShowReply` gains `tool_feedback`, a list of `{n, role, tool, kind, proposal, filed, asked, error}` (`asked` the adj id).\n- Text: after the findings, `tool feedback:` then one line per entry, `  N ROLE KIND TOOL  PROPOSAL`, then `    filed as ID`, `    asked as adj #ID` or `    not filed: ERROR`. Nothing is printed when the run has no entries.\n- Spec check: at `:424` take the entries with role `spec-check` and pass them to `FileToolFeedback` with the check's project, item (the one item when the check has one, else none) and no run id; the outline says \"spec check of ITEMS\". Results are not stored; failures do not change the verdicts. The key keeps a retried check from filing twice."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/runs.go:2863-2872` (`ShowReply.ToolFeedback`, a `ShowToolFeedback` type)\n- `internal/daemon/runs.go:3006-3058` (fill it from the record)\n- `internal/daemon/show_test.go`\n- `internal/cli/show.go:206-220` (print the section)\n- `internal/cli/show_test.go`\n- `internal/engine/speccheck.go:417-424` (file the entries)\n- `internal/engine/speccheck_test.go`\n- `docs/design.md:1313-1325`\n- `docs/orchestrator-parity.md:148`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestShowListsToolFeedbackWithFiledAndAsked` (`internal/cli`): a reply with entries filed `S500`, asked `#21` and errored `slicer add: exit 3` prints `tool feedback:`, three entry lines, and `filed as S500`, `asked as adj #21`, `not filed: slicer add: exit 3`. Fails first: `ShowReply` has no tool feedback.\n- `TestShowWithoutToolFeedbackPrintsNoSection` (`internal/cli`): no entries, no `tool feedback:` line. Fails first only once the field exists; it guards the empty case.\n- `TestShowJSONCarriesToolFeedback` (`internal/daemon`): a record with one filed entry gives `tool_feedback[0].filed == \"S500\"` in the reply. Fails first: no field.\n- `TestSpecCheckFilesItsToolFeedback` (`internal/engine`, fake role and fake slicer): a spec-check report with a valid verdict and `tool feedback: 1. spec-check | tool: ork | kind: friction | proposal: P | evidence: E` runs `slicer add P --discovered-from ITEM --key tool-feedback-ork-...` and returns the same verdicts as without the line. Fails first: the line is dropped (`internal/engine/speccheck.go:424`).\n- `TestSpecCheckToolFeedbackFailureKeepsTheVerdict` (`internal/engine`): a fake `slicer add` exiting 3 still returns the verdicts and no error. Fails first: no filing call."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests above and watch each go red.\n2. Wire field and fill; text section.\n3. Spec-check filing.\n4. Docs: `docs/design.md` (spec-check filing, the `ork show` section; drop \"not built\"), `docs/orchestrator-parity.md` v12.3 to met, citing adj 417. Mark *proposed*.\n5. CHANGELOG.md: one bullet under `## Unreleased`.\n\nUI slice: UI pass (r14). It changes `internal/cli` output."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- `ork show RUN` for a run with tool feedback prints a `tool feedback:` section listing each entry with `filed as ID`, `asked as adj #ID` or `not filed: ERROR`; a run without entries prints no such section.\n- `ork show RUN --json` has a `tool_feedback` list with the same entries.\n- A spec check whose role reports a `friction` line files one slice in the target, and its verdicts are the same as without the line.\n- Running the same spec check again files nothing new.\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `go test ./internal/cli ./internal/daemon ./internal/engine -run 'ToolFeedback' -v` lists the five new tests as passing.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0.\n- `adj lint` exits 0.\n- `rg -n \"not built\" docs/orchestrator-parity.md` no longer matches the v12.3 row.\n- [HUMAN CHECK] UI pass (r14): `ork show RUN` with three entries reads clearly at 80 columns."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch."
+    }
+  ],
+  "notes": []
+}
