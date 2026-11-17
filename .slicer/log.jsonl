@@ -5032,3 +5032,14 @@
 {"when": "2026-11-17T23:02:38Z", "item": "S397", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S397):", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:03:05Z", "item": "S397", "action": "note", "from": "", "to": "", "note": "Spec-check questions show role text as plain text, keep its ", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:03:09Z", "item": "S397", "action": "status", "from": "started", "to": "done", "note": "Spec-check questions show role text as plain text, keep its line breaks, and wrap each line at 80 columns. An option continues under its label, including after a role line break. The answer prompt and the needs-N header wrap within 80 columns, and the prompt waits on its last line.", "by": "Jon Robbins"}
+{"when": "2026-11-17T21:50:53Z", "item": "S402", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T22:01:12Z", "item": "S396", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T22:32:35Z", "item": "S411", "action": "add", "from": "", "to": "open", "note": "Clock test: TestSpecCheckAllRowsOutRefuses fails from 22:00 to midnight"}
+{"when": "2026-11-17T22:42:38Z", "item": "S412", "action": "add", "from": "", "to": "open", "note": "Do not run a reviewer pass under Grok plan mode. Plan mode asks for plan.md and exit_plan_mode, which conflicts with a read-only report that must be the final message."}
+{"when": "2026-11-17T22:42:38Z", "item": "S412", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T22:44:30Z", "item": "S413", "action": "add", "from": "", "to": "open", "note": "In a plan-mode review, allow slicer goals, slicer list, and go test without an approval prompt."}
+{"when": "2026-11-17T22:44:31Z", "item": "S413", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T22:51:30Z", "item": "S414", "action": "add", "from": "", "to": "open", "note": "Do not run the gate under Grok plan mode. Plan mode asks for plan.md and exit_plan_mode, which conflicts with a read-only verdict that must be the final message."}
+{"when": "2026-11-17T22:51:30Z", "item": "S414", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T22:51:48Z", "item": "S415", "action": "add", "from": "", "to": "open", "note": "Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt."}
+{"when": "2026-11-17T22:51:48Z", "item": "S415", "action": "promote", "from": "", "to": "", "note": ""}
