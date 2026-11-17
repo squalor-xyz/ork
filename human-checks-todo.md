@@ -205,3 +205,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S335 (run ork-20261117-014448-b5d2, 2026-11-17)
 
 - [ ] [AFTER LAND] With the TUI open on a project with a live run, the run's state changes still show within about a second, and `ps` sampling shows far fewer slicer processes than before.
+
+## S66 (run ork-20261117-022055-182f, 2026-11-17)
+
+- [ ] At 100x30 and 80x24 in a real terminal: select text with the mouse at launch, press `M`, click a tab, a project and a row, press `M` again and select text again.
