@@ -4914,3 +4914,8 @@
 {"when": "2026-11-17T02:26:50Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-17T02:26:51Z", "item": "S385", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-17T02:26:51Z", "item": "S386", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T12:15:39Z", "item": "S403", "action": "add", "from": "", "to": "open", "note": "ork wait: several runs, every run of a project, and stage ends"}
+{"when": "2026-11-17T12:15:39Z", "item": "S404", "action": "add", "from": "", "to": "open", "note": "Spec answers by option label; piped answers refused"}
+{"when": "2026-11-17T12:15:39Z", "item": "S405", "action": "add", "from": "", "to": "open", "note": "ork tracking commit: commit the tracking files on the base branch"}
+{"when": "2026-11-17T12:15:39Z", "item": "S406", "action": "add", "from": "", "to": "open", "note": "Check lines ork runs itself are never asked about"}
+{"when": "2026-11-17T12:15:39Z", "item": "S407", "action": "add", "from": "", "to": "open", "note": "Slice checks skip the Acceptance criteria list"}
