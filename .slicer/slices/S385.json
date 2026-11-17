@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n\n- `docs/guide.md` and `docs/design.md` hold no `path.go:N` citation.\n- Each code citation in the two docs names a path and a symbol or unique string, and `go test` fails when that symbol is no longer in the file, naming the doc line.\n- A missing file still fails the test.\n- `AGENTS.md` states the citation form.\n- No doc sentence changed meaning; the diff of the two docs is citations only.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/docscheck -v` exits 0 and lists the five tests.\n- `rg -n '\\.go:[0-9]' docs/guide.md docs/design.md` prints nothing.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+      "body": "Acceptance criteria:\n\n- 'docs/guide.md' and 'docs/design.md' hold no 'path.go:N' citation.\n- Each code citation in the two docs names a path and a symbol or unique string, and 'go test' fails when that symbol is no longer in the file, naming the doc line.\n- A missing file still fails the test.\n- 'AGENTS.md' states the citation form.\n- No doc sentence changed meaning; the diff of the two docs is citations only.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/docscheck -v` exits 0 and lists the five tests.\n- `rg -n '\\.go:[0-9]' docs/guide.md docs/design.md` prints nothing.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
     },
     {
       "heading": "Git",
