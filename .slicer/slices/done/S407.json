@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/brief.go:413-427` (`sliceCheckCommands`: skip the criteria block)\n- `internal/engine/brief.go:561-580` (`sliceChecklistSections`, the Check text it reads)\n- `internal/engine/slicechecks_test.go`\n- `internal/engine/brief_test.go`\n- `docs/design.md:1522-1528`\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/brief.go:413-427` (`sliceCheckCommands`: skip the criteria block)\n- `internal/engine/brief.go:561-580` (`sliceChecklistSections`, the Check text it reads)\n- `internal/engine/slicechecks_test.go`\n- `internal/engine/brief_test.go`\n- `docs/design.md:1551-1562` (the S317 paragraph under Roles)\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

@@ -1559,6 +1559,10 @@ containment check.
 flag such as `--yes`, left in the Check after a spec answer dropped it) is not
 a command: ork records it as "not run by ork: not a command (starts with -)"
 with the entry named, does not run it, and does not pause the run.
+*Proposed (S407, `checks.acceptance-criteria`):* entries after a line
+`Acceptance criteria:` in the Check section, up to a line `Commands:` or the end
+of the section, are prose. ork neither runs them nor lists them as Check
+commands in a brief. A Check section without that line is read as before.
 HUMAN CHECK and `[AFTER LAND]` entries keep their existing workflow.
 Each command has the project's check timeout (ten minutes when unset), an exit
 status and its own log and check row. A nonzero exit, timeout or output on a

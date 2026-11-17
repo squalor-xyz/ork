@@ -470,6 +470,24 @@ func TestSpecCheckFlagsUnrunnableChecks(t *testing.T) {
 	}
 }
 
+// S407: criteria bullets never reach the spec check as Check commands.
+func TestCheckSectionsSkipAcceptanceCriteria(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleSpecCheck
+	raw, _ := json.Marshal([]any{map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "Acceptance criteria:\n- the run prints `friction` once\n\nCommands:\n- `true` exits 0."}}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "- true\n") {
+		t.Error("spec-check brief lacks the command under Commands:")
+	}
+	if strings.Contains(got, "- friction\n") {
+		t.Error("spec-check brief lists a backticked criterion as a Check command")
+	}
+}
+
 func TestGateBriefSplitsCheckCommands(t *testing.T) {
 	t.Run("prose", func(t *testing.T) {
 		in := baseBrief()

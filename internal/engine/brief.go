@@ -410,9 +410,11 @@ type sliceCheckCommand struct {
 
 // sliceCheckCommands shares the backtick splitter with the role briefs.
 // Human and after-land checks remain owned by their existing workflows.
+// Entries after an "Acceptance criteria:" line, up to a "Commands:" line or the
+// end of the section, are prose and add no command (S407, adj 448).
 func sliceCheckCommands(raw string) []sliceCheckCommand {
 	var commands []sliceCheckCommand
-	for _, entry := range checklistEntries(sliceChecklistSections(raw)["Check"]) {
+	for _, entry := range checklistEntries(withoutAcceptanceCriteria(sliceChecklistSections(raw)["Check"])) {
 		if strings.Contains(entry, "HUMAN CHECK") || strings.Contains(entry, "[AFTER LAND]") {
 			continue
 		}
@@ -424,6 +426,27 @@ func sliceCheckCommands(raw string) []sliceCheckCommand {
 		}
 	}
 	return commands
+}
+
+// withoutAcceptanceCriteria drops the lines from an "Acceptance criteria:" line
+// up to the next "Commands:" line (or the end), and the marker lines themselves.
+// A body without the marker comes back unchanged.
+func withoutAcceptanceCriteria(body string) string {
+	var kept []string
+	skip := false
+	for _, line := range strings.Split(body, "\n") {
+		switch strings.TrimSpace(line) {
+		case "Acceptance criteria:":
+			skip = true
+		case "Commands:":
+			skip = false
+		default:
+			if !skip {
+				kept = append(kept, line)
+			}
+		}
+	}
+	return strings.Join(kept, "\n")
 }
 
 type sliceCheck struct {

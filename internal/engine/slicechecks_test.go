@@ -220,6 +220,41 @@ func TestSliceChecksSkipAFlagOnlyEntry(t *testing.T) {
 	}
 }
 
+// requireCheckCommands starts a run on a slice with the given Check body and
+// requires its slice check records to name exactly want, in order, all OK.
+func requireCheckCommands(t *testing.T, body string, want ...string) {
+	t.Helper()
+	h := sliceChecksHarness(t, body)
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	var got []string
+	for _, c := range e.Snapshot().Checks {
+		if !c.Slice {
+			continue // the project's own check row
+		}
+		got = append(got, c.Command)
+		if !c.OK {
+			t.Errorf("check %q is not OK: %+v", c.Command, c)
+		}
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Errorf("check commands = %q, want %q", got, want)
+	}
+}
+
+// S407: bullets under "Acceptance criteria:" are prose, never commands.
+func TestSliceChecksSkipAcceptanceCriteria(t *testing.T) {
+	requireCheckCommands(t, "Acceptance criteria:\n- the run prints `friction` once\n\nCommands:\n- `true` exits 0.", "true")
+}
+
+func TestSliceChecksWithoutCriteriaUnchanged(t *testing.T) {
+	requireCheckCommands(t, "- `true` exits 0.\n- `go vet ./...` exits 0.", "true", "go vet ./...")
+}
+
+func TestSliceChecksCriteriaWithoutCommandsLine(t *testing.T) {
+	requireCheckCommands(t, "- `true` exits 0.\n\nAcceptance criteria:\n- the run prints `friction` once\n- and `nothing-here` too", "true")
+}
+
 func TestSliceChecksRepeatOnlyAfterProductChanges(t *testing.T) {
 	for _, name := range []string{"docs/guide.md", ".slicer/extra", "product.go", "internal/roles/prompts/gate.md", "CHANGELOG.md", "decisions/example.txt"} {
 		t.Run(name, func(t *testing.T) {
