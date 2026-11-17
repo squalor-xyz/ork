@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/slicercli"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 func TestPipelineLineMarksTheRunningRole(t *testing.T) {
@@ -170,6 +171,80 @@ func TestRecentSectionListsRunsEndedWithinTheHour(t *testing.T) {
 	h.now = h.now.Add(time.Hour)
 	if len(h.m.recentRows()) != 0 {
 		t.Fatal("render clock not applied")
+	}
+}
+
+// recentOutcomeHarness holds four ended runs within the hour: pass, fail,
+// stopped, and a pass that ork landed (S390, adj 418).
+func recentOutcomeHarness(t *testing.T) *harness {
+	t.Helper()
+	h := newHarness(t, proj("ork", false))
+	s := snap(proj("ork", false), nil, nil)
+	for i, run := range []struct{ id, outcome string }{{"pass", "pass"}, {"fail", "fail"}, {"stopped", "stopped"}, {"landed", "pass"}} {
+		minutes := time.Duration(i+1) * time.Minute
+		s.BoardRuns.Value = append(s.BoardRuns.Value, slicercli.RelayRun{ID: run.id, Items: []string{"S97"}, State: "ended", Outcome: run.outcome, BeganAt: h.now.Add(-minutes - 10*time.Minute).Format(time.RFC3339), UpdatedAt: h.now.Add(-minutes).Format(time.RFC3339), Steps: []slicercli.Step{{Role: "implementer"}}})
+	}
+	s.EngineRuns = []source.EngineRun{{ID: "engine-1", Item: "S97", State: "landed", Landed: true, RelayRun: "landed"}}
+	h.src.set(s)
+	h.start()
+	return h
+}
+
+func TestRecentOutcomeGlyphsFollowTheASCIIOption(t *testing.T) {
+	for _, ascii := range []bool{true, false} {
+		want := []string{"✓ pass", "✗ fail", "~ stopped", "✓ landed"}
+		if ascii {
+			want = []string{"+ pass", "x fail", "~ stopped", "+ landed"}
+		}
+		t.Run(fmt.Sprintf("ascii-%t", ascii), func(t *testing.T) {
+			h := recentOutcomeHarness(t)
+			h.m.cfg.ASCII = ascii
+			rows := h.m.recentRows()
+			if len(rows) != len(want) {
+				t.Fatalf("%d rows, want %d: %+v", len(rows), len(want), rows)
+			}
+			for i, r := range rows {
+				if r.cells[0] != want[i] {
+					t.Errorf("row %d outcome %q, want %q", i, r.cells[0], want[i])
+				}
+				if ascii {
+					for j := 0; j < len(r.text); j++ {
+						if r.text[j] >= 128 {
+							t.Errorf("row %d holds a non-ASCII byte: %q", i, r.text)
+							break
+						}
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestRecentASCIIOutcomeKeepsItsColour(t *testing.T) {
+	h := recentOutcomeHarness(t)
+	h.m.cfg.ASCII = true
+	th := NewTheme(false)
+	h.m.cfg.Theme = th
+	rows := h.m.recentRows()
+	if len(rows) != 4 {
+		t.Fatalf("%d rows", len(rows))
+	}
+	for _, c := range []struct {
+		row   ovRow
+		want  string
+		style func() string
+	}{
+		{rows[0], "+ pass", func() string { return th.Passed.Render("+ pass") }},
+		{rows[1], "x fail", func() string { return th.Error.Render("x fail") }},
+		{rows[3], "+ landed", func() string { return th.Passed.Render("+ landed") }},
+	} {
+		line := h.m.rowLine(c.row, false, 3, 80)
+		if got := c.style(); !strings.Contains(line, got) || got == c.want {
+			t.Errorf("row %q is not drawn in its colour %q:\n%q", c.want, got, line)
+		}
+	}
+	if line := h.m.rowLine(rows[2], false, 3, 80); strings.Contains(line, th.Passed.Render("~ stopped")) || strings.Contains(line, th.Error.Render("~ stopped")) {
+		t.Errorf("a stopped run takes a pass or error colour: %q", line)
 	}
 }
 

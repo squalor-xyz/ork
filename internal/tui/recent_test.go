@@ -7,8 +7,29 @@ import (
 	"testing"
 	"time"
 
+	tea "charm.land/bubbletea/v2"
+
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
+
+// With the ASCII option the Recent outcomes are ASCII (S390, adj 418).
+func TestGoldenRecentASCII(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	s := snap(proj("ork", false), nil, nil)
+	for i, run := range []struct{ id, outcome string }{{"pass", "pass"}, {"fail", "fail"}} {
+		minutes := time.Duration(i+5) * time.Minute
+		s.BoardRuns.Value = append(s.BoardRuns.Value, slicercli.RelayRun{ID: run.id, Items: []string{"S97"}, State: "ended", Outcome: run.outcome, BeganAt: h.now.Add(-minutes - 10*time.Minute).Format(time.RFC3339), UpdatedAt: h.now.Add(-minutes).Format(time.RFC3339), Steps: []slicercli.Step{{Role: "implementer"}, {Role: "reviewer"}, {Role: "gate"}}})
+	}
+	h.src.set(s)
+	h.start()
+	h.m.cfg.Theme, h.m.cfg.ASCII = NewTheme(true), true
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	view := h.m.View().Content
+	if !strings.Contains(view, "+ pass") || !strings.Contains(view, "x fail") {
+		t.Fatalf("the Recent rows are not on the Overview:\n%s", view)
+	}
+	checkGolden(t, "recent-80x24-ascii.txt", view)
+}
 
 func TestRecentShowsDashForUnrecordedReviewAndGate(t *testing.T) {
 	for _, tt := range []struct {
