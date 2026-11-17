@@ -99,6 +99,9 @@ func (c Client) ItemDeps(ctx context.Context, root, id string) (*ItemDeps, error
 
 // Show runs `slicer show ID --json --lean --root ROOT`.
 func (c Client) Show(ctx context.Context, root, id string) (*Detail, error) {
+	if err := checkID("item", id); err != nil {
+		return nil, err
+	}
 	var d Detail
 	if err := clirun.RunJSON(ctx, c.call("show", id, "--json", "--lean", "--root", root), &d); err != nil {
 		return nil, err

@@ -308,6 +308,103 @@ func TestItemParkBadParams(t *testing.T) {
 		})
 	}
 }
+
+func TestItemParkUndoesAParkRacedByARunStart(t *testing.T) {
+	d, store, p := runDaemon(t, nil,
+		clitest.Route{Tool: "slicer", Args: []string{"park"}, Prefix: true, Stdout: `{}`},
+		clitest.Route{Tool: "slicer", Args: []string{"unpark"}, Prefix: true, Stdout: `{}`},
+	)
+	parkWriteHook = func() {
+		if _, err := store.Create(runrec.Record{ID: "run-late", Project: "p", Item: "S12", State: "implement"}); err != nil {
+			t.Error(err)
+		}
+	}
+	t.Cleanup(func() { parkWriteHook = nil })
+	_, err := d.handle(context.Background(), "item.park", json.RawMessage(`{"project":"p","item":"S12"}`))
+	e := ipc.ErrorOf(err)
+	if e == nil || e.Code != CodeRefused {
+		t.Fatalf("code %v", err)
+	}
+	if e.Message != "Cannot park S12: run run-late is unfinished" {
+		t.Fatalf("message %q", e.Message)
+	}
+	calls := lastFake.CallsTo("slicer")
+	wantPark := []string{"park", "S12", "--render", "--json", "--root", p.Path}
+	wantUnpark := []string{"unpark", "S12", "--render", "--json", "--root", p.Path}
+	if len(calls) != 2 || !reflect.DeepEqual(calls[0].Args, wantPark) || !reflect.DeepEqual(calls[1].Args, wantUnpark) {
+		t.Fatalf("calls %v", calls)
+	}
+}
+
+func TestItemParkReportsAFailedUndo(t *testing.T) {
+	d, store, p := runDaemon(t, nil,
+		clitest.Route{Tool: "slicer", Args: []string{"park"}, Prefix: true, Stdout: `{}`},
+		clitest.Route{Tool: "slicer", Args: []string{"unpark"}, Prefix: true, Exit: 1},
+	)
+	parkWriteHook = func() {
+		if _, err := store.Create(runrec.Record{ID: "run-late", Project: "p", Item: "S12", State: "implement"}); err != nil {
+			t.Error(err)
+		}
+	}
+	t.Cleanup(func() { parkWriteHook = nil })
+	_, err := d.handle(context.Background(), "item.park", json.RawMessage(`{"project":"p","item":"S12"}`))
+	e := ipc.ErrorOf(err)
+	if e == nil || e.Code != ipc.CodeInternal {
+		t.Fatalf("code %v", err)
+	}
+	const prefix = "S12 is parked although run run-late is unfinished; slicer unpark failed: "
+	if e.Message == "" || !strings.HasPrefix(e.Message, prefix) {
+		t.Fatalf("message %q", e.Message)
+	}
+	calls := lastFake.CallsTo("slicer")
+	wantPark := []string{"park", "S12", "--render", "--json", "--root", p.Path}
+	wantUnpark := []string{"unpark", "S12", "--render", "--json", "--root", p.Path}
+	if len(calls) != 2 || !reflect.DeepEqual(calls[0].Args, wantPark) || !reflect.DeepEqual(calls[1].Args, wantUnpark) {
+		t.Fatalf("calls %v", calls)
+	}
+}
+
+func TestItemParkWithoutARaceWritesOnce(t *testing.T) {
+	d, _, p := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"park"}, Prefix: true, Stdout: `{}`})
+	parkWriteHook = nil
+	v, err := d.handle(context.Background(), "item.park", json.RawMessage(`{"project":"p","item":"S12"}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := json.Marshal(v)
+	if string(b) != `{"item":"S12"}` {
+		t.Fatalf("result %s", b)
+	}
+	calls := lastFake.CallsTo("slicer")
+	want := []string{"park", "S12", "--render", "--json", "--root", p.Path}
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+		t.Fatalf("calls %v", calls)
+	}
+}
+
+func TestItemHandlersRefuseADashLeadingId(t *testing.T) {
+	for _, tc := range []struct{ name, method, raw string }{
+		{"show", "item.show", `{"project":"p","id":"-x"}`},
+		{"note", "item.note", `{"project":"p","item":"-x","text":"n"}`},
+		{"park", "item.park", `{"project":"p","item":"-x"}`},
+		{"unpark", "item.unpark", `{"project":"p","item":"-x"}`},
+		{"move item", "item.move", `{"project":"p","item":"-x","other":"S2","position":"before"}`},
+		{"move other", "item.move", `{"project":"p","item":"S2","other":"-x","position":"before"}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil)
+			_, err := d.handle(context.Background(), tc.method, json.RawMessage(tc.raw))
+			e := ipc.ErrorOf(err)
+			if e == nil || e.Code != CodeBadParams {
+				t.Fatalf("code %v", err)
+			}
+			if calls := lastFake.CallsTo("slicer"); len(calls) != 0 {
+				t.Fatalf("slicer called: %v", calls)
+			}
+		})
+	}
+}
+
 func TestItemMoveRunsSlicerMove(t *testing.T) {
 	for _, pos := range []string{"before", "after"} {
 		t.Run(pos, func(t *testing.T) {

@@ -22,6 +22,18 @@ import (
 // client sets none.
 const longTimeout = time.Minute
 
+// checkID refuses a blank id, with the message the wrappers already used, and
+// an id that starts with "-" so slicer cannot read it as a flag.
+func checkID(name, id string) error {
+	if strings.TrimSpace(id) == "" {
+		return errors.New(name + " must not be empty")
+	}
+	if strings.HasPrefix(id, "-") {
+		return fmt.Errorf("%s must not start with %q", name, "-")
+	}
+	return nil
+}
+
 func (c Client) longCall(args ...string) clirun.Call {
 	call := c.call(args...)
 	if c.Timeout == 0 {
@@ -56,6 +68,9 @@ func (c Client) UnsetRelayPin(ctx context.Context, root string) error {
 // ShowRaw runs `slicer show ID --json --lean --root ROOT` and returns stdout
 // as printed.
 func (c Client) ShowRaw(ctx context.Context, root, id string) ([]byte, error) {
+	if err := checkID("item", id); err != nil {
+		return nil, err
+	}
 	res, err := clirun.Run(ctx, c.call("show", id, "--json", "--lean", "--root", root))
 	if err != nil {
 		return nil, err
@@ -192,8 +207,8 @@ func (c Client) RelayEnd(ctx context.Context, w runrec.Writer, root, run, outcom
 
 // Note runs `slicer note ID --text TEXT --render --json`.
 func (c Client) Note(ctx context.Context, w runrec.Writer, root, id, text string) error {
-	if strings.TrimSpace(id) == "" {
-		return errors.New("item must not be empty")
+	if err := checkID("item", id); err != nil {
+		return err
 	}
 	if strings.TrimSpace(text) == "" {
 		return errors.New("Note must not be empty")
@@ -632,8 +647,8 @@ func (c Client) AddItem(ctx context.Context, w runrec.Writer, root string, spec 
 
 // Park runs `slicer park ID --render --json`.
 func (c Client) Park(ctx context.Context, w runrec.Writer, root, id string) error {
-	if strings.TrimSpace(id) == "" {
-		return errors.New("item must not be empty")
+	if err := checkID("item", id); err != nil {
+		return err
 	}
 	_, err := c.write(ctx, w, root, "park", id, "--render", "--json")
 	return err
@@ -641,8 +656,8 @@ func (c Client) Park(ctx context.Context, w runrec.Writer, root, id string) erro
 
 // Unpark runs `slicer unpark ID --render --json`.
 func (c Client) Unpark(ctx context.Context, w runrec.Writer, root, id string) error {
-	if strings.TrimSpace(id) == "" {
-		return errors.New("item must not be empty")
+	if err := checkID("item", id); err != nil {
+		return err
 	}
 	_, err := c.write(ctx, w, root, "unpark", id, "--render", "--json")
 	return err
@@ -652,6 +667,12 @@ func (c Client) Unpark(ctx context.Context, w runrec.Writer, root, id string) er
 func (c Client) Move(ctx context.Context, w runrec.Writer, root, id, other, position string) error {
 	if strings.TrimSpace(id) == "" || strings.TrimSpace(other) == "" {
 		return errors.New("item and other must not be empty")
+	}
+	if err := checkID("item", id); err != nil {
+		return err
+	}
+	if err := checkID("other", other); err != nil {
+		return err
 	}
 	if position != "before" && position != "after" {
 		return errors.New("position must be before or after")

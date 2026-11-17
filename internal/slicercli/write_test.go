@@ -726,3 +726,50 @@ func TestEditWrappersRefuseEmptyArguments(t *testing.T) {
 		t.Fatalf("invalid edits called slicer: %v", calls)
 	}
 }
+
+func TestSlicerWrappersRefuseADashLeadingId(t *testing.T) {
+	for _, id := range []string{"-x", "--help", "--root=/tmp"} {
+		t.Run(id, func(t *testing.T) {
+			for _, tc := range []struct {
+				name, want string
+				call       func(c Client, w runrec.Writer) error
+			}{
+				{"Note", `item must not start with "-"`, func(c Client, w runrec.Writer) error {
+					return c.Note(context.Background(), w, root, id, "text")
+				}},
+				{"Park", `item must not start with "-"`, func(c Client, w runrec.Writer) error {
+					return c.Park(context.Background(), w, root, id)
+				}},
+				{"Unpark", `item must not start with "-"`, func(c Client, w runrec.Writer) error {
+					return c.Unpark(context.Background(), w, root, id)
+				}},
+				{"Move id", `item must not start with "-"`, func(c Client, w runrec.Writer) error {
+					return c.Move(context.Background(), w, root, id, "S2", "before")
+				}},
+				{"Move other", `other must not start with "-"`, func(c Client, w runrec.Writer) error {
+					return c.Move(context.Background(), w, root, "S2", id, "after")
+				}},
+				{"Show", `item must not start with "-"`, func(c Client, _ runrec.Writer) error {
+					_, err := c.Show(context.Background(), root, id)
+					return err
+				}},
+				{"ShowRaw", `item must not start with "-"`, func(c Client, _ runrec.Writer) error {
+					_, err := c.ShowRaw(context.Background(), root, id)
+					return err
+				}},
+			} {
+				t.Run(tc.name, func(t *testing.T) {
+					c, fake := client(t)
+					w, _ := writer()
+					err := tc.call(c, w)
+					if err == nil || err.Error() != tc.want {
+						t.Errorf("error %v, want %s", err, tc.want)
+					}
+					if calls := fake.CallsTo("slicer"); len(calls) != 0 {
+						t.Errorf("slicer called: %v", calls)
+					}
+				})
+			}
+		})
+	}
+}
