@@ -21206,7 +21206,9 @@
       "short_title": "Nothing-plus-prose is no finding",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21236,7 +21238,9 @@
       "short_title": "Smaller fixed context for cloud Claude roles",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21266,7 +21270,9 @@
       "short_title": "Direction digest in the brief",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21296,7 +21302,9 @@
       "short_title": "ork runs the finish step",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21551,7 +21559,9 @@
       "short_title": "Lost brief for siblings, FIFO-safe report reads",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21579,7 +21589,9 @@
       "short_title": "Write results, dash values, vendor note",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21607,7 +21619,9 @@
       "short_title": "Report viewer and notes text polish",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21768,7 +21782,9 @@
       "short_title": "Changelog and scope edge tests, doctor wording",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21796,7 +21812,9 @@
       "short_title": "slicer tui hint and restore fixes",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21824,7 +21842,9 @@
       "short_title": "Fix-round goldens, detail wrap, parked count",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21942,7 +21962,9 @@
       "short_title": "Spec answers by label, no piped answers",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21970,7 +21992,9 @@
       "short_title": "ork tracking commit",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [
         {
           "id": "51fbdf92-822f-4410-a521-6d8b462a63e2",
@@ -22014,7 +22038,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S407"
+        "S409"
       ],
       "note_records": [
         {
@@ -22100,12 +22124,12 @@
       "title": "ork retry re-lands a committed run whose landing was blocked",
       "short_title": "ork retry re-lands a committed run whose landing was blocked",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
