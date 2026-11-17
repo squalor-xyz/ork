@@ -1,0 +1,41 @@
+{
+  "id": "S381",
+  "title": "Fix round: a section that opens with nothing is empty",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-12, anchors checked at f48a6154 on 2026-11-17. A reviewer section that says \"nothing\" and then explains what was traced counts as a fix finding, so the run gets a fix round with nothing to fix. Owner decision 2026-11-17 (adj 406, `review.nothing-section`): a section whose first line says nothing or none is empty; later prose is evidence, not a finding; an untagged finding is still a fix finding."
+  ],
+  "depends_note": null,
+  "findings_note": "docs/review-2026-11-12-workflow.md F2: 29 of 65 landed runs ran a fix round with no [fix] tag; at least 12 look like the parser. Decided: adj 406 (review.nothing-section).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "daemon",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** gate reports (`triageGate`); requiring tags on every finding; section (C), which already counts only tagged findings.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence read on 2026-11-12:\n\n- `triage` adds any untagged (A), (B) or (D) section with content to the fix findings (`internal/engine/report.go:530`). `saysNothing` accepts only a body that is the one word (`internal/engine/report.go:661`).\n- `review` sends a whole untagged report to a fix round (`internal/engine/states.go:681`).\n- 7 reviewer-1 reports open every one of (A), (B) and (D) with \"nothing\" and still got a fix round (S103, S129, S236, S259, S291, S292, S293). 6 round-2 implementer reports say nothing was changed."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/report.go:506-570`\n- `internal/engine/report.go:636-664`\n- `internal/engine/report_test.go`\n- `internal/engine/states.go:681`\n- `internal/engine/engine_test.go`\n- `internal/roles/prompts/reviewer.md`\n- `internal/roles/prompts/ui.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestTriageNothingThenProseIsEmpty`: sections (A), (B) and (D) each \"nothing\" plus a paragraph give no fix finding and no shape error. Cases: `nothing`, `Nothing.`, `**none**`, and the word on the heading line.\n- `TestTriageNothingThenTaggedFindingKeepsTheFinding`: a section that opens with nothing and later holds a `[fix]` line keeps that finding.\n- `TestTriageUntaggedFindingIsStillFix`: an untagged section that does not open with nothing is a fix finding, as today.\n- `TestTriageNothingAsFirstWordOfASentenceIsAFinding`: \"Nothing checks the error path.\" is content, not an empty section.\n- `TestReviewSkipsFixRoundOnNothingProse`: the run goes from review to the gate with no implementer round.\n- `TestSavedReportsTriage`: the fixtures from step 1 give the expected fix or no-fix result."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Read the reviewer-1 and ui-1 reports of the runs named in Why with `ork show RUN NAME` and save 6 as fixtures under `internal/engine/testdata/` (3 with nothing-plus-prose, 3 with real untagged findings), report text only.\n2. In `content`, a body whose first non-blank line, on its own, says nothing or none is empty. A tagged finding later in the section still counts.\n3. Prompts: say that evidence after \"nothing\" is allowed and is not a finding, and that a finding must not follow it.\n4. Docs (*proposed*): `docs/design.md` review section cites adj 406. CHANGELOG.md: one bullet."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- A reviewer or UI report whose (A), (B) and (D) sections each open with a line that says nothing or none, with any prose after it and no tag, starts no fix round; the run goes to the gate.\n- A `[fix]` finding anywhere in such a section still starts a fix round with that finding.\n- An untagged section that does not open with nothing still starts a fix round, as today.\n- A sentence that only begins with the word nothing is still a finding.\n- A blank section is still a shape error.\n- The reviewer and UI prompts say that evidence may follow \"nothing\".\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine -run 'TriageNothing|TriageUntagged|ReviewSkipsFixRound|SavedReportsTriage' -v` exits 0 and lists the six tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

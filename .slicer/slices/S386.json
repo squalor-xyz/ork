@@ -1,0 +1,41 @@
+{
+  "id": "S386",
+  "title": "ork stats: usage, exits and fix-round causes per role and model",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-12, anchors checked at f48a6154 on 2026-11-17. `ork stats` prints slicer's time statistics. ork's own run records hold tokens, cost, exits and findings, and no command adds them up."
+  ],
+  "depends_note": null,
+  "findings_note": "docs/review-2026-11-12-workflow.md F7: the review needed four scripts over ork status --json and 190 ork show calls.",
+  "size": "M",
+  "flags": [],
+  "trees_note": "cli, daemon",
+  "trees_plural": true,
+  "boundary": "**Not in this slice:** a TUI view; the outer session's tokens; changes to slicer's statistics.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence:\n\n- `internal/cli/stats.go:16-70` prints only `slicercli.RelayStats`.\n- The 2026-11-12 review computed, by script: tokens and cost per role, vendor and model; non-ok exits; rounds per run; runs whose fix round had no fix finding; finding kinds per role.\n- The trial review asked to keep measuring (`docs/review-2026-10-26-orchestration-trial.md`, O4).\n\nNo open owner question on scope. The text layout goes through the UI pass."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/stats.go:16-70`\n- `internal/cli/stats_test.go`\n- `internal/cli/help.go`\n- `internal/daemon/runs.go`\n- `internal/daemon/wire.go`\n- `docs/guide.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestStatsUsagePerRoleAndModel`: three recorded runs give steps, tokens, cost and role time per role, vendor and model.\n- `TestStatsUsageCountsExits`: non-ok exits are counted per role, vendor and exit class.\n- `TestStatsUsageCountsEmptyFixRounds`: a run whose round-1 reports had no fix finding and that ran round 2 is counted.\n- `TestStatsUsageCountsFindingKinds`: fix, owner and later findings are counted per role.\n- `TestStatsUsageJSON`: `--json` carries the same numbers.\n- `TestStatsUsageSince`: `--since DATE` leaves earlier runs out.\n- `TestStatsUsageUnknownCostIsADash`: a vendor that reports no cost shows `-`, not `$0.00`."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Daemon: one read that folds the run records into the totals (no report text on the wire).\n2. CLI: `ork stats [PROJECT] --usage [--since DATE] [--json]` (*proposed*). Without `--usage` the output does not change.\n3. Docs (*proposed*): the guide's command list and `docs/design.md`. CHANGELOG.md: one bullet."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- `ork stats P --usage` prints, per role, vendor and model: steps, tokens, cost and role time; then non-ok exits per role, vendor and class; rounds per run; the count of runs whose fix round followed no fix finding; and finding kinds per role.\n- Cost is `-` for a vendor that reports none.\n- `--since DATE` and `--json` work with `--usage`; the JSON holds every number the text shows.\n- `ork stats P` without `--usage` prints what it prints today.\n- The text fits 80 columns.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/cli ./internal/daemon -run 'StatsUsage' -v` exits 0 and lists the seven tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "S382",
+  "title": "Cloud Claude roles: a smaller fixed context",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-12, anchors checked at f48a6154 on 2026-11-17. S360 turned off six unused tools and the slash commands for local roles. Cloud Claude roles read the same unused context on every turn. Owner decision 2026-11-17 (adj 408, `roles.cloud-fixed-context`): cloud Claude roles get the tool list and the slash-command switch only; the UI pass keeps Skill."
+  ],
+  "depends_note": null,
+  "findings_note": "docs/review-2026-11-12-workflow.md F4: S360 measured 30211 to 26692 first-turn tokens (12%), claude-local only; Claude ran 245 role steps in five days. Decided: adj 408 (roles.cloud-fixed-context).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "agent",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** the Bash output cap for cloud roles (the owner chose the tool list only); instruction files and MCP servers, which are measured here and changed nowhere; Codex and Grok roles.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence:\n\n- The S360 note of 2026-11-12: 30,211 first-turn input tokens before, 26,692 after, on cloud haiku.\n- `internal/agent/claude/args.go:85` and `internal/agent/claude/args.go:136` branch on `claude-local`. `TestArgsCloudRoleUnchanged` (`internal/agent/claude/args_test.go:145`) pins the cloud arguments.\n- What fills the other 26.7k tokens is not measured."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/args.go:85`\n- `internal/agent/claude/args.go:136`\n- `internal/agent/claude/args_test.go:145`\n- `internal/daemon/runner_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestArgsCloudRoleTurnsOffUnusedTools`: a cloud write role's args hold `--disallowedTools` with WebFetch, WebSearch, Task, Agent, NotebookEdit and Skill, and `--disable-slash-commands`.\n- `TestArgsCloudReadOnlyRoleTurnsOffUnusedTools`: the same for a cloud reviewer or gate, with its read-only arguments otherwise unchanged.\n- `TestArgsCloudUIPassKeepsSkill`: a cloud UI pass keeps Skill and has no `--disable-slash-commands`.\n- `TestClaudeCloudEnvHasNoBashCap`: a cloud role's environment does not set `BASH_MAX_OUTPUT_LENGTH`.\n- `TestArgsCloudRoleUnchanged` is replaced by the tests above."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Check the tool names against `claude --help` and the stream's `init` event before listing them.\n2. Apply the local tool list and slash-command switch to cloud Claude roles, tests first. Keep the local-only parts (own prompt file, read-only allowlist) local.\n3. Measure a cloud role's first-turn input tokens (prompt \"Reply with one word: ok\", from the ork checkout) before and after, and with the user instruction file, the project instruction file and MCP servers off one at a time. Record each number in the slice notes. Change nothing for them; file what is large as a later note.\n4. Docs (*proposed*): `docs/design.md` cites adj 408. CHANGELOG.md: one bullet."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- Every cloud Claude role except the UI pass starts with `--disallowedTools WebFetch,WebSearch,Task,Agent,NotebookEdit,Skill` and `--disable-slash-commands`.\n- A cloud UI pass keeps Skill and the slash commands, so its design skills still load.\n- A cloud role's Bash output is not capped.\n- claude-local arguments do not change.\n- The slice notes hold the first-turn token count before and after, and the count with each of the three other sources off.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/agent/claude ./internal/daemon -run 'ArgsCloud|ArgsLocal|ClaudeCloudEnv' -v` exits 0 and lists the new tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0.\n- [HUMAN CHECK] Run one size S slice with a Claude implementer and a UI pass: the implementer finishes without asking for a turned-off tool, and the UI pass report names the design skills it loaded."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

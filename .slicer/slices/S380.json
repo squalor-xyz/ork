@@ -1,0 +1,41 @@
+{
+  "id": "S380",
+  "title": "Usage: record a step's own cost and tokens, not the session total",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-12, anchors checked at f48a6154 on 2026-11-17. A resumed Claude session reports its running cost, and a resumed Codex session its running tokens. ork stores each as the step's own value and adds the steps up, so run totals and token budgets are too high."
+  ],
+  "depends_note": null,
+  "findings_note": "docs/review-2026-11-12-workflow.md F1: Claude cost monotonic in 63 of 63 resumed sequences, Codex tokens in 20 of 20; $542 recorded is about $194.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "daemon, agent",
+  "trees_plural": true,
+  "boundary": "**Not in this slice:** rewriting old run records; a cost for Codex or Grok; `ork stats` output.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence read on 2026-11-12 from `ork status --json` (75 runs):\n\n- Claude step costs never decrease inside a run (63 of 63 sequences). S298: $4.75, $6.40, $6.65; the third step ran 10.6 seconds.\n- Codex step tokens never decrease inside a run (20 of 20). S315: 7.5M, 13.8M, 14.6M; the third step ran 20 seconds.\n- Claude tokens and Grok tokens are per step (3 of 63 and 2 of 12 sequences are monotonic).\n- `overBudget` (`internal/engine/round.go:285`) reads the recorded role usage, so a Codex run reaches its token budget early.\n\nThis is inferred from run records. The implementer confirms it with fixtures first. If a vendor's value turns out to be per step, that vendor is left unchanged and the slice notes say so.\n\nNo open owner question."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/stream.go:109`\n- `internal/agent/codex/codex.go:189`\n- `internal/daemon/runner.go:149`\n- `internal/engine/round.go:671`\n- `internal/engine/round.go:746`\n- `internal/engine/watchdog.go:196`\n- `internal/runrec/record.go`\n- `internal/daemon/runs.go:2764`\n- `docs/state.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestResumedClaudeStepRecordsItsOwnCost`: two results of one session with `total_cost_usd` 1.00 then 1.50 record step costs 1.00 and 0.50.\n- `TestResumedCodexStepRecordsItsOwnTokens`: two turns of one session with totals 100 then 250 record step tokens 100 and 150.\n- `TestFreshSessionAfterFallbackStartsFromZero`: a new session id after a fallback records its full value.\n- `TestRunCostSumsStepCosts`: the run total is 1.50, not 2.50.\n- `TestBudgetCountsStepTokens`: a Codex run with session totals 100 then 250 and a token budget of 300 is not over budget.\n- `TestOldRecordIsReadUnchanged`: a record written before this slice loads with the values it holds."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Capture two resumed invocations per vendor (Claude, Codex) as fixtures under `testdata/vendors/`, with prompt and report text and any credential field removed. Record in the slice notes whether each value is a session total.\n2. Keep the session's last recorded total on the role record, keyed by session id (*proposed* fields; `docs/state.md`).\n3. Record the step value as the total minus the session's last total; a new session id starts from zero; a total lower than the last one is taken whole.\n4. Leave old run records as they are.\n5. CHANGELOG.md: one bullet under `## Unreleased`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- A run whose Claude implementer was resumed twice shows a run cost equal to the session's last `total_cost_usd`, not the sum of the three values.\n- A run whose Codex implementer was resumed shows run tokens equal to the session's last total.\n- A fallback to another vendor or a fresh session adds that session's full value.\n- A token budget pauses a run only when the step values add up to it.\n- Run records written by an older build still load and display.\n- The slice notes state, per vendor, what the fixture showed.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine ./internal/daemon ./internal/agent/... -run 'Resumed|FreshSession|RunCostSums|BudgetCountsStep|OldRecordIsRead' -v` exits 0 and lists the six tests.\n- `gofmt -l .` prints nothing.\n- `rg -n 'credential' testdata/vendors` prints no new line.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

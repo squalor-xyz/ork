@@ -1,0 +1,42 @@
+{
+  "id": "S384",
+  "title": "Finish step without a model round",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-12, anchors checked at f48a6154 on 2026-11-17. After the gate passes, ork resumes the implementer to run `slicer note` and `slicer done`. Owner decision 2026-11-17 (adj 407, `engine.finish-runner`): ork runs both commands, with the note text from an `Outcome:` line in the implementer's last report. adj 81 (`engine.finish-order`) keeps the order: finish, then commit.",
+    "This item waits on slicer's item \"Relay contract: an engine may run the closing note and finish step\" (key `ork-wfr-finish-contract` in the slicer project), which adds the rule in relay v13."
+  ],
+  "depends_note": null,
+  "findings_note": "docs/review-2026-11-12-workflow.md F3: 65 finish steps, median 12 s, 56M Claude tokens; S315's finish step failed on Codex credits and cost a gate and an implementer round. Decided: adj 407 (engine.finish-runner).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "daemon",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** split parts and slivers; the landing steps after the commit; any change for a project on relay v11 or v12.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence:\n\n- `finish` builds a brief of two commands and runs a role round (`internal/engine/states.go:1225-1262`).\n- 65 finish steps in five days, median 12 seconds; each Claude resume reads the session again (51 steps, 56M tokens).\n- The step can fail as any role can (S315).\n- The contract's Conformance section says a program meets each obligation in its own code, and other parts say the implementer runs the closing note and finish step (`slicer ai relay`). v13 settles which holds for an engine."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/states.go:1225-1262`\n- `internal/engine/report.go`\n- `internal/engine/report_test.go`\n- `internal/engine/engine_test.go`\n- `internal/engine/contract_v12_test.go`\n- `internal/slicercli/contract.go`\n- `internal/slicercli/write.go`\n- `internal/roles/prompts/implementer.md`\n- `docs/design.md`\n- `docs/boundaries.md`\n- `AGENTS.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestContractV13IsAccepted`: a project on relay v13 passes the contract check; v11 and v12 still pass.\n- `TestFinishRunsSlicerWithoutARole`: on v13, after approval the fake slicer sees the note and the done call, in that order, before the commit, and the runner sees no round.\n- `TestFinishUsesTheOutcomeLine`: the note text is the `Outcome:` line of the last accepted implementer report.\n- `TestImplementerReportNeedsOutcomeOnV13`: a v13 implementer report with no `Outcome:` line is a shape error and gets the usual shape retry.\n- `TestFinishHandoffMode`: `implement_finish` handoff runs `slicer handoff`.\n- `TestFinishSlicerFailurePauses`: a failed slicer call pauses the run with slicer's message, and `ork retry` runs the call again.\n- `TestFinishOnOlderContractResumesTheImplementer`: a project pinned to v12 behaves as today."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Start only after the slicer item has landed and `slicer ai relay` prints `Contract: relay v13`. Add v13 to the accepted set (`boundary.contract-set`, adj 326) with its contract test, as v12 was added.\n2. Report shape on v13: an implementer report carries `Outcome:` (one line, the verified outcome). `CheckReport` checks it.\n3. In `finish`, on v13, run `slicer note` and then `slicer done` or `slicer handoff` through `slicercli`, in the worktree, with the run's owner name. A failed call pauses.\n4. Keep the role path for v11 and v12.\n5. Implementer prompt: write the `Outcome:` line; do not run the closing note or the finish step on v13.\n6. Docs (*proposed*): `docs/design.md` finish step cites adj 407; `docs/boundaries.md` names ork as the runner of the step; `AGENTS.md` lists v13. CHANGELOG.md: one bullet."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- On a relay v13 project, a run that passes its gate and is approved writes the closing note and runs the finish step with no implementer round; the run's role list ends at the gate.\n- The closing note's text is the `Outcome:` line of the implementer's last report.\n- The note and the finish step still come before ork's commit (adj 81).\n- A v13 implementer report without `Outcome:` is retried for shape, not accepted.\n- A slicer failure in the finish step pauses the run with slicer's message and resumes with `ork retry`.\n- A project on relay v11 or v12 runs the finish step through the implementer, as today.\n- ork accepts relay v11, v12 and v13.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/engine ./internal/slicercli -run 'Finish|ContractV13|NeedsOutcome' -v` exits 0 and lists the seven tests.\n- `slicer ai relay --root /home/jon/code/squalor-xyz/ork` prints `Contract: relay v13` on its first line.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

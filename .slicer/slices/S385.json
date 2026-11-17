@@ -1,0 +1,41 @@
+{
+  "id": "S385",
+  "title": "Docs citations by symbol, checked by a test",
+  "lead": [
+    "*Proposed.* Drafted 2026-11-12, anchors checked at f48a6154 on 2026-11-17. The guide and the design cite code by line. Lines move with every slice, the test only checks that the line exists, and the reviewer finds the stale ones by reading. Owner decision 2026-11-17 (adj 409, `docs.citation-form`): the two docs cite a path and a symbol with no line number, checked by a test."
+  ],
+  "depends_note": null,
+  "findings_note": "docs/review-2026-11-12-workflow.md F6: (D) Doc accuracy is 33 of 79 reviewer fix findings; 5 of 14 sampled are moved citations. Decided: adj 409 (docs.citation-form).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "docs",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** line anchors in slice specs, which slicer's `refs` command owns; the other files in `docs/`; citations of `.md` files.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "*Proposed.* Evidence:\n\n- `docs/guide.md` and `docs/design.md` hold 66 backticked `path:line` citations at f48a6154.\n- Reviewer findings on moved citations: S132, S215 and three on S219.\n- `TestGuideAndDesignCitationsResolve` (`internal/docscheck/cite_test.go:79`) fails on a missing file or a line outside the file, and nothing else."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/docscheck/cite_test.go`\n- `docs/guide.md`\n- `docs/design.md`\n- `AGENTS.md`\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestSymbolCitationParser`: `internal/cli/wave.go` followed by a backticked symbol in the same parentheses or sentence parses as one citation.\n- `TestSymbolCitationResolves`: it passes when the file contains the symbol as a whole word.\n- `TestSymbolCitationFailsWhenTheSymbolIsGone`: it fails and names the doc file and line.\n- `TestGuideAndDesignHaveNoLineCitationsOfGoFiles`: a `path.go:N` citation in either doc fails and names the line.\n- `TestGuideAndDesignSymbolCitationsResolve`: every symbol citation in the two docs resolves."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Fix the written form first and record it in the slice notes, for example (`internal/cli/wave.go`, `startWave`). The implementer picks the form that needs the fewest prose changes and keeps it uniform.\n2. Extend the parser and the tests.\n3. Convert the 66 citations. A citation with no clear symbol (a constant block, a table) cites a string that is unique in the file, or the path only.\n4. `AGENTS.md` Editing: one line on the citation form, citing adj 409. CHANGELOG.md: one bullet."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- `docs/guide.md` and `docs/design.md` hold no `path.go:N` citation.\n- Each code citation in the two docs names a path and a symbol or unique string, and `go test` fails when that symbol is no longer in the file, naming the doc line.\n- A missing file still fails the test.\n- `AGENTS.md` states the citation form.\n- No doc sentence changed meaning; the diff of the two docs is citations only.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/docscheck -v` exits 0 and lists the five tests.\n- `rg -n '\\.go:[0-9]' docs/guide.md docs/design.md` prints nothing.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` and `adj lint` exit 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
