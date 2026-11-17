@@ -4,12 +4,16 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clitest"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -261,9 +265,10 @@ func TestAGatesToolFeedbackDoesNotChangeTheRun(t *testing.T) {
 		if plain != with || plainRec.State != fbRec.State || plainRec.Round != fbRec.Round || len(plainRec.Findings) != len(fbRec.Findings) {
 			t.Errorf("fail=%v: run differs\n plain %s %s/%d\n with  %s %s/%d", fail, plain, plainRec.State, plainRec.Round, with, fbRec.State, fbRec.Round)
 		}
-		// The failing gate runs twice with the same 2 lines; the record keeps 3.
-		if want := map[bool]int{false: 2, true: 3}[fail]; len(fbRec.ToolFeedback) != want {
-			t.Errorf("fail=%v: recorded %+v", fail, fbRec.ToolFeedback)
+		// The failing gate runs twice with the same 2 lines; the repeat has the
+		// same keys (S387, adj 414), so the record keeps 2 either way.
+		if len(fbRec.ToolFeedback) != 2 {
+			t.Errorf("fail=%v: recorded %d entries, want 2: %+v", fail, len(fbRec.ToolFeedback), fbRec.ToolFeedback)
 		}
 	}
 }
@@ -375,6 +380,247 @@ func TestSpecCheckOwnerTextLeavesOutToolFeedback(t *testing.T) {
 	saved, err := os.ReadFile(filepath.Join(cfg.Dir, "spec-check.md"))
 	if err != nil || !strings.Contains(string(saved), line) {
 		t.Fatalf("saved report %q, %v", saved, err)
+	}
+}
+
+// registeredProjects answers Deps.Project from a list, by name without regard
+// to case, as the daemon does.
+func registeredProjects(ps ...registry.Project) func(string) (registry.Project, bool) {
+	return func(name string) (registry.Project, bool) {
+		for _, p := range ps {
+			if strings.EqualFold(p.Name, name) {
+				return p, true
+			}
+		}
+		return registry.Project{}, false
+	}
+}
+
+// The key is stable (S387, proposed; adj 414 feedback.dedupe): the tool and the
+// proposal are normalized, the kind is part of it.
+func TestToolFeedbackKeyIsStableAndNormalized(t *testing.T) {
+	key := regexp.MustCompile(`^tool-feedback-slicer-[0-9a-f]{8}$`)
+	a := ToolFeedbackKey("Slicer", "friction", "Add  a --json flag")
+	b := ToolFeedbackKey("slicer", "friction", "add a --json flag")
+	if !key.MatchString(a) || a != b {
+		t.Fatalf("keys %q and %q, want one tool-feedback-slicer-XXXXXXXX", a, b)
+	}
+	if c := ToolFeedbackKey("slicer", "feature", "add a --json flag"); c == a || !key.MatchString(c) {
+		t.Errorf("another kind gives another key: %q vs %q", c, a)
+	}
+	if c := ToolFeedbackKey("slicer", "friction", "add a --yaml flag"); c == a {
+		t.Errorf("another proposal gives another key: %q", c)
+	}
+	if c := ToolFeedbackKey("my tool", "friction", "p"); !strings.HasPrefix(c, "tool-feedback-my-tool-") {
+		t.Errorf("tool `my tool` gives %q, want slug my-tool", c)
+	}
+	for tool, want := range map[string]string{"Some_CLI v2": "some-cli-v2", "--x--": "x", "!!!": "tool", "Ünï": "n", "go-vet": "go-vet"} {
+		if got := ToolFeedbackSlug(tool); got != want {
+			t.Errorf("slug of %q = %q, want %q", tool, got, want)
+		}
+	}
+}
+
+// The target is the registered project the tool names, else the run's own
+// project with the tool in the title (adj 412 feedback.target).
+func TestToolFeedbackTargetIsTheRegisteredToolElseTheRunsProject(t *testing.T) {
+	ork := registry.Project{Name: "ork", Path: "/p/ork"}
+	slicer := registry.Project{Name: "slicer", Path: "/p/slicer"}
+	lookup := registeredProjects(ork, slicer)
+	fb := func(tool string) ToolFeedback {
+		return ToolFeedback{Role: "reviewer", Tool: tool, Kind: "friction", Proposal: "PROPOSAL", Evidence: "e"}
+	}
+	for name, tc := range map[string]struct {
+		tool, project, title, from string
+		lookup                     func(string) (registry.Project, bool)
+	}{
+		"registered tool":          {"slicer", "slicer", "PROPOSAL", "", lookup},
+		"registered, other case":   {"Slicer", "slicer", "PROPOSAL", "", lookup},
+		"unregistered tool":        {"some-cli", "ork", "some-cli: PROPOSAL", "S04", lookup},
+		"the run's own project":    {"ork", "ork", "PROPOSAL", "S04", lookup},
+		"own project, other case":  {"ORK", "ork", "PROPOSAL", "S04", lookup},
+		"no registry resolves any": {"slicer", "ork", "slicer: PROPOSAL", "S04", nil},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got := ToolFeedbackTarget(ork, "S04", tc.lookup, fb(tc.tool))
+			if got.Project.Name != tc.project || got.Title != tc.title || got.DiscoveredFrom != tc.from {
+				t.Errorf("target %+v, want project %s, title %q, discovered-from %q", got, tc.project, tc.title, tc.from)
+			}
+		})
+	}
+}
+
+// toolFeedbackRun runs a slice to its approval card with the reviewer's
+// reports lines at the end of its first report, ork and slicer registered.
+func toolFeedbackRun(t *testing.T, slicerPath string, opts func(*harnessOpts), lines ...string) (*harness, *Engine) {
+	t.Helper()
+	h := newHarness(t, opts)
+	h.deps.Project = registeredProjects(h.proj, registry.Project{Name: "slicer", Path: slicerPath})
+	reviewerSays(h, cleanReview+strings.Join(lines, "\n")+"\n")
+	return h, h.start()
+}
+
+const (
+	tfFriction = "tool feedback: 1. reviewer | tool: slicer | kind: friction | proposal: Print the run id on start | evidence: had to run ork status"
+	tfFeature  = "tool feedback: 1. reviewer | tool: slicer | kind: feature | proposal: Print the run id on start | evidence: had to run ork status"
+)
+
+func TestToolFeedbackFrictionIsFiledInTheToolsProject(t *testing.T) {
+	slicerPath := filepath.Join(t.TempDir(), "slicer")
+	h, e := toolFeedbackRun(t, slicerPath, fileRoutes("S130"), tfFriction)
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	adds := h.calls("slicer", "add")
+	key := ToolFeedbackKey("slicer", "friction", "Print the run id on start")
+	want := []string{"add", "Print the run id on start", "--key", key, "--render", "--json", "--lean", "--root", slicerPath}
+	if len(adds) != 1 || !reflect.DeepEqual(adds[0], want) {
+		t.Fatalf("slicer add calls %q, want %q", adds, want)
+	}
+	promotes := h.calls("slicer", "promote")
+	if len(promotes) != 1 || len(promotes[0]) != 9 || promotes[0][1] != "S130" || promotes[0][2] != "--file" || promotes[0][8] != slicerPath {
+		t.Fatalf("slicer promote calls %q", promotes)
+	}
+	outline, err := os.ReadFile(promotes[0][3])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if filepath.Dir(promotes[0][3]) != h.store.RunDir(rec.ID) {
+		t.Errorf("the outline is written in the run directory, not %s", promotes[0][3])
+	}
+	for _, want := range []string{"## Print the run id on start", "### Why", "reviewer", rec.ID, "ork", item, "had to run ork status"} {
+		if !strings.Contains(string(outline), want) {
+			t.Errorf("outline lacks %q:\n%s", want, outline)
+		}
+	}
+	if len(rec.ToolFeedback) != 1 {
+		t.Fatalf("entries %+v", rec.ToolFeedback)
+	}
+	if f := rec.ToolFeedback[0]; f.Key != key || f.Filed != "S130" || f.FiledAt.IsZero() || f.FileError != "" {
+		t.Errorf("entry %+v", f)
+	}
+	var logged int
+	for _, w := range rec.Writes {
+		if w.Tool == "slicer" && (w.Argv[0] == "add" || w.Argv[0] == "promote") && w.Root == slicerPath {
+			logged++
+		}
+	}
+	if logged != 2 {
+		t.Errorf("writes[] holds %d filing writes in the tool's project, want 2: %+v", logged, rec.Writes)
+	}
+}
+
+func TestToolFeedbackUnregisteredToolIsFiledInTheRunsProject(t *testing.T) {
+	line := "tool feedback: 1. reviewer | tool: some-cli | kind: deterministic-check | proposal: Check the flag order | evidence: it failed twice"
+	h, e := toolFeedbackRun(t, "/projects/slicer", fileRoutes("S131"), line)
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	adds := h.calls("slicer", "add")
+	key := ToolFeedbackKey("some-cli", "deterministic-check", "Check the flag order")
+	want := []string{"add", "some-cli: Check the flag order", "--discovered-from", item, "--key", key, "--render", "--json", "--lean", "--root", h.P}
+	if len(adds) != 1 || !reflect.DeepEqual(adds[0], want) {
+		t.Fatalf("slicer add calls %q, want %q", adds, want)
+	}
+	if n := len(h.calls("slicer", "promote")); n != 1 {
+		t.Errorf("promote ran %d times", n)
+	}
+	if f := rec.ToolFeedback[0]; f.Filed != "S131" || f.Key != key {
+		t.Errorf("entry %+v", f)
+	}
+}
+
+func TestToolFeedbackFeatureIsOnlyKept(t *testing.T) {
+	h, e := toolFeedbackRun(t, "/projects/slicer", fileRoutes("S130"), tfFeature)
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if n := len(h.calls("slicer", "add")) + len(h.calls("slicer", "promote")); n != 0 {
+		t.Fatalf("a feature entry is not filed; %d filing calls", n)
+	}
+	if len(rec.ToolFeedback) != 1 {
+		t.Fatalf("entries %+v", rec.ToolFeedback)
+	}
+	if f := rec.ToolFeedback[0]; f.Key != ToolFeedbackKey("slicer", "feature", "Print the run id on start") || f.Filed != "" || f.FileError != "" {
+		t.Errorf("entry %+v", f)
+	}
+	raw, err := os.ReadFile(filepath.Join(h.store.RunDir(rec.ID), "run.json"))
+	var disk struct {
+		ToolFeedback []struct {
+			Key   string `json:"key"`
+			Filed string `json:"filed"`
+		} `json:"tool_feedback"`
+	}
+	if err != nil || json.Unmarshal(raw, &disk) != nil || len(disk.ToolFeedback) != 1 || !strings.HasPrefix(disk.ToolFeedback[0].Key, "tool-feedback-slicer-") || disk.ToolFeedback[0].Filed != "" {
+		t.Errorf("run.json tool_feedback %+v (%v), want the entry with its key and no filed", disk.ToolFeedback, err)
+	}
+}
+
+// A filing that fails is advisory: the entry says why, and the run goes on as
+// it does without the line.
+func TestToolFeedbackFilingFailureDoesNotStopTheRun(t *testing.T) {
+	failing := func(o *harnessOpts) {
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Exit: 3, Stderr: "slicer: broken"})
+	}
+	plainH := newHarness(t)
+	reviewerSays(plainH, cleanReview)
+	plain := requireState(t, plainH.start(), runrec.StateAwaitingApproval)
+
+	h, e := toolFeedbackRun(t, "/projects/slicer", failing, tfFriction)
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if rec.Pending != nil || rec.Round != plain.Round || !reflect.DeepEqual(h.runner.roles(), plainH.runner.roles()) {
+		t.Errorf("the run differs: pending %+v, round %d (plain %d), roles %v (plain %v)", rec.Pending, rec.Round, plain.Round, h.runner.roles(), plainH.runner.roles())
+	}
+	if len(rec.ToolFeedback) != 1 {
+		t.Fatalf("entries %+v", rec.ToolFeedback)
+	}
+	if f := rec.ToolFeedback[0]; f.FileError == "" || !strings.Contains(f.FileError, "slicer add") || f.Filed != "" || f.Key == "" {
+		t.Errorf("entry %+v", f)
+	}
+	if n := len(h.calls("slicer", "promote")); n != 0 {
+		t.Errorf("promote ran after a failed add")
+	}
+}
+
+// The same proposal in a second run carries the same key; slicer returns the
+// item it filed before, already specified, so nothing is promoted again.
+func TestToolFeedbackRepeatAcrossRunsReturnsTheSameItem(t *testing.T) {
+	const slicerPath = "/projects/slicer"
+	h1, e1 := toolFeedbackRun(t, slicerPath, fileRoutes("S130"), tfFriction)
+	requireState(t, e1, runrec.StateAwaitingApproval)
+	again := func(o *harnessOpts) {
+		o.routes = append(o.routes,
+			clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"id":"S130","existing":true,"has_slice":true}`},
+			clitest.Route{Tool: "slicer", Args: []string{"promote"}, Prefix: true, Stdout: `{"id":"S130"}`},
+		)
+	}
+	h2, e2 := toolFeedbackRun(t, slicerPath, again, tfFriction)
+	rec := requireState(t, e2, runrec.StateAwaitingApproval)
+	first, second := h1.calls("slicer", "add"), h2.calls("slicer", "add")
+	if len(first) != 1 || len(second) != 1 || !reflect.DeepEqual(first[0], second[0]) {
+		t.Fatalf("the runs send different filings:\n %q\n %q", first, second)
+	}
+	if n := len(h2.calls("slicer", "promote")); n != 0 {
+		t.Errorf("promote ran %d times for an item that has its spec", n)
+	}
+	if f := rec.ToolFeedback[0]; f.Filed != "S130" {
+		t.Errorf("entry %+v", f)
+	}
+}
+
+// A line a role repeats in one run is kept and filed once.
+func TestToolFeedbackRepeatInOneRunIsFiledOnce(t *testing.T) {
+	h := newHarness(t, fileRoutes("S130"))
+	h.deps.Project = registeredProjects(h.proj, registry.Project{Name: "slicer", Path: "/projects/slicer"})
+	h.runner.script = func(req Request, n int) (Result, error) {
+		switch req.Role {
+		case RoleImplementer:
+			return Result{Exit: ExitOK, Session: "sess-impl", Report: implReport + strings.Replace(tfFriction, "reviewer", "implementer", 1) + "\n"}, nil
+		case RoleReviewer:
+			return Result{Exit: ExitOK, Session: "sess-reviewer", Report: cleanReview + tfFriction + "\n"}, nil
+		}
+		return Result{}, nil
+	}
+	rec := requireState(t, h.start(), runrec.StateAwaitingApproval)
+	if len(rec.ToolFeedback) != 1 || rec.ToolFeedback[0].Role != "implementer" {
+		t.Errorf("entries %+v", rec.ToolFeedback)
+	}
+	if n := len(h.calls("slicer", "add")); n != 1 {
+		t.Errorf("slicer add ran %d times", n)
 	}
 }
 

@@ -26,6 +26,29 @@ func TestAddFilesAnItemDiscoveredFromAnother(t *testing.T) {
 	}
 }
 
+// A filing in another project has no item of that project to be discovered
+// from (S387, proposed), so an empty argument leaves the flag out.
+func TestSlicerAddOmitsAnEmptyDiscoveredFrom(t *testing.T) {
+	for name, tc := range map[string]struct {
+		from string
+		args []string
+	}{
+		"empty":   {"", []string{"add", "T", "--key", "k", "--render", "--json", "--lean", "--root", root}},
+		"an item": {"S1", []string{"add", "T", "--discovered-from", "S1", "--key", "k", "--render", "--json", "--lean", "--root", root}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"id":"S130"}`})
+			w, _ := writer()
+			if _, err := c.Add(context.Background(), w, root, "T", tc.from, "k"); err != nil {
+				t.Fatal(err)
+			}
+			if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, tc.args) {
+				t.Fatalf("calls %+v, want args %q", calls, tc.args)
+			}
+		})
+	}
+}
+
 func TestAddCutsALeadingDashFromTheTitle(t *testing.T) {
 	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"id":"S130"}`})
 	w, _ := writer()

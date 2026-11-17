@@ -8,6 +8,7 @@
 package runrec
 
 import (
+	"slices"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/registry"
@@ -392,24 +393,39 @@ const (
 const MaxToolFeedback = 3
 
 // ToolFeedback is one advisory tool feedback entry that a role ended its
-// report with (adj 325). It is not a finding and nothing acts on it.
+// report with (adj 325). It is not a finding. ork files an entry of a safe
+// kind as a slice (S387, *proposed*; adj 410-414): Key is its stable filing
+// identity, Filed the new item's id, FiledAt the time, and FileError why a
+// filing failed. The kind feature is only kept.
 type ToolFeedback struct {
-	Role     string `json:"role"`
-	Tool     string `json:"tool"`
-	Kind     string `json:"kind"` // friction, feature or deterministic-check
-	Proposal string `json:"proposal"`
-	Evidence string `json:"evidence"`
+	Role      string    `json:"role"`
+	Tool      string    `json:"tool"`
+	Kind      string    `json:"kind"` // friction, feature or deterministic-check
+	Proposal  string    `json:"proposal"`
+	Evidence  string    `json:"evidence"`
+	Key       string    `json:"key,omitempty"`
+	Filed     string    `json:"filed,omitempty"`
+	FiledAt   time.Time `json:"filed_at,omitzero"`
+	FileError string    `json:"file_error,omitempty"`
 }
 
 // AddToolFeedback appends entries in the order given and keeps the first
-// MaxToolFeedback of them in all.
-func (r *Record) AddToolFeedback(entries []ToolFeedback) {
+// MaxToolFeedback of them in all. An entry whose key the record already holds
+// is skipped and does not count against the limit; an entry without a key is
+// never a repeat. It returns the entries it added, in order.
+func (r *Record) AddToolFeedback(entries []ToolFeedback) []ToolFeedback {
+	var added []ToolFeedback
 	for _, f := range entries {
 		if len(r.ToolFeedback) >= MaxToolFeedback {
-			return
+			break
+		}
+		if f.Key != "" && slices.ContainsFunc(r.ToolFeedback, func(h ToolFeedback) bool { return h.Key == f.Key }) {
+			continue
 		}
 		r.ToolFeedback = append(r.ToolFeedback, f)
+		added = append(added, f)
 	}
+	return added
 }
 
 // Record is the content of run.json.

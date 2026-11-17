@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 408,
+  "next_id": 409,
   "preamble": "",
   "passes": [
     {
@@ -21357,10 +21357,53 @@
       "id": "S387",
       "title": "File a role's safe tool feedback as a slice",
       "short_title": "Auto-file safe tool feedback",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ca1b29be-490b-411b-989e-998fb7fdae25",
+          "kind": "",
+          "text": "**2026-11-17** — Human checks at approval (S387):\n- later: Run one real slice whose role reports a friction line; the filed item reads as a usable roadmap entry and nothing else in the run changed.",
+          "created_at": "2026-11-17T02:28:24Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "008451ea-d8dd-4b7e-b8c7-3d42cfcde4ec",
+          "kind": "",
+          "text": "**2026-11-17** — Verified: a role's friction or deterministic-check tool feedback is filed as an unscored slice (slicer add --key, then promote with a Why naming role, run, project, item and evidence) in the registered project the tool names, else in the run's own project as 'TOOL: PROPOSAL' with --discovered-from. Entries get a stable key, repeats are skipped, feature entries are only kept, and a failed filing sets file_error without changing the run. go vet, gofmt and go test ./... passed (26 packages); the 11 new tests were red first and each assertion was mutation-checked.",
+          "created_at": "2026-11-17T02:28:28Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "35ad83f9-079c-4bb0-83a6-bbf02274a71e",
+          "kind": "",
+          "text": "**2026-11-17** — Verified: a role's friction or deterministic-check tool feedback is filed as an unscored slice in the registered project the tool names, else in the run's own project as 'TOOL: PROPOSAL' with --discovered-from. Entries get a stable key, repeats are skipped, feature entries are only kept, and a failed filing sets file_error without changing the run. go vet and go test ./... passed in all 26 packages; the new tests were red first and each assertion was mutation-checked.",
+          "created_at": "2026-11-17T12:30:35Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -21378,7 +21421,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -21962,6 +22005,34 @@
         "reason": "",
         "importance": 3,
         "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S408",
+      "title": "ork retry re-lands a committed run whose landing was blocked",
+      "short_title": "ork retry re-lands a committed run whose landing was blocked",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-17: S387 (run ork-20261117-021246-a004) committed, then its landing re-check went red because main's adj records were uncommitted (orchestrator error, fixed in 037800d8). landBlocked (internal/engine/land.go:262-266) stopped the run after its one land fix; NotResumable (internal/engine/resume.go:24-25) refuses retry for any committed run, so the orchestrator merged main, re-ran the checks and fast-forwarded main by hand (dae60175). Owner rule 2026-11-17: deterministic work runs as code.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }

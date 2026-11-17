@@ -489,10 +489,16 @@ type Added struct {
 // Add runs `slicer add TITLE --discovered-from ID --key KEY --render --json
 // --lean --root ROOT`. The key is the filing identity: a retry returns the
 // item the first call filed. A leading dash is cut from the title so that
-// slicer does not read it as a flag.
+// slicer does not read it as a flag. An empty discoveredFrom leaves the flag
+// out (S387, *proposed*): an item in another project has no item of that
+// project to be discovered from.
 func (c Client) Add(ctx context.Context, w runrec.Writer, root, title, discoveredFrom, key string) (*Added, error) {
 	title = strings.TrimLeft(title, "- ")
-	res, err := c.write(ctx, w, root, "add", title, "--discovered-from", discoveredFrom, "--key", key, "--render", "--json", "--lean")
+	argv := []string{"add", title}
+	if discoveredFrom != "" {
+		argv = append(argv, "--discovered-from", discoveredFrom)
+	}
+	res, err := c.write(ctx, w, root, append(argv, "--key", key, "--render", "--json", "--lean")...)
 	if err != nil {
 		return nil, err
 	}

@@ -988,9 +988,19 @@ func (e *Engine) routeReport(r round, rep *Report, tri *Triaged, findings, text,
 	// or fix round carries them.
 	text, _ = splitToolFeedback(r.role, text)
 	if len(rep.ToolFeedback) > 0 {
-		if err := e.run.Update(func(rr *runrec.Record) { rr.AddToolFeedback(rep.ToolFeedback) }); err != nil {
+		// Each entry gets its stable key; an entry whose key the run holds is
+		// not added again, so a repeat is filed once (S387, *proposed*).
+		entries := make([]ToolFeedback, len(rep.ToolFeedback))
+		for i, f := range rep.ToolFeedback {
+			f.Key = ToolFeedbackKey(f.Tool, f.Kind, f.Proposal)
+			entries[i] = f
+		}
+		var added []ToolFeedback
+		if err := e.run.Update(func(rr *runrec.Record) { added = rr.AddToolFeedback(entries) }); err != nil {
 			return outcome{}, err
 		}
+		// Filing is advisory and its failure never reaches the round.
+		e.fileToolFeedback(added)
 	}
 	if rep.Question != "" {
 		err := e.run.Update(func(rr *runrec.Record) {

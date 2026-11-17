@@ -1213,6 +1213,40 @@ func TestCheckRecordAttemptsAndFlakyAreOmittedWhenAbsent(t *testing.T) {
 	}
 }
 
+// An entry whose key the record already holds is skipped (S387, proposed; adj
+// 414 feedback.dedupe). A skipped entry does not count against the cap, the
+// entries added come back in order, and an entry without a key is never a
+// repeat of another.
+func TestAddToolFeedbackSkipsARepeatedKey(t *testing.T) {
+	var r Record
+	entry := func(key, proposal string) ToolFeedback {
+		return ToolFeedback{Role: "reviewer", Tool: "slicer", Kind: "friction", Proposal: proposal, Evidence: "e", Key: key}
+	}
+	added := r.AddToolFeedback([]ToolFeedback{entry("k1", "one"), entry("k1", "one again"), entry("k2", "two")})
+	var got, gotAdded []string
+	for _, f := range r.ToolFeedback {
+		got = append(got, f.Proposal)
+	}
+	for _, f := range added {
+		gotAdded = append(gotAdded, f.Proposal)
+	}
+	if want := []string{"one", "two"}; !reflect.DeepEqual(got, want) || !reflect.DeepEqual(gotAdded, want) {
+		t.Fatalf("kept %v, added %v, want %v", got, gotAdded, want)
+	}
+	// A repeat in a later call is skipped too, and frees no room.
+	if more := r.AddToolFeedback([]ToolFeedback{entry("k2", "two later"), entry("k3", "three"), entry("k4", "four")}); len(more) != 1 || more[0].Proposal != "three" {
+		t.Fatalf("added %+v, want only three (a repeat is skipped, the cap is 3)", more)
+	}
+	if len(r.ToolFeedback) != 3 {
+		t.Fatalf("kept %+v", r.ToolFeedback)
+	}
+	var plain Record
+	plain.AddToolFeedback([]ToolFeedback{entry("", "a"), entry("", "b")})
+	if len(plain.ToolFeedback) != 2 {
+		t.Fatalf("entries without a key repeat nothing: %+v", plain.ToolFeedback)
+	}
+}
+
 // A run keeps at most 3 tool feedback entries, in the order they came
 // (relay v12, adj 325 relay.tool-feedback).
 func TestAddToolFeedbackKeepsTheFirstThreeInOrder(t *testing.T) {

@@ -20,6 +20,7 @@ Relay-run statistics belong to slicer; ork only displays them through `slicer re
 | Spec check verdicts (S116) | ork keeps them only as an ephemeral, in-memory job cache in the daemon, each tied to a fingerprint of the slice's spec; a restart asks again. They are not a durable record: slicer owns the spec, and the owner's answers are written into it with `slicer edit --append` (and into adj for keyed questions). The one thing ork stores is the answers' `Owner decisions` paragraph in the run record of the slice it then starts, because the run's worktree lacks the main checkout's uncommitted edit | `roles.spec-check` (#164); [design.md](design.md), Spec check |
 | Spec drafts (*proposed*, S179) | slicer owns the spec; ork keeps a proposal only in the daemon's memory, tied to the fingerprint of the spec it was made against, and replaces a section with `slicer edit ID --section NAME --text ... --render` only after the owner approves that section; the edit is left uncommitted | `scope.spec-drafting` (decided 2026-11-16, which lifts the wait of `scope.v1` for spec text); [design.md](design.md), Spec check |
 | Slices filed from a review's `later` findings | slicer owns the record; on the owner's confirmation in the pane, ork runs `slicer add TITLE --discovered-from ITEM` and `slicer promote` (a Why section from the finding) in the project, as the writes it logs | `review.finding-kinds` (#163); `slicer add --help` |
+| Slices filed from a role's tool feedback (*proposed*, S387) | slicer owns the record; with no confirmation, ork runs `slicer add TITLE --key KEY` and `slicer promote` (a Why section naming the role, run, project, item and evidence) for each entry of kind `friction` or `deterministic-check`, in the registered project the tool names, else in the run's own project; a `feature` entry is only kept, and a failure is advisory | adj 410 `feedback.auto-file`, 411 `feedback.safe-kinds`, 412 `feedback.target`, 413 `feedback.when`, 414 `feedback.dedupe`; `slicer add --help` |
 | Goals, non-goals, catalog | slicer | `slicer goals`, `slicer catalog` |
 | Owner decisions | adjudicate | `adj` |
 | Global agent guidance | agents repo | `agents/GLOBAL_AGENTS.md` |
@@ -62,7 +63,12 @@ Two things keep them in line
    which ork requires on a v12 contract. Tool feedback is advisory and ork
    owns nothing of it beyond reading the lines from role reports and keeping
    up to 3 in the run record (`relay.tool-feedback`, adj 325); it is no
-   finding and no gate input.
+   finding and no gate input. *Proposed* (S387): ork also files the entries
+   of the safe kinds, `friction` and `deterministic-check`, as unscored slices
+   through slicer, without a confirmation (adj 410 `feedback.auto-file`, 411
+   `feedback.safe-kinds`, 412 `feedback.target`, 413 `feedback.when`, 414
+   `feedback.dedupe`). The slice record stays slicer's; a `feature` entry is
+   only kept.
 
 Where ork's model differs from the contract, because there is no
 orchestrator agent and ork plays both the outer session and the
