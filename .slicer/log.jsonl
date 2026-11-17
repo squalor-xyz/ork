@@ -5084,3 +5084,5 @@
 {"when": "2026-11-17T23:49:58Z", "item": "S416", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-17T23:51:38Z", "item": "S417", "action": "add", "from": "", "to": "open", "note": "let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done"}
 {"when": "2026-11-17T23:51:38Z", "item": "S417", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:54:52Z", "item": "S418", "action": "add", "from": "", "to": "open", "note": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message"}
+{"when": "2026-11-17T23:54:52Z", "item": "S418", "action": "promote", "from": "", "to": "", "note": ""}

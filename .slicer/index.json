@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 418,
+  "next_id": 419,
   "preamble": "",
   "passes": [
     {
@@ -22563,6 +22563,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-88736bf2",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S418",
+      "title": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message",
+      "short_title": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S388",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f702ffae",
         "pass": "v1.1",
         "group": "",
         "reason": "",
