@@ -1704,7 +1704,9 @@ func TestSpecCheckSkipsTheOutVendorsOtherRowsAfterARateLimit(t *testing.T) {
 func TestSpecCheckAllRowsOutRefuses(t *testing.T) {
 	rig := grokFirstRig(t)
 	now := time.Now()
-	grokUntil, claudeUntil := now.Add(time.Hour), now.Add(2*time.Hour)
+	// grok ends within the hour, another day only near midnight. claude ends
+	// two days later, so its end always names the day (S299).
+	grokUntil, claudeUntil := now.Add(time.Hour), now.Add(48*time.Hour)
 	vendors := rig.d.runs.deps.Vendors
 	if err := vendors.MarkOutOwnerUntil("grok", "marked out by the owner", now, grokUntil); err != nil {
 		t.Fatal(err)
@@ -1720,7 +1722,7 @@ func TestSpecCheckAllRowsOutRefuses(t *testing.T) {
 	if got.Code != CodeRefused {
 		t.Fatalf("error %v, want code %s", err, CodeRefused)
 	}
-	for _, want := range []string{"grok is out until " + grokUntil.Local().Format("15:04"), "claude is out until " + claudeUntil.Local().Format("15:04")} {
+	for _, want := range []string{"grok is out until " + vendorUntilText(now, grokUntil), "claude is out until " + vendorUntilText(now, claudeUntil)} {
 		if !strings.Contains(got.Message, want) {
 			t.Errorf("message lacks %q:\n%s", want, got.Message)
 		}

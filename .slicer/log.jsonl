@@ -5028,3 +5028,11 @@
 {"when": "2026-11-17T19:56:30Z", "item": "S408", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-17T20:51:55Z", "item": "S408", "action": "note", "from": "", "to": "", "note": "ork retry re-lands a committed run stopped in land: it reset", "by": "Jon Robbins"}
 {"when": "2026-11-17T20:51:57Z", "item": "S408", "action": "status", "from": "started", "to": "done", "note": "ork retry re-lands a committed run stopped in land: it resets land_fixes and lands when the re-check is green. A red re-check gets one implementer fix round, then stops land-blocked if still red, and the stop names ork retry RUN. Other committed runs, a missing worktree or branch, and --rounds are refused. ork run and ork wave start do not resume that run. At the round cap, retry sets round_limit to round plus 1 and leaves round unchanged. adj 458, adj 459.", "by": "Jon Robbins"}
+{"when": "2026-11-17T21:52:12Z", "item": "S402", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T21:58:51Z", "item": "S402", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T21:58:53Z", "item": "S402", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-17T21:58:55Z", "item": "S402", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T22:07:02Z", "item": "S402", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T22:07:04Z", "item": "S402", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-17T22:52:00Z", "item": "S402", "action": "note", "from": "", "to": "", "note": "A merged stopped run removes its item's spec-check directory", "by": "Jon Robbins"}
+{"when": "2026-11-17T22:52:02Z", "item": "S402", "action": "status", "from": "started", "to": "done", "note": "A merged stopped run removes its item's spec-check directory only when the run has a commit time and no file in the check is newer than that commit. A restart or a git error leaves a later spec check of the same item. A run cleaned while git ran, and a committed run with no commit time, remove nothing.", "by": "Jon Robbins"}
