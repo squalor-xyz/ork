@@ -4963,3 +4963,33 @@
 {"when": "2026-11-17T14:31:20Z", "item": "S410", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-17T14:41:42Z", "item": "S410", "action": "note", "from": "", "to": "", "note": "Cause: the fake slicer/adj/git CLI in internal/clitest had a", "by": "Jon Robbins"}
 {"when": "2026-11-17T14:41:44Z", "item": "S410", "action": "status", "from": "started", "to": "done", "note": "Flaky split part parent fixed at its cause: the fake CLI in internal/clitest now serialises each call (log append and Seq reply under one lock file), so step ids match their place in the call log. Target test passes -count=200 and -race -count=50; go vet, gofmt and go test ./... clean.", "by": "Jon Robbins"}
+{"when": "2026-11-17T19:38:44Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:44Z", "item": "S355", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:44Z", "item": "S374", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:45Z", "item": "S381", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:45Z", "item": "S382", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:45Z", "item": "S383", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:45Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:46Z", "item": "S385", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:46Z", "item": "S386", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:46Z", "item": "S388", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:46Z", "item": "S389", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:47Z", "item": "S390", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:47Z", "item": "S391", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:47Z", "item": "S392", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:47Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:48Z", "item": "S394", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:48Z", "item": "S395", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:48Z", "item": "S396", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:48Z", "item": "S397", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:49Z", "item": "S398", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:49Z", "item": "S399", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:49Z", "item": "S400", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:49Z", "item": "S401", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:49Z", "item": "S402", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:50Z", "item": "S403", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:50Z", "item": "S404", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:50Z", "item": "S405", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:50Z", "item": "S406", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:38:51Z", "item": "S403", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T19:38:51Z", "item": "S406", "action": "note", "from": "", "to": "", "note": "2026-11-17: S409 (owner: fix first, adj 456) makes checkComm", "by": "Jon Robbins"}

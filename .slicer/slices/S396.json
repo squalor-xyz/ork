@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n\n- A run started while 'item.park' is between its check and its write leaves the item unparked, and the call is refused naming the run.\n- No slicer process is started for an item id or other id that starts with '-'; the daemon answers 'bad_params'.\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `go test ./internal/daemon ./internal/slicercli -run 'Park|Dash' -v` lists the new tests as passing.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0.\n- `adj lint` exits 0.\n- `rg -n 'must not start with \"-\"' internal/slicercli` finds the shared helper."
+      "body": "Acceptance criteria:\n\n- A run started while 'item.park' is between its check and its write leaves the item unparked, and the call is refused naming the run.\n- No slicer process is started for an item id or other id that starts with '-'; the daemon answers 'bad_params'.\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `go test ./internal/daemon ./internal/slicercli -run 'Park|Dash' -v` lists the new tests as passing.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0.\n- `rg -n 'must not start with \"-\"' internal/slicercli` finds the shared helper."
     },
     {
       "heading": "Git",

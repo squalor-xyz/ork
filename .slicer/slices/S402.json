@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n\n- After a daemon restart, a spec check of an item made after its merged run's commit stays.\n- After a git error and a later successful merge check, a newer spec check stays.\n- A run first seen not merged, then merged, removes its older spec check once.\n- A run cleaned while git ran removes nothing.\n- A committed run with no commit time removes nothing.\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `go test ./internal/daemon -run 'MergedSpecCleanup|MergedCommitStopped' -v` lists the new tests as passing.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0.\n- `adj lint` exits 0.\n- `rg -n 'Commit.At' internal/daemon/landed.go` finds the guard."
+      "body": "Acceptance criteria:\n\n- After a daemon restart, a spec check of an item made after its merged run's commit stays.\n- After a git error and a later successful merge check, a newer spec check stays.\n- A run first seen not merged, then merged, removes its older spec check once.\n- A run cleaned while git ran removes nothing.\n- A committed run with no commit time removes nothing.\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `go test ./internal/daemon -run 'MergedSpecCleanup|MergedCommitStopped' -v` lists the new tests as passing.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0.\n- `rg -n 'Commit.At' internal/daemon/landed.go` finds the guard."
     },
     {
       "heading": "Git",

@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n\n- 'ork stats P --usage' prints, per role, vendor and model: steps, tokens, cost and role time; then non-ok exits per role, vendor and class; rounds per run; the count of runs whose fix round followed no fix finding; and finding kinds per role.\n- Cost is '-' for a vendor that reports none.\n- '--since DATE' and '--json' work with '--usage'; the JSON holds every number the text shows.\n- 'ork stats P' without '--usage' prints what it prints today.\n- The text fits 80 columns.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/cli ./internal/daemon -run 'StatsUsage' -v` exits 0 and lists the seven tests.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0."
+      "body": "Acceptance criteria:\n\n- 'ork stats P --usage' prints, per role, vendor and model: steps, tokens, cost and role time; then non-ok exits per role, vendor and class; rounds per run; the count of runs whose fix round followed no fix finding; and finding kinds per role.\n- Cost is '-' for a vendor that reports none.\n- '--since DATE' and '--json' work with '--usage'; the JSON holds every number the text shows.\n- 'ork stats P' without '--usage' prints what it prints today.\n- The text fits 80 columns.\n\nCommands:\n\n- `go vet ./... && go test ./...` exits 0.\n- `go test -count=1 ./internal/cli ./internal/daemon -run 'StatsUsage' -v` exits 0 and lists the seven tests.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
     },
     {
       "heading": "Git",
