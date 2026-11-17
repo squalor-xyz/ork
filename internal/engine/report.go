@@ -533,12 +533,13 @@ func triage(text string, lenient bool) (*Triaged, error) {
 			continue
 		}
 		t.Tagged = true
+		nothing := s.opensNothing()
 		var keep []string
 		for _, g := range segs {
 			text := strings.TrimSpace(strings.Join(g.lines, "\n"))
 			switch g.kind {
 			case "":
-				if letter != "C" && text != "" && !saysNothing(text) {
+				if letter != "C" && !nothing && text != "" && !saysNothing(text) {
 					keep = append(keep, text)
 				}
 			case KindFix:
@@ -634,28 +635,40 @@ func triageGate(text string, lenient bool) (*Triaged, error) {
 // content returns the section's findings text, empty when the section says
 // nothing. blank is true when the section holds nothing at all.
 func (s *reviewSection) content() (text string, blank bool) {
+	if s.opensNothing() {
+		return "", false
+	}
 	body := strings.TrimSpace(strings.Join(s.body, "\n"))
 	if body != "" {
-		if saysNothing(body) {
-			return "", false
-		}
 		return body, false
 	}
-	// No body: the heading line may carry the content after a colon, or end in
-	// "nothing".
+	// No body: the heading line may carry the content after a colon.
 	if _, after, ok := strings.Cut(s.remainder, ":"); ok && strings.TrimSpace(strings.Trim(after, "*_` ")) != "" {
-		if saysNothing(after) {
-			return "", false
-		}
 		return strings.TrimSpace(after), false
+	}
+	return "", true
+}
+
+// opensNothing reports whether the section opens by saying nothing or none
+// (adj 406, review.nothing-section): its heading line ends in the word, or the
+// first non-blank line of its body is the word on its own. Prose after it is
+// evidence, not a finding; only a tagged finding after it counts.
+func (s *reviewSection) opensNothing() bool {
+	if _, after, ok := strings.Cut(s.remainder, ":"); ok && saysNothing(after) {
+		return true
 	}
 	words := strings.Fields(strings.ToLower(strings.Trim(s.remainder, "*_`:.- ")))
 	if len(words) > 0 {
 		if last := strings.Trim(words[len(words)-1], "*_`:.-"); last == "nothing" || last == "none" {
-			return "", false
+			return true
 		}
 	}
-	return "", true
+	for _, line := range s.body {
+		if strings.TrimSpace(line) != "" {
+			return saysNothing(line)
+		}
+	}
+	return false
 }
 
 func saysNothing(s string) bool {

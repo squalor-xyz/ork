@@ -21204,12 +21204,41 @@
       "id": "S381",
       "title": "Fix round: a section that opens with nothing is empty",
       "short_title": "Nothing-plus-prose is no finding",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e397e70d-64f5-4c27-86b1-a90f2bb5b7ac",
+          "kind": "",
+          "text": "**2026-11-17** — Fixture provenance (testdata/reports): nofix-reviewer-1.md is the reviewer-1 report of run ork-20261116-155616-1207 and nofix-reviewer-2.md is the reviewer-1 report of run ork-20261117-130402-15ab (run ids as given in the round-1 review); in both, absolute paths are redacted to <worktree>. The other four fixtures (fix-reviewer-1, fix-reviewer-2, fix-ui-1, nofix-ui-1) are synthetic: line 1 of each says so. The runs named in Why were pruned from local state, and no saved report held a real untagged finding.",
+          "created_at": "2026-11-17T23:54:54Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "dbc6b0ce-2dad-4adf-a1b2-08b51ba7cdb6",
+          "kind": "",
+          "text": "**2026-11-17** — Verified: a reviewer or UI section that opens with nothing or none (heading line or first non-blank body line) is empty; prose after it is evidence and starts no fix round, a tagged finding after it still counts, an untagged section that does not open with nothing is still a fix finding, a sentence that only starts with Nothing is still a finding, and a blank section is still a shape error. Reviewer and UI prompts, docs/design.md and CHANGELOG.md updated. go vet, go test ./..., gofmt, slicer check and adj lint pass; six slice tests plus a prompt test pass, each assertion mutation-checked.",
+          "created_at": "2026-11-17T23:57:31Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -21229,7 +21258,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

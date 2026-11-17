@@ -44,7 +44,10 @@ the brief and this prompt disagree, the brief wins; say so in your report.
    ran something) or PLAUSIBLE. Do not report a check you did not run. Do not
    suggest extra scope.
 
-Report these sections, and write "nothing" for an empty one:
+Report these sections, and write "nothing" for an empty one. A section whose first
+line is "nothing" is empty: you may add evidence after it, such as what you traced
+or checked, and ork does not read that as a finding. Put no finding after it, unless
+it carries a `[fix]`, `[owner]` or `[later]` tag.
 
 - (A) Correctness, most severe first. For each finding give the failure scenario and
   a concrete fix.

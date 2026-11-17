@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- S381 (*proposed*, adj 406): A reviewer or UI section that opens with
+  "nothing" or "none" is empty, even with prose after it. The prose is evidence
+  and no longer starts a fix round; a tagged finding after it still counts. The
+  reviewer and UI prompts say so. Docs updated: `docs/design.md`.
 - S402 (*proposed*, adj 405): a merged run removes its item's spec-check
   directory only when the run has a commit time and no file in the check is
   newer than that commit. A restart or a git error no longer removes a later spec check

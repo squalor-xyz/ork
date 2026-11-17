@@ -1170,7 +1170,13 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   with `slicer note ID --text "Review FAIL: ..." --render`, sends the
   implementer back, and the third FAIL stops
   the slice. *Proposed:* review findings are the text of sections (A), (B)
-  and (D) of the reviewer's report when they are not "nothing"; (C) holds
+  and (D) of the reviewer's report when they are not "nothing". A section is
+  "nothing" when its heading line ends in the word or its first non-blank line
+  is the word on its own (`nothing`, `Nothing.`, `**none**`); prose after it is
+  evidence, and only a tagged finding after it counts (adj 406,
+  `review.nothing-section`). A sentence that only starts with the word is a
+  finding, and an untagged section that does not open with it is a fix
+  finding. (C) holds
   notes for later, and starts a fix round only through a finding tagged
   `[fix]`. Only fix findings count (finding kinds above). A report without
   sections (A) and (B) is a shape error.
