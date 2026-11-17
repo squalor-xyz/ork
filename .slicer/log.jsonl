@@ -5062,3 +5062,4 @@
 {"when": "2026-11-17T23:10:23Z", "item": "S415", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-17T23:19:44Z", "item": "S397", "action": "note", "from": "", "to": "", "note": "Landing check is green. S412-S415 were marked as slices with", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:21:01Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Bug evidence 2026-11-17 23:20: S402 and S396 landing re-chec", "by": "Jon Robbins"}
+{"when": "2026-11-17T23:35:47Z", "item": "S411", "action": "retire", "from": "open", "to": "retired", "note": "Fixed on main by S402 (ad3e9c34): TestSpecCheckAllRowsOutRefuses now builds its expected text with vendorUntilText and claude ends 48h out; run ork-20261117-232657-f1b3 stopped as redundant."}
