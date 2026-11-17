@@ -26,5 +26,5 @@
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │  project_busy: project alpha has unfinished runs: run-1
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mgo to project[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mgo to project[m; tab [2mviews[m; + [2madd project[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed never

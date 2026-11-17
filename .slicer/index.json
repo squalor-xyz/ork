@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 409,
+  "next_id": 410,
   "preamble": "",
   "passes": [
     {
@@ -2508,7 +2508,7 @@
       "id": "S66",
       "title": "Mouse support: click tabs, rows and keys (M toggles capture, off at launch)",
       "short_title": "Mouse support: click tabs, rows and keys (M toggles capture, off at launch)",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S12"
@@ -2555,6 +2555,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "efdcd5a5-31f4-4190-85b4-ef3e9a5aad77",
+          "kind": "",
+          "text": "**2026-11-17** — Human checks at approval (S66):\n- later: At 100x30 and 80x24 in a real terminal: select text with the mouse at launch, press `M`, click a tab, a project and a row, press `M` again and select text again.",
+          "created_at": "2026-11-17T12:28:13Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "176f2ee8-f825-40dd-ba76-632f3766d1fd",
+          "kind": "",
+          "text": "**2026-11-17** — Mouse support built and verified: M toggles capture (off at every launch, not saved; MouseModeCellMotion when on; status line shows 'mouse on'; hint 'M mouse' drops first; help lists it). With capture on, a left click on a view tab, a sidebar entry or an Overview, Running or Roadmap row does what tab, the number keys or the row keys do; wheel and other buttons do nothing; clicks do nothing while help, a confirm bar, a run pane or a text field is open (owner: no click acts while a run pane is open). go vet, go test ./..., go test -race ./internal/tui, gofmt, slicer check and adj lint pass; the nine named tests are green and mutation-checked. The real-terminal human check is left to approval (later).",
+          "created_at": "2026-11-17T12:28:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -2574,7 +2602,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -18855,7 +18883,9 @@
       "short_title": "Adopt landed-changed entries",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [
         {
           "id": "1e6ee9e2-2877-43a7-b03f-da495fd36f7d",
@@ -21431,7 +21461,8 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S387"
+        "S387",
+        "S409"
       ],
       "note_records": [],
       "claim": null,
@@ -21490,7 +21521,9 @@
       "short_title": "ASCII Recent glyphs, overlap hang",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21660,7 +21693,9 @@
       "short_title": "Park race and dash-leading ids",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -21688,8 +21723,25 @@
       "short_title": "Safe spec-check question text",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
-      "note_records": [],
+      "depends_on": [
+        "S409"
+      ],
+      "note_records": [
+        {
+          "id": "e841caa2-2f18-4e2c-9f55-bc012f0ebfff",
+          "kind": "",
+          "text": "**2026-11-17** — Owner 2026-11-17 (relay session 8d711f67): wrap the 'needs N answers' header at 80 too; Implement step 4 updated. Waits on S409 (adj 456).",
+          "created_at": "2026-11-17T14:20:51Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -21830,7 +21882,9 @@
       "short_title": "Merged spec cleanup guard",
       "status": "open",
       "has_slice": true,
-      "depends_on": [],
+      "depends_on": [
+        "S409"
+      ],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -22048,6 +22102,34 @@
         "reason": "",
         "importance": 3,
         "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S409",
+      "title": "Check commands: a quoted | is not a pipe, and the implementer may run rg",
+      "short_title": "Runnable Check lines",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-17: the spec check flagged orchestrator-only Check lines on S402, S396, S397, S390, S332 and S388, the same question as adj 249, 255, 256 and 259. Two causes: `checkCommandRunnable` (`internal/engine/brief.go:546-552`) treats any `;|&<>` or backtick or `$` as a compound command even inside quotes, so `go test ./internal/daemon -run 'A|B' -v` is orchestrator-only, while `plainCheckSyntax` (`internal/engine/brief.go:486-522`), which decides what ork itself runs, already accepts a quoted `|`. And `ImplementerPreset` (`internal/engine/perm.go:45-71`) has no `rg` entry, so every `rg -n ...` Check line is orchestrator-only.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "check-runnable-quoted-pipe-rg",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
         "effort": 1,
         "attempts": 0
       }

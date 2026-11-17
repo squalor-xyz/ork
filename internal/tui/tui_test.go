@@ -267,6 +267,446 @@ func names(calls []string) []string {
 
 var four = []registry.Project{proj("slicer", true), proj("adjudicate", true), proj("DataBall", false), proj("agents", true)}
 
+// Mouse support (S66, adj 129): capture is off at launch and `M` turns it on.
+
+// cellOf is the screen cell (column, row) of the first place text starts in the
+// plain view, looking only at columns x0 up to x1 of each row.
+func cellOf(t *testing.T, view, text string, x0, x1 int) (x, y int) {
+	t.Helper()
+	for row, line := range strings.Split(view, "\n") {
+		cells := []rune(line)
+		if x0 >= len(cells) {
+			continue
+		}
+		cells = cells[x0:min(x1, len(cells))]
+		if at := strings.Index(string(cells), text); at >= 0 {
+			return x0 + len([]rune(string(cells)[:at])), row
+		}
+	}
+	t.Fatalf("%q is not drawn in columns %d-%d of:\n%s", text, x0, x1, view)
+	return 0, 0
+}
+
+// clickAt sends a left click at a screen cell.
+func (h *harness) clickAt(x, y int) {
+	h.t.Helper()
+	h.deliver(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseLeft})
+}
+
+// clickOn clicks the first cell of text in columns x0 up to x1 of the view the
+// model draws at its current size.
+func (h *harness) clickOn(text string, x0, x1 int) {
+	h.t.Helper()
+	x, y := cellOf(h.t, plainView(h.m), text, x0, x1)
+	h.clickAt(x, y)
+}
+
+// mouseOn is the harness after `M`, on a 100x30 screen (a sidebar of 28 columns).
+func mouseOn(t *testing.T, h *harness) *harness {
+	t.Helper()
+	h.view()
+	h.send(press("M"))
+	if !h.m.mouse {
+		t.Fatal("M did not turn the mouse on")
+	}
+	return h
+}
+
+func TestMouseOffByDefault(t *testing.T) {
+	h := manyRows(t)
+	if got := h.m.View().MouseMode; got != tea.MouseModeNone {
+		t.Fatalf("a new Model draws MouseMode %v, want none: capture stops text selection", got)
+	}
+	h.send(press("G")) // the window scrolls, so a row is drawn under a "lines above" marker
+	cursor, active, view := h.m.cursor, h.m.active, h.m.view
+	plain := plainView(h.m)
+	for _, c := range []struct {
+		name, text string
+		x0, x1     int
+	}{{"tab", "Roadmap", 20, 80}, {"sidebar project", "slicer", 0, 20}, {"row", "question", 20, 80}} {
+		x, y := cellOf(t, plain, c.text, c.x0, c.x1)
+		h.clickAt(x, y)
+		if h.m.cursor != cursor || h.m.active != active || h.m.view != view {
+			t.Errorf("a click on a %s with the mouse off changed cursor %d->%d, active %d->%d, view %d->%d", c.name, cursor, h.m.cursor, active, h.m.active, view, h.m.view)
+		}
+	}
+	// The same clicks do act once `M` turns the mouse on, so the check above
+	// is the capture switch and not a click that misses.
+	h.send(press("M"))
+	x, y := cellOf(t, plain, "question", 20, 80)
+	h.clickAt(x, y)
+	if h.m.cursor == cursor {
+		t.Errorf("the same click with the mouse on left the cursor on row %d", cursor)
+	}
+}
+
+func TestMouseKeyTogglesCapture(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	h.view()
+	statusOf := func() string {
+		lines := strings.Split(plainView(h.m), "\n")
+		return lines[len(lines)-1]
+	}
+	if strings.Contains(statusOf(), "mouse on") {
+		t.Fatalf("the status line says mouse on at launch: %q", statusOf())
+	}
+	h.send(press("M"))
+	if got := h.m.View().MouseMode; got != tea.MouseModeCellMotion {
+		t.Errorf("after M the view asks for MouseMode %v, want cell motion", got)
+	}
+	if !strings.Contains(statusOf(), "mouse on") {
+		t.Errorf("the status line has no `mouse on` cue: %q", statusOf())
+	}
+	h.send(press("M"))
+	if got := h.m.View().MouseMode; got != tea.MouseModeNone {
+		t.Errorf("after M again the view asks for MouseMode %v, want none", got)
+	}
+	if strings.Contains(statusOf(), "mouse on") {
+		t.Errorf("the cue stays after M turned the mouse off: %q", statusOf())
+	}
+	// The mouse stays off at every launch: a new Model starts off, even after one that had it on.
+	h.send(press("M"))
+	if fresh := newHarness(t, four...); fresh.m.mouse || fresh.m.View().MouseMode != tea.MouseModeNone {
+		t.Error("a new Model starts with the mouse on")
+	}
+}
+
+func TestMouseKeyIsInTheHintAndHelp(t *testing.T) {
+	h := newHarness(t, four...)
+	h.start()
+	h.m.Update(tea.WindowSizeMsg{Width: 200, Height: 30})
+	lines := strings.Split(plainView(h.m), "\n")
+	if hint := lines[len(lines)-2]; !strings.Contains(hint, "M mouse") {
+		t.Errorf("the hint line has no `M mouse`: %q", hint)
+	}
+	// It is the first hint to go: a narrow line drops it before any other.
+	var mouse *hintEntry
+	entries := h.m.contextHints()
+	for i := range entries {
+		if entries[i].b.Help().Key == "M" {
+			mouse = &entries[i]
+		}
+	}
+	if mouse == nil {
+		t.Fatal("the context hints have no M")
+	}
+	for _, e := range entries {
+		if e.b.Help().Key != "M" && e.drop >= mouse.drop {
+			t.Errorf("hint %q drops at %d, not before M mouse (%d)", e.b.Help().Key, e.drop, mouse.drop)
+		}
+	}
+	if help := strings.Join(h.m.helpLines(60, 40), "\n"); !strings.Contains(help, "M mouse") {
+		t.Errorf("the help does not list M mouse:\n%s", help)
+	}
+	// At 100x30 the whole key list still fits and ends with the way out (S164).
+	for _, size := range [][2]int{{100, 30}, {80, 24}} {
+		m := goldenModel(NewTheme(true), size[0], size[1])
+		m.Update(press("?"))
+		checkGolden(t, fmt.Sprintf("mouse-help-%dx%d-mono.txt", size[0], size[1]), m.View().Content)
+	}
+}
+
+func TestClickViewTabSwitchesView(t *testing.T) {
+	for _, name := range []string{"Questions", "Waves", "Roadmap", "Decisions"} {
+		t.Run(name, func(t *testing.T) {
+			keyed := newHarness(t, four...)
+			keyed.start()
+			for i := 0; i < len(views) && views[keyed.m.view].name != name; i++ {
+				keyed.send(press("tab"))
+			}
+			probe := newHarness(t, four...)
+			probe.start()
+			x0, y := cellOf(t, probe.view(), name, 28, 100)
+			// The tab takes the cells of its name and no others: the cells beside it are separator.
+			for _, c := range []struct {
+				cell string
+				x    int
+				hits bool
+			}{{"first", x0, true}, {"last", x0 + len(name) - 1, true}, {"before", x0 - 1, false}, {"after", x0 + len(name), false}} {
+				clicked := newHarness(t, four...)
+				clicked.start()
+				mouseOn(t, clicked)
+				clicked.clickAt(c.x, y)
+				switch {
+				case c.hits && (views[clicked.m.view].name != name || clicked.m.view != keyed.m.view):
+					t.Errorf("a click on the %s cell of the %s tab selected view %d, tab selects %d", c.cell, name, clicked.m.view, keyed.m.view)
+				case !c.hits && clicked.m.view != 0:
+					t.Errorf("a click on the cell %s the %s tab selected view %d", c.cell, name, clicked.m.view)
+				}
+			}
+		})
+	}
+	// A click on the active tab or on the separator between tabs changes nothing.
+	h := newHarness(t, four...)
+	h.start()
+	mouseOn(t, h)
+	h.clickOn("Waves", 28, 100)
+	x, y := cellOf(t, plainView(h.m), "│", 28, 100)
+	h.clickAt(x, y)
+	if h.m.view != wavesView {
+		t.Errorf("a click on a tab separator moved to view %d", h.m.view)
+	}
+	// A screen so narrow that the bar drops its leading space keeps the tabs on their cells.
+	narrow := newHarness(t, four...)
+	narrow.start()
+	mouseOn(t, narrow)
+	narrow.send(tea.WindowSizeMsg{Width: 70, Height: 24})
+	if bar := strings.Split(plainView(narrow.m), "\n")[0]; strings.Contains(bar, "│  Overview") || !strings.Contains(bar, "│Overview") {
+		t.Fatalf("setup: the bar kept its leading space at 70 columns: %q", bar)
+	}
+	narrow.clickOn("Decisions", 20, 70)
+	if narrow.m.view != decisionsView {
+		t.Errorf("a click on the Decisions tab of the 70 column bar selected view %d", narrow.m.view)
+	}
+	// A click on the tab that is already active keeps the view as it is, cursor included.
+	rm := roadmapHarness(t)
+	mouseOn(t, rm)
+	rm.send(press("down"))
+	rm.send(press("down"))
+	rm.clickOn("Roadmap", 28, 100)
+	if rm.m.view != roadmapView || rm.m.roadmapCursor != 2 {
+		t.Errorf("a click on the active tab: view %d, Roadmap cursor %d, want 3 and 2", rm.m.view, rm.m.roadmapCursor)
+	}
+}
+
+func TestClickSidebarProjectSelectsIt(t *testing.T) {
+	for _, c := range []struct {
+		name, key string
+		active    int
+	}{{"adjudicate", "2", 1}, {"DataBall", "3", 2}, {"Needs you", "0", needsEntry}} {
+		t.Run(c.name, func(t *testing.T) {
+			h := newHarness(t, four...)
+			h.start()
+			h.send(press("1")) // so a click on Needs you has somewhere to come from
+			mouseOn(t, h)
+			h.clickOn(c.name, 0, 28)
+			keyed := newHarness(t, four...)
+			keyed.start()
+			keyed.send(press(c.key))
+			if h.m.active != c.active || h.m.active != keyed.m.active {
+				t.Errorf("a click on %s selected %d, key %s selects %d, want %d", c.name, h.m.active, c.key, keyed.m.active, c.active)
+			}
+		})
+	}
+	// The Running entry has no number: a click selects it as ] does.
+	h := newHarness(t, four...)
+	h.start()
+	mouseOn(t, h)
+	h.clickOn("Running", 0, 28)
+	if h.m.active != runningEntry {
+		t.Errorf("a click on Running selected %d", h.m.active)
+	}
+}
+
+// decisionCursor finds the row of a decision titled title: its cursor index.
+func decisionCursor(t *testing.T, m *Model, title string) int {
+	t.Helper()
+	for i, r := range m.cursorRows() {
+		if r.decision != nil && r.decision.Title == title {
+			return i
+		}
+	}
+	t.Fatalf("no row %q", title)
+	return -1
+}
+
+func TestClickOverviewRowMovesCursor(t *testing.T) {
+	t.Run("scrolled window", func(t *testing.T) {
+		h := mouseOn(t, manyRows(t))
+		h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+		h.send(press("G")) // the window scrolls: its first line is a "lines above" marker
+		plain := plainView(h.m)
+		if !strings.Contains(plain, "lines above") {
+			t.Fatalf("setup: the window is not scrolled:\n%s", plain)
+		}
+		last := h.m.cursor
+		for _, n := range []string{"question 37", "question 40"} {
+			if !strings.Contains(plain, n) {
+				continue
+			}
+			h.clickOn(n, 20, 80)
+			if want := decisionCursor(t, h.m, n); h.m.cursor != want {
+				t.Errorf("a click on %q put the cursor on row %d, want row %d (it was on %d)", n, h.m.cursor, want, last)
+			}
+			plain = plainView(h.m)
+		}
+		if h.m.cursor == last {
+			t.Errorf("no click moved the cursor off row %d", last)
+		}
+	})
+	t.Run("rows with command lines", func(t *testing.T) {
+		h := mouseOn(t, readyRowsHarness(t, 24))
+		h.send(press("G"))
+		// Each Ready row has two command lines: a click on the land command of
+		// the row above the cursor selects that row, not the one its line sits beside.
+		cursor := h.m.cursor
+		above := h.m.cursorRows()[cursor-1]
+		h.clickOn("slicer land '"+above.id+"'", 20, 80)
+		if h.m.cursor != cursor-1 {
+			t.Errorf("a click on the land command of %s put the cursor on %d, want %d", above.id, h.m.cursor, cursor-1)
+		}
+	})
+	t.Run("roadmap", func(t *testing.T) {
+		h := mouseOn(t, roadmapHarness(t))
+		h.clickOn("S03", 28, 100)
+		if h.m.roadmapCursor != 2 {
+			t.Errorf("a click on S03 put the Roadmap cursor on %d, want 2", h.m.roadmapCursor)
+		}
+	})
+	t.Run("running entry", func(t *testing.T) {
+		h := runningHarness(t)
+		mouseOn(t, h)
+		h.m.Update(tea.WindowSizeMsg{Width: 160, Height: 30})
+		if len(h.m.cursorRows()) < 2 || h.m.cursor != 0 {
+			t.Fatalf("setup: %d Running rows, cursor %d", len(h.m.cursorRows()), h.m.cursor)
+		}
+		h.send(press("space")) // the first run opens: its detail line sits under it
+		h.send(press("j"))
+		if h.m.cursor != 1 {
+			t.Fatalf("setup: cursor %d, want 1", h.m.cursor)
+		}
+		// A click on the opened detail line of the first run selects that run (its row ends there).
+		x, y := cellOf(t, plainView(h.m), "tokens", 28, 160)
+		h.clickAt(x, y)
+		if h.m.cursor != 0 {
+			t.Errorf("a click on the opened line of the S30 run put the cursor on %d, want 0", h.m.cursor)
+		}
+		x, y = cellOf(t, plainView(h.m), "S41", 28, 160)
+		h.clickAt(x, y)
+		if h.m.cursor != 1 {
+			t.Errorf("a click on the S41 row put the cursor on %d, want 1", h.m.cursor)
+		}
+		x, y = cellOf(t, plainView(h.m), "S30", 28, 160)
+		h.clickAt(x, y)
+		if h.m.cursor != 0 {
+			t.Errorf("a click on the S30 row put the cursor on %d, want 0", h.m.cursor)
+		}
+	})
+	t.Run("run pane open", func(t *testing.T) {
+		// The inline pane (S106) holds the keys, so the rows move nothing under it.
+		h := paneHarness(t, "awaiting-approval", "")
+		mouseOn(t, h)
+		cursor, active := h.m.cursor, h.m.active
+		for _, c := range []struct {
+			text   string
+			x0, x1 int
+		}{{"S22", 28, 100}, {"Roadmap", 28, 100}, {"Running", 0, 28}} {
+			h.clickOn(c.text, c.x0, c.x1)
+			if h.m.pane == nil || h.m.cursor != cursor || h.m.view != 0 || h.m.active != active {
+				t.Errorf("a click on %q with a run pane open: pane open %v, cursor %d (was %d), view %d, active %d (was %d)", c.text, h.m.pane != nil, h.m.cursor, cursor, h.m.view, h.m.active, active)
+			}
+		}
+	})
+}
+
+func TestClickOutsideRowsDoesNothing(t *testing.T) {
+	h := mouseOn(t, manyRows(t))
+	h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.send(press("down"))
+	h.send(press("down"))
+	state := func() string {
+		return fmt.Sprintf("cursor %d active %d view %d status %q help %v pane %v", h.m.cursor, h.m.active, h.m.view, h.m.actionStatus, h.m.showHelp, h.m.pane != nil)
+	}
+	before := state()
+	plain := plainView(h.m)
+	lines := strings.Split(plain, "\n")
+	for _, c := range []struct {
+		name string
+		x, y int
+	}{
+		{"the rule under the tabs", 40, 1},
+		{"a section heading", func() int { x, _ := cellOf(t, plain, "Needs you", 20, 80); return x }(), func() int { _, y := cellOf(t, plain, "Needs you", 20, 80); return y }()},
+		{"the group heading above the first row", func() int { x, _ := cellOf(t, plain, "question 01", 20, 80); return x }(), func() int { _, y := cellOf(t, plain, "question 01", 20, 80); return y - 1 }()},
+		{"the hint line", 30, len(lines) - 2},
+		{"the status line", 30, len(lines) - 1},
+		{"past the last column", 90, 5},
+		{"below the screen", 30, 60},
+	} {
+		h.clickAt(c.x, c.y)
+		if got := state(); got != before {
+			t.Errorf("a click on %s changed %s to %s", c.name, before, got)
+		}
+	}
+	// The wheel and the other buttons do nothing in this slice.
+	x, y := cellOf(t, plain, "question 05", 20, 80)
+	h.deliver(tea.MouseWheelMsg{X: x, Y: y, Button: tea.MouseWheelDown})
+	h.deliver(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseRight})
+	h.deliver(tea.MouseClickMsg{X: x, Y: y, Button: tea.MouseMiddle})
+	if got := state(); got != before {
+		t.Errorf("the wheel or another button changed %s to %s", before, got)
+	}
+}
+
+func TestClickWhileConfirmBarOrHelpOpenChangesNothing(t *testing.T) {
+	t.Run("help", func(t *testing.T) {
+		h := mouseOn(t, manyRows(t))
+		h.send(tea.WindowSizeMsg{Width: 80, Height: 24})
+		h.send(press("?"))
+		plain := plainView(h.m)
+		if !h.m.showHelp {
+			t.Fatal("? did not open the help")
+		}
+		for _, c := range []struct {
+			text   string
+			x0, x1 int
+		}{{"Roadmap", 20, 80}, {"adjudicate", 0, 20}, {"Needs you", 0, 20}} {
+			x, y := cellOf(t, plain, c.text, c.x0, c.x1)
+			h.clickAt(x, y)
+			if !h.m.showHelp || h.m.view != 0 || h.m.active != needsEntry || h.m.cursor != 0 {
+				t.Errorf("a click on %q with the help open: help %v view %d active %d cursor %d", c.text, h.m.showHelp, h.m.view, h.m.active, h.m.cursor)
+			}
+		}
+	})
+	t.Run("confirm bar", func(t *testing.T) {
+		h := actionHarness(t, "awaiting-approval", "")
+		mouseOn(t, h)
+		h.deliver(press("a"))
+		if h.m.confirm == nil {
+			t.Fatal("a did not open the confirm bar")
+		}
+		plain := plainView(h.m)
+		for _, c := range []struct {
+			text   string
+			x0, x1 int
+		}{{"Roadmap", 28, 100}, {"ork", 0, 28}, {"Running", 0, 28}, {"S22", 28, 100}} {
+			x, y := cellOf(t, plain, c.text, c.x0, c.x1)
+			h.clickAt(x, y)
+			if h.m.confirm == nil || h.m.view != 0 || h.m.active != needsEntry {
+				t.Errorf("a click on %q with the confirm bar open: confirm %v view %d active %d", c.text, h.m.confirm != nil, h.m.view, h.m.active)
+			}
+		}
+	})
+}
+
+func TestMouseKeyIgnoredInTextInput(t *testing.T) {
+	t.Run("filter field", func(t *testing.T) {
+		h := newHarness(t, four...)
+		h.start()
+		h.send(press("/"))
+		h.send(press("M"))
+		if h.m.mouse || h.m.filter != "M" {
+			t.Errorf("M in the filter: mouse %v, filter %q, want it typed", h.m.mouse, h.m.filter)
+		}
+	})
+	t.Run("answer field", func(t *testing.T) {
+		h := optionsHarness(t)
+		h.deliver(press("t"))
+		h.deliver(press("M"))
+		if h.m.mouse || h.m.pane.input.Value() != "M" {
+			t.Errorf("M in the answer field: mouse %v, text %q, want it typed", h.m.mouse, h.m.pane.input.Value())
+		}
+	})
+	t.Run("confirm bar", func(t *testing.T) {
+		h := actionHarness(t, "awaiting-approval", "")
+		h.deliver(press("a"))
+		h.deliver(press("M"))
+		if h.m.mouse || h.m.confirm == nil {
+			t.Errorf("M at the confirm bar: mouse %v, confirm %v", h.m.mouse, h.m.confirm != nil)
+		}
+	})
+}
+
 func TestInitFetchesEveryProjectOnce(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()

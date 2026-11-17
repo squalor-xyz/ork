@@ -26,5 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mhide stale[m; E [2mexpand all[m; tab [2mviews[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mhide stale[m; E [2mexpand all[m; tab [2mviews[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
                            │ 3 projects | refreshed 16:42:00

@@ -4893,6 +4893,11 @@
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Git"}
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Owner decisions (2026-11-17, interactive, relay session 8d71", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:20:57Z", "item": "S66", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:26:44Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T12:28:13Z", "item": "S66", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S66):", "by": "Jon Robbins"}
+{"when": "2026-11-17T12:28:20Z", "item": "S66", "action": "note", "from": "", "to": "", "note": "Mouse support built and verified: M toggles capture (off at ", "by": "Jon Robbins"}
+{"when": "2026-11-17T12:28:23Z", "item": "S66", "action": "status", "from": "started", "to": "done", "note": "Mouse support built and verified: M toggles capture (off at every launch); left clicks on tabs, sidebar entries and Overview, Running and Roadmap rows act as their keys; nothing acts while help, a confirm bar, a run pane or a text field is open. Checks pass; real-terminal human check is left to approval.", "by": "Jon Robbins"}
 {"when": "2026-11-17T02:26:44Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-17T02:32:54Z", "item": "S380", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-17T04:01:00Z", "item": "S380", "action": "edit", "from": "", "to": "", "note": "Files"}
@@ -4942,3 +4947,13 @@
 {"when": "2026-11-17T13:06:16Z", "item": "S407", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-17T14:23:23Z", "item": "S407", "action": "note", "from": "", "to": "", "note": "Slice checks now skip the Acceptance criteria list: sliceChe", "by": "Jon Robbins"}
 {"when": "2026-11-17T14:23:25Z", "item": "S407", "action": "status", "from": "started", "to": "done", "note": "Slice checks skip the Acceptance criteria list: backticked words between 'Acceptance criteria:' and 'Commands:' are no longer run before the gate or classified as Check commands; a Check without the marker behaves as before. Verified by 4 new tests (red then green), 3 mutations, vet, gofmt and the full suite, and a clean review.", "by": "Jon Robbins"}
+{"when": "2026-11-17T14:20:34Z", "item": "S409", "action": "add", "from": "", "to": "open", "note": "Check commands: a quoted | is not a pipe, and the implementer may run rg"}
+{"when": "2026-11-17T14:20:34Z", "item": "S402", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:34Z", "item": "S396", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S397", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S390", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S332", "action": "set", "from": "", "to": "", "note": "depends_on -→S409"}
+{"when": "2026-11-17T14:20:35Z", "item": "S388", "action": "set", "from": "", "to": "", "note": "depends_on S387→S409"}
+{"when": "2026-11-17T14:20:51Z", "item": "S388", "action": "set", "from": "", "to": "", "note": "depends_on S409→S387,S409"}
+{"when": "2026-11-17T14:20:51Z", "item": "S397", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T14:20:51Z", "item": "S397", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-17 (relay session 8d711f67): wrap the 'needs N", "by": "Jon Robbins"}

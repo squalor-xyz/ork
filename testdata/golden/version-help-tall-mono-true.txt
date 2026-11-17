@@ -17,7 +17,7 @@
                            │}/{ next/previous group, pass or wave
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears; s hide/show sidebar
-                           │+ add project; - remove active project
+                           │+ add project; - remove active project; M mouse on/off
                            │space expand or collapse a run, or show the stale rows (Running); E e...
                            │space tick item and plan it (Waves); e edit lineup (Waves, launch)
                            │l launch a ready slice (Roadmap) or wave (Waves)

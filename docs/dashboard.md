@@ -15,7 +15,9 @@ owner approves that section.
 - **Needs-you first.** Every screen answers one question first: what needs
   the owner now.
 - **One keystroke** for every common action on any screen.
-  Mouse clicks are off in v1; if S66 builds them, they are opt-in by a flag (`ui.mouse`).
+  Mouse clicks do the same as keys, but only while the owner turns mouse
+  capture on with `M`: it is off at every launch and not saved (S66, `ui.mouse`,
+  adj 129). See Mouse below.
 - **Color is never the only signal.** Every colored state also has a word
   or symbol, and there is a monochrome theme.
 - **Show the command.** Every write shows the exact command it will run.
@@ -198,7 +200,8 @@ scroll keys, then `esc close pane` (or `esc back to card`) at the right end.
 The way out, `esc` in a pane and `? help` elsewhere, never drops, and on the
 main views and their decision and Roadmap item panes `q quit` never drops
 either (S152). When the line
-is too narrow, whole hints drop, lowest priority first: `f file slice`,
+is too narrow, whole hints drop, lowest priority first: `M mouse` (S66; it
+shows on the main views when the line has room), `f file slice`,
 `v renders`, `F fix round`, the check digits, `t retry`, `x stop`, then
 `ctrl+d/u half page`, `p report`, `tab views`, `pgup/pgdown`, `a approve`
 (with `A approve wave`, S222, *proposed*, which shows only when two runs of a
@@ -290,6 +293,39 @@ it carries the rest: `y run; n cancel; e edit lineup; s split`, `y start; n canc
 cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor and
 `s` turns split (a lead and parts, S61, *proposed*) on or off and plans again.
 The help screen shows `? or esc close help; q quit`.
+
+**Mouse (S66).** `M` turns mouse capture on and off. It is off at every launch and ork does not
+save it, so the terminal's own text selection works from the start: the Ready
+row's `slicer land` command (see Overview) is copied by selecting it with the
+mouse. Capture stops that selection, so press `M` again before you copy. While
+capture is on, the status line shows `mouse on` right after the project count,
+and the Bubble Tea view asks for cell-motion mouse reporting. `M mouse` is on
+the hint line of the main views when the line has room, and always on the help's
+`+ add project` line; the hint is the first to drop on a narrow line. `M` is a key like `+`: it works
+wherever no text field or confirm bar owns the keys, and typed into a field it
+stays text.
+
+With capture on, a left click does what the matching key does:
+
+- A view tab is `tab` to that view. A click on the active tab does nothing.
+- A sidebar entry is its number key (`0` Needs you, `1`-`9` a project), or `]`
+  for the Running entry and a project below the ninth.
+- A row of the Overview, the Running entry or the Roadmap list moves the row
+  cursor to that row, as `j` and `k` do. A click on any line of a row counts
+  (its second line, its command lines). The hit cells are those the last screen
+  drew, so a scrolled list, the `lines above` marker and a selected row's extra
+  lines are allowed for.
+
+A click on anything else does nothing: a heading, a rule, the hint and status
+lines, the detail area, a view whose rows do not move (Questions, Waves,
+Decisions) and the cells past the screen. The wheel and the other buttons do
+nothing. A click also does nothing while a confirm bar, the help, a run pane, a
+text field, a launch, a project removal or a spec sitting is open: the keys of
+that state are in charge (`ui.confirm`, adj 98), and a key of the pane would
+not switch view or project either. With a run pane open (S106 draws it under
+its row) no row is hit, so a click never lands on a row the pane moved. The
+Roadmap item pane lists no rows, and its view tabs and sidebar entries act as
+their keys do.
 
 The header shows the version next to ork (ui.version-mark, adj #130).
 Development builds show the first seven revision characters, with `+` for a
@@ -774,7 +810,8 @@ the text column, falling back to a shorter indent when needed to fit.
    whose cleanup failed (see below), across projects, or for the
    selected project. Each row shows the slice and branch, with
    `slicer land 'ID' --branch 'B' --note 'Landed B'` on its own indented line to
-   copy. Ready rows follow Needs you, Running and Recent in the cursor order and
+   copy (select it with the mouse while capture is off; `M` turns capture on
+   and stops that selection, see Mouse). Ready rows follow Needs you, Running and Recent in the cursor order and
    scroll into view with their command lines. The selected row shows full
    commands wrapped in the detail area; other rows keep clipped commands.
    Enter opens the run pane, including its findings and filing action.

@@ -76,6 +76,11 @@ type keyMap struct {
 	Filter      key.Binding
 	Sidebar     key.Binding
 
+	// Mouse turns mouse capture on and off (S66, owner decision 2026-10-30:
+	// M; adj 129: off at every launch). Capture stops the terminal's own text
+	// selection, so the key is one press from selecting text again.
+	Mouse key.Binding
+
 	// SpecDraft opens the draft view of a Roadmap item pane (S179, owner
 	// decision 2026-11-16, ui.spec-draft-key: D). The hint line lists it; the help
 	// view does not.
@@ -132,6 +137,7 @@ func newKeyMap() keyMap {
 		Renders:     key.NewBinding(key.WithKeys("v"), key.WithHelp("v", "view renders")),
 		Filter:      key.NewBinding(key.WithKeys("/"), key.WithHelp("/", "filter projects; esc clears")),
 		Sidebar:     key.NewBinding(key.WithKeys("s"), key.WithHelp("s", "hide/show sidebar")),
+		Mouse:       key.NewBinding(key.WithKeys("M", "shift+m"), key.WithHelp("M", "mouse on/off")),
 		Next:        key.NewBinding(key.WithKeys("]"), key.WithHelp("]", "next project or entry")),
 		Prev:        key.NewBinding(key.WithKeys("["), key.WithHelp("[", "previous project or entry")),
 		TabNext:     key.NewBinding(key.WithKeys("right")),
@@ -168,7 +174,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Park, k.MoveDown, k.MoveUp, k.Matrix, k.MatrixEdit, k.MatrixAdd, k.MatrixRemove, k.MatrixMove, k.MatrixRule, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove, k.Mouse}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Park, k.MoveDown, k.MoveUp, k.Matrix, k.MatrixEdit, k.MatrixAdd, k.MatrixRemove, k.MatrixMove, k.MatrixRule, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -193,6 +199,7 @@ type hintEntry struct {
 // the pane scroll keys'
 // second form and the global tab. Finding actions stay with row keys.
 const (
+	dropMouse      = 21 // M mouse is the first hint to go: it is a toggle, not a row key (S66)
 	dropMove       = 12 // wide Roadmap edits outlast project edits, notes and tab views
 	dropPark       = 11
 	dropMatrixWide = 10 // at 100 columns matrix outlasts tab views, alongside the edit keys
@@ -292,6 +299,7 @@ func (m *Model) contextHints() []hintEntry {
 		l.add(dropTab, short(k.NextView, "tab", "views"))
 		l.add(dropAdd, short(k.Add, "+", "add project"))
 		l.add(dropRemove, offer(m.active >= 0 && !m.projects[m.active].snap.Unavailable, k.Remove, "-", "remove project"))
+		l.add(dropMouse, short(k.Mouse, "M", "mouse"))
 		l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Help, "?", "help"))
 	}
 	switch {
