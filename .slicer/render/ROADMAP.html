@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">410 items · — 69 · done 301 · retired 40</p>
+<p class="summary">410 items · — 68 · done 302 · retired 40</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S385</td><td>Docs cite symbols, not lines</td><td>M</td><td>2</td><td>docs</td><td>docs/review-2026-11-12-workflow.md F6: (D) Doc accuracy is 33 of 79 reviewer fix findings; 5 of 14 sampled are moved citations. Decided: adj 409 (docs.citation-form).</td><td class="status">—</td></tr>
@@ -299,7 +299,7 @@
 <tr class="done"><td>241</td><td>S331</td><td>Auto-land a passing run</td><td>M</td><td>2</td><td></td><td>Every v1.1 landing was a hand approve after VERDICT: PASS under the owner&#x27;s standing rule.</td><td class="status">done</td></tr>
 <tr class="done"><td>242</td><td>S333</td><td>Running view declutter</td><td>M</td><td>2</td><td></td><td>Owner screenshots 2026-11-11 (Running collapsed, E expand all, an open run): start on Running; the view is crowded and expand all repeats each row. Decisions adj 282, 283, 284.</td><td class="status">done</td></tr>
 <tr class="open"><td>243</td><td>S409</td><td>Runnable Check lines</td><td>S</td><td>1</td><td></td><td>2026-11-17: the spec check flagged orchestrator-only Check lines on S402, S396, S397, S390, S332 and S388, the same question as adj 249, 255, 256 and 259. Two causes: `checkCommandRunnable` (`internal/engine/brief.go:546-552`) treats any `;|&amp;&lt;&gt;` or backtick or `$` as a compound command even inside quotes, so `go test ./internal/daemon -run &#x27;A|B&#x27; -v` is orchestrator-only, while `plainCheckSyntax` (`internal/engine/brief.go:486-522`), which decides what ork itself runs, already accepts a quoted `|`. And `ImplementerPreset` (`internal/engine/perm.go:45-71`) has no `rg` entry, so every `rg -n ...` Check line is orchestrator-only.</td><td class="status">—</td></tr>
-<tr class="open"><td>244</td><td>S410</td><td>Flaky split part parent</td><td>S</td><td>1</td><td></td><td>2026-11-17: `TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart` (`internal/engine/split_test.go:539`) failed once in a full `go test ./...` of the S407 worktree and once in 10 runs on main (a409ee76), with &quot;the round 2 part step has parent &quot;9&quot;, want the lead&#x27;s fix step &quot;10&quot;&quot; and parent &quot;6&quot; on another run; 20 further runs passed on each. Not caused by S407.</td><td class="status">—</td></tr>
+<tr class="done"><td>244</td><td>S410</td><td>Flaky split part parent</td><td>S</td><td>1</td><td></td><td>2026-11-17: `TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart` (`internal/engine/split_test.go:539`) failed once in a full `go test ./...` of the S407 worktree and once in 10 runs on main (a409ee76), with &quot;the round 2 part step has parent &quot;9&quot;, want the lead&#x27;s fix step &quot;10&quot;&quot; and parent &quot;6&quot; on another run; 20 further runs passed on each. Not caused by S407.</td><td class="status">done</td></tr>
 </tbody></table>
 <h2>v1.0</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>

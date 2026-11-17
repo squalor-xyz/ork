@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/split_test.go:490-545`\n- `internal/engine/split.go`"
+      "body": "- `internal/clitest/clitest.go`\n- `internal/clitest/clitest_test.go`\n- `internal/engine/split_test.go:498-545`\n- `internal/engine/split.go`"
     },
     {
       "heading": "Failing tests",
-      "body": "- `go test ./internal/engine -run TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart -count=200` reproduces at least one failure before the fix, and passes after it."
+      "body": "- `go test ./internal/clitest -run TestSeqAnswersConcurrentCallsOnceEachInLogOrder` fails before the fix: concurrent calls to a fake get duplicate Seq replies and replies that do not match the call's place in the log.\n- `go test ./internal/engine -run TestLeadFixRoundHandsAFilesFindingsBackToTheOwningPart -count=200` reproduces at least one failure before the fix, and passes after it."
     },
     {
       "heading": "Implement",
