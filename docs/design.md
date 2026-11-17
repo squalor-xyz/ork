@@ -1576,7 +1576,10 @@ The run pane does not add a list of check rows.
 *Proposed (S309):* spec-check and gate briefs split slice Check commands into
 implementer-runnable and orchestrator-only commands, using the implementer's
 resolved allowlist. An environment assignment prefix, an absolute path outside
-the worktree, or an unallowlisted command is orchestrator-only. Spec-check flags
+the worktree, or an unallowlisted command is orchestrator-only. A `;`, `|`,
+`&`, `<` or `>` inside quotes is an argument, so `go test -run 'A|B'` stays
+runnable; unquoted, it makes the command compound and orchestrator-only unless
+an allowlist form names the whole command (S409). Spec-check flags
 these lines so the owner can replace them or assign them to the orchestrator.
 Only backtick spans identify commands; prose bullets without backticks are
 absent from both command lists.

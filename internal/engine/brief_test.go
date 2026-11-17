@@ -519,6 +519,64 @@ func TestGateBriefSplitsCheckCommands(t *testing.T) {
 	}
 }
 
+func TestCheckCommandRunnableQuotedPipe(t *testing.T) {
+	allow, err := ImplementerPreset("go", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const worktree = "/p/.worktrees/S409"
+	for _, tc := range []struct {
+		name, command string
+		runnable      bool
+	}{
+		{"single-quoted pipe", "go test ./internal/daemon -run 'MergedSpecCleanup|MergedCommitStopped' -v", true},
+		{"double-quoted pipe", `go test ./internal/cli -run "SpecQuestion|PromptWraps" -v`, true},
+		{"quoted redirect and semicolon", `go test ./... -run 'A>B;C&D<E'`, true},
+		{"quoted dollar in single quotes", `go test ./... -run 'A$'`, true},
+		{"dollar in double quotes", `go test ./... -run "A$B"`, false},
+		{"backtick in double quotes", "go test ./... -run \"A`x`\"", false},
+		{"unquoted pipe", "go test ./... | tee out", false},
+		{"unquoted and", "go test ./... && rm -rf x", false},
+		{"unquoted semicolon", "go test ./...; make check", false},
+		{"unquoted redirect", "go test ./... > out", false},
+		{"unquoted dollar", "go test ./... $X", false},
+		{"unquoted pipe after quoted pipe", "go test ./... -run 'A|B' | tee out", false},
+		{"unterminated quote", "go test ./... -run 'A|B", false},
+		{"newline", "go test ./...\nrm -rf x", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := checkCommandRunnable(tc.command, worktree, allow); got != tc.runnable {
+				t.Errorf("checkCommandRunnable(%q) = %v, want %v", tc.command, got, tc.runnable)
+			}
+		})
+	}
+	// An allowlist form that names the whole compound command still allows it.
+	if !checkCommandRunnable("go test ./... | tee out", worktree, []string{"Bash(go test ./... | tee out)"}) {
+		t.Error("an explicit whole-command form must allow its compound command")
+	}
+}
+
+// The owner dropped rg from the presets (launch.allowlist-rg, adj 457): an rg
+// Check line stays orchestrator-only, even with a quoted pipe.
+func TestCheckCommandRunnableRgStaysOrchestratorOnly(t *testing.T) {
+	const worktree = "/p/.worktrees/S409"
+	lists := map[string][]string{"default": DefaultImplementerAllowlist("")}
+	for _, name := range PresetNames() {
+		list, err := ImplementerPreset(name, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		lists["preset "+name] = list
+	}
+	for name, list := range lists {
+		for _, command := range []string{`rg -n "adj 416" docs/boundaries.md`, `rg -n 'a|b' docs`} {
+			if checkCommandRunnable(command, worktree, list) {
+				t.Errorf("%s: %q is runnable, want orchestrator-only", name, command)
+			}
+		}
+	}
+}
+
 func TestGatePromptUsesOrkEvidence(t *testing.T) {
 	in := baseBrief()
 	in.Role = RoleGate

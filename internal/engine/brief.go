@@ -484,16 +484,25 @@ func sliceChecks(raw, worktree string) []sliceCheck {
 }
 
 func plainCheckSyntax(command string) bool {
+	return !shellSyntaxOutsideQuotes(command, "|&;<>(){}*?[]~#")
+}
+
+// shellSyntaxOutsideQuotes reports whether command holds shell syntax: a
+// newline, an unquoted character of unquoted, a `$` or backtick outside single
+// quotes, an unterminated quote or a trailing backslash. Single quotes are
+// literal; inside double quotes only `$` and a backtick count. A backslash
+// escapes the next character outside single quotes.
+func shellSyntaxOutsideQuotes(command, unquoted string) bool {
 	var quote byte
 	for i := 0; i < len(command); i++ {
 		c := command[i]
 		if c == '\n' || c == '\r' {
-			return false
+			return true
 		}
 		if c == '\\' && quote != '\'' {
 			i++
 			if i == len(command) {
-				return false
+				return true
 			}
 			continue
 		}
@@ -505,7 +514,7 @@ func plainCheckSyntax(command string) bool {
 			continue
 		}
 		if c == '$' || c == '`' {
-			return false
+			return true
 		}
 		if quote == '"' {
 			continue
@@ -514,11 +523,11 @@ func plainCheckSyntax(command string) bool {
 			quote = c
 			continue
 		}
-		if strings.ContainsRune("|&;<>(){}*?[]~#", rune(c)) {
-			return false
+		if strings.ContainsRune(unquoted, rune(c)) {
+			return true
 		}
 	}
-	return quote == 0
+	return quote != 0
 }
 
 func checkCommandRunnable(command, worktree string, allow []string) bool {
@@ -537,6 +546,8 @@ func checkCommandRunnable(command, worktree string, allow []string) bool {
 			}
 		}
 	}
+	// A quoted ;|&<> is an argument, not shell syntax (S409).
+	compound := shellSyntaxOutsideQuotes(command, ";|&<>")
 	for _, form := range allow {
 		pattern, ok := strings.CutPrefix(form, "Bash(")
 		if !ok || !strings.HasSuffix(pattern, ")") {
@@ -544,10 +555,10 @@ func checkCommandRunnable(command, worktree string, allow []string) bool {
 		}
 		pattern = strings.TrimSuffix(pattern, ")")
 		// A compound command needs an explicit whole-command allowlist form.
-		if strings.ContainsAny(command, ";|&<>\n`$") && !strings.HasPrefix(command, strings.TrimSuffix(pattern, "*")) {
+		if compound && !strings.HasPrefix(command, strings.TrimSuffix(pattern, "*")) {
 			continue
 		}
-		if strings.ContainsAny(command, ";|&<>\n`$") && !strings.ContainsAny(pattern, ";|&<>\n`$") {
+		if compound && !strings.ContainsAny(pattern, ";|&<>\n`$") {
 			continue
 		}
 		expr := "^" + strings.ReplaceAll(regexp.QuoteMeta(pattern), `\*`, ".*") + "$"

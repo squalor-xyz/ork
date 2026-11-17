@@ -4953,3 +4953,14 @@
 {"when": "2026-11-17T14:20:51Z", "item": "S388", "action": "set", "from": "", "to": "", "note": "depends_on S409→S387,S409"}
 {"when": "2026-11-17T14:20:51Z", "item": "S397", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-17T14:20:51Z", "item": "S397", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-17 (relay session 8d711f67): wrap the 'needs N", "by": "Jon Robbins"}
+{"when": "2026-11-17T14:22:05Z", "item": "S409", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T14:25:27Z", "item": "S409", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T19:34:11Z", "item": "S409", "action": "note", "from": "", "to": "", "note": "Review FAIL: The owner's answer in the brief overrides the s", "by": "Jon Robbins"}
+{"when": "2026-11-17T19:39:46Z", "item": "S409", "action": "edit", "from": "", "to": "", "note": "lead"}
+{"when": "2026-11-17T19:39:47Z", "item": "S409", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T19:39:49Z", "item": "S409", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-17T19:39:50Z", "item": "S409", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-17T19:39:52Z", "item": "S409", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T19:39:54Z", "item": "S409", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-17T19:48:50Z", "item": "S409", "action": "note", "from": "", "to": "", "note": "Quote-aware Check classification: checkCommandRunnable now u", "by": "Jon Robbins"}
+{"when": "2026-11-17T19:48:51Z", "item": "S409", "action": "status", "from": "started", "to": "done", "note": "Quote-aware Check classification: a quoted ;|&<> is an argument, so go test -run 'A|B' is implementer-runnable; unquoted pipes, redirects, ; and && stay orchestrator-only. rg is not added to the presets (adj 457). Verified with go vet, go test ./... (26 packages ok) and gofmt.", "by": "Jon Robbins"}
