@@ -5039,3 +5039,4 @@
 {"when": "2026-11-17T22:51:30Z", "item": "S414", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-17T22:51:48Z", "item": "S415", "action": "add", "from": "", "to": "open", "note": "Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt."}
 {"when": "2026-11-17T22:51:48Z", "item": "S415", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:21:01Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Bug evidence 2026-11-17 23:20: S402 and S396 landing re-chec", "by": "Jon Robbins"}
