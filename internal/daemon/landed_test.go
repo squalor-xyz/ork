@@ -69,9 +69,16 @@ func setMerged(d *Daemon, id string, merged *bool) {
 	defer d.runs.mu.Unlock()
 	d.runs.merged[id] = merged
 }
+
+// commitAt is the time committedRun records on the run's commit.
+var commitAt = time.Date(2026, 11, 17, 15, 0, 0, 0, time.UTC)
+
 func committedRun(t *testing.T, store *runrec.Store, p registry.Project, id, state string) {
 	t.Helper()
-	_, e := store.Create(runrec.Record{ID: id, Project: p.Name, Item: "S63", State: state, Branch: "s63", Worktree: p.Path + "/.worktrees/s63"})
+	_, e := store.Create(runrec.Record{
+		ID: id, Project: p.Name, Item: "S63", State: state, Branch: "s63", Worktree: p.Path + "/.worktrees/s63",
+		Commit: &runrec.Commit{SHA: "c1", At: commitAt},
+	})
 	if e != nil {
 		t.Fatal(e)
 	}
@@ -146,10 +153,34 @@ func specCheckDirOfCommittedRun(t *testing.T, d *Daemon, p registry.Project) str
 	if err := writeSpecJSON(filepath.Join(dir, "answers.json"), storedSpecAnswers{Fingerprint: "f", Decisions: "d"}); err != nil {
 		t.Fatal(err)
 	}
+	// Every file the helper writes is dated before the run's commit, so an
+	// existing removal test still sees an old spec check (S402).
+	dateSpecFiles(t, dir, commitAt.Add(-time.Hour))
+	rememberSpecEntry(d, p)
+	return dir
+}
+
+// dateSpecFiles sets the modification time of every file under dir.
+func dateSpecFiles(t *testing.T, dir string, at time.Time) {
+	t.Helper()
+	err := filepath.WalkDir(dir, func(path string, ent os.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if ent.IsDir() {
+			return nil
+		}
+		return os.Chtimes(path, at, at)
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
+func rememberSpecEntry(d *Daemon, p registry.Project) {
 	d.runs.mu.Lock()
 	d.runs.specs[specKey(p.Name, "S63")] = specEntry{fingerprint: "f", ready: true, decisions: "d"}
 	d.runs.mu.Unlock()
-	return dir
 }
 func specCheckState(d *Daemon, p registry.Project, dir string) (dirKept, entryKept bool) {
 	_, err := os.Stat(dir)
@@ -192,6 +223,107 @@ func TestUnmergedOrUnknownCommitStoppedRunKeepsItsSpecCheckDir(t *testing.T) {
 				t.Errorf("exit %d: directory kept %v, entry kept %v; want both kept", exit, dirKept, entryKept)
 			}
 		})
+	}
+}
+
+// A spec check dated after the merged run's commit stays, including on a new
+// daemon whose merge memory is empty (S402).
+func TestMergedSpecCleanupKeepsALaterSpecCheckAfterARestart(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	dir := specCheckDirOfCommittedRun(t, d, p)
+	dateSpecFiles(t, dir, commitAt.Add(time.Hour))
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); !dirKept || !entryKept {
+		t.Fatalf("first daemon: directory kept %v, entry kept %v; want both kept", dirKept, entryKept)
+	}
+	d2 := New(d.cfg)
+	t.Cleanup(d2.cache.Close)
+	t.Cleanup(d2.closeRuns)
+	rememberSpecEntry(d2, p)
+	refreshHead(t, d2, p)
+	if dirKept, entryKept := specCheckState(d2, p, dir); !dirKept || !entryKept {
+		t.Fatalf("restart: directory kept %v, entry kept %v; want both kept", dirKept, entryKept)
+	}
+}
+
+// A newer spec check written after a git error stays when a later pass finds
+// the merge again (S402). The first pass still removes an older check.
+func TestMergedSpecCleanupKeepsALaterSpecCheckAfterAGitError(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	dir := specCheckDirOfCommittedRun(t, d, p)
+	mergeErrorGit(t, d, p, clitest.Reply{Exit: 0}, clitest.Reply{Exit: 2}, clitest.Reply{Exit: 0})
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); dirKept || entryKept {
+		t.Fatalf("first pass: directory kept %v, entry kept %v; want both gone", dirKept, entryKept)
+	}
+	dir = specCheckDirOfCommittedRun(t, d, p)
+	dateSpecFiles(t, dir, commitAt.Add(time.Hour))
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); !dirKept || !entryKept {
+		t.Fatalf("git error: directory kept %v, entry kept %v; want both kept", dirKept, entryKept)
+	}
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); !dirKept || !entryKept {
+		t.Fatalf("third pass: directory kept %v, entry kept %v; want both kept", dirKept, entryKept)
+	}
+}
+
+// A branch first seen unmerged, then merged, removes its older spec check once.
+func TestMergedSpecCleanupOnAFalseToTrueTransition(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 1, "")
+	committedRun(t, s, p, "run", "committed")
+	dir := specCheckDirOfCommittedRun(t, d, p)
+	mergeErrorGit(t, d, p, clitest.Reply{Exit: 1}, clitest.Reply{Exit: 0})
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); !dirKept || !entryKept {
+		t.Fatalf("not merged: directory kept %v, entry kept %v; want both kept", dirKept, entryKept)
+	}
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); dirKept || entryKept {
+		t.Fatalf("merged: directory kept %v, entry kept %v; want both gone", dirKept, entryKept)
+	}
+}
+
+// A run cleaned while git ran is not newly merged, so its spec check stays.
+// The directory is older than the commit, so only that skip keeps it (S402).
+// There is no earlier HEAD refresh: that pass would itself be the finding pass
+// and would remove this directory before the in-flight one.
+func TestMergedSpecCleanupSkipsARunCleanedWhileGitRan(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	committedRun(t, s, p, "run", "committed")
+	dir := specCheckDirOfCommittedRun(t, d, p)
+	blockDir, release := blockedGit(t, d)
+	pass := make(chan struct{})
+	go func() { d.checkMerged(context.Background(), p, "changed"); close(pass) }()
+	waitFor(t, "the merge check started", func() bool {
+		_, err := os.Stat(filepath.Join(blockDir, "started"))
+		return err == nil
+	})
+	if err := d.markCleaned("run"); err != nil {
+		t.Fatal(err)
+	}
+	release()
+	<-pass
+	if dirKept, entryKept := specCheckState(d, p, dir); !dirKept || !entryKept {
+		t.Fatalf("cleaned while git ran: directory kept %v, entry kept %v; want both kept", dirKept, entryKept)
+	}
+}
+
+// A committed run with no commit time is not a signal to remove the spec check.
+func TestMergedSpecCleanupNeedsACommitTime(t *testing.T) {
+	d, s, p, _ := landingDaemon(t, 0, "")
+	if _, err := s.Create(runrec.Record{
+		ID: "run", Project: p.Name, Item: "S63", State: runrec.StateCommitted,
+		Branch: "s63", Worktree: p.Path + "/.worktrees/s63",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	dir := specCheckDirOfCommittedRun(t, d, p)
+	refreshHead(t, d, p)
+	if dirKept, entryKept := specCheckState(d, p, dir); !dirKept || !entryKept {
+		t.Fatalf("no commit time: directory kept %v, entry kept %v; want both kept", dirKept, entryKept)
 	}
 }
 

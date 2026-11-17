@@ -395,7 +395,8 @@ the spec check before asking `Start this slice? [y/N]` (*proposed*, adj 189).
 `--well-specified` and `--split` do not skip it. `--slivers` (*proposed*, S62)
 runs the parent's slivers one after another in the parent's worktree and
 branch, as one plan and one landing. Answer each spec question
-with an option number or text. An empty line or end of input holds the
+with an option number or text. A role's question text is shown as plain
+text, and its line breaks are kept. An empty line or end of input holds the
 slice and exits 1. A failed check also blocks launch. Real spec-check failures
 carry the `spec check failed: ` prefix in text mode; refusals do not. Text
 mode prints only `ork: spec check failed: MESSAGE`; the error code shows with

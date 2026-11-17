@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/fs"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -241,21 +242,70 @@ func (d *Daemon) checkMerged(ctx context.Context, p registry.Project, head strin
 }
 
 // removeMergedSpecDirs drops the spec-check directory of the item of each run
-// whose merge was just found. A run stopped after commit never lands through
-// ork, so the owner's merge is the only sign that its item is done (S191,
-// *proposed*). The lock order is specStateMu before mu, as at recoverRuns; no
-// git runs under either.
+// whose merge was just found, when that run has a commit time and nothing in
+// the directory is newer than it. A later spec check of the same item stays,
+// so a restart or a git error does not remove it (S402, *proposed*, adj 405).
+// A run stopped after commit never lands through ork, so the owner's merge is
+// the only sign that its item is done (S191, *proposed*). Times are read
+// before either lock. The lock order is specStateMu before mu, as at
+// recoverRuns; no git runs under either.
 func (d *Daemon) removeMergedSpecDirs(found []runrec.Record) {
 	if len(found) == 0 {
+		return
+	}
+	var remove []runrec.Record
+	for _, rec := range found {
+		if rec.Commit == nil || rec.Commit.At.IsZero() {
+			continue
+		}
+		newer, err := specDirNewerThan(d.specDir(rec.Project, rec.Item), rec.Commit.At)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "remove spec check: %v\n", err)
+			continue
+		}
+		if newer {
+			continue
+		}
+		remove = append(remove, rec)
+	}
+	if len(remove) == 0 {
 		return
 	}
 	d.runs.specStateMu.Lock()
 	defer d.runs.specStateMu.Unlock()
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
-	for _, rec := range found {
+	for _, rec := range remove {
 		d.removeSpecDirLocked(rec.Project, rec.Item)
 	}
+}
+
+// specDirNewerThan reports whether any file in dir has a modification time
+// after at. The directory itself is not a file. A missing directory is not
+// newer.
+func specDirNewerThan(dir string, at time.Time) (bool, error) {
+	newer := false
+	err := filepath.WalkDir(dir, func(path string, ent fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+		if ent.IsDir() {
+			return nil
+		}
+		info, err := ent.Info()
+		if err != nil {
+			return err
+		}
+		if info.ModTime().After(at) {
+			newer = true
+			return fs.SkipAll
+		}
+		return nil
+	})
+	if errors.Is(err, fs.ErrNotExist) {
+		return false, nil
+	}
+	return newer, err
 }
 
 // pruneRunsLocked uses only previously checked results; pruning never adds git

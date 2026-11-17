@@ -1701,14 +1701,12 @@ func TestSpecCheckSkipsTheOutVendorsOtherRowsAfterARateLimit(t *testing.T) {
 
 // When every spec check row is on a vendor that is out, the check is refused
 // and the message names the vendors and when each one ends (S379, *proposed*).
-// Claude's end is 00:30 on the next local day, so the assertion always asks
-// for the day the product names when the end is not the day the mark began.
 func TestSpecCheckAllRowsOutRefuses(t *testing.T) {
 	rig := grokFirstRig(t)
 	now := time.Now()
-	y, m, d := now.Date()
-	grokUntil := now.Add(time.Hour)
-	claudeUntil := time.Date(y, m, d, 0, 30, 0, 0, now.Location()).AddDate(0, 0, 1)
+	// grok ends within the hour, another day only near midnight. claude ends
+	// two days later, so its end always names the day (S299).
+	grokUntil, claudeUntil := now.Add(time.Hour), now.Add(48*time.Hour)
 	vendors := rig.d.runs.deps.Vendors
 	if err := vendors.MarkOutOwnerUntil("grok", "marked out by the owner", now, grokUntil); err != nil {
 		t.Fatal(err)
@@ -1724,10 +1722,7 @@ func TestSpecCheckAllRowsOutRefuses(t *testing.T) {
 	if got.Code != CodeRefused {
 		t.Fatalf("error %v, want code %s", err, CodeRefused)
 	}
-	for _, want := range []string{
-		"grok is out until " + vendorUntilText(now, grokUntil),
-		"claude is out until " + vendorUntilText(now, claudeUntil),
-	} {
+	for _, want := range []string{"grok is out until " + vendorUntilText(now, grokUntil), "claude is out until " + vendorUntilText(now, claudeUntil)} {
 		if !strings.Contains(got.Message, want) {
 			t.Errorf("message lacks %q:\n%s", want, got.Message)
 		}

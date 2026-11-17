@@ -429,7 +429,10 @@ restarts in the item's `answers.json` beside its check, tied to the updated
 spec fingerprint. Run start transfers it to this record and removes that
 file; a spec change drops the stored answers. The item's check directory is
 removed when its run lands, when a run stopped after commit is found merged
-(*proposed*, S229: the merge check at a HEAD change finds the owner's merge),
+and that run has a commit time and no file in the spec check is newer than the commit
+(*proposed*, S229 and adj 405: the merge check at a HEAD change finds the
+owner's merge, and a restart or a git error never removes a later spec check
+of the same item),
 or when its project is removed. Startup sweeps
 identified directories older than 14 days whose item is done, retired or gone,
 using the ordinary slicer list without `--all`. It also removes old directories
