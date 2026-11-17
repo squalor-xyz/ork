@@ -22166,10 +22166,39 @@
       "id": "S409",
       "title": "Check commands: a quoted | is not a pipe, and the implementer may run rg",
       "short_title": "Runnable Check lines",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "40d0fc7c-cb55-47f1-b039-aaf32b144a8a",
+          "kind": "",
+          "text": "**2026-11-17** — Review FAIL: The owner's answer in the brief overrides the slice spec. The owner decided to drop rg: no `Bash(rg *)` in any preset, and rg Check lines stay orchestrator-only. The slice spec still lists the rg preset change, its tests, its doc lines and an rg acceptance criterion. I gated against the owner's decision. The brief cites the decision as adj 457, but `adj show 457 --root <worktree>` prints `adj show: record not found: id 457` in this worktree, so I could not read the record. - Earlier blockers resolved with a proving test: no. There was no earlier `[owner blocker]`. The open owner question on `r...",
+          "created_at": "2026-11-17T19:34:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e07d14b3-73aa-43ee-b57d-27cbc07b7a0b",
+          "kind": "",
+          "text": "**2026-11-17** — Quote-aware Check classification: checkCommandRunnable now uses shellSyntaxOutsideQuotes (shared with plainCheckSyntax), so a quoted ;|&<> is an argument and go test -run 'A|B' is implementer-runnable; unquoted pipes, redirects, ; and && stay orchestrator-only unless an allowlist form names the whole command. rg is not added to the presets (adj 457); rg Check lines stay orchestrator-only. Verified: go vet ./..., go test ./... (26 packages ok), gofmt clean; mutation checks red for the quote scan and the rg guard. design.md and CHANGELOG updated.",
+          "created_at": "2026-11-17T19:48:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -22187,7 +22216,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

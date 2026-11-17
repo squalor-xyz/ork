@@ -1,0 +1,41 @@
+{
+  "id": "S409",
+  "title": "Check commands: a quoted | is not a pipe, and the implementer may run rg",
+  "lead": [
+    "The Check classifier that sorts Check commands into implementer-runnable and orchestrator-only reads quotes the way ork's own check runner does, so a `|`, `&`, `;`, `<` or `>` inside single or double quotes no longer makes a command compound. The implementer presets do not gain `rg`: an `rg` Check line stays orchestrator-only."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-17: the spec check flagged orchestrator-only Check lines on S402, S396, S397, S390, S332 and S388, the same question as adj 249, 255, 256 and 259. Two causes: `checkCommandRunnable` (`internal/engine/brief.go:546-552`) treats any `;|&<>` or backtick or `$` as a compound command even inside quotes, so `go test ./internal/daemon -run 'A|B' -v` is orchestrator-only, while `plainCheckSyntax` (`internal/engine/brief.go:486-522`), which decides what ork itself runs, already accepts a quoted `|`. And `ImplementerPreset` (`internal/engine/perm.go:45-71`) has no `rg` entry, so every `rg -n ...` Check line is orchestrator-only.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Owner rule (2026-11-17): a deterministic step done regularly is code, not a model call or a hand step. Each spec check of a slice whose Check uses `go test -run 'A|B'` raises an owner question about orchestrator-only lines (adj 249, 255, 256, 259, and six more slices on 2026-11-17). The commands are plain and safe; the classifier is what makes them orchestrator-only.\n\nOwner decisions (2026-11-17): ork is fixed in code first, and S402, S396, S397, S390, S332 and S388 wait until this slice lands [checks.implementer-runnable, adj 456]. The implementer presets do not allow `Bash(rg *)`: adj 457 supersedes adj 455 (launch.allowlist-rg), so `rg` Check lines stay orchestrator-only."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/brief.go:486-565` (`plainCheckSyntax`, new `shellSyntaxOutsideQuotes`, `checkCommandRunnable`: quote-aware compound test)\n- `internal/engine/brief_test.go`\n- `docs/design.md:1576-1584` (check classification)\n- `CHANGELOG.md` (Unreleased entry, by hand: slicer changelog is off)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestCheckCommandRunnableQuotedPipe` in `internal/engine/brief_test.go`: with the `go` preset as allow, `go test ./internal/daemon -run 'MergedSpecCleanup|MergedCommitStopped' -v` and `go test ./internal/cli -run \"SpecQuestion|PromptWraps\" -v` are runnable; `go test ./... | tee out` and `go test ./... && rm -rf x` are not.\n- `TestCheckCommandRunnableRgStaysOrchestratorOnly` in `internal/engine/brief_test.go`: `rg -n \"adj 416\" docs/boundaries.md` is not runnable under the built-in default or either preset (owner dropped rg, adj 457)."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. In `checkCommandRunnable`, replace the two `strings.ContainsAny(command, \";|&<>\\n`$\")` tests with a helper that reports shell syntax outside quotes, built on the same scan as `plainCheckSyntax` (single quotes literal; inside double quotes only `$` and backtick count). A command with unquoted `;|&<>`, a newline, `$` or a backtick keeps today's rule (needs an explicit whole-command allowlist form).\n2. Update `docs/design.md` (check classification paragraph) to state the quote rule.\n3. Add an Unreleased CHANGELOG entry by hand (`slicer changelog add` is off for this project)."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- A Check line with a quoted pipe, such as go test -run 'A|B', is classified implementer-runnable in the role brief.\n- A Check line with an unquoted pipe, redirect, ';' or '&&' stays orchestrator-only unless an allowlist form names the whole command.\n- An rg Check line stays orchestrator-only under the built-in default and both presets.\n- A spec check of S402 no longer lists 'go test ./internal/daemon -run ...' as orchestrator-only.\n- docs/design.md states the quote rule.\n\nCommands:\n- `go test ./internal/engine -run CheckCommandRunnable -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` must print nothing."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch."
+    }
+  ],
+  "notes": []
+}
