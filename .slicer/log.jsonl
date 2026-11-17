@@ -5047,3 +5047,8 @@
 {"when": "2026-11-17T22:51:30Z", "item": "S414", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-17T22:51:48Z", "item": "S415", "action": "add", "from": "", "to": "open", "note": "Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt."}
 {"when": "2026-11-17T22:51:48Z", "item": "S415", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:24:47Z", "item": "S412", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:25:02Z", "item": "S413", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:25:05Z", "item": "S414", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:25:08Z", "item": "S415", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:32:20Z", "item": "S402", "action": "note", "from": "", "to": "", "note": "A merged stopped run removes its item's spec-check directory", "by": "Jon Robbins"}
