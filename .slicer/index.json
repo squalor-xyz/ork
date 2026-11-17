@@ -17576,6 +17576,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "c82f2fb1-2fc2-4432-9a9c-f54c2713535b",
+          "kind": "",
+          "text": "**2026-11-17** — Trial 6 started 2026-11-17 02:24 (owner: 'S380 now'): run ork-20261117-022414-31cb, S380 (size S; round.go, watchdog.go, runner.go, record.go, runs.go), claude-local qwen3.8-27b low then claude sonnet high. Live since trial 5: S371 (ork-kept anchor log), S372 (150-line local reads).",
+          "created_at": "2026-11-17T02:24:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
