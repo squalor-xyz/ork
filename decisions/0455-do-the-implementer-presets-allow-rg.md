@@ -2,7 +2,7 @@
 {
   "id": 455,
   "title": "Do the implementer presets allow rg?",
-  "status": "decided",
+  "status": "superseded",
   "key": "launch.allowlist-rg",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -29,6 +29,7 @@
   },
   "decision": "allow",
   "rationale": "Owner chose 'Allow Bash(rg *)' in an interactive question, relay session 8d711f67, 2026-11-17.",
+  "superseded_by": 457,
   "history": [
     {
       "date": "2026-11-17",
@@ -37,6 +38,11 @@
     {
       "date": "2026-11-17",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-17",
+      "event": "supersede",
+      "note": "by 457"
     }
   ]
 }
