@@ -2,7 +2,10 @@
 
 // Package cache is the daemon's in-memory snapshot cache: one value per
 // project and part, shared by every client (dash.cache). Each part is read on
-// its schedule (dash.refresh) by one CLI call. A read that is already running
+// its schedule (dash.refresh) by one CLI call; a Fetcher that is also a
+// source.Batcher reads the items, goals and runs parts that come due together
+// across projects with one call, and a part whose revision did not change is
+// only marked read again. A read that is already running
 // is shared, so a part is never read twice at once, and at most Limit CLI
 // processes run at once across all projects. A failed read keeps the last good
 // value, and a read that fails with corrupt, locked or a timeout is tried once
@@ -16,6 +19,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
@@ -39,6 +43,13 @@ const (
 	// the last good read holds a live run (proposed; 2 s since S336, adj 301).
 	LiveInterval = 2 * time.Second
 )
+
+// BatchWindow is how long a read of Items, Goals or Runs waits for others to
+// join it in one batched call (proposed, adj 306). Parts that come due within
+// the window, such as every project's at one tick, share one slicer process.
+// It is real time, not the Clock's: it joins reads that start together, and
+// does not schedule them.
+const BatchWindow = 10 * time.Millisecond
 
 // ErrClosed is returned once Close has been called.
 var ErrClosed = errors.New("cache closed")
@@ -76,6 +87,7 @@ type Value struct {
 type Cache struct {
 	clock    Clock
 	fetch    source.Fetcher
+	batcher  source.Batcher // fetch's optional batched read; nil when it has none
 	onChange func(project string, part source.Part)
 	slots    chan struct{} // one token per CLI process that may run
 	ctx      context.Context
@@ -87,6 +99,14 @@ type Cache struct {
 	idle    bool // no client is attached: nothing is read on a timer (S336)
 	visible map[string]bool
 	entries map[key]*entry
+	queue   []queued // reads of batchable parts that wait for the batch window to end
+}
+
+// queued is a read that waits for the next batched call.
+type queued struct {
+	k key
+	f *flight
+	p registry.Project
 }
 
 type key struct {
@@ -100,6 +120,7 @@ type entry struct {
 	value   any               // the last good value
 	readAt  time.Time         // when value was read; zero if never
 	sum     [sha256.Size]byte // hash of the value's JSON, to tell a change
+	rev     string            // slicer's revision of value, from a batched read; empty after a read of the part alone
 	err     error             // the last read's error; nil if it worked
 	done    bool              // a read has finished
 	started time.Time         // when the last read started
@@ -114,9 +135,11 @@ type flight struct{ done chan struct{} }
 // New returns an empty cache.
 func New(opt Options) *Cache {
 	ctx, cancel := context.WithCancel(context.Background())
+	batcher, _ := opt.Fetcher.(source.Batcher)
 	return &Cache{
 		clock:    opt.Clock,
 		fetch:    opt.Fetcher,
+		batcher:  batcher,
 		onChange: opt.OnChange,
 		slots:    make(chan struct{}, Limit),
 		ctx:      ctx,
@@ -211,10 +234,131 @@ func (c *Cache) startLocked(k key) *flight {
 	e.flight = f
 	e.started = c.clock.Now()
 	e.pending = false
-	c.wg.Add(1)
-	go c.run(k, e.reg, f)
+	if c.batcher != nil && batchable(k.part) {
+		c.enqueueLocked(queued{k, f, e.reg})
+	} else {
+		c.wg.Add(1)
+		go c.run(k, e.reg, f)
+	}
 	c.scheduleLocked(k)
 	return f
+}
+
+// batchable reports whether a part is read with the others in one batched call
+// (poll.snapshot-parts, adj 299). Deps, open and decided records and git HEAD
+// stay one call per project.
+func batchable(part source.Part) bool {
+	switch part {
+	case source.Items, source.Goals, source.Runs:
+		return true
+	}
+	return false
+}
+
+// enqueueLocked adds a read to the batch that the end of BatchWindow starts.
+// The first read of a window starts the goroutine that waits for it.
+func (c *Cache) enqueueLocked(q queued) {
+	c.queue = append(c.queue, q)
+	if len(c.queue) == 1 {
+		c.wg.Add(1)
+		go c.flush()
+	}
+}
+
+// flush waits for the batch window to end, then reads every queued part of
+// every project with one batched call. A call that fails as a whole is read
+// part by part this once (poll.snapshot-errors, adj 300); a project that the
+// reply marks as failed fails only that project's parts.
+func (c *Cache) flush() {
+	defer c.wg.Done()
+	timer := time.NewTimer(BatchWindow)
+	select {
+	case <-timer.C:
+	case <-c.ctx.Done():
+		timer.Stop()
+	}
+
+	c.mu.Lock()
+	queue := c.queue
+	c.queue = nil
+	var live, gone []queued
+	var reqs []source.BatchRequest
+	at := map[string]int{}
+	for _, q := range queue {
+		e := c.entries[q.k]
+		if e == nil || e.flight != q.f {
+			gone = append(gone, q) // forgotten during the window
+			continue
+		}
+		i, ok := at[q.k.project]
+		if !ok {
+			i = len(reqs)
+			at[q.k.project] = i
+			reqs = append(reqs, source.BatchRequest{Project: q.p, Have: map[source.Part]string{}})
+		}
+		reqs[i].Parts = append(reqs[i].Parts, q.k.part)
+		if e.rev != "" && !e.readAt.IsZero() {
+			reqs[i].Have[q.k.part] = e.rev
+		}
+		live = append(live, q)
+	}
+	c.mu.Unlock()
+
+	for _, q := range gone {
+		c.finish(q.k, q.f, nil, ErrForgotten)
+	}
+	if len(live) == 0 {
+		return
+	}
+	results, err := c.callBatch(reqs)
+	if err == nil && len(results) != len(reqs) {
+		err = errors.New("batched read answered the wrong number of projects")
+	}
+	if err != nil {
+		for _, q := range live {
+			if c.ctx.Err() != nil {
+				c.finish(q.k, q.f, nil, c.ctx.Err())
+				continue
+			}
+			c.wg.Add(1)
+			go c.run(q.k, q.p, q.f)
+		}
+		return
+	}
+	for _, q := range live {
+		res := results[at[q.k.project]]
+		bp, ok := res.Parts[q.k.part]
+		switch {
+		case res.Err != nil:
+			c.finishRead(q.k, q.f, readOut{err: res.Err})
+		case !ok:
+			c.finishRead(q.k, q.f, readOut{err: fmt.Errorf("batched read has no %s of %s", q.k.part, q.k.project)})
+		case bp.Err != nil:
+			c.finishRead(q.k, q.f, readOut{err: bp.Err})
+		default:
+			c.finishRead(q.k, q.f, readOut{v: bp.Value, rev: bp.Revision, unchanged: bp.Unchanged})
+		}
+	}
+}
+
+// callBatch makes the batched call, holding one of the Limit slots while it
+// runs. As for a part, a call that fails with corrupt, locked or a timeout is
+// tried once more at once.
+func (c *Cache) callBatch(reqs []source.BatchRequest) ([]source.BatchResult, error) {
+	once := func() ([]source.BatchResult, error) {
+		select {
+		case c.slots <- struct{}{}:
+		case <-c.ctx.Done():
+			return nil, c.ctx.Err()
+		}
+		defer func() { <-c.slots }()
+		return c.batcher.FetchBatch(c.ctx, reqs)
+	}
+	res, err := once()
+	if err != nil && retryable(err) && c.ctx.Err() == nil {
+		res, err = once()
+	}
+	return res, err
 }
 
 // scheduleLocked sets the timer for k's next read, an interval after the last
@@ -304,6 +448,24 @@ func (c *Cache) requestLocked(k key) {
 // change; so is an error that differs from the last one. The change is
 // reported after the lock is released.
 func (c *Cache) finish(k key, f *flight, v any, err error) {
+	c.finishRead(k, f, readOut{v: v, err: err})
+}
+
+// readOut is a read's outcome. rev is slicer's revision of v, from a batched
+// read. unchanged says a batched read found rev equal to the one the cache holds
+// for the part, so v is nil and the held value stays.
+type readOut struct {
+	v         any
+	err       error
+	rev       string
+	unchanged bool
+}
+
+// finishRead is finish for a read that may be an unchanged revision. That read
+// only brings the part's ReadAt up to date, with no notice, unless the part's last
+// read failed: its recovery is a change.
+func (c *Cache) finishRead(k key, f *flight, out readOut) {
+	v, err := out.v, out.err
 	c.mu.Lock()
 	e := c.entries[k]
 	if e == nil || e.flight != f {
@@ -317,7 +479,10 @@ func (c *Cache) finish(k key, f *flight, v any, err error) {
 	e.flight = nil
 	e.done = true
 	var sum [sha256.Size]byte
-	if err == nil {
+	if err == nil && out.unchanged && (e.readAt.IsZero() || e.rev == "" || e.rev != out.rev) {
+		err = errors.New("batched read found a part unchanged that the cache holds no such revision of")
+	}
+	if err == nil && !out.unchanged {
 		b, merr := json.Marshal(v)
 		if merr != nil {
 			err = merr
@@ -327,13 +492,17 @@ func (c *Cache) finish(k key, f *flight, v any, err error) {
 	}
 	changed, headMoved := false, false
 	wasLive := k.part == source.Runs && c.liveRunLocked(k)
-	if err == nil {
-		changed = e.readAt.IsZero() || sum != e.sum || e.err != nil
-		headMoved = k.part == source.Head && !e.readAt.IsZero() && sum != e.sum
-		e.value, e.readAt, e.sum, e.err = v, c.clock.Now(), sum, nil
-	} else {
+	switch {
+	case err != nil:
 		changed = e.err == nil || e.err.Error() != err.Error()
 		e.err = err
+	case out.unchanged:
+		changed = e.err != nil
+		e.readAt, e.err = c.clock.Now(), nil
+	default:
+		changed = e.readAt.IsZero() || sum != e.sum || e.err != nil
+		headMoved = k.part == source.Head && !e.readAt.IsZero() && sum != e.sum
+		e.value, e.readAt, e.sum, e.rev, e.err = v, c.clock.Now(), sum, out.rev, nil
 	}
 	if headMoved {
 		c.requestLocked(key{k.project, source.Goals})

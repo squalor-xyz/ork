@@ -10,6 +10,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -207,6 +208,148 @@ func TestFetchUnknownPartIsAnError(t *testing.T) {
 	}
 	if len(fake.Calls()) != 0 {
 		t.Fatalf("an unknown part made calls: %+v", fake.Calls())
+	}
+}
+
+func TestDirectIsABatcher(t *testing.T) {
+	var _ Batcher = (*Direct)(nil)
+}
+
+// snapshotArgs is the one call a batch makes for the given snapshot parts, which
+// slicer reads in the order the batch names them: items, goals, runs.
+func snapshotArgs(parts string, roots ...string) []string {
+	args := []string{"snapshot", "--json", "--lean", "--parts", parts}
+	for _, r := range roots {
+		args = append(args, "--root", r)
+	}
+	return args
+}
+
+func TestBatchGivesTheTypedValuesOfThePerPartCalls(t *testing.T) {
+	p := registry.Project{Name: "ork", Path: root}
+	snapFake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: snapshotArgs("items,goals,runs", root), File: rec("slicer", "snapshot.json")})
+	res, err := direct(snapFake).FetchBatch(context.Background(), []BatchRequest{{Project: p, Parts: []Part{Items, Goals, Runs}}})
+	if err != nil || len(res) != 1 || res[0].Err != nil {
+		t.Fatalf("batch: %+v, %v", res, err)
+	}
+	if calls := snapFake.CallsTo("slicer"); len(calls) != 1 {
+		t.Fatalf("a batch of three parts made %d slicer calls: %+v", len(calls), calls)
+	}
+
+	partFake := clitest.Install(t, slicerRoutes()...)
+	d := direct(partFake)
+	for _, part := range []Part{Items, Goals, Runs} {
+		want, err := d.Fetch(context.Background(), p, part)
+		if err != nil {
+			t.Fatalf("fetch %s: %v", part, err)
+		}
+		got := res[0].Parts[part]
+		if got.Err != nil || got.Unchanged || got.Revision == "" {
+			t.Fatalf("%s: %+v", part, got)
+		}
+		if !reflect.DeepEqual(got.Value, want) {
+			t.Fatalf("%s: the snapshot value differs from the per-part call\n got %#v\nwant %#v", part, got.Value, want)
+		}
+	}
+}
+
+func TestBatchOfSeveralProjectsIsOneCallInRequestOrder(t *testing.T) {
+	reply := `{"snapshot":2,"slicer":"1.22.1","contract":12,"projects":[` +
+		`{"root":"/a","revision":"r","parts":{"items":{"revision":"i1","fingerprint":null,"value":[{"id":"A1"}]},` +
+		`"goals":{"revision":"g1","fingerprint":null,"value":{"goals":"ga","non_goals":"","records":{"goal":[],"non_goal":[]}}},` +
+		`"runs":{"revision":"u1","fingerprint":null,"value":{"runs":[]}}},"error":null},` +
+		`{"root":"/b","revision":"r","parts":{"items":{"revision":"i2","fingerprint":null,"value":[{"id":"B1"},{"id":"B2"}]},` +
+		`"goals":{"revision":"g2","fingerprint":null,"value":{"goals":"gb","non_goals":"","records":{"goal":[],"non_goal":[]}}},` +
+		`"runs":{"revision":"u2","fingerprint":null,"value":{"runs":[{"id":"run-b"}]}}},"error":null}]}`
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: snapshotArgs("items,goals,runs", "/a", "/b"), Stdout: reply})
+	a, b := registry.Project{Name: "a", Path: "/a"}, registry.Project{Name: "b", Path: "/b"}
+	res, err := direct(fake).FetchBatch(context.Background(), []BatchRequest{
+		{Project: a, Parts: []Part{Items}}, {Project: b, Parts: []Part{Runs, Goals, Items}}})
+	if err != nil || len(res) != 2 {
+		t.Fatalf("batch: %+v, %v", res, err)
+	}
+	if n := len(fake.CallsTo("slicer")); n != 1 {
+		t.Fatalf("slicer calls: %d", n)
+	}
+	if items, _ := res[0].Parts[Items].Value.([]slicercli.Item); len(items) != 1 || items[0].ID != "A1" {
+		t.Fatalf("a items: %+v", res[0].Parts[Items])
+	}
+	if _, asked := res[0].Parts[Runs]; asked {
+		t.Fatalf("a part that was not asked for came back: %+v", res[0].Parts)
+	}
+	if runs, _ := res[1].Parts[Runs].Value.([]slicercli.RelayRun); len(runs) != 1 || runs[0].ID != "run-b" {
+		t.Fatalf("b runs: %+v", res[1].Parts[Runs])
+	}
+	if items, _ := res[1].Parts[Items].Value.([]slicercli.Item); len(items) != 2 || res[1].Parts[Items].Revision != "i2" {
+		t.Fatalf("b items: %+v", res[1].Parts[Items])
+	}
+}
+
+func TestBatchSkipsTheDecodeOfAPartWhoseRevisionIsUnchanged(t *testing.T) {
+	// The items value is not valid items JSON: a part that is decoded fails, so a
+	// part that is skipped is the one with no error.
+	reply := `{"snapshot":2,"projects":[{"root":"/a","revision":"r","parts":{` +
+		`"items":{"revision":"i1","fingerprint":null,"value":"not a list of items"},` +
+		`"goals":{"revision":"g2","fingerprint":null,"value":{"goals":"new","non_goals":"","records":{"goal":[],"non_goal":[]}}}},"error":null}]}`
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: snapshotArgs("items,goals", "/a"), Stdout: reply})
+	res, err := direct(fake).FetchBatch(context.Background(), []BatchRequest{{
+		Project: registry.Project{Name: "a", Path: "/a"}, Parts: []Part{Items, Goals},
+		Have: map[Part]string{Items: "i1", Goals: "g1"},
+	}})
+	if err != nil || len(res) != 1 {
+		t.Fatalf("batch: %+v, %v", res, err)
+	}
+	items := res[0].Parts[Items]
+	if items.Err != nil || !items.Unchanged || items.Value != nil || items.Revision != "i1" {
+		t.Fatalf("an unchanged items part: %+v", items)
+	}
+	goals := res[0].Parts[Goals]
+	if g, _ := goals.Value.(*slicercli.Goals); goals.Err != nil || goals.Unchanged || g == nil || g.Goals != "new" || goals.Revision != "g2" {
+		t.Fatalf("a changed goals part: %+v", goals)
+	}
+}
+
+func TestBatchProjectErrorMarksOnlyThatProject(t *testing.T) {
+	reply := `{"snapshot":2,"projects":[` +
+		`{"root":"/a","revision":null,"parts":{},"error":{"code":"corrupt","message":"index unreadable","command":"snapshot"}},` +
+		`{"root":"/b","revision":"r","parts":{"items":{"revision":"i2","fingerprint":null,"value":[{"id":"B1"}]}},"error":null}]}`
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: snapshotArgs("items", "/a", "/b"), Stdout: reply, Exit: 3})
+	res, err := direct(fake).FetchBatch(context.Background(), []BatchRequest{
+		{Project: registry.Project{Name: "a", Path: "/a"}, Parts: []Part{Items}},
+		{Project: registry.Project{Name: "b", Path: "/b"}, Parts: []Part{Items}}})
+	if err != nil || len(res) != 2 {
+		t.Fatalf("batch: %+v, %v", res, err)
+	}
+	var te *clirun.ToolError
+	if !errors.As(res[0].Err, &te) || te.Code != "corrupt" || len(res[0].Parts) != 0 {
+		t.Fatalf("a: %+v", res[0])
+	}
+	if items, _ := res[1].Parts[Items].Value.([]slicercli.Item); res[1].Err != nil || len(items) != 1 {
+		t.Fatalf("b: %+v", res[1])
+	}
+}
+
+func TestBatchOfAFailedCallIsAnErrorAndAPartMissingFromTheReplyFailsItself(t *testing.T) {
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: snapshotArgs("items", "/a"),
+		Stdout: `{"error":{"code":"usage","message":"nope","command":"snapshot"}}`, Exit: 2})
+	p := registry.Project{Name: "a", Path: "/a"}
+	if res, err := direct(fake).FetchBatch(context.Background(), []BatchRequest{{Project: p, Parts: []Part{Items}}}); err == nil {
+		t.Fatalf("a failed call gave results: %+v", res)
+	}
+
+	fake = clitest.Install(t, clitest.Route{Tool: "slicer", Args: snapshotArgs("items", "/a"),
+		Stdout: `{"snapshot":2,"projects":[{"root":"/a","revision":"r","parts":{},"error":null}]}`})
+	res, err := direct(fake).FetchBatch(context.Background(), []BatchRequest{{Project: p, Parts: []Part{Items}}})
+	if err != nil || len(res) != 1 || res[0].Err != nil || res[0].Parts[Items].Err == nil {
+		t.Fatalf("a part the reply lacks: %+v, %v", res, err)
+	}
+}
+
+func TestBatchOfAPartItCannotReadIsAnError(t *testing.T) {
+	fake := clitest.Install(t)
+	_, err := direct(fake).FetchBatch(context.Background(), []BatchRequest{{Project: registry.Project{Name: "a", Path: "/a"}, Parts: []Part{Deps}}})
+	if err == nil || len(fake.Calls()) != 0 {
+		t.Fatalf("deps in a batch: %v, calls %+v", err, fake.Calls())
 	}
 }
 

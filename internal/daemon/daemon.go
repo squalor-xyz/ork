@@ -113,7 +113,7 @@ func New(cfg Config) *Daemon {
 	}
 	d := &Daemon{cfg: cfg, ready: make(chan struct{}), focus: map[*ipc.Conn][]string{}}
 	d.initRunManager()
-	d.cache = cache.New(cache.Options{Clock: cfg.Clock, Fetcher: landingFetcher{Fetcher: cfg.Source, d: d}, OnChange: d.changed, Idle: true})
+	d.cache = cache.New(cache.Options{Clock: cfg.Clock, Fetcher: newLandingFetcher(cfg.Source, d), OnChange: d.changed, Idle: true})
 	return d
 }
 

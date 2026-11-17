@@ -9,6 +9,13 @@
   names, else in the run's own project with the tool in the title; a failure is
   `file_error` on the entry and never stops the run. A `feature` entry is only
   kept.
+- S335 (*proposed*): Batched snapshot polling. The daemon reads the items,
+  goals and runs parts of every project that is due with one `slicer snapshot`
+  process (slicer 1.22.1, snapshot schema 2) instead of one process per part per
+  project, and a part whose revision did not change is not decoded or announced.
+  A failed batched call falls back to the per-part calls for that tick, and a
+  project with an `error` in the reply fails only its own parts. Deps, adj
+  records and git HEAD stay one call per project.
 - S379 (*proposed*): The spec check skips a vendor marked out. A spec check row
   on an out vendor is left out of the chain, so the next row runs; a spec-check
   role that exits rate-limited or out of credits marks its vendor out and the

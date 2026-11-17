@@ -999,10 +999,13 @@ func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
 	e.writeRegistry(t, 0, registry.Project{Name: "alpha", Path: "/p/alpha", Adj: true})
 	const root = "/p/alpha"
 	fake := clitest.Install(t,
-		clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", root}, Stdout: "[]"},
+		// Items, goals and runs are read with one batched snapshot call (S335).
+		clitest.Route{Tool: "slicer", Args: []string{"snapshot", "--json", "--lean", "--parts", "items,goals,runs", "--root", root},
+			Stdout: `{"snapshot":2,"projects":[{"root":"/p/alpha","revision":"r","parts":{` +
+				`"items":{"revision":"i","fingerprint":null,"value":[]},` +
+				`"goals":{"revision":"g","fingerprint":null,"value":{}},` +
+				`"runs":{"revision":"u","fingerprint":null,"value":{"runs":[]}}},"error":null}]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"deps", "--json", "--lean", "--root", root}, Stdout: "[]"},
-		clitest.Route{Tool: "slicer", Args: []string{"goals", "--json", "--root", root}, Stdout: "{}"},
-		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list", "--json", "--lean", "--active", "--root", root}, Stdout: `{"runs":[]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "list", "--json", "--lean", "--root", root}, Stdout: `{"runs":[]}`},
 		clitest.Route{Tool: "adj", Args: []string{"inbox", "--json", "--root", root}, Stdout: `{"records":[]}`},
 		clitest.Route{Tool: "adj", Args: []string{"list", "--json", "--status", "decided", "--root", root}, Stdout: `{"records":[]}`},
@@ -1025,10 +1028,14 @@ func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
 	wg.Wait()
 	waitFor(t, "git HEAD read", func() bool { return len(fake.CallsTo("git")) == 1 })
 	settle()
-	// Cached parts still share one call. Board runs are read per snapshot.
-	active, board := 0, 0
+	// Cached parts still share one call, and the items, goals and runs parts
+	// share one batched snapshot call. Board runs are read per snapshot.
+	snap, active, board := 0, 0, 0
 	for _, call := range fake.CallsTo("slicer") {
-		if len(call.Args) > 0 && call.Args[0] == "relay-run" {
+		switch {
+		case len(call.Args) > 0 && call.Args[0] == "snapshot":
+			snap++
+		case len(call.Args) > 0 && call.Args[0] == "relay-run":
 			if slices.Contains(call.Args, "--active") {
 				active++
 			} else {
@@ -1036,13 +1043,13 @@ func TestTwoClientsReadingAtOnceMakeOneCallPerPart(t *testing.T) {
 			}
 		}
 	}
-	if active != 1 || board != 2 {
-		t.Fatalf("active %d, board %d", active, board)
+	if snap != 1 || active != 0 || board != 2 {
+		t.Fatalf("snapshot %d, active %d, board %d", snap, active, board)
 	}
 	for _, tc := range []struct {
 		tool  string
 		verbs int
-	}{{"slicer", 6}, {"adj", 2}, {"git", 1}} {
+	}{{"slicer", 4}, {"adj", 2}, {"git", 1}} { // slicer: one snapshot, deps, two board reads
 		if n := len(fake.CallsTo(tc.tool)); n != tc.verbs {
 			t.Errorf("%s calls for two snapshots: %d, want %d (one per part)", tc.tool, n, tc.verbs)
 		}

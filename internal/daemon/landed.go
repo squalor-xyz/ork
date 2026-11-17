@@ -26,6 +26,29 @@ type landingFetcher struct {
 	d *Daemon
 }
 
+// batchLandingFetcher is a landingFetcher over a source that also reads in
+// batches. The batched parts (items, goals, runs) are not HEAD, so they need no
+// landing check.
+type batchLandingFetcher struct {
+	landingFetcher
+	batch source.Batcher
+}
+
+func (f batchLandingFetcher) FetchBatch(ctx context.Context, reqs []source.BatchRequest) ([]source.BatchResult, error) {
+	return f.batch.FetchBatch(ctx, reqs)
+}
+
+// newLandingFetcher wraps src for the cache. The result is a source.Batcher
+// exactly when src is, so the cache keeps the batched read of a source that has
+// one and reads part by part over one that does not.
+func newLandingFetcher(src source.Fetcher, d *Daemon) source.Fetcher {
+	lf := landingFetcher{Fetcher: src, d: d}
+	if b, ok := src.(source.Batcher); ok {
+		return batchLandingFetcher{landingFetcher: lf, batch: b}
+	}
+	return lf
+}
+
 func (f landingFetcher) Fetch(ctx context.Context, p registry.Project, part source.Part) (any, error) {
 	v, err := f.Fetcher.Fetch(ctx, p, part)
 	if part == source.Head && err == nil {

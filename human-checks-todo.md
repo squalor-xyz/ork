@@ -201,3 +201,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S179 (run ork-20261116-203847-b14e, 2026-11-16)
 
 - [ ] review the diff in testdata/golden/; the owner should see only the new spec-draft views
+
+## S335 (run ork-20261117-014448-b5d2, 2026-11-17)
+
+- [ ] [AFTER LAND] With the TUI open on a project with a live run, the run's state changes still show within about a second, and `ps` sampling shows far fewer slicer processes than before.

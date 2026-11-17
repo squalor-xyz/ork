@@ -1390,8 +1390,12 @@ func TestTwoOpenTUIsShareCLIReads(t *testing.T) {
 	e := newEnv(t)
 	e.writeRegistry(t, 0, registry.Project{Name: "alpha", Path: "/p/alpha", Adj: true})
 	fake := clitest.Install(t,
-		clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[{"id":"S1","title":"shared"}]`},
-		clitest.Route{Tool: "slicer", Args: []string{"goals"}, Prefix: true, Stdout: `{}`},
+		// Items, goals and runs are read with one batched snapshot call (S335).
+		clitest.Route{Tool: "slicer", Args: []string{"snapshot"}, Prefix: true,
+			Stdout: `{"snapshot":2,"projects":[{"root":"/p/alpha","revision":"r","parts":{` +
+				`"items":{"revision":"i","fingerprint":null,"value":[{"id":"S1","title":"shared"}]},` +
+				`"goals":{"revision":"g","fingerprint":null,"value":{}},` +
+				`"runs":{"revision":"u","fingerprint":null,"value":{"runs":[]}}},"error":null}]}`},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run"}, Prefix: true, Stdout: `{"runs":[]}`},
 		clitest.Route{Tool: "adj", Prefix: true, Stdout: `{"records":[]}`},
 		clitest.Route{Tool: "git", Prefix: true, Stdout: "head\n"},
@@ -1426,15 +1430,20 @@ func TestTwoOpenTUIsShareCLIReads(t *testing.T) {
 	if board != 2 {
 		t.Fatalf("board reads %d, want one per snapshot", board)
 	}
-	for _, verb := range []string{"list", "goals", "relay-run"} {
+	for verb, want := range map[string]int{"snapshot": 1, "list": 0, "goals": 0} {
 		n := 0
 		for _, call := range fake.CallsTo("slicer") {
-			if call.Args[0] == verb && (verb != "relay-run" || slices.Contains(call.Args, "--active")) {
+			if call.Args[0] == verb {
 				n++
 			}
 		}
-		if n != 1 {
-			t.Fatalf("two open TUIs: %s invoked %d times, want one shared read", verb, n)
+		if n != want {
+			t.Fatalf("two open TUIs: %s invoked %d times, want %d (one shared batched read)", verb, n, want)
+		}
+	}
+	for _, call := range fake.CallsTo("slicer") {
+		if call.Args[0] == "relay-run" && slices.Contains(call.Args, "--active") {
+			t.Fatalf("the active runs were read apart from the batch: %v", call.Args)
 		}
 	}
 }
