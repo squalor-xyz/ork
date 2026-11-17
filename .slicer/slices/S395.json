@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n\n- The guide's key table has the Roadmap `n` and `N` keys and the command list has `ork note`.\n- `docs/orchestrator-parity.md` and `docs/diagrams.md` hold no `path.go:N` citation, and S385's test checks that each symbol they cite is still in its file.\n- The diff of the two docs is citations only.\n\nCommands:\n\n- `rg -n 'ork note' docs/guide.md` prints at least two lines.\n- `rg -n '\\.go:[0-9]' docs/orchestrator-parity.md docs/diagrams.md` prints nothing.\n- `go test -count=1 ./internal/docscheck -v` exits 0 and lists the parity and diagram tests.\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0.\n- `adj lint` exits 0."
+      "body": "Acceptance criteria:\n\n- The guide's key table has the Roadmap 'n' and 'N' keys and the command list has 'ork note'.\n- 'docs/orchestrator-parity.md' and 'docs/diagrams.md' hold no 'path.go:N' citation, and S385's test checks that each symbol they cite is still in its file.\n- The diff of the two docs is citations only.\n\nCommands:\n\n- `rg -n 'ork note' docs/guide.md` prints at least two lines.\n- `rg -n '\\.go:[0-9]' docs/orchestrator-parity.md docs/diagrams.md` prints nothing.\n- `go test -count=1 ./internal/docscheck -v` exits 0 and lists the parity and diagram tests.\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
