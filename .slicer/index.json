@@ -21782,6 +21782,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "856d181b-7744-4ab5-a7ca-cb28c564f73f",
+          "kind": "",
+          "text": "**2026-11-17** — Landing check is green. S412-S415 were marked as slices with no file after the merge from main; promote --force recreated the slice files and render refreshed them. Spec-check questions still show role text as plain text, keep line breaks, and wrap at 80 columns. An option continues under its label, and the answer prompt and the needs-N header stay within 80 columns.",
+          "created_at": "2026-11-17T23:19:44Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
