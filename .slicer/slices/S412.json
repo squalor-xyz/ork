@@ -12,7 +12,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": ""
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-215053-c643, project ork, item S402:\n\nDo not run a reviewer pass under Grok plan mode. Plan mode asks for plan.md and exit_plan_mode, which conflicts with a read-only report that must be the final message.\n\nEvidence: this prompt enables plan mode and the brief says the brief wins, forbids tree writes, and says ork saves the final message to reviewer-2.md"
     },
     {
       "heading": "Files",
