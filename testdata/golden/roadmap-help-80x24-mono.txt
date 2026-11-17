@@ -10,7 +10,7 @@
                    │}/{ next/previous group, pass or wave
                    │enter open run, question, item or decision; other rows se...
                    │/ filter projects; esc clears; s hide/show sidebar
-                   │+ add project; - remove active project
+                   │+ add project; - remove active project; M mouse on/off
                    │e edit lineup (Waves, launch)
                    │l launch; m matrix; N note; n new slice; O slicer tui
                    │P park/unpark; J/K move item down/up

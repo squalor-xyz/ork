@@ -641,6 +641,10 @@ type overviewView struct {
 	// rows is the body line each cursor row starts on, in cursor order. The
 	// page keys read it to find the first row below or above the window (S151).
 	rows []int
+	// ends is the last body line of each of those rows: its second line,
+	// commands, note or opened detail. A click anywhere on the row selects it
+	// (S66). A row with no entry is one line.
+	ends []int
 }
 
 // isPaneRow reports whether r is the row of the open run pane.
@@ -707,7 +711,7 @@ func (m *Model) overview(w int) overviewView {
 
 	var lines []string
 	sel, selEnd, paneAt, paneExtra, selExtra := -1, -1, -1, 0, 0
-	var rowAt []int
+	var rowAt, rowEnd []int
 	section := func(rows []ovRow, first int, empty string) {
 		if len(rows) == 0 {
 			lines = append(lines, indent+th.Dim.Render(empty))
@@ -742,6 +746,7 @@ func (m *Model) overview(w int) overviewView {
 			if r.note != "" {
 				lines = append(lines, hang+th.Dim.Render(clip(r.note, max(w-len(hang), 1))))
 			}
+			rowEnd = append(rowEnd, len(lines)-1)
 			if selected {
 				selEnd = len(lines) - 1
 			}
@@ -800,7 +805,7 @@ func (m *Model) overview(w int) overviewView {
 	ready := m.readyRows()
 	section(ready, len(needs)+len(running)+len(recent), "none")
 
-	ov := overviewView{body: lines, sel: sel, selEnd: selEnd, paneAt: paneAt, paneExtra: paneExtra, selExtra: selExtra, rows: rowAt}
+	ov := overviewView{body: lines, sel: sel, selEnd: selEnd, paneAt: paneAt, paneExtra: paneExtra, selExtra: selExtra, rows: rowAt, ends: rowEnd}
 	switch {
 	case m.active >= 0 && m.projects[m.active].setup():
 		// The hint is the detail line of a selected project with no rows.
@@ -1917,7 +1922,7 @@ func (m *Model) runningOverview(w int) overviewView {
 	}
 	lines := []string{heading}
 	sel, selEnd, paneAt, selExtra := -1, -1, -1, 0
-	var rowAt []int
+	var rowAt, rowEnd []int
 	if len(running) == 0 {
 		lines = append(lines, indent+th.Dim.Render("nothing running"))
 	}
@@ -1946,6 +1951,7 @@ func (m *Model) runningOverview(w int) overviewView {
 				selExtra = len(open)
 			}
 		}
+		rowEnd = append(rowEnd, len(lines)-1)
 		if i == cursor {
 			selEnd = len(lines) - 1
 		}
@@ -1960,6 +1966,7 @@ func (m *Model) runningOverview(w int) overviewView {
 			sel = len(lines)
 		}
 		lines = append(lines, m.rowLine(r, len(running)+i == cursor, nameW, w))
+		rowEnd = append(rowEnd, len(lines)-1)
 		if len(running)+i == cursor {
 			selEnd = sel
 		}
@@ -1967,7 +1974,7 @@ func (m *Model) runningOverview(w int) overviewView {
 			paneAt = len(lines) - 1
 		}
 	}
-	ov := overviewView{body: lines, sel: sel, selEnd: selEnd, paneAt: paneAt, selExtra: selExtra, rows: rowAt}
+	ov := overviewView{body: lines, sel: sel, selEnd: selEnd, paneAt: paneAt, selExtra: selExtra, rows: rowAt, ends: rowEnd}
 	// The selected row's full text is below the rows, unless it is open under its
 	// row. A live run's strip holds only the facts its row lacks, so no cell says
 	// the row again, and none when there are none (S333, adj 283). The `stale: N`

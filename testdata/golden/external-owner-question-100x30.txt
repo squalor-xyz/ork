@@ -26,5 +26,5 @@
                            │  waiting since 00:02  waiting: reviewer: S77 reviewer
                            │  implementer>reviewer waiting>gate
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed 16:42:00

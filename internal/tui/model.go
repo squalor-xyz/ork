@@ -160,6 +160,7 @@ type Model struct {
 	itemRequest      uint64
 	cursor           int // the Overview row under the cursor; drawn clamped to the rows there are
 	sidebarHidden    bool
+	mouse            bool // the mouse is captured: `M` toggles it, off at every launch (S66, adj 129)
 	filtering        bool
 	filter           string
 	focusing         bool
@@ -186,6 +187,7 @@ type Model struct {
 	actionStatus     string
 	lastRefresh      time.Time
 	drawn            drawnRows // the body window of the last screen, for the page keys
+	hits             mouseHits // what the last screen drew for a left click to pick (S66)
 	listening        bool      // the daemon's notice feed is being listened to (S13)
 
 	roadmapFollow     *runAction
@@ -562,6 +564,12 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, tea.Batch(m.fetch(msg.project, false), m.listen())
 	case tea.KeyPressMsg:
 		return m, m.key(msg)
+	case tea.MouseClickMsg:
+		// Only the left button acts; the wheel and the other buttons do nothing (S66).
+		if mouse := msg.Mouse(); mouse.Button == tea.MouseLeft {
+			return m, m.click(mouse.X, mouse.Y)
+		}
+		return m, nil
 	case tea.PasteMsg:
 		if m.removing.name != "" {
 			return m, nil
@@ -638,6 +646,12 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return m.welcomeKey(msg)
 		case "-":
 			return m.requestProjectRemoval()
+		}
+		// M turns mouse capture on and off wherever no text field or confirm bar
+		// owns the keys; it stays text in a field (S66, adj 129).
+		if key.Matches(msg, m.keys.Mouse) {
+			m.mouse = !m.mouse
+			return nil
 		}
 	}
 	if key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.Next, m.keys.Prev, m.keys.NextView, m.keys.PrevView, m.keys.Jump, m.keys.First, m.keys.Last, m.keys.PageDown, m.keys.PageUp, m.keys.NextGroup, m.keys.PrevGroup, m.keys.Filter, m.keys.Select, m.keys.Close) {
@@ -1389,21 +1403,101 @@ func (m *Model) moveView(delta int) tea.Cmd {
 	for step := 1; step < n; step++ {
 		i := ((m.view+delta*step)%n + n) % n
 		if m.viewShown(i) {
-			if m.launch != nil && m.launch.stage != launchStarting {
-				m.actionStatus = ""
+			return m.showView(i)
+		}
+	}
+	return nil
+}
+
+// showView selects view i, which the entry shows: what tab does, and what a
+// click on the view's tab does (S66).
+func (m *Model) showView(i int) tea.Cmd {
+	if m.launch != nil && m.launch.stage != launchStarting {
+		m.actionStatus = ""
+	}
+	m.dropLaunch()
+	m.compose = nil
+	m.matrixEdit = nil
+	m.specDraft = nil
+	m.view = i
+	m.roadmapCursor = 0
+	m.decisionsCursor = 0
+	m.questionsCursor = 0
+	m.pane = nil
+	m.decisionPane = nil
+	m.itemPane = nil
+	return m.openWaves()
+}
+
+// mouseReady reports whether a click may act: the keys of the main screen are
+// in charge, as they are not while a confirm bar, the help, a pane, a text field
+// or a sitting holds them (ui.confirm, adj 98). The key switch reads the same
+// states in the same order.
+func (m *Model) mouseReady() bool {
+	if !m.mouse || m.showHelp || m.confirm != nil || m.removing.name != "" || m.reportOn() > 0 || m.pane != nil {
+		return false
+	}
+	if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" || m.registeredProjectCount() == 0 {
+		return false
+	}
+	if m.projectTextEntry() || m.specDraft != nil {
+		return false
+	}
+	if w := m.waves; w != nil {
+		if w.lineup != nil || w.sitting != nil || (m.view == wavesView && (w.pane != nil || w.naming != nil || w.list != nil)) {
+			return false
+		}
+	}
+	return true
+}
+
+// click is a left click at screen cell (x, y), with the effect of the key that
+// does the same (S66): a view tab is tab, a sidebar entry its number key or ],
+// and a row of the Overview, the Running entry or the Roadmap is the cursor
+// moved to it. A click on anything else does nothing.
+func (m *Model) click(x, y int) tea.Cmd {
+	if !m.mouseReady() {
+		return nil
+	}
+	m.screen() // the cells of the screen as it is now
+	h := m.hits
+	navigate := func() {
+		m.jumpRun = ""
+		m.roadmapFollow = nil
+		m.roadmapNavigation++
+	}
+	switch {
+	case y == 0:
+		for _, t := range h.tabs {
+			if x >= t.x0 && x < t.x1 && t.view != m.view {
+				navigate()
+				return m.showView(t.view)
 			}
-			m.dropLaunch()
-			m.compose = nil
-			m.matrixEdit = nil
-			m.specDraft = nil
-			m.view = i
-			m.roadmapCursor = 0
-			m.decisionsCursor = 0
-			m.questionsCursor = 0
-			m.pane = nil
-			m.decisionPane = nil
-			m.itemPane = nil
-			return m.openWaves()
+		}
+	case x < h.sideW:
+		for _, s := range h.side {
+			if s.y == y {
+				navigate()
+				return m.switchTo(s.entry)
+			}
+		}
+	default:
+		if w, _, _ := m.termSize(); x >= w || (m.view != 0 && m.view != roadmapView) {
+			return nil
+		}
+		cur, n := m.rowCursor()
+		if cur == nil || n != h.rowCount {
+			return nil
+		}
+		for _, r := range h.rows {
+			if y >= r.y0 && y <= r.y1 {
+				navigate()
+				if cur == &m.cursor && r.row != clampCursor(*cur, n) {
+					m.actionStatus = ""
+				}
+				*cur = r.row
+				return nil
+			}
 		}
 	}
 	return nil

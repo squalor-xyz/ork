@@ -4886,3 +4886,8 @@
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Git"}
 {"when": "2026-11-17T02:15:05Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Owner decisions (2026-11-17, interactive, relay session 8d71", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:20:57Z", "item": "S66", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T02:26:44Z", "item": "S66", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-17T12:28:13Z", "item": "S66", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S66):", "by": "Jon Robbins"}
+{"when": "2026-11-17T12:28:20Z", "item": "S66", "action": "note", "from": "", "to": "", "note": "Mouse support built and verified: M toggles capture (off at ", "by": "Jon Robbins"}
+{"when": "2026-11-17T12:28:23Z", "item": "S66", "action": "status", "from": "started", "to": "done", "note": "Mouse support built and verified: M toggles capture (off at every launch); left clicks on tabs, sidebar entries and Overview, Running and Roadmap rows act as their keys; nothing acts while help, a confirm bar, a run pane or a text field is open. Checks pass; real-terminal human check is left to approval.", "by": "Jon Robbins"}

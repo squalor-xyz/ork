@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-402 items · — 65 · done 297 · retired 40
+402 items · — 64 · done 298 · retired 40
 
 ## v1.3
 
@@ -58,7 +58,7 @@ v1.2
 | # | Slice | Title | Size | Effort | Trees | Findings | Status |
 |---|---|---|---|---|---|---|---|
 | 3 | [S61](slices/S61.md) | Split parts: lead and parts in one worktree | M | 2 |  |  | done |
-| 4 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (M toggles capture, off at launch) | M | 2 |  |  | — |
+| 4 | [S66](slices/S66.md) | Mouse support: click tabs, rows and keys (M toggles capture, off at launch) | M | 2 |  |  | done |
 | 5 | [S62](slices/S62.md) | Slivers as their own items under the cap | L | 3 |  |  | done |
 | 6 | [S123](slices/S123.md) | Relay stats: thin display of slicer's | S | 1 |  |  | done |
 | 7 | [S179](slices/S179.md) | Spec drafting round | L | 3 |  | discovered from S165 | done |

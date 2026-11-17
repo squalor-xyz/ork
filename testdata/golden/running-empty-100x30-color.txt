@@ -26,5 +26,5 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
-                           │ tab [2mviews[m; + [2madd project[m; q [2mquit[m; ? [2mhelp[m
+                           │ tab [2mviews[m; + [2madd project[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
                            │ 4 projects | refreshed 16:42:07

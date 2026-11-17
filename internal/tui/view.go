@@ -27,6 +27,11 @@ const (
 func (m *Model) View() tea.View {
 	v := tea.NewView(m.screen())
 	v.AltScreen = true
+	if m.mouse {
+		// Clicks reach the TUI only while the owner turns capture on with M; the
+		// terminal's own text selection works the rest of the time (adj 129).
+		v.MouseMode = tea.MouseModeCellMotion
+	}
 	return v
 }
 
@@ -72,7 +77,8 @@ func (m *Model) screen() string {
 	var body, detail, footer []string
 	bodyH, start := max(h-4, 1), 0
 	m.drawn = drawnRows{sel: -1}
-	var rowStarts []int // the body line each row starts on, for the page keys
+	m.hits = mouseHits{sideW: sideW}
+	var rowStarts, rowEnds []int // the body line each row starts and ends on, for the page keys and clicks
 	selectedLine, selExtra := -1, 0
 	overviewBody := false
 	collapse := false // a render on show takes the whole body (S121, *proposed*)
@@ -186,13 +192,13 @@ func (m *Model) screen() string {
 		}
 		body = rv.body
 		selectedLine = rv.sel
-		rowStarts = rv.rows
+		rowStarts, rowEnds = rv.rows, rv.ends
 	} else {
 		// Detail shares the height with its rule, the body and screen chrome.
 		overviewBody = true
 		ov := m.overview(mainW)
 		body, detail = ov.body, ov.detail
-		rowStarts = ov.rows
+		rowStarts, rowEnds = ov.rows, ov.ends
 		status := m.actionStatus
 		if m.confirm != nil {
 			status = m.confirm.promptWidth(max(mainW-len(indent), 1))
@@ -224,9 +230,9 @@ func (m *Model) screen() string {
 			// the pane give way, so the pane leaves its row for the detail.
 			if collapse = m.renderOn() > 0 || m.reportOn() > 0; collapse {
 				detail = m.paneLines(mainW, max(h-4, 1), status)
-				rowStarts = nil
+				rowStarts, rowEnds = nil, nil
 			} else {
-				rowStarts = nil // the pane's lines move the rows below it
+				rowStarts, rowEnds = nil, nil // the pane's lines move the rows below it
 				// Four columns in, the pane sits inside its row (S106).
 				pane := m.paneLinesAs(max(mainW-len(indent), 1), paneHeight, status, true)
 				for i := range pane {
@@ -330,21 +336,27 @@ func (m *Model) screen() string {
 	if bodyH > 0 {
 		hi, _, _ := span(len(body), start, bodyH)
 		m.drawn = drawnRows{lo: start, hi: hi, sel: rowLine, rows: rowStarts}
+		m.recordRowHits(rowStarts, rowEnds, start, hi, len(body), bodyH)
 		body = window(body, start, bodyH, th)
 	}
 	_, horizontal := th.rules(m.cfg.ASCII)
 	rule := th.Dim.Render(strings.Repeat(horizontal, mainW))
-	bar := m.viewBar()
+	bar, tabs := m.viewBarTabs(true)
+	trimmed := 0
 	if lipgloss.Width(bar) > mainW && strings.HasPrefix(bar, " ") {
 		bar = bar[1:] // the longer first tab still fits an 80 column screen
+		trimmed = 1
 	}
 	if lipgloss.Width(bar) > mainW {
 		// The Questions count is the first thing to go: the tab names matter more.
-		bar = m.viewBarCount(false)
+		bar, tabs = m.viewBarTabs(false)
+		trimmed = 0
 		if lipgloss.Width(bar) > mainW && strings.HasPrefix(bar, " ") {
 			bar = bar[1:]
+			trimmed = 1
 		}
 	}
+	m.recordTabHits(tabs, sideW-trimmed, sideW+mainW)
 	main := []string{bar, rule}
 	main = append(main, body...)
 	main = append(main, footer...)
@@ -373,6 +385,61 @@ func (m *Model) screen() string {
 type drawnRows struct {
 	lo, hi, sel int
 	rows        []int // the body line each row starts on; nil when the screen has no row list
+}
+
+// mouseHits is where the last screen drew what a left click picks (S66): the
+// view tabs on screen row 0, the sidebar entries, and the rows of the list.
+// A hit is a range of screen rows or columns, so a click lands on what is drawn.
+type mouseHits struct {
+	sideW    int       // the sidebar's width: a click left of it is the sidebar's
+	tabs     []tabHit  // a view tab, by screen columns
+	side     []sideHit // a sidebar entry, by screen row
+	rows     []rowHit  // a list row, by screen rows
+	rowCount int       // the rows the screen lists, drawn or not; a click needs the cursor's list to agree
+}
+
+// tabHit is a view tab: the screen columns x0 up to x1.
+type tabHit struct{ view, x0, x1 int }
+
+// sideHit is a sidebar entry (a registry index, runningEntry or needsEntry) and its screen row.
+type sideHit struct{ y, entry int }
+
+// rowHit is a list row, the cursor row at index row, on the screen rows y0 to y1 (both included).
+type rowHit struct{ y0, y1, row int }
+
+// recordTabHits keeps the tabs at their screen columns: origin is the column
+// the bar's first column is drawn at, and limit the first column past the bar.
+func (m *Model) recordTabHits(tabs []tabHit, origin, limit int) {
+	for _, t := range tabs {
+		t.x0, t.x1 = origin+t.x0, min(origin+t.x1, limit)
+		if t.x0 < t.x1 {
+			m.hits.tabs = append(m.hits.tabs, t)
+		}
+	}
+}
+
+// recordRowHits keeps the screen rows each list row is drawn on. starts and
+// ends are the body lines a row begins and ends on (a row with no end is one
+// line); the window shows body lines from to up to hi, below the two rows of
+// the bar and its rule and under a "lines above" marker when it has one. It is
+// the same window the screen draws (total lines, n of them in the window), so a
+// click lands on the drawn row (S151).
+func (m *Model) recordRowHits(starts, ends []int, lo, hi, total, n int) {
+	m.hits.rowCount = len(starts)
+	top := 2 - lo // the screen row of body line 0, were the window to reach it
+	if _, above, _ := span(total, lo, n); above {
+		top++ // the marker takes the window's first screen row
+	}
+	for i, s := range starts {
+		e := s
+		if i < len(ends) {
+			e = max(ends[i], s)
+		}
+		s, e = max(s, lo), min(e, hi-1)
+		if s <= e {
+			m.hits.rows = append(m.hits.rows, rowHit{y0: top + s, y1: top + e, row: i})
+		}
+	}
 }
 
 func (m *Model) sidebar(w, h int) []string {
@@ -480,6 +547,9 @@ func (m *Model) sidebar(w, h int) []string {
 		case dim:
 			label = m.cfg.Theme.Dim.Render(label)
 		}
+		if w > 0 {
+			m.hits.side = append(m.hits.side, sideHit{y: len(lines), entry: idx})
+		}
 		lines = append(lines, label)
 	}
 	hidden := start + len(nav) - end
@@ -528,11 +598,16 @@ func (m *Model) viewShown(i int) bool { return views[i].built && !m.viewHidden(i
 // viewBar lists the views. The active view uses ViewActive. A view that is not
 // built yet is drawn dim with the separators before it; a built view that is not
 // active is plain. A view the entry hides is not drawn at all.
-func (m *Model) viewBar() string { return m.viewBarCount(true) }
+func (m *Model) viewBar() string {
+	bar, _ := m.viewBarTabs(true)
+	return bar
+}
 
-// viewBarCount is viewBar with or without the Questions count (S149).
-func (m *Model) viewBarCount(count bool) string {
+// viewBarTabs is the bar with or without the Questions count (S149), and the
+// columns each drawn tab takes in it, for the clicks of S66.
+func (m *Model) viewBarTabs(count bool) (string, []tabHit) {
 	th := m.cfg.Theme
+	var tabs []tabHit
 	var b strings.Builder
 	var idle string // separators and unbuilt names not yet drawn, drawn as one dim run
 	flush := func() {
@@ -567,16 +642,20 @@ func (m *Model) viewBarCount(count bool) string {
 			idle += v.name + tail
 		case i == m.view:
 			flush()
+			start := lipgloss.Width(b.String())
 			b.WriteString(th.ViewActive.Render(v.name) + tail)
+			tabs = append(tabs, tabHit{view: i, x0: start, x1: lipgloss.Width(b.String())})
 		case v.built:
 			flush()
+			start := lipgloss.Width(b.String())
 			b.WriteString(v.name + tail)
+			tabs = append(tabs, tabHit{view: i, x0: start, x1: lipgloss.Width(b.String())})
 		default:
 			idle += v.name + tail
 		}
 	}
 	flush()
-	return b.String()
+	return b.String(), tabs
 }
 
 // statusLine shows the project count, the last refresh and the number of
@@ -592,6 +671,11 @@ func (m *Model) statusLine(w int) string {
 		refreshed = m.lastRefresh.Format("15:04:05")
 	}
 	fields := []string{fmt.Sprintf("%d %s", count, noun)}
+	if m.mouse {
+		// Right after the count, so a narrow line drops the refresh time first and
+		// the cue that text selection is off stays (S66).
+		fields = append(fields, "mouse on")
+	}
 	if count > 0 {
 		fields = append(fields, "refreshed "+refreshed)
 	}
@@ -810,11 +894,12 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				continue
 			}
 			if h == m.keys.Add.Help() {
-				r := m.keys.Remove.Help()
-				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+r.Key+" "+r.Desc, w))
+				r, mouse := m.keys.Remove.Help(), m.keys.Mouse.Help()
+				// M shares the project-edit line, so the help keeps its length (S66).
+				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+r.Key+" "+r.Desc+"; "+mouse.Key+" "+mouse.Desc, w))
 				continue
 			}
-			if h == m.keys.Remove.Help() || h == m.keys.ExpandAll.Help() || h == m.keys.Tick.Help() {
+			if h == m.keys.Remove.Help() || h == m.keys.Mouse.Help() || h == m.keys.ExpandAll.Help() || h == m.keys.Tick.Help() {
 				continue
 			}
 			// The two Waves keys share a line, which pays for the expand keys' (S164).
