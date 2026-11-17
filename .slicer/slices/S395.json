@@ -1,0 +1,41 @@
+{
+  "id": "S395",
+  "title": "Docs: guide keys and commands, parity and diagram cites by symbol",
+  "lead": [
+    "*Proposed.* The guide lists the Roadmap's `n` and `N` keys and `ork note`. The parity and diagram documents cite code by file and symbol in S385's form, and S385's test checks them too."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-17: re-verified at HEAD f48a6154. docs/guide.md's key table has no `n`/`N` row and its command list has no `ork note`; the line cites in docs/orchestrator-parity.md and docs/diagrams.md point at the wrong lines (for example `internal/tui/keys.go:104` is `ExpandAll`, `internal/engine/states.go:706` is a closing brace).",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Docs-only part of the S227 notes row. Re-verified at HEAD `f48a6154`:\n\n- S171 item 2 (still present). `docs/guide.md:881-897` (Keys at a glance) has the Roadmap row `l`, `m` only; the command list (`docs/guide.md:916-948`) has no `ork note`, which exists (`internal/cli/cli.go:124`).\n- S169 item 10 (still present). 33 lines in `docs/orchestrator-parity.md` and 5 in `docs/diagrams.md` cite `PATH:N`. Spot checks at HEAD: `internal/tui/keys.go:104` is `ExpandAll`, `internal/engine/speccheck.go:446` is `var b strings.Builder`, `internal/engine/states.go:706` is `}`, `internal/daemon/runs.go:47` is blank, `internal/engine/land.go:136` is `}`.\n\nOwner decisions (2026-11-17): cite code by file and symbol, not line (adj 430; adj 409 `docs.citation-form` for S385).\n\nS385 (\"Docs citations by symbol, checked by a test\") converts `docs/guide.md` and `docs/design.md` and builds the symbol-citation parser and test in `internal/docscheck/cite_test.go`. Its \"Not in this slice\" excludes \"the other files in `docs/`\", so it does not cover the parity and diagram docs. This slice converts those two files and adds them to S385's test. It depends on S385 for the citation form and the parser. Because S385 rewrites `docs/guide.md`, this slice's guide edit runs after S385 lands too."
+    },
+    {
+      "heading": "Files",
+      "body": "- `docs/guide.md:881-897`\n- `docs/guide.md:916-948`\n- `docs/orchestrator-parity.md`\n- `docs/diagrams.md:46`\n- `docs/diagrams.md:148-149`\n- `docs/diagrams.md:172-173`\n- `internal/docscheck/cite_test.go` (add the two files to S385's symbol tests)\n- `CHANGELOG.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestParityAndDiagramsHaveNoLineCitationsOfGoFiles` (`internal/docscheck/cite_test.go`): S385's `TestGuideAndDesignHaveNoLineCitationsOfGoFiles` run on `docs/orchestrator-parity.md` and `docs/diagrams.md`. Fails first: 38 lines cite `path.go:N`.\n- `TestParityAndDiagramsSymbolCitationsResolve` (same file): S385's resolve test on the two files. Passes once the cites are converted; fails if a symbol is gone. If S385 made the file list a table, add the two files to it instead of new test names."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Tests first: add the two files to S385's tests; see them red.\n2. `docs/guide.md` key table: Roadmap row adds `n`, `N` (new slice, note); add `ork note P ITEM [--] TEXT` to the command list, as `internal/cli/cli.go:124` prints it.\n3. `docs/orchestrator-parity.md` and `docs/diagrams.md`: convert each `PATH:N` cite to S385's written form (path plus symbol, or a string unique in the file). Find each symbol by reading the cited file at the commit that last changed the doc line (`git log -L` or `git blame`), then confirm it at HEAD. Where the symbol is gone, cite what replaced it, or drop the cite and say so in the doc line. Change only citations.\n4. CHANGELOG.md: one new bullet at the end of `## Unreleased` (S227)."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n\n- The guide's key table has the Roadmap `n` and `N` keys and the command list has `ork note`.\n- `docs/orchestrator-parity.md` and `docs/diagrams.md` hold no `path.go:N` citation, and S385's test checks that each symbol they cite is still in its file.\n- The diff of the two docs is citations only.\n\nCommands:\n\n- `rg -n 'ork note' docs/guide.md` prints at least two lines.\n- `rg -n '\\.go:[0-9]' docs/orchestrator-parity.md docs/diagrams.md` prints nothing.\n- `go test -count=1 ./internal/docscheck -v` exits 0 and lists the parity and diagram tests.\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check --root /home/jon/code/squalor-xyz/ork` exits 0.\n- `adj lint` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch: \"Guide keys and commands; symbol cites in parity and diagrams\"."
+    }
+  ],
+  "notes": []
+}

@@ -1,6 +1,6 @@
 {
   "id": "S66",
-  "title": "Mouse support: click tabs, rows and keys (needs ui.mouse)",
+  "title": "Mouse support: click tabs, rows and keys (M toggles capture, off at launch)",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
