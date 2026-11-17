@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Write the failing tests above and see them red for the stated reason.\n2. `removeMergedSpecDirs`: for each found run, skip it when `rec.Commit == nil` or `rec.Commit.At` is zero, or when any file in `d.specDir(project, item)` has a modification time after `rec.Commit.At`. Read the times without holding `specStateMu` or `runs.mu`, then take the locks (`specStateMu` before `mu`) and remove. Keep the transition rule at `landed.go:205`.\n3. Docs: `docs/state.md:176-181,430-434`: the removal applies only to a spec check older than the run's commit, so a restart or a git error never removes a later one (*proposed*, adj 405). CHANGELOG.md: one bullet at the end of `## Unreleased`."
+      "body": "1. Write the failing tests above and see them red for the stated reason.\n2. `removeMergedSpecDirs`: for each found run, skip it when `rec.Commit == nil` or `rec.Commit.At` is zero, or when any file in `d.specDir(project, item)` has a modification time after `rec.Commit.At`. Read the times without holding `specStateMu` or `runs.mu`, then take the locks (`specStateMu` before `mu`) and remove. Keep the transition rule at `landed.go:205`.\n3. Docs: `docs/state.md:176-181,430-434`: the removal applies only to a spec check older than the run's commit, so a restart or a git error never removes a later one (*proposed*, adj 405). CHANGELOG.md: one bullet at the end of `## Unreleased`.\n\nOwner decisions (2026-11-17): Who runs the Commit.At source check? -> orchestrator: assign `rg -n 'Commit.At' internal/daemon/landed.go` to the orchestrator; done when it prints a matching line."
     },
     {
       "heading": "Check",
