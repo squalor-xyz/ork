@@ -146,6 +146,8 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	case claude.ClassConnection:
 		class = engine.ExitConnection
 	}
+	// CostUSD is the session's running cost; the engine records the step's own
+	// (engine.stepUsage, S380).
 	result := engine.Result{Exit: class, Reason: round.Reason, Session: round.SessionID, Report: round.Report, CostUSD: round.Usage.CostUSD,
 		Tokens: int(round.Usage.InputTokens + round.Usage.OutputTokens + round.Usage.CacheReadTokens + round.Usage.CacheCreationTokens)}
 	if req.Vendor == "claude-local" && err != nil && round.Result == nil {

@@ -186,6 +186,8 @@ func (r *stream) line(line []byte) {
 	case "turn.completed":
 		r.completed = true
 		r.round.Usage = e.Usage
+		// The turn's usage is the thread's running total: a resumed thread
+		// reports its earlier turns too (S380).
 		r.round.Tokens = e.Usage.InputTokens + e.Usage.OutputTokens
 	case "turn.failed", "error":
 		r.failed = true

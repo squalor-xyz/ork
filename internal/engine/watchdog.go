@@ -194,6 +194,8 @@ func (e *Engine) endHungRound(ctx context.Context, rec runrec.Record, r round, i
 		role.Session = res.Session
 		role.Tokens = res.Tokens
 		role.CostUSD = res.CostUSD
+		role.SessionTokens = res.SessionTokens
+		role.SessionCostUSD = res.SessionCostUSD
 	})
 	if err != nil {
 		return outcome{}, err

@@ -280,6 +280,64 @@ func pendingKindSection(p *runrec.Pending) []BriefSection {
 	return nil
 }
 
+// sessionTotals reports which of a vendor's usage values are the running total
+// of a resumed session, not the step's own (S380, *proposed*). Claude's
+// total_cost_usd and Codex's turn token usage grow with the session, in 63 of 63
+// and 20 of 20 resumed sequences of the run records read on 2026-11-12, and in
+// testdata/vendors/claude/03-resume.stdout and codex/02-resume-by-id.stdout.
+// Claude's tokens and Grok's tokens are per step.
+func sessionTotals(vendor string) (tokens, cost bool) {
+	switch vendor {
+	case "codex", "codex-local":
+		return true, false
+	case "claude", "claude-local":
+		return false, true
+	}
+	return false, false
+}
+
+// stepUsage turns the usage a vendor reported for a round into the round's own
+// (S380, *proposed*). For each value the vendor reports as a session total,
+// SessionTokens or SessionCostUSD keeps that total and Tokens or CostUSD holds
+// the total minus the latest nonzero total of the same session in the earlier
+// rows (a row that kept no total is skipped). A new
+// session id starts from zero, and a total below the last one is taken whole.
+// A value the vendor reports per step is left as it is.
+func stepUsage(vendor string, earlier []runrec.RoleRecord, res Result) Result {
+	totalTokens, totalCost := sessionTotals(vendor)
+	var lastTokens int
+	var lastCost float64
+	if res.Session != "" {
+		for i := len(earlier) - 1; i >= 0; i-- {
+			old := earlier[i]
+			if old.Session != res.Session {
+				continue
+			}
+			// A row that kept no total (an older record, or a round that ended
+			// before the vendor reported) does not hide the one before it.
+			if lastTokens == 0 {
+				lastTokens = old.SessionTokens
+			}
+			if lastCost == 0 {
+				lastCost = old.SessionCostUSD
+			}
+		}
+	}
+	if totalTokens {
+		res.SessionTokens = res.Tokens
+		if res.Tokens >= lastTokens {
+			res.Tokens -= lastTokens
+		}
+	}
+	if totalCost {
+		res.SessionCostUSD = res.CostUSD
+		if res.CostUSD >= lastCost {
+			res.CostUSD -= lastCost
+		}
+	}
+	return res
+}
+
 // overBudget compares recorded role usage with the run's limits. Only role
 // run time counts; time between roles or spent paused does not.
 func (e *Engine) overBudget(rec runrec.Record) (string, bool) {
@@ -607,6 +665,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			OnStart: func(pgid int) { e.run.Update(func(rr *runrec.Record) { rr.Roles[idx].PGID = pgid }) },
 		})
 		endSession()
+		res = stepUsage(entry.Vendor, e.run.Snapshot().Roles[:idx], res)
 		res.Tokens += spentTokens
 		res.CostUSD += spentCost
 		res.Denials = append(denials, res.Denials...)
@@ -652,6 +711,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			role.Restarts = append(role.Restarts, runrec.SessionRestart{At: e.d.now(), Tokens: tokens})
 			role.PGID = 0
 			role.Session = ""
+			role.SessionTokens, role.SessionCostUSD = 0, 0
 			role.Tokens, role.CostUSD = spentTokens, spentCost
 			role.Denials, role.DeniedCommands = denialNames(denials), denials
 		}); err != nil {
@@ -669,6 +729,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 				role.Session = res.Session
 				role.Tokens = res.Tokens
 				role.CostUSD = res.CostUSD
+				role.SessionTokens = res.SessionTokens
+				role.SessionCostUSD = res.SessionCostUSD
 			})
 			return outcome{}, updateErr
 		}
@@ -744,6 +806,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		role.Session = res.Session
 		role.Tokens = res.Tokens
 		role.CostUSD = res.CostUSD
+		role.SessionTokens = res.SessionTokens
+		role.SessionCostUSD = res.SessionCostUSD
 		role.Denials = denialNames(res.Denials)
 		role.DeniedCommands = res.Denials
 		role.Report = file

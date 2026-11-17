@@ -314,6 +314,46 @@ func TestRunRecordFromBeforeS45LoadsWithoutCommands(t *testing.T) {
 	}
 }
 
+// S380, *proposed*: a record written before the session total fields loads with
+// the usage it holds, and is written back without the new fields.
+func TestOldRecordIsReadUnchanged(t *testing.T) {
+	const old = `{"version":1,"id":"old","project":"ork","item":"S04","worktree":"/p/.worktrees/S04","branch":"S04",
+"contract":12,"state":"stopped","round":1,
+"roles":[{"role":"implementer","round":1,"vendor":"claude","session":"s1","started_at":"2026-10-19T16:12:00Z","ended_at":"2026-10-19T16:20:00Z","exit":"ok","tokens":120,"cost_usd":4.75},
+{"role":"implementer","round":2,"vendor":"claude","session":"s1","started_at":"2026-10-19T16:21:00Z","ended_at":"2026-10-19T16:22:00Z","exit":"ok","tokens":30,"cost_usd":6.4}],
+"checks":[],"approvals":[],"questions":[],"writes":[],"created_at":"2026-10-19T16:12:00Z","updated_at":"2026-10-19T16:22:00Z"}`
+	s := newStore(t)
+	if err := os.MkdirAll(s.RunDir("old"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(s.RunDir("old"), "run.json"), []byte(old), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	run, err := s.Open("old")
+	if err != nil {
+		t.Fatalf("old record refused: %v", err)
+	}
+	roles := run.Snapshot().Roles
+	if len(roles) != 2 || roles[0].Tokens != 120 || roles[0].CostUSD != 4.75 || roles[1].Tokens != 30 || roles[1].CostUSD != 6.4 {
+		t.Fatalf("old roles changed: %+v", roles)
+	}
+	if roles[0].SessionTokens != 0 || roles[0].SessionCostUSD != 0 {
+		t.Fatalf("old role holds session totals: %+v", roles[0])
+	}
+	if err := run.Update(func(r *Record) { r.State = StateCommitted }); err != nil {
+		t.Fatal(err)
+	}
+	written := readFile(t, filepath.Join(s.RunDir("old"), "run.json"))
+	if strings.Contains(written, "session_tokens") || strings.Contains(written, "session_cost_usd") {
+		t.Errorf("an old record must not gain session totals:\n%s", written)
+	}
+	roles[0].SessionTokens, roles[0].SessionCostUSD = 250, 1.5
+	b, err := json.Marshal(roles[0])
+	if err != nil || !strings.Contains(string(b), `"session_tokens":250`) || !strings.Contains(string(b), `"session_cost_usd":1.5`) {
+		t.Errorf("session totals do not round-trip: %s, %v", b, err)
+	}
+}
+
 func TestStateDocSaysACommandIsCappedNotScrubbed(t *testing.T) {
 	b, err := os.ReadFile(filepath.Join("..", "..", "docs", "state.md"))
 	if err != nil {

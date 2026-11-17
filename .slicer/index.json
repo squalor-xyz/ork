@@ -21142,10 +21142,39 @@
       "id": "S380",
       "title": "Usage: record a step's own cost and tokens, not the session total",
       "short_title": "Per-step cost and tokens",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7c2c4d2f-32fc-4dd2-845f-ab8b7285f07b",
+          "kind": "",
+          "text": "**2026-11-17** — Fixture findings (existing captures reused; no new vendor runs were captured, the sandbox cannot run the vendor CLIs). Claude: testdata/vendors/claude/01-plain-json then 03-resume are one session (b17a3484, same session_id on resume). In 03, modelUsage.cacheReadInputTokens is 32604 = 8858 (from 01) + 23746 (03's own usage block), and total_cost_usd 0.003343 equals modelUsage.costUSD, up from 0.003086 in 01. So Claude cost is a session total and the usage tokens are per step. Codex: codex/01-plain-stream-jsonl then 02-resume-by-id are one thread (01a151a0). turn.completed input tokens go 17086 -> 34203 and output tokens 5 -> 10, so Codex tokens are a running total. Grok tokens and Claude tokens stay per step (run-record evidence in the Why section, not re-captured).",
+          "created_at": "2026-11-17T12:17:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "231a306c-981b-42b7-8cad-7d67ca073b78",
+          "kind": "",
+          "text": "**2026-11-17** — Verified outcome: a resumed step now records its own usage. RoleRecord gains session_tokens and session_cost_usd (omitempty); engine.stepUsage records Claude cost and Codex tokens as the total minus the latest earlier nonzero total of the same session id (new session id from zero, a lower total taken whole); Claude and Grok tokens stay per step. Six named tests plus a Claude-tokens guard are red before the code and green after, with mutation checks. go vet, go test ./... (26 packages), gofmt and slicer check pass. Old run records load unchanged. docs/state.md and CHANGELOG.md updated.",
+          "created_at": "2026-11-17T12:30:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -21166,7 +21195,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

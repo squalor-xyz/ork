@@ -771,6 +771,22 @@ that limit, and time the machine slept is not counted in it. `commit` is
 role's `model`, `effort` and `denials`, a check's `log`, and a write's
 `error` are *proposed* (S04).
 
+*Proposed (S380, adj `usage.session-total-fields`):* a role's `tokens` and
+`cost_usd` are that round's own usage. A resumed Claude session reports its
+running `total_cost_usd`, and a resumed Codex thread reports its running token
+usage (the fixtures `testdata/vendors/claude/03-resume.stdout` and
+`testdata/vendors/codex/02-resume-by-id.stdout` show both; Claude's and Grok's
+tokens are per step). For those two values ork keeps the vendor's reported
+total in `roles[].session_tokens` (int) or `roles[].session_cost_usd` (float),
+both omitted when zero, and records the step as the total minus the latest
+earlier nonzero total for the same `session` (a row that kept no total is
+skipped). A new session id, as after a fallback, starts from zero, and a total
+below the last one is taken whole. A run's tokens and cost are the sum of its
+rows, as before, so each session's usage is counted once, at its last total;
+a run that used several sessions shows the sum of those sessions' last totals.
+A record written before S380 has neither field and is read and shown as it is;
+its rows are not rewritten.
+
 *Proposed (S358):* `roles[].restarts`, omitted when empty, records each fresh
 claude-local session within the same role round as `{"at": TIMESTAMP,
 "tokens": INPUT_CONTEXT_TOKENS}`. Cached input is included. It is a list on
