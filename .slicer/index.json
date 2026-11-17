@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 408,
+  "next_id": 409,
   "preamble": "",
   "passes": [
     {
@@ -21976,6 +21976,34 @@
         "reason": "",
         "importance": 3,
         "urgency": 3,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S408",
+      "title": "ork retry re-lands a committed run whose landing was blocked",
+      "short_title": "ork retry re-lands a committed run whose landing was blocked",
+      "status": "open",
+      "has_slice": false,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-17: S387 (run ork-20261117-021246-a004) committed, then its landing re-check went red because main's adj records were uncommitted (orchestrator error, fixed in 037800d8). landBlocked (internal/engine/land.go:262-266) stopped the run after its one land fix; NotResumable (internal/engine/resume.go:24-25) refuses retry for any committed run, so the orchestrator merged main, re-ran the checks and fast-forwarded main by hand (dae60175). Owner rule 2026-11-17: deterministic work runs as code.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
         "effort": 1,
         "attempts": 0
       }

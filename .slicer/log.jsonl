@@ -4929,3 +4929,4 @@
 {"when": "2026-11-17T12:30:35Z", "item": "S387", "action": "note", "from": "", "to": "", "note": "Verified: a role's friction or deterministic-check tool feed", "by": "Jon Robbins"}
 {"when": "2026-11-17T12:18:02Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Bug evidence 2026-11-17: ork's own tracking commit before la", "by": "Jon Robbins"}
 {"when": "2026-11-17T12:31:10Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Trial 6 result, 2026-11-17, S380 (size S; round.go, watchdog", "by": "Jon Robbins"}
+{"when": "2026-11-17T12:34:39Z", "item": "S408", "action": "add", "from": "", "to": "open", "note": "ork retry re-lands a committed run whose landing was blocked"}
