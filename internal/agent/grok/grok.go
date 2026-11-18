@@ -219,6 +219,7 @@ func ParsePlain(b []byte) (Round, error) {
 type stream struct {
 	pending                    []byte
 	raw                        bytes.Buffer
+	plain                      bytes.Buffer // stdout lines that are not stream events
 	round                      Round
 	completed, failed, credits bool
 	cancelled                  bool
@@ -250,6 +251,8 @@ func (r *stream) line(line []byte) {
 	e, err := ParseLine(line)
 	if err != nil {
 		r.failed = true
+		r.plain.Write(line)
+		r.plain.WriteByte('\n')
 		return
 	}
 	switch e.Type {
@@ -354,6 +357,14 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 			out.completed, out.failed = true, false
 		}
 	}
+	permissionCancel := out.cancelled && strings.Contains(stderr.String(), "permission required")
+	if !out.credits && !permissionCancel && !(out.completed && !out.failed) {
+		// grok 1.0.77 can print the credits or usage-limit error outside the
+		// stream, on stderr or as a plain `Error:` line, and exit 0. A
+		// permission cancellation repeats the refused command on stderr, which
+		// may name the vendor text, so it is not scanned.
+		out.fail(stderr.String() + "\n" + out.plain.String())
+	}
 	round = out.round
 	round.Command = append([]string{bin}, args...)
 	defer func() {
@@ -379,7 +390,7 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 	round.Exit = ExitUnclassified
 	if out.credits {
 		round.Exit = ExitOutOfCredits
-	} else if out.cancelled && strings.Contains(stderr.String(), "permission required") {
+	} else if permissionCancel {
 		round.Exit = ExitError
 		_, command, _ := strings.Cut(stderr.String(), "permission required: Execute `")
 		command, _, _ = strings.Cut(command, "`")

@@ -153,6 +153,64 @@ func TestGrokBadModelAndAuthStayUnclassified(t *testing.T) {
 	}
 }
 
+// creditsErrorLine is the shape grok 1.0.77 printed outside the stream when
+// the team was out of credits (exit 0, no stream events). The team id is
+// synthetic.
+const creditsErrorLine = `Error: Internal error: { "message": "API error (status 403 Forbidden): Your team REDACTED-TEAM-ID has either used all available credits or reached its monthly spending limit. Manage it in the console.", "http_status": 403 }` + "\n"
+
+func checkFixedCreditsReason(t *testing.T, got Round, err error) {
+	t.Helper()
+	if err != nil || got.Exit != ExitOutOfCredits || got.ExitCode != 0 {
+		t.Fatalf("exit=%s code=%d err=%v", got.Exit, got.ExitCode, err)
+	}
+	const want = "grok: the team has used all available credits or reached its spending limit"
+	if got.Reason != want {
+		t.Fatalf("reason %q, want %q", got.Reason, want)
+	}
+	if got.Report != "" {
+		t.Fatalf("report %q", got.Report)
+	}
+}
+
+func TestGrokCreditsOnStderrIsOutOfCredits(t *testing.T) {
+	s := fake(t, "", false)
+	t.Setenv("ORK_GROK_STDERR", creditsErrorLine)
+	got, err := Run(context.Background(), s)
+	checkFixedCreditsReason(t, got, err)
+}
+
+func TestGrokCreditsOnStdoutPlainLineIsOutOfCredits(t *testing.T) {
+	got, err := Run(context.Background(), fake(t, creditsErrorLine, false))
+	checkFixedCreditsReason(t, got, err)
+}
+
+func TestGrokUsageLimitOnStderrIsOutOfCredits(t *testing.T) {
+	s := fake(t, "", false)
+	t.Setenv("ORK_GROK_STDERR", "Error: "+usageLimitSentence+"\n")
+	got, err := Run(context.Background(), s)
+	if err != nil || got.Exit != ExitOutOfCredits || got.Reason != "grok: the usage limit is reached" {
+		t.Fatalf("exit=%s reason=%q err=%v", got.Exit, got.Reason, err)
+	}
+}
+
+func TestGrokCreditsTextOnStderrOfASuccessfulRoundStaysOK(t *testing.T) {
+	s := fake(t, out(t, "02-stream-messages-json"), false)
+	t.Setenv("ORK_GROK_STDERR", creditsErrorLine)
+	got, err := Run(context.Background(), s)
+	if err != nil || got.Exit != ExitOK {
+		t.Fatalf("exit=%s err=%v", got.Exit, err)
+	}
+}
+
+func TestGrokOtherStderrAndPlainLinesStayUnclassified(t *testing.T) {
+	s := fake(t, "Error: Something else went wrong.\n", false)
+	t.Setenv("ORK_GROK_STDERR", "Error: Internal error: { \"http_status\": 500 }\n")
+	got, err := Run(context.Background(), s)
+	if err != nil || got.Exit != ExitUnclassified || got.Reason != "" {
+		t.Fatalf("exit=%s reason=%q err=%v", got.Exit, got.Reason, err)
+	}
+}
+
 func TestGrokArgsRefuseFlagLikeInputs(t *testing.T) {
 	for _, s := range []Spec{{ReadOnly: true}, {Prompt: "  ", ReadOnly: true}, {Prompt: "-x", ReadOnly: true}, {Prompt: "brief", Resume: "-x", ReadOnly: true}} {
 		if _, err := s.Args(); err == nil {
@@ -461,6 +519,35 @@ func TestGrokPermissionCancelIsAnErrorExit(t *testing.T) {
 	}
 	if got.ExitCode != 0 {
 		t.Errorf("exit code = %d, want 0", got.ExitCode)
+	}
+}
+
+func TestGrokPermissionCancelOfACommandNamingTheCreditsTextIsNotOutOfCredits(t *testing.T) {
+	// A reviewer's refused `rg` for the vendor text repeats it on stderr.
+	for _, text := range []string{creditsText, usageLimitText} {
+		for name, prefix := range map[string]string{
+			"no report":       "",
+			"finished report": assistantText("Full review.\n## Owner needed\nnone\n"),
+		} {
+			t.Run(name+"/"+text, func(t *testing.T) {
+				s := permissionCancelSpec(t, prefix)
+				t.Setenv("ORK_GROK_STDERR", "permission required: Execute `rg -n '"+text+"' internal` was not run, ask the user.\n")
+				got, err := Run(context.Background(), s)
+				if err != nil {
+					t.Fatal(err)
+				}
+				want := ExitError
+				if prefix != "" {
+					want = ExitOK
+				}
+				if got.Exit != want {
+					t.Errorf("exit = %s, want %s", got.Exit, want)
+				}
+				if wantReason := "grok: cancelled on a permission prompt: rg -n '" + text + "' internal"; got.Reason != wantReason[:min(len(wantReason), len("grok: cancelled on a permission prompt: ")+60)] {
+					t.Errorf("reason = %q", got.Reason)
+				}
+			})
+		}
 	}
 }
 
