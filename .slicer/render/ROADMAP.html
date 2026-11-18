@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">444 items · — 76 · done 318 · retired 50</p>
+<p class="summary">444 items · — 75 · done 318 · retired 51</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S385</td><td>Docs cite symbols, not lines</td><td>M</td><td>2</td><td>docs</td><td>docs/review-2026-11-12-workflow.md F6: (D) Doc accuracy is 33 of 79 reviewer fix findings; 5 of 14 sampled are moved citations. Decided: adj 409 (docs.citation-form).</td><td class="status">—</td></tr>
@@ -194,7 +194,7 @@
 <tr class="open"><td>139</td><td>S440</td><td>allow removing a file the slice moves out of (rm or git rm) in the implementer&#x27;s allowed commands, so a moved file can be deleted instead of left as a comment-only stub</td><td></td><td>-</td><td></td><td>discovered from S431</td><td class="status">—</td></tr>
 <tr class="retired"><td>140</td><td>S441</td><td>allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree</td><td></td><td>-</td><td></td><td>Duplicate of S416/S422 (UI pass render path; go test -overlay), filed again by tool feedback · discovered from S431</td><td class="status">retired</td></tr>
 <tr class="open"><td>141</td><td>S442</td><td>When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing</td><td></td><td>-</td><td></td><td>discovered from S419</td><td class="status">—</td></tr>
-<tr class="open"><td>142</td><td>S443</td><td>When a resumed gate&#x27;s tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it</td><td></td><td>-</td><td></td><td>discovered from S419</td><td class="status">—</td></tr>
+<tr class="retired"><td>142</td><td>S443</td><td>When a resumed gate&#x27;s tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it</td><td></td><td>-</td><td></td><td>Duplicate of S424 (brief says the tree is unchanged since round N, with the diff hash), filed again by tool feedback · discovered from S419</td><td class="status">retired</td></tr>
 <tr class="open"><td>143</td><td>S444</td><td>Heartbeat test under race</td><td>S</td><td>1</td><td></td><td>2026-11-18 13:55 UTC, main at de74b1d9: `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd` fails every time with `heartbeat_test.go:129: no stepEnd observed`; the `ok` subtest takes about 60 s. Without -race the same test passes in 1.4 s. Found when S392&#x27;s Check line `go test -race -count=1 ./...` went red on a diff that does not touch the engine&#x27;s product code; that line was narrowed in S392.</td><td class="status">—</td></tr>
 </tbody></table>
 <h2>v1.1</h2>
