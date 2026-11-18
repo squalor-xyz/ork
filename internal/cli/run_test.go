@@ -892,6 +892,38 @@ func TestRunAsksSpecQuestionsOnStdinThenStarts(t *testing.T) {
 	}
 }
 
+// S404: standard input that is not a terminal is never read for spec answers;
+// every open question is printed with its answer address and nothing starts.
+func TestRunRefusesPipedSpecAnswers(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	var out, errs bytes.Buffer
+	app := &App{Input: strings.NewReader("1\n1\ny\n"), Terminal: func() bool { return false }, Call: func(ctx context.Context, method string, params, result any) error {
+		if method == daemon.MethodRunStart {
+			stub.calls = append(stub.calls, method)
+			stub.started = append(stub.started, params.(daemon.RunParams).Item)
+			return json.Unmarshal([]byte(`{"id":"r1","state":"setup"}`), result)
+		}
+		return stub.call(ctx, method, params, result)
+	}}
+	code := app.Run(context.Background(), []string{"run", "p", "S1", "--well-specified", "y", "--split", "n"}, &out, &errs)
+	if code != ExitWaitQuestion || len(stub.answers) != 0 || len(stub.started) != 0 {
+		t.Fatalf("exit %d answers %+v started %v: %s %s", code, stub.answers, stub.started, out.String(), errs.String())
+	}
+	for _, c := range stub.calls {
+		if c == daemon.MethodSpecAnswer || c == daemon.MethodRunStart {
+			t.Errorf("%s was called: %v", c, stub.calls)
+		}
+	}
+	for _, want := range []string{"[S1 1/2] Which store?", "Decision key: cache.store", "[S1 2/2] What flag?", "Answer as: #2", "held: S1: input is not a terminal; answer with --answer KEY=LABEL\n"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("missing %q:\n%s", want, out.String())
+		}
+	}
+	if strings.Contains(out.String(), "needs 2 answers") || strings.Contains(out.String(), "Answer 1-") {
+		t.Errorf("the prompt must not be shown:\n%s", out.String())
+	}
+}
+
 func TestRunHoldsAnItemWhoseQuestionsStayOpen(t *testing.T) {
 	for _, input := range []string{"\n", ""} {
 		code, out, errs, stub := singleSpecRun(t, input, specCheckTwoQuestions, nil, "--yes")

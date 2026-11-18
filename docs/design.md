@@ -2674,11 +2674,19 @@ for run or `Answer as: ITEM:#N` for wave. `--questions` refuses `--yes` and
 `--answer`. Run answers use `KEY=value`; wave answers use `ITEM:KEY=value`.
 For a question with options, an in-range integer selects its option. An
 integer outside that range, including one that overflows, is a usage error;
+a value equal to one option's label, trimmed and without regard to case,
+selects that option and records `Label: Summary` (*proposed*, S404, adj 452);
 any other nonempty value is free text. The CLI
 validates the whole batch before the first `spec.answer`: unknown, duplicate,
 empty or out-of-range answers are usage errors naming the address. Missing
-answers list their addresses and hold the whole batch with exit 3 and no
-recording. Complete batches use the existing `RecordSpecAnswers` path, so
+answers list their addresses, print each missing question in full (as the
+listing does) and hold the whole batch with exit 3 and no recording.
+*Proposed (S404, adj 452):* when no `--answer` is given and the input is not a
+terminal (`App.terminal`), `run` and `wave start` read no answer from it: they
+print every open question with its answer address, then
+`held: ID: input is not a terminal; answer with --answer KEY=LABEL` for each
+item (`--answer ITEM:KEY=LABEL` for `wave start`, whose addresses carry the
+item), start nothing and exit 3, as an incomplete batch does. Complete batches use the existing `RecordSpecAnswers` path, so
 the Owner decisions paragraph retains each decision key. Answers with no
 pending question are refused. With `--json`, batch results include
 `questions` (entries with `item`, `address` and the embedded

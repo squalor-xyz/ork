@@ -588,6 +588,23 @@ func TestWaveStartAsksTheSpecQuestionsInOneSittingThenStartsEveryItem(t *testing
 	}
 }
 
+// S404: a wave start never reads spec answers from input that is not a terminal;
+// as for an incomplete --answer batch, nothing starts, the ready S2 included.
+func TestWaveStartRefusesPipedSpecAnswers(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	var out, errs bytes.Buffer
+	app := &App{Input: strings.NewReader("1\n1\ny\n"), Terminal: func() bool { return false }, Call: stub.call}
+	code := app.Run(context.Background(), []string{"wave", "start", "p", "S1", "S2", "--well-specified", "yes", "--split", "no", "--yes"}, &out, &errs)
+	if code != ExitWaitQuestion || len(stub.answers) != 0 || len(stub.started) != 0 || stub.waveStarts() != 0 {
+		t.Fatalf("exit %d answers %+v started %v calls %v: %s %s", code, stub.answers, stub.started, stub.calls, out.String(), errs.String())
+	}
+	for _, want := range []string{"[S1 1/2] Which store?", "Decision key: cache.store", "[S1 2/2] What flag?", "Answer as: S1:#2", "held: S1: input is not a terminal; answer with --answer ITEM:KEY=LABEL\n"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("missing %q:\n%s", want, out.String())
+		}
+	}
+}
+
 func TestWaveStartLeavesOutAnItemWhoseQuestionsStayOpen(t *testing.T) {
 	stub := &specStub{t: t, check: specCheckTwoQuestions}
 	// An empty line skips S1; the wave starts with the ready S2.

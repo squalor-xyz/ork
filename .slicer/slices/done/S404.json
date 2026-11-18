@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/cli/wave.go:641-657` (held batch: print the unanswered questions)\n- `internal/cli/wave.go:675-680` (refuse the stdin prompt when not a terminal)\n- `internal/cli/wave.go:842-906` (`mapAnswers`: label match)\n- `internal/cli/wave.go:908-947` (`printSpecQuestion`, reused for the hold)\n- `internal/cli/specdraft.go:35-50` (`terminal`, reused)\n- `internal/cli/spec_questions_test.go`\n- `internal/cli/run_test.go`\n- `internal/cli/cli.go:60-61` (usage: `--answer KEY=LABEL`)\n- `docs/guide.md:416-430`\n- `docs/design.md:2555-2560`\n- `CHANGELOG.md`"
+      "body": "- `internal/cli/wave.go:641-706` (specCheck: the held batch prints the unanswered questions; the non-terminal refusal)\n- `internal/cli/wave.go:889-961` (`mapAnswers`: label match)\n- `internal/cli/wave.go:963-1004` (`printSpecQuestion`, reused for the hold)\n- `internal/cli/specdraft.go:31-50` (`terminal`, reused)\n- `internal/cli/spec_questions_test.go`\n- `internal/cli/run_test.go`\n- `internal/cli/wave_test.go`\n- `internal/cli/lineup_defaults_test.go` (`TestWaveStartPlansEveryItemWithTheDefaults` gets a Terminal hook)\n- `internal/cli/cli.go:60-95` (usage: `--answer KEY=LABEL`)\n- `docs/guide.md:427-449`\n- `docs/design.md:2675-2691`\n- `landed-changed/S404.md` (the changelog entry, written with `slicer changelog add`)"
     },
     {
       "heading": "Failing tests",

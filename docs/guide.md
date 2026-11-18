@@ -424,8 +424,11 @@ the saved-wave form accepts the flag too. When no questions are open, text
 mode prints `no open spec questions: S1, S2`; a saved wave with no startable
 items names the wave instead.
 
-Answer all questions in one call with repeatable `--answer KEY=N`, or
-`--answer KEY=text` for free text, plus `--yes` to confirm the launch. A
+Answer all questions in one call with repeatable `--answer KEY=LABEL`, which
+picks the option whose label is LABEL (trimmed, upper or lower case), plus
+`--yes` to confirm the launch. `--answer KEY=N` picks an option by its
+position, and other text is free text; a label does not move when the options
+change, a number does (*proposed*, S404). A
 question without a key uses `#N`, its one-based position within the item.
 Quote that address in a shell, for example `--answer '#2=custom limit'`.
 Flag order does not matter. A wave requires an item prefix on every answer:
@@ -434,8 +437,15 @@ The wave listing shows `Decision key: k1 (answer as S1:k1)`. Keyless questions
 show `Answer as: #N` for run and `Answer as: ITEM:#N` for wave.
 Unknown keys, duplicate keys, empty answers and option numbers outside the
 range are refused before any answer is recorded. Missing answers hold the
-whole batch, list the missing addresses and exit 3 without recording answers
+whole batch, list the missing addresses, print each missing question in full
+with its options and answer address, and exit 3 without recording answers
 or starting anything. Answers with no pending questions are refused.
+Standard input that is not a terminal is never read for answers (*proposed*,
+S404): `printf '1\n1\n' | ork run P ID` with open questions prints every
+question with its answer address, prints
+`held: ID: input is not a terminal; answer with --answer KEY=LABEL`,
+starts nothing and exits 3. `ork wave start` does the same for the whole wave,
+and its line names the prefixed form: `answer with --answer ITEM:KEY=LABEL`.
 `--questions` cannot be combined with `--yes` or `--answer`.
 
 With `--json`, these flags add `questions` and `answered` arrays to the one

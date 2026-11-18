@@ -83,7 +83,9 @@ func TestRunYesStillRefusesNoCheckWithoutAskingAnything(t *testing.T) {
 func TestWaveStartPlansEveryItemWithTheDefaults(t *testing.T) {
 	var plans []daemon.RunParams
 	var started daemon.WaveStartParams
-	app := &App{Call: func(_ context.Context, method string, params, result any) error {
+	// S404: a terminal whose owner gives no answer; input that is not a terminal
+	// is refused instead (TestWaveStartRefusesPipedSpecAnswers).
+	app := &App{Terminal: func() bool { return true }, Call: func(_ context.Context, method string, params, result any) error {
 		switch method {
 		case daemon.MethodItemShow:
 			return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
