@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "Observed 2026-11-11: the registered slicer project (pyproject.toml, no go.mod) had the built-in Go implementer allowlist and no check command, so the first `ork wave start` warned and refused; fixed by hand with `ork projects set slicer --preset python --check ...`. Wanted: detect the language at `projects add` (or when the first run plans) and suggest the preset and the check command from the project's AGENTS.md."
+      "body": "Observed 2026-11-11: the registered slicer project (pyproject.toml, no go.mod) had the built-in Go implementer allowlist and no check command, so the first `ork wave start` warned and refused; fixed by hand with `ork projects set slicer --preset python --check ...`. Wanted: detect the language at `projects add` (or when the first run plans) and suggest the preset and the check command from the project's AGENTS.md.\n\nWhat already exists (checked 2026-11-18):\n\n- The plan and `ork doctor` already detect it, after the fact. `SetupWarnings` (`internal/engine/setup.go:90-128`) warns when the implementer has the built-in Go list and the project has no go.mod, and `presetFix` (`internal/engine/setup.go:138-149`) names `--preset python` when pyproject.toml is present. The plan carries them (`internal/daemon/runs.go:808`); `ork doctor` prints them (`internal/cli/doctor.go:197-202`).\n- The check command: since S246 a run uses slicer's `check_command` config key when it is set, else the registry's (adj 32; `internal/daemon/runs.go:991-1005`). A project that sets it in slicer needs no `--check`.\n- `projects add` only registers the path and the adj flag (`internal/daemon/handlers.go:536-575`) and prints `added NAME PATH` (`internal/cli/daemoncmds.go:280-293`). It says nothing about setup, so the owner learns of the gap at the first start.\n- Reading a check command out of AGENTS.md prose is not deterministic (it is free text), so this spec does not do it; the fix text points to slicer's `check_command` key instead.\n- slicer has no language detection to reuse (`slicer --root ../slicer find language`: no such item).\n\nOpen owner question: what `projects add` does when it finds a language marker, per the owner's answer to `projects.add-setup`."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/cli/daemoncmds.go:234-295` (`projects add`: print the setup lines after `added ...`)\n- `internal/engine/setup.go:76-150` (`NoCheckMessage` and `presetFix`: name slicer's `check_command` key; a helper that picks the preset from the marker files)\n- `internal/daemon/handlers.go:536-575` (`addProject`: only if the owner picks the apply option)\n- `internal/engine/setup_test.go`\n- `internal/cli/cli_test.go`\n- `docs/guide.md:133-145`\n- `docs/design.md:3452-3460`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "Written for the recommended answer to `projects.add-setup` (print, do not apply). Under the apply option, `TestProjectsAddAppliesThePythonPreset` replaces the first test.\n\n- `TestProjectsAddPrintsSetupLines` in `internal/cli/cli_test.go`: a temp project dir with pyproject.toml and no go.mod; `ork projects add DIR` exits 0 and prints `added ...`, then a line with `--preset python` and a line about the check command. Red today: add prints only `added NAME PATH` (`internal/cli/daemoncmds.go:292`).\n- `TestProjectsAddGoProjectPrintsNoPresetLine` in `internal/cli/cli_test.go`: a dir with go.mod; no preset line is printed (the built-in list fits), the check command line still is. Red today only for the check command line.\n- `TestProjectsAddJSONCarriesSetupWarnings` in `internal/cli/cli_test.go`: `--json` output has `\"setup\": [...]` with the same lines beside `\"project\"`. Red today: the key does not exist.\n- `TestNoCheckMessageNamesSlicerCheckCommand` in `internal/engine/setup_test.go`: `NoCheckMessage(\"p\")` names `slicer config check_command CMD` as a fix beside `ork projects set p --check CMD`. Red today: it names only the registry flag (`internal/engine/setup.go:80`)."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. `internal/engine/setup.go`: `NoCheckMessage` also names `slicer config check_command CMD` as a fix, since a run prefers slicer's key (S246, adj 32). Keep the `--allow-no-check` part. Update the expected strings in `TestSetupWarnings` and in the plan and doctor tests that quote the message.\n3. `projects add` in `internal/cli/daemoncmds.go`: after the add succeeds, compute `engine.SetupWarnings` for the new project with a `has` that stats files in its path, as `ork doctor` does (`internal/cli/doctor.go:197-200`). Text mode prints each as `setup: LINE`; `--json` adds `\"setup\": [...]` (empty list when none). Exit code stays 0.\n4. Per the owner's answer to `projects.add-setup`: if the owner picks apply, `addProject` writes the preset's list (`engine.ImplementerPreset`) when exactly one of go.mod and pyproject.toml is present, and the add line says so; otherwise nothing is written.\n5. The TUI add flow (`internal/tui/welcome.go:72`) is not changed in this slice.\n6. Docs: `docs/guide.md` (projects add prints setup lines), `docs/design.md` (`projects add` JSON gains `setup`). Changelog entry with `slicer changelog add S339 --text \"...\"`.\n\nThis slice changes `internal/cli` output, so it gets a UI pass (rule u10)."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- Adding a project with pyproject.toml and no go.mod prints a line that names the python preset fix.\n- Adding a project with no check command prints a line that names both slicer's check_command key and the registry flag.\n- The JSON form carries the same lines under setup.\n- projects add still exits 0 and writes only what the owner's answer to projects.add-setup allows.\n\nCommands:\n- `go test ./internal/cli ./internal/engine -run 'TestProjectsAdd|TestNoCheckMessage|TestSetupWarnings' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S339: projects add prints the setup a new project needs\"."
     }
   ],
   "notes": []

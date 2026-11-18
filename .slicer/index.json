@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 445,
+  "next_id": 446,
   "preamble": "",
   "passes": [
     {
@@ -19237,7 +19237,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19265,7 +19265,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19293,7 +19293,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19320,8 +19320,8 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
-        "effort": null,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19349,7 +19349,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19377,7 +19377,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19533,7 +19533,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19547,7 +19547,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -19561,7 +19561,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19646,7 +19646,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19674,7 +19674,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19730,7 +19730,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19772,7 +19772,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -19786,7 +19786,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19998,7 +19998,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -22836,7 +22836,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22850,7 +22850,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -22879,7 +22879,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22893,7 +22893,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -22907,7 +22907,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22921,7 +22921,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -22946,11 +22946,25 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "69001e94-ac6c-4607-9c12-0bda238dfdbc",
+          "kind": "",
+          "text": "**2026-11-18** — Merged S445 (2026-11-18, tool feedback from run ork-20261118-151517-1d8b, S439 reviewer): same plan-mode brief conflict.",
+          "created_at": "2026-11-18T15:37:10Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22964,7 +22978,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23134,7 +23148,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23148,7 +23162,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23162,7 +23176,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23175,8 +23189,8 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
-        "effort": null,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -23486,7 +23500,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23498,9 +23512,9 @@
         "pass": "v1.2",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 2,
-        "effort": null,
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23570,7 +23584,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23584,7 +23598,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -23671,7 +23685,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23685,7 +23699,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23742,7 +23756,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23756,7 +23770,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -23813,6 +23827,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S445",
+      "title": "say in the brief that plan mode may be active and that the final message is the report, so the plan-mode instructions do not conflict",
+      "short_title": "say in the brief that plan mode may be active and that the final message is the report, so the plan-mode instructions do not conflict",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S439",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4fbb8f1f",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S418 (roles.read-only-plan-mode, option a: brief says not to exit plan mode and to give the report as the final message).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

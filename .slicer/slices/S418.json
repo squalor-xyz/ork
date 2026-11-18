@@ -4,7 +4,7 @@
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "",
+  "size": "S",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-233556-f24d, project ork, item S388:\n\nSay in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message\n\nEvidence: this session started in plan mode with an ExitPlanMode instruction that conflicts with the reviewer contract's final-report rule"
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-233556-f24d, project ork, item S388:\nSay in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message\nEvidence: this session started in plan mode with an ExitPlanMode instruction that conflicts with the reviewer contract's final-report rule\n\nMerged on 2026-11-18 (duplicate sweep): S412 (no reviewer under Grok plan mode, run ork-20261117-215053-c643, S402), S414 (no gate under Grok plan mode, same run) and S427 (brief says whether gate mode applies, run ork-20261118-121813-4c84, S404: \"session started in plan mode demanding ExitPlanMode, which is not in the reviewer's tool list\"). This slice covers the reviewer and the gate, on Claude and on Grok.\n\nEvidence (2026-11-18):\n\n- ork starts every cloud read-only role in plan mode on purpose: Claude with `--permission-mode plan` unless it is a UI pass with a write directory (`internal/agent/claude/args.go:103-105`), Grok with `--permission-mode plan` (`internal/agent/grok/grok.go:3-5`, `internal/agent/grok/grok.go:84`). The reviewer, gate, architect, UI pass, spec check and spec draft are read-only (`internal/engine/perm.go:103-105`, `internal/engine/perm.go:124-131`).\n- Each harness's plan mode adds its own instruction: Claude asks for ExitPlanMode, Grok for plan.md and exit_plan_mode (S412, S414, S427 evidence). Neither the role prompts nor the brief mention plan mode for Claude. For Grok the brief names only the commands that run in plan mode (`internal/engine/brief.go:251-255`).\n- The brief already says the report is the final message: the Your files section (`internal/engine/brief.go:158-161`) and the done-when line (`internal/engine/brief.go:249-250`). It does not say to ignore the harness's plan-mode request.\n- adj 372 (`roles.ui-pass-write-mechanism`, decided 2026-11-16) moved the cloud UI pass off plan mode to an allowlist with `--permission-prompts none`, because plan mode refused its writes. Whether the reviewer and gate keep plan mode is open: S412 and S414 asked not to run them under it.\n\nOpen owner question: whether read-only roles stay in plan mode and are told how to treat it (this spec), or leave plan mode. Per the owner's answer to `roles.read-only-plan-mode`."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/brief.go:243-256` (`doneWhen`: the plan-mode line for a read-only role on claude or grok)\n- `internal/engine/brief_test.go`\n- `docs/design.md` (Roles: read-only roles run in plan mode, and what the brief tells them)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "In `internal/engine/brief_test.go`:\n\n- `TestPlanModeReadOnlyBriefSaysToIgnoreThePlanRequest`: for roles reviewer, gate, architect, spec-check, and vendors claude and grok, `BuildBrief` with `ReadOnly` set has a done-when line that says the harness starts the role in plan mode, that it must not call ExitPlanMode or exit_plan_mode or write a plan file, and that its final message is the report. Red today: no line mentions plan mode for claude, and the grok line names only the commands that run.\n- `TestUIPassWithWriteDirHasNoPlanModeLine`: a UI pass brief on claude (the role that runs without plan mode, adj 372) has no plan-mode line. Red only if step 2 adds the line to every read-only role; it guards the exception.\n- `TestCodexAndLocalReadOnlyBriefHasNoPlanModeLine`: on codex and claude-local the read-only brief has no plan-mode line, since those launchers do not use plan mode (`internal/agent/claude/args.go:103`). Green today; it guards step 2.\n- `TestClaudeAndCodexReadOnlyDoneWhenIsUnchanged`: update its claude expectations for the new line; codex stays as it is."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see them red for the stated reason.\n2. Per the owner's answer to `roles.read-only-plan-mode`. If plan mode stays (this spec): in `doneWhen`, for a read-only role whose vendor is claude (cloud, not a UI pass) or grok, add one line: \"The harness starts you in plan mode. Do not call ExitPlanMode or exit_plan_mode and do not write a plan file. Your final message is your report.\" Keep the Grok line about the commands that run. If the owner chooses to leave plan mode, stop and return the slice for a new spec: the change then moves to `internal/agent/claude/args.go` and `internal/agent/grok/grok.go`.\n3. Docs: `docs/design.md` Roles says that read-only roles run in plan mode on Claude and Grok and that the brief tells them to ignore the plan request (cite the adj record). Changelog entry with `slicer changelog add S418 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- A reviewer, gate, architect or spec check brief on Claude or Grok says the harness starts it in plan mode, that it must not call ExitPlanMode or exit_plan_mode or write a plan file, and that its final message is its report.\n- A UI pass with a write directory, a codex role and a claude-local role get no such line.\n- docs/design.md describes the rule.\n\nCommands:\n- `go test ./internal/engine -run 'PlanMode|TestClaudeAndCodexReadOnlyDoneWhenIsUnchanged|TestUIPassWithWriteDirHasNoPlanModeLine' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S418: tell plan-mode read-only roles to ignore the plan request\"."
     }
   ],
   "notes": []

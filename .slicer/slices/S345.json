@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "Observed 2026-11-11 (slicer s453, ork-20261111-213809-376f): the implementer under `ork projects set slicer --preset python` was denied `git -C <worktree> ls-files -s tests/fixtures/relay-contract-v11.json` and `git mv tests/fixtures/relay-contract-v11.json tests/fixtures/relay-contract-v12.json` while doing the slice's own fixture rename; the run went on. Wanted: decide whether the presets allow `git ls-files` (read-only) and `git mv` (index-only, no commit), or say in the brief that a rename is a plain move the landing picks up."
+      "body": "Observed 2026-11-11 (slicer s453, ork-20261111-213809-376f): the implementer under `ork projects set slicer --preset python` was denied `git -C <worktree> ls-files -s tests/fixtures/relay-contract-v11.json` and `git mv tests/fixtures/relay-contract-v11.json tests/fixtures/relay-contract-v12.json` while doing the slice's own fixture rename; the run went on. Wanted: decide whether the presets allow `git ls-files` (read-only) and `git mv` (index-only, no commit), or say in the brief that a rename is a plain move the landing picks up.\n\nEvidence (2026-11-18):\n\n- Both presets share one head and tail (`internal/engine/perm.go:45-69`): git `status`, `diff` and `log`, plain and `-C *`, and no `ls-files`, `mv` or `rm`. The built-in default is the go preset (`internal/engine/perm.go:75-78`, adj 75 and adj 94).\n- A plain move needs `mv` or `rm`, and neither is in either list, so the implementer today can only Write the new file and leave the old one. ork's commit stages everything (`git add -A`, `internal/engine/states.go:1284`), so a rename done by the implementer by any means is picked up at the commit.\n- A preset is written into the registry as a plain list when it is set (`internal/daemon/settings.go:114-120`; `docs/state.md:161`). Changing `ImplementerPreset` changes the built-in default and later `--preset` calls, not a project that already stores a list (slicer does).\n- S440 (filed from tool feedback, adj 466 decided `file`) asks for `rm` or `git rm` for the same reason: a file the slice moves out of. S440 and this slice change the same lines (`internal/engine/perm.go:45-69`).\n- adj 457 (`launch.allowlist-rg`) dropped `rg` from the presets because `rg --pre` runs a program; the same review applies to any new entry.\n\nOpen owner question: which move and index-read forms the presets allow, per the owner's answer to `launch.allowlist-move`."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/perm.go:41-78` (`ImplementerPreset`: the shared head and tail)\n- `internal/engine/perm_test.go:13-130`\n- `internal/roles/prompts/implementer.md` (one line on how to rename a file, per the answer)\n- `docs/design.md:2345-2372` (the preset lists)\n- `docs/state.md:161`\n- `docs/guide.md:255`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "Written for the recommended answer to `launch.allowlist-move` (allow `git ls-files` and `git mv`, plain and `-C *`).\n\n- `TestImplementerPresetsAllowGitLsFilesAndMv` in `internal/engine/perm_test.go`: for both `go` and `python`, the list holds `Bash(git ls-files*)`, `Bash(git -C * ls-files*)`, `Bash(git mv*)` and `Bash(git -C * mv*)`. Red today: none is in either list (`internal/engine/perm.go:46-53`).\n- `TestDefaultImplementerAllowlistIsExactlyTheDecidedOne` in `internal/engine/perm_test.go`: update its exact list to the new go preset. Red today against the new expected list.\n- `TestImplementerPromptSaysHowToRename` in `internal/roles/roles_test.go`: the implementer prompt names `git mv` for a rename of a tracked file. Red today: the prompt has no such line."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. `ImplementerPreset`: add the forms the owner's answer to `launch.allowlist-move` allows to the shared tail, so both presets and the built-in default get them. Keep the order stable; the check command's entry stays last.\n3. Implementer prompt: one line, in the rules on files, that a tracked file is renamed with `git mv` (or as the answer says), and that ork's commit picks up the move.\n4. A project that stores a list keeps it: the docs say to run `ork projects set NAME --preset go|python` again, or `--allow implementer=PATTERN` (adj 190, adds), to pick up the new entries. ork does not rewrite stored lists.\n5. Coordinate with S440 (`rm` and `git rm`), which edits the same lines: whichever lands second rebases on the other. If the orchestrator merges the two, this spec's tests carry over unchanged.\n6. Docs: `docs/design.md` preset lists, `docs/state.md:161`, `docs/guide.md:255`, citing the new adj record. Changelog entry with `slicer changelog add S345 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- The go and python presets, and the built-in default, allow the read-only index listing and the move forms the owner chose.\n- The implementer prompt says how to rename a tracked file.\n- The docs list the new entries and say how a project with a stored list picks them up.\n\nCommands:\n- `go test ./internal/engine ./internal/roles -run 'TestImplementerPreset|TestDefaultImplementerAllowlist|TestImplementerPromptSaysHowToRename' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S345: implementer presets allow git ls-files and git mv\"."
     }
   ],
   "notes": []
