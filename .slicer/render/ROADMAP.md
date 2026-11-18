@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-449 items · — 63 · done 321 · retired 65
+449 items · — 62 · done 321 · retired 66
 
 ## v1.3
 
@@ -89,7 +89,7 @@ v1.2
 | 32 | S270 | No-adj hint | S | 1 |  | Owner 2026-11-03 (screenshot of the slicer project's Decisions tab): the tab reads 'no adj in this project' with nothing else. The slicer repo has no .adjudicate.json (adj check there: 'no repo root found: no .adjudicate.json in ...; run adj init first'), so the message is accurate but gives no way forward. Sites: internal/tui/decisions.go:124-126 (the Decisions tab) and internal/tui/pane.go:729 and :734 (the answer pane, same words). Proposed: the Decisions tab says 'no adj in this project; run adj init in its repo to start one' (wording to confirm), and the pane keeps its short form. TUI text only: ork does not run adj init (boundaries: adj is the owner's tool). Golden views for the empty state change; UI pass applies (u10). Open owner question: exact wording, and whether the pane line should change too. · discovered from S140 | — |
 | 33 | S286 | Read release target and wave from slicer: wave start, status and the Waves screen | M | 2 |  | Blocked on slicer s449 (release target and wave). Owner 2026-11-04 wants mini slices to target a version release and each release split into waves to execute. ork should read release_target and wave from slicer (never keep its own copy), fall back to pass when only pass is present, and use them: wave start suggests the next unfinished wave of a release target (wave.selection), status and the Waves screen show release target and wave per item, and the glossary names ork's launched wave against slicer's planned wave and parallel set. Check slicer first (slicer --root ../slicer find) that slicer does not already provide the suggestion. Spec step must run adj check on wave.selection and ask the owner if the key is decided differently. Acceptance: (1) with only pass in slicer data, behavior is unchanged; (2) with release_target and wave, wave start with no items suggests that wave's unfinished items within the cap; (3) status and the Waves screen show release target and wave, with goldens updated and reviewed; (4) docs/glossary.md, docs/design.md and docs/dashboard.md use the new terms; (5) go test ./..., go vet ./... and gofmt -l . are clean. | — |
 | 34 | [S303](slices/S303.md) | Local launcher unreachable: fall back to the next row | S | 2 | daemon, agent | S301 | — |
-| 35 | [S304](slices/S304.md) | Evaluate local launchers per role | M | 2 | daemon |  | — |
+| 35 | [S304](slices/S304.md) | Evaluate local launchers per role | M | 2 | daemon | Trials done; results in notes. claude-local qwen3.8-27b failed every implementer trial (6 of 6, no product edit). | retired |
 | 36 | [S305](slices/S305.md) | Grok and grok-local accept write roles | M | 2 | agent, daemon |  | done |
 | 37 | [S307](slices/S307.md) | S258 and S274 later notes | M | 2 | daemon, tui, cli | S258 and S274 reviews and gates, 2026-11-07 · discovered from S274 | — |
 | 38 | [S308](slices/S308.md) | ork status lists stale manual relays | S | - |  |  | done |
@@ -191,7 +191,7 @@ v1.2
 | 134 | [S423](slices/S423.md) | say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it" | S | 1 |  | discovered from S403 | — |
 | 135 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it | M | 2 |  | discovered from S403 | — |
 | 136 | [S431](slices/S431.md) | Daemon auto-rebuild | L | 3 |  | 2026-11-18: after S332, S403, S405 and S404 landed, the daemon stayed on build 7f5a1f7d, so landed fixes (the changelog-entry gate, ork wait, the tracking commit) did not apply to new runs. `ork daemon restart --rebuild` refuses while any role runs, even with --force (`docs/design.md:3847-3849`, adj 312), and with three runs in flight there was no gap; the orchestrator retried it every 30 s from a shell loop. The rebuild runs in the CLI (`internal/cli/lifecycle.go:88-120`); the daemon only reports behind main (`internal/daemon/build.go:25`, `:173`). | done |
-| 137 | [S432](slices/S432.md) | Accept slicer relay contract v13 (engine runs the finish step) | M | - |  |  | — |
+| 137 | [S432](slices/S432.md) | Accept slicer relay contract v13 (v12-v13) | M | - |  |  | — |
 | 138 | [S433](slices/S433.md) | give the UI pass a named render hook, so renders need no overlay test file written by the role |  | - |  | Duplicate of S416 (UI pass render path), filed again by tool feedback · discovered from S392 | retired |
 | 139 | [S434](slices/S434.md) | give doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file | S | 1 |  | discovered from S398 | — |
 | 140 | [S435](slices/S435.md) | treat exit 1 of an absence check such as `rg -n PATTERN PATH` as pass when the slice's Check line says it prints nothing |  | - |  | Duplicate of S419 (no-match rg on a prints-nothing Check line), filed again by tool feedback · discovered from S398 | retired |

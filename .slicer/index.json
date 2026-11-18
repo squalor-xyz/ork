@@ -21423,7 +21423,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S409"
+        "S432"
       ],
       "note_records": [
         {
@@ -23506,8 +23506,8 @@
     },
     {
       "id": "S432",
-      "title": "Accept slicer relay contract v13 (engine runs the finish step)",
-      "short_title": "Accept slicer relay contract v13 (engine runs the finish step)",
+      "title": "Accept slicer relay contract v13 (v12-v13)",
+      "short_title": "Accept slicer relay contract v13 (v12-v13)",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
