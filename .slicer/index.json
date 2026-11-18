@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 440,
+  "next_id": 441,
   "preamble": "",
   "passes": [
     {
@@ -22913,7 +22913,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22925,9 +22925,9 @@
         "pass": "v1.1",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 2,
-        "effort": null,
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23505,6 +23505,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S440",
+      "title": "allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub",
+      "short_title": "allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S431",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-548e367a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
