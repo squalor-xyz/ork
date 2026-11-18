@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 420,
+  "next_id": 421,
   "preamble": "",
   "passes": [
     {
@@ -22669,6 +22669,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S420",
+      "title": "Grok out of credits on stderr is classified, so the role falls back",
+      "short_title": "Grok stderr credits",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-18 03:38 UTC: S388 (run ork-20261117-233556-f24d) implementer round 4 and gate round 5 ran grok-4.7 and each ended in under a second with exit \"unclassified\", no report, and the run stopped. A manual `grok -p \"reply with ok\"` (grok 1.0.77) printed `Error: Internal error: { \"message\": \"API error (status 403 Forbidden): Your team <team> has either used all available credits or reached its monthly spending limit. ...\", \"http_status\": 403 }` on its output and exited 0. The adapter looks for `used all available credits` only in stream `error` events (`internal/agent/grok/grok.go:291-309`) and sets out of credits only from that (`:380-381`), so the stderr form stays unclassified and the role neither falls back nor marks grok out.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "grok-stderr-credits",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }
