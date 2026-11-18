@@ -5220,3 +5220,7 @@
 {"when": "2026-11-18T13:49:33Z", "item": "S441", "action": "add", "from": "", "to": "open", "note": "allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree"}
 {"when": "2026-11-18T13:49:33Z", "item": "S441", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T13:50:49Z", "item": "S441", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416/S422 (UI pass render path; go test -overlay), filed again by tool feedback"}
+{"when": "2026-11-18T13:55:22Z", "item": "S442", "action": "add", "from": "", "to": "open", "note": "When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing"}
+{"when": "2026-11-18T13:55:22Z", "item": "S442", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:56:35Z", "item": "S443", "action": "add", "from": "", "to": "open", "note": "When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it"}
+{"when": "2026-11-18T13:56:35Z", "item": "S443", "action": "promote", "from": "", "to": "", "note": ""}
