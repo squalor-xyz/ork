@@ -5513,3 +5513,5 @@
 {"when": "2026-11-18T22:18:10Z", "item": "S338", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 473 cli.spec-check-skip = fla", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:18:11Z", "item": "S339", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 474 projects.add-setup = warn", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:18:11Z", "item": "S340", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 475 status.spec-questions = y", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:19:31Z", "item": "S450", "action": "add", "from": "", "to": "open", "note": "skip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files"}
+{"when": "2026-11-18T22:19:31Z", "item": "S450", "action": "promote", "from": "", "to": "", "note": ""}

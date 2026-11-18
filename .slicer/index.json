@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 450,
+  "next_id": 451,
   "preamble": "",
   "passes": [
     {
@@ -24154,6 +24154,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S450",
+      "title": "skip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files",
+      "short_title": "skip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S432",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-606d696f",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
