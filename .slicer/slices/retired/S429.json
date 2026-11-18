@@ -1,0 +1,39 @@
+{
+  "id": "S429",
+  "title": "give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261118-121813-4c84, project ork, item S404:\n\ngive the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand\n\nEvidence: attempt 1 cp of the module into tmp/ui-1 was denied: \"This command requires approval, and this session has no approval surface\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
