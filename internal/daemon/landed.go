@@ -12,6 +12,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -52,9 +53,19 @@ func newLandingFetcher(src source.Fetcher, d *Daemon) source.Fetcher {
 
 func (f landingFetcher) Fetch(ctx context.Context, p registry.Project, part source.Part) (any, error) {
 	v, err := f.Fetcher.Fetch(ctx, p, part)
-	if part == source.Head && err == nil {
+	if err != nil {
+		return v, err
+	}
+	switch part {
+	case source.Head:
 		if head, ok := v.(string); ok && head != "" {
 			f.d.checkMerged(ctx, p, head)
+		}
+	case source.Decided:
+		// A decided tool feedback question is filed once, whoever decided it
+		// (S388, *proposed*).
+		if records, ok := v.([]adjcli.Record); ok {
+			f.d.fileDecidedToolFeedback(ctx, p, records)
 		}
 	}
 	return v, err

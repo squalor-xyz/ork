@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S388 (*proposed*, adj 415, 416): a `feature` tool feedback entry is asked in
+  the target project's adj as `tool-feedback.SLUG-HASH`, with options `file` and
+  `drop` and `file` recommended, so it shows in Needs you. The entry keeps the
+  record id as `asked`; a target without adj, or a key adj already holds, leaves
+  `file_error` and asks nothing. When the record is decided `file`, by the owner
+  or by the relay-session orchestrator as the owner's delegate, the daemon files
+  one slice in that project on its next read of the decided records. ork never
+  runs `adj decide` for these records. Docs updated: `docs/boundaries.md`,
+  `docs/design.md`, `docs/state.md`, `docs/orchestrator-parity.md`.
 - S390 (*proposed*, adj 418, adj 419): with the ASCII option the Recent
   outcomes read `+ pass`, `x fail` and `+ landed` and keep their colours; a
   wrapped Waves `both touch` overlap line hangs its continuation four columns
@@ -10,6 +19,13 @@
   "nothing" or "none" is empty, even with prose after it. The prose is evidence
   and no longer starts a fix round; a tagged finding after it still counts. The
   reviewer and UI prompts say so. Docs updated: `docs/design.md`.
+- S396 (*proposed*): `item.park` checks again for an unfinished run after
+  `slicer park` and undoes the park with `slicer unpark` when a run started in
+  between. The call stays `refused` and names that run; a failed unpark is
+  `internal` and says the item is parked although the run is unfinished.
+  `Note`, `Park`, `Unpark`, `Move`, `Show` and `ShowRaw` refuse an id that
+  starts with `-`, and the `item.*` handlers refuse it as `bad_params`. Docs
+  updated: `docs/design.md`.
 - S402 (*proposed*, adj 405): a merged run removes its item's spec-check
   directory only when the run has a commit time and no file in the check is
   newer than that commit. A restart or a git error no longer removes a later spec check
@@ -359,14 +375,6 @@
   if it is still red. `--rounds` is refused. Any other committed run, or one
   whose worktree or branch is gone, stays refused. `ork run` does not resume
   it.
-
-- S396 (*proposed*): `item.park` checks again for an unfinished run after
-  `slicer park` and undoes the park with `slicer unpark` when a run started in
-  between. The call stays `refused` and names that run; a failed unpark is
-  `internal` and says the item is parked although the run is unfinished.
-  `Note`, `Park`, `Unpark`, `Move`, `Show` and `ShowRaw` refuse an id that
-  starts with `-`, and the `item.*` handlers refuse it as `bad_params`. Docs
-  updated: `docs/design.md`.
 
 ## v1.1.0 (2026-11-11)
 

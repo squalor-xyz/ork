@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 421,
+  "next_id": 422,
   "preamble": "",
   "passes": [
     {
@@ -21495,13 +21495,42 @@
       "id": "S388",
       "title": "Ask about feature tool feedback in adj and file it when answered",
       "short_title": "Tool feedback owner questions",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S387",
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1a952188-d96d-45b1-a6cb-cde1d7bf15b8",
+          "kind": "",
+          "text": "**2026-11-18** — Human checks at approval (S388):\n- later: In a real run, a feature line reaches Needs you, and answering `file` files one slice in the target.",
+          "created_at": "2026-11-18T03:43:16Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "91a20d41-776b-4416-a48c-b4e97a02da4b",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: a feature tool feedback entry is asked in the target project's adj as tool-feedback.SLUG-HASH (options file and drop, file recommended; the entry keeps the record id as asked). A target without adj, or a key adj already holds, leaves file_error and asks nothing. The daemon's fetcher wrapper files one slice per decided tool-feedback.* record whose decision is file, once per record, whoever decided it; drop and other keys file nothing; ork never runs adj decide for these records. docs/boundaries.md names the adj 416 delegate exception. go vet and go test ./... pass (26 packages); the eight slice tests pass and were mutation-checked.",
+          "created_at": "2026-11-18T03:43:22Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -21519,7 +21548,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22726,6 +22755,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S421",
+      "title": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator",
+      "short_title": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S388",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5fefb136",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388's run",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

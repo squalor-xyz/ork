@@ -90,6 +90,8 @@ type Daemon struct {
 
 	models modelCache // the vendors' model lists, read once (S244)
 
+	toolFeedback toolFeedbackFiling // the decided tool feedback records handled since start (S388, *proposed*)
+
 	buildMu sync.Mutex
 	builds  map[string]buildEntry // at most one tip/ref/build per registered path
 

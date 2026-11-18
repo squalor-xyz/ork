@@ -105,6 +105,12 @@ change the contract by itself.
   (`owner.questions`) or confirms an open record with `ork adj answer`.
   The latter always prompts and has no `--yes`. No role and no automatic
   step triggers it. ork never rejects, supersedes or withdraws a record.
+  *Proposed* exception (S388, adj 416 `feedback.who-answers`): a
+  `tool-feedback.*` question may also be decided by the relay-session
+  orchestrator as the owner's delegate, with `--by` the owner and a `--why`
+  that cites the session. It is the delegate's own `adj decide`; still no role
+  and no automatic ork step runs `adj decide`, and ork only reads the decision
+  and files the slice.
 - Slice result commits go on slice branches, only after the owner approves
   the slice (`git.commit`).
   In handoff mode, landing also commits the `.slicer` change on the base

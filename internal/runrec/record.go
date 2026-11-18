@@ -396,7 +396,8 @@ const MaxToolFeedback = 3
 // report with (adj 325). It is not a finding. ork files an entry of a safe
 // kind as a slice (S387, *proposed*; adj 410-414): Key is its stable filing
 // identity, Filed the new item's id, FiledAt the time, and FileError why a
-// filing failed. The kind feature is only kept.
+// filing failed. An entry of the kind feature is asked in the target project's
+// adj instead (S388, *proposed*; adj 415, 416): Asked is the adj record id.
 type ToolFeedback struct {
 	Role      string    `json:"role"`
 	Tool      string    `json:"tool"`
@@ -407,6 +408,7 @@ type ToolFeedback struct {
 	Filed     string    `json:"filed,omitempty"`
 	FiledAt   time.Time `json:"filed_at,omitzero"`
 	FileError string    `json:"file_error,omitempty"`
+	Asked     int       `json:"asked,omitempty"`
 }
 
 // AddToolFeedback appends entries in the order given and keeps the first
