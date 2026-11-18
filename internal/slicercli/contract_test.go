@@ -146,9 +146,9 @@ func dropEntry(generic map[string]any, list, field, value string) {
 
 // v11 renames the conformance key vendor_limit to role_fallback, adds
 // blocker_wait and puts the gate in roles[] (slicer s424).
-func TestRelayContractV11Validate(t *testing.T) {
-	if got := editContract(t, "relay-v11.json", func(map[string]any) {}); got.Validate() != nil {
-		t.Fatalf("recorded v11 JSON refused: %v", got.Validate())
+func TestRelayContractInheritedV11RulesValidate(t *testing.T) {
+	if got := editContract(t, "relay-v12.json", func(map[string]any) {}); got.Validate() != nil {
+		t.Fatalf("recorded v12 JSON refused: %v", got.Validate())
 	}
 	for name, edit := range map[string]func(map[string]any){
 		"no gate in roles[]": func(g map[string]any) { dropEntry(g, "roles", "role", "gate") },
@@ -160,7 +160,7 @@ func TestRelayContractV11Validate(t *testing.T) {
 		},
 	} {
 		t.Run(name, func(t *testing.T) {
-			err := editContract(t, "relay-v11.json", edit).Validate()
+			err := editContract(t, "relay-v12.json", edit).Validate()
 			if err == nil {
 				t.Fatal("accepted")
 			}
@@ -192,19 +192,19 @@ func TestRelayContractV12Validate(t *testing.T) {
 	}
 }
 
-// v11 needs no tool_feedback key.
-func TestRelayContractV11NeedsNoToolFeedback(t *testing.T) {
+// Historical v11 data still decodes, but is no longer accepted.
+func TestRelayContractV11IsRefused(t *testing.T) {
 	got := editContract(t, "relay-v11.json", func(map[string]any) {})
-	if got.ToolFeedback != nil || got.Validate() != nil {
-		t.Fatalf("%+v: %v", got.ToolFeedback, got.Validate())
+	if err := got.Validate(); err == nil || !strings.Contains(err.Error(), "v12 or v13") {
+		t.Fatalf("v11: %v", err)
 	}
 }
 
-// v10 and v13 are outside the accepted set {11, 12}.
-func TestRelayContractV10AndV13AreRefused(t *testing.T) {
-	for _, v := range []string{"relay v10", "relay v13"} {
+// v10 and v14 are outside the accepted set {12, 13}.
+func TestRelayContractV10AndV14AreRefused(t *testing.T) {
+	for _, v := range []string{"relay v10", "relay v14"} {
 		err := editContract(t, "relay-v12.json", func(g map[string]any) { g["contract"] = v }).Validate()
-		if err == nil || !strings.Contains(err.Error(), "relay v11 or v12 and slicer prints "+strings.TrimPrefix(v, "relay ")) {
+		if err == nil || !strings.Contains(err.Error(), "relay v12 or v13 and slicer prints "+strings.TrimPrefix(v, "relay ")) {
 			t.Errorf("%s: %v", v, err)
 		}
 	}
@@ -213,7 +213,7 @@ func TestRelayContractV10AndV13AreRefused(t *testing.T) {
 func TestRelayContractV9IsRefused(t *testing.T) {
 	got := editContract(t, "relay-v12.json", func(g map[string]any) { g["contract"] = "relay v9" })
 	err := got.Validate()
-	if err == nil || !strings.Contains(err.Error(), "v11 or v12") {
+	if err == nil || !strings.Contains(err.Error(), "v12 or v13") {
 		t.Fatalf("v9: %v", err)
 	}
 }
@@ -270,4 +270,39 @@ func TestRelayRunsWaitDecodesQuestionObject(t *testing.T) {
 	if step.Phase != "wait" || step.WaitingOn != "owner" || step.Question == nil || step.Question.ID != "q1" || len(step.Question.Options) != 2 || !step.Question.Blocker || step.Question.Recommend != "four" {
 		t.Fatalf("%+v", step)
 	}
+}
+
+func TestValidateAcceptsRecordedV13(t *testing.T) {
+	got := editContract(t, "relay-v13.json", func(map[string]any) {})
+	if err := got.Validate(); err != nil {
+		t.Fatalf("recorded v13 JSON refused: %v", err)
+	}
+}
+
+func TestValidateV13NeedsFinishRunner(t *testing.T) {
+	for _, text := range []string{"missing", "", "   "} {
+		t.Run(text, func(t *testing.T) {
+			got := editContract(t, "relay-v13.json", func(g map[string]any) {
+				if text == "missing" {
+					dropEntry(g, "conformance", "key", "finish_runner")
+					return
+				}
+				for _, c := range g["conformance"].([]any) {
+					m := c.(map[string]any)
+					if m["key"] == "finish_runner" {
+						m["text"] = text
+					}
+				}
+			})
+			if err := got.Validate(); err == nil || !strings.Contains(err.Error(), "finish_runner") {
+				t.Fatalf("v13 without finish_runner: %v", err)
+			}
+		})
+	}
+	t.Run("v12", func(t *testing.T) {
+		got := editContract(t, "relay-v12.json", func(g map[string]any) { dropEntry(g, "conformance", "key", "finish_runner") })
+		if err := got.Validate(); err != nil {
+			t.Fatalf("v12 without finish_runner: %v", err)
+		}
+	})
 }

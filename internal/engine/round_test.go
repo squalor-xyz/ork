@@ -1167,7 +1167,7 @@ func TestACappedRoleTakesThePauseFromALowerCount(t *testing.T) {
 }
 
 func TestAcceptedGateReportClosesANewLedgerStepWithItsVerdict(t *testing.T) {
-	h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
+	h := newHarness(t, func(o *harnessOpts) { o.contract = 12 })
 	h.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleGate {
 			return Result{Exit: ExitOK, Session: "sess-gate", Report: "VERDICT: PASS\n\n" + noOptions + "\nTests: 12 passed, 0 failed\n\n## Owner needed\n\nnone\n"}, nil

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-449 items · — 62 · done 321 · retired 66
+449 items · — 61 · done 322 · retired 66
 
 ## v1.3
 
@@ -191,7 +191,7 @@ v1.2
 | 134 | [S423](slices/S423.md) | say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it" | S | 1 |  | discovered from S403 | — |
 | 135 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it | M | 2 |  | discovered from S403 | — |
 | 136 | [S431](slices/S431.md) | Daemon auto-rebuild | L | 3 |  | 2026-11-18: after S332, S403, S405 and S404 landed, the daemon stayed on build 7f5a1f7d, so landed fixes (the changelog-entry gate, ork wait, the tracking commit) did not apply to new runs. `ork daemon restart --rebuild` refuses while any role runs, even with --force (`docs/design.md:3847-3849`, adj 312), and with three runs in flight there was no gap; the orchestrator retried it every 30 s from a shell loop. The rebuild runs in the CLI (`internal/cli/lifecycle.go:88-120`); the daemon only reports behind main (`internal/daemon/build.go:25`, `:173`). | done |
-| 137 | [S432](slices/S432.md) | Accept slicer relay contract v13 (v12-v13) | M | - |  |  | — |
+| 137 | [S432](slices/S432.md) | Accept slicer relay contract v13 (v12-v13) | M | - |  |  | done |
 | 138 | [S433](slices/S433.md) | give the UI pass a named render hook, so renders need no overlay test file written by the role |  | - |  | Duplicate of S416 (UI pass render path), filed again by tool feedback · discovered from S392 | retired |
 | 139 | [S434](slices/S434.md) | give doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file | S | 1 |  | discovered from S398 | — |
 | 140 | [S435](slices/S435.md) | treat exit 1 of an absence check such as `rg -n PATTERN PATH` as pass when the slice's Check line says it prints nothing |  | - |  | Duplicate of S419 (no-match rg on a prints-nothing Check line), filed again by tool feedback · discovered from S398 | retired |

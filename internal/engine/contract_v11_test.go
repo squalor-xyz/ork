@@ -40,12 +40,12 @@ func gateDone(t *testing.T, h *harness) string {
 	return join(closing)
 }
 
-func TestV11GatePassClosesTheStepWithVerdictPass(t *testing.T) {
-	h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
+func TestV12GatePassClosesTheStepWithVerdictPass(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) { o.contract = 12 })
 	e := h.start()
 	rec := requireState(t, e, runrec.StateAwaitingApproval)
-	if rec.Contract != 11 {
-		t.Fatalf("recorded contract %d, want 11", rec.Contract)
+	if rec.Contract != 12 {
+		t.Fatalf("recorded contract %d, want 12", rec.Contract)
 	}
 	if got := gateDone(t, h); !strings.Contains(got, "--phase done --verdict pass") {
 		t.Fatalf("gate close: %s", got)
@@ -62,8 +62,8 @@ func TestV11GatePassClosesTheStepWithVerdictPass(t *testing.T) {
 	}
 }
 
-func TestV11GateFailClosesTheStepWithVerdictFail(t *testing.T) {
-	h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
+func TestV12GateFailClosesTheStepWithVerdictFail(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) { o.contract = 12 })
 	h.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleGate && req.Round == 1 {
 			return Result{Exit: ExitOK, Session: "sess-gate", Report: gateFail}, nil
@@ -85,8 +85,8 @@ func TestV11GateFailClosesTheStepWithVerdictFail(t *testing.T) {
 
 // A gate report with no valid first line has no verdict to send; the round
 // pauses on the report's shape and the step closes without one.
-func TestV11GateWithoutAVerdictLineClosesWithoutOne(t *testing.T) {
-	h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
+func TestV12GateWithoutAVerdictLineClosesWithoutOne(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) { o.contract = 12 })
 	h.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleGate {
 			return Result{Exit: ExitOK, Session: "sess-gate", Report: "no verdict here\n\nTests: 1 passed, 0 failed\n\n## Owner needed\n\nnone\n"}, nil
@@ -101,13 +101,13 @@ func TestV11GateWithoutAVerdictLineClosesWithoutOne(t *testing.T) {
 	}
 }
 
-func TestEngineStartWithV11CreatesARun(t *testing.T) {
-	h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
+func TestEngineStartWithV12RecordsSetup(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) { o.contract = 12 })
 	e, err := New(context.Background(), h.deps, h.cfg)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if rec := e.Snapshot(); rec.Contract != 11 || rec.State != runrec.StateSetup {
+	if rec := e.Snapshot(); rec.Contract != 12 || rec.State != runrec.StateSetup {
 		t.Fatalf("record: %+v", rec)
 	}
 }
@@ -158,7 +158,7 @@ func gateLedger(h *harness) ([]gateStepLog, []verdictCall) {
 	return steps, verdicts
 }
 
-// gatePauseCase is a v11 run whose first gate report pauses the round: the
+// gatePauseCase is a v12 run whose first gate report pauses the round: the
 // gate says PASS, and something else in the report stops the engine accepting
 // it. After resolve the gate runs again and passes.
 type gatePauseCase struct {
@@ -194,7 +194,7 @@ var gatePauseCases = []gatePauseCase{
 // The second gate passes.
 func runGatePause(t *testing.T, c gatePauseCase, wantNoVerdict bool) (*harness, *Engine) {
 	t.Helper()
-	h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
+	h := newHarness(t, func(o *harnessOpts) { o.contract = 12 })
 	resolved := false
 	h.runner.script = func(req Request, n int) (Result, error) {
 		if req.Role == RoleGate && !resolved {
@@ -235,23 +235,23 @@ func requireOnlyTheAcceptedGateHasAVerdict(t *testing.T, h *harness) {
 	}
 }
 
-func TestV11GateOwnerNeededClosesTheStepWithoutAVerdict(t *testing.T) {
+func TestV12GateOwnerNeededClosesTheStepWithoutAVerdict(t *testing.T) {
 	h, _ := runGatePause(t, gatePauseCases[0], true)
 	requireOnlyTheAcceptedGateHasAVerdict(t, h)
 }
 
-func TestV11GateTriageShapeErrorClosesTheStepWithoutAVerdict(t *testing.T) {
+func TestV12GateTriageShapeErrorClosesTheStepWithoutAVerdict(t *testing.T) {
 	h, _ := runGatePause(t, gatePauseCases[1], true)
 	requireOnlyTheAcceptedGateHasAVerdict(t, h)
 }
 
-func TestV11GateBlockerFindingClosesTheStepWithoutAVerdict(t *testing.T) {
+func TestV12GateBlockerFindingClosesTheStepWithoutAVerdict(t *testing.T) {
 	h, _ := runGatePause(t, gatePauseCases[2], true)
 	requireOnlyTheAcceptedGateHasAVerdict(t, h)
 }
 
 // No exit path closes a gate step twice or leaves it open.
-func TestV11GateStepCloseIsSingle(t *testing.T) {
+func TestV12GateStepCloseIsSingle(t *testing.T) {
 	check := func(t *testing.T, h *harness) {
 		t.Helper()
 		steps, _ := gateLedger(h)
@@ -271,15 +271,15 @@ func TestV11GateStepCloseIsSingle(t *testing.T) {
 		})
 	}
 	t.Run("accepted pass", func(t *testing.T) {
-		h := newHarness(t, func(o *harnessOpts) { o.contract = 11 })
+		h := newHarness(t, func(o *harnessOpts) { o.contract = 12 })
 		requireState(t, h.start(), runrec.StateAwaitingApproval)
 		check(t, h)
 	})
 }
 
-func TestV11GateStatusReadFailureClosesTheStepWithoutAVerdict(t *testing.T) {
+func TestV12GateStatusReadFailureClosesTheStepWithoutAVerdict(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
-		o.contract = 11
+		o.contract = 12
 		o.routesFor = func(P, W string) []clitest.Route {
 			return []clitest.Route{{Tool: "git", Args: []string{"-C", W, "status", "--porcelain"}, Seq: []clitest.Reply{{}, {}, {}, {Exit: 1, Stderr: "status failed"}}}}
 		}

@@ -186,7 +186,7 @@ type harnessOpts struct {
 	routesFor func(P, W string) []clitest.Route // the same, for routes that name the paths
 	project   func(*registry.Project)
 	exclude   *string // contents of .git/info/exclude; nil means the file does not exist
-	contract  int     // relay contract version the fake slicer prints: 12 (default) or 11
+	contract  int     // relay contract version the fake slicer prints: 12 (default) or 13
 }
 
 type harness struct {

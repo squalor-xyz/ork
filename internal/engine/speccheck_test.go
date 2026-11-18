@@ -316,7 +316,7 @@ func specRepoHarness(t *testing.T, project string) *harness {
 		o.routesFor = func(P, W string) []clitest.Route {
 			root := filepath.Join(P, project)
 			return []clitest.Route{
-				{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json")},
+				{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", root}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v12.json")},
 				{Tool: "slicer", Args: []string{"show", "S10", "--json", "--lean", "--root", root}, Stdout: specSliceJSON("S10", "ten")},
 				{Tool: "slicer", Args: []string{"show", "S11", "--json", "--lean", "--root", root}, Stdout: specSliceJSON("S11", "eleven")},
 			}

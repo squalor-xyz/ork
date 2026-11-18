@@ -242,7 +242,7 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 		if want := filepath.Join(h.store.RunDir(rec.ID), r.Role+"-1.md"); r.ReportPath != want {
 			t.Errorf("%s report path %q, want %q", r.Role, r.ReportPath, want)
 		}
-		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v12\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
+		if !strings.HasPrefix(r.Brief, "Role: "+r.Role+". Contract: relay v13\n") || !strings.Contains(r.Brief, `"id":"S04"`) || !strings.Contains(r.Brief, "Shell: zsh on darwin.") {
 			t.Errorf("%s brief is missing its parts:\n%.300s", r.Role, r.Brief)
 		}
 	}
@@ -1396,16 +1396,16 @@ func TestContractCheckAcceptsTheSetAndRefusesOthers(t *testing.T) {
 		"Contract: relay v8":   "v8",
 		"Contract: relay v9":   "v9",
 		"Contract: relay v10":  "v10",
-		"Contract: relay v11":  "",
+		"Contract: relay v11":  "v11",
 		"Contract: relay v12":  "",
-		"Contract: relay v13":  "v13",
+		"Contract: relay v13":  "",
 		"Contract: relay v6":   "v6",
 		"something else":       "contract line",
 		"Contract: relay v7 x": "contract line",
 	} {
 		h := newHarness(t, func(o *harnessOpts) {
 			o.routesFor = func(P, W string) []clitest.Route {
-				file, recordedAs := "relay-v12.json", `"contract": "relay v12"`
+				file, recordedAs := "relay-v13.json", `"contract": "relay v13"`
 				raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", file))
 				if err != nil {
 					t.Fatal(err)
@@ -1668,7 +1668,7 @@ func TestEngineStartKeepsTheContractErrorTexts(t *testing.T) {
 					if invalid {
 						s = strings.ReplaceAll(s, `"key": "finding_kinds"`, `"key": "missing"`)
 					} else {
-						s = strings.Replace(s, `"contract": "relay v12"`, `"contract": "relay v13"`, 1)
+						s = strings.Replace(s, `"contract": "relay v12"`, `"contract": "relay v14"`, 1)
 					}
 					return []clitest.Route{{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, Stdout: s}}
 				}
@@ -1681,7 +1681,7 @@ func TestEngineStartKeepsTheContractErrorTexts(t *testing.T) {
 				if !strings.HasPrefix(err.Error(), "slicer ai relay --json: relay conformance missing finding_kinds") {
 					t.Fatalf("conformance error: %v", err)
 				}
-			} else if !strings.Contains(err.Error(), "v13") || strings.HasPrefix(err.Error(), "slicer ai relay --json:") {
+			} else if !strings.Contains(err.Error(), "v14") || strings.HasPrefix(err.Error(), "slicer ai relay --json:") {
 				t.Fatalf("version error: %v", err)
 			}
 		})
