@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+- S403 (*proposed*, adj 449, 450, 451, 460): `ork wait` follows several runs.
+  `ork wait RUN...` and `ork wait --project P` (every unfinished run of P at
+  the start, replacing the usage error of adj 203) end on the first read in
+  which a followed run is done, and print one line per such run. `--stage` also
+  ends the wait when a role round of a followed run ends, with exit 6
+  (`ExitWaitStage`); 3 still beats 0, and 0 beats 6. The daemon sends a
+  `snapshot.changed` notice for part `runs`, with an optional `runs` list, when
+  a run record's state, pending kind or key, or ended role count changes, and
+  `run.show` role rows carry `ended_at`, so the wait wakes at once and not on
+  its 30 s read. One RUN prints what it printed before. Docs updated:
+  `docs/guide.md`, `docs/design.md`, `docs/state.md`.
 - S388 (*proposed*, adj 415, 416): a `feature` tool feedback entry is asked in
   the target project's adj as `tool-feedback.SLUG-HASH`, with options `file` and
   `drop` and `file` recommended, so it shows in Needs you. The entry keeps the

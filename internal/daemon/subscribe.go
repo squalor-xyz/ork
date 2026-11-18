@@ -76,13 +76,19 @@ func (d *Daemon) visibleLocked() []string {
 // project changed. A connection that cannot take the notice is closed by
 // ipc, and drops out here when it ends.
 func (d *Daemon) changed(project string, part source.Part) {
+	d.changedRuns(project, part, nil)
+}
+
+// changedRuns is changed with the ids of the runs whose record changed (S403,
+// *proposed*; adj 451).
+func (d *Daemon) changedRuns(project string, part source.Part, runs []string) {
 	d.subsMu.Lock()
 	conns := make([]*ipc.Conn, 0, len(d.focus))
 	for c := range d.focus {
 		conns = append(conns, c)
 	}
 	d.subsMu.Unlock()
-	n := SnapshotChanged{Project: project, Parts: []string{string(part)}, At: d.cfg.Clock.Now()}
+	n := SnapshotChanged{Project: project, Parts: []string{string(part)}, Runs: runs, At: d.cfg.Clock.Now()}
 	for _, c := range conns {
 		c.Notify(MethodSnapshotChanged, n)
 	}

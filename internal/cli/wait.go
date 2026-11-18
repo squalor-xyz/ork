@@ -28,30 +28,34 @@ var RunEventStates = []string{"question", "awaiting-approval", "paused", "stoppe
 
 const defaultWaitPoll = 30 * time.Second
 
-// wait blocks until a run changes state and prints the new state (S257,
-// *proposed*). It subscribes, reads run.show at once, and reads it again on
-// each notice and every WaitPoll, because the daemon sends a notice for a
-// cached part and not for every record change. It only reads.
+// wait blocks until one of the runs it follows changes state and prints the
+// new state (S257, *proposed*; several runs and --stage, S403, *proposed*). It
+// subscribes, reads run.show of each followed run at once, and reads them again
+// on each notice and every WaitPoll, because the daemon sends a notice for a
+// cached part and for a record change that a waiter must learn of, and not for
+// every record change. It only reads.
 func (a *App) wait(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("wait", flag.ContinueOnError)
-	untilFlag := fs.String("until", "", "stop when the run enters one of these states (comma separated)")
+	untilFlag := fs.String("until", "", "stop when a run enters one of these states (comma separated)")
 	timeout := fs.Duration("timeout", 0, "give up after this long; 0 waits for ever")
-	project := fs.String("project", "", "the project whose unfinished run to follow when RUN is omitted")
+	project := fs.String("project", "", "the project whose unfinished runs to follow when RUN is omitted")
+	stage := fs.Bool("stage", false, "also stop when a role round of a followed run ends")
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
 		return o.usage("wait: %v", err)
 	}
-	if len(pos) > 1 {
-		return o.usage("wait takes [RUN] [--until STATE,...] [--timeout D] [--project P]")
-	}
-	w := &waiter{app: a, o: o, project: *project, poll: a.WaitPoll, parent: ctx}
+	w := &waiter{app: a, o: o, project: *project, stage: *stage, poll: a.WaitPoll, parent: ctx}
 	if w.poll <= 0 {
 		w.poll = defaultWaitPoll
 	}
-	if len(pos) == 1 {
-		w.run = pos[0]
+	for _, id := range pos {
+		if slices.ContainsFunc(w.runs, func(f *followed) bool { return f.id == id }) {
+			return o.usage("wait: run %s is named twice", id)
+		}
+		w.runs = append(w.runs, &followed{id: id})
 	}
+	w.several = len(w.runs) > 1
 	untilGiven := false
 	fs.Visit(func(f *flag.Flag) { untilGiven = untilGiven || f.Name == "until" })
 	if untilGiven {
@@ -103,18 +107,41 @@ type waiter struct {
 	app     *App
 	o       *output
 	project string
-	run     string // empty until resolved from the project
+	runs    []*followed // the runs followed, in the order given; empty until resolved from the project
+	several bool        // more than one run is followed: print one line per run
+	stage   bool        // a role round that ends is a stop
 	until   []string
 	poll    time.Duration
 	timeout time.Duration
 	parent  context.Context // the caller's context, without the --timeout deadline
 
-	base    string            // the state name of the first read
-	hasBase bool              // base is set
-	last    *daemon.ShowReply // the newest read
-	retried bool              // the connection dropped and a retry is under way
-	dropped error             // why the connection dropped
+	retried bool  // the connection dropped and a retry is under way
+	dropped error // why the connection dropped
 }
+
+// followed is one run of a wait and what the wait has seen of it.
+type followed struct {
+	id          string
+	base        string            // the state name of the first read
+	hasBase     bool              // base is set
+	ended       int               // the role rounds with an end at the last read
+	last        *daemon.ShowReply // the newest read
+	gone        bool              // final, or unknown, and matching nothing: no longer read
+	goneReason  string            // the state name it was dropped in, or "unknown"
+	verdict     verdict           // why the wait stops on it, once it does
+	stageReason string            // "ROLE round N ended EXIT" for a stage end
+}
+
+// verdict is what a read says of a followed run.
+type verdict int
+
+const (
+	verdictNone     verdict = iota // nothing to report; read again
+	verdictQuestion                // paused on an owner question
+	verdictChanged                 // entered an --until state, or changed state
+	verdictStage                   // a role round ended (--stage)
+	verdictFinal                   // final and matched nothing: nothing more to do
+)
 
 // name is the shared-list name of the run's state: a committed run that ork
 // landed reads landed.
@@ -170,13 +197,34 @@ func (w *waiter) connection(ctx context.Context) (code int, retry bool) {
 			return drop(err)
 		}
 	}
+	if len(w.runs) == 0 {
+		ids, code, retry := w.resolve(ctx, c, projects)
+		if len(ids) == 0 {
+			return code, retry
+		}
+		for _, id := range ids {
+			w.runs = append(w.runs, &followed{id: id})
+		}
+		w.several = len(w.runs) > 1
+	}
+	// A notice that names runs, none of them followed, changes nothing the wait
+	// reads. A notice that names none (a cached part of a project) wakes it, as
+	// does any notice from a daemon that does not name runs yet (adj 451).
+	ids := make([]string, len(w.runs))
+	for i, f := range w.runs {
+		ids[i] = f.id
+	}
 	notices.Add(1)
 	go func() {
 		defer notices.Done()
 		for {
-			if _, err := c.Next(noticeCtx); err != nil {
+			n, err := c.Next(noticeCtx)
+			if err != nil {
 				dead <- err
 				return
+			}
+			if len(n.Runs) > 0 && !slices.ContainsFunc(n.Runs, func(id string) bool { return slices.Contains(ids, id) }) {
+				continue
 			}
 			select {
 			case wake <- struct{}{}:
@@ -184,25 +232,30 @@ func (w *waiter) connection(ctx context.Context) (code int, retry bool) {
 			}
 		}
 	}()
-	if w.run == "" {
-		run, code, retry := w.resolve(ctx, c, projects)
-		if run == "" {
-			return code, retry
-		}
-		w.run = run
-	}
 	tick := time.NewTicker(w.poll)
 	defer tick.Stop()
 	for {
-		reply, err := c.Show(ctx, w.run)
-		if err != nil {
-			if e := ipc.ErrorOf(err); ctx.Err() == nil && !transport(err) && e.Code == daemon.CodeNotFound {
-				return o.fail(ExitWaitNothingActive, "nothing_active", fmt.Sprintf("no run %s: it is unknown to the daemon, so nothing is active", w.run)), false
+		verdicts := make([]verdict, len(w.runs))
+		for i, f := range w.runs {
+			if f.gone {
+				continue
 			}
-			return drop(err)
+			reply, err := c.Show(ctx, f.id)
+			if err != nil {
+				if e := ipc.ErrorOf(err); ctx.Err() == nil && !transport(err) && e.Code == daemon.CodeNotFound {
+					if !w.several {
+						return o.fail(ExitWaitNothingActive, "nothing_active", fmt.Sprintf("no run %s: it is unknown to the daemon, so nothing is active", f.id)), false
+					}
+					f.goneReason = "unknown"
+					verdicts[i] = verdictFinal
+					continue
+				}
+				return drop(err)
+			}
+			w.retried = false // a read worked on this connection
+			verdicts[i] = w.judge(f, reply)
 		}
-		w.retried = false // a read worked on this connection
-		if code, done := w.judge(reply); done {
+		if code, done := w.finish(verdicts); done {
 			return code, false
 		}
 		select {
@@ -226,18 +279,19 @@ func (w *waiter) drop(ctx context.Context, err error) (code int, retry bool) {
 	return w.ended(ctx, func() int { return w.o.failErr(err) }), false
 }
 
-// resolve picks the run a wait without RUN follows (adj 203, cli.wait-default-run;
-// cli.wait-project-scope): the unfinished run of --project, or of the only
-// registered project. Several runs, or several projects with no --project, is
-// a usage error. It returns no run when the wait ended with code, or when the
-// connection dropped (retry).
-func (w *waiter) resolve(ctx context.Context, c *daemon.Client, projects []registry.Project) (run string, code int, retry bool) {
+// resolve picks the runs a wait without RUN follows (adj 449, cli.wait-project,
+// which supersedes adj 203; cli.wait-project-scope): every unfinished run of
+// --project, or of the only registered project, as of this read. A run started
+// later is not followed. Several projects with no --project is a usage error.
+// It returns no run when the wait ended with code, or when the connection
+// dropped (retry).
+func (w *waiter) resolve(ctx context.Context, c *daemon.Client, projects []registry.Project) (runs []string, code int, retry bool) {
 	o := w.o
 	name := w.project
 	if name == "" {
 		switch len(projects) {
 		case 0:
-			return "", o.usage("wait needs RUN: no project is registered"), false
+			return nil, o.usage("wait needs RUN: no project is registered"), false
 		case 1:
 			name = projects[0].Name
 		default:
@@ -245,13 +299,13 @@ func (w *waiter) resolve(ctx context.Context, c *daemon.Client, projects []regis
 			for i, p := range projects {
 				names[i] = p.Name
 			}
-			return "", o.usage("wait needs RUN or --project: %d projects are registered (%s)", len(projects), strings.Join(names, ", ")), false
+			return nil, o.usage("wait needs RUN or --project: %d projects are registered (%s)", len(projects), strings.Join(names, ", ")), false
 		}
 	}
 	var res daemon.StatusResult
 	if err := c.Call(ctx, daemon.MethodStatus, daemon.StatusParams{Project: name}, &res); err != nil {
 		code, retry := w.drop(ctx, err)
-		return "", code, retry
+		return nil, code, retry
 	}
 	var open []string
 	for _, p := range res.Projects {
@@ -264,35 +318,121 @@ func (w *waiter) resolve(ctx context.Context, c *daemon.Client, projects []regis
 			}
 		}
 	}
-	switch len(open) {
-	case 0:
-		return "", o.fail(ExitWaitNothingActive, "nothing_active", fmt.Sprintf("project %s has no unfinished run, so nothing is active", name)), false
-	case 1:
-		return open[0], 0, false
+	if len(open) == 0 {
+		return nil, o.fail(ExitWaitNothingActive, "nothing_active", fmt.Sprintf("project %s has no unfinished run, so nothing is active", name)), false
 	}
-	return "", o.usage("project %s has %d unfinished runs (%s); name one as RUN", name, len(open), strings.Join(open, ", ")), false
+	return open, 0, false
 }
 
-// judge decides whether a read ends the wait, and prints the result when it
-// does. A pending question always ends it, because only the owner moves the
-// run on. Then the --until list; with no list, a change of state from the
-// first read. A final run that matched none of those has nothing more to do.
-func (w *waiter) judge(r daemon.ShowReply) (code int, done bool) {
+// judge says what a read of a followed run means for the wait. A pending
+// question always ends it, because only the owner moves the run on. Then the
+// --until list; with no list, a change of state from the first read. With
+// --stage, a role round that ended since the last read. A final run that
+// matched none of those has nothing more to do.
+func (w *waiter) judge(f *followed, r daemon.ShowReply) verdict {
 	name := waitName(r)
-	first := !w.hasBase
+	first := !f.hasBase
 	if first {
-		w.base, w.hasBase = name, true
+		f.base, f.hasBase = name, true
 	}
-	w.last = &r
+	f.last = &r
+	ended, latest := endedRounds(r)
+	grew := ended > f.ended
+	f.ended = ended
 	switch {
 	case questionPending(r):
-		return w.print(r, name, ExitWaitQuestion), true
+		return verdictQuestion
 	case len(w.until) > 0 && slices.Contains(w.until, name):
-		return w.print(r, name, ExitWaitChanged), true
-	case len(w.until) == 0 && !first && name != w.base:
-		return w.print(r, name, ExitWaitChanged), true
+		return verdictChanged
+	case len(w.until) == 0 && !first && name != f.base:
+		return verdictChanged
+	case w.stage && !first && grew:
+		f.stageReason = latest
+		return verdictStage
 	case runrec.IsFinal(r.State):
-		return w.o.fail(ExitWaitNothingActive, "nothing_active", fmt.Sprintf("run %s is %s, so nothing is active", r.ID, name)), true
+		f.goneReason = name
+		return verdictFinal
+	}
+	return verdictNone
+}
+
+// endedRounds counts the role rounds of a read that have an end, and describes
+// the last of them as "ROLE round N ended EXIT".
+func endedRounds(r daemon.ShowReply) (n int, latest string) {
+	for _, role := range r.Roles {
+		if role.EndedAt.IsZero() {
+			continue
+		}
+		n++
+		latest = fmt.Sprintf("%s round %d ended", role.Role, role.Round)
+		if role.Exit != "" {
+			latest += " " + role.Exit
+		}
+	}
+	return n, latest
+}
+
+// finish decides whether the reads of one round end the wait, and prints the
+// result when they do. Every followed run that is done is printed, in the order
+// given. A run that is final and matched nothing is dropped; the wait ends with
+// nothing active when none is left.
+func (w *waiter) finish(verdicts []verdict) (code int, done bool) {
+	var stops []*followed
+	var question, changed bool
+	for i, v := range verdicts {
+		switch v {
+		case verdictQuestion:
+			question = true
+		case verdictChanged:
+			changed = true
+		case verdictStage:
+		default:
+			continue
+		}
+		w.runs[i].verdict = v
+		stops = append(stops, w.runs[i])
+	}
+	if len(stops) > 0 {
+		// A question outranks a state change, and a state change a stage end.
+		switch {
+		case question:
+			code = ExitWaitQuestion
+		case changed:
+			code = ExitWaitChanged
+		default:
+			code = ExitWaitStage
+		}
+		return w.print(stops, code), true
+	}
+	var dropped []string
+	for i, v := range verdicts {
+		if v == verdictFinal {
+			w.runs[i].gone = true
+			dropped = append(dropped, w.runs[i].id)
+		}
+	}
+	if !w.several {
+		if len(dropped) > 0 {
+			f := w.runs[0]
+			return w.o.fail(ExitWaitNothingActive, "nothing_active", fmt.Sprintf("run %s is %s, so nothing is active", f.id, f.goneReason)), true
+		}
+		return 0, false
+	}
+	var left, gone []string
+	for _, f := range w.runs {
+		if f.gone {
+			gone = append(gone, f.id+" "+f.goneReason)
+		} else {
+			left = append(left, f.id)
+		}
+	}
+	if len(left) == 0 {
+		return w.o.fail(ExitWaitNothingActive, "nothing_active", "nothing is active: "+strings.Join(gone, ", ")), true
+	}
+	for _, f := range w.runs {
+		if f.gone && slices.Contains(dropped, f.id) {
+			fmt.Fprintf(w.o.stderr, "%s is %s, so nothing is active; still waiting on %s\n", f.id, f.goneReason, strings.Join(left, ", "))
+		}
 	}
 	return 0, false
 }
@@ -304,11 +444,12 @@ func (w *waiter) ended(ctx context.Context, fallback func() int) int {
 	if err := ctx.Err(); err != nil {
 		if errors.Is(err, context.DeadlineExceeded) && w.timeout > 0 && w.parent.Err() == nil {
 			msg := fmt.Sprintf("timed out after %v", w.timeout)
-			switch {
-			case w.last != nil:
-				msg += fmt.Sprintf("; run %s is still %s", w.last.ID, waitName(*w.last))
-			case w.run != "":
-				msg += fmt.Sprintf("; run %s was not read", w.run)
+			for _, f := range w.runs {
+				if f.last != nil {
+					msg += fmt.Sprintf("; run %s is still %s", f.id, waitName(*f.last))
+				} else {
+					msg += fmt.Sprintf("; run %s was not read", f.id)
+				}
 			}
 			return w.o.fail(ExitWaitTimeout, "timeout", msg)
 		}
@@ -334,21 +475,71 @@ type waitPending struct {
 	Kind string `json:"kind"`
 }
 
-// print writes the state the wait stopped on and returns code. The text is
-// the run and its state, then for a pause its kind, the question and the
-// decision key, and the next command, as ork show prints them.
-func (w *waiter) print(r daemon.ShowReply, name string, code int) int {
+// stageState is the state of a stage end in the output: the run itself has not
+// changed state (adj 450; cli.wait-stage-json).
+const stageState = "stage"
+
+// print writes the runs the wait stopped on, in the order given, and returns
+// code. One run prints a block of text, or one JSON object; several runs print
+// one line each, or one JSON array. A stage end is always one line, and a JSON
+// object with state "stage" and the round as its reason.
+func (w *waiter) print(stops []*followed, code int) int {
 	o := w.o
 	if o.json {
-		out := waitJSON{Run: r.ID, Item: r.Item, State: name, Reason: r.Reason, Next: r.Next}
-		if r.Pending != nil {
-			out.Pending = &waitPending{Kind: r.Pending.Kind}
+		objs := make([]waitJSON, len(stops))
+		for i, f := range stops {
+			r := *f.last
+			objs[i] = waitJSON{Run: r.ID, Item: r.Item, State: waitName(r), Reason: r.Reason, Next: r.Next}
+			if f.verdict == verdictStage {
+				objs[i] = waitJSON{Run: r.ID, Item: r.Item, State: stageState, Reason: f.stageReason}
+			} else if r.Pending != nil {
+				objs[i].Pending = &waitPending{Kind: r.Pending.Kind}
+			}
+		}
+		var out any = objs
+		if !w.several {
+			out = objs[0]
 		}
 		if rc := o.printJSON(out); rc != ExitOK {
 			return rc
 		}
 		return code
 	}
+	for _, f := range stops {
+		switch r := *f.last; {
+		case f.verdict == verdictStage:
+			fmt.Fprintf(o.stdout, "%s %s %s %s\n", r.ID, r.Item, stageState, f.stageReason)
+		case w.several:
+			w.line(r)
+		default:
+			w.block(r, waitName(r))
+		}
+	}
+	return code
+}
+
+// line writes one run as RUN ITEM STATE, then " key: KEY" for a question and
+// " next: COMMAND" when the run has one.
+func (w *waiter) line(r daemon.ShowReply) {
+	name := waitName(r)
+	key := ""
+	if questionPending(r) { // a question is its own state in a line, as in --until
+		name = "question"
+		if r.Pending.Key != "" {
+			key = " key: " + runrec.PlainText(r.Pending.Key)
+		}
+	}
+	s := fmt.Sprintf("%s %s %s%s", r.ID, r.Item, name, key)
+	if r.Next != "" {
+		s += " next: " + r.Next
+	}
+	fmt.Fprintln(w.o.stdout, s)
+}
+
+// block writes one run's state, then for a pause its kind, the question and the
+// decision key, and the next command, as ork show prints them.
+func (w *waiter) block(r daemon.ShowReply, name string) {
+	o := w.o
 	fmt.Fprintf(o.stdout, "%s %s\n", r.ID, name)
 	if p := r.Pending; p != nil {
 		head := p.Kind + " pause"
@@ -369,5 +560,4 @@ func (w *waiter) print(r daemon.ShowReply, name string, code int) int {
 	if r.Next != "" {
 		fmt.Fprintf(o.stdout, "next: %s\n", r.Next)
 	}
-	return code
 }

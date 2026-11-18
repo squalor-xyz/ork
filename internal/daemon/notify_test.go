@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -14,6 +15,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/source"
 )
 
 func TestNotifySetWithUnfinishedRun(t *testing.T) {
@@ -281,6 +283,84 @@ func TestNotifyFailures(t *testing.T) {
 			}
 		})
 	}
+}
+
+// A change of state, of the pending question or of the number of ended role
+// rounds sends a subscriber a notice for part runs that names the run (S403,
+// *proposed*; adj 451, cli.wait-signal). A change of tokens or of updated_at
+// alone sends none.
+func TestRecordStateChangeSendsARunNotice(t *testing.T) {
+	// The socket sits directly in a short temp directory, so the test runs
+	// where shortDir finds no room for a state subdirectory and skips.
+	dir, err := os.MkdirTemp("", "o")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { os.RemoveAll(dir) })
+	e := &env{dir: dir, paths: PathsIn(dir), regPath: filepath.Join(dir, "projects.json"), clock: &fakeClock{}, src: &stubSource{snaps: map[string]source.Snapshot{}}}
+	if len(e.paths.Socket) > 100 {
+		t.Fatalf("socket path %s is too long", e.paths.Socket)
+	}
+	twoProjects(t, e)
+	e.src.put("alpha", alphaItems)
+	r := e.start(t)
+	e.dial(t).Snapshot(context.Background(), registry.Project{Name: "alpha"})
+	sub := e.dial(t)
+	if err := sub.Subscribe(context.Background(), []string{"alpha"}); err != nil {
+		t.Fatal(err)
+	}
+	ch := notices(t, sub)
+	settle()
+	for len(ch) > 0 { // the reads of the attach
+		<-ch
+	}
+	store := r.d.runs.deps.Store
+	run, err := store.Create(runrec.Record{ID: "r1", Project: "alpha", Item: "S1", State: runrec.StateImplement,
+		Roles: []runrec.RoleRecord{{Role: "implementer", Round: 1, StartedAt: time.Now()}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	// only returns the run notices that arrive within the settle time.
+	runNotices := func() []SnapshotChanged {
+		settle()
+		var got []SnapshotChanged
+		for len(ch) > 0 {
+			if n := <-ch; len(n.Runs) > 0 {
+				got = append(got, n)
+			}
+		}
+		return got
+	}
+	runNotices() // the create is not a change of an existing record
+	one := func(what string, fn func(*runrec.Record)) {
+		t.Helper()
+		if err := run.Update(fn); err != nil {
+			t.Fatal(err)
+		}
+		got := runNotices()
+		if len(got) != 1 || got[0].Project != "alpha" || !slices.Equal(got[0].Parts, []string{"runs"}) || !slices.Equal(got[0].Runs, []string{"r1"}) {
+			t.Fatalf("%s: notices %+v, want one for part runs naming r1", what, got)
+		}
+	}
+	none := func(what string, fn func(*runrec.Record)) {
+		t.Helper()
+		if err := run.Update(fn); err != nil {
+			t.Fatal(err)
+		}
+		if got := runNotices(); len(got) != 0 {
+			t.Fatalf("%s: notices %+v, want none", what, got)
+		}
+	}
+	none("a change of tokens", func(rec *runrec.Record) { rec.Roles[0].Tokens = 500 })
+	none("a change of updated_at only", func(*runrec.Record) {})
+	one("the state moves to awaiting-approval", func(rec *runrec.Record) { rec.State = runrec.StateAwaitingApproval })
+	one("a role round ends", func(rec *runrec.Record) { rec.Roles[0].EndedAt = time.Now(); rec.Roles[0].Exit = "clean" })
+	one("a question is pending", func(rec *runrec.Record) {
+		rec.State = runrec.StatePaused
+		rec.Pending = &runrec.Pending{Kind: runrec.PendingQuestion, Key: "a.b"}
+	})
+	one("the pending key changes", func(rec *runrec.Record) { rec.Pending.Key = "c.d" })
+	one("the pending kind changes", func(rec *runrec.Record) { rec.Pending.Kind = "shape" })
 }
 
 func TestNotifyDoesNotBlockRunManager(t *testing.T) {
