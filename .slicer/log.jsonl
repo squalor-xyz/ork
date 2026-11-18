@@ -5219,3 +5219,4 @@
 {"when": "2026-11-18T13:48:01Z", "item": "S438", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S419 (prints-nothing rule, adj 468), filed again by tool feedback"}
 {"when": "2026-11-18T13:49:33Z", "item": "S441", "action": "add", "from": "", "to": "open", "note": "allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree"}
 {"when": "2026-11-18T13:49:33Z", "item": "S441", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:50:49Z", "item": "S441", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416/S422 (UI pass render path; go test -overlay), filed again by tool feedback"}
