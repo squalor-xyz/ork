@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-444 items · — 72 · done 321 · retired 51
+444 items · — 71 · done 322 · retired 51
 
 ## v1.3
 
@@ -192,7 +192,7 @@ v1.2
 | 135 | [S436](slices/S436.md) | say in the reviewer brief whether the harness may start the role in plan mode, since plan-mode instructions conflict with the report-as-final-message rule |  | - |  | Duplicate of S418 (reviewer prompt in plan mode), filed again by tool feedback · discovered from S392 | retired |
 | 136 | [S437](slices/S437.md) | give role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip |  | - |  | discovered from S431 | — |
 | 137 | [S438](slices/S438.md) | judge a Check line that says "prints nothing" by its output, and treat rg exit 1 (no match) as pass |  | - |  | Duplicate of S419 (prints-nothing rule, adj 468), filed again by tool feedback · discovered from S392 | retired |
-| 138 | [S439](slices/S439.md) | Rebuild auto-resume | S | 2 |  | 2026-11-18, S431 implementer: after the drain, the successor daemon recovers runs through today's recovery (`internal/engine/recover.go:119`), which pauses each as interrupted until the owner runs `ork retry RUN`. Owner decision adj 467 (`selfhost.auto-rebuild-resume`): mark runs held at a rebuild in their record, and have the successor retry them at start with no owner action. | — |
+| 138 | [S439](slices/S439.md) | Rebuild auto-resume | S | 2 |  | 2026-11-18, S431 implementer: after the drain, the successor daemon recovers runs through today's recovery (`internal/engine/recover.go:119`), which pauses each as interrupted until the owner runs `ork retry RUN`. Owner decision adj 467 (`selfhost.auto-rebuild-resume`): mark runs held at a rebuild in their record, and have the successor retry them at start with no owner action. | done |
 | 139 | [S440](slices/S440.md) | allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub |  | - |  | discovered from S431 | — |
 | 140 | [S441](slices/S441.md) | allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree |  | - |  | Duplicate of S416/S422 (UI pass render path; go test -overlay), filed again by tool feedback · discovered from S431 | retired |
 | 141 | [S442](slices/S442.md) | When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing |  | - |  | discovered from S419 | — |

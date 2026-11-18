@@ -1,0 +1,41 @@
+{
+  "id": "S439",
+  "title": "Runs held by an auto-rebuild resume on their own",
+  "lead": [
+    "Only runs whose role start waits at Engine.HeldForRebuild() when the auto-rebuild ends the daemon receive a record marker. At startup, the successor clears each marker, then retries the marked run once after recovery without an owner command. Queued runs, owner pauses and approval waits stay unmarked."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-18, S431 implementer: after the drain, the successor daemon recovers runs through today's recovery (`internal/engine/recover.go:119`), which pauses each as interrupted until the owner runs `ork retry RUN`. Owner decision adj 467 (`selfhost.auto-rebuild-resume`): mark runs held at a rebuild in their record, and have the successor retry them at start with no owner action.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The goal of S431 (adj 464) is a rebuild with no hand command. Without this, every held run waits for the owner after each rebuild (adj 467)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/runrec/record.go:434` (Record: durable rebuild marker)\n- `internal/daemon/build.go:520` (exitForRebuild: best-effort marker writes only for Engine.HeldForRebuild runs)\n- `internal/daemon/runs.go:363` (recoverRuns: consume markers, then retry marked runs once after recovery)\n- `internal/engine/recover.go:19` (MarkRebuildResume: update the live record; existing Reconcile keeps interrupted recovery)\n- `internal/daemon/runs_test.go:1434` (startup, held-only marking, one-shot retry and marker-write failure tests)\n- `docs/design.md:3932` (self-host rebuild restart and failed-marker fallback, adj 467)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestRebuildHeldRunResumesAtStart` in `internal/daemon/runs_test.go:1434`: a rebuild-marked paused interrupted record resumes its prior stage at startup and clears its marker.\n- `TestUnmarkedInterruptedRunStillWaits` in `internal/daemon/runs_test.go:1453`: the identical paused interrupted record without the marker stays paused.\n- `TestRebuildMarkerRetriedOnlyOnce` in `internal/daemon/runs_test.go:1465`: a marked run whose retry fails clears its marker and is not retried next startup.\n- `TestRebuildExitMarksOnlyHeldRuns` in `internal/daemon/runs_test.go:1498`: rebuild exit marks only Engine.HeldForRebuild runs, leaving owner pauses, queued runs and approval waits unmarked.\n- `TestRebuildMarkerWriteFailureStillExits` in `internal/daemon/runs_test.go:1524`: a failed marker write is best-effort; rebuild exit returns true and signals shutdown."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests and see them red for the stated reason.\n2. Add the marker to the run record. At rebuild exit, mark only runs whose role start waits at Engine.HeldForRebuild(). Queued runs, owner pauses (question, shape, budget, lost and earlier interrupt) and approval waits stay unmarked. Marker writes are best-effort: log a failure and continue exiting, leaving that run to the existing interrupted pause.\n3. At daemon start, clear each marker, then retry the marked runs once after recovery through the ordinary retry path, regardless of the retry result.\n4. Update docs/design.md self-host rebuild section, citing adj 467, and add the changelog entry with slicer changelog add.\n\nOwner decision (2026-11-18): held only. Mark only a run whose role start waits at Engine.HeldForRebuild() when the daemon ends."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- After an auto-rebuild, every run the drain held continues on the new daemon with no owner command.\n- An interrupted run that the rebuild did not hold still waits for the owner.\n- A marked run is retried at most once.\n\nCommands:\n- `go test ./internal/daemon -run 'TestRebuildHeldRunResumesAtStart|TestUnmarkedInterruptedRunStillWaits|TestRebuildMarkerRetriedOnlyOnce' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` must print nothing."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"Runs held by an auto-rebuild resume on their own\"."
+    }
+  ],
+  "notes": []
+}

@@ -3934,10 +3934,16 @@ and refuses clearing the command under it. A started run does not read it.
   starts `ork daemon run` from the new executable, detached, in its own session
   and with stderr in `daemon.log` (`daemon.StartExe`, the CLI's start code).
   The successor retries the lock for two seconds, takes it and recovers the
-  runs. Recovery is today's: a held run has not started its role, so its record
-  shows the state it was in and recovery pauses it as `interrupted`;
-  `ork retry RUN` (or `t`) starts the role on the new build. Resuming them with
-  no owner action is a follow-up (S439; adj 467 `selfhost.auto-rebuild-resume`).
+  runs. Before ending, the old daemon sets `rebuild_resume` in the record of
+  each run whose role start is waiting at `Engine.HeldForRebuild()`. Only these
+  held runs are marked: queued runs, owner pauses (including earlier interrupts)
+  and approval waits keep their existing behavior. After recovery pauses the
+  interrupted runs, the successor uses the ordinary retry path to resume each
+  marked run, including waiting for a cap slot. It consumes the marker before
+  attempting the retry, so a failure is not retried at the next startup. No
+  owner command is needed (S439; adj 467 `selfhost.auto-rebuild-resume`).
+  Marker writes are best-effort: a failed write is logged and the daemon still
+  exits; that run falls back to the ordinary interrupted pause.
 - **A failed build or an unusable executable.** The old daemon keeps running and
   the hold is released, so held runs go on with the old build. Status carries
   `daemon not rebuilt: build failed (exit 1)` and the last twenty output lines

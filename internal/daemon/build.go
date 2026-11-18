@@ -527,6 +527,18 @@ func (d *Daemon) exitForRebuild(start func(context.Context) error) bool {
 		d.runs.mu.Unlock()
 		return false
 	}
+	// Only a role actually waiting at the hold gets automatic recovery. Owner
+	// pauses, queued runs and approval waits retain their existing behavior.
+	for id, m := range d.runs.runs {
+		if m.engine == nil || !m.engine.HeldForRebuild() {
+			continue
+		}
+		if err := m.engine.MarkRebuildResume(); err != nil {
+			fmt.Fprintf(os.Stderr, "mark rebuild resume %s: %v\n", id, err)
+			// A missing marker leaves this run at the ordinary interrupted
+			// pause. It must not stall the rebuild or every other held run.
+		}
+	}
 	d.runs.closed = true
 	d.runs.mu.Unlock()
 	d.rebuild.mu.Lock()

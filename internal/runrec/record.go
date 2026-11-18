@@ -432,8 +432,9 @@ func (r *Record) AddToolFeedback(entries []ToolFeedback) []ToolFeedback {
 
 // Record is the content of run.json.
 type Record struct {
-	RoundLimit       int                      `json:"round_limit,omitempty"` // proposed: durable owner grant
-	ChainFrom        int                      `json:"chain_from,omitempty"`  // proposed (S255): index into Roles; the vendor chain walks the records from here
+	RebuildResume    bool                     `json:"rebuild_resume,omitempty"` // held role start to retry once after an auto-rebuild (adj 467)
+	RoundLimit       int                      `json:"round_limit,omitempty"`    // proposed: durable owner grant
+	ChainFrom        int                      `json:"chain_from,omitempty"`     // proposed (S255): index into Roles; the vendor chain walks the records from here
 	StopAfter        string                   `json:"stop_after,omitempty"`
 	Version          int                      `json:"version"`
 	ID               string                   `json:"id"`

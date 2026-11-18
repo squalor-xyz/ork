@@ -1386,6 +1386,179 @@ func TestRecoveredRunCanBeStoppedAndActiveRunIsPaused(t *testing.T) {
 	}
 }
 
+// Seed through JSON to exercise the durable marker across daemon instances.
+func rebuildResumeRecord(t *testing.T, store *runrec.Store, p registry.Project, marked bool) {
+	t.Helper()
+	raw := fmt.Sprintf(`{"id":"rebuild","project":%q,"item":"S1","worktree":%q,"state":"paused","round":1,"rebuild_resume":%t,"pending":{"kind":"interrupted","state":%q,"role":"implementer","round":1},"lineup":{"implementer":[{"vendor":"claude","model":"sonnet"}],"reviewer":[{"vendor":"claude","model":"sonnet"}]}}`, p.Name, filepath.Join(p.Path, ".worktrees", "S1"), marked, runrec.StateImplement)
+	var rec runrec.Record
+	if err := json.Unmarshal([]byte(raw), &rec); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Create(rec); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func rebuildMarker(t *testing.T, store *runrec.Store, id string) bool {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(store.RunDir(id), "run.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rec struct {
+		RebuildResume bool `json:"rebuild_resume"`
+	}
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	return rec.RebuildResume
+}
+
+func recoverRebuildDaemon(t *testing.T, d *Daemon) {
+	t.Helper()
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	if err := d.recoverRuns(ctx); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func rebuildResumeRunner(started chan<- engine.Request) roundRunner {
+	return func(ctx context.Context, req engine.Request) (engine.Result, error) {
+		started <- req
+		<-ctx.Done()
+		return engine.Result{}, ctx.Err()
+	}
+}
+
+func TestRebuildHeldRunResumesAtStart(t *testing.T) {
+	started := make(chan engine.Request, 1)
+	d, store, p := runDaemon(t, rebuildResumeRunner(started))
+	rebuildResumeRecord(t, store, p, true)
+	recoverRebuildDaemon(t, d)
+	select {
+	case req := <-started:
+		r, _ := store.Open("rebuild")
+		if req.Role != engine.RoleImplementer || r.Snapshot().State != runrec.StateImplement {
+			t.Fatalf("resumed role/state = %s/%s, want implementer/implement", req.Role, r.Snapshot().State)
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("marked run did not resume its implementer at startup")
+	}
+	if rebuildMarker(t, store, "rebuild") {
+		t.Fatal("successful resume kept the rebuild marker")
+	}
+}
+
+func TestUnmarkedInterruptedRunStillWaits(t *testing.T) {
+	started := make(chan engine.Request, 1)
+	d, store, p := runDaemon(t, rebuildResumeRunner(started))
+	rebuildResumeRecord(t, store, p, false)
+	recoverRebuildDaemon(t, d)
+	r, _ := store.Open("rebuild")
+	rec := r.Snapshot()
+	if rec.State != runrec.StatePaused || rec.Pending == nil || rec.Pending.Kind != runrec.PendingInterrupted || len(rec.Roles) != 0 || rec.Resume != nil {
+		t.Fatalf("unmarked interrupted run resumed: %+v", rec)
+	}
+}
+
+func TestRebuildMarkerRetriedOnlyOnce(t *testing.T) {
+	d, store, p := runDaemon(t, retryRunner)
+	d.runs.deps.Check = func(context.Context, string, string, time.Duration) (engine.CheckOutput, error) {
+		return engine.CheckOutput{}, context.DeadlineExceeded
+	}
+	rebuildResumeRecord(t, store, p, true)
+	recoverRebuildDaemon(t, d)
+	waitIdle(t, d, "rebuild")
+	r, _ := store.Open("rebuild")
+	first := r.Snapshot()
+	if len(first.Roles) != 1 || first.State != runrec.StatePaused || first.Pending == nil || first.Pending.Kind != runrec.PendingError {
+		t.Fatalf("marked run did not attempt and fail its retry: %+v", first)
+	}
+	if rebuildMarker(t, store, "rebuild") {
+		t.Error("failed retry kept the rebuild marker")
+	}
+	d.closeRuns()
+	deps := d.runs.deps
+	deps.Hold, deps.Wake, deps.Vendors = nil, nil, nil
+	d2 := New(Config{Paths: d.cfg.Paths, RegistryPath: d.cfg.RegistryPath, Source: &stubSource{}, Engine: &deps})
+	t.Cleanup(d2.cache.Close)
+	t.Cleanup(d2.closeRuns)
+	recoverRebuildDaemon(t, d2)
+	waitIdle(t, d2, "rebuild")
+	r, err := store.Open("rebuild")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := r.Snapshot(); !reflect.DeepEqual(got, first) {
+		t.Fatalf("failed retry ran again at next startup: %+v", got)
+	}
+}
+
+func TestRebuildExitMarksOnlyHeldRuns(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	pausedRun(t, d, store, p, "held")
+	for _, state := range []string{runrec.StatePaused, runrec.StateQueued, runrec.StateAwaitingApproval} {
+		pausedRun(t, d, store, p, state)
+		r, _ := store.Open(state)
+		if err := r.Update(func(rec *runrec.Record) { rec.State = state }); err != nil {
+			t.Fatal(err)
+		}
+	}
+	d.runs.deps.Hold.Set(true)
+	request(t, d, MethodRunRetry, `{"run":"held","no_wait":true}`)
+	waitFor(t, "held role start", func() bool { return engineRunWait(d, "held") == engine.HoldReason })
+	if !d.exitForRebuild(func(context.Context) error { return nil }) {
+		t.Fatal("rebuild exit refused held runs")
+	}
+	if !rebuildMarker(t, store, "held") {
+		t.Error("held run has no durable rebuild marker")
+	}
+	for _, state := range []string{runrec.StatePaused, runrec.StateQueued, runrec.StateAwaitingApproval} {
+		if rebuildMarker(t, store, state) {
+			t.Errorf("resting run %s marked for rebuild", state)
+		}
+	}
+}
+
+func TestRebuildMarkerWriteFailureStillExits(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	pausedRun(t, d, store, p, "held")
+	d.runs.deps.Hold.Set(true)
+	request(t, d, MethodRunRetry, `{"run":"held","no_wait":true}`)
+	waitFor(t, "held role start", func() bool { return engineRunWait(d, "held") == engine.HoldReason })
+
+	// The engine retains its open record. Replacing its directory with a file
+	// makes Update fail without depending on permission bits or privileges.
+	dir := store.RunDir("held")
+	saved := filepath.Join(t.TempDir(), "held")
+	if err := os.Rename(dir, saved); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := os.Remove(dir); err != nil && !errors.Is(err, os.ErrNotExist) {
+			t.Error(err)
+		}
+		if err := os.Rename(saved, dir); err != nil {
+			t.Error(err)
+		}
+	})
+	if err := os.WriteFile(dir, []byte("not a directory"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	exited := captureExit(d)
+	didExit := d.exitForRebuild(func(context.Context) error { return nil })
+	signalled := false
+	select {
+	case <-exited:
+		signalled = true
+	default:
+	}
+	if !didExit || !signalled {
+		t.Fatalf("marker write failure blocked rebuild exit: returned %t, stop signalled %t", didExit, signalled)
+	}
+}
+
 func TestTwoOpenTUIsShareCLIReads(t *testing.T) {
 	e := newEnv(t)
 	e.writeRegistry(t, 0, registry.Project{Name: "alpha", Path: "/p/alpha", Adj: true})
@@ -4003,6 +4176,9 @@ func TestAutoRebuildHoldsNewRoles(t *testing.T) {
 
 	// The daemon restarts: the old one ends, a new one recovers the run, and its
 	// role starts (the new daemon holds nothing).
+	if !d.exitForRebuild(func(context.Context) error { return nil }) {
+		t.Fatal("rebuild exit refused the held run")
+	}
 	d.closeRuns()
 	deps := d.runs.deps
 	deps.Hold, deps.Wake, deps.Vendors = nil, nil, nil
@@ -4014,7 +4190,8 @@ func TestAutoRebuildHoldsNewRoles(t *testing.T) {
 	if err := d2.recoverRuns(ctx); err != nil {
 		t.Fatal(err)
 	}
-	request(t, d2, "run.retry", `{"run":"r1"}`)
+	waitState(t, store, "r1", runrec.StateAwaitingApproval)
+	waitIdle(t, d2, "r1")
 	if got := starts(); len(got) == 0 || got[0] != "r1 implementer" {
 		t.Fatalf("roles started after the restart: %v, want r1's implementer first", got)
 	}

@@ -13,6 +13,13 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+// MarkRebuildResume records a held role start for the successor daemon to
+// retry once. The caller keeps the rebuild hold set until shutdown. Use the
+// engine's live record handle so cancellation cannot overwrite the marker.
+func (e *Engine) MarkRebuildResume() error {
+	return e.run.Update(func(rec *runrec.Record) { rec.RebuildResume = true })
+}
+
 // Recover loads every unfinished run in the store and reconciles it with the
 // live process groups (engine.restart). A run whose project lookup fails is
 // named in the returned error; the others are still recovered.

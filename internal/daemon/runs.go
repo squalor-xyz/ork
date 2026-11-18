@@ -378,8 +378,18 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	var rebuildResumes []string
 	for _, r := range stored {
 		rec := r.Snapshot()
+		if rec.RebuildResume {
+			// Consume before retrying, including failed recovery or a refused
+			// retry. A later daemon must not repeat this automatic attempt.
+			if err := r.Update(func(rec *runrec.Record) { rec.RebuildResume = false }); err != nil {
+				fmt.Fprintf(os.Stderr, "clear rebuild resume %s: %v\n", rec.ID, err)
+			} else {
+				rebuildResumes = append(rebuildResumes, rec.ID)
+			}
+		}
 		if runrec.IsFinal(rec.State) {
 			if !rec.LandedAt.IsZero() {
 				d.runs.specStateMu.Lock()
@@ -450,6 +460,13 @@ func (d *Daemon) recoverRuns(ctx context.Context) error {
 		d.runs.mu.Lock()
 		d.runs.runs[rec.ID] = &managedRun{engine: e}
 		d.runs.mu.Unlock()
+	}
+	// All recovered runs are published before retry uses the ordinary owner
+	// action path, including its cap and durable waiting-resume handling.
+	for _, id := range rebuildResumes {
+		if _, err := d.ownerRunReply(ctx, MethodRunRetry, RunAction{Run: id, NoWait: true}); err != nil {
+			fmt.Fprintf(os.Stderr, "rebuild resume %s: %v\n", id, err)
+		}
 	}
 	d.runs.mu.Lock()
 	defer d.runs.mu.Unlock()
