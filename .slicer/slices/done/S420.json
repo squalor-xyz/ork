@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/agent/grok/grok.go:291-309`\n- `internal/agent/grok/grok.go:360-395`\n- `internal/agent/grok/grok_test.go`"
+      "body": "- `internal/agent/grok/grok.go:247-256` (stream.line)\n- `internal/agent/grok/grok.go:302-313` (stream.fail)\n- `internal/agent/grok/grok.go:358-395` (Run, after the stream fallback and the exit classification)\n- `internal/agent/grok/grok_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

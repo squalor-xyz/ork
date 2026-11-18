@@ -376,6 +376,12 @@
   whose worktree or branch is gone, stays refused. `ork run` does not resume
   it.
 
+- S420: a grok round whose credits or usage-limit error appears only on
+  stderr or as a plain stdout line (not a stream event) now ends
+  out_of_credits with the same fixed reason, so the role falls back to the
+  next matrix row and grok is marked out. Before, it stayed unclassified and
+  stopped the run. A round that completed cleanly is not reclassified.
+
 ## v1.1.0 (2026-11-11)
 
 - Docs: re-anchor file:line citations in `docs/guide.md` (S219).
