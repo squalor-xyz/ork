@@ -21330,6 +21330,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ae9289b2-8c1e-44e6-92e9-6ef6a7c0aed0",
+          "kind": "",
+          "text": "**2026-11-18** — Verified after landing was re-run: the Direction section reaches the reviewer's and architect's briefs, the prompts name it, a failed read falls back to the two slicer commands, and go vet, go test ./..., gofmt and slicer check pass on the merged tree.",
+          "created_at": "2026-11-18T12:35:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
