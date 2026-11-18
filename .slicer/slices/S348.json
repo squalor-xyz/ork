@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "Observed 2026-11-11 (slicer s455): landing paused on conflicts in .slicer/render/ROADMAP.html and ROADMAP.md because the clone had no merge.slicer-* git config; the fix (`slicer setup-git` lines, merge --abort, ork retry) came only at the land step, after the whole relay. `slicer check`/`slicer setup-git` exit 1 when the drivers are missing. Wanted: `ork run`/`ork wave start` plans (and `ork doctor`) warn when `slicer setup-git` exits 1 for the project, before any slice starts."
+      "body": "Observed 2026-11-11 (slicer s455): landing paused on conflicts in .slicer/render/ROADMAP.html and ROADMAP.md because the clone had no merge.slicer-* git config; the fix (`slicer setup-git` lines, merge --abort, ork retry) came only at the land step, after the whole relay. `slicer check`/`slicer setup-git` exit 1 when the drivers are missing. Wanted: `ork run`/`ork wave start` plans (and `ork doctor`) warn when `slicer setup-git` exits 1 for the project, before any slice starts.\n\nRe-anchored 2026-11-18:\n\n- S328 (landed 2026-11-11, commit `148f6d80`) added the doctor finding and the landing-pause clause (adj 288 `doctor.merge-driver-report` = doctor-and-pause; adj 289 `doctor.merge-driver-fix`). `engine.MissingMergeDrivers` reads `.slicer/.gitattributes` and checks `git config --get merge.NAME.driver` (`internal/engine/setup.go:19-61`). `ork doctor` reports `merge drivers missing: NAME, NAME (fix: run the lines slicer setup-git prints)` (`internal/cli/doctor.go:190-196`); the landing pause adds its clause (`internal/engine/landmerge.go:182`).\n- The run plan does not call it. `planRun` fills `plan.Warnings` from `engine.SetupWarnings` and the check-command probe only (`internal/daemon/runs.go:808-828`). `ork run` and `ork wave start` print each plan warning as `warning: LINE` (`internal/cli/run.go:295-297`, used by `startWave` at `internal/cli/wave.go:350`), and the TUI launch confirm shows them (`TestLaunchConfirmShowsSetupWarnings`, `internal/tui/launch_test.go:1502`). So a plan warning reaches all three without new print code.\n- adj 288 picked where ork says it from three options: doctor-and-pause, doctor-only, refuse-launch. A plan warning was not one of them, so adding it widens a decided record. The spec is written per the owner's answer to `plan.merge-driver-warning`.\n- slicer does not plan ork's runs; `slicer setup-git` prints the lines and `slicer check` warns (owner's report above). Nothing in slicer warns at an ork plan.\n\nUI: the warning shows in `ork run` / `ork wave start` output and the TUI launch confirm, so this slice gets a UI pass (rule u10)."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/setup.go:19-61` (a shared `MissingDriversWarning(names)` text beside `MissingMergeDrivers`)\n- `internal/engine/setup_test.go`\n- `internal/cli/doctor.go:190-196` (use the shared text; output unchanged)\n- `internal/daemon/runs.go:808-828` (`planRun`: append the warning)\n- `internal/daemon/runs_test.go:3743` (beside `TestRunPlanCarriesSetupWarnings`)\n- `docs/design.md:2905-2925` (the plan's warnings list)\n- `docs/guide.md:95` (doctor and the plan both name missing drivers)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestMissingDriversWarning` in `internal/engine/setup_test.go`: `MissingDriversWarning([]string{\"slicer-index\", \"slicer-render\"})` returns `merge drivers missing: slicer-index, slicer-render (fix: run the lines slicer setup-git prints)`, the text doctor prints today. Red today: the function does not exist.\n- `TestRunPlanWarnsOnMissingMergeDrivers` in `internal/daemon/runs_test.go`: the project path is a real git repo with a check command, a `go.mod`, and `.slicer/.gitattributes` holding `render/* merge=slicer-render`, with no git config for it. `launchPlan` returns a plan whose warnings include the missing-drivers line naming `slicer-render`. After `git config merge.slicer-render.driver true` in that repo, the plan has no such line. Red today: `planRun` never calls `MissingMergeDrivers` (`internal/daemon/runs.go:808`).\n- `TestRunPlanWithoutSlicerAttributesHasNoDriverWarning` in `internal/daemon/runs_test.go`: a project with no `.slicer/.gitattributes` gets no driver line, and `TestRunPlanCarriesSetupWarnings` stays as it is. Green today (guard); mutation-check it by always appending the line.\n- `TestRunPlanDriverReadErrorIsAWarning` in `internal/daemon/runs_test.go`: `.slicer/.gitattributes` is a directory, so the read fails; the plan is still made and carries one `merge drivers: ...` warning, as doctor does (`internal/cli/doctor.go:191-192`). Red today: no line."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. Per the owner's answer to `plan.merge-driver-warning`. With \"plan-warning\" (recommended): add `engine.MissingDriversWarning(names []string) string` and use it in `ork doctor` (no output change).\n3. `planRun`: after the setup warnings and before the check-command probe, when the project path is a directory, call `engine.MissingMergeDrivers(ctx, proj.Path, d.runs.deps.GitBin)`; append `MissingDriversWarning` when names are missing, or `merge drivers: ERR` on an error. A warning never refuses the start; the `expected` plan compare already includes warnings (`docs/design.md:2923`).\n4. Do not run `slicer setup-git` from the plan; `ork doctor --fix` stays the only place ork runs those lines (adj 289).\n5. Docs: add the warning to the plan's warnings list in `docs/design.md` (cite S348 and the new record) and say in `docs/guide.md` that the plan shows it too. Changelog entry with `slicer changelog add S348 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- A plan for a project whose slicer merge drivers are not configured carries one warning that names them and the slicer setup-git fix, in the same words as ork doctor.\n- ork run, ork wave start and the TUI launch confirm show it before the start; it does not refuse the start.\n- A project with the drivers configured, or with no slicer attributes, gets no such warning.\n\nCommands:\n- `go test ./internal/engine ./internal/daemon ./internal/cli -run 'MissingDriversWarning|RunPlan|DoctorMergeDriver' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S348: run plans warn when slicer merge drivers are missing\"."
     }
   ],
   "notes": []

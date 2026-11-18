@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 445,
+  "next_id": 448,
   "preamble": "",
   "passes": [
     {
@@ -20,6 +20,12 @@
     {
       "key": "v1.2",
       "heading": "v1.2",
+      "intro": "",
+      "outro": ""
+    },
+    {
+      "key": "v1.3",
+      "heading": "",
       "intro": "",
       "outro": ""
     }
@@ -12632,7 +12638,7 @@
       "id": "S221",
       "title": "Daemon restart helper: pick up a rebuilt ork without waiting for every role to end",
       "short_title": "Daemon restart helper (options)",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -12664,7 +12670,7 @@
         "key": "daemon-restart-helper",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Covered by S431 (adj 464): the daemon drains and rebuilds itself after a code landing, so a rebuilt ork is picked up after at most one role ends",
         "importance": 2,
         "urgency": 1,
         "effort": 2,
@@ -18385,7 +18391,7 @@
       "id": "S320",
       "title": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions",
       "short_title": "Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -18417,7 +18423,7 @@
         "key": "ork-new-73bd6e39c3599b31",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Covered by S387 (safe tool feedback filed as a slice) and S388 (feature feedback asked in adj, filed when decided); its de-duplication part moves to S442",
         "importance": 3,
         "urgency": 2,
         "effort": 2,
@@ -19231,7 +19237,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19259,7 +19265,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19287,7 +19293,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19314,8 +19320,8 @@
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
-        "effort": null,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19343,7 +19349,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19371,7 +19377,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19527,7 +19533,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19541,7 +19547,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -19555,7 +19561,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19640,7 +19646,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19668,7 +19674,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19676,7 +19682,7 @@
       "id": "S350",
       "title": "Implementer has no way to remove a file it created by mistake",
       "short_title": "Implementer has no way to remove a file it created by mistake",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -19693,7 +19699,7 @@
         "key": "ork-new-706bfb83d1d8ea93",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S440 (implementer may remove a file: one it created by mistake or one the slice moved code out of), 2026-11-18 duplicate sweep",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -19724,7 +19730,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -19766,7 +19772,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "S",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -19780,7 +19786,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -19992,7 +19998,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -20903,6 +20909,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "7a798e06-7d6a-42c4-b07b-a36cd3a2a934",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18 owner: no need to wait on S374 for v1.2; keep it low in the queue and let it move out of v1.2 (now v1.3).",
+          "created_at": "2026-11-18T15:25:28Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -20916,11 +20936,11 @@
         "parent": "",
         "cites": [],
         "key": "ork-grok-cutover",
-        "pass": "v1.2",
+        "pass": "v1.3",
         "group": "",
         "reason": "",
-        "importance": 3,
-        "urgency": 3,
+        "importance": 1,
+        "urgency": 1,
         "effort": 1,
         "attempts": 0
       }
@@ -22711,7 +22731,7 @@
       "id": "S412",
       "title": "Do not run a reviewer pass under Grok plan mode. Plan mode asks for plan.md and exit_plan_mode, which conflicts with a read-only report that must be the final message.",
       "short_title": "Do not run a reviewer pass under Grok plan mode. Plan mode asks for plan.md and exit_plan_mode, which conflicts with a read-only report that must be the final message.",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -22728,7 +22748,7 @@
         "key": "tool-feedback-ork-525e1326",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S418 (plan-mode harness vs a read-only review or gate), 2026-11-18 duplicate sweep",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -22739,7 +22759,7 @@
       "id": "S413",
       "title": "In a plan-mode review, allow slicer goals, slicer list, and go test without an approval prompt.",
       "short_title": "In a plan-mode review, allow slicer goals, slicer list, and go test without an approval prompt.",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -22756,7 +22776,7 @@
         "key": "tool-feedback-ork-8ed14e65",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S415 (reviewer runs go test, gofmt, slicer read commands without an approval prompt), 2026-11-18 duplicate sweep",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -22767,7 +22787,7 @@
       "id": "S414",
       "title": "Do not run the gate under Grok plan mode. Plan mode asks for plan.md and exit_plan_mode, which conflicts with a read-only verdict that must be the final message.",
       "short_title": "Do not run the gate under Grok plan mode. Plan mode asks for plan.md and exit_plan_mode, which conflicts with a read-only verdict that must be the final message.",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -22784,7 +22804,7 @@
         "key": "tool-feedback-ork-892c8fb1",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S418 (plan-mode harness vs a read-only review or gate), 2026-11-18 duplicate sweep",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -22798,10 +22818,25 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b07d6c01-9f4a-428b-b878-867d4f75e80a",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18 duplicate sweep: merged S413 (in a plan-mode review, allow slicer goals, slicer list and go test without a prompt).",
+          "created_at": "2026-11-18T15:26:04Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22810,12 +22845,12 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-0d0bafe2",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -22826,10 +22861,25 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ff352d28-8e61-45a7-b458-65a1dc7adc15",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18 duplicate sweep: merged S422 (CLI renders from a go test -overlay file in the role tmp dir, allowlisted) and S425 (ui role may run go run ./cmd/ork --help for the approval card). Earlier duplicates retired: S426, S429, S433, S441.",
+          "created_at": "2026-11-18T15:26:04Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22838,12 +22888,12 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-75926515",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -22857,7 +22907,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22866,12 +22916,12 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-88736bf2",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -22882,10 +22932,39 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "16a6a502-e253-43b4-a150-c36b780f67e5",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18 duplicate sweep: merged S412 (no reviewer under Grok plan mode), S414 (no gate under Grok plan mode) and S427 (brief says whether gate mode applies). Cover reviewer and gate, and say what the role does when the harness starts it in plan mode.",
+          "created_at": "2026-11-18T15:26:04Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "69001e94-ac6c-4607-9c12-0bda238dfdbc",
+          "kind": "",
+          "text": "**2026-11-18** — Merged S445 (2026-11-18, tool feedback from run ork-20261118-151517-1d8b, S439 reviewer): same plan-mode brief conflict.",
+          "created_at": "2026-11-18T15:37:10Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -22894,12 +22973,12 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-f702ffae",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23035,7 +23114,7 @@
       "id": "S422",
       "title": "For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix",
       "short_title": "For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -23052,7 +23131,7 @@
         "key": "tool-feedback-ork-461d9aba",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S416 (UI pass renders views and CLI output outside the tree), 2026-11-18 duplicate sweep",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -23069,7 +23148,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23078,12 +23157,12 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-684dfb81",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23097,7 +23176,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23106,12 +23185,12 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-0221af1b",
-        "pass": "v1.1",
+        "pass": "v1.2",
         "group": "",
         "reason": "",
         "importance": 2,
-        "urgency": 2,
-        "effort": null,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -23119,7 +23198,7 @@
       "id": "S425",
       "title": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card",
       "short_title": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -23136,7 +23215,7 @@
         "key": "tool-feedback-ork-4a8e7f3d",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S416 (UI pass renders views and CLI output outside the tree), 2026-11-18 duplicate sweep",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -23175,7 +23254,7 @@
       "id": "S427",
       "title": "say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review",
       "short_title": "say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -23192,7 +23271,7 @@
         "key": "tool-feedback-ork-5de63bee",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S418 (plan-mode harness vs a read-only review or gate), 2026-11-18 duplicate sweep",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -23259,10 +23338,25 @@
       "id": "S430",
       "title": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found",
       "short_title": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "09028749-41b7-4fdd-9514-f58911471422",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18: filed in adjudicate as S56 (owner asked; not committed there).",
+          "created_at": "2026-11-18T15:29:19Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -23276,7 +23370,7 @@
         "key": "tool-feedback-adj-2a0922a7",
         "pass": "v1.1",
         "group": "",
-        "reason": "",
+        "reason": "Belongs to adjudicate, not ork (adj lint/adj show naming a record that exists only on the base branch); ork may not write ../adjudicate. Owner to file it there.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -23406,7 +23500,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23418,9 +23512,9 @@
         "pass": "v1.2",
         "group": "",
         "reason": "",
-        "importance": 2,
-        "urgency": 2,
-        "effort": null,
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23490,7 +23584,7 @@
       "note_records": [],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23504,7 +23598,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -23573,10 +23667,25 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "99cf6ea9-45d3-4102-b41b-dda0523845b8",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18 duplicate sweep: merged S350. Evidence from S350: slicer s451 (ork-20261111-213809-6e14) left a 2-byte scratch file tests/test_merge_slice.py.tail that turned affected.py red; with no rm in the allowlist the run paused and the outer session deleted it by hand. Cover both cases: a file the implementer created by mistake and a file the slice moved code out of.",
+          "created_at": "2026-11-18T15:26:05Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23590,7 +23699,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 1,
         "attempts": 0
       }
     },
@@ -23629,10 +23738,25 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "dc272044-5991-49ac-8b94-4ddb936ca2b2",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18: takes over S320's de-duplication part. Evidence: tool feedback filed near-identical slices repeatedly on 2026-11-17/18 (S416, S422, S426, S429, S433, S441; S418, S428, S436; S419, S421, S435, S438), retired by hand.",
+          "created_at": "2026-11-18T15:26:17Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "M",
         "flags": [],
         "trees": [],
         "trees_literal": false,
@@ -23646,7 +23770,7 @@
         "reason": "",
         "importance": 2,
         "urgency": 2,
-        "effort": null,
+        "effort": 2,
         "attempts": 0
       }
     },
@@ -23719,6 +23843,90 @@
         "urgency": 2,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S445",
+      "title": "say in the brief that plan mode may be active and that the final message is the report, so the plan-mode instructions do not conflict",
+      "short_title": "say in the brief that plan mode may be active and that the final message is the report, so the plan-mode instructions do not conflict",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S439",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4fbb8f1f",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S418 (roles.read-only-plan-mode, option a: brief says not to exit plan mode and to give the report as the final message).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S446",
+      "title": "say in the reviewer brief whether the harness started the role in plan mode, since plan mode tells the role to write a plan file and call ExitPlanMode, which a read-only review cannot do",
+      "short_title": "say in the reviewer brief whether the harness started the role in plan mode, since plan mode tells the role to write a plan file and call ExitPlanMode, which a read-only review cannot do",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S444",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-7889d5dd",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S447",
+      "title": "name go test -overlay with a temp-dir test file as the sanctioned render path for read-only UI passes in the brief",
+      "short_title": "name go test -overlay with a temp-dir test file as the sanctioned render path for read-only UI passes in the brief",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S393",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-cf7c8e61",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
       }
     }
   ],
