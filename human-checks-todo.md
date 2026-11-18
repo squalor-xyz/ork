@@ -222,3 +222,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S388 (run ork-20261117-233556-f24d, 2026-11-18)
 
 - [ ] In a real run, a feature line reaches Needs you, and answering `file` files one slice in the target.
+
+## S431 (run ork-20261118-130342-787e, 2026-11-18)
+
+- [ ] With `ork projects set ork --auto-rebuild on`, land a slice that changes internal/engine while another run is implementing; the daemon restarts on the new build after that role ends.
