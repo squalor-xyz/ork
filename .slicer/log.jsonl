@@ -5473,3 +5473,4 @@
 {"when": "2026-11-18T17:16:12Z", "item": "S447", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path; go test -overlay route, option a)."}
 {"when": "2026-11-18T17:16:12Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S446 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-18T17:16:13Z", "item": "S416", "action": "note", "from": "", "to": "", "note": "Merged S447 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:42:25Z", "item": "S444", "action": "note", "from": "", "to": "", "note": "Verified the merged tree: heartbeat regression passes with a", "by": "Jon Robbins"}
