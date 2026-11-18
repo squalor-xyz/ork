@@ -1,0 +1,39 @@
+{
+  "id": "S434",
+  "title": "give doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (deterministic-check) on ork in ork run ork-20261118-130536-390b, project ork, item S398:\n\ngive doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file\n\nEvidence: TestDoctorUpgradeFlagPrintsEveryTool only checks substrings (internal/cli/upgrade_test.go:474-481); no golden file exists for doctor output, so no render could be produced for S398"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

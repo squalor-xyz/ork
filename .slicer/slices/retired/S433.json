@@ -1,0 +1,39 @@
+{
+  "id": "S433",
+  "title": "give the UI pass a named render hook, so renders need no overlay test file written by the role",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261118-130509-4fa3, project ork, item S392:\n\ngive the UI pass a named render hook, so renders need no overlay test file written by the role\n\nEvidence: the project has no render command; I used go test -overlay with a temp test file that calls launchHarness, launchConfirmed and plainView"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

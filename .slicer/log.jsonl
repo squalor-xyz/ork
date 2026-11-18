@@ -5183,3 +5183,16 @@
 {"when": "2026-11-18T13:03:28Z", "item": "S432", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T13:03:41Z", "item": "S431", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T13:05:36Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "2026-11-18 spec check: held until slicer s460 lands and 'sli", "by": "Jon Robbins"}
+{"when": "2026-11-18T13:21:04Z", "item": "S433", "action": "add", "from": "", "to": "open", "note": "give the UI pass a named render hook, so renders need no overlay test file written by the role"}
+{"when": "2026-11-18T13:21:05Z", "item": "S433", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:23:33Z", "item": "S434", "action": "add", "from": "", "to": "open", "note": "give doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file"}
+{"when": "2026-11-18T13:23:34Z", "item": "S434", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:28:03Z", "item": "S435", "action": "add", "from": "", "to": "open", "note": "treat exit 1 of an absence check such as `rg -n PATTERN PATH` as pass when the slice's Check line says it prints nothing"}
+{"when": "2026-11-18T13:28:03Z", "item": "S435", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:28:35Z", "item": "S436", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief whether the harness may start the role in plan mode, since plan-mode instructions conflict with the report-as-final-message rule"}
+{"when": "2026-11-18T13:28:36Z", "item": "S436", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:32:44Z", "item": "S437", "action": "add", "from": "", "to": "open", "note": "give role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip"}
+{"when": "2026-11-18T13:32:45Z", "item": "S437", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:33:25Z", "item": "S433", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path), filed again by tool feedback"}
+{"when": "2026-11-18T13:33:25Z", "item": "S435", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S419 (no-match rg on a prints-nothing Check line), filed again by tool feedback"}
+{"when": "2026-11-18T13:33:25Z", "item": "S436", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (reviewer prompt in plan mode), filed again by tool feedback"}
