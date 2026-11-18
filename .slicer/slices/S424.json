@@ -1,0 +1,39 @@
+{
+  "id": "S424",
+  "title": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261118-035228-7421, project ork, item S403:\n\nhave ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it\n\nEvidence: implementer-2 changed no file; the gate had to re-run git status, git diff --stat and a grep of cited lines to confirm the 12-file 829/144 diff was unchanged"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
