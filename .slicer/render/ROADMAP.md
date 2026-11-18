@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-430 items · — 74 · done 314 · retired 42
+430 items · — 70 · done 315 · retired 45
 
 ## v1.3
 
@@ -160,7 +160,7 @@ v1.2
 | 103 | [S380](slices/S380.md) | Per-step cost and tokens | S | 1 | daemon, agent | docs/review-2026-11-12-workflow.md F1: Claude cost monotonic in 63 of 63 resumed sequences, Codex tokens in 20 of 20; $542 recorded is about $194. | done |
 | 104 | [S381](slices/S381.md) | Nothing-plus-prose is no finding | S | 1 | daemon | docs/review-2026-11-12-workflow.md F2: 29 of 65 landed runs ran a fix round with no [fix] tag; at least 12 look like the parser. Decided: adj 406 (review.nothing-section). | done |
 | 105 | [S382](slices/S382.md) | Smaller fixed context for cloud Claude roles | S | 1 | agent | docs/review-2026-11-12-workflow.md F4: S360 measured 30211 to 26692 first-turn tokens (12%), claude-local only; Claude ran 245 role steps in five days. Decided: adj 408 (roles.cloud-fixed-context). · discovered from S360 | — |
-| 106 | [S383](slices/S383.md) | Direction digest in the brief | M | 2 | daemon | docs/review-2026-11-12-workflow.md F5: slicer list --json --lean is 85139 bytes for ork; section (C) gave 1 fix finding in 55 reports; the reviewer is 153M tokens and the slowest step. Grok review ends 2026-12-09, after which this read is billed. | — |
+| 106 | [S383](slices/S383.md) | Direction digest in the brief | M | 2 | daemon | docs/review-2026-11-12-workflow.md F5: slicer list --json --lean is 85139 bytes for ork; section (C) gave 1 fix finding in 55 reports; the reviewer is 153M tokens and the slowest step. Grok review ends 2026-12-09, after which this read is billed. | done |
 | 107 | [S384](slices/S384.md) | ork runs the finish step | M | 2 | daemon | docs/review-2026-11-12-workflow.md F3: 65 finish steps, median 12 s, 56M Claude tokens; S315's finish step failed on Codex credits and cost a gate and an implementer round. Decided: adj 407 (engine.finish-runner). | — |
 | 108 | [S387](slices/S387.md) | Auto-file safe tool feedback | M | 2 |  | 2026-11-17 spec draft of S320 at f48a6154. Parsing and keeping landed in S354 (adj 325 `relay.tool-feedback`, decision `full`): `splitToolFeedback` (`internal/engine/report.go:148-171`) reads up to 3 well-formed lines per report, `routeReport` keeps them with `AddToolFeedback` (`internal/engine/round.go:922-929`), and the record holds at most 3 with no duplicate check (`internal/runrec/record.go:381-403`, `:452`). Nothing acts on them (`docs/design.md:1321-1325`). `slicercli.Client.Add` always passes `--discovered-from` (`internal/slicercli/write.go:489-505`). · discovered from S320 | done |
 | 109 | [S388](slices/S388.md) | Tool feedback owner questions | M | 2 |  | 2026-11-17 spec draft of S320 at f48a6154. Open adj records already show in Needs you: the daemon counts `len(s.Open.Value)` (`internal/daemon/handlers.go:460`) and the Overview lists each open record (`internal/tui/overview.go:360-363`). `AskRecord` checks the key first and refuses one that exists (`internal/engine/adjrecord.go:112-127`). The source cache fetches decided records (`internal/source/source.go:152`), and the daemon already wraps the cache fetcher to act on a fetched part (`landingFetcher`, `internal/daemon/landed.go:22-37`). · discovered from S320 | done |
@@ -321,10 +321,10 @@ v1.2
 | 257 | [S423](slices/S423.md) | say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it" |  | - |  | discovered from S403 | — |
 | 258 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it |  | - |  | discovered from S403 | — |
 | 259 | [S425](slices/S425.md) | allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card |  | - |  | discovered from S405 | — |
-| 260 | [S426](slices/S426.md) | give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output |  | - |  | discovered from S404 | — |
+| 260 | [S426](slices/S426.md) | give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output |  | - |  | Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback · discovered from S404 | retired |
 | 261 | [S427](slices/S427.md) | say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review |  | - |  | discovered from S404 | — |
-| 262 | [S428](slices/S428.md) | in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply |  | - |  | discovered from S383 | — |
-| 263 | [S429](slices/S429.md) | give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand |  | - |  | discovered from S404 | — |
+| 262 | [S428](slices/S428.md) | in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply |  | - |  | Duplicate of S418 (reviewer prompt in plan mode), filed again by ork tool feedback · discovered from S383 | retired |
+| 263 | [S429](slices/S429.md) | give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand |  | - |  | Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback · discovered from S404 | retired |
 | 264 | [S430](slices/S430.md) | adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found |  | - |  | discovered from S405 | — |
 
 ---
