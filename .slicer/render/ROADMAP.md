@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-450 items · — 62 · done 322 · retired 66
+450 items · — 61 · done 322 · retired 67
 
 ## v1.3
 
@@ -123,7 +123,7 @@ v1.2
 | 66 | [S342](slices/S342.md) | wave start: an owner's landing-order answer does not order the wave | M | 2 |  |  | — |
 | 67 | [S343](slices/S343.md) | Local roles fit the local server | M | 2 |  | S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer's Bash calls went through Claude Code's model-backed classifier (plan mode), which timed out three times. · discovered from S304 | done |
 | 68 | [S344](slices/S344.md) | Local spec check and UI pass rows | M | 2 |  | S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role. · discovered from S304 | done |
-| 69 | [S345](slices/S345.md) | python preset: implementer cannot rename a tracked file or list the index | S | 1 |  |  | — |
+| 69 | [S345](slices/S345.md) | Implementer presets allow moving and removing files (with S440) | S | 1 |  |  | — |
 | 70 | [S346](slices/S346.md) | A paused run cannot get the permission it was denied without stopping every run in the project | M | 2 |  |  | — |
 | 71 | [S347](slices/S347.md) | Launch commit leaves orphan index entries | S | 1 |  | 2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported "S345: marked as having a slice, but no file exists" and the same for S346. ork's launch commits a56c3f8 (S123) and d5880ab (S343) took main's whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items' slice files. | done |
 | 72 | [S348](slices/S348.md) | Warn before a run starts when the slicer merge drivers are not configured | S | 1 |  |  | — |
@@ -199,7 +199,7 @@ v1.2
 | 142 | [S437](slices/S437.md) | give role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip | S | 2 |  | discovered from S431 | — |
 | 143 | [S438](slices/S438.md) | judge a Check line that says "prints nothing" by its output, and treat rg exit 1 (no match) as pass |  | - |  | Duplicate of S419 (prints-nothing rule, adj 468), filed again by tool feedback · discovered from S392 | retired |
 | 144 | [S439](slices/S439.md) | Rebuild auto-resume | S | 2 |  | 2026-11-18, S431 implementer: after the drain, the successor daemon recovers runs through today's recovery (`internal/engine/recover.go:119`), which pauses each as interrupted until the owner runs `ork retry RUN`. Owner decision adj 467 (`selfhost.auto-rebuild-resume`): mark runs held at a rebuild in their record, and have the successor retry them at start with no owner action. | — |
-| 145 | [S440](slices/S440.md) | allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub | S | 1 |  | discovered from S431 | — |
+| 145 | [S440](slices/S440.md) | allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub | S | 1 |  | Merged into S345 (adj 478: one preset change for moves and removals). · discovered from S431 | retired |
 | 146 | [S441](slices/S441.md) | allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree |  | - |  | Duplicate of S416/S422 (UI pass render path; go test -overlay), filed again by tool feedback · discovered from S431 | retired |
 | 147 | [S442](slices/S442.md) | When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing | M | 2 |  | discovered from S419 | — |
 | 148 | [S443](slices/S443.md) | When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it |  | - |  | Duplicate of S424 (brief says the tree is unchanged since round N, with the diff hash), filed again by tool feedback · discovered from S419 | retired |

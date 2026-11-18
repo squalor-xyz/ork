@@ -19419,7 +19419,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8828421c-039c-428f-9f37-98857b670ad4",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 476 specs.readonly-tracking-change = ignore (leave the project's .slicer/ out of the spec check fingerprint; replaces S292's 2026-11-04 answer). The spec's recommended option a no longer applies; follow adj 476.",
+          "created_at": "2026-11-18T22:21:02Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19447,7 +19462,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "968a5235-98d1-450b-acb0-7c3ecbe5ba50",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 477 wave.overlap-order = hold (a later member waits until the earlier overlapping one lands).",
+          "created_at": "2026-11-18T22:21:02Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -19598,12 +19628,27 @@
     },
     {
       "id": "S345",
-      "title": "python preset: implementer cannot rename a tracked file or list the index",
-      "short_title": "python preset: implementer cannot rename a tracked file or list the index",
+      "title": "Implementer presets allow moving and removing files (with S440)",
+      "short_title": "Implementer presets allow moving and removing files (with S440)",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "065608d4-330f-4917-b285-10c51db9212a",
+          "kind": "",
+          "text": "**2026-11-18** — Merged S440 (file removal) on 2026-11-18 per adj 478 (owner: 'ls-files, mv, git rm, rm').",
+          "created_at": "2026-11-18T22:21:02Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19631,7 +19676,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "798f2c8f-9442-403e-83a5-bfd66b578670",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 479 run.retry-allow = retry-flag (ork retry RUN --allow PATTERN, stored on that run only).",
+          "created_at": "2026-11-18T22:21:02Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -23793,7 +23853,7 @@
       "id": "S440",
       "title": "allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub",
       "short_title": "allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -23825,7 +23885,7 @@
         "key": "tool-feedback-ork-548e367a",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S345 (adj 478: one preset change for moves and removals).",
         "importance": 2,
         "urgency": 2,
         "effort": 1,

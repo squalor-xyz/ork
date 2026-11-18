@@ -5502,3 +5502,18 @@
 {"when": "2026-11-18T22:18:11Z", "item": "S340", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 475 status.spec-questions = y", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:19:31Z", "item": "S450", "action": "add", "from": "", "to": "open", "note": "skip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files"}
 {"when": "2026-11-18T22:19:31Z", "item": "S450", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-18T22:21:02Z", "item": "S345", "action": "set", "from": "", "to": "", "note": "title python preset: implementer cannot rename a tracked file or list the index→Implementer presets allow moving and removing files (with S440); short_title python preset: implementer cannot rename a tracked file or list the index→Implementer presets allow moving and removing files (with S440)"}
+{"when": "2026-11-18T22:21:02Z", "item": "S345", "action": "note", "from": "", "to": "", "note": "Merged S440 (file removal) on 2026-11-18 per adj 478 (owner:", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:02Z", "item": "S440", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S345 (adj 478: one preset change for moves and removals)."}
+{"when": "2026-11-18T22:21:02Z", "item": "S342", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 477 wave.overlap-order = hold", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:02Z", "item": "S346", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 479 run.retry-allow = retry-f", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:02Z", "item": "S341", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 476 specs.readonly-tracking-c", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:22Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:21:23Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:21:23Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T22:21:23Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Check"}
