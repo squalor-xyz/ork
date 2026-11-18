@@ -5474,3 +5474,25 @@
 {"when": "2026-11-18T17:16:12Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S446 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-18T17:16:13Z", "item": "S416", "action": "note", "from": "", "to": "", "note": "Merged S447 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-18T17:42:25Z", "item": "S444", "action": "note", "from": "", "to": "", "note": "Verified the merged tree: heartbeat regression passes with a", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:17:43Z", "item": "S448", "action": "add", "from": "", "to": "open", "note": "say in the brief whether plan mode may wrap a gate session, so the plan-file and ExitPlanMode instructions do not compete with the gate report"}
+{"when": "2026-11-18T17:17:44Z", "item": "S448", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T17:19:38Z", "item": "S449", "action": "add", "from": "", "to": "open", "note": "Queued-resume and Waves launch TUI follow-ups (split from S307)"}
+{"when": "2026-11-18T17:19:44Z", "item": "S448", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (plan mode in read-only and gate briefs)."}
+{"when": "2026-11-18T17:19:44Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S448 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:19:44Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-18T17:19:44Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T17:19:44Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T17:19:44Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T17:19:44Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T17:19:45Z", "item": "S307", "action": "set", "from": "", "to": "", "note": "title Later notes from S258 and S274 (wave 1 of v1.1)→Later notes from S258 and S274: daemon and CLI"}
+{"when": "2026-11-18T17:19:45Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "Split 2026-11-18 (owner, interactive question, relay session", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:19:56Z", "item": "S304", "action": "note", "from": "", "to": "", "note": "Retired 2026-11-18 (owner, interactive question, relay sessi", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:19:56Z", "item": "S304", "action": "retire", "from": "open", "to": "retired", "note": "Trials done; results in notes. claude-local qwen3.8-27b failed every implementer trial (6 of 6, no product edit)."}
+{"when": "2026-11-18T17:20:30Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-18T17:20:31Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T17:20:31Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T17:20:31Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T17:20:31Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T17:20:31Z", "item": "S432", "action": "set", "from": "", "to": "", "note": "title Accept slicer relay contract v13 (engine runs the finish step)→Accept slicer relay contract v13 (v12-v13); short_title Accept slicer relay contract v13 (engine runs the finish step)→Accept slicer relay contract v13 (v12-v13)"}
+{"when": "2026-11-18T17:20:31Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T17:20:32Z", "item": "S384", "action": "set", "from": "", "to": "", "note": "depends_on S409→S432"}

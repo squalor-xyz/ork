@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 448,
+  "next_id": 450,
   "preamble": "",
   "passes": [
     {
@@ -17395,7 +17395,7 @@
       "id": "S304",
       "title": "Local model: measure which roles each local launcher suits",
       "short_title": "Evaluate local launchers per role",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [
         "S301"
@@ -17638,6 +17638,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "cd2dee15-ea7b-42ac-b1d2-3762a84c92ba",
+          "kind": "",
+          "text": "**2026-11-18** — Retired 2026-11-18 (owner, interactive question, relay session 8d711f67: 'Retire, record results'). Result of trials 1-6 (2026-11-11 to 11-17, S316, S314, S248 x3, S246, S380): claude-local qwen3.8-27b as implementer never made a product edit on a real slice; each attempt hit the 90 min local limit or was stopped, and the claude sonnet high fallback finished in minutes (trial 6: 7.4 min). No local row is tuned for any role; local launchers stay out of default lineups.",
+          "created_at": "2026-11-18T17:19:56Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -17655,7 +17669,7 @@
         "key": "local-role-eval",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Trials done; results in notes. claude-local qwen3.8-27b failed every implementer trial (6 of 6, no product edit).",
         "importance": 3,
         "urgency": 2,
         "effort": 2,
@@ -17757,7 +17771,7 @@
     },
     {
       "id": "S307",
-      "title": "Later notes from S258 and S274 (wave 1 of v1.1)",
+      "title": "Later notes from S258 and S274: daemon and CLI",
       "short_title": "S258 and S274 later notes",
       "status": "open",
       "has_slice": true,
@@ -17768,6 +17782,20 @@
           "kind": "",
           "text": "**2026-11-07** — From S265 and S306 (2026-11-07): (1) TUI Waves confirm should show check: none and the adj 191 refusal before y, as the launch confirm does; today the daemon error shows afterwards and suggests --allow-no-check, which the TUI cannot pass. (2) An old TUI or CLI binary against a restarted daemon gets 'plan changed' on any plan with warnings (note S135 has the same property); mention in an upgrade note. (3) The launch confirm clips warnings and the note below the roles at 80x24 with '+N more lines' and the confirm takes every key, so they cannot be scrolled to. (4) ork projects set summary does not say how many patterns --allow added or skipped.",
           "created_at": "2026-11-07T19:46:26Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "bb53f581-2073-4967-8b0f-845db289052f",
+          "kind": "",
+          "text": "**2026-11-18** — Split 2026-11-18 (owner, interactive question, relay session 8d711f67: 'Split a/b'): TUI items T1-T6 moved to S449.",
+          "created_at": "2026-11-18T17:19:45Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -21395,7 +21423,7 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [
-        "S409"
+        "S432"
       ],
       "note_records": [
         {
@@ -22988,6 +23016,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "42699d33-ef7a-4e4c-aa23-adb321c74534",
+          "kind": "",
+          "text": "**2026-11-18** — Merged S448 (2026-11-18, tool feedback).",
+          "created_at": "2026-11-18T17:19:44Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -23464,8 +23506,8 @@
     },
     {
       "id": "S432",
-      "title": "Accept slicer relay contract v13 (engine runs the finish step)",
-      "short_title": "Accept slicer relay contract v13 (engine runs the finish step)",
+      "title": "Accept slicer relay contract v13 (v12-v13)",
+      "short_title": "Accept slicer relay contract v13 (v12-v13)",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -23968,6 +24010,62 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S448",
+      "title": "say in the brief whether plan mode may wrap a gate session, so the plan-file and ExitPlanMode instructions do not compete with the gate report",
+      "short_title": "say in the brief whether plan mode may wrap a gate session, so the plan-file and ExitPlanMode instructions do not compete with the gate report",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S439",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-fa382dbc",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S418 (plan mode in read-only and gate briefs).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S449",
+      "title": "Queued-resume and Waves launch TUI follow-ups (split from S307)",
+      "short_title": "S307 TUI follow-ups",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "M",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "S258 and S274 reviews and gates, 2026-11-07; re-anchored 2026-11-18; split from S307 by the owner on 2026-11-18.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "s307-tui-followups",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 2,
         "attempts": 0
       }
     }
