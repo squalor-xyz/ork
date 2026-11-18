@@ -608,6 +608,19 @@ func TestParseSpecCheckMatchesAnIdIgnoringCase(t *testing.T) {
 	}
 }
 
+// S406: the orchestrator-run list is a section of its own; it is no question and
+// no part of a slice's verdict.
+func TestParseSpecCheckIgnoresTheOrchestratorRunSection(t *testing.T) {
+	report := "## Slice S374\nReady\n\n## Slice S375\nReady\n\n## Orchestrator-run Check commands\n\n- S374: go test ./... | tee out\n\n## Owner needed\n\nnone\n"
+	verdicts, err := ParseSpecCheck(report, []string{"S374", "S375"})
+	if err != nil {
+		t.Fatalf("error %v", err)
+	}
+	if len(verdicts) != 2 || !verdicts[0].Ready || !verdicts[1].Ready {
+		t.Errorf("verdicts %+v, want both Ready", verdicts)
+	}
+}
+
 func TestParseOwnerQuestionsReadsEveryBlock(t *testing.T) {
 	body := `Some context.
 

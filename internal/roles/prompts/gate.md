@@ -48,9 +48,12 @@ this prompt disagree, the brief wins; say so in your report.
 4. Cite `file:line` for every claim. Do not report a check you did not run.
 5. The Check split uses the implementer's resolved allowlist. It does not grant
    you permission to run commands. Do not attempt commands your read-only mode cannot run.
-   Use ork's recorded rows for commands it already ran.
+   Use ork's recorded rows for commands it already ran. The brief's "Check
+   commands ork runs" are those: name them from ork's rows, not from a run of
+   your own. A plain `&&` chain has one row for each part; a part marked "not
+   run by ork: an earlier part of the chain failed" follows the failed part.
    Name which Check commands you ran and which you left to the orchestrator.
-   Never fail tests-green solely for an orchestrator-only line or because your
+   Never fail tests-green solely for an orchestrator-run line or because your
    read-only mode cannot run tests. Cite ork's result separately from your own runs.
    You must accept ork's round check result in the brief as tests-green evidence.
    The slice's own Check rows are required tests-green evidence. Read every

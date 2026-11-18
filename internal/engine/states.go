@@ -1111,12 +1111,17 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 		timeout = 10 * time.Minute
 	}
 	failed := checkRun{ok: true}
+	brokenChains := map[int]bool{} // && chains with a failed part: the rest are not run (S406)
 	for i, row := range rows {
 		start := e.d.now()
-		c := runrec.CheckRecord{Slice: true, Round: rec.Round, Command: row.command, NotRun: row.notRun, ProductSHA256: fingerprint}
+		notRun := row.notRun
+		if notRun == "" && brokenChains[row.chain] {
+			notRun = notRunChainFailed
+		}
+		c := runrec.CheckRecord{Slice: true, Round: rec.Round, Command: row.command, NotRun: notRun, ProductSHA256: fingerprint}
 		log := "$ " + row.command + "\n"
-		if row.notRun != "" {
-			log += row.notRun + "\n"
+		if notRun != "" {
+			log += notRun + "\n"
 		} else {
 			res, runErr := clirun.Run(ctx, clirun.Call{Bin: row.argv[0], Args: row.argv[1:], Env: append(os.Environ(), row.env...), Dir: rec.Worktree, Timeout: timeout})
 			if ctx.Err() != nil {
@@ -1152,6 +1157,9 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 		}
 		if !c.OK && c.NotRun == "" && failed.ok {
 			failed = checkRun{log: c.Log, failure: checkFailureLine(log)}
+		}
+		if row.chain != 0 && !c.OK {
+			brokenChains[row.chain] = true
 		}
 	}
 	return failed, false, nil

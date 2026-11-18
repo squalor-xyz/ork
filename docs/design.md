@@ -1629,6 +1629,13 @@ entries. Quoted literal arguments are supported; shell operators, expansions
 and paths outside the worktree are left as "not run by ork: orchestrator".
 Relative arguments are resolved against the worktree and cleaned before this
 containment check.
+*Proposed (S406, `checks.three-way-split`, adj 454):* a line that is a chain of
+plain commands joined only by `&&` outside quotes is run as its parts, in
+order: each part has its own row, log and check record, and a failed part
+(nonzero exit or timeout) leaves the later parts recorded as "not run by ork:
+an earlier part of the chain failed". A `&` that is not part of `&&`, a `|`, a
+`;` or any part ork would not run keeps the whole line as one "not run by ork:
+orchestrator" row. A line's "must print nothing" binds every part.
 *Proposed (S368):* a backticked entry whose first word starts with `-` (a
 flag such as `--yes`, left in the Check after a spec answer dropped it) is not
 a command: ork records it as "not run by ork: not a command (starts with -)"
@@ -1641,7 +1648,7 @@ HUMAN CHECK and `[AFTER LAND]` entries keep their existing workflow.
 Each command has the project's check timeout (ten minutes when unset), an exit
 status and its own log and check row. A nonzero exit, timeout or output on a
 line saying "must print nothing" sends the row's log to a fix round. All rows
-run even when one fails. Cancellation returns the context error without a row
+run even when one fails, except the parts of a chain after a failed part. Cancellation returns the context error without a row
 or a spent round. A command that cannot start, or returns an unexpected
 execution error, pauses at the current state instead of becoming a red row.
 A later fix reruns rows after a change outside `docs/` and `.slicer/`;
@@ -1651,17 +1658,24 @@ re-check runs the same rows after merging the moved base. The gate receives
 every row's command, result and log alongside the project check evidence.
 The run pane does not add a list of check rows.
 
-*Proposed (S309):* spec-check and gate briefs split slice Check commands into
-implementer-runnable and orchestrator-only commands, using the implementer's
-resolved allowlist. An environment assignment prefix, an absolute path outside
-the worktree, or an unallowlisted command is orchestrator-only. A `;`, `|`,
-`&`, `<` or `>` inside quotes is an argument, so `go test -run 'A|B'` stays
-runnable; unquoted, it makes the command compound and orchestrator-only unless
-an allowlist form names the whole command (S409). Spec-check flags
-these lines so the owner can replace them or assign them to the orchestrator.
+*Proposed (S309, S406):* spec-check and gate briefs split slice Check commands
+three ways, in code (`checks.three-way-split`, adj 454, which supersedes adj
+280): implementer-runnable (the implementer's resolved allowlist), "Check
+commands ork runs" (a plain command or `&&` chain that the S317 paragraph
+above has ork run, such as an environment assignment prefix, a quoted
+argument or a command outside the allowlist) and orchestrator-run (shell
+syntax ork does not run, or an absolute path outside the worktree). A line
+goes to the first group that fits. A `;`, `|`, `&`, `<` or `>` inside quotes
+is an argument, so `go test -run 'A|B'` stays runnable; unquoted, it makes the
+command compound and not implementer-runnable unless an allowlist form names
+the whole command (S409). Spec-check raises no finding and asks no question
+for an implementer-runnable or ork-run line, and lists the orchestrator-run
+lines in its report without a question; it raises a finding for one only when
+the command looks wrong or risky.
 Only backtick spans identify commands; prose bullets without backticks are
-absent from both command lists.
-The gate names the commands it ran and those it left to the orchestrator.
+absent from the command lists.
+The gate names ork-run commands from ork's recorded rows, and names the
+commands it ran and those it left to the orchestrator.
 Per the owner answer for `gate.tests-green-evidence` (2026-11-08), the read-only
 gate accepts ork's latest round check result as tests-green evidence and must
 not run the suite itself. The Gate section repeats this rule. The brief

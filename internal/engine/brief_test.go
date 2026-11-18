@@ -468,9 +468,90 @@ func TestSpecCheckFlagsUnrunnableChecks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"Raise a finding", "environment assignment prefix, an absolute path outside the worktree", "Orchestrator-only Check commands", "- GOOS=linux go vet ./...", "- slicer check --root /old/checkout"} {
+	// S406: an env prefix is run by ork; a path outside the worktree is the
+	// orchestrator's and is listed without a question.
+	for _, want := range []string{"## Check commands ork runs\n\n- GOOS=linux go vet ./...\n", "## Orchestrator-run Check commands\n\n- slicer check --root /old/checkout\n"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("spec-check brief lacks %q", want)
+		}
+	}
+	if strings.Contains(got, "Orchestrator-only") {
+		t.Error("spec-check brief still names Orchestrator-only Check commands")
+	}
+}
+
+// S406 (adj 454): the brief splits Check lines three ways, in code.
+func TestCheckSectionsSplitThreeWays(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleSpecCheck
+	in.Allow = []string{"Bash(go vet *)"}
+	body := "- `go vet ./...`\n- `go test ./internal/x -run 'A|B' -v`\n- `rg -n 'credential' testdata/vendors`\n- `go vet ./... && go test ./...`\n- `go test ./... | tee out`"
+	raw, _ := json.Marshal([]any{map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": body}}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "Check command classification for S04:\n\n" +
+		"## Implementer-runnable Check commands\n\n- go vet ./...\n\n" +
+		"## Check commands ork runs\n\n- go test ./internal/x -run 'A|B' -v\n- rg -n 'credential' testdata/vendors\n- go vet ./... && go test ./...\n\n" +
+		"## Orchestrator-run Check commands\n\n- go test ./... | tee out\n\n"
+	if !strings.Contains(got, want) {
+		_, section, _ := strings.Cut(got, "Check command classification for S04:")
+		t.Errorf("check sections are not split three ways; got:\n%s", section)
+	}
+}
+
+// S406: only an && outside quotes and escapes splits a line.
+func TestSplitAndChain(t *testing.T) {
+	for _, tc := range []struct {
+		command string
+		want    []string
+	}{
+		{"go vet ./...", []string{"go vet ./..."}},
+		{"a && b", []string{"a", "b"}},
+		{"a  &&  b&&c", []string{"a", "b", "c"}},
+		{"rg 'a && b' docs", []string{"rg 'a && b' docs"}},
+		{`rg "a && b" docs`, []string{`rg "a && b" docs`}},
+		{`rg "a\" && b" x && y`, []string{`rg "a\" && b" x`, "y"}},
+		{"a & b", []string{"a & b"}},
+		{"a &&", []string{"a", ""}},
+	} {
+		if got := splitAndChain(tc.command); strings.Join(got, "\x00") != strings.Join(tc.want, "\x00") {
+			t.Errorf("splitAndChain(%q) = %q, want %q", tc.command, got, tc.want)
+		}
+	}
+}
+
+// S406: ork runs a plain && chain, so checkRunByOrk is true for it and false for
+// a line with real shell syntax or a part ork would not run.
+func TestCheckRunByOrk(t *testing.T) {
+	const worktree = "/p/.worktrees/S04"
+	for _, tc := range []struct {
+		command string
+		want    bool
+	}{
+		{"go vet ./...", true},
+		{"GOOS=linux go vet ./...", true},
+		{"go test ./x -run 'A|B' -v", true},
+		{"rg -n 'a && b' docs", true},
+		{"go vet ./... && go test ./...", true},
+		{"go vet ./... && GOOS=linux go test ./... && gofmt -l .", true},
+		{"go test ./... | tee out", false},
+		{"go test ./... ; go vet ./...", false},
+		{"go test ./... & go vet ./...", false},
+		{"go vet ./... &&", false},
+		{"&& go vet ./...", false},
+		{"go vet ./... && && go test ./...", false},
+		{"go vet ./... && go test /old/checkout", false},
+		{"go vet ./... && go test ./... | tee out", false},
+		{"go vet ./... && go test $X", false},
+		{"go vet ./... && --yes", false},
+		{"slicer check --root /old/checkout", false},
+		{"--yes", false},
+	} {
+		if got := checkRunByOrk(tc.command, worktree); got != tc.want {
+			t.Errorf("checkRunByOrk(%q) = %v, want %v", tc.command, got, tc.want)
 		}
 	}
 }
@@ -509,17 +590,17 @@ func TestGateBriefSplitsCheckCommands(t *testing.T) {
 		}
 	})
 	for _, tc := range []struct {
-		name, command string
-		runnable      bool
+		name, command, group string
 	}{
-		{"test", "go test ./...", true},
-		{"env", "GOOS=linux go vet ./...", false},
-		{"outside", "slicer check --root /old/checkout", false},
-		{"sibling-prefix", "go -C /p/.worktrees/S040 test ./...", false},
-		{"inside", "go -C /p/.worktrees/S04 test ./...", true},
-		{"unknown", "make check", false},
-		{"custom", "custom-check ./...", true},
-		{"compound", "go test ./...; make check", false},
+		{"test", "go test ./...", "Implementer-runnable"},
+		{"env", "GOOS=linux go vet ./...", "Check commands ork runs"},
+		{"outside", "slicer check --root /old/checkout", "Orchestrator-run"},
+		{"sibling-prefix", "go -C /p/.worktrees/S040 test ./...", "Orchestrator-run"},
+		{"inside", "go -C /p/.worktrees/S04 test ./...", "Implementer-runnable"},
+		{"unknown", "make check", "Check commands ork runs"},
+		{"custom", "custom-check ./...", "Implementer-runnable"},
+		{"compound", "go test ./...; make check", "Orchestrator-run"},
+		{"and-chain", "make check && make test", "Check commands ork runs"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			in := baseBrief()
@@ -531,9 +612,9 @@ func TestGateBriefSplitsCheckCommands(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			heading := "## Orchestrator-only Check commands\n\n"
-			if tc.runnable {
-				heading = "## Implementer-runnable Check commands\n\n"
+			heading := "## " + tc.group + " Check commands\n\n"
+			if tc.group == "Check commands ork runs" {
+				heading = "## Check commands ork runs\n\n"
 			}
 			if !strings.Contains(got, heading+"- "+tc.command+"\n") {
 				t.Errorf("command classified incorrectly: want %q", heading+"- "+tc.command)
@@ -607,7 +688,7 @@ func TestGatePromptUsesOrkEvidence(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	for _, want := range []string{"must accept ork's round check result", "The slice's own Check rows are required tests-green evidence", "Never fail tests-green solely for an orchestrator-only", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
+	for _, want := range []string{"must accept ork's round check result", "The slice's own Check rows are required tests-green evidence", "Never fail tests-green solely for an orchestrator-run", "name them from ork's rows", "an earlier part of the chain failed", "Name which Check commands you ran", "Do not attempt commands your read-only mode cannot run"} {
 		if !strings.Contains(got, want) {
 			t.Errorf("gate brief lacks %q", want)
 		}

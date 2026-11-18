@@ -144,7 +144,8 @@ func TestSliceChecksFailuresReachFixBrief(t *testing.T) {
 }
 
 func TestSliceChecksRecordUnsupportedCommands(t *testing.T) {
-	commands := []string{"go test ./pkg | cat", "go test ./pkg && go vet ./pkg", "go -C /outside test ./pkg", "gofmt ./../../outside", "go test dir/../../other"}
+	// A chain with a part ork would not run stays one orchestrator row (S406).
+	commands := []string{"go test ./pkg | cat", "go test ./pkg && go -C /outside test ./pkg", "go -C /outside test ./pkg", "gofmt ./../../outside", "go test dir/../../other"}
 	body := ""
 	for _, cmd := range commands {
 		body += "- `" + cmd + "`\n"
@@ -187,6 +188,87 @@ func TestSliceChecksRecordUnsupportedCommands(t *testing.T) {
 	}
 	if b, err := os.ReadFile(trace); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("unsupported tool executed: %q, %v", b, err)
+	}
+}
+
+// S406 (adj 454): a plain && chain is run as its parts, in order. The first
+// failure stops the chain; the rest are recorded as not run.
+func TestSliceChecksRunAnAndChain(t *testing.T) {
+	h := sliceChecksHarness(t, "- `true && false && true`")
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, paused, err := e.runSliceChecks(context.Background(), e.Snapshot(), runrec.StateGate, "slice-checks", false)
+	if err != nil || paused {
+		t.Fatalf("runSliceChecks: paused=%v err=%v", paused, err)
+	}
+	if run.ok {
+		t.Error("a chain with a failed part must fail the check")
+	}
+	var rows []runrec.CheckRecord
+	for _, c := range e.Snapshot().Checks {
+		if c.Slice {
+			rows = append(rows, c)
+		}
+	}
+	if len(rows) != 3 {
+		t.Fatalf("got %d check records, want 3 (one per part): %+v", len(rows), rows)
+	}
+	for i, command := range []string{"true", "false", "true"} {
+		if rows[i].Command != command {
+			t.Errorf("row %d command = %q, want %q", i, rows[i].Command, command)
+		}
+	}
+	if !rows[0].OK || rows[0].Exit != 0 || rows[0].NotRun != "" {
+		t.Errorf("first part = %+v, want OK", rows[0])
+	}
+	if rows[1].OK || rows[1].Exit != 1 || rows[1].NotRun != "" {
+		t.Errorf("second part = %+v, want failed with exit 1", rows[1])
+	}
+	if rows[2].OK || rows[2].NotRun != "not run by ork: an earlier part of the chain failed" {
+		t.Errorf("third part = %+v, want NotRun after an earlier failure", rows[2])
+	}
+	if b, err := os.ReadFile(filepath.Join(e.run.Dir(), rows[2].Log)); err != nil || !strings.Contains(string(b), rows[2].NotRun) {
+		t.Errorf("third part log = %q, %v", b, err)
+	}
+	if run.log != rows[1].Log {
+		t.Errorf("failed check log = %q, want the failed part's log %q", run.log, rows[1].Log)
+	}
+}
+
+// S406 review: "must print nothing" on a chain line binds every part, as it does
+// for a shell run of the whole line: output from the first part fails the line.
+func TestSliceChecksChainMustPrintNothingBindsEveryPart(t *testing.T) {
+	h := sliceChecksHarness(t, "- `echo x && true` must print nothing.")
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	run, paused, err := e.runSliceChecks(context.Background(), e.Snapshot(), runrec.StateGate, "slice-checks", false)
+	if err != nil || paused {
+		t.Fatalf("runSliceChecks: paused=%v err=%v", paused, err)
+	}
+	if run.ok {
+		t.Error("output from the first part of a must-print-nothing chain must fail the check")
+	}
+	var rows []runrec.CheckRecord
+	for _, c := range e.Snapshot().Checks {
+		if c.Slice {
+			rows = append(rows, c)
+		}
+	}
+	if len(rows) != 2 {
+		t.Fatalf("got %d check records, want 2: %+v", len(rows), rows)
+	}
+	if rows[0].Command != "echo x" || rows[0].OK || rows[0].NotRun != "" {
+		t.Errorf("first part = %+v, want red from its output", rows[0])
+	}
+	if b, err := os.ReadFile(filepath.Join(e.run.Dir(), rows[0].Log)); err != nil || !strings.Contains(string(b), "check must print nothing") {
+		t.Errorf("first part log = %q, %v", b, err)
+	}
+	if rows[1].Command != "true" || rows[1].OK || rows[1].NotRun != notRunChainFailed {
+		t.Errorf("second part = %+v, want not run after the red first part", rows[1])
 	}
 }
 

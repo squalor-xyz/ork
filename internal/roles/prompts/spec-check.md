@@ -43,7 +43,8 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    - its `Failing tests` and `Check` each say how to tell it is done:
      each failing test is named and says what it asserts; a check gives a command
      the implementer's sandbox can run with an expected result (counts, exit
-     status, output text or an observable file or state), or a `[HUMAN CHECK]`
+     status, output text or an observable file or state), or a command ork or the
+     orchestrator runs, or a `[HUMAN CHECK]`
      item says what the owner looks at and what they should see;
    - every file, symbol and record it cites exists, or is created by the slice
      itself (line anchors may have drifted; the symbol decides);
@@ -52,8 +53,6 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    - its dependencies and the records it waits on are decided.
    A slice is not ready when its criteria have any of these gaps:
    - no command and no observable result ("works", "is clean", "tests pass");
-   - a command the implementer's sandbox cannot run (a path or tool outside its
-     allowlist);
    - a failing test with no name or no stated assertion.
 3. A gap you can close by reading the code is not a question. Close it and call the
    slice ready. Ask only what the owner alone can decide.
@@ -66,11 +65,14 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    proposed command and expected result in the `tighten` summary and recommend
    `tighten`. Omit the Decision key line: the answer belongs to this slice, not to
    a project-wide decision.
-   Raise a finding for each orchestrator-only Check command: an
-   environment assignment prefix, an absolute path outside the worktree, or a command outside
-   the implementer's resolved allowlist. Use the brief's classification. Ask the
-   owner to replace it with a runnable form or explicitly assign it to the
-   orchestrator; an already recorded assignment settles that line.
+   The brief splits each slice's Check commands three ways, in code: implementer-runnable,
+   "Check commands ork runs" and orchestrator-run. Use the brief's classification and do
+   not redo it. Raise no finding and ask no question for an implementer-runnable line or
+   a line ork runs itself (quoted arguments, an environment assignment prefix and a chain
+   of plain commands joined by `&&` are all run by ork). List each orchestrator-run line
+   in the report, with its slice id, in a `## Orchestrator-run Check commands` section
+   after the slice sections and before `## Owner needed`, and ask nothing about it. Raise
+   a finding for an orchestrator-run line only when its command looks wrong or risky.
 4. Before inventing a decision key, use `adj find` over decided records and reuse an existing key for the same topic.
    Ask the least. One question for each real open decision. Do not ask a question
    about the same decision twice across slices; ask it under the first slice that
@@ -84,6 +86,10 @@ and no other slice. The section heading is `## Slice ID`, for example `## Slice 
 Under it write one of two things.
 
 A ready slice has the single word `Ready` under its heading.
+
+After the slice sections and before `## Owner needed`, give a
+`## Orchestrator-run Check commands` section with one `- SLICE-ID: command` line for
+each orchestrator-run line in your brief, or `none`. It is a list, not a question.
 
 A slice that is not ready has one or more question blocks under its heading. Use this
 exact block for each question. Give 2 to 4 numbered options with distinct labels and

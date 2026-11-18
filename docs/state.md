@@ -545,6 +545,9 @@ the immediate no-progress pause. Older records without hashes remain readable.
 *Proposed (S317):* slice Check commands add rows to `checks[]` with `slice:
 true`, `command`, `exit`, `ok`, `seconds`, `log` and `log_sha256`. Unsupported
 commands have `not_run: "not run by ork: orchestrator"` and no execution.
+*Proposed (S406):* a plain `&&` chain has one row for each part, and a part
+after a failed one has `not_run: "not run by ork: an earlier part of the chain
+failed"` and no execution.
 Logs are `slice-checks-ROUND-ROW.log` or `land-slice-checks-ROUND-ROW.log`.
 `product_sha256` fingerprints product paths, modes and contents (including
 untracked files and symlink targets) plus the Check section. Only `docs/`

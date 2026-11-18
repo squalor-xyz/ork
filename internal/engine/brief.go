@@ -595,11 +595,16 @@ func checkCommandSections(in BriefInput) string {
 	for _, raw := range specs {
 		var spec struct{ ID string }
 		_ = json.Unmarshal(raw, &spec)
-		var runnable, orchestrator []string
+		// The first group that fits: the implementer's allowlist, a line ork
+		// runs itself outside the sandbox, else the orchestrator (S406, adj 454).
+		var runnable, byOrk, orchestrator []string
 		for _, entry := range sliceCheckCommands(string(raw)) {
-			if checkCommandRunnable(entry.command, in.Worktree, in.Allow) {
+			switch {
+			case checkCommandRunnable(entry.command, in.Worktree, in.Allow):
 				runnable = append(runnable, entry.command)
-			} else {
+			case checkRunByOrk(entry.command, in.Worktree):
+				byOrk = append(byOrk, entry.command)
+			default:
 				orchestrator = append(orchestrator, entry.command)
 			}
 		}
@@ -609,7 +614,7 @@ func checkCommandSections(in BriefInput) string {
 		for _, group := range []struct {
 			title    string
 			commands []string
-		}{{"Implementer-runnable Check commands", runnable}, {"Orchestrator-only Check commands", orchestrator}} {
+		}{{"Implementer-runnable Check commands", runnable}, {"Check commands ork runs", byOrk}, {"Orchestrator-run Check commands", orchestrator}} {
 			fmt.Fprintf(&b, "## %s\n\n", group.title)
 			if len(group.commands) == 0 {
 				b.WriteString("none\n")
@@ -673,57 +678,128 @@ type sliceCheck struct {
 	sliceCheckCommand
 	env, argv []string
 	notRun    string
+	chain     int // nonzero for a part of an && chain: the parts of one line share it (S406)
 }
+
+// notRunChainFailed is the record of a chain part that follows a failed one.
+const notRunChainFailed = "not run by ork: an earlier part of the chain failed"
 
 func sliceChecks(raw, worktree string) []sliceCheck {
 	var rows []sliceCheck
-	for _, command := range sliceCheckCommands(raw) {
-		row := sliceCheck{sliceCheckCommand: command}
-		// No shell runs these commands. Reject shell syntax rather than changing
-		// its meaning. scanWord handles literal quotes and escaped spaces.
-		if !plainCheckSyntax(command.command) {
-			row.notRun = "not run by ork: orchestrator"
-		} else {
-			for i := 0; i < len(command.command); {
-				if command.command[i] == ' ' || command.command[i] == '\t' {
-					i++
-					continue
-				}
-				word, end := scanWord(command.command, i)
-				if end <= i {
-					row.notRun = "not run by ork: orchestrator"
-					break
-				}
-				i = end
-				value := word.text
-				if _, v, ok := strings.Cut(value, "="); ok {
-					value = v
-				}
-				path := value
-				if !filepath.IsAbs(path) {
-					path = filepath.Join(worktree, path)
-				}
-				rel, err := filepath.Rel(worktree, filepath.Clean(path))
-				if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
-					row.notRun = "not run by ork: orchestrator"
-				}
-				if len(row.argv) == 0 && regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(word.text) {
-					row.env = append(row.env, word.text)
-				} else {
-					row.argv = append(row.argv, word.text)
-				}
-			}
-			if len(row.argv) == 0 {
-				row.notRun = "not run by ork: orchestrator"
-			} else if strings.HasPrefix(row.argv[0], "-") {
-				// A backticked flag, such as a spec answer left in the Check
-				// ("drop the `--yes` flags"), is not a command (S368).
-				row.notRun = "not run by ork: not a command (starts with -): " + row.argv[0]
-			}
-		}
-		rows = append(rows, row)
+	for i, command := range sliceCheckCommands(raw) {
+		rows = append(rows, checkRows(command, worktree, i+1)...)
 	}
 	return rows
+}
+
+// checkRows is the rows ork runs for one Check line. A plain line is one row. A
+// chain of plain commands joined by && outside quotes is one row for each part,
+// all with the chain number chain. When any part is not a plain command ork
+// would run, the line stays one row marked not run (S406, adj 454).
+func checkRows(command sliceCheckCommand, worktree string, chain int) []sliceCheck {
+	if parts := splitAndChain(command.command); len(parts) > 1 {
+		rows := make([]sliceCheck, 0, len(parts))
+		for _, part := range parts {
+			// The line's "must print nothing" binds every part, as it does for a
+			// shell run of the whole line.
+			row := plainCheckRow(sliceCheckCommand{command: part, empty: command.empty}, worktree)
+			if row.notRun != "" {
+				rows = nil
+				break
+			}
+			row.chain = chain
+			rows = append(rows, row)
+		}
+		if rows != nil {
+			return rows
+		}
+	}
+	return []sliceCheck{plainCheckRow(command, worktree)}
+}
+
+// checkRunByOrk reports whether ork runs the Check line itself: a plain
+// command, or a chain of plain commands joined by && (S406, adj 454).
+func checkRunByOrk(command, worktree string) bool {
+	for _, row := range checkRows(sliceCheckCommand{command: command}, worktree, 1) {
+		if row.notRun != "" {
+			return false
+		}
+	}
+	return true
+}
+
+// splitAndChain splits command at each && outside quotes. A command without
+// one comes back as the only part. The quote rules are those of
+// shellSyntaxOutsideQuotes.
+func splitAndChain(command string) []string {
+	var parts []string
+	var quote byte
+	start := 0
+	for i := 0; i < len(command); i++ {
+		c := command[i]
+		switch {
+		case c == '\\' && quote != '\'':
+			i++
+		case c == quote:
+			quote = 0
+		case quote != 0:
+		case c == '\'' || c == '"':
+			quote = c
+		case c == '&' && i+1 < len(command) && command[i+1] == '&':
+			parts = append(parts, strings.TrimSpace(command[start:i]))
+			i++
+			start = i + 1
+		}
+	}
+	return append(parts, strings.TrimSpace(command[start:]))
+}
+
+// plainCheckRow is the row for one command with no && in it.
+func plainCheckRow(command sliceCheckCommand, worktree string) sliceCheck {
+	row := sliceCheck{sliceCheckCommand: command}
+	// No shell runs these commands. Reject shell syntax rather than changing
+	// its meaning. scanWord handles literal quotes and escaped spaces.
+	if !plainCheckSyntax(command.command) {
+		row.notRun = "not run by ork: orchestrator"
+		return row
+	}
+	for i := 0; i < len(command.command); {
+		if command.command[i] == ' ' || command.command[i] == '\t' {
+			i++
+			continue
+		}
+		word, end := scanWord(command.command, i)
+		if end <= i {
+			row.notRun = "not run by ork: orchestrator"
+			break
+		}
+		i = end
+		value := word.text
+		if _, v, ok := strings.Cut(value, "="); ok {
+			value = v
+		}
+		path := value
+		if !filepath.IsAbs(path) {
+			path = filepath.Join(worktree, path)
+		}
+		rel, err := filepath.Rel(worktree, filepath.Clean(path))
+		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			row.notRun = "not run by ork: orchestrator"
+		}
+		if len(row.argv) == 0 && regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(word.text) {
+			row.env = append(row.env, word.text)
+		} else {
+			row.argv = append(row.argv, word.text)
+		}
+	}
+	if len(row.argv) == 0 {
+		row.notRun = "not run by ork: orchestrator"
+	} else if strings.HasPrefix(row.argv[0], "-") {
+		// A backticked flag, such as a spec answer left in the Check
+		// ("drop the `--yes` flags"), is not a command (S368).
+		row.notRun = "not run by ork: not a command (starts with -): " + row.argv[0]
+	}
+	return row
 }
 
 func plainCheckSyntax(command string) bool {

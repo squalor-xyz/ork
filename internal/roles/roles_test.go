@@ -749,7 +749,6 @@ func TestSpecCheckPromptRequiresVerifiableCriteria(t *testing.T) {
 		"a `[HUMAN CHECK]` item says what the owner looks at and what they should see",
 		"A slice is not ready when its criteria have any of these gaps",
 		"no command and no observable result",
-		"a command the implementer's sandbox cannot run",
 		"a failing test with no name or no stated assertion",
 	} {
 		t.Run(want, func(t *testing.T) {
@@ -757,6 +756,36 @@ func TestSpecCheckPromptRequiresVerifiableCriteria(t *testing.T) {
 				t.Errorf("spec-check does not say %q", want)
 			}
 		})
+	}
+	// S406: a command the sandbox cannot run is no gap; ork or the
+	// orchestrator runs it.
+	if has(p, "a command the implementer's sandbox cannot run") {
+		t.Error("spec-check still treats a command the implementer's sandbox cannot run as a gap")
+	}
+}
+
+// S406 (adj 454): the brief splits Check lines three ways; the spec check
+// raises nothing for implementer-runnable or ork-run lines and lists the
+// orchestrator-run lines without a question.
+func TestSpecCheckPromptAsksOnlyAboutOrchestratorLines(t *testing.T) {
+	p := prompts(t)["spec-check"]
+	for _, want := range []string{
+		"Raise no finding and ask no question for an implementer-runnable line or a line ork runs itself",
+		"List each orchestrator-run line in the report",
+		"`## Orchestrator-run Check commands` section",
+		"and ask nothing about it",
+		"Raise a finding for an orchestrator-run line only when its command looks wrong or risky",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(p, want) {
+				t.Errorf("spec-check does not say %q", want)
+			}
+		})
+	}
+	for _, bad := range []string{"Ask the owner to replace it with a runnable form", "orchestrator-only"} {
+		if has(p, bad) {
+			t.Errorf("spec-check still says %q", bad)
+		}
 	}
 }
 
