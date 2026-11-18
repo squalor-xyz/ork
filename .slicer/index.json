@@ -23267,6 +23267,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "43733147-e243-40a5-8b32-a7f1a18bdfb0",
+          "kind": "",
+          "text": "**2026-11-18** — Merged S451 (2026-11-18, tool feedback). Seven duplicates so far: run S418 soon.",
+          "created_at": "2026-11-18T22:28:57Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -24089,6 +24103,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6f17720c-0f07-496a-a2b8-2afbee6049b1",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 492 feedback.near-duplicates = landing; spec rewritten for it.",
+          "created_at": "2026-11-18T22:30:00Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -24368,7 +24396,7 @@
       "id": "S451",
       "title": "tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode",
       "short_title": "tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -24385,7 +24413,7 @@
         "key": "tool-feedback-ork-ca252d5d",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Duplicate of S418 (plan mode in read-only briefs; adj 489 moves cloud Claude read-only roles off plan mode).",
         "importance": 2,
         "urgency": 2,
         "effort": null,

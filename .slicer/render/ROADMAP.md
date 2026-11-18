@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-451 items · — 61 · done 322 · retired 68
+451 items · — 60 · done 322 · retired 69
 
 ## v1.3
 
@@ -210,7 +210,7 @@ v1.2
 | 153 | [S448](slices/S448.md) | say in the brief whether plan mode may wrap a gate session, so the plan-file and ExitPlanMode instructions do not compete with the gate report |  | - |  | Duplicate of S418 (plan mode in read-only and gate briefs). · discovered from S439 | retired |
 | 154 | [S449](slices/S449.md) | S307 TUI follow-ups | M | 2 |  | S258 and S274 reviews and gates, 2026-11-07; re-anchored 2026-11-18; split from S307 by the owner on 2026-11-18. | — |
 | 155 | [S450](slices/S450.md) | skip the UI pass or say "no TUI views changed" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files |  | - |  | discovered from S432 | — |
-| 156 | [S451](slices/S451.md) | tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode |  | - |  | discovered from S432 | — |
+| 156 | [S451](slices/S451.md) | tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode |  | - |  | Duplicate of S418 (plan mode in read-only briefs; adj 489 moves cloud Claude read-only roles off plan mode). · discovered from S432 | retired |
 
 ---
 
