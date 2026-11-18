@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">421 items · — 72 · done 308 · retired 41</p>
+<p class="summary">421 items · — 71 · done 308 · retired 42</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S385</td><td>Docs cite symbols, not lines</td><td>M</td><td>2</td><td>docs</td><td>docs/review-2026-11-12-workflow.md F6: (D) Doc accuracy is 33 of 79 reviewer fix findings; 5 of 14 sampled are moved citations. Decided: adj 409 (docs.citation-form).</td><td class="status">—</td></tr>
@@ -310,7 +310,7 @@
 <tr class="open"><td>252</td><td>S418</td><td>Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message</td><td></td><td>-</td><td></td><td>discovered from S388</td><td class="status">—</td></tr>
 <tr class="open"><td>253</td><td>S419</td><td>Treat a &quot;prints nothing&quot; Check line that is a no-match rg (exit 1) as passing, or read the output and not the exit code</td><td></td><td>-</td><td></td><td>discovered from S388</td><td class="status">—</td></tr>
 <tr class="open"><td>254</td><td>S420</td><td>Grok stderr credits</td><td>S</td><td>1</td><td></td><td>2026-11-18 03:38 UTC: S388 (run ork-20261117-233556-f24d) implementer round 4 and gate round 5 ran grok-4.7 and each ended in under a second with exit &quot;unclassified&quot;, no report, and the run stopped. A manual `grok -p &quot;reply with ok&quot;` (grok 1.0.77) printed `Error: Internal error: { &quot;message&quot;: &quot;API error (status 403 Forbidden): Your team &lt;team&gt; has either used all available credits or reached its monthly spending limit. ...&quot;, &quot;http_status&quot;: 403 }` on its output and exited 0. The adapter looks for `used all available credits` only in stream `error` events (`internal/agent/grok/grok.go:291-309`) and sets out of credits only from that (`:380-381`), so the stderr form stays unclassified and the role neither falls back nor marks grok out.</td><td class="status">—</td></tr>
-<tr class="open"><td>255</td><td>S421</td><td>Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator</td><td></td><td>-</td><td></td><td>discovered from S388</td><td class="status">—</td></tr>
+<tr class="retired"><td>255</td><td>S421</td><td>Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator</td><td></td><td>-</td><td></td><td>Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388&#x27;s run · discovered from S388</td><td class="status">retired</td></tr>
 </tbody></table>
 <h2>v1.0</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>

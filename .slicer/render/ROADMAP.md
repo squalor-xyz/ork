@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-421 items · — 72 · done 308 · retired 41
+421 items · — 71 · done 308 · retired 42
 
 ## v1.3
 
@@ -316,7 +316,7 @@ v1.2
 | 252 | [S418](slices/S418.md) | Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message |  | - |  | discovered from S388 | — |
 | 253 | [S419](slices/S419.md) | Treat a "prints nothing" Check line that is a no-match rg (exit 1) as passing, or read the output and not the exit code |  | - |  | discovered from S388 | — |
 | 254 | [S420](slices/S420.md) | Grok stderr credits | S | 1 |  | 2026-11-18 03:38 UTC: S388 (run ork-20261117-233556-f24d) implementer round 4 and gate round 5 ran grok-4.7 and each ended in under a second with exit "unclassified", no report, and the run stopped. A manual `grok -p "reply with ok"` (grok 1.0.77) printed `Error: Internal error: { "message": "API error (status 403 Forbidden): Your team <team> has either used all available credits or reached its monthly spending limit. ...", "http_status": 403 }` on its output and exited 0. The adapter looks for `used all available credits` only in stream `error` events (`internal/agent/grok/grok.go:291-309`) and sets out of credits only from that (`:380-381`), so the stderr form stays unclassified and the role neither falls back nor marks grok out. | — |
-| 255 | [S421](slices/S421.md) | Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator |  | - |  | discovered from S388 | — |
+| 255 | [S421](slices/S421.md) | Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator |  | - |  | Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388's run · discovered from S388 | retired |
 
 ---
 
