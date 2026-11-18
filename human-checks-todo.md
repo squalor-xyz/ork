@@ -218,3 +218,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 
 - [ ] At 80x24, start `LC_ALL=C ork` with a run that ended within the hour; press `tab` until the Overview shows; the Recent row reads `+ pass` (or `x fail`) in green (red), and the rules are `|` and `-`.
 - [ ] At 80x24 in a UTF-8 terminal, open Waves (`tab` to Waves), tick two items with `space` that share a long path; the `! A and B both touch` line wraps with its path four columns in.
+
+## S388 (run ork-20261117-233556-f24d, 2026-11-18)
+
+- [ ] In a real run, a feature line reaches Needs you, and answering `file` files one slice in the target.
