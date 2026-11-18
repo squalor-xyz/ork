@@ -1781,6 +1781,40 @@ func TestWavesConflictMarkerHangIndents(t *testing.T) {
 	}
 }
 
+// The overlap line hangs its continuations like the engine-conflict marker
+// (S390, adj 419).
+func TestWavesOverlapLineHangIndents(t *testing.T) {
+	h, l := wavesHarness(t)
+	l.overlap = &slicercli.Overlap{Overlap: []slicercli.OverlapPair{{A: "A", B: "B", Shared: []string{"testdata/golden/waves-sitting-held-80x24-mono.txt"}}}}
+	twoWaveItems(t, h)
+	lines := h.m.wavesBody(38).body
+	start := -1
+	for i, line := range lines {
+		if strings.HasPrefix(stripANSI(line), "  ! A and B both touch") {
+			start = i
+			break
+		}
+	}
+	if start < 0 || start+1 >= len(lines) {
+		t.Fatalf("no wrapped overlap line: %v", lines)
+	}
+	for _, line := range lines[start+1:] {
+		if !strings.HasPrefix(stripANSI(line), "    ") {
+			t.Errorf("continuation must hang-indent: %q", stripANSI(line))
+		}
+	}
+}
+
+func TestGoldenWavesOverlapWrap(t *testing.T) {
+	h, l := wavesHarness(t)
+	h.m.cfg.Theme = NewTheme(true)
+	l.overlap = &slicercli.Overlap{Overlap: []slicercli.OverlapPair{{A: "A", B: "B", Shared: []string{"testdata/golden/waves-sitting-held-80x24-mono.txt"}}}}
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	twoWaveItems(t, h)
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	checkGolden(t, "waves-overlap-wrap-80x24-mono.txt", h.m.View().Content)
+}
+
 func TestWavesAKeyTogglesBackToThreeWaves(t *testing.T) {
 	for _, unplaced := range []bool{false, true} {
 		for _, selected := range []string{"S2", "S3b", "S4", "S5", "D", "E"} {

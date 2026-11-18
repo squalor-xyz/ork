@@ -11,6 +11,17 @@
   one slice in that project on its next read of the decided records. ork never
   runs `adj decide` for these records. Docs updated: `docs/boundaries.md`,
   `docs/design.md`, `docs/state.md`, `docs/orchestrator-parity.md`.
+- S390 (*proposed*, adj 418, adj 419): with the ASCII option the Recent
+  outcomes read `+ pass`, `x fail` and `+ landed` and keep their colours; a
+  wrapped Waves `both touch` overlap line hangs its continuation four columns
+  in, like the engine-conflict marker.
+- S396 (*proposed*): `item.park` checks again for an unfinished run after
+  `slicer park` and undoes the park with `slicer unpark` when a run started in
+  between. The call stays `refused` and names that run; a failed unpark is
+  `internal` and says the item is parked although the run is unfinished.
+  `Note`, `Park`, `Unpark`, `Move`, `Show` and `ShowRaw` refuse an id that
+  starts with `-`, and the `item.*` handlers refuse it as `bad_params`. Docs
+  updated: `docs/design.md`.
 - S402 (*proposed*, adj 405): a merged run removes its item's spec-check
   directory only when the run has a commit time and no file in the check is
   newer than that commit. A restart or a git error no longer removes a later spec check

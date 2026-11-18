@@ -427,6 +427,15 @@ func isSpecCheckRun(r slicercli.RelayRun) bool {
 	return len(r.Steps) > 0 && !slices.ContainsFunc(r.Steps, func(s slicercli.Step) bool { return s.Role != "spec-check" })
 }
 
+// outcomeGlyphs are the pass and fail marks of a Recent outcome: "✓" and "✗",
+// or "+" and "x" with the ASCII option (S390, adj 418).
+func outcomeGlyphs(ascii bool) (pass, fail string) {
+	if ascii {
+		return "+", "x"
+	}
+	return "✓", "✗"
+}
+
 // recentRows lists the runs that ended in the last hour, newest first: landed,
 // stopped and failed runs, not spec-check results.
 func (m *Model) recentRows() []ovRow {
@@ -449,15 +458,16 @@ func (m *Model) recentRows() []ovRow {
 			if r.State != "ended" || err != nil || m.cfg.Now().Sub(at) > time.Hour || isSpecCheckRun(r) {
 				continue
 			}
+			pass, fail := outcomeGlyphs(m.cfg.ASCII)
 			glyph := "~ stopped"
 			if r.Outcome == "pass" {
-				glyph = "✓ pass"
+				glyph = pass + " pass"
 			}
 			if r.Outcome == "fail" {
-				glyph = "✗ fail"
+				glyph = fail + " fail"
 			}
 			if landed[r.ID] && r.Outcome == "pass" {
-				glyph = "✓ landed"
+				glyph = pass + " landed"
 				if cleanupFailed[r.ID] {
 					glyph += ", cleanup failed"
 				}

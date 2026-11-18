@@ -950,10 +950,11 @@ func (m *Model) rowLine(r ovRow, selected bool, nameW, w int) string {
 	if len(r.cells) > 0 {
 		outcome := r.cells[0]
 		style := th.Dim
-		if strings.HasPrefix(outcome, "✓") {
+		pass, fail := outcomeGlyphs(m.cfg.ASCII)
+		if strings.HasPrefix(outcome, pass+" ") {
 			style = th.Passed
 		}
-		if strings.HasPrefix(outcome, "✗") {
+		if strings.HasPrefix(outcome, fail+" ") {
 			style = th.Error
 		}
 		text = style.Render(outcome) + th.Dim.Render(strings.TrimPrefix(text, outcome))

@@ -729,7 +729,14 @@ func (m *Model) wavesParts(width int) (overviewView, []string) {
 	if w.overlap != nil {
 		for _, pair := range w.overlap.Overlap {
 			for _, path := range pair.Shared {
-				add("! " + pair.A + " and " + pair.B + " both touch " + path)
+				// Continuations hang like the engine-conflict marker (adj 419).
+				for i, line := range wrapText("! "+pair.A+" and "+pair.B+" both touch "+path, max(width-2-2, 1)) {
+					prefix := indent
+					if i > 0 {
+						prefix += indent
+					}
+					out.body = append(out.body, prefix+line)
+				}
 			}
 		}
 	}
