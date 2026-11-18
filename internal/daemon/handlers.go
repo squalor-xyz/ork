@@ -92,6 +92,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.adjAsk(ctx, p)
+	case MethodTrackingCommit:
+		var p TrackingCommitParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.trackingCommit(ctx, p)
 	case MethodWaveStart:
 		var p WaveStartParams
 		if err := decode(params, &p); err != nil {

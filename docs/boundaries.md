@@ -124,6 +124,18 @@ change the contract by itself.
   ork still never opens or edits `.slicer/` itself. Owner decision
   2026-11-07, recorded as adj 193 (`landing.tracking-commit`, option
   `commit-tracking`, decided 2026-11-08).
+  *Proposed (S405; adj 453, adj 461, adj 462):* `ork tracking commit P` is a further ork
+  commit on the base branch, and it runs only on an explicit owner or
+  orchestrator command. It commits the project's uncommitted tracking files:
+  `.slicer/` without `config.json` and `relay-roles.json`, and the files in
+  the adj store folder that `.adjudicate.json` names. It commits by literal
+  path (the same `commitTracking` step), takes no message (the subject is
+  built from the slice IDs and adj numbers in the paths, consecutive runs as
+  ranges), and refuses, committing
+  nothing, when another path is staged, when the main checkout is not on the
+  base branch (`--base`, default `main`; nothing is stored) or when there is
+  nothing to commit. It never writes the files; filing and deciding stay with
+  `slicer` and `adj`.
   Confirmed cleanup may run `git worktree remove` then
   `git branch -d` for a merged run (`git.cleanup-key`).
   Landing fast-forwards the base branch after merging it into the slice

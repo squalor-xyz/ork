@@ -484,6 +484,21 @@ slice.
     file read, add or commit error pauses setup with one line before creating the
     worktree. An existing worktree directory skips this commit, including on
     a retry after setup already created it.
+  - Beside this commit, and not part of setup: *proposed (S405; adj 453, adj
+    461, adj 462)* `ork tracking commit P` (the `tracking.commit` daemon method, under
+    the spec lock) commits every uncommitted tracking file of the project on
+    the base branch in one commit: slicer's `.slicer/` files without
+    `config.json` and `relay-roles.json`, and the files in the adj store folder
+    that `.adjudicate.json` names. It calls the same literal-path commit as the
+    launch and landing commits (`commitLiteralPaths`), with a plain `git -C P`
+    runner because no run exists. The checkout must be on the base branch
+    (`--base`, default `main`). Any other staged path, or no tracking file to
+    commit, refuses and commits nothing. `--leave PATH` keeps a tracking path
+    out. The subject is `Tracking edits on BASE: S387-S389; adj 402-405,
+    410-446`, built from `.slicer/slices/ID.json` and `STORE/NNNN-*.md`, with
+    each run of two or more consecutive numbers (one prefix, no leading zero)
+    written as a range (adj 462, *proposed*), and plain `Tracking edits on BASE`
+    when the paths hold neither.
   - `git -C P worktree add <worktree_pattern> -b <branch_pattern>`
     (`git.worktrees`);
   - `.worktrees/` is added to `info/exclude` if it is missing;

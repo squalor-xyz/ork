@@ -132,6 +132,20 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--recommend LABEL] [--reasoning TEXT]
                               [--ref R]... [--tag T]...
                               ask an adj question without deciding it
+  ork tracking commit P [--base BRANCH] [--leave PATH]...
+                              commit P's uncommitted tracking files in one
+                              commit on the base branch (main unless --base)
+                              of its main checkout: slicer's .slicer files,
+                              without config.json and relay-roles.json, and
+                              the adj store's files (proposed: the store
+                              folder named in .adjudicate.json); the subject
+                              names the slice IDs and adj numbers (consecutive
+                              runs as ranges); no message
+                              flag; --leave keeps a tracking path out and
+                              repeats; refused, committing nothing, when
+                              another path is staged, when the checkout is not
+                              on the base branch, or when there is nothing
+                              to commit
   ork answer RUN TEXT [--wait]
                               answer and resume a paused role; returns once
                               it runs, --wait waits until it rests
@@ -394,6 +408,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return o.printHelp(words...)
 	case "adj":
 		return a.adj(ctx, o, rest)
+	case "tracking":
+		return a.tracking(ctx, o, rest)
 	case "new":
 		return a.newSlice(ctx, o, rest)
 	case "note":
