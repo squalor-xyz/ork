@@ -24117,6 +24117,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "b31bdbce-6ec1-4ebd-a195-f45b0cc05aac",
+          "kind": "",
+          "text": "**2026-11-18** — Correction 2026-11-18: the owner clicked 'List at landing' by mistake; adj 493 (note) supersedes adj 492. Spec rewritten for adj 493.",
+          "created_at": "2026-11-18T22:32:00Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,

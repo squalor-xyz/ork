@@ -2,7 +2,7 @@
 {
   "id": 492,
   "title": "What does ork do when tool feedback would file a slice that looks like an open one?",
-  "status": "decided",
+  "status": "superseded",
   "key": "feedback.near-duplicates",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -33,6 +33,7 @@
   },
   "decision": "landing",
   "rationale": "Owner chose 'List at landing' in an interactive question, relay session 8d711f67, 2026-11-18.",
+  "superseded_by": 493,
   "refs": [
     "S442"
   ],
@@ -44,6 +45,11 @@
     {
       "date": "2026-11-18",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-18",
+      "event": "supersede",
+      "note": "by 493"
     }
   ]
 }
