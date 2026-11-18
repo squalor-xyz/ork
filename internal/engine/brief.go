@@ -3,14 +3,19 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"regexp"
 	"strings"
+	"sync"
+	"unicode/utf8"
 
 	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 // BriefSection is one headed part of a brief that is specific to the round.
@@ -363,6 +368,221 @@ func doneWhen(in BriefInput) string {
 		items = append(items[:35], strings.Join(items[35:], " | "))
 	}
 	return "## Done when\n\n- [ ] " + strings.Join(items, "\n- [ ] ") + "\n\n"
+}
+
+const (
+	directionBudget  = 8000 // bytes, the most a Direction section holds (S383)
+	directionFooter  = 400  // bytes kept free for the closing lines
+	directionTitle   = 120  // bytes of one title in the digest
+	directionWorkers = 8    // `slicer show` calls at the same time
+)
+
+// directionSection is the Direction section of the reviewer's and the
+// architect's brief (S383, *proposed*). ork reads the goals, the open items and
+// the diff's paths once and gives the role the part that matters. When it
+// cannot, the section tells the role to read the two sources itself, and the
+// run goes on.
+func (e *Engine) directionSection(ctx context.Context, rec runrec.Record) BriefSection {
+	body, err := e.directionDigest(ctx, rec)
+	if err != nil {
+		return BriefSection{Title: "Direction", Body: "ork could not build the direction digest. Read the direction sources yourself: run `slicer goals --json --lean` and `slicer list --json --lean`, and `slicer show ID --json --lean` for an item that needs detail."}
+	}
+	return BriefSection{Title: "Direction", Body: body}
+}
+
+// directionEntry is one open item of the digest.
+type directionEntry struct {
+	item  slicercli.Item
+	files []string
+}
+
+func (e *Engine) directionDigest(ctx context.Context, rec runrec.Record) (string, error) {
+	goals, err := e.d.Slicer.GoalsLean(ctx, rec.Worktree)
+	if err != nil {
+		return "", err
+	}
+	items, err := e.d.Slicer.List(ctx, rec.Worktree)
+	if err != nil {
+		return "", err
+	}
+	changed, err := e.branchPaths(ctx, rec)
+	if err != nil {
+		return "", err
+	}
+	var open []directionEntry
+	for _, it := range items {
+		if it.ID != rec.Item && it.Status != "done" && it.Status != "retired" {
+			open = append(open, directionEntry{item: it})
+		}
+	}
+	// An item's Files come from its own `slicer show`; the list holds none.
+	unread := make([]bool, len(open))
+	var wg sync.WaitGroup
+	slots := make(chan struct{}, directionWorkers)
+	for i := range open {
+		if !open[i].item.HasSlice {
+			continue
+		}
+		wg.Add(1)
+		slots <- struct{}{}
+		go func() {
+			defer func() { <-slots; wg.Done() }()
+			detail, err := e.d.Slicer.Show(ctx, rec.Worktree, open[i].item.ID)
+			if err != nil {
+				unread[i] = true
+				return
+			}
+			open[i].files = detail.Paths
+		}()
+	}
+	wg.Wait()
+	var touching, rest []directionEntry
+	unreadCount := 0
+	for i, entry := range open {
+		if unread[i] {
+			unreadCount++
+		}
+		if touchesPaths(entry.files, changed) {
+			touching = append(touching, entry)
+		} else {
+			rest = append(rest, entry)
+		}
+	}
+	return formatDirection(goals, touching, rest, unreadCount), nil
+}
+
+// branchPaths lists the paths the slice changed against the base branch: the
+// tracked changes since the merge base, which include the worktree's own, and
+// the untracked files. The base is the main checkout's branch, as for a landing.
+func (e *Engine) branchPaths(ctx context.Context, rec runrec.Record) ([]string, error) {
+	base, err := e.gitRead(ctx, e.proj.Path, "symbolic-ref", "--short", "HEAD")
+	if err != nil {
+		return nil, fmt.Errorf("git symbolic-ref: %w", err)
+	}
+	base = strings.TrimSpace(base)
+	if base == "" {
+		return nil, errors.New("the main checkout is not on a branch")
+	}
+	mergeBase, err := e.gitRead(ctx, rec.Worktree, "merge-base", base, "HEAD")
+	if err != nil {
+		return nil, fmt.Errorf("git merge-base: %w", err)
+	}
+	changed, err := e.gitRead(ctx, rec.Worktree, "diff", "--name-only", "-z", "--no-renames", "--no-relative", strings.TrimSpace(mergeBase))
+	if err != nil {
+		return nil, fmt.Errorf("git diff: %w", err)
+	}
+	untracked, err := e.gitRead(ctx, rec.Worktree, "ls-files", "--others", "--exclude-standard", "-z", "--full-name")
+	if err != nil {
+		return nil, fmt.Errorf("git ls-files: %w", err)
+	}
+	var paths []string
+	for _, p := range strings.Split(changed+untracked, "\x00") {
+		if p != "" {
+			paths = append(paths, p)
+		}
+	}
+	return paths, nil
+}
+
+// touchesPaths reports whether a path of files equals a changed path or is a
+// directory that holds one.
+func touchesPaths(files, changed []string) bool {
+	for _, f := range files {
+		f = strings.TrimSuffix(strings.TrimSpace(f), "/")
+		if f == "" {
+			continue
+		}
+		for _, c := range changed {
+			if c == f || strings.HasPrefix(c, f+"/") {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+// cutTitle keeps a title on one line and under directionTitle bytes.
+func cutTitle(title string) string {
+	title = strings.Join(strings.Fields(title), " ")
+	if len(title) <= directionTitle {
+		return title
+	}
+	n := directionTitle - 3
+	for n > 0 && !utf8.RuneStart(title[n]) {
+		n--
+	}
+	return title[:n] + "..."
+}
+
+// formatDirection writes the digest: the goals, the items that touch the diff,
+// then the others by id and title, in slicer's order, until the budget is used.
+// It names how many open items it left out.
+func formatDirection(goals *slicercli.Goals, touching, rest []directionEntry, unread int) string {
+	var b strings.Builder
+	room := func(line string) bool { return b.Len()+len(line)+1 <= directionBudget-directionFooter }
+	line := func(s string) bool {
+		if !room(s) {
+			return false
+		}
+		b.WriteString(s + "\n")
+		return true
+	}
+	leftGoals := 0
+	for _, group := range []struct {
+		heading string
+		records []slicercli.GoalRecord
+	}{{"Goals:", goals.Records.Goal}, {"Non-goals:", goals.Records.NonGoal}} {
+		line(group.heading)
+		for _, r := range group.records {
+			if r.Status != "" && r.Status != "active" {
+				continue
+			}
+			if !line("- " + r.ID + " " + cutTitle(r.Title)) {
+				leftGoals++
+			}
+		}
+	}
+	listed := 0
+	line("\nOpen items that touch this diff's files (id, title, status, dependencies):")
+	if len(touching) == 0 {
+		line("- none")
+	}
+	for _, t := range touching {
+		deps := "no dependencies"
+		if len(t.item.DependsOn) > 0 {
+			deps = "depends on " + strings.Join(t.item.DependsOn, ", ")
+		}
+		if line("- " + t.item.ID + " " + cutTitle(t.item.Title) + " (" + t.item.Status + "; " + deps + ")") {
+			listed++
+		}
+	}
+	line("\nOther open items (id and title):")
+	if len(rest) == 0 {
+		line("- none")
+	}
+	for _, r := range rest {
+		if line("- " + r.item.ID + " " + cutTitle(r.item.Title)) {
+			listed++
+		}
+	}
+	b.WriteString("\n")
+	if unread > 0 {
+		noun := "items"
+		if unread == 1 {
+			noun = "item"
+		}
+		fmt.Fprintf(&b, "Files unread for %d %s: ork could not read their Files, so they are not matched against the diff.\n", unread, noun)
+	}
+	if leftGoals > 0 {
+		fmt.Fprintf(&b, "%d goals left out; run `slicer goals --json --lean` for all.\n", leftGoals)
+	}
+	total := len(touching) + len(rest)
+	noun := "items"
+	if total-listed == 1 {
+		noun = "item"
+	}
+	fmt.Fprintf(&b, "%d open %s left out of %d. Read one with `slicer show ID --json --lean`.", total-listed, noun, total)
+	return b.String()
 }
 
 // checkCommandSections uses the implementer's resolved allowlist, not the gate's.

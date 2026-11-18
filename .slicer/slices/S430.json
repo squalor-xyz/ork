@@ -1,0 +1,39 @@
+{
+  "id": "S430",
+  "title": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on adj in ork run ork-20261118-120855-7418, project ork, item S405:\n\nwhen a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found\n\nEvidence: adj show 462 in the S405 worktree printed 'record not found: id 462' while the docs and the UI pass cite adj 462 as decided"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

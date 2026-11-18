@@ -1,0 +1,39 @@
+{
+  "id": "S427",
+  "title": "say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-121813-4c84, project ork, item S404:\n\nsay in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review\n\nEvidence: session started in plan mode demanding ExitPlanMode, which is not in the reviewer's tool list"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

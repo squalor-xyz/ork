@@ -1,0 +1,39 @@
+{
+  "id": "S428",
+  "title": "in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-121620-ee88, project ork, item S383:\n\nin plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply\n\nEvidence: this session was started with plan mode on, and its instructions conflicted with the reviewer's read-only report flow."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
