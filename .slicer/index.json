@@ -23327,7 +23327,22 @@
       "status": "retired",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "09028749-41b7-4fdd-9514-f58911471422",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18: filed in adjudicate as S56 (owner asked; not committed there).",
+          "created_at": "2026-11-18T15:29:19Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
