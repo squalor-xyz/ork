@@ -1,0 +1,39 @@
+{
+  "id": "S442",
+  "title": "When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-134755-11b1, project ork, item S419:\n\nWhen a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing\n\nEvidence: S419 Why names S421 and S435 as duplicates; S438 is still open in the Direction list with the same title wording"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

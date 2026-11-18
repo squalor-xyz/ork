@@ -125,6 +125,7 @@ func (c *Client) Snapshot(ctx context.Context, p registry.Project) source.Snapsh
 		DaemonBuild:  out.DaemonBuild,
 		SelfHost:     out.SelfHost,
 		BehindMain:   out.BehindMain,
+		Rebuild:      out.Rebuild,
 		RolesRunning: out.RolesRunning,
 		VendorsOut:   out.VendorsOut,
 		Unavailable:  out.Unavailable,

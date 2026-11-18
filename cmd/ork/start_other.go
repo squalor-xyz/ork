@@ -4,8 +4,4 @@
 
 package main
 
-import "os/exec"
-
-// detach does nothing here: the daemon needs Unix sockets and file locks, and
-// its start fails on these systems anyway.
-func detach(cmd *exec.Cmd) {}
+// detach moved to internal/daemon (restart_other.go) with the start code (S431).

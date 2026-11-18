@@ -1,0 +1,39 @@
+{
+  "id": "S436",
+  "title": "say in the reviewer brief whether the harness may start the role in plan mode, since plan-mode instructions conflict with the report-as-final-message rule",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-130509-4fa3, project ork, item S392:\n\nsay in the reviewer brief whether the harness may start the role in plan mode, since plan-mode instructions conflict with the report-as-final-message rule\n\nEvidence: session started with Plan mode active and an ExitPlanMode instruction while the brief says give the report as the final message (same family as S418/S427)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

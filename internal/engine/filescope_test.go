@@ -49,6 +49,22 @@ func TestFilesScopeReadsOnlyChangedPaths(t *testing.T) {
 	}
 }
 
+// S398 (S50 item 1): -z output is unquoted, and a worktree-column rename keeps both paths.
+func TestFilesScopeReadsQuotedAndWorktreeRenamedPaths(t *testing.T) {
+	out := " M a\"b.go\x00 R new.go\x00old.go\x00"
+	want := []string{"a\"b.go", "new.go", "old.go"}
+	if got := parsePorcelainZ(out); !reflect.DeepEqual(got, want) {
+		t.Fatalf("paths %q, want %q", got, want)
+	}
+}
+
+func TestScopeWarningsSiblingDirectoryIsOutside(t *testing.T) {
+	got := ScopeWarnings([]string{"internal/engine2/x.go", "internal/engine/x.go"}, []string{"internal/engine"})
+	if want := []string{"internal/engine2/x.go"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("warnings %v, want %v", got, want)
+	}
+}
+
 // config, when given, is what `slicer config --json` prints in the worktree.
 func filesScopeHarness(t *testing.T, paths []string, status string, failure string, config ...string) *harness {
 	t.Helper()

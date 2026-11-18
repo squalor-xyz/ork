@@ -893,6 +893,9 @@ slice.
   paths under it; `.slicer/` is exempt. An empty Files paths list or a failed
   read adds no section. The gate decides whether each file is needed; this
   warning alone does not fail the gate (`engine.files-scope`, adj 119).
+  *Proposed:* the check reads `git status`, so after the slice commit (a
+  landing fix round, S119) it sees only that round's uncommitted edits
+  (adj 438).
   Nothing from this check is recorded in `run.json`.
 - **commit:** ork commits in the worktree with the title from the slice's
   Git section. An empty or missing Git section falls back to `ID: slice title`
@@ -1650,7 +1653,17 @@ order: each part has its own row, log and check record, and a failed part
 (nonzero exit or timeout) leaves the later parts recorded as "not run by ork:
 an earlier part of the chain failed". A `&` that is not part of `&&`, a `|`, a
 `;` or any part ork would not run keeps the whole line as one "not run by ork:
-orchestrator" row. A line's "must print nothing" binds every part.
+orchestrator" row. A line's "prints nothing" or "must print nothing" binds every
+part.
+*Proposed (S419, `checks.prints-nothing-exit`, adj 468):* a line worded "prints
+nothing" or "must print nothing" (any case) is an empty-output check. Its row is
+ok when the output is empty and the exit is 0, or 1 from `rg`, `grep` or
+`git grep`, whose exit 1 means "no match". Any output, an exit of 2 or more, a
+timeout, or exit 1 from another command is red. The log of a row that printed
+something ends with "check must print nothing"; the log of any other red row
+names the exit code. ork runs no piped line, so a piped line stays "not run by
+ork: orchestrator"; the orchestrator judges it by its last command, by the same
+rule.
 *Proposed (S368):* a backticked entry whose first word starts with `-` (a
 flag such as `--yes`, left in the Check after a spec answer dropped it) is not
 a command: ork records it as "not run by ork: not a command (starts with -)"
@@ -1662,7 +1675,8 @@ commands in a brief. A Check section without that line is read as before.
 HUMAN CHECK and `[AFTER LAND]` entries keep their existing workflow.
 Each command has the project's check timeout (ten minutes when unset), an exit
 status and its own log and check row. A nonzero exit, timeout or output on a
-line saying "must print nothing" sends the row's log to a fix round. All rows
+line saying "prints nothing" or "must print nothing" (judged as above) sends the
+row's log to a fix round. All rows
 run even when one fails, except the parts of a chain after a failed part. Cancellation returns the context error without a row
 or a spent round. A command that cannot start, or returns an unexpected
 execution error, pauses at the current state instead of becoming a red row.
@@ -2925,7 +2939,7 @@ the flag.
 Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false,"held":[]}` on stdout. Interactive questions go on
-stderr in JSON mode. Real spec-check failures carry the `spec check failed: `
+stderr in JSON mode. Other spec-check errors carry the `spec check failed: `
 prefix in text mode; refusals do not.
 
 *Proposed (S172):* `ork adj answer PROJECT ID (--option LABEL | --text TEXT)`
@@ -3220,7 +3234,9 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   prints all three whether or not anything is behind. Contract reasons say
   `older than the versions ork accepts (v11 or v12)` or
   `newer than the versions ork accepts (v11 or v12)`. With `--upgrade`, a
-  current slicer or adj reason includes `(installed: VERSION)` when known.
+  current slicer or adj reason includes `(installed: VERSION)` when known;
+  a version that starts with the tool name and a space loses that prefix
+  (`slicer 1.22.1` prints as `1.22.1`).
   Text prints `[upgrade] TOOL  REASON`, an optional `note:` line, then each
   command on its own line, indented, after the contract line. slicer: a checkout
   gets `git -C DIR pull --ff-only` and `DIR/.venv/bin/pip install -e DIR`, a
@@ -3881,11 +3897,63 @@ the restart. A deleted-executable suffix is removed before validation. If
 the installed file is missing, it says `daemon not restarted` and keeps the
 old daemon running. A build that cannot start includes its underlying
 start error when there is no captured output.
-There is no automatic rebuild. For ork use
+A project does not rebuild on its own unless it opts in (next section). For ork use
 `ork projects set ork --build 'sh ./build-only-in-home-dir.sh'`.
 This writes outside the workspace to `~/.local/bin/ork`, so the owner or a
 session with approval must run it. `build-in-home-dir.sh` stays available
 for manual build and restart. Doctor checks the build command without running it.
+
+*Proposed (S431; adj 464 `selfhost.auto-rebuild`, which supersedes adj 232;
+adj 465 `selfhost.auto-rebuild-restart`):* a self-host project that sets
+`ork projects set NAME --auto-rebuild on` lets the daemon rebuild and restart
+itself. The registry field is `auto_rebuild`, off by default; the daemon
+refuses `on` without a `build_command` or for a project that is not self-host,
+and refuses clearing the command under it. A started run does not read it.
+
+- **Trigger.** The daemon looks after a landing (the run record gets its
+  landing time), when it starts, and when `auto_rebuild` is set on. It acts
+  when the project is self-host, behind main, opted in and has a build command.
+  One project drains at a time.
+- **Drain.** The daemon holds every new role start: an engine run's role
+  (before it takes its vendor slot, and again after it) and each spec check
+  role. The hold only blocks a start; no drain code path cancels a role. A
+  running role, a check or a landing finishes. A held run reports the wait
+  `waiting for daemon rebuild`. Status, `ork status` and the TUI status line say
+  `rebuild pending: waiting for N roles` while roles run, then
+  `rebuild pending: building`. A queued run, a pause and an approval wait count
+  as nothing: none has a role. A run counts as held only when a start waits at
+  the hold and none of its roles or checks runs.
+- **Build.** When every run is held or at rest, the daemon builds through the
+  same code as `ork daemon restart --rebuild` (`daemon.RunBuild`: `sh -c`, in
+  the project directory, ten minute timeout, process-group cleanup), writing the
+  installed path the command writes. It then validates the executable as the
+  CLI restart does (`daemon.PrepareRestartExe`, moved from `cmd/ork/start.go`).
+  If runs started meanwhile, it waits for them too before it ends.
+- **Restart (adj 465).** The daemon closes admission under the manager lock and
+  ends. Once `Run` has joined its runs, and before it releases the lock, it
+  starts `ork daemon run` from the new executable, detached, in its own session
+  and with stderr in `daemon.log` (`daemon.StartExe`, the CLI's start code).
+  The successor retries the lock for two seconds, takes it and recovers the
+  runs. Recovery is today's: a held run has not started its role, so its record
+  shows the state it was in and recovery pauses it as `interrupted`;
+  `ork retry RUN` (or `t`) starts the role on the new build. Resuming them with
+  no owner action is a follow-up (S439; adj 467 `selfhost.auto-rebuild-resume`).
+- **A failed build or an unusable executable.** The old daemon keeps running and
+  the hold is released, so held runs go on with the old build. Status carries
+  `daemon not rebuilt: build failed (exit 1)` and the last twenty output lines
+  (`rebuild.output`). The daemon does not try again until main moves; a later
+  landing clears the failure and may start a new drain.
+- **Off (the default).** Nothing is held or built. The behind notice and
+  `ork daemon restart --rebuild` stay as above.
+
+A successor that cannot start leaves no daemon; the next `ork` command starts
+one from the installed file, which is the new build. A build that leaves the
+daemon's own executable at the running revision (read with `debug/buildinfo`)
+is a failed rebuild too: the daemon stays, because the successor would start
+the same build and rebuild again with no end. During a drain a held run still
+counts as active work, so `ork daemon stop` is refused and an idle exit cannot
+fire; `ork daemon stop --force` ends the drain, releases the hold and cancels any
+role that runs.
 
 ### Live role output and usage (S99)
 

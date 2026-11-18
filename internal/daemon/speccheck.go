@@ -533,6 +533,7 @@ func (d *Daemon) beginSpecJob(ctx context.Context) (context.Context, func(), err
 		delete(d.runs.specCancels, id)
 		d.runs.specJobs--
 		d.runs.mu.Unlock()
+		d.rebuildKick()
 		d.runs.wg.Done()
 	}, nil
 }

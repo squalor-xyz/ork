@@ -190,6 +190,53 @@ func TestMergeChangelogEntries(t *testing.T) {
 	}
 }
 
+// S398: an Unreleased section that is the last section of the file.
+func TestMergeChangelogEntriesUnreleasedLast(t *testing.T) {
+	const p = "# Changelog\n\n## Unreleased\n\n"
+	tests := []struct {
+		name, base, ours, theirs, want string
+	}{
+		{"with an old entry", p + "- old\n", p + "- S1\n\n- old\n", p + "- S2\n\n- old\n", p + "- S1\n\n- S2\n\n- old\n"},
+		{"empty section", p, p + "- S1\n", p + "- S2\n", p + "- S1\n\n- S2\n"},
+		{"no final newline", p + "- old", p + "- S1\n\n- old", p + "- S2\n\n- old", p + "- S1\n\n- S2\n\n- old"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := mergeChangelogEntries(tt.base, tt.ours, tt.theirs)
+			if !ok || got != tt.want {
+				t.Fatalf("got (%q, %v), want (%q, true)", got, ok, tt.want)
+			}
+		})
+	}
+}
+
+// S398: a CRLF file is not rewritten; the conflict goes to the owner.
+func TestMergeChangelogEntriesRefusesCRLF(t *testing.T) {
+	const p = "# Changelog\n\n## Unreleased\n\n"
+	const suffix = "## v1.0.0\n\n- released\n"
+	const branch = "- S1: branch thing.\n  Docs updated: `docs/design.md`."
+	const main = "- S2: base thing.\n  Docs updated: `docs/design.md`."
+	text := func(entries ...string) string {
+		if len(entries) == 0 {
+			return p + suffix
+		}
+		return p + strings.Join(entries, "\n\n") + "\n\n" + suffix
+	}
+	crlf := func(s string) string { return strings.ReplaceAll(s, "\n", "\r\n") }
+	tests := []struct{ name, base, ours, theirs string }{
+		{"unreleased last", p + "- old\n", p + "- S1\n\n- old\n", p + "- S2\n\n- old\n"},
+		{"reviewer example", text(), text(branch), text(main)},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, ok := mergeChangelogEntries(crlf(tt.base), crlf(tt.ours), crlf(tt.theirs))
+			if ok || got != "" {
+				t.Fatalf("got (%q, %v), want (\"\", false)", got, ok)
+			}
+		})
+	}
+}
+
 // TestMergeChangelogEntriesLayouts covers bodies whose entries are not all
 // separated by one blank line, as in CHANGELOG.md: compact at the top, blank
 // separated below.

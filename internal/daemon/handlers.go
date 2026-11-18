@@ -355,6 +355,7 @@ func (d *Daemon) snapshot(ctx context.Context, p SnapshotParams) (*SnapshotResul
 		DaemonBuild:  d.cfg.BuildID,
 		SelfHost:     selfHost,
 		BehindMain:   behindMain,
+		Rebuild:      d.rebuildStatus(proj),
 		RolesRunning: d.cfg.WaveRunning() || d.activeRuns(),
 		VendorsOut:   d.vendorsOut(),
 		Project:      s.Project,
@@ -412,6 +413,7 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 	for i, s := range snaps {
 		ps := projectStatus(projects[i], s, now)
 		ps.SelfHost, ps.BehindMain = d.projectBuild(ctx, projects[i])
+		ps.Rebuild = d.rebuildStatus(projects[i])
 		out.Projects = append(out.Projects, ps)
 	}
 	for _, group := range unavailable {
@@ -667,6 +669,21 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	if err := validateProjectExtras(p); err != nil {
 		return registry.Project{}, err
 	}
+	// The daemon's own rebuild is only for a self-host project (S431, *proposed*;
+	// adj 464). The read runs git, so it is before the locks below.
+	if p.AutoRebuild != nil && *p.AutoRebuild {
+		f0, err := d.loadRegistry()
+		if err != nil {
+			return registry.Project{}, err
+		}
+		cur, ok := find(f0, p.Name)
+		if !ok {
+			return registry.Project{}, notFound(p.Name, f0)
+		}
+		if selfHost, _ := d.projectBuild(ctx, cur); !selfHost {
+			return registry.Project{}, bad("auto_rebuild is only for a self-host project: the daemon's build is not a commit of %s", cur.Path)
+		}
+	}
 
 	d.regMu.Lock()
 	defer d.regMu.Unlock()
@@ -714,6 +731,18 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	}
 	if base.RoundCheckCommand != "" && base.CheckCommand == "" {
 		return registry.Project{}, bad("round_check_command needs a check_command: the check before the gate and the landing re-check run it; set --check with --round-check, or clear --round-check")
+	}
+	// S431 (*proposed*): auto_rebuild needs a build command, as the registry would
+	// hold it after this call.
+	rebuilds, buildCommand := proj.AutoRebuild, proj.BuildCommand
+	if p.AutoRebuild != nil {
+		rebuilds = *p.AutoRebuild
+	}
+	if p.BuildCommand != nil {
+		buildCommand = *p.BuildCommand
+	}
+	if rebuilds && buildCommand == "" {
+		return registry.Project{}, bad("auto_rebuild needs a build_command: the daemon runs it to rebuild; set --build with --auto-rebuild on, or set --auto-rebuild off")
 	}
 	if !p.NoVerify {
 		if refusal := verifyNewCheck(ctx, *proj, p); refusal != "" {
@@ -763,6 +792,9 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	if p.BuildCommand != nil {
 		proj.BuildCommand = *p.BuildCommand
 	}
+	if p.AutoRebuild != nil {
+		proj.AutoRebuild = *p.AutoRebuild
+	}
 	if p.RoundCheckCommand != nil {
 		proj.RoundCheckCommand = *p.RoundCheckCommand
 	}
@@ -794,6 +826,9 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 			// cap stops nothing.
 			d.runs.lastRegistry = f
 			d.startQueuedLocked(f)
+		}
+		if p.AutoRebuild != nil && *p.AutoRebuild {
+			go d.checkRebuild() // a daemon already behind main starts its drain now (S431)
 		}
 	}
 	return *proj, nil

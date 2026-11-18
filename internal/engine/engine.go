@@ -65,6 +65,7 @@ type Deps struct {
 	Vendors        *Vendors                                         // the per-vendor slot cap and vendor-out memory (S169); nil means no cap and no memory
 	Wake           *Wake                                            // the sleep detector (S235); nil means sleep is not detected
 	Project        func(name string) (registry.Project, bool)       // the registered project a tool feedback entry names (S387, *proposed*); nil resolves nothing, so the run's own project is used
+	Hold           *Hold                                            // holds new role starts while the daemon drains for a rebuild (S431, *proposed*); nil holds nothing
 }
 
 func (d Deps) now() time.Time {
@@ -147,6 +148,7 @@ type Engine struct {
 	noted          string      // the checks note written for an approval (guarded by mu)
 	checkVerified  bool        // setup verified the check command of this engine, so implement need not (S295; guarded by mu)
 	vendorWait     vendorWaits // the vendors whose slot a round waits for (S169); own lock, because Run holds mu
+	holdWait       holdWaiting // the role starts that wait for the rebuild hold (S431); own lock, because Run holds mu
 	work           workings    // the roles and checks that run now (S235); own lock, because Run holds mu
 	localMu        sync.Mutex  // protects the lifetime reservation, independently of e.mu
 	localRelease   func()

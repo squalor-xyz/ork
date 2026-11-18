@@ -397,7 +397,7 @@ runs the parent's slivers one after another in the parent's worktree and
 branch, as one plan and one landing. Answer each spec question
 with an option number or text. A role's question text is shown as plain
 text, and its line breaks are kept. An empty line or end of input holds the
-slice and exits 1. A failed check also blocks launch. Real spec-check failures
+slice and exits 1. A failed check also blocks launch. Other spec-check errors
 carry the `spec check failed: ` prefix in text mode; refusals do not. Text
 mode prints only `ork: spec check failed: MESSAGE`; the error code shows with
 `--json`. A spec check whose report has a shape error, or whose commands were
@@ -504,6 +504,15 @@ The roles run in this order (`docs/design.md:391-631`):
 6. **gate**: the first line of its report is `VERDICT: PASS` or
    `VERDICT: FAIL`. The third FAIL stops the run.
 7. **awaiting approval**: your turn (section 10).
+
+**Writing Check lines.** Before the gate, ork runs each backticked plain
+command in the slice's Check section (`docs/design.md`, slice checks). *Proposed
+(S419, `checks.prints-nothing-exit`, adj 468):* word a line that finds nothing
+as "prints nothing" (or "must print nothing"). Such a line passes when its
+output is empty and its exit is 0, or 1 from `rg`, `grep` or `git grep` (their
+no-match code). Output, exit 2 or more, or exit 1 from any other command
+fails it. ork does not run a piped line; the orchestrator runs it and judges it
+by its last command, by the same rule. A line not worded that way must exit 0.
 
 ## 8. Watch it
 
@@ -901,9 +910,11 @@ Set it with `ork projects set NAME --bell on|off` (*proposed*, S224).
 | A relay that ork did not start shows `!!` and `stale` | Open its pane and press `x`. It ends the ledger run as stopped (`internal/tui/pane.go:413-416`, `internal/tui/ledgerend.go:21`), but only when the run is stale and no unfinished ork run owns it (`internal/daemon/runs.go:2515-2531`). `ork stop RUN` does not take such a run: it names ork runs and waves, and the daemon answers `no run` for a ledger id (`internal/daemon/runs.go:1624-1635`) |
 | Codex is out of credits or at a limit | Nothing is needed: ork marks it out for 60 minutes and starts new rounds on the next row of another vendor. Check with `ork vendor`. To keep it out longer, `ork vendor out codex` holds until you run `back` (it survives a daemon restart), and `ork vendor out codex --until 07:12` holds until then. `ork vendor back codex` ends the mark early, for example after you add credits. A run that waits for the one Codex slot is not stuck: it starts when the other Codex role ends |
 | You want to stop work | `x` on a row or `ork stop RUN`; `ork stop WAVE-ID` for a wave |
+| Status or the TUI status line says `rebuild pending: waiting for N roles` (*proposed*, S431) | The project has `ork projects set NAME --auto-rebuild on`, a landing left the daemon behind main, and the daemon is draining: it starts no new role, lets the N running roles finish and kills none, then builds and restarts itself. A run that reaches its next role waits with `waiting for daemon rebuild`. Nothing is needed. After the restart each held run is paused as interrupted: `t` or `ork retry RUN` starts its role on the new build. While the drain runs `ork daemon stop` is refused, because the held runs still count as active work; `ork daemon stop --force` ends the drain but also cancels any role that runs |
+| Status says `daemon not rebuilt: build failed (exit 1)` with output lines (*proposed*, S431) | The build command of a project with `--auto-rebuild on` failed, the built file was not an executable, or the build left the daemon's own executable at its old revision (the message names the file: the build command must write the file the daemon runs from). The old daemon keeps running, the hold is released and held runs went on with the old build. Fix the build, then land the next change: the daemon tries again only when main moves. Or run `ork daemon restart --rebuild` by hand when no role runs. `ork projects set NAME --auto-rebuild off` returns to the manual restart |
 | The daemon died or you stopped it | Start `ork` again. On start the daemon checks every unfinished run against live processes and marks a role with no process and no report as lost, then the slice waits for you (`docs/design.md:167-173`) |
 | Commands warn that the daemon build differs | `ork daemon restart`. It refuses while a role runs unless you add `--force` (`docs/design.md:41-48`) |
-| The self-host daemon is behind main (*proposed*, S315) | Set a build-only command once with `ork projects set ork --build 'sh ./build-only-in-home-dir.sh'`, then run `ork daemon restart --rebuild`. It refuses while a role runs, naming the run, even with `--force`. A failed build prints its last twenty output lines and `daemon not restarted`; the old daemon stays running. The script writes `~/.local/bin/ork` outside the workspace, so the owner or a session with approval runs it. ork never rebuilds automatically. `--build ''` clears the setting; without it the behind notice keeps the plain restart hint. `build-in-home-dir.sh` remains the manual build-and-restart script |
+| The self-host daemon is behind main (*proposed*, S315) | Set a build-only command once with `ork projects set ork --build 'sh ./build-only-in-home-dir.sh'`, then run `ork daemon restart --rebuild`. It refuses while a role runs, naming the run, even with `--force`. A failed build prints its last twenty output lines and `daemon not restarted`; the old daemon stays running. The script writes `~/.local/bin/ork` outside the workspace, so the owner or a session with approval runs it. ork does not rebuild on its own unless the project sets `--auto-rebuild on` (next rows). `--build ''` clears the setting; without it the behind notice keeps the plain restart hint. `build-in-home-dir.sh` remains the manual build-and-restart script |
 | A merged slice left its worktree behind | `c` on the Ready row removes the merged worktree and branch (`internal/tui/keys.go:89`) |
 
 Run `ork doctor` after you upgrade slicer or adj. The slicer contract must

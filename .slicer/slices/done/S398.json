@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "UI note: this slice changes `internal/cli` output (the doctor line), so it gets the UI pass.\n\n- `internal/engine/changelog_test.go:150-322`\n- `internal/engine/filescope_test.go:15-49`\n- `internal/engine/changelog.go:70-134` (read only)\n- `internal/engine/filescope.go:14-41` (read only)\n- `internal/cli/upgrade.go:195-245`\n- `internal/cli/upgrade_test.go:725-770`\n- `docs/design.md:836-842,2745-2751`\n- `docs/guide.md:395-402`\n- `CHANGELOG.md`"
+      "body": "UI note: this slice changes `internal/cli` output (the doctor line), so it gets the UI pass.\n\n- `internal/engine/changelog_test.go:151-323`\n- `internal/engine/filescope_test.go:16-50`\n- `internal/engine/changelog.go:70-134` (read only)\n- `internal/engine/filescope.go:14-41` (read only)\n- `internal/cli/upgrade.go:195-245`\n- `internal/cli/upgrade_test.go:725-770`\n- `docs/design.md:890-899`\n- `docs/design.md:2925-2932`\n- `docs/design.md:3213-3221`\n- `docs/guide.md:396-402`\n- `landed-changed/S398.md` (written by `slicer changelog add`)"
     },
     {
       "heading": "Failing tests",
@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n\n- A CHANGELOG whose Unreleased is the last section merges two new entries with one blank line between entries and no extra line at the end; a CRLF CHANGELOG is left to the owner.\n- A path with a double quote, a worktree-column rename and a sibling directory are read and judged as the tests state.\n- 'docs/design.md' says what the files-scope warning sees after the slice commit.\n- 'ork doctor --upgrade' prints '[upgrade] slicer  requested with --upgrade (installed: 1.22.1)' with slicer 1.22.1 installed.\n- The docs say \"Other spec-check errors\".\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `go test ./internal/engine -run 'Changelog|Scope' -v` and `go test ./internal/cli -run 'DoctorUpgrade' -v` list the new tests as passing.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0.\n- `rg -n \"Real spec-check failures\" docs` prints nothing.\n- `rg -n \"only that round\" docs/design.md` finds the files-scope sentence."
+      "body": "Acceptance criteria:\n\n- A CHANGELOG whose Unreleased is the last section merges two new entries with one blank line between entries and no extra line at the end; a CRLF CHANGELOG is left to the owner.\n- A path with a double quote, a worktree-column rename and a sibling directory are read and judged as the tests state.\n- 'docs/design.md' says what the files-scope warning sees after the slice commit.\n- 'ork doctor --upgrade' prints '[upgrade] slicer  requested with --upgrade (installed: 1.22.1)' with slicer 1.22.1 installed.\n- The docs say \"Other spec-check errors\".\n\nCommands:\n\n- `go vet ./...` exits 0.\n- `go test ./...` exits 0.\n- `go test ./internal/engine -run 'Changelog|Scope' -v` and `go test ./internal/cli -run 'DoctorUpgrade' -v` list the new tests as passing.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0.\n- Orchestrator check, not run by ork (a no-match rg exits 1, S419): rg -n \"Real spec-check failures\" docs prints nothing.\n- `rg -n \"only that round\" docs/design.md` finds the files-scope sentence."
     },
     {
       "heading": "Git",

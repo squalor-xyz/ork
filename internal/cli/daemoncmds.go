@@ -62,6 +62,13 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 			name += " (removed)"
 		}
 		fmt.Fprintf(o.stdout, "%s: needs you %d, active relays %d\n", name, p.NeedsYou, len(p.ActiveRelays))
+		// The daemon's own rebuild: the drain that holds role starts, or the failure (S431).
+		if p.Rebuild != nil {
+			fmt.Fprintf(o.stdout, "  %s\n", p.Rebuild.Message)
+			for _, line := range p.Rebuild.Output {
+				fmt.Fprintf(o.stdout, "    %s\n", line)
+			}
+		}
 		for _, r := range p.Open {
 			fmt.Fprintf(o.stdout, "  #%d %s  %s\n", r.ID, r.Key, r.Title)
 		}
@@ -496,6 +503,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
 	check := fs.String("check", "", "the check command")
 	build := fs.String("build", "", "the self-host build-only command; empty clears it")
+	autoRebuild := fs.String("auto-rebuild", "", "on or off: a self-host daemon rebuilds and restarts itself after a landing that leaves it behind main; needs --build (off unless set on)")
 	roundCheck := fs.String("round-check", "", "a faster check command for the checks after implementer rounds; needs --check; empty clears it")
 	noVerify := fs.Bool("no-verify", false, "store --check or --round-check even when the static check says it cannot run in the project's folder")
 	dryRun := fs.Bool("dry-run", false, "run every check and show the change without saving")
@@ -549,6 +557,15 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 			p.AutoLand = &on
 		default:
 			return o.usage("projects set: --auto-land takes on or off, got %q", *autoLand)
+		}
+	}
+	if given["auto-rebuild"] {
+		switch *autoRebuild {
+		case "on", "off":
+			on := *autoRebuild == "on"
+			p.AutoRebuild = &on
+		default:
+			return o.usage("projects set: --auto-rebuild takes on or off, got %q", *autoRebuild)
 		}
 	}
 	if given["ui-pass-skills"] {
@@ -638,7 +655,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --bell, --notify, --auto-land, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --bell, --notify, --auto-land, --auto-rebuild, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -677,6 +694,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		if p.AutoLand != nil {
 			changed = append(changed, map[bool]string{true: "auto_land=on", false: "auto_land=off"}[proj.AutoLandOn()])
+		}
+		if p.AutoRebuild != nil {
+			changed = append(changed, map[bool]string{true: "auto_rebuild=on", false: "auto_rebuild=off"}[proj.AutoRebuild])
 		}
 		if p.UIDoc != nil {
 			changed = append(changed, text("ui_doc", proj.UIDoc))

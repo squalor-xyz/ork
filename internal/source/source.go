@@ -97,6 +97,16 @@ func result[T any](v T, err error) Result[T] {
 	return Result[T]{Value: v}
 }
 
+// Rebuild is the daemon's own rebuild of a self-host project that opted in
+// (S431, *proposed*; adj 464): State is "draining", "building" or "failed".
+type Rebuild struct {
+	State   string   `json:"state"`
+	Waiting int      `json:"waiting,omitempty"` // roles and checks that still run
+	Held    int      `json:"held,omitempty"`    // runs and spec checks whose next role start is held
+	Message string   `json:"message"`           // "rebuild pending: waiting for N roles", or "daemon not rebuilt: ..."
+	Output  []string `json:"output,omitempty"`  // a failed build's last lines
+}
+
 // Snapshot is what ork shows for one project. Each part has its own error, so
 // one failed call does not blank the others. Open and Decided stay empty, with
 // no error, for a project whose registry entry has adj false.
@@ -104,6 +114,7 @@ type Snapshot struct {
 	DaemonBuild  string      // proposed: daemon build from the latest refresh
 	SelfHost     bool        // proposed: running build revision exists in the project
 	BehindMain   bool        // proposed: local main descends from the running build
+	Rebuild      *Rebuild    // S431, *proposed*: the daemon's rebuild of this project while it drains, or after it failed
 	RolesRunning bool        // global daemon activity, for the idle restart notice
 	VendorsOut   []VendorOut // proposed: vendors the daemon remembers as out (S169); global, not per project
 	Unavailable  bool        // proposed: display group for runs without a registered project
