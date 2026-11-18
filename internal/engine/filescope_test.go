@@ -4,6 +4,7 @@ package engine
 
 import (
 	"encoding/json"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -48,7 +49,8 @@ func TestFilesScopeReadsOnlyChangedPaths(t *testing.T) {
 	}
 }
 
-func filesScopeHarness(t *testing.T, paths []string, status string, failure string) *harness {
+// config, when given, is what `slicer config --json` prints in the worktree.
+func filesScopeHarness(t *testing.T, paths []string, status string, failure string, config ...string) *harness {
 	t.Helper()
 	rawPaths, _ := json.Marshal(paths)
 	raw := strings.TrimSuffix(sliceJSON(), "}") + ",\"paths\":" + string(rawPaths) + "}"
@@ -69,7 +71,12 @@ func filesScopeHarness(t *testing.T, paths []string, status string, failure stri
 				git.Exit = 1
 				git.Stderr = "status unavailable"
 			}
-			return []clitest.Route{show, git}
+			routes := []clitest.Route{show, git}
+			for _, c := range config {
+				routes = append(routes, existingWorktreeRoutes(P, W)...)
+				routes = append(routes, clitest.Route{Tool: "slicer", Args: []string{"config", "--json", "--root", W}, Stdout: c})
+			}
+			return routes
 		}
 	})
 }
@@ -101,6 +108,23 @@ func TestGateBriefListsTheOutOfScopeFiles(t *testing.T) {
 	}
 	if strings.Contains(body, "internal/engine/check.go") || strings.Contains(body, ".slicer/index.json") {
 		t.Fatal("scope section names covered or tracking files")
+	}
+}
+
+// S332: the item's own changelog entry is part of the slice, whatever the Files list says.
+func TestGateBriefDoesNotFlagTheItemsChangelogEntry(t *testing.T) {
+	h := filesScopeHarness(t, []string{"internal/engine"}, " M internal/engine/check.go\x00?? landed-changed/S04.md\x00?? landed-changed/S05.md\x00", "", entryFolderOn)
+	writeFile(t, filepath.Join(h.W, "landed-changed", "S04.md"), "entry text\n")
+	brief, _ := scopeGateBrief(t, h)
+	_, body, ok := strings.Cut(brief, "## Out of scope files\n\n")
+	if !ok {
+		t.Fatal("no Out of scope files section")
+	}
+	if !strings.Contains(body, "landed-changed/S05.md") {
+		t.Errorf("scope section lacks the other item's entry: %s", body)
+	}
+	if strings.Contains(body, "landed-changed/S04.md") {
+		t.Errorf("scope section flags the item's own entry: %s", body)
 	}
 }
 

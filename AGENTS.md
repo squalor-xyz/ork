@@ -50,6 +50,11 @@ before any other dependency. Every new Go file starts with
 - In a slice's Files section, put each path in backticks, for example
   `internal/tui/model.go`, so slicer can read it. Inside the backticks, allow
   only a `:N` or `:N-M` line anchor; put any other anchor after the backtick.
+- *Proposed:* a slice's changelog entry is written with
+  `slicer changelog add ID --text "..."` into `landed-changed/ID.md`. Never
+  edit `CHANGELOG.md`; `slicer changelog assemble` fills it at release. A spec
+  step that says "CHANGELOG.md: one bullet" means this command (adj 402,
+  adj 404, adj 445).
 
 ## Environment
 

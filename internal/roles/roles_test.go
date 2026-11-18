@@ -457,6 +457,26 @@ func TestImplementerSteps(t *testing.T) {
 	}
 }
 
+// S332 (adj 404): a slice's changelog entry is written with slicer, and a spec
+// step that names the changelog file is read as that command (adj 445).
+func TestImplementerPromptWritesTheChangelogEntryWithSlicer(t *testing.T) {
+	ps := prompts(t)
+	for _, want := range []string{
+		"slicer changelog add {{slice_id}} --text",
+		"slicer config changelog_path",
+		"never edit the changelog file",
+	} {
+		if !has(ps["implementer"], want) {
+			t.Errorf("implementer does not mention %q", want)
+		}
+	}
+	for name, p := range ps {
+		if strings.Contains(p, "CHANGELOG.md") {
+			t.Errorf("%s prompt names CHANGELOG.md", name)
+		}
+	}
+}
+
 func TestImplementerSearchAndDenialRules(t *testing.T) {
 	p := prompts(t)["implementer"]
 	for _, want := range []string{

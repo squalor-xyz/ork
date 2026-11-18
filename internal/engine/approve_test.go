@@ -82,7 +82,7 @@ func TestApproveFinishesThenCommitsWithTheSlicesGitTitle(t *testing.T) {
 			order = append(order, "commit")
 		case c.Tool == "slicer" && len(c.Args) > 2 && c.Args[0] == "relay-run" && c.Args[1] == "end":
 			order = append(order, "end")
-		case c.Tool == "slicer" && len(c.Args) > 2 && c.Args[0] == "config":
+		case c.Tool == "slicer" && len(c.Args) > 2 && c.Args[0] == "config" && c.Args[1] == "implement_finish":
 			order = append(order, "config")
 		}
 	}

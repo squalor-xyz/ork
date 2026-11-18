@@ -80,5 +80,8 @@
       "size",
       "score"
     ]
-  }
+  },
+  "changelog_path": "CHANGELOG.md",
+  "changelog_unreleased_heading": "## Unreleased",
+  "changelog_require_entry": true
 }

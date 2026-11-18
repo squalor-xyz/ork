@@ -456,7 +456,7 @@ func TestApprovalRecordsHumanChecksAsSlicerNote(t *testing.T) {
 		switch {
 		case c.Tool == "slicer" && len(c.Args) > 0 && c.Args[0] == "note":
 			order = append(order, "note")
-		case c.Tool == "slicer" && len(c.Args) > 0 && c.Args[0] == "config":
+		case c.Tool == "slicer" && len(c.Args) > 1 && c.Args[0] == "config" && c.Args[1] == "implement_finish":
 			order = append(order, "config")
 		}
 	}
