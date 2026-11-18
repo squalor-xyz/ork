@@ -5086,3 +5086,5 @@
 {"when": "2026-11-17T23:51:38Z", "item": "S417", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-17T23:54:52Z", "item": "S418", "action": "add", "from": "", "to": "open", "note": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message"}
 {"when": "2026-11-17T23:54:52Z", "item": "S418", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-17T23:59:41Z", "item": "S419", "action": "add", "from": "", "to": "open", "note": "Treat a \"prints nothing\" Check line that is a no-match rg (exit 1) as passing, or read the output and not the exit code"}
+{"when": "2026-11-17T23:59:41Z", "item": "S419", "action": "promote", "from": "", "to": "", "note": ""}
