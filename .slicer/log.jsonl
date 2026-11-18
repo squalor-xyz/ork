@@ -5256,6 +5256,13 @@
 {"when": "2026-11-18T16:13:01Z", "item": "S439", "action": "edit", "from": "", "to": "", "note": "lead"}
 {"when": "2026-11-18T17:17:58Z", "item": "S439", "action": "note", "from": "", "to": "", "note": "Verified held-only rebuild markers, one-shot startup retry w", "by": "Jon Robbins"}
 {"when": "2026-11-18T17:17:59Z", "item": "S439", "action": "status", "from": "started", "to": "done", "note": "Runs held at rebuild resume once on the successor; unmarked owner waits remain paused, and failed marker writes do not stall shutdown. Gate PASS and owner approval received.", "by": "Jon Robbins"}
+{"when": "2026-11-18T15:33:17Z", "item": "S444", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T15:34:11Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T15:34:11Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T15:36:50Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T15:36:51Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T16:14:10Z", "item": "S444", "action": "note", "from": "", "to": "", "note": "Verified TestHeartbeatStopsAtStepEnd with and without -race ", "by": "Jon Robbins"}
+{"when": "2026-11-18T16:14:17Z", "item": "S444", "action": "status", "from": "started", "to": "done", "note": "Verified TestHeartbeatStopsAtStepEnd with and without -race and the full engine race suite. Event synchronization replaces sleeps, and all three explicit-stop mutations failed as intended. Gate returned PASS and owner approved.", "by": "Jon Robbins"}
 {"when": "2026-11-18T15:15:16Z", "item": "S439", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T15:25:27Z", "item": "S374", "action": "set", "from": "", "to": "", "note": "pass_key v1.2→v1.3; importance 3→1; urgency 3→1"}
 {"when": "2026-11-18T15:25:28Z", "item": "S374", "action": "note", "from": "", "to": "", "note": "2026-11-18 owner: no need to wait on S374 for v1.2; keep it ", "by": "Jon Robbins"}
@@ -5477,6 +5484,7 @@
 {"when": "2026-11-18T17:16:12Z", "item": "S447", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path; go test -overlay route, option a)."}
 {"when": "2026-11-18T17:16:12Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S446 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-18T17:16:13Z", "item": "S416", "action": "note", "from": "", "to": "", "note": "Merged S447 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:42:25Z", "item": "S444", "action": "note", "from": "", "to": "", "note": "Verified the merged tree: heartbeat regression passes with a", "by": "Jon Robbins"}
 {"when": "2026-11-18T17:17:43Z", "item": "S448", "action": "add", "from": "", "to": "open", "note": "say in the brief whether plan mode may wrap a gate session, so the plan-file and ExitPlanMode instructions do not compete with the gate report"}
 {"when": "2026-11-18T17:17:44Z", "item": "S448", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T17:19:16Z", "item": "S448", "action": "promote", "from": "", "to": "", "note": ""}
@@ -5501,3 +5509,7 @@
 {"when": "2026-11-18T17:20:31Z", "item": "S432", "action": "set", "from": "", "to": "", "note": "title Accept slicer relay contract v13 (engine runs the finish step)→Accept slicer relay contract v13 (v12-v13); short_title Accept slicer relay contract v13 (engine runs the finish step)→Accept slicer relay contract v13 (v12-v13)"}
 {"when": "2026-11-18T17:20:31Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T17:20:32Z", "item": "S384", "action": "set", "from": "", "to": "", "note": "depends_on S409→S432"}
+{"when": "2026-11-18T22:18:10Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 472 cli.wait-queued-resume = ", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:18:10Z", "item": "S338", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 473 cli.spec-check-skip = fla", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:18:11Z", "item": "S339", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 474 projects.add-setup = warn", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:18:11Z", "item": "S340", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 475 status.spec-questions = y", "by": "Jon Robbins"}

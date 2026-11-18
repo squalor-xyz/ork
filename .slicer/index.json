@@ -17804,6 +17804,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ba3d4dd4-ac96-4412-8078-68132946154f",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 472 cli.wait-queued-resume = wait (B1: wait until the resume starts and the run rests again).",
+          "created_at": "2026-11-18T22:18:10Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -19276,7 +19290,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9de2b36d-96de-4e5c-a1ea-6a6745ae7238",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 473 cli.spec-check-skip = flag (--spec-check off on ork run and ork wave start, CLI only).",
+          "created_at": "2026-11-18T22:18:10Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19304,7 +19333,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "09fdf032-5085-4118-8420-a9192a419009",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 474 projects.add-setup = warn (print setup warnings with fix commands; write nothing).",
+          "created_at": "2026-11-18T22:18:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19332,7 +19376,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6e6ac33f-f47e-4e49-b2d0-c7ac99c3d820",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 475 status.spec-questions = yes (ork status lists open spec questions and counts them under needs you).",
+          "created_at": "2026-11-18T22:18:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -23905,10 +23964,39 @@
       "id": "S444",
       "title": "TestHeartbeatStopsAtStepEnd fails under -race",
       "short_title": "Heartbeat test under race",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "93f3da78-52bf-47d8-af97-5ba866344d6f",
+          "kind": "",
+          "text": "**2026-11-18** — Verified TestHeartbeatStopsAtStepEnd with and without -race and the full engine race suite. The test now waits for a heartbeat retry and verifies cancellation before the terminal write; all three explicit-stop mutations failed as intended. Gate returned PASS and owner approved.",
+          "created_at": "2026-11-18T16:14:10Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "8e95d20f-3652-42af-889e-b0a384cfcd7a",
+          "kind": "",
+          "text": "**2026-11-18** — Verified the merged tree: heartbeat regression passes with and without -race; vet, formatting and slicer check pass. The orchestrator reports full repository tests pass after merging main. S446 and S447 are retired duplicates; the landing blocker is resolved. Gate returned PASS and owner approved.",
+          "created_at": "2026-11-18T17:42:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -23926,7 +24014,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

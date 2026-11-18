@@ -92,10 +92,31 @@ func (s heartbeatEndSink) AddWrite(w runrec.Write) error {
 	return s.Sink.AddWrite(w)
 }
 
+// Check at the terminal write so the deferred stop at round return cannot
+// hide a missing explicit stop before stepEnd.
+type heartbeatRetryEndSink struct {
+	runrec.Sink
+	t       *testing.T
+	stopped <-chan struct{}
+}
+
+func (s heartbeatRetryEndSink) AddWrite(w runrec.Write) error {
+	if strings.Contains(join(w.Argv), "--phase done") || strings.Contains(join(w.Argv), "--phase fail") {
+		select {
+		case <-s.stopped:
+		default:
+			s.t.Error("heartbeat retry not canceled before stepEnd")
+		}
+	}
+	return s.Sink.AddWrite(w)
+}
+
 func TestHeartbeatStopsAtStepEnd(t *testing.T) {
 	for _, exit := range []ExitClass{ExitOK, ExitError, ExitRateLimited} {
 		t.Run(string(exit), func(t *testing.T) {
-			h, e := heartbeatEngine(t)
+			h, e := heartbeatEngine(t, func(o *harnessOpts) {
+				o.routes = []clitest.Route{{Tool: "slicer", Args: []string{"relay-run", "step", "run-1", "--step", "1", "--phase", "start"}, Prefix: true, Exit: 3, Stderr: `{"error":{"code":"locked","message":"busy"}}`}}
+			})
 			if exit == ExitRateLimited {
 				if err := e.run.Update(func(r *runrec.Record) {
 					r.Lineup[RoleImplementer] = append(r.Lineup[RoleImplementer], runrec.LineupEntry{Vendor: "codex", Model: "test", Effort: "high"})
@@ -103,9 +124,22 @@ func TestHeartbeatStopsAtStepEnd(t *testing.T) {
 					t.Fatal(err)
 				}
 			}
-			e.wr.Sink = heartbeatEndSink{e.run}
+			// Wait after the fake CLI has exited and released its lock. Canceling
+			// it mid-call can strand that lock and time out the terminal write.
+			sleeping, stopped := make(chan struct{}), make(chan struct{})
+			e.wr.Sleep = func(ctx context.Context, _ time.Duration) error {
+				close(sleeping)
+				<-ctx.Done()
+				close(stopped)
+				return ctx.Err()
+			}
+			e.wr.Sink = heartbeatRetryEndSink{Sink: e.run, t: t, stopped: stopped}
 			h.runner.script = func(Request, int) (Result, error) {
-				time.Sleep(3 * testHeartbeatEvery)
+				select {
+				case <-sleeping:
+				case <-time.After(2 * time.Second):
+					return Result{}, context.DeadlineExceeded
+				}
 				if exit != ExitOK {
 					return Result{Exit: exit}, nil
 				}
@@ -115,7 +149,6 @@ func TestHeartbeatStopsAtStepEnd(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			time.Sleep(2 * testHeartbeatEvery)
 			ended := false
 			for _, s := range h.steps() {
 				if s.Phase == "done" || s.Phase == "fail" {
