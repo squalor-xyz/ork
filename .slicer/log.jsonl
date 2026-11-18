@@ -5590,3 +5590,8 @@
 {"when": "2026-11-18T22:31:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "note", "from": "", "to": "", "note": "Correction 2026-11-18: the owner clicked 'List at landing' b", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:59:31Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T23:14:43Z", "item": "S452", "action": "add", "from": "", "to": "open", "note": "Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored"}
+{"when": "2026-11-18T23:14:43Z", "item": "S452", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T23:42:25Z", "item": "S453", "action": "add", "from": "", "to": "open", "note": "Resume the gate without Claude Code plan mode until S418 lands in the daemon binary"}
+{"when": "2026-11-18T23:42:25Z", "item": "S453", "action": "promote", "from": "", "to": "", "note": ""}
