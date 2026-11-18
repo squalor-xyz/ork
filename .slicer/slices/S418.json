@@ -1,0 +1,39 @@
+{
+  "id": "S418",
+  "title": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-233556-f24d, project ork, item S388:\n\nSay in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message\n\nEvidence: this session started in plan mode with an ExitPlanMode instruction that conflicts with the reviewer contract's final-report rule"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

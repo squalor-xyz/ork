@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- S390 (*proposed*, adj 418, adj 419): with the ASCII option the Recent
+  outcomes read `+ pass`, `x fail` and `+ landed` and keep their colours; a
+  wrapped Waves `both touch` overlap line hangs its continuation four columns
+  in, like the engine-conflict marker.
 - S381 (*proposed*, adj 406): A reviewer or UI section that opens with
   "nothing" or "none" is empty, even with prose after it. The prose is evidence
   and no longer starts a fix round; a tagged finding after it still counts. The

@@ -782,7 +782,8 @@ the text column, falling back to a shorter indent when needed to fit.
    `spec-check`) is not a run and not a row (S333, adj 284); landed, stopped and
    failed runs are. Rows show `✓ pass` for pass, `✗ fail` for fail, and `~ stopped` for
    any other outcome (`✓ landed` for a pass that ork landed, `✓ landed, cleanup
-   failed` when its cleanup failed; S148), then items, wall time,
+   failed` when its cleanup failed; S148). With the ASCII option the glyphs are
+   `+ pass`, `x fail` and `+ landed` (S390, adj 418); the colours stay. Then items, wall time,
    `ended N ago`, and counts such as `impl 1  review 1  gate -`. The first
    duration is wall time from the ledger's `begun_at` to `updated_at`, including
    waits. The parenthesised figure is active time, for example
@@ -2519,7 +2520,8 @@ touch `internal/engine`, `internal/daemon` or `cmd`, naming both:
 ```
 
 The marker starts two columns in; wrapped continuations start four columns in.
-The `both touch` overlap lines keep their existing indentation.
+The `both touch` overlap lines hang their wrapped continuations four columns in,
+like the conflict marker (S390, adj 419).
 
 Pressing `l` puts the same conflict text, without the leading `! ` marker, in
 the action status. Launch is blocked until the selection holds at most one

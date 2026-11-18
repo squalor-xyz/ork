@@ -1,0 +1,39 @@
+{
+  "id": "S416",
+  "title": "give the UI pass a pre-approved way to render views outside the tree, such as a scratch copy of the module or an ANSI strip into TMPDIR, so it can produce the 120x40 and ASCII renders",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261117-233555-6d1c, project ork, item S390:\n\ngive the UI pass a pre-approved way to render views outside the tree, such as a scratch copy of the module or an ANSI strip into TMPDIR, so it can produce the 120x40 and ASCII renders\n\nEvidence: rsync of the worktree into tmp/ui-1/mod and sed on a golden were both denied for lack of an approval surface, so only the two 80x24 goldens could be copied by hand"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
