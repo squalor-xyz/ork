@@ -5189,3 +5189,16 @@
 {"when": "2026-11-18T13:33:19Z", "item": "S398", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-18T13:36:02Z", "item": "S398", "action": "note", "from": "", "to": "", "note": "Verified: the changelog merge (Unreleased last, no final new", "by": "Jon Robbins"}
 {"when": "2026-11-18T13:36:04Z", "item": "S398", "action": "status", "from": "started", "to": "done", "note": "Verified: the changelog merge (Unreleased last, no final newline, CRLF refused), files-scope parser (quoted path, worktree-column rename, sibling directory) tests pin current behaviour; ork doctor --upgrade now names the tool once (installed: 1.22.1) for slicer and adj; docs say what the files-scope warning sees after the slice commit and use 'Other spec-check errors'. go vet, gofmt, go test ./... (4077 passed, 0 failed) and slicer check pass; each new assertion was mutation-checked.", "by": "Jon Robbins"}
+{"when": "2026-11-18T13:21:04Z", "item": "S433", "action": "add", "from": "", "to": "open", "note": "give the UI pass a named render hook, so renders need no overlay test file written by the role"}
+{"when": "2026-11-18T13:21:05Z", "item": "S433", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:23:33Z", "item": "S434", "action": "add", "from": "", "to": "open", "note": "give doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file"}
+{"when": "2026-11-18T13:23:34Z", "item": "S434", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:28:03Z", "item": "S435", "action": "add", "from": "", "to": "open", "note": "treat exit 1 of an absence check such as `rg -n PATTERN PATH` as pass when the slice's Check line says it prints nothing"}
+{"when": "2026-11-18T13:28:03Z", "item": "S435", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:28:35Z", "item": "S436", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief whether the harness may start the role in plan mode, since plan-mode instructions conflict with the report-as-final-message rule"}
+{"when": "2026-11-18T13:28:36Z", "item": "S436", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:32:44Z", "item": "S437", "action": "add", "from": "", "to": "open", "note": "give role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip"}
+{"when": "2026-11-18T13:32:45Z", "item": "S437", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:33:25Z", "item": "S433", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path), filed again by tool feedback"}
+{"when": "2026-11-18T13:33:25Z", "item": "S435", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S419 (no-match rg on a prints-nothing Check line), filed again by tool feedback"}
+{"when": "2026-11-18T13:33:25Z", "item": "S436", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (reviewer prompt in plan mode), filed again by tool feedback"}
