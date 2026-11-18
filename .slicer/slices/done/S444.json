@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/heartbeat_test.go:95-132`\n- `internal/engine/heartbeat.go`"
+      "body": "- `internal/engine/heartbeat_test.go:95-166` (heartbeatRetryEndSink and TestHeartbeatStopsAtStepEnd)\n- `internal/engine/round.go:1247-1293` (stepEnd and heartbeat; read-only reference replacing missing heartbeat.go)\n- `landed-changed/S444.md` (entry written by slicer changelog add)"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestHeartbeatStopsAtStepEnd` in `internal/engine/heartbeat_test.go` under `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd`: fails today with \"no stepEnd observed\"; passes after the fix, and still passes without -race."
+      "body": "- `TestHeartbeatStopsAtStepEnd` in `internal/engine/heartbeat_test.go:114-166` under `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd`: reproduced before the fix with \"no stepEnd observed\" at original line 129; passes after the fix, and still passes without -race."
     },
     {
       "heading": "Implement",

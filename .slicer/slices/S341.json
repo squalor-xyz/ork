@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "Observed 2026-11-11 (slicer wave 2): `ork wave start slicer s455 s450 s456 s451 s453` failed with \"ork: spec check failed: spec-check changed the tree, and it is a read-only role\". The change was another session filing slicer s459 on main (log entry 19:18:46, from ork's S335 spec work), not the spec check. Wanted: compare only paths the role could have written, or name the changed paths and their log origin in the error, and refuse to start a spec check on a dirty tree rather than failing after it."
+      "body": "Observed 2026-11-11 (slicer wave 2): `ork wave start slicer s455 s450 s456 s451 s453` failed with \"ork: spec check failed: spec-check changed the tree, and it is a read-only role\". The change was another session filing slicer s459 on main (log entry 19:18:46, from ork's S335 spec work), not the spec check. Wanted: compare only paths the role could have written, or name the changed paths and their log origin in the error, and refuse to start a spec check on a dirty tree rather than failing after it.\n\nRe-anchored 2026-11-18:\n\n- The fingerprint is `git -C ROOT status --porcelain -- .` (`internal/engine/speccheck.go:88-97`), scoped to the project by S292 (done 2026-11-09). S292's owner answer (Q1, project-only, 2026-11-04) keeps the project's own `.slicer/` in the fingerprint. The s459 filing was in the same project, so S292 does not cover this case.\n- A change between `baseline` and `before` is an outside change and is retried once (`errSpecStatusChanged`, `internal/engine/speccheck.go:100,257-262`, retry at `:189`). A change between `before` and `after`, while the role runs, is the hard error \"spec-check changed the tree, and it is a read-only role\" (`internal/engine/speccheck.go:351-375`). It names no path. The same pattern is in the spec draft (`internal/engine/specdraft.go:178,279`) and the carve (`internal/engine/carve.go:73,117`).\n- The fingerprint compares status lines, so a dirty tree that does not change passes (`TestSpecCheckOnADirtyButUnchangedTreeIsFine`). Refusing to start on a dirty tree would refuse every spec check while the owner has uncommitted tracking edits on main, which is the normal state between commits; this spec does not do that.\n- adj 28 (`role.readonly-fingerprint`, decided yes) keeps the fingerprint. Whether a change made only under the project's `.slicer/` while the role runs is retried like an outside change is open: per the owner's answer to `specs.readonly-tracking-change`.\n- Not slicer's: slicer has no read-only role check."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/speccheck.go:88-125` (a helper that lists the paths whose status line changed; the retry error text)\n- `internal/engine/speccheck.go:340-380` (name the paths; leave the project's .slicer/ out, adj 476)\n- `internal/engine/specdraft.go:178`, `internal/engine/specdraft.go:279` (name the paths in the draft's error too)\n- `internal/engine/carve.go:117`\n- `internal/engine/speccheck_test.go:71` (`specHarnessStatusReads` already serves a sequence of status replies)\n- `internal/engine/specdraft_test.go`\n- `docs/design.md:219-260` (spec check read-only fingerprint)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "In `internal/engine/speccheck_test.go`, with `specHarnessStatusReads` serving the status before and after the role:\n\n- `TestStatusChangedPaths`: the helper, given before `\" M .slicer/log.jsonl\\n\"` and after `\" M .slicer/log.jsonl\\n?? .slicer/slices/s459.json\\n M src/a.py\\n\"`, returns `.slicer/slices/s459.json` and `src/a.py`, sorted; a line present in both is not listed; a line that went away is listed. Red today: no helper.\n- `TestSpecCheckTreeChangeNamesThePaths`: the role run adds `src/a.py` to the status. The error is still the read-only error and ends with `: changed src/a.py`. Red today: the message is fixed text (`internal/engine/speccheck.go:375`).\n- `TestSpecCheckIgnoresProjectSlicerChanges` (adj 476): the role run adds only `?? .slicer/slices/s459.json` and ` M .slicer/log.jsonl`; the spec check passes on the first attempt with no retry. Red today: a hard error.\n- `TestSpecCheckFingerprintKeepsOtherSlicerDirs`: a change to `sub/.slicer/x.json` (not the project root's `.slicer/`) still fails. Guard.\n- `TestSpecCheckNonTrackingChangeStillFails`: a change to `src/a.py` and `.slicer/x.json` together fails at once and names `src/a.py` only. Red today for the naming.\n- `TestSpecDraftTreeChangeNamesThePaths` in `internal/engine/specdraft_test.go`: the same naming for the draft's error. Red today."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. Add `statusChangedPaths(before, after string) []string`: the path part of every porcelain line that is in one fingerprint and not the other, sorted and unique.\n3. Spec check, spec draft and carve: when `after != before`, append `: changed PATH, PATH` to the error (at most 5 paths, then `and N more`).\n4. adj 476 (`specs.readonly-tracking-change` = ignore, narrows adj 28): the spec check's fingerprint leaves out the project's own `.slicer/` (the status lines whose path starts with `.slicer/` relative to the project root). Spec draft and carve keep today's fingerprint unless they share the helper; say which in the report.\n5. Do not refuse a dirty tree at start; the fingerprint compares changes, not cleanliness.\n6. Docs: the read-only fingerprint paragraph in `docs/design.md` (named paths; `.slicer/` left out of the spec check fingerprint, citing adj 476 and its narrowing of adj 28). Changelog entry with `slicer changelog add S341 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- A spec check, spec draft or carve that fails the read-only check names the paths that changed.\n- A spec check whose only change during the role is under the project's .slicer/ passes (adj 476).\n- A change to any other path still fails at once, as adj 28 requires outside the scope adj 476 narrows.\n- A dirty but unchanged tree still passes.\n\nCommands:\n- `go test ./internal/engine -run 'StatusChangedPaths|SpecCheck|SpecDraft' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S341: read-only check names the changed paths\"."
     }
   ],
   "notes": []

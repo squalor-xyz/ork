@@ -1,0 +1,39 @@
+{
+  "id": "S445",
+  "title": "say in the brief that plan mode may be active and that the final message is the report, so the plan-mode instructions do not conflict",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-151517-1d8b, project ork, item S439:\n\nsay in the brief that plan mode may be active and that the final message is the report, so the plan-mode instructions do not conflict\n\nEvidence: the harness asked for a plan file and ExitPlanMode while the brief asked for a read-only review report"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

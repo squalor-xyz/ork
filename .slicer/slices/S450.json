@@ -1,0 +1,39 @@
+{
+  "id": "S450",
+  "title": "skip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261118-172104-db18, project ork, item S432:\n\nskip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files\n\nEvidence: S432 diff stat lists no internal/tui or testdata/golden paths; the UI pass was triggered by internal/cli test edits only"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

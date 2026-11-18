@@ -1,10 +1,10 @@
 {
   "id": "S418",
-  "title": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message",
+  "title": "Cloud Claude read-only roles run on the read-only allowlist, not plan mode",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "",
+  "size": "S",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-233556-f24d, project ork, item S388:\n\nSay in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message\n\nEvidence: this session started in plan mode with an ExitPlanMode instruction that conflicts with the reviewer contract's final-report rule"
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-233556-f24d, project ork, item S388:\nSay in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message\nEvidence: this session started in plan mode with an ExitPlanMode instruction that conflicts with the reviewer contract's final-report rule\n\nMerged on 2026-11-18 (duplicate sweep): S412 (no reviewer under Grok plan mode, run ork-20261117-215053-c643, S402), S414 (no gate under Grok plan mode, same run) and S427 (brief says whether gate mode applies, run ork-20261118-121813-4c84, S404: \"session started in plan mode demanding ExitPlanMode, which is not in the reviewer's tool list\"). This slice covers the reviewer and the gate, on Claude and on Grok.\n\nEvidence (2026-11-18):\n\n- ork starts every cloud read-only role in plan mode on purpose: Claude with `--permission-mode plan` unless it is a UI pass with a write directory (`internal/agent/claude/args.go:103-105`), Grok with `--permission-mode plan` (`internal/agent/grok/grok.go:3-5`, `internal/agent/grok/grok.go:84`). The reviewer, gate, architect, UI pass, spec check and spec draft are read-only (`internal/engine/perm.go:103-105`, `internal/engine/perm.go:124-131`).\n- Each harness's plan mode adds its own instruction: Claude asks for ExitPlanMode, Grok for plan.md and exit_plan_mode (S412, S414, S427 evidence). Neither the role prompts nor the brief mention plan mode for Claude. For Grok the brief names only the commands that run in plan mode (`internal/engine/brief.go:251-255`).\n- The brief already says the report is the final message: the Your files section (`internal/engine/brief.go:158-161`) and the done-when line (`internal/engine/brief.go:249-250`). It does not say to ignore the harness's plan-mode request.\n- adj 372 (`roles.ui-pass-write-mechanism`, decided 2026-11-16) moved the cloud UI pass off plan mode to an allowlist with `--permission-prompts none`, because plan mode refused its writes. Whether the reviewer and gate keep plan mode is open: S412 and S414 asked not to run them under it.\n\nOpen owner question: whether read-only roles stay in plan mode and are told how to treat it (this spec), or leave plan mode. Per the owner's answer to `roles.read-only-plan-mode`."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/daemon/runner.go:40-55` (a cloud Claude read-only role gets the read-only allowlist, as the UI pass and claude-local do)\n- `internal/agent/claude/args.go:103-135` (no `--permission-mode plan` for cloud Claude; `--allowedTools` and `--permission-prompts none`)\n- `internal/agent/claude/args_test.go`\n- `internal/daemon/runner_test.go`\n- `internal/engine/perm.go:20-33` (`LocalReadOnlyAllowlist`; rename only if the name now misleads, and say so)\n- `internal/engine/brief.go:243-256` (`doneWhen`: no plan-mode text for Claude)\n- `internal/engine/brief_test.go`\n- `docs/design.md` (Roles: how read-only roles run on each vendor, adj 489)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "Owner decision adj 489 (`roles.read-only-plan-mode` = allowlist, 2026-11-18): cloud Claude read-only roles (reviewer, gate, architect, spec check) run in allowlist mode, as adj 372 did for the UI pass; Grok read-only roles stay in plan mode.\n\n- `TestCloudClaudeReadOnlyRunsOnTheAllowlist` in `internal/agent/claude/args_test.go`: `Args` for `Bin: \"claude\"`, `ReadOnly: true`, no `WriteDir`, and a read-only allowlist has `--allowedTools` with that list and `--permission-prompts none`, and no `--permission-mode`. Red today: it passes `--permission-mode plan`.\n- `TestCloudClaudeReadOnlyNeedsAnAllowlist` in `internal/agent/claude/args_test.go`: the same spec with an empty allowlist is an error. Red today: plan mode needs no list.\n- `TestReadOnlyRoleOnCloudClaudeGetsTheReadOnlyList` in `internal/daemon/runner_test.go`: a reviewer, gate, architect and spec check request on `claude` reach the round with the read-only allowlist (spec check also `Bash(adj find*)`, as on claude-local) and no write rule. Red today: the allowlist is empty.\n- `TestUIPassStillGetsItsWriteRule` in `internal/daemon/runner_test.go`: the cloud UI pass keeps `Skill` and its write directory rules. Guard.\n- `TestGrokReadOnlyStillUsesPlanMode` in `internal/agent/grok/grok_test.go`: a read-only Grok role still gets `--permission-mode plan`. Guard.\n- `TestClaudeReadOnlyBriefHasNoPlanModeText` in `internal/engine/brief_test.go`: a read-only Claude brief does not mention plan mode or ExitPlanMode. Guard (green today unless the brief gained such a line)."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. `internal/daemon/runner.go`: for every read-only request on cloud `claude`, set the allowlist to the read-only list (`LocalReadOnlyAllowlist`, plus `Bash(adj find*)` for the spec check). The UI pass keeps `Skill` and its write directory.\n3. `internal/agent/claude/args.go`: cloud read-only runs on `--allowedTools` and `--permission-prompts none`, with no permission mode flag, as the UI pass does (adj 372). A cloud read-only spec with an empty allowlist is an error. claude-local is unchanged.\n4. Grok read-only roles keep plan mode; do not change `internal/agent/grok`.\n5. The tree fingerprint around read-only roles stays (adj 28): a read-only role that changes the tree still fails.\n6. Docs: `docs/design.md` Roles says cloud Claude read-only roles run on the read-only allowlist and Grok ones in plan mode, citing adj 489 and adj 372. Changelog entry with `slicer changelog add S418 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- A cloud Claude reviewer, gate, architect or spec check runs without plan mode, on the read-only allowlist with no permission prompts.\n- The cloud UI pass, claude-local and Grok read-only roles run as before.\n- A read-only role that changes the tree still fails (adj 28).\n- docs/design.md describes the rule and cites adj 489.\n\nCommands:\n- `go test ./internal/agent/claude ./internal/agent/grok ./internal/daemon ./internal/engine -run 'CloudClaudeReadOnly|ReadOnlyRoleOnCloudClaude|UIPassStillGetsItsWriteRule|GrokReadOnlyStillUsesPlanMode|ClaudeReadOnlyBriefHasNoPlanModeText' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S418: cloud Claude read-only roles run on the read-only allowlist\"."
     }
   ],
   "notes": []

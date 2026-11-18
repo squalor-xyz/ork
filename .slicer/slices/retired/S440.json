@@ -1,0 +1,39 @@
+{
+  "id": "S440",
+  "title": "allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #466 was decided to file it:\n\nProposal: allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub\nRole: implementer\nRun: ork-20261118-130342-787e\nProject: ork\nItem: S431\nEvidence: cmd/ork/start_unix.go and start_other.go held only `detach`, which moved to internal/daemon; no allowed form could delete them\n\nMerged S350 (2026-11-18 duplicate sweep): slicer s451 (run ork-20261111-213809-6e14) left a 2-byte scratch file `tests/test_merge_slice.py.tail` that turned affected.py red; with no rm in the allowlist the run paused and the outer session deleted it by hand. This slice covers both cases: a tracked file the slice moved code out of, and an untracked file the implementer created by mistake.\n\nCode evidence (2026-11-18):\n\n- Both implementer presets share a base with no removal command (`internal/engine/perm.go:45-70`): `Read`, `Grep`, `Glob`, `Edit`, `Write`, `Bash(slicer *)`, read-only git, the language's test entries and adj reads. `TestDefaultImplementerAllowlistIsExactlyTheDecidedOne` pins the list (`internal/engine/perm_test.go:13-30`).\n- The built-in list is owner-decided: adj 75 (`launch.default-allowlist`) and adj 94 (`engine.default-allowlist`); `docs/design.md:2346-2372` lists it. Adding an entry changes a decided list, so it needs an owner answer.\n- The Claude approval hook denies a Bash token that is an absolute path or holds `..` and points outside the worktree (`internal/agent/claude/pretool.go:106-122`), so a removal command with a relative path stays inside the worktree.\n- `git rm` removes only tracked files; it cannot remove S350's untracked scratch file. A Codex implementer has no per-tool allowlist and runs with `-s workspace-write` (`docs/design.md:2359-2361`), so this gap is Claude's only.\n- A project whose registry already holds an expanded preset list (`ork projects set --preset`, `docs/design.md:2369-2370`) keeps that list; it gains a new entry only when the preset is set again.\n- Related: S345 (python preset: no `git mv` or `git ls-files`) changes the same lists in `internal/engine/perm.go`; the two should land in one wave in order, or merge.\n- slicer has no such capability (`slicer find \"git rm\"` in slicer finds only s432, a stray-file cleanup, 2026-11-18).\n\nOpen owner question: which removal commands the implementer gets, per the owner's answer to `launch.allow-file-removal`."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/perm.go:45-70` (`ImplementerPreset`: the base list)\n- `internal/engine/perm_test.go:13-30`\n- `internal/agent/claude/pretool_test.go`\n- `internal/roles/prompts/implementer.md` (one line: remove a file the slice moves out of, or one it created by mistake, with the allowed command)\n- `docs/design.md:2346-2372`\n- `docs/guide.md` (the allowlist presets)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "The entries below are written as option c of `launch.allow-file-removal` (`Bash(git rm *)`, `Bash(git -C * rm *)` and `Bash(rm *)` without a recursive flag); adjust them to the owner's answer.\n\n- `TestDefaultImplementerAllowlistIsExactlyTheDecidedOne` in `internal/engine/perm_test.go`: the wanted list gains the new entries in the base, before the language entries. Red today: the list has no removal entry.\n- `TestImplementerPresetsAllowFileRemoval` in `internal/engine/perm_test.go`: both the `go` and `python` presets contain the new entries. Red today.\n- `TestApprovalAllowsRemovingAFileInTheWorktree` in `internal/agent/claude/pretool_test.go`: with the new allowlist, `git rm cmd/ork/start_unix.go` and `rm tests/x.py.tail` from the worktree are allowed. Red today: no allowlist entry matches.\n- `TestApprovalDeniesRemovingOutsideTheWorktree` in `internal/agent/claude/pretool_test.go`: `rm ../other/file`, `rm /home/x/file` and `git -C /elsewhere rm f` are denied with \"outside worktree\". Green today on the path rule; it guards the new entries.\n- `TestApprovalDeniesRecursiveRemove` in `internal/agent/claude/pretool_test.go` (option b or c): `rm -r dir`, `rm -rf .` and `rm -fr x` are not allowed by the new entry. Red today only if the entry is written as a plain `Bash(rm *)`; the step adds the guard."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. Per the owner's answer to `launch.allow-file-removal`, add the removal entries to the shared base of `ImplementerPreset` (`internal/engine/perm.go:45-53`), so both presets and the built-in default get them. A part role keeps them (they are not slicer writes, `internal/engine/perm.go:81-100`).\n3. If the answer includes plain `rm`, refuse a recursive flag (`-r`, `-R`, `-rf`, `-fr`, `--recursive`) for that entry in the approval hook, so a match on `Bash(rm *)` alone never allows a tree removal.\n4. Implementer prompt: one line saying a file the slice moves code out of, or one it created by mistake, is removed with the allowed command, not left as a stub.\n5. Docs: the default list in `docs/design.md` (cite the new adj record next to adj 75 and adj 94) and the presets in `docs/guide.md`; say that a project with an expanded preset in its registry gets the entries by setting the preset again. Changelog entry with `slicer changelog add S440 --text \"...\"`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- An implementer with the built-in default or either preset may remove a file inside its worktree with the commands the owner chose.\n- A removal outside the worktree is denied; a recursive rm is not allowed by the new entry.\n- The S350 case (an untracked stray file) and the S431 case (a tracked file the slice moved out of) both have an allowed form, or the docs say which one the owner left out.\n- docs/design.md lists the new default and cites its adj record.\n\nCommands:\n- `go test ./internal/engine ./internal/agent/claude -run 'TestDefaultImplementerAllowlist|TestImplementerPresets|TestApprovalAllowsRemoving|TestApprovalDeniesRemoving|TestApprovalDeniesRecursive' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"S440: implementer may remove a file it moved out of or created by mistake\"."
+    }
+  ],
+  "notes": []
+}

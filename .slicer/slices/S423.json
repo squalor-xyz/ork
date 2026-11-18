@@ -4,7 +4,7 @@
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "",
+  "size": "S",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-035228-7421, project ork, item S403:\n\nsay in the brief whether the reviewer may write the report path, instead of giving both \"write your report to PATH\" and \"you cannot write it\"\n\nEvidence: the role prompt says \"write your final report to …/reviewer-1.md\", while the brief's Your files section says \"ork saves your final message there; you cannot write it\""
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-035228-7421, project ork, item S403:\nsay in the brief whether the reviewer may write the report path, instead of giving both \"write your report to PATH\" and \"you cannot write it\"\nEvidence: the role prompt says \"write your final report to …/reviewer-1.md\", while the brief's Your files section says \"ork saves your final message there; you cannot write it\"\n\nEvidence (2026-11-18):\n\n- Every role prompt's Report section says \"When you finish, write your final report to {{report_path}} and exit. If you cannot write that file, put the whole report in your final message instead.\" (`internal/roles/prompts/reviewer.md:168-169`, `internal/roles/prompts/gate.md:159-160`, and the same two lines in architect, ui, spec-check, spec-draft, carve, implementer, lead and part). `TestReportShape` requires the phrase (`internal/roles/roles_test.go:535`).\n- For a read-only role the brief's Your files section says \"Your report path: PATH (ork saves your final message there; you cannot write it)\" (`internal/engine/brief.go:158-161`). The reviewer, gate, architect, UI pass, spec check and spec draft are always read-only (`internal/engine/perm.go:124-131`); an implementer is read-only only under the read-only preset (`internal/engine/perm.go:132-137`).\n- So every read-only brief gives the role two report rules. adj 27 (`role.report-io`, exit-and-file) keeps the file; S256 made ork save a read-only role's final message to that path.\n\nRelated: S418 (plan-mode line in `doneWhen`) edits `internal/engine/brief.go` and `internal/engine/brief_test.go` too; land one before the other."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/brief.go:100-115` (`BuildBrief`: replace the prompt's report sentence for a read-only role before the placeholders are filled)\n- `internal/engine/brief.go:158-163` (Your files)\n- `internal/engine/brief_test.go`\n- `docs/design.md` (Roles: how a read-only role hands back its report)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "In `internal/engine/brief_test.go`:\n\n- `TestReadOnlyBriefHasOneReportRule`: for each of reviewer, gate, architect, ui, spec-check and spec-draft with `ReadOnly` set, the built brief does not contain \"write your final report to\" and does contain \"give your whole report as your final message\" naming the report path once in the Report section. Red today: the prompt's sentence is copied in unchanged (`internal/roles/prompts/reviewer.md:168`).\n- `TestReadOnlyPresetImplementerBriefHasOneReportRule`: the same for an implementer brief with `ReadOnly` set. Red today for the same reason.\n- `TestWriteRoleBriefKeepsTheReportPathRule`: an implementer brief without `ReadOnly` still says \"write your final report to PATH\". Green today; it guards step 2.\n- `TestReadOnlyReportSentenceIsInEveryPrompt`: each embedded prompt contains the exact sentence step 2 replaces, so a prompt edit cannot silently bring back the conflict. Green today; it fails if a prompt's wording drifts from the replaced text."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see the red ones fail for the stated reason.\n2. `BuildBrief`: when `in.ReadOnly` is set, replace the prompt's sentence \"write your final report to {{report_path}} and exit. If you cannot\\nwrite that file, put the whole report in your final message instead.\" with \"give your whole report as your final message and exit; ork saves it to {{report_path}}.\" before the placeholders are filled. Keep one constant for the replaced text. The prompts and `TestReportShape` stay as they are.\n3. If the sentence is missing from a prompt, `BuildBrief` returns an error naming the role, so a drifted prompt fails loudly instead of sending both rules.\n4. Docs: `docs/design.md` Roles says a read-only role's brief carries one report rule, the final message (adj 27, S256). Changelog entry with `slicer changelog add S423 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- A read-only role's brief tells it only to give its report as its final message; it never also tells it to write the report path.\n- A write role's brief still tells it to write the report path.\n- A prompt whose report sentence drifts makes the brief fail with the role's name.\n\nCommands:\n- `go test ./internal/engine -run 'ReportRule|ReportPathRule|ReadOnlyReportSentence' -v`\n- `go test ./internal/roles -run 'TestReportShape|TestPlaceholders' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S423: one report rule in a read-only brief\"."
     }
   ],
   "notes": []

@@ -4,7 +4,7 @@
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "",
+  "size": "S",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The implementer reported this as tool feedback (friction) on ork in ork run ork-20261118-130342-787e, project ork, item S431:\n\ngive role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip\n\nEvidence: TMPDIR is /home/jon/.local/state/ork/runs/ork-20261118-130342-787e/tmp/implementer-1 (77 bytes); shortDir skips with \"no temp directory short enough for a socket\" (75 skipped tests)"
+      "body": "The implementer reported this as tool feedback (friction) on ork in ork run ork-20261118-130342-787e, project ork, item S431:\n\ngive role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip\n\nEvidence: TMPDIR is /home/jon/.local/state/ork/runs/ork-20261118-130342-787e/tmp/implementer-1 (77 bytes); shortDir skips with \"no temp directory short enough for a socket\" (75 skipped tests)\n\nCode evidence (2026-11-18):\n\n- The engine makes each round's temp directory `RUNDIR/tmp/LABEL-N` (`internal/engine/round.go:486`), and the runner sets the role's `TMPDIR` to it for Claude (`internal/daemon/runner.go:321-332`) and Codex (`internal/daemon/runner.go:336-343`). `docs/state.md:19` documents the path.\n- Four test helpers make a directory with `os.MkdirTemp` under `TMPDIR` (adds about 14 bytes), then skip when the socket path under it is over 100 bytes: `internal/daemon/daemon_test.go:33-47` and `internal/cli/cli_test.go:65-79` (`state/ork.sock`), `internal/ipc/ipc_test.go:25-39` (`d/ork.sock`), `cmd/ork/main_test.go:38-50` (`state/ork/ork.sock`). With a 77-byte `TMPDIR` the path is about 106 to 110 bytes, so every socket test skips inside a role run, and the implementer, reviewer and gate never see them run.\n- To pass the 100-byte check with `state/ork/ork.sock`, `TMPDIR` must be at most about 67 bytes. The run directory alone is 57 bytes on this host (`/home/jon/.local/state/ork/runs/ork-20261118-130342-787e`).\n- The role's temp directory is also a path the approval hook allows (`docs/design.md:2268-2280`) and holds the UI pass's renders (`docs/state.md:22`, `internal/engine/round.go:489-495`), so moving or renaming it reaches past the env var.\n- No slicer item covers this (`slicer find socket`, `slicer find TMPDIR` in slicer, 2026-11-18); ork items S271 (TMPDIR for Claude roles) and S290 are done and do not cover the length.\n\nOpen owner question: how ork gets a short enough `TMPDIR`, per the owner's answer to `roles.socket-tmpdir`."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/round.go:486-495` (the round's temp directory; option a or c)\n- `internal/engine/round_test.go`\n- `internal/daemon/runner.go:321-343` (`claudeEnv`, `codexEnv`: the `TMPDIR` value; option c)\n- `internal/daemon/runner_test.go`\n- `internal/daemon/daemon_test.go:33-47`, `internal/cli/cli_test.go:65-79`, `internal/ipc/ipc_test.go:25-39`, `cmd/ork/main_test.go:38-50` (the socket helpers; option b)\n- `internal/agent/claude/pretool.go` (the temp directory path exception; option c only)\n- `docs/state.md:19-22`\n- `docs/design.md:2268-2280`, `docs/design.md:2389-2395`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "The tests depend on the owner's answer to `roles.socket-tmpdir`. For every option:\n\n- `TestRoleTMPDIRLeavesRoomForASocket` in `internal/engine/round_test.go`: for a state root `/home/jon/.local/state/ork`, run ID `ork-20261118-130342-787e` and each role label with round 1 (implementer, reviewer, gate, architect, ui, spec-check, and an implementer part), the `TMPDIR` the role gets, joined with `ork1234567890/state/ork/ork.sock`, is at most 100 bytes. The test calls the pure helper that builds the path (step 2), so it needs no real state directory. Red today: the path is `RUNDIR/tmp/implementer-1` and the joined path is about 110 bytes.\n- `TestRoleTMPDIRIsWritableByTheRole` in `internal/daemon/runner_test.go`: a Claude and a Codex request get `TMPDIR` equal to the short directory, the directory exists with mode 0700 before the role starts, and (option c) the approval rules allow a write under it. Red today for option c: `TMPDIR` is the long temp directory.\n\nOption b only (test helpers):\n\n- `TestShortDirFallsBackWhenTMPDIRIsLong` in `internal/daemon/daemon_test.go`: with `TMPDIR` set to a 77-byte directory, `shortDir` returns a directory whose socket path is at most 100 bytes and does not skip. Red today: it skips."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. Per the owner's answer to `roles.socket-tmpdir`, add one pure helper that returns the role's `TMPDIR` from the state root, run ID, label and round, and use it where the engine makes the round's temp directory (`internal/engine/round.go:486`) or where the runner sets `TMPDIR` (`internal/daemon/runner.go:321-343`):\n   - a: shorter names under the run directory (for example `tmp/i1`), keeping the role's temp directory where it is;\n   - b: no product change; the four socket helpers try `TMPDIR`, then `t.TempDir()`, then a directory under `/tmp`, and skip only when none fits;\n   - c: a short `TMPDIR` outside the run directory (for example under `STATEROOT/t/`), created 0700 per round and removed with the run, and allowed by the approval rules as the role temp directory is.\n3. Keep the UI pass's renders, the progress note and the read log at their documented paths unless the answer moves them; if it does, update every reader of `tmp/ui-N/renders/`.\n4. Run `go test ./internal/daemon ./internal/cli ./internal/ipc ./cmd/ork -v` inside a role-like `TMPDIR` of 77 bytes and see no \"no temp directory short enough\" skip.\n5. Docs: `docs/state.md` (the role's temp directory row), `docs/design.md` (the role environment and, for option c, the approval path exception). Changelog entry with `slicer changelog add S437 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- Inside a role run on this host, the daemon, CLI, ipc and cmd/ork socket tests run instead of skipping for a long temp directory.\n- A role can still write only where it could before, plus the new directory if the owner's answer adds one.\n- docs/state.md names the TMPDIR path a role gets.\n\nCommands:\n- `go test ./internal/engine ./internal/daemon -run 'TestRoleTMPDIR|TestShortDir' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] in the next ork run on this project, the implementer's report shows the daemon tests ran with no \"no temp directory short enough for a socket\" skip."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S437: give roles a TMPDIR short enough for a Unix socket\"."
     }
   ],
   "notes": []

@@ -4,7 +4,7 @@
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "S",
+  "size": "M",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -12,27 +12,27 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "Observed 2026-11-11 (slicer s453): the gate failed only because the implementer was denied `git mv`; the owner chose to allow it and retry, but `ork projects set slicer --allow ...` was refused (\"project slicer has unfinished runs: ... (s455 running), ... (s453 paused)\"). The fix waits for an unrelated slice (s455) to land, then the paused run is stopped and retried. Wanted: a per-run grant on retry (e.g. `ork retry RUN --allow PATTERN`), or let --allow change for runs that are paused, since they read it at their next round."
+      "body": "Observed 2026-11-11 (slicer s453): the gate failed only because the implementer was denied `git mv`; the owner chose to allow it and retry, but `ork projects set slicer --allow ...` was refused (\"project slicer has unfinished runs: ... (s455 running), ... (s453 paused)\"). The fix waits for an unrelated slice (s455) to land, then the paused run is stopped and retried. Wanted: a per-run grant on retry (e.g. `ork retry RUN --allow PATTERN`), or let --allow change for runs that are paused, since they read it at their next round.\n\nEvidence (2026-11-18):\n\n- `projects.set` refuses `--allow`, `--permission` and `--preset` while the project has any unfinished run (`fieldsReadByARun`, `internal/daemon/wire.go:336-360`; the refusal, `internal/daemon/handlers.go:704-710`, `busyMessage` `:887-898`). A paused run is unfinished (`unfinishedRunsLocked`, `internal/daemon/runs.go:2711-2728`).\n- A started engine keeps the project it was built with; each role round resolves its permission from that copy (`ResolvePermission(e.proj, ...)`, `internal/engine/round.go:467`). Only a retry of a stopped run rebuilds the engine from the registry as it is now (`prepareResume`, `internal/daemon/runs.go:1466-1503`). A retry of a paused run keeps the old copy. So the premise \"paused runs read it at their next round\" does not hold today.\n- `ork retry` takes `--rounds`, `--accept-shape`, `--again` and `--wait` (`internal/cli/run.go:357-364`); the wire call is `RunAction` (`internal/daemon/runs.go:72-90`).\n- adj 279 (`projects.set-busy-unread-fields`) allows only fields no started run reads; the allowlist is read by every round, so it stays in the busy set unless the owner changes that.\n- No slicer capability applies: the allowlist is ork's (`slicer --root ../slicer find allowlist` finds nothing for roles).\n\nOpen owner question: how the owner grants a permission to one paused or stopped run, per the owner's answer to `run.retry-allow`."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/cli/run.go:350-400` (`ork retry --allow PATTERN`, repeatable)\n- `internal/cli/cli.go:157` (usage line of `ork retry`)\n- `internal/daemon/runs.go:72-90` (`RunAction.Allow`)\n- `internal/daemon/runs.go:2620-2632` (pass the grant to the retry)\n- `internal/engine/engine.go:726-740` (`RetryOptions.Allow`; store the grant before the round starts)\n- `internal/runrec/record.go:470-489` (`Record.Grants`: the patterns granted to this run's implementer)\n- `internal/engine/round.go:467` (the implementer's permission adds the run's grants)\n- `internal/registry/registry.go:205-225` (reuse the pattern validation)\n- `internal/engine/stoppedresume_test.go`, `internal/engine/engine_test.go`, `internal/cli/cli_test.go`\n- `docs/design.md`, `docs/guide.md:905-910`, `docs/state.md`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "Written for the recommended answer to `run.retry-allow` (a per-run grant on `ork retry`).\n\n- `TestRetryAllowGrantsThePatternToThisRunOnly` in `internal/engine/engine_test.go`: a run paused after an implementer round with a denied call; `RetryWith(RetryOptions{Allow: []string{\"Bash(git mv*)\"}})`; the next implementer round's allowlist (as the fake runner sees it) holds the pattern, the record's `grants` holds it, and the registry project is unchanged. Red today: `RetryOptions` has no `Allow`.\n- `TestRetryAllowReachesAResumedStoppedRun` in `internal/engine/stoppedresume_test.go`: the same for a stopped run resumed with `--allow`. Red today for the same reason.\n- `TestRetryAllowIsNotGivenToReadOnlyRoles` in `internal/engine/engine_test.go`: the reviewer and the gate of the same run keep their read-only permission. Red today: the field does not exist.\n- `TestRetryAllowRefusesABadPattern` in `internal/cli/cli_test.go`: `ork retry RUN --allow \"\"` is a usage error, as `projects set --allow` refuses one (`internal/registry/registry.go:205-225`). Red today: the flag does not exist.\n- `TestRetryAllowWhileAnotherRunIsRunning` in `internal/cli/cli_test.go` (or the daemon tests): with a second run of the same project running, `ork retry RUN --allow P` succeeds. Red today: no way to pass the pattern."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. Per the owner's answer to `run.retry-allow`. For the recommended answer: `ork retry RUN --allow PATTERN` (repeatable) sends `allow` on `run.retry`; the daemon validates each pattern with the registry's rules and passes them in `RetryOptions.Allow`.\n3. The engine appends the patterns to `Record.Grants` (deduplicated, in order) in the same update that leaves the pause, so a refused retry stores nothing.\n4. `runRound`: for the implementer (and a lead or part, which derive from it), the resolved permission's list gains the run's grants. A read-only role is unchanged. A project whose implementer is `read-only` keeps it: the retry is refused with a line that says so.\n5. `ork show RUN` lists the grants on one line (`granted: ...`). The registry is never written.\n6. Docs: `docs/design.md` (retry options, the grant), `docs/guide.md` troubleshooting (a denied call: `ork retry RUN --allow PATTERN`, or `projects set --allow` once the project has no unfinished run), `docs/state.md` (`grants` in run.json). Changelog entry with `slicer changelog add S346 --text \"...\"`.\n\nThis slice changes `internal/cli` output, so it gets a UI pass (rule u10)."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- The owner can grant a pattern to one paused or stopped run while other runs of the project are unfinished.\n- The grant reaches that run's implementer rounds only; read-only roles and other runs are unchanged, and the registry is not written.\n- A bad pattern is refused before anything changes.\n- ork show names the run's grants.\n\nCommands:\n- `go test ./internal/engine ./internal/cli ./internal/daemon -run 'TestRetryAllow' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S346: ork retry --allow grants a pattern to one run\"."
     }
   ],
   "notes": []

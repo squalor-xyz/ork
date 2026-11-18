@@ -1,0 +1,39 @@
+{
+  "id": "S446",
+  "title": "say in the reviewer brief whether the harness started the role in plan mode, since plan mode tells the role to write a plan file and call ExitPlanMode, which a read-only review cannot do",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-151518-6a3a, project ork, item S444:\n\nsay in the reviewer brief whether the harness started the role in plan mode, since plan mode tells the role to write a plan file and call ExitPlanMode, which a read-only review cannot do\n\nEvidence: this session started in plan mode with a plan-file path, while the brief says the report goes in the final message"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

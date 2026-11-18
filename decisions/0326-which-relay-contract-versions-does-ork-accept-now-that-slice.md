@@ -2,7 +2,7 @@
 {
   "id": 326,
   "title": "Which relay contract versions does ork accept, now that slicer 1.21.0 prints relay v12?",
-  "status": "decided",
+  "status": "superseded",
   "key": "boundary.contract-set",
   "asked_by": "claude",
   "decided_by": "Jon",
@@ -33,6 +33,7 @@
   "supersedes": [
     175
   ],
+  "superseded_by": 470,
   "refs": [
     "S348"
   ],
@@ -62,6 +63,11 @@
       "date": "2026-11-12",
       "event": "renumber",
       "note": "from 324"
+    },
+    {
+      "date": "2026-11-18",
+      "event": "supersede",
+      "note": "by 470"
     }
   ]
 }
