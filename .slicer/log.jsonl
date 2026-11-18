@@ -5462,3 +5462,7 @@
 {"when": "2026-11-18T15:58:40Z", "item": "S446", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T16:05:06Z", "item": "S447", "action": "add", "from": "", "to": "open", "note": "name go test -overlay with a temp-dir test file as the sanctioned render path for read-only UI passes in the brief"}
 {"when": "2026-11-18T16:05:06Z", "item": "S447", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T17:16:12Z", "item": "S446", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (read-only roles and plan mode in the brief)."}
+{"when": "2026-11-18T17:16:12Z", "item": "S447", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path; go test -overlay route, option a)."}
+{"when": "2026-11-18T17:16:12Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S446 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:16:13Z", "item": "S416", "action": "note", "from": "", "to": "", "note": "Merged S447 (2026-11-18, tool feedback).", "by": "Jon Robbins"}
