@@ -30,6 +30,21 @@ func unreleasedIndex(t *testing.T, lines []string) int {
 	return -1
 }
 
+// S332 (adj 402): slices write entries into landed-changed/ with slicer, and
+// `slicer changelog assemble` fills Unreleased at release, so no bullet stands
+// there between releases.
+func TestUnreleasedHoldsNoBullets(t *testing.T) {
+	lines := changelogLines(t)
+	for _, l := range lines[unreleasedIndex(t, lines)+1:] {
+		if strings.HasPrefix(l, "## ") {
+			return
+		}
+		if strings.HasPrefix(l, "- ") {
+			t.Fatalf("a bullet stands under `## Unreleased`; write it with `slicer changelog add`: %q", l)
+		}
+	}
+}
+
 // The v1.1.0 release section stays in the changelog. Entries for the next
 // release may stand under `## Unreleased` above it.
 func TestChangelogHasTheV110Section(t *testing.T) {

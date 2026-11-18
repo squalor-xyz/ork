@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	pathpkg "path"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -887,6 +888,24 @@ func (e *Engine) gate(ctx context.Context) error {
 	}
 	if !check.ok {
 		return e.bumpRound(ctx, runrec.Feedback{Kind: "checks", File: check.log}, check.failure)
+	}
+	// S332 (adj 404, adj 280): ork, not the gate role, checks the changelog entry.
+	// It is no gate FAIL: nothing is noted and fails is not counted.
+	entry, on, err := e.changelogEntry(ctx, rec)
+	if err != nil {
+		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateGate, Reason: "changelog entry check: " + err.Error()})
+	}
+	if on {
+		if info, err := os.Stat(filepath.Join(rec.Worktree, filepath.FromSlash(entry))); err != nil || !info.Mode().IsRegular() {
+			name := fmt.Sprintf("changelog-entry-%d.md", rec.Round)
+			dir := pathpkg.Dir(entry)
+			text := "VERDICT: FAIL\n\nThe changelog entry " + entry + " is missing. This project keeps one changelog entry per slice in " + dir + "/ (adj 404). " +
+				"Write it with `slicer changelog add " + rec.Item + " --text \"...\"`, adding `--category NAME` when `slicer config changelog_categories` lists any. Do not edit CHANGELOG.md.\n"
+			if err := os.WriteFile(filepath.Join(e.run.Dir(), name), []byte(text), 0o600); err != nil {
+				return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateGate, Reason: "changelog entry file: " + err.Error()})
+			}
+			return e.bumpRound(ctx, runrec.Feedback{Kind: "fail", File: name}, "changelog entry "+entry+" is missing")
+		}
 	}
 	pend := e.takePending()
 	rec = e.run.Snapshot()

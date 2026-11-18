@@ -270,6 +270,8 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "answer"}, Prefix: true}, `{}`),
 		with(s("show", item, "--json", "--lean", "--root", W), sliceJSON()),
 		with(s("config", "implement_finish", "--json", "--root", W), `{"key":"implement_finish","value":"done"}`),
+		// The changelog entry folder is off by default (S332): no gate test needs an entry file.
+		with(s("config", "--json", "--root", W), `{"changelog_path":"","changelog_entries_dir":"landed-changed"}`),
 		with(s("check", "--json", "--root", W), `{"ok":true,"stale_render":[],"stale_sync":[],"problems":[],"warnings":[]}`),
 		with(s("relay-run", "begin", item, "--worktree", W, "--json", "--root", W), `{"run":{"id":"run-1","items":["S04"],"state":"active"}}`),
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "step", "run-1"}, Prefix: true, Seq: stepReplies(80)},

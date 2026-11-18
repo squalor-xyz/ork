@@ -5108,6 +5108,15 @@
 {"when": "2026-11-17T23:59:41Z", "item": "S419", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T03:38:08Z", "item": "S419", "action": "note", "from": "", "to": "", "note": "2026-11-18: S388 round 3 ended red only because its Check li", "by": "Jon Robbins"}
 {"when": "2026-11-18T03:41:55Z", "item": "S420", "action": "add", "from": "", "to": "open", "note": "Grok out of credits on stderr is classified, so the role falls back"}
+{"when": "2026-11-18T03:42:16Z", "item": "S332", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:44:10Z", "item": "config.changelog_path", "action": "config", "from": "", "to": "CHANGELOG.md", "note": ""}
+{"when": "2026-11-18T03:44:11Z", "item": "config.changelog_unreleased_heading", "action": "config", "from": "## [Unreleased]", "to": "## Unreleased", "note": ""}
+{"when": "2026-11-18T03:44:12Z", "item": "config.changelog_require_entry", "action": "config", "from": "false", "to": "true", "note": ""}
+{"when": "2026-11-18T03:44:46Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T03:44:47Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T03:53:25Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-18T03:55:06Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Verified: the gate now fails a slice with no landed-changed/", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:55:08Z", "item": "S332", "action": "status", "from": "started", "to": "done", "note": "Verified: gate fails a slice with no landed-changed/ITEM.md before the gate role runs when changelog_path is set; implementer prompt writes the entry with slicer changelog add; 53 Unreleased bullets imported into landed-changed/ plus S332.md; CHANGELOG resolver unchanged as the fallback; docs updated; go vet, go test ./..., gofmt, slicer check and adj lint pass.", "by": "Jon Robbins"}
 {"when": "2026-11-18T03:42:06Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T03:43:15Z", "item": "S421", "action": "add", "from": "", "to": "open", "note": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator"}
 {"when": "2026-11-18T03:43:15Z", "item": "S421", "action": "promote", "from": "", "to": "", "note": ""}
@@ -5118,3 +5127,4 @@
 {"when": "2026-11-18T03:55:06Z", "item": "S420", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-18T04:01:55Z", "item": "S420", "action": "note", "from": "", "to": "", "note": "Grok credits and usage-limit errors printed on stderr or as ", "by": "Jon Robbins"}
 {"when": "2026-11-18T04:01:56Z", "item": "S420", "action": "status", "from": "started", "to": "done", "note": "Grok credits and usage-limit errors printed on stderr or as a plain stdout line now end out_of_credits with the same fixed reasons, so the role falls back and grok is marked out. Clean and permission-cancelled rounds are not reclassified. Verified by new grok tests, mutation checks, go vet, gofmt and go test ./...", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:52:27Z", "item": "S403", "action": "edit", "from": "", "to": "", "note": "Implement"}

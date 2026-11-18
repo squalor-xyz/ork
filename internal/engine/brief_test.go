@@ -145,13 +145,14 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			want := "a806631ced476e50afc2ff4e909810f526cbfc447a6aeb5949e8842ecf230b27"
+			// S332: the implementer prompt gained the changelog entry rule.
+			want := "1423dae9bf4f3f6284cb568bac86846494e9c43d1f1be43294b433484c873e5b"
 			switch vendor {
 			case "claude":
-				want = "4172e283479a9995869c476015e7996a5fc5068b14b72c36bd84a77259719d5f"
+				want = "ee373b69e052c59665d6e4b8195706fe500b887a0fa963644ba628aa3394e07f"
 			case "grok":
 				// S305: a grok implementer's checklist names dontAsk mode.
-				want = "7a329bb2bc088e73fdef021add2750c8f164006987389a1bbdfcfe2bb155938a"
+				want = "c546a92acd828cdb3646be27d67b751e660a36f8e7e850be3a7c4fc7e0beab25"
 			}
 			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
 				t.Fatalf("%s cloud brief changed %x", vendor, sha256.Sum256([]byte(got)))

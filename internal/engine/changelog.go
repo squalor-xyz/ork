@@ -4,13 +4,45 @@ package engine
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
+	pathpkg "path"
 	"path/filepath"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// defaultEntriesDir is slicer's default for changelog_entries_dir.
+const defaultEntriesDir = "landed-changed"
+
+// changelogEntry reports whether the project keeps one changelog entry per item
+// (S332, adj 404): slicer's changelog_path is set in the worktree's config. When
+// it is, path is the item's entry file relative to the worktree, with forward
+// slashes. A missing key reads as empty, so a slicer older than 1.22 is off.
+// The resolver above stays the fallback for a project that is off (adj 403).
+func (e *Engine) changelogEntry(ctx context.Context, rec runrec.Record) (path string, on bool, err error) {
+	raw, err := e.d.Slicer.ConfigAll(ctx, rec.Worktree)
+	if err != nil {
+		return "", false, err
+	}
+	var cfg struct {
+		Path string `json:"changelog_path"`
+		Dir  string `json:"changelog_entries_dir"`
+	}
+	if err := json.Unmarshal(raw, &cfg); err != nil {
+		return "", false, fmt.Errorf("decode slicer config: %w", err)
+	}
+	if cfg.Path == "" {
+		return "", false, nil
+	}
+	dir := cfg.Dir
+	if dir == "" {
+		dir = defaultEntriesDir
+	}
+	return pathpkg.Join(filepath.ToSlash(dir), rec.Item+".md"), true, nil
+}
 
 // resolveChangelog merges complete entries in the unmerged root changelog and
 // stages the result. It does not commit: settleMerge commits the merge once
