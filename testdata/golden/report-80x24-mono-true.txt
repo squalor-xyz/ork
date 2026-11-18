@@ -18,7 +18,7 @@
                    │
                    │
                    │
-                   │  [1mReport 1 of 3: gate-1.md  gate round 1[m
+                   │  [1mReport 1 of 3: gate-1.md[m
                    │[2m────────────────────────────────────────────────────────────[m
                    │ p [2mnext report[m; s [2msidebar[m; pgup/pgdown [2mline[m; esc [2mback to run[m
                    │ 1 project | refreshed 16:42:00

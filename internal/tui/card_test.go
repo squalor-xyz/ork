@@ -41,7 +41,7 @@ func (l *cardLive) Render(_ context.Context, run, name string) (string, error) {
 	}
 	text, ok := l.renders[name]
 	if !ok {
-		return "", fmt.Errorf("not_found: no render %s", name)
+		return "", &ipc.Error{Code: daemon.CodeNotFound, Message: fmt.Sprintf("no render %s", name)}
 	}
 	return text, nil
 }
@@ -669,8 +669,8 @@ func TestDaemonFixAndCheckWire(t *testing.T) {
 	}
 }
 
-// The live connection reads a render through run.render, and a refusal reaches
-// the pane's failed state with its code.
+// The live connection reads a render through run.render and preserves the
+// missing-file code. Action formatting retains that code; viewers omit it.
 func TestDaemonRenderWire(t *testing.T) {
 	var _ renderReader = (*Daemon)(nil)
 	var methods []string
@@ -695,8 +695,8 @@ func TestDaemonRenderWire(t *testing.T) {
 	if !errors.As(err, &wire) || wire.Code != daemon.CodeNotFound {
 		t.Fatalf("a refused render: %v", err)
 	}
-	if got := actionError(err); got != "not_found: no render gone-80x24.txt for run engine" {
-		t.Errorf("the pane would show %q", got)
+	if got := actionError(err); got != daemon.CodeNotFound+": no render gone-80x24.txt for run engine" {
+		t.Errorf("action error %q", got)
 	}
 	if strings.Join(methods, " ") != "run.render run.render" ||
 		seen[0] != (daemon.RunAction{Run: "engine", Name: "x-80x24.txt"}) ||

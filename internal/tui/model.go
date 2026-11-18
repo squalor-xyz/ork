@@ -2024,6 +2024,14 @@ func isRefused(err error) bool {
 	return errors.As(err, &wire) && wire.Code == daemon.CodeRefused
 }
 
+func viewerError(err error) string {
+	var wire *ipc.Error
+	if errors.As(err, &wire) && wire.Code == daemon.CodeNotFound {
+		return wire.Message
+	}
+	return actionError(err)
+}
+
 func actionError(err error) string {
 	var wire *ipc.Error
 	if errors.As(err, &wire) {

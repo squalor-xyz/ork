@@ -30,6 +30,12 @@
   },
   "decision": "commit-tracking",
   "rationale": "Owner picked 'commit-tracking' in the interactive question; Q3 'as built' (only overlap with the slice's changes matters).",
+  "narrowed_by": [
+    {
+      "id": 483,
+      "scope": "the landing pauses instead of committing another item's slice file or render"
+    }
+  ],
   "refs": [
     "S254"
   ],
@@ -41,6 +47,11 @@
     {
       "date": "2026-11-08",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-18",
+      "event": "narrow",
+      "note": "by 483: the landing pauses instead of committing another item's slice file or render"
     }
   ]
 }

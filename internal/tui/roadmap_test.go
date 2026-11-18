@@ -497,6 +497,25 @@ func TestRoadmapGroupKeysLandOnHeadings(t *testing.T) {
 	}
 }
 
+func TestItemPaneNoteShowsALeadingDateWithoutMarkup(t *testing.T) {
+	for _, tc := range []struct{ note, want string }{
+		{"**2026-11-01** — first note", "2026-11-01 — first note"},
+		{"see **this** word", "see **this** word"},
+	} {
+		t.Run(tc.note, func(t *testing.T) {
+			h := roadmapHarness(t)
+			h.m.itemPane = &itemPane{project: "ork", id: "S90", detail: &slicercli.Detail{Item: slicercli.Item{Notes: []string{tc.note}}}}
+			lines := h.m.roadmap(100).body
+			for _, line := range lines {
+				if sgr.ReplaceAllString(line, "") == indent+"- "+tc.want {
+					return
+				}
+			}
+			t.Fatalf("note line missing: %q, lines %q", indent+"- "+tc.want, lines)
+		})
+	}
+}
+
 func TestItemPaneListsNotes(t *testing.T) {
 	h := roadmapHarness(t)
 	d := &slicercli.Detail{Item: slicercli.Item{Title: "Title", Notes: []string{"first note", "second note"}}, Slice: &slicercli.Spec{Sections: []slicercli.Section{{Heading: "Why", Body: "section text"}}}}
