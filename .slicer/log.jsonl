@@ -5141,3 +5141,13 @@
 {"when": "2026-11-18T12:14:25Z", "item": "S403", "action": "note", "from": "", "to": "", "note": "Verified: ork wait follows several RUN and every unfinished ", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "add", "from": "", "to": "open", "note": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card"}
 {"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:25:26Z", "item": "S426", "action": "add", "from": "", "to": "open", "note": "give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output"}
+{"when": "2026-11-18T12:25:26Z", "item": "S426", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:25:52Z", "item": "S427", "action": "add", "from": "", "to": "open", "note": "say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review"}
+{"when": "2026-11-18T12:25:52Z", "item": "S427", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:27:14Z", "item": "S428", "action": "add", "from": "", "to": "open", "note": "in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply"}
+{"when": "2026-11-18T12:27:14Z", "item": "S428", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:27:55Z", "item": "S429", "action": "add", "from": "", "to": "open", "note": "give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand"}
+{"when": "2026-11-18T12:27:55Z", "item": "S429", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:28:22Z", "item": "S430", "action": "add", "from": "", "to": "open", "note": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found"}
+{"when": "2026-11-18T12:28:23Z", "item": "S430", "action": "promote", "from": "", "to": "", "note": ""}
