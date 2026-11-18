@@ -1,0 +1,39 @@
+{
+  "id": "S438",
+  "title": "judge a Check line that says \"prints nothing\" by its output, and treat rg exit 1 (no match) as pass",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The implementer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261118-130509-4fa3, project ork, item S392:\n\njudge a Check line that says \"prints nothing\" by its output, and treat rg exit 1 (no match) as pass\n\nEvidence: fix round 2 failed on `rg -n '\"--text\", text|...' internal/slicercli: exit 1` although Grep over the same path finds no match"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

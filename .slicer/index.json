@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 438,
+  "next_id": 440,
   "preamble": "",
   "passes": [
     {
@@ -23447,6 +23447,64 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S438",
+      "title": "judge a Check line that says \"prints nothing\" by its output, and treat rg exit 1 (no match) as pass",
+      "short_title": "judge a Check line that says \"prints nothing\" by its output, and treat rg exit 1 (no match) as pass",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S392",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-bef5ccf8",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S439",
+      "title": "Runs held by an auto-rebuild resume on their own",
+      "short_title": "Rebuild auto-resume",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [
+        "S431"
+      ],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-18, S431 implementer: after the drain, the successor daemon recovers runs through today's recovery (`internal/engine/recover.go:119`), which pauses each as interrupted until the owner runs `ork retry RUN`. Owner decision adj 467 (`selfhost.auto-rebuild-resume`): mark runs held at a rebuild in their record, and have the successor retry them at start with no owner action.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "selfhost-rebuild-resume",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
         "attempts": 0
       }
     }

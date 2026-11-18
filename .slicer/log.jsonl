@@ -5202,3 +5202,7 @@
 {"when": "2026-11-18T13:33:25Z", "item": "S433", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path), filed again by tool feedback"}
 {"when": "2026-11-18T13:33:25Z", "item": "S435", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S419 (no-match rg on a prints-nothing Check line), filed again by tool feedback"}
 {"when": "2026-11-18T13:33:25Z", "item": "S436", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (reviewer prompt in plan mode), filed again by tool feedback"}
+{"when": "2026-11-18T13:39:23Z", "item": "S438", "action": "add", "from": "", "to": "open", "note": "judge a Check line that says \"prints nothing\" by its output, and treat rg exit 1 (no match) as pass"}
+{"when": "2026-11-18T13:39:23Z", "item": "S438", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:44:33Z", "item": "S439", "action": "add", "from": "", "to": "open", "note": "Runs held by an auto-rebuild resume on their own"}
+{"when": "2026-11-18T13:44:33Z", "item": "S439", "action": "set", "from": "", "to": "", "note": "depends_on -→S431"}
