@@ -1,0 +1,39 @@
+{
+  "id": "S451",
+  "title": "tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-172104-db18, project ork, item S432:\n\ntell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode\n\nEvidence: the harness started this reviewer in plan mode, and the brief says the report path cannot be written (see S418)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

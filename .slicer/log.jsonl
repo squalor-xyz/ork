@@ -5256,6 +5256,24 @@
 {"when": "2026-11-18T16:13:01Z", "item": "S439", "action": "edit", "from": "", "to": "", "note": "lead"}
 {"when": "2026-11-18T17:17:58Z", "item": "S439", "action": "note", "from": "", "to": "", "note": "Verified held-only rebuild markers, one-shot startup retry w", "by": "Jon Robbins"}
 {"when": "2026-11-18T17:17:59Z", "item": "S439", "action": "status", "from": "started", "to": "done", "note": "Runs held at rebuild resume once on the successor; unmarked owner waits remain paused, and failed marker writes do not stall shutdown. Gate PASS and owner approval received.", "by": "Jon Robbins"}
+{"when": "2026-11-18T15:49:17Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T15:49:17Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T15:49:17Z", "item": "S393", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T15:53:46Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T15:53:46Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T17:33:09Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T17:33:09Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T17:35:40Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T17:35:40Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:19:37Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:19:37Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:20:53Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:20:53Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:21:10Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:21:11Z", "item": "S393", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:34:21Z", "item": "S393", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S393):", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:42:46Z", "item": "S393", "action": "note", "from": "", "to": "", "note": "Report and render viewers omit missing-file wire codes; repo", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:42:51Z", "item": "S393", "action": "status", "from": "started", "to": "done", "note": "Report and render viewers omit missing-file wire codes; report headings avoid repeated role and round, wrapped list items keep hanging indents, and Roadmap note dates display plainly. Documentation, goldens and regression tests are updated.", "by": "Jon Robbins"}
 {"when": "2026-11-18T15:33:17Z", "item": "S444", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-18T15:34:11Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-18T15:34:11Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
@@ -5517,3 +5535,49 @@
 {"when": "2026-11-18T22:19:31Z", "item": "S450", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T22:30:35Z", "item": "S450", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T22:43:23Z", "item": "S439", "action": "note", "from": "", "to": "", "note": "Recreated the missing default S450 scaffold through slicer t", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T22:21:01Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-18T22:21:02Z", "item": "S345", "action": "set", "from": "", "to": "", "note": "title python preset: implementer cannot rename a tracked file or list the index→Implementer presets allow moving and removing files (with S440); short_title python preset: implementer cannot rename a tracked file or list the index→Implementer presets allow moving and removing files (with S440)"}
+{"when": "2026-11-18T22:21:02Z", "item": "S345", "action": "note", "from": "", "to": "", "note": "Merged S440 (file removal) on 2026-11-18 per adj 478 (owner:", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:02Z", "item": "S440", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S345 (adj 478: one preset change for moves and removals)."}
+{"when": "2026-11-18T22:21:02Z", "item": "S342", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 477 wave.overlap-order = hold", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:02Z", "item": "S346", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 479 run.retry-allow = retry-f", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:02Z", "item": "S341", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 476 specs.readonly-tracking-c", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:21:22Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:21:23Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:21:23Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T22:21:23Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T22:23:32Z", "item": "S348", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 480 plan.merge-driver-warning", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:23:32Z", "item": "S349", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 481 run.resume-open-findings ", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:23:33Z", "item": "S351", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 483 landing.tracking-commit-s", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:23:46Z", "item": "S451", "action": "add", "from": "", "to": "open", "note": "tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode"}
+{"when": "2026-11-18T22:23:47Z", "item": "S451", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T22:25:21Z", "item": "S415", "action": "retire", "from": "open", "to": "retired", "note": "Owner 2026-11-18 (adj 486): not worth it; Grok is out until 2026-12-01 and ends 2026-12-09."}
+{"when": "2026-11-18T22:25:21Z", "item": "S353", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 484 land.contract-bump-guard ", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:25:21Z", "item": "S357", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 485 git.commit-title = id-tit", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:25:21Z", "item": "S416", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 487 roles.ui-pass-render-path", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:28:42Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:28:43Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:28:43Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T22:28:43Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T22:28:43Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-18T22:28:43Z", "item": "S418", "action": "set", "from": "", "to": "", "note": "title Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message→Cloud Claude read-only roles run on the read-only allowlist, not plan mode; short_title Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message→Cloud Claude read-only roles run on the read-only allowlist, not plan mode"}
+{"when": "2026-11-18T22:28:43Z", "item": "S417", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 488 roles.implementer-run-rep", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:28:43Z", "item": "S424", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 490 brief.tree-unchanged = st", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:28:44Z", "item": "S437", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 491 roles.socket-tmpdir = sta", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:28:44Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 489 roles.read-only-plan-mode", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:28:56Z", "item": "S451", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (plan mode in read-only briefs; adj 489 moves cloud Claude read-only roles off plan mode)."}
+{"when": "2026-11-18T22:28:57Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S451 (2026-11-18, tool feedback). Seven duplicates so", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:29:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:30:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:30:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T22:30:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T22:30:00Z", "item": "S442", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 492 feedback.near-duplicates ", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:31:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:31:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T22:31:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "note", "from": "", "to": "", "note": "Correction 2026-11-18: the owner clicked 'List at landing' b", "by": "Jon Robbins"}

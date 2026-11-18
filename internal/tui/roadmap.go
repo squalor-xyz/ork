@@ -6,6 +6,7 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"regexp"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -18,6 +19,8 @@ import (
 )
 
 const roadmapView = 3
+
+var noteLeadingDate = regexp.MustCompile(`^\*\*([0-9]{4}-[0-9]{2}-[0-9]{2})\*\*`)
 
 type itemPane struct {
 	project, id string
@@ -291,6 +294,7 @@ func (m *Model) roadmap(w int) overviewView {
 			if len(d.Notes) > 0 {
 				heading(fmt.Sprintf("Notes (%d)", len(d.Notes)))
 				for _, note := range d.Notes {
+					note = noteLeadingDate.ReplaceAllString(note, "$1")
 					for i, line := range wrapText(note, max(w-4, 1)) {
 						prefix := "- "
 						if i > 0 {

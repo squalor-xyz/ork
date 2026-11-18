@@ -123,7 +123,7 @@ func TestPaneReportFailedReadShowsTheError(t *testing.T) {
 	h, l := reportHarness(t)
 	l.err = &ipc.Error{Code: daemon.CodeNotFound, Message: "no report gate-1.md"}
 	h.deliver(press("p"))
-	if v := h.at(120, 40); !strings.Contains(v, "Could not read gate-1.md: not_found: no report gate-1.md") {
+	if v := h.at(120, 40); !strings.Contains(v, "Could not read gate-1.md: no report gate-1.md") || strings.Contains(v, "not_found") {
 		t.Fatal(v)
 	}
 	l.err = nil
@@ -134,6 +134,42 @@ func TestPaneReportFailedReadShowsTheError(t *testing.T) {
 	h.deliver(press("esc"))
 	if h.m.pane.reportName != "" {
 		t.Fatal("cannot escape")
+	}
+}
+
+func TestReportTitleNamesTheFileOnce(t *testing.T) {
+	for _, tc := range []struct {
+		name, role   string
+		round, total int
+		want         string
+	}{
+		{"gate-1.md", "gate", 1, 3, "Report 1 of 3: gate-1.md"},
+		{"reviewer-2-attempt-2.md", "reviewer", 2, 1, "Report 1 of 1: reviewer-2-attempt-2.md"},
+		{"owner-fix-2.md", "implementer", 2, 1, "Report 1 of 1: owner-fix-2.md  implementer round 2"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h, _ := reportHarness(t)
+			roles := make([]source.EngineRole, tc.total)
+			for i := range roles {
+				roles[i] = source.EngineRole{Role: tc.role, Round: tc.round, Report: fmt.Sprintf("older-%d.md", i)}
+			}
+			roles[len(roles)-1].Report = tc.name
+			h.m.byName["ork"].snap.EngineRuns[0].Roles = roles
+			h.deliver(press("p"))
+			if got := sgr.ReplaceAllString(h.m.reportTitle(), ""); got != tc.want {
+				t.Fatalf("title %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestPaneReportListItemsHangTheirContinuation(t *testing.T) {
+	h, _ := reportHarness(t)
+	h.deliver(press("p"))
+	h.m.pane.reports[h.m.pane.reportName] = renderFetch{done: true, text: "- one two three four five six\n1. alpha beta gamma delta epsilon\n  - nested words wrap here too"}
+	want := []string{"- one two three four", "  five six", "1. alpha beta gamma", "   delta epsilon", "  - nested words", "    wrap here too"}
+	if got := h.m.reportLines(20); !reflect.DeepEqual(got, want) {
+		t.Fatalf("lines %#v, want %#v", got, want)
 	}
 }
 
@@ -258,7 +294,7 @@ func TestDaemonReportWire(t *testing.T) {
 	}
 	_, err := d.Report(context.Background(), "engine", "gone.md")
 	var wire *ipc.Error
-	if !errors.As(err, &wire) || actionError(err) != "not_found: no report" {
+	if !errors.As(err, &wire) || actionError(err) != daemon.CodeNotFound+": no report" {
 		t.Fatalf("%v", err)
 	}
 	if strings.Join(methods, " ") != "run.report run.report" || !reflect.DeepEqual(seen, []daemon.RunAction{{Run: "engine", Name: "gate-1.md"}, {Run: "engine", Name: "gone.md"}}) {

@@ -10,15 +10,12 @@ package clitest
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 )
 
 const (
@@ -197,23 +194,6 @@ func nextCount(path string) int {
 
 // release drops the call lock Main took.
 var release = func() {}
-
-// lock takes a lock file that only one fake process holds at a time and
-// returns the function that drops it. A process that fails to create the file
-// for another reason than its existence goes on without the lock.
-func lock(path string) func() {
-	for {
-		f, err := os.OpenFile(path, os.O_CREATE|os.O_EXCL|os.O_WRONLY, 0o644)
-		if err == nil {
-			f.Close()
-			return func() { os.Remove(path) }
-		}
-		if !errors.Is(err, fs.ErrExist) {
-			return func() {}
-		}
-		time.Sleep(time.Millisecond)
-	}
-}
 
 // exit writes the answer, drops the call lock and ends the process.
 func exit(code int, stdout, stderr string) {

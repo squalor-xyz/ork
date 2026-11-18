@@ -12,6 +12,14 @@ import (
 )
 
 func TestMain(m *testing.M) {
+	if len(os.Args) == 3 && os.Args[1] == "--clitest-hold-lock" {
+		unlock := lock(os.Args[2])
+		os.Stdout.WriteString("locked\n")
+		var b [1]byte
+		os.Stdin.Read(b[:])
+		unlock()
+		os.Exit(0)
+	}
 	Main()
 	os.Exit(m.Run())
 }

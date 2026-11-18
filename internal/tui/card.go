@@ -264,7 +264,7 @@ func (m *Model) renderArrived(msg renderMsg) {
 	}
 	f := renderFetch{done: true, text: msg.text, seq: msg.seq}
 	if msg.err != nil {
-		f.err = actionError(msg.err)
+		f.err = viewerError(msg.err)
 	}
 	m.pane.fetched[k] = f
 }

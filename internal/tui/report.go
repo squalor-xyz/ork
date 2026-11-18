@@ -5,6 +5,7 @@ package tui
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 
 	"charm.land/bubbles/v2/key"
@@ -109,7 +110,7 @@ func (m *Model) reportArrived(msg reportMsg) {
 	}
 	f := renderFetch{done: true, text: msg.text, seq: msg.seq}
 	if msg.err != nil {
-		f.err = actionError(msg.err)
+		f.err = viewerError(msg.err)
 	}
 	m.pane.reports[msg.name] = f
 }
@@ -139,7 +140,12 @@ func (m *Model) reportTitle() string {
 	idx := m.reportOn()
 	reports := m.reportList()
 	role := reports[idx-1]
-	return m.cfg.Theme.Heading.Render(fmt.Sprintf("Report %d of %d: %s  %s round %d", idx, len(reports), role.Report, role.Role, role.Round))
+	title := fmt.Sprintf("Report %d of %d: %s", idx, len(reports), role.Report)
+	round := fmt.Sprintf("-%d", role.Round)
+	if !strings.HasPrefix(role.Report, role.Role+"-") || !(strings.HasSuffix(role.Report, round+".md") || strings.Contains(role.Report, round+"-attempt-")) {
+		title += fmt.Sprintf("  %s round %d", role.Role, role.Round)
+	}
+	return m.cfg.Theme.Heading.Render(title)
 }
 
 // reportLayout holds only the current layout. Its text is unstyled and is
@@ -151,6 +157,8 @@ type reportLayout struct {
 	sidebarHidden bool
 	lines         []string
 }
+
+var reportListMarker = regexp.MustCompile(`^( *)([-*+]|[0-9]+[.)]) `)
 
 func (m *Model) reportLines(width int) []string {
 	name := m.pane.reportName
@@ -170,6 +178,15 @@ func (m *Model) reportLines(width int) []string {
 	for _, line := range strings.Split(runrec.PlainText(f.text), "\n") {
 		if strings.HasPrefix(line, "|") {
 			lines = append(lines, clip(line, width))
+		} else if marker := reportListMarker.FindString(line); marker != "" && width-len(marker) >= 10 {
+			textWidth := width - len(marker)
+			for i, part := range wrapText(breakReportLine(line[len(marker):], textWidth), textWidth) {
+				prefix := marker
+				if i > 0 {
+					prefix = strings.Repeat(" ", len(marker))
+				}
+				lines = append(lines, prefix+part)
+			}
 		} else {
 			lines = append(lines, wrapText(breakReportLine(line, width), width)...)
 		}
