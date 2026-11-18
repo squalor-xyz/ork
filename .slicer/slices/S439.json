@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Write the failing tests and see them red for the stated reason.\n2. Add the marker to the run record; S431's drain sets it on every run it holds or that has no role running at the restart.\n3. At daemon start, after recovery, retry each marked run once (as `ork retry RUN` does), then clear the marker whatever the result.\n4. Docs: `docs/design.md` self-host rebuild section, citing adj 467. Changelog entry with `slicer changelog add`."
+      "body": "1. Write the failing tests and see them red for the stated reason.\n2. Add the marker to the run record; S431's drain sets it on every run it holds or that has no role running at the restart.\n3. At daemon start, after recovery, retry each marked run once (as `ork retry RUN` does), then clear the marker whatever the result.\n4. Docs: `docs/design.md` self-host rebuild section, citing adj 467. Changelog entry with `slicer changelog add`.\n\nOwner decisions (2026-11-18): Which runs does the rebuild drain mark for auto-resume? -> held only: mark only a run whose role start waits at the hold (`Engine.HeldForRebuild()`, `internal/engine/hold.go:142`) when the daemon ends. Queued runs, runs paused for the owner (question, shape, budget, lost, earlier interrupt) and runs awaiting approval stay unmarked and keep waiting for the owner.."
     },
     {
       "heading": "Check",
