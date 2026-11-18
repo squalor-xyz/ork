@@ -189,7 +189,14 @@ func (e *Engine) checkMain(ctx context.Context, P, base, B, item string, commit 
 }
 
 // commitTracking commits literal paths, preserving unrelated staged changes.
+// Its writes are logged on the run.
 func (e *Engine) commitTracking(ctx context.Context, P string, tracking []string, msg string) string {
+	return commitLiteralPaths(ctx, e.gitWrite, P, tracking, msg)
+}
+
+// commitLiteralPaths is commitTracking with the git runner passed in, so a
+// command without a run can use it (S405).
+func commitLiteralPaths(ctx context.Context, git GitFunc, P string, tracking []string, msg string) string {
 	// By name, never a pathspec of ".", and literal, so a name with a glob
 	// character cannot take another file along: the owner's staged files stay
 	// staged. git add cannot name a path that is in neither the index nor the
@@ -204,7 +211,7 @@ func (e *Engine) commitTracking(ctx context.Context, P string, tracking []string
 	}
 	var staged []string
 	if len(present) > 0 {
-		if _, err := e.gitWrite(ctx, P, append([]string{"add", "-A", "--"}, present...)...); err != nil {
+		if _, err := git(ctx, P, append([]string{"add", "-A", "--"}, present...)...); err != nil {
 			return oneLine("git add: " + err.Error())
 		}
 		for _, rel := range tracking {
@@ -213,7 +220,7 @@ func (e *Engine) commitTracking(ctx context.Context, P string, tracking []string
 			}
 		}
 	}
-	if _, err := e.gitWrite(ctx, P, append([]string{"commit", "-m", msg, "--"}, specs...)...); err != nil {
+	if _, err := git(ctx, P, append([]string{"commit", "-m", msg, "--"}, specs...)...); err != nil {
 		note := ""
 		if len(staged) > 0 {
 			note = "; ork staged " + nameList(staged)

@@ -16,40 +16,41 @@ import (
 
 // The methods a client can call.
 const (
-	MethodRelayAnswer  = "relay.answer"  // proposed (S112)
-	MethodAdjAnswer    = "adj.answer"    // proposed; params AdjAnswerParams, result AdjAnswerResult
-	MethodAdjAsk       = "adj.ask"       // proposed; params AdjAskParams, result AdjAskResult
-	MethodWaveStart    = "wave.start"    // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
-	MethodWaveStop     = "wave.stop"     // proposed wire; params WaveAction, result WaveResult
-	MethodWaveApprove  = "wave.approve"  // proposed wire (S222); params WaveAction, result WaveApproveResult
-	MethodWaveSuggest  = "wave.suggest"  // proposed wire; params WaveSuggestParams, result slicercli.ParallelPlan
-	MethodWaveOverlap  = "wave.overlap"  // proposed wire; params WaveOverlapParams, result slicercli.Overlap
-	MethodWaveDefine   = "wave.define"   // proposed wire (S215); params WaveDefineParams, result SavedWave
-	MethodWaveList     = "wave.list"     // proposed wire (S215); params WaveListParams, result WaveListResult
-	MethodWaveRm       = "wave.rm"       // proposed wire (S215); params WaveRmParams, result SavedWave (the one removed)
-	MethodRolesMatrix  = "roles.matrix"  // proposed (S168); params RolesMatrixParams, result RolesMatrixResult
-	MethodMatrixEdit   = "matrix.edit"   // proposed (S173); params MatrixEditParams, result MatrixEditResult
-	MethodDaemonInfo   = "daemon.info"   // no params, result DaemonInfoResult
-	MethodDaemonStop   = "daemon.stop"   // params StopParams, result StopResult
-	MethodStatus       = "status"        // params StatusParams, result StatusResult
-	MethodItemNew      = "item.new"      // proposed; params ItemNewParams, result ItemNewResult
-	MethodItemPark     = "item.park"     // proposed; params ItemParkParams, result ItemParkResult
-	MethodItemUnpark   = "item.unpark"   // proposed; params ItemParkParams, result ItemParkResult
-	MethodItemMove     = "item.move"     // proposed; params ItemMoveParams, result ItemMoveResult
-	MethodItemNote     = "item.note"     // proposed; params ItemNoteParams, result ItemNoteResult
-	MethodItemShow     = "item.show"     // proposed; params ItemShowParams, result ItemShowResult
-	MethodSnapshot     = "snapshot"      // params SnapshotParams, result SnapshotResult
-	MethodProjectsList = "projects.list" // no params, result ProjectsResult
-	MethodProjectsAdd  = "projects.add"  // params AddProjectParams, result registry.Project
-	MethodProjectsRm   = "projects.rm"   // params RemoveProjectParams, no result
-	MethodProjectsSet  = "projects.set"  // proposed (S161); params SetProjectParams, result registry.Project
-	MethodProjectsShow = "projects.show" // proposed (S247); params ProjectsShowParams, result ProjectsShowResult
-	MethodSettingsGet  = "settings.get"  // proposed (S174); no params, result SettingsResult
-	MethodSettingsSet  = "settings.set"  // proposed (S174); params SetSettingsParams, result SettingsResult
-	MethodVendorsList  = "vendors.list"  // proposed (S169); no params, result VendorsResult
-	MethodVendorsSet   = "vendors.set"   // proposed (S169); params SetVendorParams, result VendorsResult
-	MethodSubscribe    = "subscribe"     // params SubscribeParams, no result
-	MethodRefresh      = "refresh"       // params RefreshParams, no result
+	MethodRelayAnswer    = "relay.answer"    // proposed (S112)
+	MethodAdjAnswer      = "adj.answer"      // proposed; params AdjAnswerParams, result AdjAnswerResult
+	MethodAdjAsk         = "adj.ask"         // proposed; params AdjAskParams, result AdjAskResult
+	MethodTrackingCommit = "tracking.commit" // proposed (S405); params TrackingCommitParams, result TrackingCommitResult
+	MethodWaveStart      = "wave.start"      // params WaveStartParams (run.launch-wire), proposed result shape WaveResult
+	MethodWaveStop       = "wave.stop"       // proposed wire; params WaveAction, result WaveResult
+	MethodWaveApprove    = "wave.approve"    // proposed wire (S222); params WaveAction, result WaveApproveResult
+	MethodWaveSuggest    = "wave.suggest"    // proposed wire; params WaveSuggestParams, result slicercli.ParallelPlan
+	MethodWaveOverlap    = "wave.overlap"    // proposed wire; params WaveOverlapParams, result slicercli.Overlap
+	MethodWaveDefine     = "wave.define"     // proposed wire (S215); params WaveDefineParams, result SavedWave
+	MethodWaveList       = "wave.list"       // proposed wire (S215); params WaveListParams, result WaveListResult
+	MethodWaveRm         = "wave.rm"         // proposed wire (S215); params WaveRmParams, result SavedWave (the one removed)
+	MethodRolesMatrix    = "roles.matrix"    // proposed (S168); params RolesMatrixParams, result RolesMatrixResult
+	MethodMatrixEdit     = "matrix.edit"     // proposed (S173); params MatrixEditParams, result MatrixEditResult
+	MethodDaemonInfo     = "daemon.info"     // no params, result DaemonInfoResult
+	MethodDaemonStop     = "daemon.stop"     // params StopParams, result StopResult
+	MethodStatus         = "status"          // params StatusParams, result StatusResult
+	MethodItemNew        = "item.new"        // proposed; params ItemNewParams, result ItemNewResult
+	MethodItemPark       = "item.park"       // proposed; params ItemParkParams, result ItemParkResult
+	MethodItemUnpark     = "item.unpark"     // proposed; params ItemParkParams, result ItemParkResult
+	MethodItemMove       = "item.move"       // proposed; params ItemMoveParams, result ItemMoveResult
+	MethodItemNote       = "item.note"       // proposed; params ItemNoteParams, result ItemNoteResult
+	MethodItemShow       = "item.show"       // proposed; params ItemShowParams, result ItemShowResult
+	MethodSnapshot       = "snapshot"        // params SnapshotParams, result SnapshotResult
+	MethodProjectsList   = "projects.list"   // no params, result ProjectsResult
+	MethodProjectsAdd    = "projects.add"    // params AddProjectParams, result registry.Project
+	MethodProjectsRm     = "projects.rm"     // params RemoveProjectParams, no result
+	MethodProjectsSet    = "projects.set"    // proposed (S161); params SetProjectParams, result registry.Project
+	MethodProjectsShow   = "projects.show"   // proposed (S247); params ProjectsShowParams, result ProjectsShowResult
+	MethodSettingsGet    = "settings.get"    // proposed (S174); no params, result SettingsResult
+	MethodSettingsSet    = "settings.set"    // proposed (S174); params SetSettingsParams, result SettingsResult
+	MethodVendorsList    = "vendors.list"    // proposed (S169); no params, result VendorsResult
+	MethodVendorsSet     = "vendors.set"     // proposed (S169); params SetVendorParams, result VendorsResult
+	MethodSubscribe      = "subscribe"       // params SubscribeParams, no result
+	MethodRefresh        = "refresh"         // params RefreshParams, no result
 )
 
 // MethodSnapshotChanged is the notice a subscribed connection gets when a part
@@ -68,6 +69,10 @@ const (
 	CodeRegistry      = "registry"
 	CodeProjectBusy   = "project_busy" // proposed
 	CodeRefused       = "refused"      // proposed: an owner action the engine refused before it changed anything (S141)
+
+	// CodeNothingToCommit is a tracking commit that found no uncommitted tracking
+	// files (S405, *proposed*).
+	CodeNothingToCommit = "nothing_to_commit"
 
 	// CodeNoSpecCheckRow is a spec check that has no row to run on (S258,
 	// *proposed*, owner decision 2026-11-07). The message gives the fix.
@@ -537,6 +542,24 @@ type AdjAskParams struct {
 // AdjAskResult is the new adj record id. Proposed wire field.
 type AdjAskResult struct {
 	ID int `json:"id"`
+}
+
+// TrackingCommitParams commits a project's uncommitted tracking files on its
+// base branch (S405, *proposed*; adj 453, adj 461). Base is the branch the main
+// checkout must be on; empty means main. Leave names project-relative tracking
+// paths to keep out of the commit.
+type TrackingCommitParams struct {
+	Project string   `json:"project"`
+	Base    string   `json:"base,omitempty"`
+	Leave   []string `json:"leave,omitempty"`
+}
+
+// TrackingCommitResult is the commit: its short hash, its subject and how many
+// files it holds. Proposed wire fields (S405).
+type TrackingCommitResult struct {
+	Hash    string `json:"hash"`
+	Subject string `json:"subject"`
+	Files   int    `json:"files"`
 }
 
 // RelayAnswerParams is an explicitly confirmed external ledger answer. Proposed.

@@ -23,7 +23,7 @@ var (
 	commandWord    = regexp.MustCompile(`^[a-z][a-z-]*$`)
 	optionalWord   = regexp.MustCompile(`^\[([a-z][a-z-]*)\]$`)
 	helpFlagWords  = []string{"-h", "--help"}
-	groupCommands  = []string{"adj", "daemon", "projects", "roles", "settings", "spec", "vendor", "wave"}
+	groupCommands  = []string{"adj", "daemon", "projects", "roles", "settings", "spec", "tracking", "vendor", "wave"}
 	errHelpMessage = flag.ErrHelp.Error()
 )
 

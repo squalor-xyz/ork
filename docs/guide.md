@@ -978,12 +978,26 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N
+    ork tracking commit P [--base BRANCH] [--leave PATH]...
     ork vendor [list] | out NAME [--reason TEXT] [--until TIME] | back NAME
     ork roles print [ROLE]
     ork roles matrix PROJECT
     ork daemon status
     ork daemon run | stop [--force] | restart [--force] [--rebuild]
     ork doctor
+
+*Proposed (S405; adj 462 for the ranges):* `ork tracking commit P` commits the tracking files that
+filing slices, spec answers and owner decisions leave uncommitted on the base
+branch, in one commit, in place of `git add .slicer decisions` by hand. It takes
+`.slicer/` without `config.json` and `relay-roles.json`, plus the adj store
+folder named in `.adjudicate.json`; the subject names the slice IDs and adj
+numbers (consecutive runs as ranges, such as `S387-S389; adj 402-405, 410-446`),
+and there is no message flag. `--leave PATH` (repeatable) keeps a
+tracking path out. It refuses, committing nothing, when any other path is
+staged, when the main checkout is not on the base branch (`--base BRANCH`,
+default `main`), or when there is nothing to commit (code `nothing_to_commit`,
+exit 1). An unstaged edit to another file stays as it is. It prints
+`committed 3b1c2d4 Tracking edits on main: S9; adj 7 (3 files)`.
 
 Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2 usage
 (`internal/cli/cli.go:212`); `ork wait` also returns 3 question pending, 4
