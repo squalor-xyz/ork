@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 421,
+  "next_id": 422,
   "preamble": "",
   "passes": [
     {
@@ -22697,6 +22697,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S421",
+      "title": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator",
+      "short_title": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S388",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5fefb136",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
