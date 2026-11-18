@@ -1,0 +1,39 @@
+{
+  "id": "S417",
+  "title": "let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261117-234004-9e8e, project ork, item S381:\n\nlet the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done\n\nEvidence: the implementer's report says ork show RUN NAME was denied with \"this session has no approval surface\", so the S381 fixtures are synthetic"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
