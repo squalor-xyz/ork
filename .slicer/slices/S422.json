@@ -1,0 +1,39 @@
+{
+  "id": "S422",
+  "title": "For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261118-035228-7421, project ork, item S403:\n\nFor CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix\n\nEvidence: the RENDER_DIR=... go test prefix and an awk width check were denied as \"contains multiple operations\"; the overlay with a hardcoded path worked."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
