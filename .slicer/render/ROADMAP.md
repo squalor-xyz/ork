@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-449 items · — 61 · done 322 · retired 66
+449 items · — 60 · done 323 · retired 66
 
 ## v1.3
 
@@ -203,7 +203,7 @@ v1.2
 | 146 | [S441](slices/S441.md) | allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree |  | - |  | Duplicate of S416/S422 (UI pass render path; go test -overlay), filed again by tool feedback · discovered from S431 | retired |
 | 147 | [S442](slices/S442.md) | When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing | M | 2 |  | discovered from S419 | — |
 | 148 | [S443](slices/S443.md) | When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it |  | - |  | Duplicate of S424 (brief says the tree is unchanged since round N, with the diff hash), filed again by tool feedback · discovered from S419 | retired |
-| 149 | [S444](slices/S444.md) | Heartbeat test under race | S | 1 |  | 2026-11-18 13:55 UTC, main at de74b1d9: `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd` fails every time with `heartbeat_test.go:129: no stepEnd observed`; the `ok` subtest takes about 60 s. Without -race the same test passes in 1.4 s. Found when S392's Check line `go test -race -count=1 ./...` went red on a diff that does not touch the engine's product code; that line was narrowed in S392. | — |
+| 149 | [S444](slices/S444.md) | Heartbeat test under race | S | 1 |  | 2026-11-18 13:55 UTC, main at de74b1d9: `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd` fails every time with `heartbeat_test.go:129: no stepEnd observed`; the `ok` subtest takes about 60 s. Without -race the same test passes in 1.4 s. Found when S392's Check line `go test -race -count=1 ./...` went red on a diff that does not touch the engine's product code; that line was narrowed in S392. | done |
 | 150 | [S445](slices/S445.md) | say in the brief that plan mode may be active and that the final message is the report, so the plan-mode instructions do not conflict |  | - |  | Duplicate of S418 (roles.read-only-plan-mode, option a: brief says not to exit plan mode and to give the report as the final message). · discovered from S439 | retired |
 | 151 | [S446](slices/S446.md) | say in the reviewer brief whether the harness started the role in plan mode, since plan mode tells the role to write a plan file and call ExitPlanMode, which a read-only review cannot do |  | - |  | Duplicate of S418 (read-only roles and plan mode in the brief). · discovered from S444 | retired |
 | 152 | [S447](slices/S447.md) | name go test -overlay with a temp-dir test file as the sanctioned render path for read-only UI passes in the brief |  | - |  | Duplicate of S416 (UI pass render path; go test -overlay route, option a). · discovered from S393 | retired |
