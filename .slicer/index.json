@@ -22238,6 +22238,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9f5dc939-c663-496b-98ff-5b0adfb10660",
+          "kind": "",
+          "text": "**2026-11-18** — Verified on the tree after merging main: ork run and ork wave start refuse spec answers from input that is not a terminal (every open question printed with its answer address, held line, exit 3, nothing started); --answer KEY=LABEL picks the option by label, trimmed and case-insensitive; a held batch prints each unanswered question in full. go vet, go test ./..., gofmt, adj lint and slicer check are clean.",
+          "created_at": "2026-11-18T12:39:58Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
