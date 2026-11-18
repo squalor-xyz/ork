@@ -22150,6 +22150,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "981b0f67-a18b-4a18-ba44-c773e5851a01",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: ork wait follows several RUN and every unfinished run of --project; --stage ends on a role round end (exit 6); exit precedence 3 over 0 over 6; one RUN prints as before; the daemon sends a snapshot.changed notice for part runs on a change of state, pending kind or key, or ended role count. After merging main: full suite 4026 passed, 0 failed; go vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-11-18T12:14:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
