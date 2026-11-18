@@ -5108,6 +5108,15 @@
 {"when": "2026-11-17T23:59:41Z", "item": "S419", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T03:38:08Z", "item": "S419", "action": "note", "from": "", "to": "", "note": "2026-11-18: S388 round 3 ended red only because its Check li", "by": "Jon Robbins"}
 {"when": "2026-11-18T03:41:55Z", "item": "S420", "action": "add", "from": "", "to": "open", "note": "Grok out of credits on stderr is classified, so the role falls back"}
+{"when": "2026-11-18T03:42:16Z", "item": "S332", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:44:10Z", "item": "config.changelog_path", "action": "config", "from": "", "to": "CHANGELOG.md", "note": ""}
+{"when": "2026-11-18T03:44:11Z", "item": "config.changelog_unreleased_heading", "action": "config", "from": "## [Unreleased]", "to": "## Unreleased", "note": ""}
+{"when": "2026-11-18T03:44:12Z", "item": "config.changelog_require_entry", "action": "config", "from": "false", "to": "true", "note": ""}
+{"when": "2026-11-18T03:44:46Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T03:44:47Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T03:53:25Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-18T03:55:06Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Verified: the gate now fails a slice with no landed-changed/", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:55:08Z", "item": "S332", "action": "status", "from": "started", "to": "done", "note": "Verified: gate fails a slice with no landed-changed/ITEM.md before the gate role runs when changelog_path is set; implementer prompt writes the entry with slicer changelog add; 53 Unreleased bullets imported into landed-changed/ plus S332.md; CHANGELOG resolver unchanged as the fallback; docs updated; go vet, go test ./..., gofmt, slicer check and adj lint pass.", "by": "Jon Robbins"}
 {"when": "2026-11-18T03:42:06Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T03:43:15Z", "item": "S421", "action": "add", "from": "", "to": "open", "note": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator"}
 {"when": "2026-11-18T03:43:15Z", "item": "S421", "action": "promote", "from": "", "to": "", "note": ""}
@@ -5118,3 +5127,10 @@
 {"when": "2026-11-18T04:03:16Z", "item": "S403", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-18T04:11:05Z", "item": "S403", "action": "note", "from": "", "to": "", "note": "Verified: ork wait follows several RUN and every unfinished ", "by": "Jon Robbins"}
 {"when": "2026-11-18T04:11:07Z", "item": "S403", "action": "status", "from": "started", "to": "done", "note": "ork wait follows several RUN and every unfinished run of --project, with --stage (exit 6) and exit precedence 3 over 0 over 6; the daemon sends a run notice so the wait wakes at once. Full suite 4018 passed, 0 failed; vet, gofmt, slicer check and adj lint clean.", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:52:27Z", "item": "S403", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T04:08:06Z", "item": "S422", "action": "add", "from": "", "to": "open", "note": "For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix"}
+{"when": "2026-11-18T04:08:06Z", "item": "S422", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T04:08:23Z", "item": "S423", "action": "add", "from": "", "to": "open", "note": "say in the brief whether the reviewer may write the report path, instead of giving both \"write your report to PATH\" and \"you cannot write it\""}
+{"when": "2026-11-18T04:08:23Z", "item": "S423", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T04:11:00Z", "item": "S424", "action": "add", "from": "", "to": "open", "note": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it"}
+{"when": "2026-11-18T04:11:00Z", "item": "S424", "action": "promote", "from": "", "to": "", "note": ""}

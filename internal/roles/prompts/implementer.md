@@ -58,6 +58,11 @@ brief and this prompt disagree, the brief wins; say so in your report.
 8. If the slice's premise turns out to be false, stop and report a refutation. Do not
    invent a fix to make the slice look complete.
 9. Put the docs that describe the behaviour change in the same change.
+   When `slicer config changelog_path` is set, write this slice's one changelog
+   entry with `slicer changelog add {{slice_id}} --text "..."` (Markdown, no leading
+   bullet; add `--category NAME` when `slicer config changelog_categories` lists any;
+   `--replace` rewrites it), and never edit the changelog file, even when the slice's
+   spec says to add a bullet to it: such a step means this command.
 10. Before you report: re-read **Not in this slice**; check that the working tree
     holds only the files the slice names, or say in the report why not; re-grep each
     cited file:line in its own file and trust the symbol name if the lines drifted.

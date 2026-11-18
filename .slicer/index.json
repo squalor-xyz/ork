@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 422,
+  "next_id": 425,
   "preamble": "",
   "passes": [
     {
@@ -18881,7 +18881,7 @@
       "id": "S332",
       "title": "Adopt landed-changed/ entries: roles stop editing CHANGELOG.md",
       "short_title": "Adopt landed-changed entries",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
@@ -18914,6 +18914,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ff8f379d-6173-4061-9e7c-482e3fd730ab",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: the gate now fails a slice with no landed-changed/ITEM.md before the gate role runs when changelog_path is set (a config read error pauses the run in state gate); the item's own entry is exempt from the out-of-scope warning; the implementer prompt writes the entry with slicer changelog add and never edits the changelog file. The 53 Unreleased bullets were imported into landed-changed/ with slicer (entry-001 to entry-053) plus S332.md; CHANGELOG.md Unreleased is empty. The CHANGELOG resolver is unchanged as the fallback (adj 403). AGENTS.md, docs/release.md and docs/design.md updated. go vet, go test ./... (4001 passed, 0 failed), gofmt, slicer check and adj lint pass; mutation checks went red for the right reasons.",
+          "created_at": "2026-11-18T03:55:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -18933,7 +18947,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22823,6 +22837,90 @@
         "pass": "v1.1",
         "group": "",
         "reason": "Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388's run",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S422",
+      "title": "For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix",
+      "short_title": "For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S403",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-461d9aba",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S423",
+      "title": "say in the brief whether the reviewer may write the report path, instead of giving both \"write your report to PATH\" and \"you cannot write it\"",
+      "short_title": "say in the brief whether the reviewer may write the report path, instead of giving both \"write your report to PATH\" and \"you cannot write it\"",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S403",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-684dfb81",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S424",
+      "title": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it",
+      "short_title": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S403",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0221af1b",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,

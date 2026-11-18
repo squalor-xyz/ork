@@ -2,6 +2,12 @@
 
 Moved from AGENTS.md. Same text, not a new decision.
 
+*Proposed (S332, adj 402):* slices keep their changelog entries in
+`landed-changed/`, one file each, written with `slicer changelog add`. Before
+the owner writes the release section, they run `slicer changelog assemble`.
+It writes every entry under `## Unreleased` and deletes the entry files;
+`--dry-run` previews it.
+
 *Proposed:* the owner writes a `## vX.Y.Z (YYYY-MM-DD)` section in
 `CHANGELOG.md`, creates an annotated `vX.Y.Z` tag whose message is the short
 release summary, and pushes that tag. Check the Release Actions run after

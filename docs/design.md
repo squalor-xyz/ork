@@ -839,6 +839,22 @@ slice.
   decision 2026-11-07). A round that pauses (a shape problem, an owner
   question, a blocker finding) closes without a verdict, and its rerun is a
   new ledger step that carries the verdict.
+  *Proposed* (S332; adj 404, `gate.changelog-entry`, under adj 280): ork, not
+  the gate role, checks the slice's changelog entry. After the slice checks
+  are green and before the gate role runs, ork reads the worktree's
+  `slicer config --json` (`Engine.changelogEntry`). The project uses entry
+  files when `changelog_path` is non-empty; the entry is then
+  `changelog_entries_dir/ITEM.md` (`landed-changed/ITEM.md` when the key is
+  absent). A missing key reads as off, so a slicer older than 1.22 skips the
+  check. With the project on and no regular file at that path, ork writes
+  `changelog-entry-ROUND.md` (`VERDICT: FAIL`, the missing path and the
+  `slicer changelog add ITEM --text "..."` command) and sends it to the
+  implementer as `fail` feedback (`## Gate FAIL`). No gate role runs, no
+  `slicer note` is written and `fails` is not counted. The round limit applies
+  as for any red round. A failed config read pauses the run in `gate` (pending
+  kind `error`) with a reason that starts `changelog entry check: `. The
+  item's own entry file is added to the Files list for the `Out of scope
+  files` section, so it is never flagged there.
   *Proposed* (S331; owner decision 2026-11-11, adj 281,
   `landing.auto-approve`): a gate PASS does not wait for `ork approve` when
   the run qualifies. After the card is built (`engine.autoLandReady`), the
@@ -958,7 +974,10 @@ slice.
      green re-check (or by the hand-off to the fix round). A retry with it set
      merges the base if it is not in yet (a crash between marker and merge),
      then renders and re-checks, and never fast-forwards a tree that was not
-     checked. *Proposed (S180):* if the root `CHANGELOG.md` conflicts (even
+     checked. *Proposed (S332, adj 403):* the changelog resolver that follows
+     is the fallback for a project whose slicer config has `changelog_path`
+     empty; a project that keeps entries in `landed-changed/` has no shared
+     bullet list to conflict on. *Proposed (S180):* if the root `CHANGELOG.md` conflicts (even
      when other files do) and all three index stages exist, ork merges
      complete Unreleased entries in Go. The prefix and release suffix must
      stay unchanged; both sides must retain the original entries unchanged and

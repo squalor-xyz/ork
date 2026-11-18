@@ -55,7 +55,13 @@ func (e *Engine) scopeSection(ctx context.Context, rec runrec.Record) *BriefSect
 	if err != nil {
 		return nil
 	}
-	warnings := ScopeWarnings(changed, detail.Paths)
+	allowed := detail.Paths
+	// S332: the item's own changelog entry is part of the slice. A config read
+	// error leaves the list as it is; the section is advisory.
+	if entry, on, err := e.changelogEntry(ctx, rec); err == nil && on {
+		allowed = append(append([]string(nil), allowed...), entry)
+	}
+	warnings := ScopeWarnings(changed, allowed)
 	if len(warnings) == 0 {
 		return nil
 	}

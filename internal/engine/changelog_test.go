@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -351,5 +352,144 @@ func TestChangelogWriteErrorRestoresMarkers(t *testing.T) {
 	}
 	if indexOf(env.gitCalls(), "W: checkout --merge -- CHANGELOG.md") < 0 {
 		t.Error("no marker restoration")
+	}
+}
+
+// S332 (adj 404): the gate fails a slice with no landed-changed/ITEM.md when the
+// project uses the folder. ork checks it in Go, before the gate role runs.
+
+const entryFolderOn = `{"changelog_path":"CHANGELOG.md","changelog_entries_dir":"landed-changed"}`
+
+// existingWorktreeRoutes answer the checks setup makes on a worktree folder that
+// a test created before the run started (here, to hold an entry file).
+func existingWorktreeRoutes(P, W string) []clitest.Route {
+	return []clitest.Route{
+		{Tool: "git", Args: []string{"-C", W, "rev-parse", "--show-toplevel"}, Stdout: W + "\n"},
+		{Tool: "git", Args: []string{"-C", W, "symbolic-ref", "--short", "HEAD"}, Stdout: item + "\n"},
+		{Tool: "git", Args: []string{"-C", W, "rev-parse", "--git-common-dir"}, Stdout: filepath.Join(P, ".git") + "\n"},
+		{Tool: "git", Args: []string{"-C", P, "rev-parse", "--git-common-dir"}, Stdout: filepath.Join(P, ".git") + "\n"},
+	}
+}
+
+// entryHarness is the engine harness with a `slicer config --json` route that
+// answers before the default one, with the reply's stdout, stderr and exit.
+func entryHarness(t *testing.T, reply clitest.Reply) *harness {
+	t.Helper()
+	return newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return append(existingWorktreeRoutes(P, W), clitest.Route{Tool: "slicer", Args: []string{"config", "--json", "--root", W}, Stdout: reply.Stdout, Stderr: reply.Stderr, Exit: reply.Exit})
+		}
+	})
+}
+
+func changelogEntryFiles(t *testing.T, h *harness, rec runrec.Record) []string {
+	t.Helper()
+	names, err := filepath.Glob(filepath.Join(h.store.RunDir(rec.ID), "changelog-entry-*.md"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return names
+}
+
+func hasGate(roles []string) bool {
+	for _, r := range roles {
+		if strings.HasPrefix(r, "gate-") {
+			return true
+		}
+	}
+	return false
+}
+
+func TestGateFailsWithoutTheChangelogEntryWhenTheProjectUsesTheFolder(t *testing.T) {
+	h := entryHarness(t, clitest.Reply{Stdout: entryFolderOn})
+	e := h.start()
+	rec := e.run.Snapshot()
+	if hasGate(h.runner.roles()) {
+		t.Fatalf("the gate role ran: %v", h.runner.roles())
+	}
+	want := "VERDICT: FAIL\n\nThe changelog entry landed-changed/S04.md is missing. This project keeps one changelog entry per slice in landed-changed/ (adj 404). " +
+		"Write it with `slicer changelog add S04 --text \"...\"`, adding `--category NAME` when `slicer config changelog_categories` lists any. Do not edit CHANGELOG.md.\n"
+	if got := h.readReport(rec, "changelog-entry-1.md"); got != want {
+		t.Errorf("changelog-entry-1.md:\n%q\nwant\n%q", got, want)
+	}
+	var fix string
+	for _, req := range h.runner.requests() {
+		if req.Role == RoleImplementer && req.Round == 2 {
+			fix = req.Brief
+		}
+	}
+	_, section, ok := strings.Cut(fix, "## Gate FAIL")
+	if !ok || !strings.Contains(section, "landed-changed/S04.md") {
+		t.Errorf("round-2 implementer brief lacks a Gate FAIL section naming the file:\n%s", fix)
+	}
+	if rec.Fails != 0 || len(h.calls("slicer", "note")) != 0 {
+		t.Errorf("ork found it, not the gate: fails %d, notes %v", rec.Fails, h.calls("slicer", "note"))
+	}
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingRounds || !strings.Contains(rec.Pending.Reason, "gate failed (changelog entry landed-changed/S04.md is missing)") {
+		t.Errorf("pending %+v", rec.Pending)
+	}
+}
+
+func TestGateRunsWhenTheChangelogEntryExists(t *testing.T) {
+	h := entryHarness(t, clitest.Reply{Stdout: entryFolderOn})
+	writeFile(t, filepath.Join(h.W, "landed-changed", "S04.md"), "entry text\n")
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if !hasGate(h.runner.roles()) {
+		t.Errorf("the gate role did not run: %v", h.runner.roles())
+	}
+	if got := changelogEntryFiles(t, h, rec); len(got) != 0 {
+		t.Errorf("feedback files %v", got)
+	}
+	path, on, err := e.changelogEntry(context.Background(), rec)
+	if err != nil || !on || path != "landed-changed/S04.md" {
+		t.Errorf("changelogEntry = %q, %v, %v", path, on, err)
+	}
+}
+
+func TestGateSkipsTheChangelogCheckWhenTheFolderIsOff(t *testing.T) {
+	h := entryHarness(t, clitest.Reply{Stdout: `{"changelog_path":"","changelog_entries_dir":"landed-changed"}`})
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if !hasGate(h.runner.roles()) {
+		t.Errorf("the gate role did not run: %v", h.runner.roles())
+	}
+	if got := changelogEntryFiles(t, h, rec); len(got) != 0 {
+		t.Errorf("feedback files %v", got)
+	}
+	if _, on, err := e.changelogEntry(context.Background(), rec); err != nil || on {
+		t.Errorf("changelogEntry on = %v, err = %v", on, err)
+	}
+}
+
+func TestChangelogEntryReadsTheConfig(t *testing.T) {
+	for _, tc := range []struct {
+		name, config, path string
+		on                 bool
+	}{
+		{"default dir", `{"changelog_path":"CHANGELOG.md"}`, "landed-changed/S04.md", true},
+		{"own dir", `{"changelog_path":"CHANGELOG.md","changelog_entries_dir":"notes/entries"}`, "notes/entries/S04.md", true},
+		{"older slicer", `{}`, "", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := entryHarness(t, clitest.Reply{Stdout: tc.config})
+			e := h.start()
+			path, on, err := e.changelogEntry(context.Background(), e.run.Snapshot())
+			if err != nil || on != tc.on || (on && path != tc.path) {
+				t.Errorf("changelogEntry = %q, %v, %v; want %q, %v", path, on, err, tc.path, tc.on)
+			}
+		})
+	}
+}
+
+func TestGateChangelogConfigReadFailurePauses(t *testing.T) {
+	h := entryHarness(t, clitest.Reply{Exit: 1, Stderr: "config unavailable"})
+	e := h.start()
+	rec := e.run.Snapshot()
+	if hasGate(h.runner.roles()) {
+		t.Errorf("the gate role ran: %v", h.runner.roles())
+	}
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingError || rec.Pending.State != runrec.StateGate || !strings.HasPrefix(rec.Pending.Reason, "changelog entry check: ") {
+		t.Errorf("state %s, pending %+v", rec.State, rec.Pending)
 	}
 }
