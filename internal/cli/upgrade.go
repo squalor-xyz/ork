@@ -211,7 +211,7 @@ func buildHints(rep DoctorReport, all bool) []upgradeHint {
 	case all:
 		reason = "requested with --upgrade"
 		if slicer.Version != "" {
-			reason += " (installed: " + slicer.Version + ")"
+			reason += " (installed: " + strings.TrimPrefix(slicer.Version, "slicer ") + ")"
 		}
 	}
 	if reason != "" {
@@ -226,7 +226,7 @@ func buildHints(rep DoctorReport, all bool) []upgradeHint {
 	case all:
 		reason = "requested with --upgrade"
 		if adj.Version != "" {
-			reason += " (installed: " + adj.Version + ")"
+			reason += " (installed: " + strings.TrimPrefix(adj.Version, "adj ") + ")"
 		}
 	}
 	if reason != "" {

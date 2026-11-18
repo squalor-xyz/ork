@@ -1,0 +1,39 @@
+{
+  "id": "S437",
+  "title": "give role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The implementer reported this as tool feedback (friction) on ork in ork run ork-20261118-130342-787e, project ork, item S431:\n\ngive role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip\n\nEvidence: TMPDIR is /home/jon/.local/state/ork/runs/ork-20261118-130342-787e/tmp/implementer-1 (77 bytes); shortDir skips with \"no temp directory short enough for a socket\" (75 skipped tests)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

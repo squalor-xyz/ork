@@ -893,6 +893,9 @@ slice.
   paths under it; `.slicer/` is exempt. An empty Files paths list or a failed
   read adds no section. The gate decides whether each file is needed; this
   warning alone does not fail the gate (`engine.files-scope`, adj 119).
+  *Proposed:* the check reads `git status`, so after the slice commit (a
+  landing fix round, S119) it sees only that round's uncommitted edits
+  (adj 438).
   Nothing from this check is recorded in `run.json`.
 - **commit:** ork commits in the worktree with the title from the slice's
   Git section. An empty or missing Git section falls back to `ID: slice title`
@@ -2925,7 +2928,7 @@ the flag.
 Start and owner commands return the run record. With `--json`, run prints
 the plan on stderr and a single result JSON value on stdout; declining
 prints `{"started":false,"held":[]}` on stdout. Interactive questions go on
-stderr in JSON mode. Real spec-check failures carry the `spec check failed: `
+stderr in JSON mode. Other spec-check errors carry the `spec check failed: `
 prefix in text mode; refusals do not.
 
 *Proposed (S172):* `ork adj answer PROJECT ID (--option LABEL | --text TEXT)`
@@ -3211,7 +3214,9 @@ of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
   prints all three whether or not anything is behind. Contract reasons say
   `older than the versions ork accepts (v11 or v12)` or
   `newer than the versions ork accepts (v11 or v12)`. With `--upgrade`, a
-  current slicer or adj reason includes `(installed: VERSION)` when known.
+  current slicer or adj reason includes `(installed: VERSION)` when known;
+  a version that starts with the tool name and a space loses that prefix
+  (`slicer 1.22.1` prints as `1.22.1`).
   Text prints `[upgrade] TOOL  REASON`, an optional `note:` line, then each
   command on its own line, indented, after the contract line. slicer: a checkout
   gets `git -C DIR pull --ff-only` and `DIR/.venv/bin/pip install -e DIR`, a
