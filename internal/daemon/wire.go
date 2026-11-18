@@ -439,9 +439,13 @@ type RefreshParams struct {
 }
 
 // SnapshotChanged is the notice for the parts of a project whose value changed.
+// For part runs, Runs names the run records whose state, pending question or
+// ended role count changed (S403, *proposed*; adj 451, cli.wait-signal). It is
+// absent for every other notice, and an older client ignores it.
 type SnapshotChanged struct {
 	Project string    `json:"project"`
 	Parts   []string  `json:"parts"`
+	Runs    []string  `json:"runs,omitempty"`
 	At      time.Time `json:"at"`
 }
 

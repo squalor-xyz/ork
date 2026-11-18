@@ -539,19 +539,22 @@ round command from the full one. Add `--json` to any command for scripts (`inter
 
 ### Wait for a change
 
-*Proposed (S257):* `ork wait [RUN] [--until STATE,...] [--timeout D]
-[--project P]` blocks until the run changes, so a script or an agent does not
-poll `ork status`. It prints `RUN STATE` (for a pause also the pause kind, the
-question title and decision key of a question, and `next:`), exits, and the
-exit code says why:
+*Proposed (S257, S403):* `ork wait [RUN...] [--until STATE,...] [--timeout D]
+[--project P] [--stage]` blocks until a run changes, so a script or an agent
+does not poll `ork status`. With one RUN it prints `RUN STATE` (for a pause
+also the pause kind, the question title and decision key of a question, and
+`next:`), exits, and the exit code says why:
 
 | Code | Meaning |
 | --- | --- |
-| 0 | the run changed state, or entered a state in `--until` |
-| 3 | the run is paused on an owner question |
-| 4 | nothing is active: the run is final or unknown, or the project has no unfinished run |
+| 0 | a run changed state, or entered a state in `--until` |
+| 3 | a run is paused on an owner question |
+| 4 | nothing is active: every run is final or unknown, or the project has no unfinished run |
 | 5 | `--timeout` passed with no stop condition |
+| 6 | `--stage`: a role round ended, and no run changed state |
 | 1, 2 | failure, usage error, as every command |
+
+When one read has several results, 3 wins over 0, and 0 over 6.
 
 - Without `--until`, any change of the run's state from the first read ends the
   wait. Output from a running role does not change the state, so it does not
@@ -566,20 +569,41 @@ exit code says why:
   because only you can move the run on.
 - A run that is final (`committed`, `stopped`) and matches nothing ends the
   wait with code 4 and a one-line message.
-- Without RUN, the wait follows the only unfinished run of `--project P`, or of
-  the only registered project. It is a usage error when there are several
-  unfinished runs (the message lists them) or several projects and no
-  `--project`.
-- With `--json` the state it stopped on is one object:
+- Name several runs (`ork wait r1 r2 r3`) to follow them together. Each read
+  reads every followed run. The wait ends on the first read in which at least
+  one run is done, and prints one line per run that is done, in the order
+  given: `RUN ITEM STATE`, then ` key: KEY` for a question (its state reads
+  `question`), then ` next: COMMAND` when there is one. For example
+  `r2 S2 question key: cache.store next: ork answer r2 TEXT`. A run that is
+  final and matches nothing is dropped, with `r1 is stopped, so nothing is
+  active; still waiting on r2` on stderr; when none is left the wait ends with
+  code 4 and `nothing is active: r1 stopped, r2 landed`. A name the daemon does
+  not know is dropped the same way, as `unknown`.
+- Without RUN, the wait follows every unfinished run of `--project P`, or of
+  the only registered project, as of the start. A run that starts later is not
+  followed. It is a usage error when there are several projects and no
+  `--project`. When that is one run, the output is that of one RUN.
+- `--stage` also ends the wait when a role round of a followed run ends: the
+  number of its role rounds with an end grew since the last read. It prints
+  `RUN ITEM stage ROLE round N ended EXIT`, for example
+  `r1 S1 stage implementer round 1 ended clean`, and exits 6 when no run
+  changed state in the same read. A round that ended before the first read is
+  not a stage end. A state change in the same read is printed as a state
+  change.
+- With `--json` and one run the state it stopped on is one object:
   `{"run","item","state","reason","next","pending":{"kind"}}` (empty fields
-  left out). A timeout or nothing-active result is the usual `{"error":...}`
-  object with code `timeout` or `nothing_active`.
-- The wait subscribes to the daemon's change notices, and also reads the run
-  every 30 seconds, because a notice does not come for every change of a
-  record. If the daemon connection drops it connects again once (and starts
-  the daemon as other commands do); a second drop before a read is a failure.
+  left out). With several runs it is an array of these objects. A stage end is
+  such an object with `state` `stage` and `reason` `ROLE round N ended EXIT`
+  (adj 460, `cli.wait-stage-json`). A timeout or nothing-active result is the
+  usual `{"error":...}` object with code `timeout` or `nothing_active`.
+- The wait subscribes to the daemon's change notices. The daemon sends one when
+  a run record's state, pending question or ended role count changes
+  (`docs/design.md`), so the wait reads at once. It also reads every 30 seconds
+  as a safety net. If the daemon connection drops it connects again once (and
+  starts the daemon as other commands do); a second drop before a read is a
+  failure.
 
-For example `ork wait r1 --until awaiting-approval,paused,stopped,landed;
+For example `ork wait r1 r2 --until awaiting-approval,paused,stopped,landed;
 echo $?`.
 
 ## 9. Run a wave
@@ -923,7 +947,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork --version
     ork status [--project P]
     ork show RUN [NAME]
-    ork wait [RUN] [--until STATE,...] [--timeout D] [--project P]
+    ork wait [RUN...] [--until STATE,...] [--timeout D] [--project P] [--stage]
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]
     ork projects show NAME
     ork projects pin NAME [--relay N] [--adj M] | unpin NAME [--adj]
@@ -953,7 +977,8 @@ on a pipe or file line 1 is plain `ork VERSION`.
 
 Every command takes `--json`. Exit codes: 0 ok, 1 failure, 2 usage
 (`internal/cli/cli.go:212`); `ork wait` also returns 3 question pending, 4
-nothing active and 5 timeout (S257, *proposed*).
+nothing active, 5 timeout (S257, *proposed*) and 6 a stage end (S403,
+*proposed*).
 
 `ork COMMAND --help` (or `-h`) and `ork help COMMAND` print that command's
 usage and exit 0; `ork projects --help` prints every `ork projects` form

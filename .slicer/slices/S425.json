@@ -1,0 +1,39 @@
+{
+  "id": "S425",
+  "title": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261118-120855-7418, project ork, item S405:\n\nallow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card\n\nEvidence: go -C WORKTREE run ./cmd/ork tracking commit --help was denied with no approval surface, so no render was possible"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

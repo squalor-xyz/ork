@@ -204,6 +204,14 @@ ork (TUI)  ork status --json (CLI)
   `daemon.Feed`: a change of the project in view dials a new connection that
   subscribes to that project, because a connection that waits in `Next`
   cannot take a request (S13).
+
+  *Proposed (S403, `cli.wait-signal`, adj 451):* a write of a run record also
+  sends a notice, `{"project","parts":["runs"],"runs":["r1"],"at"}`, when the
+  record's state, its pending kind or key, or the number of its role rounds that
+  have an end differs from before the write. A write of tokens, `updated_at` or
+  any other field alone sends none. `runs` is optional and an older client
+  ignores it. `ork wait` reads again at once on a notice that names a run it
+  follows, or that names no run, and not on a notice that names only other runs.
 - **Restart.** On start, the daemon reconciles every non-final run record
   against live process groups and the slicer ledger. A role whose process is
   gone and that left no report is marked `lost`, and its slice waits for the

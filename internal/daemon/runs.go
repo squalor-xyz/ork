@@ -230,7 +230,44 @@ func (d *Daemon) initRunManager() {
 	}
 	d.runs = runManager{recordLocks: map[string]*sync.Mutex{}, cleaning: map[string]bool{}, heads: map[string]string{}, merged: map[string]*bool{}, mergeLogged: map[string]string{}, ctx: context.Background(), deps: deps, runs: map[string]*managedRun{}, waveStops: map[string]int{}, specs: map[string]specEntry{}, specCancels: map[int]context.CancelFunc{}}
 	d.runs.notifications = newNotifier(d)
-	deps.Store.OnChange = d.runs.notifications.changed
+	deps.Store.OnChange = func(run *runrec.Run, before, after runrec.Record) {
+		d.runs.notifications.changed(run, before, after)
+		if runNoticeDue(before, after) {
+			d.changedRuns(after.Project, source.Runs, []string{after.ID})
+		}
+	}
+}
+
+// runNoticeDue reports whether a record write is one a waiting ork wait must
+// learn of: the state, the pending kind or key, or the number of role rounds
+// with an end differs (S403, *proposed*; adj 451, cli.wait-signal). A write of
+// tokens or updated_at alone is not.
+func runNoticeDue(before, after runrec.Record) bool {
+	if before.State != after.State {
+		return true
+	}
+	var bk, ak, bkey, akey string
+	if before.Pending != nil {
+		bk, bkey = before.Pending.Kind, before.Pending.Key
+	}
+	if after.Pending != nil {
+		ak, akey = after.Pending.Kind, after.Pending.Key
+	}
+	if bk != ak || bkey != akey {
+		return true
+	}
+	return endedRoles(before) != endedRoles(after)
+}
+
+// endedRoles counts the role rounds of a record that have an end.
+func endedRoles(rec runrec.Record) int {
+	n := 0
+	for _, role := range rec.Roles {
+		if !role.EndedAt.IsZero() {
+			n++
+		}
+	}
+	return n
 }
 
 // watchLocalSlots admits queued runs when a local role/spec check frees a
@@ -2922,13 +2959,14 @@ type ShowPending struct {
 // ShowRole is one role attempt. Denied counts its denied commands and
 // DeniedFirst holds the first three.
 type ShowRole struct {
-	Role        string   `json:"role"`
-	Round       int      `json:"round"`
-	Attempt     int      `json:"attempt"`
-	Exit        string   `json:"exit,omitempty"`
-	Report      string   `json:"report,omitempty"`
-	Denied      int      `json:"denied,omitempty"`
-	DeniedFirst []string `json:"denied_first,omitempty"`
+	Role        string    `json:"role"`
+	Round       int       `json:"round"`
+	Attempt     int       `json:"attempt"`
+	Exit        string    `json:"exit,omitempty"`
+	EndedAt     time.Time `json:"ended_at,omitzero"` // zero while the round runs (S403, *proposed*)
+	Report      string    `json:"report,omitempty"`
+	Denied      int       `json:"denied,omitempty"`
+	DeniedFirst []string  `json:"denied_first,omitempty"`
 }
 
 // ShowFinding is an owner or later finding with its full text.
@@ -3055,7 +3093,7 @@ func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
 	for _, role := range rec.Roles {
 		key := fmt.Sprintf("%s\x00%d", role.Role, role.Round)
 		attempts[key]++
-		row := ShowRole{Role: role.Role, Round: role.Round, Attempt: attempts[key], Exit: role.Exit, Report: role.Report}
+		row := ShowRole{Role: role.Role, Round: role.Round, Attempt: attempts[key], Exit: role.Exit, EndedAt: role.EndedAt, Report: role.Report}
 		denials := roleDenials(role)
 		row.Denied = len(denials)
 		row.DeniedFirst = denials[:min(len(denials), maxShownDenials)]

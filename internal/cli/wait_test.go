@@ -26,17 +26,27 @@ import (
 // notice before each reply, as the daemon does when something changed.
 type waitFake struct {
 	t        *testing.T
-	notify   bool                // send a notice before each run.show reply
-	notFound bool                // run.show says the run is unknown
-	projects []string            // registered project names; default one, "p"
-	runs     map[string][]string // per project: "ID:state" engine runs that status lists
-	afterRun func(n int)         // after the n-th run.show reply was written (one-based)
+	notify   bool                          // send a notice before each run.show reply
+	notFound bool                          // run.show says the run is unknown
+	projects []string                      // registered project names; default one, "p"
+	runs     map[string][]string           // per project: "ID:state" engine runs that status lists
+	afterRun func(n int)                   // after the n-th run.show reply was written (one-based)
+	perRun   map[string][]daemon.ShowReply // when set, run.show answers from the list of the run it names
 
 	mu        sync.Mutex
 	shows     []daemon.ShowReply
 	showCalls int
+	runCalls  map[string]int // run.show reads per run
+	conn      *ipc.Conn      // the subscribed connection, to send a notice on
 	connects  atomic.Int32
 	subscribe []string // the focus of each subscribe call, joined
+}
+
+// readsOf is how many times run.show read the run.
+func (f *waitFake) readsOf(id string) int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.runCalls[id]
 }
 
 func (f *waitFake) calls() int {
@@ -64,6 +74,7 @@ func (f *waitFake) handle(ctx context.Context, method string, raw json.RawMessag
 		json.Unmarshal(raw, &p)
 		f.mu.Lock()
 		f.subscribe = append(f.subscribe, strings.Join(p.Focus, ","))
+		f.conn = ipc.ConnFrom(ctx)
 		f.mu.Unlock()
 		return nil, nil
 	case daemon.MethodStatus:
@@ -86,10 +97,19 @@ func (f *waitFake) handle(ctx context.Context, method string, raw json.RawMessag
 				c.Notify(daemon.MethodSnapshotChanged, daemon.SnapshotChanged{Project: "p", Parts: []string{"runs"}})
 			}
 		}
+		var p daemon.RunAction
+		json.Unmarshal(raw, &p)
 		f.mu.Lock()
-		i := min(f.showCalls, len(f.shows)-1)
+		shows, n := f.shows, f.showCalls
+		if f.perRun != nil {
+			shows, n = f.perRun[p.Run], f.runCalls[p.Run]
+		}
+		if f.runCalls == nil {
+			f.runCalls = map[string]int{}
+		}
+		f.runCalls[p.Run]++
 		f.showCalls++
-		reply := f.shows[i]
+		reply := shows[min(n, len(shows)-1)]
 		f.mu.Unlock()
 		return reply, nil
 	}
@@ -514,15 +534,7 @@ func TestWaitWithoutRunFollowsTheOnlyUnfinishedRun(t *testing.T) {
 	}
 }
 
-func TestWaitWithoutRunNeedsOneRunAndOneProject(t *testing.T) {
-	t.Run("two unfinished runs", func(t *testing.T) {
-		f, app := newWaitFake(t, waitShow("implement"))
-		f.runs = map[string][]string{"p": {"r1:implement", "r2:review"}}
-		code, out, errs := runWait(t, app)
-		if code != ExitUsage || out != "" || !strings.Contains(errs, "r1") || !strings.Contains(errs, "r2") {
-			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
-		}
-	})
+func TestWaitWithoutRunNeedsOneProject(t *testing.T) {
 	t.Run("two projects", func(t *testing.T) {
 		f, app := newWaitFake(t, waitShow("implement"))
 		f.projects = []string{"alpha", "beta"}
@@ -543,7 +555,7 @@ func TestWaitWithoutRunNeedsOneRunAndOneProject(t *testing.T) {
 }
 
 func TestWaitTakesRunAndFlags(t *testing.T) {
-	for _, args := range [][]string{{"r1", "r2"}, {"r1", "--timeout", "-1s"}, {"r1", "--timeout", "soon"}, {"--bogus"}} {
+	for _, args := range [][]string{{"r1", "r1"}, {"r1", "--timeout", "-1s"}, {"r1", "--timeout", "soon"}, {"--bogus"}} {
 		code, out, errs := runWait(t, waitNoDaemon(t), args...)
 		if code != ExitUsage || out != "" || errs == "" {
 			t.Errorf("%q: code %d, stdout %q, stderr %q", args, code, out, errs)
@@ -551,11 +563,295 @@ func TestWaitTakesRunAndFlags(t *testing.T) {
 	}
 }
 
+// multiFake is a daemon double that answers run.show per run, from one list of
+// reads each (the last repeats), and sends a notice before every reply.
+func multiFake(t *testing.T, perRun map[string][]daemon.ShowReply) (*waitFake, *App) {
+	t.Helper()
+	f, app := newWaitFake(t, waitShow("implement"))
+	f.notify = true
+	f.perRun = perRun
+	return f, app
+}
+
+func runShow(id, item, state string) daemon.ShowReply {
+	return daemon.ShowReply{ID: id, Item: item, State: state}
+}
+
+func runLanded(id, item string) daemon.ShowReply {
+	r := runShow(id, item, "committed")
+	r.Landed = true
+	return r
+}
+
+func runApproval(id, item string) daemon.ShowReply {
+	r := runShow(id, item, "awaiting-approval")
+	r.Next = "ork approve " + id
+	return r
+}
+
+func runQuestion(id, item, key string) daemon.ShowReply {
+	r := runShow(id, item, "paused")
+	r.Next = "ork answer " + id + " TEXT"
+	r.Pending = &daemon.ShowPending{Kind: "question", State: "review", Role: "reviewer", Round: 1, Key: key}
+	return r
+}
+
+func TestWaitSeveralRunsPrintsEachChangedRun(t *testing.T) {
+	_, app := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runShow("r1", "S1", "implement"), runLanded("r1", "S1")},
+		"r2": {runShow("r2", "S2", "implement"), runApproval("r2", "S2")},
+	})
+	code, out, errs := runWait(t, app, "r1", "r2", "--until", "landed,awaiting-approval")
+	if code != ExitOK || out != "r1 S1 landed\nr2 S2 awaiting-approval next: ork approve r2\n" || errs != "" {
+		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+	}
+}
+
+func TestWaitSeveralRunsQuestionWins(t *testing.T) {
+	_, app := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runShow("r1", "S1", "implement"), runLanded("r1", "S1")},
+		"r2": {runShow("r2", "S2", "implement"), runQuestion("r2", "S2", "cache.store")},
+	})
+	code, out, errs := runWait(t, app, "r1", "r2", "--until", "landed")
+	if code != ExitWaitQuestion || out != "r1 S1 landed\nr2 S2 question key: cache.store next: ork answer r2 TEXT\n" || errs != "" {
+		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+	}
+}
+
+func TestWaitSeveralRunsWaitsForTheFirstChange(t *testing.T) {
+	const stoppedNext = "ork retry r2 --from review"
+	stopped := runShow("r2", "S2", "stopped")
+	stopped.Next = stoppedNext
+	f, app := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runShow("r1", "S1", "implement")},
+		"r2": {runShow("r2", "S2", "implement"), runShow("r2", "S2", "implement"), stopped},
+	})
+	code, out, errs := runWait(t, app, "r1", "r2")
+	if code != ExitOK || out != "r2 S2 stopped next: "+stoppedNext+"\n" || errs != "" {
+		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+	}
+	if n := f.readsOf("r2"); n != 3 {
+		t.Errorf("r2 was read %d times, want 3: the first two reads are no change", n)
+	}
+	if n := f.readsOf("r1"); n != 3 {
+		t.Errorf("r1 was read %d times, want 3: every read is of both runs", n)
+	}
+}
+
+func TestWaitSeveralRunsSkipsAFinishedRun(t *testing.T) {
+	t.Run("one run is final and the other goes on", func(t *testing.T) {
+		_, app := multiFake(t, map[string][]daemon.ShowReply{
+			"r1": {runShow("r1", "S1", "stopped")},
+			"r2": {runShow("r2", "S2", "implement"), runLanded("r2", "S2")},
+		})
+		code, out, errs := runWait(t, app, "r1", "r2", "--until", "landed")
+		if code != ExitOK || out != "r2 S2 landed\n" || errs != "r1 is stopped, so nothing is active; still waiting on r2\n" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+	t.Run("every run is final", func(t *testing.T) {
+		f, app := multiFake(t, map[string][]daemon.ShowReply{
+			"r1": {runShow("r1", "S1", "stopped")},
+			"r2": {runLanded("r2", "S2")},
+		})
+		code, out, errs := runWait(t, app, "r1", "r2", "--until", "awaiting-approval")
+		if code != ExitWaitNothingActive || out != "" || errs != "ork: nothing is active: r1 stopped, r2 landed\n" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+		if n := f.calls(); n != 2 {
+			t.Errorf("run.show was read %d times, want 2", n)
+		}
+	})
+	t.Run("a run the daemon does not know", func(t *testing.T) {
+		f, app := newWaitFake(t, waitShow("implement"))
+		f.notFound = true
+		code, out, errs := runWait(t, app, "r8", "r9")
+		if code != ExitWaitNothingActive || out != "" || errs != "ork: nothing is active: r8 unknown, r9 unknown\n" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+}
+
+func TestWaitProjectFollowsEveryUnfinishedRun(t *testing.T) {
+	f, app := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runApproval("r1", "S1")},
+		"r2": {runApproval("r2", "S2")},
+		"r3": {runLanded("r3", "S3")},
+	})
+	f.runs = map[string][]string{"p": {"r1:implement", "r2:review", "r3:committed"}}
+	code, out, errs := runWait(t, app, "--project", "p", "--until", untilList)
+	if code != ExitOK || out != "r1 S1 awaiting-approval next: ork approve r1\nr2 S2 awaiting-approval next: ork approve r2\n" || errs != "" {
+		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+	}
+	if n := f.readsOf("r3"); n != 0 {
+		t.Errorf("the committed run r3 was read %d times, want 0", n)
+	}
+}
+
+func TestWaitSeveralRunsJSONIsAnArray(t *testing.T) {
+	_, app := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runLanded("r1", "S1")},
+		"r2": {runApproval("r2", "S2")},
+	})
+	code, out, errs := runWait(t, app, "r1", "r2", "--until", "landed,awaiting-approval", "--json")
+	var got []map[string]any
+	mustJSON(t, out, &got)
+	if code != ExitOK || errs != "" || len(got) != 2 {
+		t.Fatalf("code %d, stderr %q, stdout %s", code, errs, out)
+	}
+	if got[0]["run"] != "r1" || got[0]["state"] != "landed" || got[1]["run"] != "r2" || got[1]["state"] != "awaiting-approval" || got[1]["next"] != "ork approve r2" {
+		t.Fatalf("elements %v", got)
+	}
+}
+
+func stageReply(ended bool, exit string) daemon.ShowReply {
+	r := runShow("r1", "S1", "implement")
+	role := daemon.ShowRole{Role: "implementer", Round: 1, Attempt: 1}
+	if ended {
+		role.EndedAt = time.Now()
+		role.Exit = exit
+	}
+	r.Roles = []daemon.ShowRole{role}
+	return r
+}
+
+func TestWaitStageEndsWhenARoleRoundEnds(t *testing.T) {
+	perRun := map[string][]daemon.ShowReply{"r1": {stageReply(false, ""), stageReply(true, "clean")}}
+	t.Run("text", func(t *testing.T) {
+		_, app := multiFake(t, perRun)
+		code, out, errs := runWait(t, app, "r1", "--stage")
+		if code != ExitWaitStage || out != "r1 S1 stage implementer round 1 ended clean\n" || errs != "" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+	t.Run("json", func(t *testing.T) {
+		_, app := multiFake(t, perRun)
+		code, out, errs := runWait(t, app, "r1", "--stage", "--json")
+		var got waitJSON
+		mustJSON(t, out, &got)
+		if code != ExitWaitStage || errs != "" || got.Run != "r1" || got.Item != "S1" || got.State != "stage" || got.Reason != "implementer round 1 ended clean" {
+			t.Fatalf("code %d, stderr %q, stdout %s", code, errs, out)
+		}
+	})
+	t.Run("without --stage the end is no stop", func(t *testing.T) {
+		_, app := multiFake(t, perRun)
+		code, out, _ := runWait(t, app, "r1", "--timeout", "100ms")
+		if code != ExitWaitTimeout || out != "" {
+			t.Fatalf("code %d, stdout %q", code, out)
+		}
+	})
+	t.Run("a round that ended before the first read is no stage end", func(t *testing.T) {
+		_, app := multiFake(t, map[string][]daemon.ShowReply{"r1": {stageReply(true, "clean")}})
+		code, out, _ := runWait(t, app, "r1", "--stage", "--timeout", "100ms")
+		if code != ExitWaitTimeout || out != "" {
+			t.Fatalf("code %d, stdout %q", code, out)
+		}
+	})
+	t.Run("a state change wins over a stage end", func(t *testing.T) {
+		_, app := multiFake(t, map[string][]daemon.ShowReply{"r1": {stageReply(false, ""), func() daemon.ShowReply {
+			r := stageReply(true, "clean")
+			r.State = "review"
+			return r
+		}()}})
+		code, out, errs := runWait(t, app, "r1", "--stage")
+		if code != ExitOK || out != "r1 review\n" || errs != "" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+	t.Run("several runs: a stage end beside a state change exits 0", func(t *testing.T) {
+		_, app := multiFake(t, map[string][]daemon.ShowReply{
+			"r1": {stageReply(false, ""), stageReply(true, "clean")},
+			"r2": {runShow("r2", "S2", "implement"), runApproval("r2", "S2")},
+		})
+		code, out, errs := runWait(t, app, "r1", "r2", "--stage")
+		if code != ExitOK || out != "r1 S1 stage implementer round 1 ended clean\nr2 S2 awaiting-approval next: ork approve r2\n" || errs != "" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+}
+
+func TestWaitSingleRunOutputIsUnchanged(t *testing.T) {
+	t.Run("a question", func(t *testing.T) {
+		_, app := newWaitFake(t, waitPause("question", "area.topic"))
+		code, out, errs := runWait(t, app, "r1")
+		want := "r1 paused\nquestion pause, reviewer round 1\ndecision key: area.topic\nnext: ork retry r1\n"
+		if code != ExitWaitQuestion || out != want || errs != "" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+	t.Run("nothing active", func(t *testing.T) {
+		_, app := newWaitFake(t, waitShow("committed"))
+		code, out, errs := runWait(t, app, "r1")
+		if code != ExitWaitNothingActive || out != "" || errs != "ork: run r1 is committed, so nothing is active\n" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+	t.Run("the only run of a project", func(t *testing.T) {
+		f, app := newWaitFake(t, waitShow("awaiting-approval"))
+		f.runs = map[string][]string{"p": {"r1:implement", "r2:committed"}}
+		code, out, errs := runWait(t, app, "--until", untilList)
+		if code != ExitOK || out != "r1 awaiting-approval\n" || errs != "" {
+			t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+		}
+	})
+}
+
+// A notice that names a followed run makes the wait read it, and a notice that
+// names only another run does not (S403, *proposed*; adj 451, cli.wait-signal).
+// WaitPoll is an hour, so only a notice can wake the wait.
+func TestWaitReadsOnARunNotice(t *testing.T) {
+	f, app := newWaitFake(t, waitShow("implement"), waitShow("awaiting-approval"))
+	type result struct {
+		code        int
+		out, errout string
+	}
+	done := make(chan result, 1)
+	go func() {
+		code, out, errs := runWait(t, app, "r1", "--until", untilList)
+		done <- result{code, out, errs}
+	}()
+	notify := func(runs ...string) {
+		t.Helper()
+		f.mu.Lock()
+		conn := f.conn
+		f.mu.Unlock()
+		if err := conn.Notify(daemon.MethodSnapshotChanged, daemon.SnapshotChanged{Project: "p", Parts: []string{"runs"}, Runs: runs}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	deadline := time.Now().Add(3 * time.Second)
+	for f.calls() < 1 {
+		if time.Now().After(deadline) {
+			t.Fatal("the wait never read r1")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	notify("r9")
+	select {
+	case r := <-done:
+		t.Fatalf("a notice for another run ended the wait: %+v", r)
+	case <-time.After(200 * time.Millisecond):
+	}
+	if n := f.calls(); n != 1 {
+		t.Fatalf("run.show was read %d times after a notice for another run, want 1", n)
+	}
+	notify("r1")
+	select {
+	case r := <-done:
+		if r.code != ExitOK || r.out != "r1 awaiting-approval\n" || r.errout != "" {
+			t.Fatalf("code %d, stdout %q, stderr %q", r.code, r.out, r.errout)
+		}
+	case <-time.After(3 * time.Second):
+		t.Fatal("a notice naming r1 did not end the wait")
+	}
+}
+
 func TestExitCodesAreDistinct(t *testing.T) {
-	// Owner decision 2026-11-09 (cli.wait-exit-codes): 0 changed to an until
-	// state, 3 question pending, 4 nothing active, 5 timeout.
-	codes := map[string]int{"changed": ExitWaitChanged, "question": ExitWaitQuestion, "nothing active": ExitWaitNothingActive, "timeout": ExitWaitTimeout}
-	want := map[string]int{"changed": 0, "question": 3, "nothing active": 4, "timeout": 5}
+	// Owner decisions (cli.wait-exit-codes, adj 201, extended by adj 450): 0
+	// changed to an until state, 3 question pending, 4 nothing active, 5
+	// timeout, 6 only a stage end.
+	codes := map[string]int{"changed": ExitWaitChanged, "question": ExitWaitQuestion, "nothing active": ExitWaitNothingActive, "timeout": ExitWaitTimeout, "stage": ExitWaitStage}
+	want := map[string]int{"changed": 0, "question": 3, "nothing active": 4, "timeout": 5, "stage": 6}
 	seen := map[int]string{}
 	for name, code := range codes {
 		if code != want[name] {

@@ -3,7 +3,7 @@
 // Package cli is ork's command line: argument parsing and output for status,
 // projects, roles and doctor. Every command takes --json (cli.json). The exit
 // code is 0 for success, 1 for a failure and 2 for a usage error; ork wait
-// also returns 3, 4 and 5 (ExitWaitQuestion and the codes after it). Spec
+// also returns 3, 4, 5 and 6 (ExitWaitQuestion and the codes after it). Spec
 // question listings and incomplete answer batches return 3 (S312, proposed).
 package cli
 
@@ -29,13 +29,15 @@ const (
 	ExitUsage   = 2
 )
 
-// Exit codes of ork wait (S257, *proposed*; adj 201, cli.wait-exit-codes). A
-// wait that ends on a state change exits 0, as any command that did its work.
+// Exit codes of ork wait (S257, *proposed*; adj 201, cli.wait-exit-codes, and
+// S403, *proposed*; adj 450). A wait that ends on a state change exits 0, as
+// any command that did its work. With several runs, 3 beats 0, and 0 beats 6.
 const (
-	ExitWaitChanged       = ExitOK // the run changed state, or entered an --until state
-	ExitWaitQuestion      = 3      // the run is paused on an owner question
-	ExitWaitNothingActive = 4      // the run is final or unknown, or the project has no unfinished run
+	ExitWaitChanged       = ExitOK // a run changed state, or entered an --until state
+	ExitWaitQuestion      = 3      // a run is paused on an owner question
+	ExitWaitNothingActive = 4      // every run is final or unknown, or the project has no unfinished run
 	ExitWaitTimeout       = 5      // --timeout passed with no stop condition
+	ExitWaitStage         = 6      // --stage: a role round ended and no run changed state
 )
 
 const (
@@ -151,14 +153,17 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork status [--project P]    projects, needs-you counts and active relays
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log
-  ork wait [RUN] [--until STATE,...] [--timeout D] [--project P]
-                              block until the run changes state and print it;
+  ork wait [RUN...] [--until STATE,...] [--timeout D] [--project P] [--stage]
+                              block until a run changes state and print it;
                               with --until, until it enters one of question,
                               awaiting-approval, paused, stopped, landed; a
-                              pending question always ends the wait; without
-                              RUN, follows the only unfinished run of P (or of
-                              the only registered project); exit 0 changed,
-                              3 question pending, 4 nothing active, 5 timeout
+                              pending question always ends the wait; several
+                              RUN follow them together and print one line per
+                              run that is done; without RUN, follows every
+                              unfinished run of P (or of the only registered
+                              project); --stage also ends the wait when a role
+                              round ends; exit 0 changed, 3 question pending,
+                              4 nothing active, 5 timeout, 6 stage end only
   ork projects list           list the registered projects
   ork projects show NAME      print every setting of a project, one block per
                               owner: ork's registry entry and global settings,
@@ -257,7 +262,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               none of them
 
 Every command takes --json. Exit codes: 0 ok, 1 failure, 2 usage; ork wait
-also returns 3, 4 and 5 (see above).
+also returns 3, 4, 5 and 6 (see above).
 `
 
 // Tools names the CLIs that doctor checks, and the git that it reads a
