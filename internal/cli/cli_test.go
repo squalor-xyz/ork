@@ -321,6 +321,27 @@ func TestStatusErrorsAreListedInText(t *testing.T) {
 	}
 }
 
+// S431 (*proposed*; adj 464): status prints the daemon's own rebuild under the
+// project line: the drain's message, or a failed build's message and its output.
+func TestStatusPrintsTheDaemonRebuild(t *testing.T) {
+	a := App{Call: func(_ context.Context, method string, _, result any) error {
+		return json.Unmarshal([]byte(`{"projects":[
+			{"name":"a","rebuild":{"state":"draining","waiting":2,"message":"rebuild pending: waiting for 2 roles"}},
+			{"name":"b","rebuild":{"state":"failed","message":"daemon not rebuilt: build failed (exit 1)","output":["x.go:1: undefined: y","make: *** Error 1"]}},
+			{"name":"c"}]}`), result)
+	}}
+	var out, errout bytes.Buffer
+	if code := a.Run(context.Background(), []string{"status"}, &out, &errout); code != 0 {
+		t.Fatalf("exit %d: %s", code, &errout)
+	}
+	want := "a: needs you 0, active relays 0\n  rebuild pending: waiting for 2 roles\n" +
+		"b: needs you 0, active relays 0\n  daemon not rebuilt: build failed (exit 1)\n    x.go:1: undefined: y\n    make: *** Error 1\n" +
+		"c: needs you 0, active relays 0\n"
+	if out.String() != want {
+		t.Fatalf("status:\n%s\nwant:\n%s", out.String(), want)
+	}
+}
+
 func TestStatusUnknownProject(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "a", Path: "/p/a"})
 	code, _, stderr := run(t, w.app, "status", "--project", "nope")
@@ -1933,6 +1954,41 @@ func TestUsageTextNamesProjectsSetAutoLand(t *testing.T) {
 		if len(line) > 80 {
 			t.Errorf("usage line of %d columns: %q", len(line), line)
 		}
+	}
+}
+
+// --auto-rebuild on|off sets the daemon's own rebuild of a self-host project
+// (S431, *proposed*; adj 464). The daemon refuses on for a project that is not
+// self-host, or has no build command.
+func TestProjectsSetAutoRebuild(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "p", Path: "/p/p", Cap: 2, BuildCommand: "make build"})
+	code, stdout, stderr := run(t, w.app, "projects", "set", "p", "--auto-rebuild", "off")
+	if code != 0 || stdout != "updated p: auto_rebuild=off\n" {
+		t.Fatalf("off: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+	code, _, stderr = run(t, w.app, "projects", "set", "p", "--auto-rebuild", "on")
+	if code == 0 || !strings.Contains(stderr, "auto_rebuild is only for a self-host project") {
+		t.Fatalf("on for a project that is not self-host: exit %d: %q", code, stderr)
+	}
+	if saved, _ := registry.Load(w.regPath); saved.Projects[0].AutoRebuild {
+		t.Fatalf("a refusal changed the registry: %+v", saved.Projects[0])
+	}
+}
+
+func TestProjectsSetAutoRebuildRefusesABadValue(t *testing.T) {
+	code, _, stderr := run(t, usageOnlyApp(t), "projects", "set", "p", "--auto-rebuild", "maybe")
+	if code != 2 || !strings.Contains(stderr, `projects set: --auto-rebuild takes on or off, got "maybe"`) {
+		t.Fatalf("exit %d: %q", code, stderr)
+	}
+}
+
+func TestUsageTextNamesProjectsSetAutoRebuild(t *testing.T) {
+	if !strings.Contains(usageText, "[--auto-rebuild on|off]") {
+		t.Errorf("usage lacks [--auto-rebuild on|off]:\n%s", usageText)
+	}
+	code, _, stderr := run(t, usageOnlyApp(t), "projects", "set", "p")
+	if code != 2 || !strings.Contains(stderr, "--auto-rebuild") {
+		t.Fatalf("the field flag list lacks --auto-rebuild: exit %d: %q", code, stderr)
 	}
 }
 

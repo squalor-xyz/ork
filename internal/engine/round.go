@@ -419,6 +419,13 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	stopWait := e.heartbeat(ctx, rec, waitStep)
 	for {
+		// A daemon that drains for a rebuild holds every new role start (S431).
+		// The check is before the slot, and again after it, so a start that was
+		// queued for a slot when the hold began waits too.
+		if err := e.waitForHold(ctx); err != nil {
+			stopWait()
+			return outcome{}, err
+		}
 		entryIndex = e.skipVendorsOut(entries, first)
 		entry = entries[entryIndex]
 		rel, waited, err := e.acquireRoleSlot(ctx, entry.Vendor, func() { e.vendorWait.add(entry.Vendor, 1) })
@@ -428,6 +435,10 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if err != nil {
 			stopWait()
 			return outcome{}, err
+		}
+		if e.d.Hold.Held() {
+			rel()
+			continue
 		}
 		if waited && e.skipVendorsOut(entries, first) != entryIndex {
 			rel()

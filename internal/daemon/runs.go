@@ -220,6 +220,11 @@ func (d *Daemon) initRunManager() {
 			}
 		}
 	}
+	if deps.Hold == nil {
+		// One hold for every run and spec check of the daemon (S431): a drain for
+		// a rebuild sets it, and a role start waits while it is set.
+		deps.Hold = engine.NewHold(d.rebuildKick)
+	}
 	if deps.Wake == nil {
 		// One detector for every run of the daemon (S235); recoverRuns starts it.
 		now := time.Now
@@ -234,6 +239,10 @@ func (d *Daemon) initRunManager() {
 		d.runs.notifications.changed(run, before, after)
 		if runNoticeDue(before, after) {
 			d.changedRuns(after.Project, source.Runs, []string{after.ID})
+		}
+		// A landing can leave the daemon behind main (S431, *proposed*; adj 464).
+		if before.LandedAt.IsZero() && !after.LandedAt.IsZero() {
+			go d.checkRebuild()
 		}
 	}
 }
@@ -2192,6 +2201,7 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 		}
 		d.startQueuedLocked(f)
 		d.runs.mu.Unlock()
+		d.rebuildKick() // a drain looks again: this run's job is over
 	}()
 }
 
@@ -2831,6 +2841,10 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			for _, w := range m.engine.Working() {
 				working = append(working, source.EngineWork{What: w.What, Since: w.Since, LastOutput: w.LastOutput, SleptSeconds: int(w.Slept.Seconds())})
 			}
+		}
+		// A run whose next role start waits for the daemon's rebuild says so (S431).
+		if m := d.runs.runs[rec.ID]; m != nil && m.engine != nil && m.engine.WaitsForHold() && d.runs.deps.Hold.Held() {
+			wait = engine.HoldReason
 		}
 		unavailable := false
 		if m := d.runs.runs[rec.ID]; m != nil {

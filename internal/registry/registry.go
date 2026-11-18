@@ -244,6 +244,11 @@ type Project struct {
 	BranchPattern   string `json:"branch_pattern,omitempty"`
 	CheckCommand    string `json:"check_command,omitempty"`
 	BuildCommand    string `json:"build_command,omitempty"` // S315, proposed: explicit self-host rebuild only
+	// AutoRebuild lets the daemon of a self-host project rebuild and restart
+	// itself after a landing that leaves it behind main (S431, *proposed*; adj
+	// 464). Off by default. It needs a non-empty BuildCommand and a self-host
+	// project; the daemon checks the second when it is set.
+	AutoRebuild bool `json:"auto_rebuild,omitempty"`
 	// RoundCheckCommand is a faster check command for the checks after
 	// implementer rounds (S285, *proposed*). Empty means CheckCommand runs
 	// everywhere. CheckCommand still runs after a green round check, before

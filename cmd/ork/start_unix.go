@@ -4,13 +4,4 @@
 
 package main
 
-import (
-	"os/exec"
-	"syscall"
-)
-
-// detach puts the child in its own session, so it has no controlling terminal
-// and a closed terminal does not reach it.
-func detach(cmd *exec.Cmd) {
-	cmd.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
-}
+// detach moved to internal/daemon (restart_unix.go) with the start code (S431).

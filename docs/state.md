@@ -117,6 +117,13 @@ Notes on the fields:
   Older binaries reject this key because registry reads use strict keys.
   For ork, set `sh ./build-only-in-home-dir.sh`. The script builds into
   `~/.local/bin/ork`, outside the workspace, and does not restart the daemon.
+- `auto_rebuild` (*proposed*, S431; adj 464) lets the daemon of a self-host
+  project rebuild and restart itself after a landing that leaves it behind
+  main (`docs/design.md`, self-host rebuild). `ork projects set NAME
+  --auto-rebuild on|off` sets it. It is off, and omitted, unless on. `on` needs
+  a non-empty `build_command` and a self-host project. A started run does not
+  read it, so it may be changed while runs are unfinished. Older binaries reject
+  this key because registry reads use strict keys.
 - `round_check_command` (*proposed*, S285; owner decisions 2026-11-09, adj 252
   to 254) is an optional faster command for the
   checks after implementer rounds. `check_command` stays the full command: it

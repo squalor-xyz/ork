@@ -114,6 +114,7 @@ type ProjectStatus struct {
 	BuildCommand string               `json:"build_command,omitempty"` // proposed
 	SelfHost     bool                 `json:"self_host"`               // proposed
 	BehindMain   bool                 `json:"behind_main"`             // proposed
+	Rebuild      *RebuildStatus       `json:"rebuild,omitempty"`       // S431, *proposed*: the daemon's own rebuild of this project, while it drains or after it failed
 	Unavailable  bool                 `json:"unavailable,omitempty"`   // proposed: display only, not registered
 	Open         []OpenRecord         `json:"open,omitempty"`          // proposed
 	Held         []HeldItem           `json:"held,omitempty"`          // proposed
@@ -250,6 +251,7 @@ type SnapshotResult struct {
 	DaemonBuild  string                     `json:"daemon_build,omitempty"` // proposed
 	SelfHost     bool                       `json:"self_host"`              // proposed
 	BehindMain   bool                       `json:"behind_main"`            // proposed
+	Rebuild      *RebuildStatus             `json:"rebuild,omitempty"`      // S431, *proposed*: as in status
 	RolesRunning bool                       `json:"roles_running"`          // global activity, as in status
 	VendorsOut   []VendorOut                `json:"vendors_out,omitempty"`  // proposed (S169): as in status
 	Unavailable  bool                       `json:"unavailable,omitempty"`  // proposed: stored runs only
@@ -308,6 +310,7 @@ type SetProjectParams struct {
 	BranchPattern     *string                         `json:"branch_pattern,omitempty"`
 	CheckCommand      *string                         `json:"check_command,omitempty"`
 	BuildCommand      *string                         `json:"build_command,omitempty"`       // S315, proposed
+	AutoRebuild       *bool                           `json:"auto_rebuild,omitempty"`        // S431, *proposed*; adj 464: true lets a self-host daemon rebuild and restart itself after a landing; needs a build command
 	RoundCheckCommand *string                         `json:"round_check_command,omitempty"` // S285, *proposed*: needs a check command; "" clears it
 	CheckMinutes      *int                            `json:"check_minutes,omitempty"`
 	Cap               *int                            `json:"cap,omitempty"`
@@ -326,7 +329,7 @@ type SetProjectParams struct {
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
 	return p.Push == nil && p.Bell == nil && p.NotifyCommand == nil && p.AutoLand == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.UIPassRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
-		p.CheckCommand == nil && p.BuildCommand == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
+		p.CheckCommand == nil && p.BuildCommand == nil && p.AutoRebuild == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
 }
 
