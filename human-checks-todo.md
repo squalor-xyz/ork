@@ -213,3 +213,8 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S397 (run ork-20261117-215731-f05c, 2026-11-17)
 
 - [ ] In an 80x24 terminal, run `ork run ork ID` on a slice whose spec check asks a question with an option longer than one line: the option's second line starts under the label, and the `Answer 1-N` prompt fits within 80 columns with the cursor after `back): `.
+
+## S390 (run ork-20261117-233555-6d1c, 2026-11-18)
+
+- [ ] At 80x24, start `LC_ALL=C ork` with a run that ended within the hour; press `tab` until the Overview shows; the Recent row reads `+ pass` (or `x fail`) in green (red), and the rules are `|` and `-`.
+- [ ] At 80x24 in a UTF-8 terminal, open Waves (`tab` to Waves), tick two items with `space` that share a long path; the `! A and B both touch` line wraps with its path four columns in.
