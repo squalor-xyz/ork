@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 451,
+  "next_id": 452,
   "preamble": "",
   "passes": [
     {
@@ -19776,7 +19776,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a237355b-918f-4132-be96-1be229723098",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 480 plan.merge-driver-warning = warn.",
+          "created_at": "2026-11-18T22:23:32Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19804,7 +19819,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "eac5f368-4087-4241-9ffe-3024920551bc",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 481 run.resume-open-findings = implementer; adj 482 run.resume-gate-fails = reset.",
+          "created_at": "2026-11-18T22:23:32Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19860,7 +19890,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e257a3be-9030-4a94-b2df-46278c07b22e",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 483 landing.tracking-commit-scope = pause (narrows adj 193).",
+          "created_at": "2026-11-18T22:23:33Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -19916,7 +19961,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6990e9dc-fa6c-4be3-bc40-8e8746c7bd47",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 484 land.contract-bump-guard = probe.",
+          "created_at": "2026-11-18T22:25:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -20128,7 +20188,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "eb9ac42e-1757-4f7e-b226-ef2edc8549ae",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 485 git.commit-title = id-title.",
+          "created_at": "2026-11-18T22:25:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -22962,7 +23037,7 @@
       "id": "S415",
       "title": "Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt.",
       "short_title": "Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt.",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -22994,7 +23069,7 @@
         "key": "tool-feedback-ork-0d0bafe2",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Owner 2026-11-18 (adj 486): not worth it; Grok is out until 2026-12-01 and ends 2026-12-09.",
         "importance": 2,
         "urgency": 2,
         "effort": 1,
@@ -23036,6 +23111,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "d8c9ec23-5b7b-4e8c-895f-e1073ea0683f",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 487 roles.ui-pass-render-path = overlay.",
+          "created_at": "2026-11-18T22:25:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -23065,7 +23154,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "31d03014-11e4-4fc0-bcb7-b85422f9281f",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 488 roles.implementer-run-reports = allow (add Bash(ork show*) to both implementer presets).",
+          "created_at": "2026-11-18T22:28:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -23088,8 +23192,8 @@
     },
     {
       "id": "S418",
-      "title": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message",
-      "short_title": "Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message",
+      "title": "Cloud Claude read-only roles run on the read-only allowlist, not plan mode",
+      "short_title": "Cloud Claude read-only roles run on the read-only allowlist, not plan mode",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -23141,6 +23245,20 @@
           "kind": "",
           "text": "**2026-11-18** — Merged S448 (2026-11-18, tool feedback).",
           "created_at": "2026-11-18T17:19:44Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b0305fd8-7d00-409d-9f65-f86ccc6fb407",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 489 roles.read-only-plan-mode = allowlist; spec rewritten for it.",
+          "created_at": "2026-11-18T22:28:44Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -23362,7 +23480,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "4d26efbf-7478-4ed5-843f-23a34aeff484",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 490 brief.tree-unchanged = state.",
+          "created_at": "2026-11-18T22:28:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -23770,7 +23903,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "903e58df-055e-470b-a9d6-9f10f3c6b161",
+          "kind": "",
+          "text": "**2026-11-18** — Owner decision 2026-11-18: adj 491 roles.socket-tmpdir = state-root.",
+          "created_at": "2026-11-18T22:28:44Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -24207,6 +24355,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-606d696f",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S451",
+      "title": "tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode",
+      "short_title": "tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S432",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ca252d5d",
         "pass": "v1.2",
         "group": "",
         "reason": "",
