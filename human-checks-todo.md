@@ -226,3 +226,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S431 (run ork-20261118-130342-787e, 2026-11-18)
 
 - [ ] With `ork projects set ork --auto-rebuild on`, land a slice that changes internal/engine while another run is implementing; the daemon restarts on the new build after that role ends.
+
+## S393 (run ork-20261118-151519-8395, 2026-11-18)
+
+- [ ] At 100x30, open a run with reports (`enter` on the run, then `p`): the heading names the file once; a report with a long `- ` list item wraps under the text. At 80x24, `4` (Roadmap), `enter` on an item with notes: each note starts with its plain date.
