@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/brief.go`\n- `internal/engine/brief_test.go`\n- `internal/slicercli/slicercli.go`\n- `internal/roles/prompts/reviewer.md:42`\n- `internal/roles/prompts/architect.md:40`\n- `internal/roles/roles_test.go`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/brief.go`\n- `internal/engine/brief_test.go`\n- `internal/engine/states.go`\n- `internal/slicercli/slicercli.go`\n- `internal/roles/prompts/reviewer.md:41-44`\n- `internal/roles/prompts/architect.md:39-43`\n- `internal/roles/roles_test.go`\n- `docs/design.md`\n- `landed-changed/S383.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestDirectionDigestNamesOverlappingItems`: an open item whose Files paths overlap the diff's paths is in the digest with id, title, status and dependencies.\n- `TestDirectionDigestListsTheRestByTitle`: other open items appear as id and title only; done and retired items do not appear.\n- `TestDirectionDigestHoldsTheGoals`: each goal and non-goal title is in the digest.\n- `TestDirectionDigestIsBounded`: 300 open items give a digest under 8,000 bytes, with a line that says how many were left out.\n- `TestDirectionDigestFailureKeepsTheOldRead`: when the list call fails, the brief has no digest and tells the role to run the two slicer commands.\n- `TestReviewerPromptNamesTheDigest` and `TestArchitectPromptNamesTheDigest`: the prompt names the digest and no longer requires `slicer list --json --lean`."
+      "body": "- `TestDirectionDigestNamesOverlappingItems`: an open item whose Files paths overlap the diff's paths is in the digest with id, title, status and dependencies.\n- `TestDirectionDigestListsTheRestByTitle`: other open items appear as id and title only; done and retired items do not appear.\n- `TestDirectionDigestHoldsTheGoals`: each goal and non-goal title is in the digest.\n- `TestDirectionDigestIsBounded`: 300 open items give a digest under 8,000 bytes, with a line that says how many were left out.\n- `TestDirectionDigestFailureKeepsTheOldRead`: when the list call fails, the brief has no digest and tells the role to run the two slicer commands.\n- `TestReviewerPromptNamesTheDigest` and `TestArchitectPromptNamesTheDigest`: the prompt names the digest and no longer requires `slicer list --json --lean`.\n- `TestReviewerAndArchitectBriefsCarryTheDirectionSection`: a real review round and architect round put the Direction section in their briefs; the implementer's brief has none."
     },
     {
       "heading": "Implement",

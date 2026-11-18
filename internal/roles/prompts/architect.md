@@ -36,10 +36,13 @@ prompt disagree, the brief wins; say so in your report.
 
 ## Review
 
-Read the goal sources the brief lists (`slicer goals --json --lean`, the queue
-`slicer list --json --lean`) and the diff the brief names. In the first round you may
-run alongside the reviewer on the same diff. Give the reviewer's correctness focus a
-deeper pass on the riskiest paths rather than repeating it line by line.
+Read the brief's Direction section (ork's digest of the goals, the open items that
+touch the diff's files, and the other open items by id and title) and the diff the
+brief names. For an item that needs detail, run `slicer show ID --json --lean`. If
+the section says ork could not build the digest, read the goals and the queue
+yourself as it says. In the first round you may run alongside the reviewer on the
+same diff. Give the reviewer's correctness focus a deeper pass on the riskiest
+paths rather than repeating it line by line.
 
 Review the architecture:
 

@@ -118,6 +118,16 @@ func (c Client) Goals(ctx context.Context, root string) (*Goals, error) {
 	return &g, nil
 }
 
+// GoalsLean runs `slicer goals --json --lean --root ROOT`: the goal and
+// non-goal records with their titles and statuses (S383, *proposed*).
+func (c Client) GoalsLean(ctx context.Context, root string) (*Goals, error) {
+	var g Goals
+	if err := clirun.RunJSON(ctx, c.call("goals", "--json", "--lean", "--root", root), &g); err != nil {
+		return nil, err
+	}
+	return &g, nil
+}
+
 // RelayRuns runs `slicer relay-run list --json --lean [--active] --root ROOT`.
 // With activeOnly, slicer lists only runs that have not ended and have had an
 // event in the last 30 minutes, or have a waiting step.
