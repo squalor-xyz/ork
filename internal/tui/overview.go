@@ -14,6 +14,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -1040,6 +1041,10 @@ func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slice
 		// 2 leaves the closing "; next: ork stop RUN" to the detail line, so a cut
 		// line keeps the cap.
 		rr.second = dropNextCommand(r.Wait)
+	case r.Wait == engine.HoldReason:
+		// The next role start waits while the daemon drains for its own rebuild
+		// (S431, *proposed*; adj 464): line 2 says why the run is quiet.
+		rr.second = r.Wait
 	case r.State == "queued" && plannedFirst(r.Lineup) != "":
 		// Nothing has started: line 2 says what will run first (S267).
 		rr.second = "plan: " + plannedFirst(r.Lineup)
@@ -1612,7 +1617,7 @@ func shellQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'"'"
 // project help always applies. Wait text that only says the state again
 // ("awaiting approval  owner approval") is left out (S154).
 func showsWait(r source.EngineRun) bool {
-	if r.Unavailable {
+	if r.Unavailable || r.Wait == engine.HoldReason {
 		return true
 	}
 	return (r.State == "paused" || r.State == "stopped" || r.State == "awaiting-approval") && !restatesState(r)

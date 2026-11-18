@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 444,
+  "next_id": 445,
   "preamble": "",
   "passes": [
     {
@@ -23272,10 +23272,39 @@
       "id": "S431",
       "title": "Self-host daemon rebuilds itself: drain, build, swap, restart",
       "short_title": "Daemon auto-rebuild",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f01a7e63-086c-4dd0-b5d2-3a63d1cefd7e",
+          "kind": "",
+          "text": "**2026-11-18** — Human checks at approval (S431):\n- later: With `ork projects set ork --auto-rebuild on`, land a slice that changes internal/engine while another run is implementing; the daemon restarts on the new build after that role ends.",
+          "created_at": "2026-11-18T14:05:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3b38f2e7-50a4-4964-b4c0-11ace63aef90",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: with auto_rebuild on, a self-host daemon behind main after a landing holds new engine and spec-check role starts, lets running roles finish (none killed), builds through the shared RunBuild helper, checks the new executable (usable and not at the running revision), then ends and starts the successor from the new build. A failed or unchanged build keeps the old daemon, releases the hold and shows 'daemon not rebuilt' with the output; no retry until main moves. Held runs show 'waiting for daemon rebuild' in status, ork status and the TUI. Off by default. go vet, gofmt and go test ./... green (4093 passed, 0 failed); every new assertion mutation-checked. Real-Run test skips only where the temp path is too long for a socket. Human check (land an engine slice with auto_rebuild on) left for the owner; held-run auto-resume is S439.",
+          "created_at": "2026-11-18T14:05:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "L",
@@ -23293,7 +23322,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 3,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -23610,7 +23639,7 @@
       "id": "S443",
       "title": "When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it",
       "short_title": "When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -23627,10 +23656,38 @@
         "key": "tool-feedback-ork-4d967cd7",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Duplicate of S424 (brief says the tree is unchanged since round N, with the diff hash), filed again by tool feedback",
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S444",
+      "title": "TestHeartbeatStopsAtStepEnd fails under -race",
+      "short_title": "Heartbeat test under race",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-18 13:55 UTC, main at de74b1d9: `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd` fails every time with `heartbeat_test.go:129: no stepEnd observed`; the `ok` subtest takes about 60 s. Without -race the same test passes in 1.4 s. Found when S392's Check line `go test -race -count=1 ./...` went red on a diff that does not touch the engine's product code; that line was narrowed in S392.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "heartbeat-race",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
         "attempts": 0
       }
     }

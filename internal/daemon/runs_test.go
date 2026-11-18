@@ -3974,6 +3974,52 @@ func TestRunRetryRefusedWhenTheProjectChangesDuringTheRead(t *testing.T) {
 	}
 }
 
+// S431 (*proposed*; adj 464): while the daemon drains for a rebuild, a run that
+// reaches a role start waits and says why; after the restart the daemon that
+// recovers the run starts that role.
+func TestAutoRebuildHoldsNewRoles(t *testing.T) {
+	var mu sync.Mutex
+	var started []string
+	runner := func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		mu.Lock()
+		started = append(started, r.RunID+" "+r.Role)
+		mu.Unlock()
+		return retryRunner(ctx, r)
+	}
+	starts := func() []string {
+		mu.Lock()
+		defer mu.Unlock()
+		return append([]string(nil), started...)
+	}
+	d, store, p, _ := rebuildDaemon(t, true, runner)
+	pausedRun(t, d, store, p, "r1")
+	d.runs.deps.Hold.Set(true) // what a drain sets
+	request(t, d, "run.retry", `{"run":"r1","no_wait":true}`)
+	waitFor(t, "the run waits for the rebuild", func() bool { return engineRunWait(d, "r1") == "waiting for daemon rebuild" })
+	time.Sleep(50 * time.Millisecond)
+	if got := starts(); len(got) != 0 {
+		t.Fatalf("roles started while the daemon drains: %v", got)
+	}
+
+	// The daemon restarts: the old one ends, a new one recovers the run, and its
+	// role starts (the new daemon holds nothing).
+	d.closeRuns()
+	deps := d.runs.deps
+	deps.Hold, deps.Wake, deps.Vendors = nil, nil, nil
+	d2 := New(Config{Paths: d.cfg.Paths, RegistryPath: d.cfg.RegistryPath, Source: &stubSource{}, Engine: &deps})
+	t.Cleanup(d2.cache.Close)
+	t.Cleanup(d2.closeRuns)
+	ctx, cancel := context.WithCancel(context.Background())
+	t.Cleanup(cancel)
+	if err := d2.recoverRuns(ctx); err != nil {
+		t.Fatal(err)
+	}
+	request(t, d2, "run.retry", `{"run":"r1"}`)
+	if got := starts(); len(got) == 0 || got[0] != "r1 implementer" {
+		t.Fatalf("roles started after the restart: %v, want r1's implementer first", got)
+	}
+}
+
 // waitForFile waits for the marker the blocked read leaves; on a timeout it
 // releases the read so no goroutine stays blocked.
 func waitForFile(t *testing.T, marker, release string) {

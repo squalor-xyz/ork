@@ -2512,6 +2512,21 @@ notice with its leading space then measures 62 columns. Below 62 columns,
 the TUI uses `behind main: ork daemon restart --rebuild`, then clips if that
 text still does not fit. The rebuild flag stays in the short form.
 
+*Proposed (S431; adj 464):* while the daemon of a project with
+`--auto-rebuild on` drains for its own rebuild, the status line shows
+`rebuild pending: waiting for N roles` (then `rebuild pending: building`) in
+the warning style, first among the daemon notices. It shows while roles run,
+where the behind notice is silent, and it replaces the behind notice. After a
+failed build it shows `daemon not rebuilt: build failed (exit 1)` in the same
+place until main moves. A line too narrow for the text keeps the part before
+the colon (`rebuild pending`, `daemon not rebuilt`). `ork status` prints the
+same message, indented under the project line, with the failed build's last
+lines under it. A run that waits at the hold shows the wait
+`waiting for daemon rebuild` on line 2 of its Running row, in place of its output
+tail, and as the reason in its pane. The landed action line leaves out
+`ork daemon restart --rebuild` for a project with `--auto-rebuild on` (adj 469):
+the daemon restarts itself.
+
 Waves marks an engine conflict after planning two selected slices whose Files
 touch `internal/engine`, `internal/daemon` or `cmd`, naming both:
 

@@ -692,6 +692,7 @@ func (m *Model) statusLine(w int) string {
 		status.Projects = append(status.Projects, daemon.ProjectStatus{
 			SelfHost: project.snap.SelfHost, BehindMain: project.snap.BehindMain,
 			BuildCommand: project.snap.Project.BuildCommand,
+			Rebuild:      project.snap.Rebuild,
 		})
 	}
 	notices := 0 // the daemon notice, which stays first
@@ -699,7 +700,15 @@ func (m *Model) statusLine(w int) string {
 	if daemonBuild == "" {
 		daemonBuild = m.cfg.DaemonBuild
 	}
-	if notice := daemon.BehindWarning(status); notice != "" {
+	if notice := daemon.RebuildNotice(status); notice != "" {
+		// The daemon is draining for its own rebuild, or the rebuild failed (S431).
+		// It says why runs wait, and it replaces the behind notice while it shows.
+		if lipgloss.Width(" "+notice) > w {
+			notice = strings.SplitN(notice, ":", 2)[0]
+		}
+		fields = append([]string{m.cfg.Theme.Warn.Render(notice)}, fields...)
+		notices = 1
+	} else if notice := daemon.BehindWarning(status); notice != "" {
 		if lipgloss.Width(" "+notice) > w {
 			rebuild := strings.HasSuffix(notice, "--rebuild")
 			notice = "behind main: ork daemon restart"

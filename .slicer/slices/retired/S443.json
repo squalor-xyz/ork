@@ -1,0 +1,39 @@
+{
+  "id": "S443",
+  "title": "When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261118-134755-11b1, project ork, item S419:\n\nWhen a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it\n\nEvidence: the status in the gate brief is identical to the reviewer round; I re-checked it by hand with git status and git diff --stat"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

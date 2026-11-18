@@ -14,7 +14,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/ipc"
@@ -204,24 +203,9 @@ func rebuildProject(ctx context.Context, status daemon.StatusResult) error {
 		if p.BuildCommand == "" {
 			return fmt.Errorf("daemon not restarted: no build_command; set it with ork projects set %s --build CMD", engine.ShellWord(p.Name))
 		}
-		res, err := clirun.Run(ctx, clirun.Call{Bin: "sh", Args: []string{"-c", p.BuildCommand}, Dir: p.Path, Timeout: 10 * time.Minute})
-		if err != nil {
-			tail := strings.TrimSpace(string(res.Stdout) + "\n" + string(res.Stderr))
-			if tail == "" {
-				tail = err.Error()
-			}
-			lines := strings.Split(tail, "\n")
-			if len(lines) > 20 {
-				lines = lines[len(lines)-20:]
-			}
-			reason := fmt.Sprintf("exit %d", res.ExitCode)
-			if errors.Is(err, context.DeadlineExceeded) {
-				reason = "timed out"
-			}
-			if errors.Is(err, context.Canceled) {
-				reason = "cancelled"
-			}
-			return fmt.Errorf("build failed (%s)\n%s\ndaemon not restarted", reason, strings.Join(lines, "\n"))
+		// The build is the daemon's own code too (S431): one helper, one timeout.
+		if berr := daemon.RunBuild(ctx, p.Path, p.BuildCommand); berr != nil {
+			return fmt.Errorf("%s\ndaemon not restarted", berr)
 		}
 		return nil
 	}

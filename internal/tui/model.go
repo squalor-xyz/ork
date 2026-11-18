@@ -1970,7 +1970,9 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 					// Landing moved main. The pre-approval snapshot may still
 					// say the daemon is current, so read the post-landing build.
 					snap := src.Snapshot(context.Background(), project)
-					a.rebuild = snap.SelfHost && snap.BehindMain && snap.Project.BuildCommand != ""
+					// A project that rebuilds its own daemon (adj 464, adj 469) needs no
+					// manual restart hint.
+					a.rebuild = snap.SelfHost && snap.BehindMain && snap.Project.BuildCommand != "" && !snap.Project.AutoRebuild
 				}
 			} else {
 				err = live.Approve(context.Background(), a.run)

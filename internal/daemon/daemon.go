@@ -77,6 +77,7 @@ type Config struct {
 	Source       source.Fetcher // nil means source.Direct over the real CLIs
 	Clock        Clock          // nil means the real clock
 	WaveRunning  func() bool    // true while a wave runs; nil means never; engine runs are checked separately
+	Rebuild      RebuildConfig  // the seams of the daemon's own rebuild (S431, *proposed*); the zero value is the real one
 }
 
 // Daemon is one daemon process.
@@ -94,6 +95,8 @@ type Daemon struct {
 
 	buildMu sync.Mutex
 	builds  map[string]buildEntry // at most one tip/ref/build per registered path
+
+	rebuild rebuildState // the daemon's own rebuild: the drain, a failed build, the successor (S431, *proposed*)
 
 	subsMu sync.Mutex
 	focus  map[*ipc.Conn][]string // the projects each subscribed connection shows
@@ -114,6 +117,7 @@ func New(cfg Config) *Daemon {
 		cfg.WaveRunning = func() bool { return false }
 	}
 	d := &Daemon{cfg: cfg, ready: make(chan struct{}), focus: map[*ipc.Conn][]string{}}
+	d.rebuild.wake = make(chan struct{}, 1)
 	d.initRunManager()
 	d.cache = cache.New(cache.Options{Clock: cfg.Clock, Fetcher: newLandingFetcher(cfg.Source, d), OnChange: d.changed, Idle: true})
 	return d
@@ -180,11 +184,19 @@ func (d *Daemon) Run(ctx context.Context) error {
 
 	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
+	d.rebuild.mu.Lock()
+	d.rebuild.stop = cancel
+	d.rebuild.mu.Unlock()
 	if err := d.recoverRuns(ctx); err != nil {
 		l.Close()
 		return err
 	}
+	// Deferred before closeRuns, so it runs after it: the rebuilt daemon starts
+	// once the runs are joined, while this daemon still holds the lock (S431).
+	defer d.startSuccessor()
 	defer d.closeRuns()
+	// A daemon that starts behind main, for a project that opted in, rebuilds.
+	go d.checkRebuild()
 	idle := &idleTimer{
 		clock:       d.cfg.Clock,
 		timeout:     d.idleTimeout,

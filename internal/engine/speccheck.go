@@ -493,6 +493,10 @@ func SpecOwnerText(body string) string {
 // check, which has no Engine run. Cloud spec checks retain their existing
 // behavior. Cancellation is joined before the slot is released.
 func (d Deps) runSpecRole(ctx context.Context, req Request) (Result, error) {
+	// A daemon that drains for a rebuild holds every new role start (S431).
+	if err := d.Hold.WaitSpec(ctx); err != nil {
+		return Result{}, err
+	}
 	if !IsLocalVendor(req.Vendor) {
 		return d.Runner.Run(ctx, req)
 	}

@@ -205,7 +205,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--ui-pass-rows rNN,rNN]
                               [--worktree-pattern P] [--branch-pattern P]
                               [--check CMD] [--round-check CMD] [--no-verify]
-                              [--build CMD] [--dry-run]
+                              [--build CMD] [--auto-rebuild on|off] [--dry-run]
                               [--check-minutes N]
                               [--cap N] [--budget-minutes N] [--budget-tokens N]
                               [--env-line LINE]... [--preset go|python]
@@ -241,6 +241,12 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               approves and lands a run whose gate passes, with
                               no open owner finding and green checks, and its
                               human checks go to human-checks-todo.md;
+                              --auto-rebuild is off unless set on, and needs
+                              --build and a self-host project: the daemon then
+                              holds new role starts after a landing that leaves
+                              it behind main, lets running roles end, builds,
+                              and restarts itself; a failed build keeps the old
+                              daemon;
                               while runs are unfinished only --cap, --bell,
                               --notify, the budgets and the worktree and branch
                               patterns may change; --dry-run runs every check
