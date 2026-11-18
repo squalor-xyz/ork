@@ -109,6 +109,26 @@ func TestRunShowSaysWhenARunLanded(t *testing.T) {
 	}
 }
 
+// ork wait --stage counts the role rounds that have an end by this field (S403).
+func TestRunShowSaysWhenARoleRoundEnded(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	end := time.Date(2026, 11, 18, 12, 0, 0, 0, time.UTC)
+	_, err := store.Create(runrec.Record{ID: "r1", Project: p.Name, Item: "S1", State: runrec.StateImplement, Roles: []runrec.RoleRecord{
+		{Role: "implementer", Round: 1, StartedAt: end.Add(-time.Minute), EndedAt: end, Exit: "clean"},
+		{Role: "reviewer", Round: 1, StartedAt: end},
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := showShow(t, d, "r1")
+	if len(got.Roles) != 2 || !got.Roles[0].EndedAt.Equal(end) || !got.Roles[1].EndedAt.IsZero() {
+		t.Fatalf("roles %+v, want the first ended at %v and the second running", got.Roles, end)
+	}
+	if raw := string(request(t, d, MethodRunShow, `{"run":"r1"}`)); strings.Count(raw, `"ended_at"`) != 1 {
+		t.Errorf("a running round carries an ended_at field: %s", raw)
+	}
+}
+
 func TestRunShowNamesTheNextCommandOfAQuestionAndOfRounds(t *testing.T) {
 	d, store, p := runDaemon(t, nil)
 	for id, pend := range map[string]runrec.Pending{

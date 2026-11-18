@@ -5123,6 +5123,14 @@
 {"when": "2026-11-18T03:46:22Z", "item": "S421", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388's run"}
 {"when": "2026-11-18T03:52:11Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "2026-11-18: recurred three more times. ork's 'Tracking edits", "by": "Jon Robbins"}
 {"when": "2026-11-18T03:52:11Z", "item": "S408", "action": "note", "from": "", "to": "", "note": "2026-11-18 gap: S381 (run ork-20261117-234004-9e8e) committe", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:52:32Z", "item": "S403", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T04:03:16Z", "item": "S403", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T04:11:05Z", "item": "S403", "action": "note", "from": "", "to": "", "note": "Verified: ork wait follows several RUN and every unfinished ", "by": "Jon Robbins"}
+{"when": "2026-11-18T04:11:07Z", "item": "S403", "action": "status", "from": "started", "to": "done", "note": "ork wait follows several RUN and every unfinished run of --project, with --stage (exit 6) and exit precedence 3 over 0 over 6; the daemon sends a run notice so the wait wakes at once. Full suite 4018 passed, 0 failed; vet, gofmt, slicer check and adj lint clean.", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:53:04Z", "item": "S420", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:55:06Z", "item": "S420", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T04:01:55Z", "item": "S420", "action": "note", "from": "", "to": "", "note": "Grok credits and usage-limit errors printed on stderr or as ", "by": "Jon Robbins"}
+{"when": "2026-11-18T04:01:56Z", "item": "S420", "action": "status", "from": "started", "to": "done", "note": "Grok credits and usage-limit errors printed on stderr or as a plain stdout line now end out_of_credits with the same fixed reasons, so the role falls back and grok is marked out. Clean and permission-cancelled rounds are not reclassified. Verified by new grok tests, mutation checks, go vet, gofmt and go test ./...", "by": "Jon Robbins"}
 {"when": "2026-11-18T03:52:27Z", "item": "S403", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T04:08:06Z", "item": "S422", "action": "add", "from": "", "to": "open", "note": "For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix"}
 {"when": "2026-11-18T04:08:06Z", "item": "S422", "action": "promote", "from": "", "to": "", "note": ""}
@@ -5134,3 +5142,16 @@
 {"when": "2026-11-18T12:17:35Z", "item": "S405", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-18T12:28:28Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Verified: ork tracking commit P [--base BRANCH] [--leave PAT", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:28:30Z", "item": "S405", "action": "status", "from": "started", "to": "done", "note": "Verified: ork tracking commit commits a project's uncommitted slicer and adj tracking files in one commit on the base branch with an auto-built subject; refuses on other staged paths, a different branch or nothing to commit. go vet, gofmt, go test ./..., slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:14:25Z", "item": "S403", "action": "note", "from": "", "to": "", "note": "Verified: ork wait follows several RUN and every unfinished ", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "add", "from": "", "to": "open", "note": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card"}
+{"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:25:26Z", "item": "S426", "action": "add", "from": "", "to": "open", "note": "give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output"}
+{"when": "2026-11-18T12:25:26Z", "item": "S426", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:25:52Z", "item": "S427", "action": "add", "from": "", "to": "open", "note": "say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review"}
+{"when": "2026-11-18T12:25:52Z", "item": "S427", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:27:14Z", "item": "S428", "action": "add", "from": "", "to": "open", "note": "in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply"}
+{"when": "2026-11-18T12:27:14Z", "item": "S428", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:27:55Z", "item": "S429", "action": "add", "from": "", "to": "open", "note": "give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand"}
+{"when": "2026-11-18T12:27:55Z", "item": "S429", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:28:22Z", "item": "S430", "action": "add", "from": "", "to": "open", "note": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found"}
+{"when": "2026-11-18T12:28:23Z", "item": "S430", "action": "promote", "from": "", "to": "", "note": ""}

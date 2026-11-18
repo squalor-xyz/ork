@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 425,
+  "next_id": 431,
   "preamble": "",
   "passes": [
     {
@@ -22131,12 +22131,41 @@
       "id": "S403",
       "title": "ork wait: several runs, every run of a project, and stage ends",
       "short_title": "ork wait on several runs",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "886c2d2f-36d7-4109-be12-01965c23629f",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: ork wait follows several RUN and every unfinished run of --project; --stage ends on a role round end (exit 6); exit precedence 3 over 0 over 6; one RUN prints as before; the daemon sends a snapshot.changed notice for part runs (optional runs list) on a change of state, pending kind or key, or ended role count, and the wait wakes on it. Full suite 4018 passed, 0 failed; go vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-11-18T04:11:05Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "981b0f67-a18b-4a18-ba44-c773e5851a01",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: ork wait follows several RUN and every unfinished run of --project; --stage ends on a role round end (exit 6); exit precedence 3 over 0 over 6; one RUN prints as before; the daemon sends a snapshot.changed notice for part runs on a change of state, pending kind or key, or ended role count. After merging main: full suite 4026 passed, 0 failed; go vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-11-18T12:14:25Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -22154,7 +22183,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22790,10 +22819,25 @@
       "id": "S420",
       "title": "Grok out of credits on stderr is classified, so the role falls back",
       "short_title": "Grok stderr credits",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d364d43a-bceb-4919-abaf-a163bdc20bfb",
+          "kind": "",
+          "text": "**2026-11-18** — Grok credits and usage-limit errors printed on stderr or as a plain stdout line now end out_of_credits with the same fixed reasons, so the role falls back and grok is marked out. A cleanly completed round and a permission-cancelled round are not scanned, so they keep their exits. Verified with new grok tests (stderr, plain stdout line, usage limit, clean round, permission cancel naming the text), mutation checks, go vet, gofmt and go test ./... (26 packages ok).",
+          "created_at": "2026-11-18T04:01:55Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -22811,7 +22855,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22917,6 +22961,174 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-0221af1b",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S425",
+      "title": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card",
+      "short_title": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S405",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4a8e7f3d",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S426",
+      "title": "give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output",
+      "short_title": "give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S404",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-50e3d47d",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S427",
+      "title": "say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review",
+      "short_title": "say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S404",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5de63bee",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S428",
+      "title": "in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply",
+      "short_title": "in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S383",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-605800e9",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S429",
+      "title": "give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand",
+      "short_title": "give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S404",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-bdff6252",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S430",
+      "title": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found",
+      "short_title": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S405",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-adj-2a0922a7",
         "pass": "v1.1",
         "group": "",
         "reason": "",

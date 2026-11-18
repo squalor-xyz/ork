@@ -931,9 +931,11 @@ ledger run only with outcome `pass` or `stopped` (`internal/engine/engine.go:740
 `internal/engine/states.go:890`). `ork wait --until failed` is an unknown
 state. S311 can add `failed` to this list, with the ledger read it needs.
 
-`ork wait` exit codes (adj 201, `cli.wait-exit-codes`): 0 the run changed
-state or entered an `--until` state, 3 a question is pending, 4 nothing is
-active, 5 timeout. S311 uses the same numbers.
+`ork wait` exit codes (adj 201, `cli.wait-exit-codes`, extended by adj 450):
+0 a run changed state or entered an `--until` state, 3 a question is pending,
+4 nothing is active, 5 timeout, 6 `--stage` and only a stage end (S403). With
+several results in one read, 3 wins over 0, and 0 over 6. S311 uses the same
+numbers 0, 3, 4 and 5.
 
 ## Engine display snapshot
 
