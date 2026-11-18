@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-444 items · — 72 · done 321 · retired 51
+444 items · — 71 · done 322 · retired 51
 
 ## v1.3
 
@@ -197,7 +197,7 @@ v1.2
 | 140 | [S441](slices/S441.md) | allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree |  | - |  | Duplicate of S416/S422 (UI pass render path; go test -overlay), filed again by tool feedback · discovered from S431 | retired |
 | 141 | [S442](slices/S442.md) | When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing |  | - |  | discovered from S419 | — |
 | 142 | [S443](slices/S443.md) | When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it |  | - |  | Duplicate of S424 (brief says the tree is unchanged since round N, with the diff hash), filed again by tool feedback · discovered from S419 | retired |
-| 143 | [S444](slices/S444.md) | Heartbeat test under race | S | 1 |  | 2026-11-18 13:55 UTC, main at de74b1d9: `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd` fails every time with `heartbeat_test.go:129: no stepEnd observed`; the `ok` subtest takes about 60 s. Without -race the same test passes in 1.4 s. Found when S392's Check line `go test -race -count=1 ./...` went red on a diff that does not touch the engine's product code; that line was narrowed in S392. | — |
+| 143 | [S444](slices/S444.md) | Heartbeat test under race | S | 1 |  | 2026-11-18 13:55 UTC, main at de74b1d9: `go test -race -count=1 ./internal/engine -run TestHeartbeatStopsAtStepEnd` fails every time with `heartbeat_test.go:129: no stepEnd observed`; the `ok` subtest takes about 60 s. Without -race the same test passes in 1.4 s. Found when S392's Check line `go test -race -count=1 ./...` went red on a diff that does not touch the engine's product code; that line was narrowed in S392. | done |
 
 ---
 

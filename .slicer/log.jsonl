@@ -5245,3 +5245,10 @@
 {"when": "2026-11-18T13:56:35Z", "item": "S443", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T13:59:55Z", "item": "S444", "action": "add", "from": "", "to": "open", "note": "TestHeartbeatStopsAtStepEnd fails under -race"}
 {"when": "2026-11-18T14:00:05Z", "item": "S443", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S424 (brief says the tree is unchanged since round N, with the diff hash), filed again by tool feedback"}
+{"when": "2026-11-18T15:33:17Z", "item": "S444", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T15:34:11Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T15:34:11Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T15:36:50Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T15:36:51Z", "item": "S444", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T16:14:10Z", "item": "S444", "action": "note", "from": "", "to": "", "note": "Verified TestHeartbeatStopsAtStepEnd with and without -race ", "by": "Jon Robbins"}
+{"when": "2026-11-18T16:14:17Z", "item": "S444", "action": "status", "from": "started", "to": "done", "note": "Verified TestHeartbeatStopsAtStepEnd with and without -race and the full engine race suite. Event synchronization replaces sleeps, and all three explicit-stop mutations failed as intended. Gate returned PASS and owner approved.", "by": "Jon Robbins"}
