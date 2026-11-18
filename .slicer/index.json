@@ -21996,12 +21996,27 @@
       "id": "S398",
       "title": "Pin changelog and files-scope edges; doctor reason and spec-check wording",
       "short_title": "Changelog and scope edge tests, doctor wording",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5964e22b-8d54-47fd-be1e-7699da86dd3b",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: the changelog merge (Unreleased last, no final newline, CRLF refused), files-scope parser (quoted path, worktree-column rename, sibling directory) tests pin current behaviour; ork doctor --upgrade now names the tool once (installed: 1.22.1) for slicer and adj; docs say what the files-scope warning sees after the slice commit and use 'Other spec-check errors'. go vet, gofmt, go test ./... (4077 passed, 0 failed) and slicer check pass; each new assertion was mutation-checked.",
+          "created_at": "2026-11-18T13:36:02Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -22019,7 +22034,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -746,7 +746,7 @@ func TestDoctorUpgradeReasonShowsTheInstalledVersion(t *testing.T) {
 			if version == "" {
 				t.Fatal("fixture has no version")
 			}
-			want += " (installed: " + version + ")"
+			want += " (installed: " + strings.TrimPrefix(version, name+" ") + ")"
 		}
 		count := 0
 		for _, hint := range d.Upgrade {
@@ -765,6 +765,35 @@ func TestDoctorUpgradeReasonShowsTheInstalledVersion(t *testing.T) {
 	for _, hint := range hints {
 		if hint.Reason != "requested with --upgrade" {
 			t.Errorf("empty version: %+v", hint)
+		}
+	}
+}
+
+// S398: the reason names the tool once; a version that starts with "NAME " loses that prefix.
+func TestDoctorUpgradeReasonNamesTheToolOnce(t *testing.T) {
+	hints := buildHints(DoctorReport{Tools: []toolCheck{
+		{Name: "slicer", Present: true, Version: "slicer 1.22.1"},
+		{Name: "adj", Present: true, Version: "v1.0.0"},
+	}}, true)
+	want := map[string]string{
+		"slicer": "requested with --upgrade (installed: 1.22.1)",
+		"adj":    "requested with --upgrade (installed: v1.0.0)",
+	}
+	for _, hint := range hints {
+		if w, ok := want[hint.Tool]; ok {
+			if hint.Reason != w {
+				t.Errorf("%s reason %q, want %q", hint.Tool, hint.Reason, w)
+			}
+			delete(want, hint.Tool)
+		}
+	}
+	if len(want) != 0 {
+		t.Errorf("no hint for %v", want)
+	}
+	// adj prints a bare version today; a prefixed one is trimmed the same way.
+	for _, hint := range buildHints(DoctorReport{Tools: []toolCheck{{Name: "adj", Present: true, Version: "adj v1.0.0"}}}, true) {
+		if hint.Tool == "adj" && hint.Reason != "requested with --upgrade (installed: v1.0.0)" {
+			t.Errorf("adj reason %q", hint.Reason)
 		}
 	}
 }
