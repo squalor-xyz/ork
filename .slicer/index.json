@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 431,
+  "next_id": 432,
   "preamble": "",
   "passes": [
     {
@@ -23207,6 +23207,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S431",
+      "title": "Self-host daemon rebuilds itself: drain, build, swap, restart",
+      "short_title": "Daemon auto-rebuild",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "L",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-18: after S332, S403, S405 and S404 landed, the daemon stayed on build 7f5a1f7d, so landed fixes (the changelog-entry gate, ork wait, the tracking commit) did not apply to new runs. `ork daemon restart --rebuild` refuses while any role runs, even with --force (`docs/design.md:3847-3849`, adj 312), and with three runs in flight there was no gap; the orchestrator retried it every 30 s from a shell loop. The rebuild runs in the CLI (`internal/cli/lifecycle.go:88-120`); the daemon only reports behind main (`internal/daemon/build.go:25`, `:173`).",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "selfhost-auto-rebuild",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 3,
         "attempts": 0
       }
     }

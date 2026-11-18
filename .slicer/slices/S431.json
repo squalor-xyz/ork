@@ -1,0 +1,41 @@
+{
+  "id": "S431",
+  "title": "Self-host daemon rebuilds itself: drain, build, swap, restart",
+  "lead": [
+    "Owner decision (2026-11-18, adj 464 `selfhost.auto-rebuild`, supersedes adj 232): for a self-host project that opts in, the daemon rebuilds and restarts itself after a landing that leaves it behind main. It drains first: no new role starts, running roles finish and are never killed, then it builds, validates, swaps the binary and restarts, and held runs resume."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-18: after S332, S403, S405 and S404 landed, the daemon stayed on build 7f5a1f7d, so landed fixes (the changelog-entry gate, ork wait, the tracking commit) did not apply to new runs. `ork daemon restart --rebuild` refuses while any role runs, even with --force (`docs/design.md:3847-3849`, adj 312), and with three runs in flight there was no gap; the orchestrator retried it every 30 s from a shell loop. The rebuild runs in the CLI (`internal/cli/lifecycle.go:88-120`); the daemon only reports behind main (`internal/daemon/build.go:25`, `:173`).",
+  "size": "L",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A daemon behind main runs old code, so every landed engine fix waits for a hand restart that can only happen when no role runs. Under a full slot cap that gap rarely comes on its own. Draining bounds the wait to one role's length. Owner rule (2026-11-17): regular, deterministic steps are code."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/registry/registry.go:246` (new per-project `auto_rebuild` flag beside `build_command`)\n- `internal/daemon/wire.go:310-336` (projects.set carries `auto_rebuild`)\n- `internal/cli/cli.go` (`ork projects set NAME --auto-rebuild on|off`)\n- `internal/daemon/build.go` (behind check; new rebuild-pending state and the drain)\n- `internal/daemon/runs.go` (hold role starts while draining; resume after restart)\n- `internal/cli/lifecycle.go:88-130` (build step shared with the daemon, not duplicated)\n- `internal/daemon/handlers.go` (status carries the drain state)\n- `internal/tui/view.go:694-705` (status line shows the drain)\n- `internal/daemon/build_test.go`\n- `internal/daemon/runs_test.go`\n- `docs/design.md:3836-3866`\n- `docs/guide.md:895-896`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestAutoRebuildDrainsThenRestarts` in `internal/daemon/build_test.go`: a self-host project with `auto_rebuild` on and a fake build command; after a landing leaves the daemon behind main, a role that is running finishes, no new role starts meanwhile, then the build runs once and the restart path is called once.\n- `TestAutoRebuildHoldsNewRoles` in `internal/daemon/runs_test.go`: while draining, a run that reaches a role start waits with reason \"waiting for daemon rebuild\" and starts that role after the restart.\n- `TestAutoRebuildFailedBuildReleasesHold`: the build exits 1; the old daemon keeps running, the hold is released, held runs continue on the old build, and status carries the last output lines and \"daemon not rebuilt\".\n- `TestAutoRebuildOffKeepsManual`: with `auto_rebuild` off (the default) nothing is held or built; the behind notice is unchanged.\n- `TestAutoRebuildNeverKillsARole`: no code path in the drain cancels a running role."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests above and see them red for the stated reason.\n2. Registry: `auto_rebuild` bool, default off, only allowed with a non-empty `build_command` on a self-host project; `ork projects set NAME --auto-rebuild on|off`.\n3. Daemon: after a landing (and at start) when the project is self-host, behind main, opted in and has a build command, enter draining: hold every new role start (engine and spec-check roles), let running roles end.\n4. When no role runs: build through the same code the CLI uses (shared helper, ten-minute timeout, process-group cleanup), into the installed path the build command writes; validate the executable as the CLI restart does; then stop and restart the daemon through the existing path. Runs resume through today's restart recovery.\n5. A failed build: keep the old daemon, release the hold, record the failure in status (last twenty lines), and do not retry until main moves again.\n6. Status, `ork status` and the TUI status line show \"rebuild pending: waiting for N roles\" while draining and the held runs' reason.\n7. Docs: `docs/design.md` self-host rebuild section (adj 464 supersedes adj 232; \"There is no automatic rebuild\" becomes the opt-in drain) and `docs/guide.md` troubleshooting rows. Changelog entry with `slicer changelog add`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- With auto_rebuild on, a landing that leaves the self-host daemon behind main ends with the daemon on the new build without any hand command, and no role was killed.\n- While draining, no new role starts and status says why.\n- A failed build leaves the old daemon running, releases held runs and reports the build output.\n- With auto_rebuild off, behaviour is unchanged.\n\nCommands:\n- `go test ./internal/daemon -run 'TestAutoRebuild' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` must print nothing.\n- [HUMAN CHECK] With `ork projects set ork --auto-rebuild on`, land a slice that changes internal/engine while another run is implementing; the daemon restarts on the new build after that role ends."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"Self-host daemon rebuilds itself after a landing (drain, build, restart)\"."
+    }
+  ],
+  "notes": []
+}
