@@ -1,0 +1,39 @@
+{
+  "id": "S441",
+  "title": "allow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261118-130342-787e, project ork, item S431:\n\nallow `go test -overlay` with an overlay file in the role temp dir as the documented way for UI passes to render without touching the tree\n\nEvidence: a `mkdir -p ... && go test -overlay ...` compound was auto-denied; a plain `go -C ... test -overlay ...` ran"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
