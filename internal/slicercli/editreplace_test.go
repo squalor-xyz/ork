@@ -12,7 +12,7 @@ import (
 
 func TestEditReplaceReplacesASection(t *testing.T) {
 	text := "- `go test ./...`\n- [HUMAN CHECK] look"
-	args := []string{"edit", "S179", "--section", "Check", "--text", text, "--render", "--json", "--lean", "--root", root}
+	args := []string{"edit", "S179", "--section", "Check", "--text=" + text, "--render", "--json", "--lean", "--root", root}
 	c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{"id":"S179"}`})
 	w, sink := writer()
 	if err := c.EditReplace(context.Background(), w, root, "S179", "Check", text); err != nil {
@@ -24,7 +24,7 @@ func TestEditReplaceReplacesASection(t *testing.T) {
 	if len(sink.writes) != 1 || sink.writes[0].Argv[0] != "edit" || sink.writes[0].Root != root {
 		t.Errorf("writes %+v", sink.writes)
 	}
-	if got := EditReplaceArgs("S179", "Check", text); !reflect.DeepEqual(got, []string{"edit", "S179", "--section", "Check", "--text", text}) {
+	if got := EditReplaceArgs("S179", "Check", text); !reflect.DeepEqual(got, []string{"edit", "S179", "--section", "Check", "--text=" + text}) {
 		t.Errorf("preview args %q", got)
 	}
 }

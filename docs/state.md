@@ -498,10 +498,10 @@ sliver waits for the owner's approval and lands the parent.
      "argv": ["relay-run", "begin", "S18", "--worktree", "/.../S18", "--json"],
      "exit": 0, "ms": 640},
     {"at": "2026-10-19T16:40:11Z", "tool": "slicer", "root": "/.../S18",
-     "argv": ["note", "S18", "--text", "Review FAIL: ...", "--render", "--json"],
+     "argv": ["note", "S18", "--text=Review FAIL: ...", "--render", "--json"],
      "exit": 3, "code": "locked", "ms": 5100},
     {"at": "2026-10-19T16:40:16Z", "tool": "slicer", "root": "/.../S18",
-     "argv": ["note", "S18", "--text", "Review FAIL: ...", "--render", "--json"],
+     "argv": ["note", "S18", "--text=Review FAIL: ...", "--render", "--json"],
      "exit": 0, "retry": 1, "ms": 420}
   ],
   "commit": null,

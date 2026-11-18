@@ -116,7 +116,7 @@ func TestAFindingKeptOnceAcrossRounds(t *testing.T) {
 		t.Errorf("the fix round after a gate FAIL carries only the fix findings:\n%s", fix)
 	}
 	notes := h.calls("slicer", "note")
-	if len(notes) != 1 || !strings.Contains(notes[0][3], "engine.go:10 missing nil check") || strings.Contains(notes[0][3], "--json flag") {
+	if len(notes) != 1 || !strings.Contains(noteText(notes[0]), "engine.go:10 missing nil check") || strings.Contains(noteText(notes[0]), "--json flag") {
 		t.Errorf("the Review FAIL note carries only the fix findings: %q", notes)
 	}
 }

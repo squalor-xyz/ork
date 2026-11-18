@@ -112,5 +112,6 @@ func (d *Daemon) vendorNote(lineup map[string][]runrec.LineupEntry) string {
 			notes = append(notes, fmt.Sprintf("%s; its rows are skipped where another vendor has one; ork vendor back %s ends it", v.SentenceAt(d.cfg.Clock.Now()), v.Vendor))
 		}
 	}
-	return strings.Join(notes, "; ")
+	// Each note holds "; " twice, so a vendor is a sentence of its own.
+	return strings.Join(notes, ". ")
 }

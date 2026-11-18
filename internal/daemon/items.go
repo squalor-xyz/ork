@@ -76,9 +76,8 @@ func (d *Daemon) itemNew(ctx context.Context, p ItemNewParams) (*ItemNewResult, 
 	if err != nil {
 		return nil, err
 	}
-	if err := d.cache.Refresh(ctx, proj, source.Items, source.Deps); err != nil {
-		return nil, err
-	}
+	// The write is done; the refresh is only freshness.
+	_ = d.cache.Refresh(ctx, proj, source.Items, source.Deps)
 	return &ItemNewResult{ID: id, Existing: existing}, nil
 }
 
@@ -119,9 +118,8 @@ func (d *Daemon) itemPark(ctx context.Context, p ItemParkParams) (*ItemParkResul
 		}
 		return nil, err
 	}
-	if err := d.cache.Refresh(ctx, proj, source.Items, source.Deps); err != nil {
-		return nil, err
-	}
+	// The write is done; the refresh is only freshness.
+	_ = d.cache.Refresh(ctx, proj, source.Items, source.Deps)
 	return &ItemParkResult{Item: p.Item}, nil
 }
 
@@ -170,9 +168,8 @@ func (d *Daemon) itemUnpark(ctx context.Context, p ItemParkParams) (*ItemParkRes
 	if err := d.runDeps(proj).Slicer.Unpark(ctx, runrec.Writer{}, proj.Path, p.Item); err != nil {
 		return nil, err
 	}
-	if err := d.cache.Refresh(ctx, proj, source.Items, source.Deps); err != nil {
-		return nil, err
-	}
+	// The write is done; the refresh is only freshness.
+	_ = d.cache.Refresh(ctx, proj, source.Items, source.Deps)
 	return &ItemParkResult{Item: p.Item}, nil
 }
 
@@ -202,9 +199,8 @@ func (d *Daemon) itemMove(ctx context.Context, p ItemMoveParams) (*ItemMoveResul
 		return nil, err
 	}
 	after, listErr := c.List(ctx, proj.Path)
-	if err := d.cache.Refresh(ctx, proj, source.Items, source.Deps); err != nil {
-		return nil, err
-	}
+	// The write is done; the refresh is only freshness.
+	_ = d.cache.Refresh(ctx, proj, source.Items, source.Deps)
 	if listErr != nil {
 		return nil, listErr
 	}

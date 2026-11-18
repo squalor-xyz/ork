@@ -27,9 +27,8 @@ func (d *Daemon) adjAnswer(ctx context.Context, p AdjAnswerParams) (*AdjAnswerRe
 	if err != nil {
 		return nil, err
 	}
-	if err := d.cache.Refresh(ctx, proj, source.Open, source.Decided); err != nil {
-		return nil, err
-	}
+	// The write is done; the refresh is only freshness.
+	_ = d.cache.Refresh(ctx, proj, source.Open, source.Decided)
 	return &AdjAnswerResult{Message: message}, nil
 }
 
@@ -49,8 +48,7 @@ func (d *Daemon) adjAsk(ctx context.Context, p AdjAskParams) (*AdjAskResult, err
 	if err != nil {
 		return nil, err
 	}
-	if err := d.cache.Refresh(ctx, proj, source.Open, source.Decided); err != nil {
-		return nil, err
-	}
+	// The write is done; the refresh is only freshness.
+	_ = d.cache.Refresh(ctx, proj, source.Open, source.Decided)
 	return &AdjAskResult{ID: id}, nil
 }

@@ -76,8 +76,8 @@ func TestNonBlockingOwnerFindingIsAskedInTheLedgerWithoutBlocker(t *testing.T) {
 			if len(asks) != 1 {
 				t.Fatalf("relay-run ask calls: %q", asks)
 			}
-			want := []string{"relay-run", "ask", "run-1", "--step", rec.OrchestratorStep, "--title", "Should the cache be shared across projects?",
-				"--option", "shared:one cache for all", "--option", "per-project:one cache each", "--recommend", "per-project"}
+			want := []string{"relay-run", "ask", "run-1", "--step", rec.OrchestratorStep, "--title=Should the cache be shared across projects?",
+				"--option=shared:one cache for all", "--option=per-project:one cache each", "--recommend", "per-project"}
 			if tc.key != "" {
 				want = append(want, "--key", tc.key)
 			}
@@ -189,8 +189,8 @@ func TestPausedQuestionStillAsksWithBlocker(t *testing.T) {
 	if len(asks) != 1 {
 		t.Fatalf("ask calls %q", asks)
 	}
-	i := slices.Index(asks[0], "--title")
-	if i < 0 || i+2 >= len(asks[0]) || asks[0][i+2] != "--blocker" {
+	i := slices.Index(asks[0], "--title=Which cap?")
+	if i < 0 || i+1 >= len(asks[0]) || asks[0][i+1] != "--blocker" {
 		t.Errorf("a paused question is asked with --blocker right after --title: %q", asks[0])
 	}
 }

@@ -111,7 +111,7 @@ func TestSpecDraftWritesNothingBeforeApproval(t *testing.T) {
 		t.Errorf("Why: %+v", why)
 	}
 	// The command is the one an approval runs, as the TUI shows it.
-	if want := "slicer edit S1 --section Why --text 'New why for S1.' --render"; why.Command != want {
+	if want := "slicer edit S1 --section Why --text='New why for S1.' --render"; why.Command != want {
 		t.Errorf("command %q, want %q", why.Command, want)
 	}
 	if check := draftSection(res, "Check"); !check.Unchanged || check.Command != "" {
@@ -143,8 +143,8 @@ func TestSpecDraftApprovalRunsSlicerEditPerSection(t *testing.T) {
 	}
 	project := reg.Projects[0].Path
 	want := [][]string{
-		{"edit", "S1", "--section", "Why", "--text", "New why for S1.", "--render", "--json", "--lean", "--root", project},
-		{"edit", "S1", "--section", "Implement", "--text", "1. Do a.", "--render", "--json", "--lean", "--root", project},
+		{"edit", "S1", "--section", "Why", "--text=New why for S1.", "--render", "--json", "--lean", "--root", project},
+		{"edit", "S1", "--section", "Implement", "--text=1. Do a.", "--render", "--json", "--lean", "--root", project},
 	}
 	if got := rig.edits(); !reflect.DeepEqual(got, want) {
 		t.Fatalf("edits %v, want %v", got, want)

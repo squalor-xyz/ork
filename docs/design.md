@@ -394,7 +394,7 @@ ork (TUI)  ork status --json (CLI)
    section, the current text, the proposal and the command an approval runs, and
    remembers the proposal in memory with the fingerprint of the spec it was made
    against. It writes nothing. `spec.draft-apply` names the sections the owner
-   approved and runs `slicer edit ID --section NAME --text TEXT --render`
+   approved and runs `slicer edit ID --section NAME --text=TEXT --render`
    (replace) for each one, in order, after it checks that the spec still has
    that fingerprint (`refused` when it changed, when there is no draft, or when
    a section is unchanged, has a problem or is already applied). Drafts, spec
@@ -3172,15 +3172,24 @@ Quote TEXT as one argument. Text after ITEM is literal even when it starts
 with `-`: `ork note P S12 "- text"` and `ork note P S12 -- "-x"` both work.
 `--json` may precede PROJECT or follow TEXT. TEXT `-` reads stdin, removing
 its trailing newline. A blank ITEM, blank note or wrong argument count exits
-2 before dialing the daemon. Blank text says `Note must not be empty`;
+2 before dialing the daemon. Blank text says `note: TEXT must not be empty`;
 wrong counts say `note: takes PROJECT ITEM TEXT, got N arguments; quote TEXT`. Success prints `noted ITEM` or
 `{"item":"ITEM","noted":true}`. The daemon validates the item and text,
 resolves the registered project, and runs
-`slicer note ITEM --text TEXT --render --json --root PROJECT`. It uses a
+`slicer note ITEM --text=TEXT --render --json --root PROJECT`. It uses a
 writer with no run sink because this write is outside a run. After success
 it refreshes only Items before returning. Notes belong to slicer; snapshots
 and item detail carry its notes without an ork-owned copy. Notes are part
 of v1.0 (`scope.v1-ork-edits`, owner decision 2026-10-29).
+
+*Proposed (S392):* ork attaches the free-text values of its slicer write
+calls to their flags (`--text=TEXT` of `note` and `edit`, `--title=TEXT` and
+`--option=LABEL:SUMMARY` of `relay-run ask`, as it already does for
+`relay-run answer`), because slicer's argument parser reads a separate value
+that starts with a dash as an option. A text such as `-x` stays text. A
+daemon write that succeeded reports success even when the refresh after it
+fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
+`item.move`, as `item.note` does); the refresh is only freshness (adj 435).
 
 `ork doctor` checks:
 - the running ork binary: its path, resolved through symlinks

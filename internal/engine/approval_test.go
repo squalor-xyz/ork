@@ -143,10 +143,15 @@ func TestApprovalNoteNamesDeferredLines(t *testing.T) {
 		t.Fatalf("%d notes: %v", len(notes), notes)
 	}
 	for _, want := range []string{"- later: " + deferredOne, "- later: " + deferredTwo} {
-		if !strings.Contains(notes[0][3], want) {
-			t.Errorf("note text lacks %q:\n%s", want, notes[0][3])
+		if !strings.Contains(noteText(notes[0]), want) {
+			t.Errorf("note text lacks %q:\n%s", want, noteText(notes[0]))
 		}
 	}
+}
+
+// noteText is the text of a recorded `slicer note ITEM --text=TEXT` call.
+func noteText(call []string) string {
+	return strings.TrimPrefix(call[2], "--text=")
 }
 
 const stat = " internal/engine/engine.go | 12 ++++++++----\n internal/tui/pane.go       | 40 ++++++++++++++++++++++++++++++++++++++++\n 2 files changed, 48 insertions(+), 4 deletions(-)\n"
@@ -442,12 +447,13 @@ func TestApprovalRecordsHumanChecksAsSlicerNote(t *testing.T) {
 		t.Fatalf("%d notes: %v", len(notes), notes)
 	}
 	n := notes[0]
-	if n[1] != item || n[2] != "--text" || n[len(n)-2] != "--root" || n[len(n)-1] != h.W {
+	if n[1] != item || !strings.HasPrefix(n[2], "--text=") || n[len(n)-2] != "--root" || n[len(n)-1] != h.W {
 		t.Fatalf("note call: %v", n)
 	}
+	text := strings.TrimPrefix(n[2], "--text=")
 	for _, want := range []string{"Human checks at approval", "ticked: " + checkOne, "later: " + checkTwo} {
-		if !strings.Contains(n[3], want) {
-			t.Errorf("note text lacks %q:\n%s", want, n[3])
+		if !strings.Contains(text, want) {
+			t.Errorf("note text lacks %q:\n%s", want, text)
 		}
 	}
 	// The note comes before the finish step, which closes the slice.
@@ -582,7 +588,7 @@ func TestApprovalNotesWhenChecksCannotBeRead(t *testing.T) {
 	if len(notes) != 1 {
 		t.Fatalf("%d notes: %v", len(notes), notes)
 	}
-	text := notes[0][3]
+	text := noteText(notes[0])
 	for _, want := range []string{"Human checks at approval (" + item + ")", "could not be read", "ledger busy"} {
 		if !strings.Contains(text, want) {
 			t.Errorf("note lacks %q:\n%s", want, text)
@@ -847,7 +853,7 @@ func TestAutoLandLandsAPassingRunWithNoApproveCall(t *testing.T) {
 	}
 	// The slicer note that records the marks is written, as an approval does.
 	calls := strings.Join(env.log("slicer.log"), "\n")
-	if n := strings.Count(calls, "note "+item+" --text Human checks at approval (S04):"); n != 1 || !strings.Contains(calls, "- later: "+checkOne) {
+	if n := strings.Count(calls, "note "+item+" --text=Human checks at approval (S04):"); n != 1 || !strings.Contains(calls, "- later: "+checkOne) {
 		t.Errorf("%d approval notes in:\n%s", n, calls)
 	}
 }
@@ -1019,7 +1025,7 @@ func TestAutoLandAfterALandingFixRoundLandsAndAppendsOnce(t *testing.T) {
 	if n := strings.Count(readTodo(t, env.P), wantRunHeader); n != 1 {
 		t.Errorf("%d sections for the run:\n%s", n, readTodo(t, env.P))
 	}
-	if n := strings.Count(strings.Join(env.log("slicer.log"), "\n"), "note "+item+" --text Human checks at approval"); n != 1 {
+	if n := strings.Count(strings.Join(env.log("slicer.log"), "\n"), "note "+item+" --text=Human checks at approval"); n != 1 {
 		t.Errorf("%d approval notes, want the one the first approval wrote", n)
 	}
 }

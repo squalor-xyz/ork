@@ -120,7 +120,7 @@ func TestApproveLaterDefersOpenChecksAndApproves(t *testing.T) {
 	}
 	// The slicer note records them as later, as a per-check mark does.
 	notes := h.calls("slicer", "note")
-	if len(notes) != 1 || !strings.Contains(notes[0][3], "later: "+checkOne) || !strings.Contains(notes[0][3], "later: "+checkTwo) {
+	if len(notes) != 1 || !strings.Contains(noteText(notes[0]), "later: "+checkOne) || !strings.Contains(noteText(notes[0]), "later: "+checkTwo) {
 		t.Errorf("notes %v", notes)
 	}
 }

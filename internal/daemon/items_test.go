@@ -109,7 +109,7 @@ func TestItemNoteWritesTheNoteAndReadsItemsAgain(t *testing.T) {
 		t.Fatalf("result %s", raw)
 	}
 	calls := lastFake.CallsTo("slicer")
-	want := []string{"note", "S12", "--text", "- text", "--render", "--json", "--root", p.Path}
+	want := []string{"note", "S12", "--text=- text", "--render", "--json", "--root", p.Path}
 	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
 		t.Fatalf("calls %v", calls)
 	}
@@ -135,6 +135,41 @@ func TestItemNoteSucceedsWhenTheItemsRefreshFails(t *testing.T) {
 	calls := lastFake.CallsTo("slicer")
 	if len(calls) != 1 || calls[0].Args[0] != "note" {
 		t.Errorf("note calls: %+v", calls)
+	}
+}
+
+func TestItemWritesSucceedWhenTheRefreshFails(t *testing.T) {
+	for _, tc := range []struct {
+		method, raw, want, write string
+		routes                   []clitest.Route
+	}{
+		{"item.new", `{"project":"p","title":"Title","why":"why","size":"M"}`, `{"id":"S184","existing":false}`, "promote", []clitest.Route{{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"id":"S184"}`}, {Tool: "slicer", Args: []string{"promote"}, Prefix: true, Stdout: `{}`}}},
+		{"item.park", `{"project":"p","item":"S12"}`, `{"item":"S12"}`, "park", []clitest.Route{{Tool: "slicer", Args: []string{"park"}, Prefix: true, Stdout: `{}`}}},
+		{"item.unpark", `{"project":"p","item":"S12"}`, `{"item":"S12"}`, "unpark", []clitest.Route{{Tool: "slicer", Args: []string{"unpark"}, Prefix: true, Stdout: `{}`}}},
+		{"item.move", `{"project":"p","item":"S12","other":"S13","position":"after"}`, `{"item":"S12","changed":false}`, "move", []clitest.Route{{Tool: "slicer", Args: []string{"move"}, Prefix: true, Stdout: `{}`}, {Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[{"id":"S12"},{"id":"S13"}]`}}},
+	} {
+		t.Run(tc.method, func(t *testing.T) {
+			d, _, _ := runDaemon(t, nil, tc.routes...)
+			if err := os.MkdirAll(d.cfg.Paths.Dir, 0700); err != nil {
+				t.Fatal(err)
+			}
+			d.cache.Close()
+			v, err := d.handle(context.Background(), tc.method, json.RawMessage(tc.raw))
+			if err != nil {
+				t.Fatalf("write returned the refresh error: %v", err)
+			}
+			raw, _ := json.Marshal(v)
+			if string(raw) != tc.want {
+				t.Errorf("result %s, want %s", raw, tc.want)
+			}
+			wrote := false
+			for _, call := range lastFake.CallsTo("slicer") {
+				wrote = wrote || call.Args[0] == tc.write
+			}
+			if !wrote {
+				t.Errorf("slicer %s was not called: %v", tc.write, lastFake.CallsTo("slicer"))
+			}
+		})
 	}
 }
 

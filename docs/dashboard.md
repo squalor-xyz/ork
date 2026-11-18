@@ -2257,7 +2257,7 @@ section cannot be approved. The role's `Owner needed` text follows the sections.
 `left` and `right` move between sections, and the screen scrolls so that the
 section under the cursor is at its top; `j`, `k`, `pgup`, `pgdown`, `g` and
 `G` scroll by hand. `y` on a section the daemon can apply asks in the status
-area with the exact command, `Run: slicer edit ID --section NAME --text ...
+area with the exact command, `Run: slicer edit ID --section NAME --text='...'
 --render`, and `[y/N] (Enter is No)`. A command longer than four lines is cut
 after its first three and a dim `+N more lines of the command` follows, so the
 question always shows; the whole text is the `Proposed:` text above. A second
@@ -2313,7 +2313,7 @@ Quote TEXT as one argument. Leading dashes are literal:
 `ork note P S12 "- text"` and `ork note P S12 -- "-x"` both work as typed.
 `--json` may precede PROJECT or follow TEXT. TEXT `-` reads stdin and removes
 its trailing newline. Blank ITEM is a usage error before dialing the daemon.
-A blank note says `Note must not be empty`. Wrong argument counts report
+A blank note says `note: TEXT must not be empty`. Wrong argument counts report
 `note: takes PROJECT ITEM TEXT, got N arguments; quote TEXT`. Text output is
 `noted ITEM`; JSON is `{"item":"ITEM","noted":true}`. Slicer owns the
 note and its date. ork reads and writes through the CLI and keeps no copy.

@@ -84,7 +84,7 @@ func TestPromoteGivesTheItemTheOutline(t *testing.T) {
 }
 
 func TestEditAppendAddsAParagraphToASection(t *testing.T) {
-	args := []string{"edit", "S130", "--section", "Implement", "--append", "--text", "Owner decisions (2026-10-26): A: yes.", "--render", "--json", "--lean", "--root", root}
+	args := []string{"edit", "S130", "--section", "Implement", "--append", "--text=Owner decisions (2026-10-26): A: yes.", "--render", "--json", "--lean", "--root", root}
 	c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{"id":"S130"}`})
 	w, sink := writer()
 	if err := c.EditAppend(context.Background(), w, root, "S130", "Implement", "Owner decisions (2026-10-26): A: yes."); err != nil {

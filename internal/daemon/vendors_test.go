@@ -82,6 +82,20 @@ func TestVendorUntilTextNamesTheDayAndTheYear(t *testing.T) {
 	}
 }
 
+func TestPlanNoteGivesEachOutVendorASentence(t *testing.T) {
+	d, _, _ := runDaemon(t, nil)
+	since := time.Now()
+	d.runs.deps.Vendors.MarkOut("codex", "You've hit your usage limit", since)
+	d.runs.deps.Vendors.MarkOutOwner("grok", "marked out by the owner", since)
+	plan := launchPlan(t, d, `{"project":"p","item":"S1","lineup":{"reviewer":[{"vendor":"codex","model":"m","effort":"high"},{"vendor":"grok","model":"grok-4.5","effort":"high"},{"vendor":"claude","model":"sonnet","effort":"high"}]}}`)
+	if want := "; ork vendor back codex ends it. grok is out until back"; !strings.Contains(plan.Note, want) {
+		t.Errorf("note %q lacks %q", plan.Note, want)
+	}
+	if strings.Contains(plan.Note, "ends it; ") {
+		t.Errorf("note %q joins the vendors with a semicolon", plan.Note)
+	}
+}
+
 func TestPlanNotesAVendorThatIsOut(t *testing.T) {
 	d, _, _ := runDaemon(t, nil)
 	var before RunPlan

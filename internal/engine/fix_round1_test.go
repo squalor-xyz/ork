@@ -145,7 +145,7 @@ func TestFix1RetryMirrorsQueuedQuestion(t *testing.T) {
 		t.Fatal(err)
 	}
 	rec := requireState(t, e, runrec.StatePaused)
-	if rec.Pending == nil || rec.Pending.LedgerQuestion == "" || !ledgerHas(h, "relay-run ask", "--title Which library?") {
+	if rec.Pending == nil || rec.Pending.LedgerQuestion == "" || !ledgerHas(h, "relay-run ask", "--title=Which library?") {
 		t.Fatal("queued question was not mirrored")
 	}
 	if len(h.runner.requests()) != before {

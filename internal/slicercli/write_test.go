@@ -293,14 +293,62 @@ func TestRelayEnd(t *testing.T) {
 
 func TestNoteWritesTheReviewFailText(t *testing.T) {
 	text := "Review FAIL: gate.go:10 handle nil"
-	args := []string{"note", "S04", "--text", text, "--render", "--json", "--root", wt}
+	args := []string{"note", "S04", "--text=" + text, "--render", "--json", "--root", wt}
 	c, _ := client(t, rawRoute(args, "note.json"))
 	w, sink := writer()
 	if err := c.Note(context.Background(), w, wt, "S04", text); err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"note", "S04", "--text", text, "--render", "--json"}; len(sink.writes) != 1 || !reflect.DeepEqual(sink.writes[0].Argv, want) {
+	if want := []string{"note", "S04", "--text=" + text, "--render", "--json"}; len(sink.writes) != 1 || !reflect.DeepEqual(sink.writes[0].Argv, want) {
 		t.Fatalf("writes %+v", sink.writes)
+	}
+}
+
+func TestSlicerFreeTextIsAttachedToItsFlag(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		verb  string
+		call  func(c Client) error
+		want  []string
+		reply string
+	}{
+		{"note", "note", func(c Client) error { return c.Note(context.Background(), runrec.Writer{}, wt, "S04", "-x") },
+			[]string{"note", "S04", "--text=-x", "--render", "--json", "--root", wt}, ""},
+		{"edit append", "edit", func(c Client) error {
+			return c.EditAppend(context.Background(), runrec.Writer{}, wt, "S1", "Why", "-x")
+		}, []string{"edit", "S1", "--section", "Why", "--append", "--text=-x", "--render", "--json", "--lean", "--root", wt}, ""},
+		{"edit replace", "edit", func(c Client) error {
+			return c.EditReplace(context.Background(), runrec.Writer{}, wt, "S1", "Why", "-x")
+		}, []string{"edit", "S1", "--section", "Why", "--text=-x", "--render", "--json", "--lean", "--root", wt}, ""},
+		{"relay ask", "relay-run", func(c Client) error {
+			q := runrec.OwnerQuestion{Title: "-t", Options: []runrec.Option{{Label: "-a", Summary: "-s"}}}
+			_, err := c.RelayAsk(context.Background(), runrec.Writer{}, wt, "run-1", "3", "", q, false)
+			return err
+		}, []string{"relay-run", "ask", "run-1", "--step", "3", "--title=-t", "--option=-a:-s", "--json", "--root", wt}, `{"question":{"id":"q1"}}`},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, f := client(t, clitest.Route{Tool: "slicer", Args: []string{tc.verb}, Prefix: true, Stdout: tc.reply})
+			if err := tc.call(c); err != nil {
+				t.Fatal(err)
+			}
+			if calls := f.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, tc.want) {
+				t.Fatalf("calls %+v, want %v", calls, tc.want)
+			}
+		})
+	}
+	if got, want := EditReplaceArgs("S1", "Why", "-x"), []string{"edit", "S1", "--section", "Why", "--text=-x"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("EditReplaceArgs %v, want %v", got, want)
+	}
+}
+
+func TestNoteRefusesEmptyTextByItsName(t *testing.T) {
+	c, f := client(t)
+	err := c.Note(context.Background(), runrec.Writer{}, wt, "S04", " ")
+	if err == nil || err.Error() != "note text must not be empty" {
+		t.Fatalf("error %v", err)
+	}
+	if calls := f.CallsTo("slicer"); len(calls) != 0 {
+		t.Fatalf("slicer called: %v", calls)
 	}
 }
 
@@ -324,7 +372,7 @@ func TestRenderAndLandAreLoggedWrites(t *testing.T) {
 
 func TestWritesRetryOnLockedAndLogEachAttempt(t *testing.T) {
 	locked := clitest.Reply{Stdout: `{"error":{"code":"locked","message":"busy","command":"note"}}`, Exit: 3}
-	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"note", "S04", "--text", "x", "--render", "--json", "--root", wt},
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: []string{"note", "S04", "--text=x", "--render", "--json", "--root", wt},
 		Seq: []clitest.Reply{locked, locked, {Stdout: `{"id":"S04","added":true}`}}})
 	w, sink := writer()
 	if err := c.Note(context.Background(), w, wt, "S04", "x"); err != nil {
@@ -451,8 +499,8 @@ var askQuestion = runrec.OwnerQuestion{
 }
 
 func TestRelayAskWithoutBlockerOmitsTheFlag(t *testing.T) {
-	want := []string{"relay-run", "ask", "run-1", "--step", "3", "--title", "Which cap?",
-		"--option", "four:cap at 4", "--option", "eight:cap at 8", "--recommend", "four", "--key", "a.b", "--reasoning", "smaller", "--json", "--root", root}
+	want := []string{"relay-run", "ask", "run-1", "--step", "3", "--title=Which cap?",
+		"--option=four:cap at 4", "--option=eight:cap at 8", "--recommend", "four", "--key", "a.b", "--reasoning", "smaller", "--json", "--root", root}
 	c, f := client(t, clitest.Route{Tool: "slicer", Args: want, Stdout: `{"question":{"id":"q7"}}`})
 	id, err := c.RelayAsk(context.Background(), runrec.Writer{}, root, "run-1", "3", "a.b", askQuestion, false)
 	if err != nil || id != "q7" {
@@ -467,8 +515,8 @@ func TestRelayAskWithoutBlockerOmitsTheFlag(t *testing.T) {
 }
 
 func TestRelayAskBlockerPassesTheFlag(t *testing.T) {
-	want := []string{"relay-run", "ask", "run-1", "--step", "3", "--title", "Which cap?", "--blocker",
-		"--option", "four:cap at 4", "--option", "eight:cap at 8", "--recommend", "four", "--key", "a.b", "--reasoning", "smaller", "--json", "--root", root}
+	want := []string{"relay-run", "ask", "run-1", "--step", "3", "--title=Which cap?", "--blocker",
+		"--option=four:cap at 4", "--option=eight:cap at 8", "--recommend", "four", "--key", "a.b", "--reasoning", "smaller", "--json", "--root", root}
 	c, f := client(t, clitest.Route{Tool: "slicer", Args: want, Stdout: `{"question":{"id":"q7"}}`})
 	id, err := c.RelayAsk(context.Background(), runrec.Writer{}, root, "run-1", "3", "a.b", askQuestion, true)
 	if err != nil || id != "q7" {

@@ -14,6 +14,43 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 )
 
+func TestAdjWritesSucceedWhenTheRefreshFails(t *testing.T) {
+	for _, tc := range []struct{ method, raw, write, want string }{
+		{"adj.answer", `{"project":"p","id":12,"option":"a","by":"Jon","via":"cli"}`, "decide", ""},
+		{"adj.ask", `{"project":"p","title":"Title"}`, "ask", `{"id":12}`},
+	} {
+		t.Run(tc.method, func(t *testing.T) {
+			d, _, p := runDaemon(t, nil, clitest.Route{Tool: "adj", Args: []string{"show"}, Prefix: true, Stdout: `{"id":12,"status":"open","title":"Which?","options":[{"label":"a"},{"label":"b"}]}`}, clitest.Route{Tool: "adj", Args: []string{"decide"}, Prefix: true}, clitest.Route{Tool: "adj", Args: []string{"ask"}, Prefix: true, Stdout: "12\n"})
+			p.Adj = true
+			if err := registry.Save(d.registryPath(), &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
+				t.Fatal(err)
+			}
+			d.runs.deps.Adj = adjcli.Client{Bin: lastFake.Bin("adj")}
+			d.cache.Close()
+			v, err := d.handle(context.Background(), tc.method, json.RawMessage(tc.raw))
+			if err != nil {
+				t.Fatalf("write returned the refresh error: %v", err)
+			}
+			b, _ := json.Marshal(v)
+			if tc.want != "" && string(b) != tc.want {
+				t.Errorf("result %s, want %s", b, tc.want)
+			}
+			if tc.want == "" && !strings.Contains(string(b), "12") {
+				t.Errorf("result %s", b)
+			}
+			writes := 0
+			for _, call := range lastFake.CallsTo("adj") {
+				if call.Args[0] == tc.write {
+					writes++
+				}
+			}
+			if writes != 1 {
+				t.Errorf("%d %s calls, want 1: %+v", writes, tc.write, lastFake.CallsTo("adj"))
+			}
+		})
+	}
+}
+
 func TestAdjMethodsDecideAskAndRefresh(t *testing.T) {
 	for _, method := range []string{"adj.answer", "adj.ask"} {
 		t.Run(method, func(t *testing.T) {

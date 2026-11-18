@@ -39,7 +39,7 @@ func (a *App) note(ctx context.Context, o *output, args []string) int {
 		text = strings.TrimSuffix(strings.TrimSuffix(string(b), "\n"), "\r")
 	}
 	if strings.TrimSpace(text) == "" {
-		return o.usage("note: Note must not be empty")
+		return o.usage("note: TEXT must not be empty")
 	}
 	var out daemon.ItemNoteResult
 	if code := a.call(ctx, o, daemon.MethodItemNote, daemon.ItemNoteParams{Project: pos[0], Item: pos[1], Text: text}, &out); code != 0 {

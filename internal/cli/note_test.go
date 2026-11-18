@@ -99,6 +99,17 @@ func TestNoteCommandBlankItem(t *testing.T) {
 		}
 	}
 }
+func TestNoteRefusesAnEmptyTextByItsArgumentName(t *testing.T) {
+	a := App{}
+	var out, errout bytes.Buffer
+	if code := a.Run(context.Background(), []string{"note", "p", "S1", "  "}, &out, &errout); code != 2 {
+		t.Fatalf("code=%d", code)
+	}
+	if !strings.Contains(errout.String(), "note: TEXT must not be empty") || strings.Contains(errout.String(), "Note must") {
+		t.Fatalf("stderr %q", errout.String())
+	}
+}
+
 func TestNoteCommandUsageMessages(t *testing.T) {
 	a := App{}
 	for _, tc := range []struct {
@@ -107,7 +118,7 @@ func TestNoteCommandUsageMessages(t *testing.T) {
 	}{
 		{[]string{"note"}, "note: takes PROJECT ITEM TEXT, got 0 arguments; quote TEXT"},
 		{[]string{"note", "P", "S12", "a", "b"}, "note: takes PROJECT ITEM TEXT, got 4 arguments; quote TEXT"},
-		{[]string{"note", "P", "S12", "  "}, "Note must not be empty"},
+		{[]string{"note", "P", "S12", "  "}, "note: TEXT must not be empty"},
 	} {
 		var out, errout bytes.Buffer
 		if code := a.Run(context.Background(), tc.args, &out, &errout); code != 2 || !strings.Contains(errout.String(), tc.want) {

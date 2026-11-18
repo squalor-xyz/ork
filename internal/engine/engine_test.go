@@ -1043,10 +1043,10 @@ func TestGateFailIsNotedAndStartsAFixRound(t *testing.T) {
 		t.Fatalf("role rounds %v, want %v", got, want)
 	}
 	notes := h.calls("slicer", "note")
-	if len(notes) != 1 || len(notes[0]) != 8 || notes[0][1] != item || notes[0][2] != "--text" || !strings.HasPrefix(notes[0][3], "Review FAIL: ") || !strings.Contains(notes[0][3], "engine.go:10 missing nil check") {
+	if len(notes) != 1 || len(notes[0]) != 7 || notes[0][1] != item || !strings.HasPrefix(notes[0][2], "--text=Review FAIL: ") || !strings.Contains(noteText(notes[0]), "engine.go:10 missing nil check") {
 		t.Fatalf("notes: %q", notes)
 	}
-	if notes[0][4] != "--render" || notes[0][5] != "--json" || notes[0][6] != "--root" || notes[0][7] != h.W {
+	if notes[0][3] != "--render" || notes[0][4] != "--json" || notes[0][5] != "--root" || notes[0][6] != h.W {
 		t.Errorf("note flags: %q", notes[0])
 	}
 	reqs := h.runner.requests()

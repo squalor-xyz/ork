@@ -205,15 +205,16 @@ func (c Client) RelayEnd(ctx context.Context, w runrec.Writer, root, run, outcom
 	return err
 }
 
-// Note runs `slicer note ID --text TEXT --render --json`.
+// Note runs `slicer note ID --text=TEXT --render --json`. The text is attached
+// to its flag, so a text that starts with a dash stays text.
 func (c Client) Note(ctx context.Context, w runrec.Writer, root, id, text string) error {
 	if err := checkID("item", id); err != nil {
 		return err
 	}
 	if strings.TrimSpace(text) == "" {
-		return errors.New("Note must not be empty")
+		return errors.New("note text must not be empty")
 	}
-	_, err := c.write(ctx, w, root, "note", id, "--text", text, "--render", "--json")
+	_, err := c.write(ctx, w, root, "note", id, "--text="+text, "--render", "--json")
 	return err
 }
 
@@ -464,14 +465,14 @@ func SpecCheckRowIDs(rules []Rule) []string {
 	return namedRowIDs(rules, specCheckRow, localSpecCheckRow)
 }
 
-// EditAppend runs `slicer edit ID --section SECTION --append --text TEXT
+// EditAppend runs `slicer edit ID --section SECTION --append --text=TEXT
 // --render --json --lean --root ROOT`: it adds TEXT to the section as a new
-// paragraph.
+// paragraph. The text is attached to its flag, so a leading dash stays text.
 func (c Client) EditAppend(ctx context.Context, w runrec.Writer, root, id, section, text string) error {
 	if strings.TrimSpace(text) == "" {
 		return fmt.Errorf("slicer edit %s: nothing to append", id)
 	}
-	_, err := c.write(ctx, w, root, "edit", id, "--section", section, "--append", "--text", text, "--render", "--json", "--lean")
+	_, err := c.write(ctx, w, root, "edit", id, "--section", section, "--append", "--text="+text, "--render", "--json", "--lean")
 	return err
 }
 
@@ -479,10 +480,10 @@ func (c Client) EditAppend(ctx context.Context, w runrec.Writer, root, id, secti
 // without --render, --json, --lean or --root. The client and the daemon's
 // preview line both come from here, so they cannot drift.
 func EditReplaceArgs(id, section, text string) []string {
-	return []string{"edit", id, "--section", section, "--text", text}
+	return []string{"edit", id, "--section", section, "--text=" + text}
 }
 
-// EditReplace runs `slicer edit ID --section SECTION --text TEXT --render
+// EditReplace runs `slicer edit ID --section SECTION --text=TEXT --render
 // --json --lean --root ROOT`: it replaces the section's body with TEXT (S179,
 // scope.spec-drafting). An empty TEXT would clear the section, so it is refused.
 func (c Client) EditReplace(ctx context.Context, w runrec.Writer, root, id, section, text string) error {
@@ -538,16 +539,18 @@ func (c Client) SetScores(ctx context.Context, w runrec.Writer, root, id string,
 	return err
 }
 
-// RelayAsk records a structured owner question on the orchestrator step. With
+// RelayAsk records a structured owner question on the orchestrator step. The
+// title and each option are attached (`--title=TEXT`, `--option=LABEL:SUMMARY`)
+// so that one that starts with a dash stays text. With
 // blocker the step waits on the owner until it is answered; without, slicer
 // records the question and the step keeps running (S223, proposed).
 func (c Client) RelayAsk(ctx context.Context, w runrec.Writer, root, run, step, key string, q runrec.OwnerQuestion, blocker bool) (string, error) {
-	argv := []string{"relay-run", "ask", run, "--step", step, "--title", q.Title}
+	argv := []string{"relay-run", "ask", run, "--step", step, "--title=" + q.Title}
 	if blocker {
 		argv = append(argv, "--blocker")
 	}
 	for _, o := range q.Options {
-		argv = append(argv, "--option", o.Label+":"+o.Summary)
+		argv = append(argv, "--option="+o.Label+":"+o.Summary)
 	}
 	if q.Recommend > 0 && q.Recommend <= len(q.Options) {
 		argv = append(argv, "--recommend", q.Options[q.Recommend-1].Label)
