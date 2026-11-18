@@ -17,9 +17,10 @@ type Permission struct {
 	Allow    []string
 }
 
-// LocalReadOnlyAllowlist is the fixed tool list for a read-only Claude local
-// launcher (adj 307). It avoids plan mode's model-backed classifier. Each
-// call returns its own slice.
+// LocalReadOnlyAllowlist is the fixed tool list shared by read-only cloud
+// Claude (adj 489) and local launchers (adj 307). The original name is kept
+// for callers. It avoids plan mode's model-backed classifier. Each call
+// returns its own slice.
 func LocalReadOnlyAllowlist() []string {
 	return []string{
 		"Read", "Grep", "Glob",

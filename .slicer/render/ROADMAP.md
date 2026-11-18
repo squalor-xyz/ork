@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-451 items · — 57 · done 325 · retired 69
+451 items · — 56 · done 326 · retired 69
 
 ## v1.3
 
@@ -187,7 +187,7 @@ v1.2
 | 130 | [S415](slices/S415.md) | Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt. | S | 1 |  | Owner 2026-11-18 (adj 486): not worth it; Grok is out until 2026-12-01 and ends 2026-12-09. · discovered from S396 | retired |
 | 131 | [S416](slices/S416.md) | give the UI pass a pre-approved way to render views outside the tree, such as a scratch copy of the module or an ANSI strip into TMPDIR, so it can produce the 120x40 and ASCII renders | S | 1 |  | discovered from S390 | — |
 | 132 | [S417](slices/S417.md) | let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done | S | 1 |  | discovered from S381 | — |
-| 133 | [S418](slices/S418.md) | Cloud Claude read-only roles run on the read-only allowlist, not plan mode | S | 1 |  | discovered from S388 | — |
+| 133 | [S418](slices/S418.md) | Cloud Claude read-only roles run on the read-only allowlist, not plan mode | S | 1 |  | discovered from S388 | done |
 | 134 | [S423](slices/S423.md) | say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it" | S | 1 |  | discovered from S403 | — |
 | 135 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it | M | 2 |  | discovered from S403 | — |
 | 136 | [S431](slices/S431.md) | Daemon auto-rebuild | L | 3 |  | 2026-11-18: after S332, S403, S405 and S404 landed, the daemon stayed on build 7f5a1f7d, so landed fixes (the changelog-entry gate, ork wait, the tracking commit) did not apply to new runs. `ork daemon restart --rebuild` refuses while any role runs, even with --force (`docs/design.md:3847-3849`, adj 312), and with three runs in flight there was no gap; the orchestrator retried it every 30 s from a shell loop. The rebuild runs in the CLI (`internal/cli/lifecycle.go:88-120`); the daemon only reports behind main (`internal/daemon/build.go:25`, `:173`). | done |

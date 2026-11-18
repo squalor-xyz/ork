@@ -124,7 +124,7 @@ func TestArgsReadOnlyRole(t *testing.T) {
 	want := []string{
 		"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
 		"--model", "opus", "--effort", "medium",
-		"--permission-mode", "plan",
+		"--allowedTools", "Read", "--permission-prompts", "none",
 		"review",
 	}
 	if !reflect.DeepEqual(got, want) {
@@ -153,7 +153,7 @@ func TestArgsResume(t *testing.T) {
 }
 
 func TestArgsOmitsEmptyModelAndEffort(t *testing.T) {
-	got, err := Spec{Prompt: "x", ReadOnly: true}.Args()
+	got, err := Spec{Prompt: "x", ReadOnly: true, Allowlist: []string{"Read"}}.Args()
 	if err != nil {
 		t.Fatal(err)
 	}

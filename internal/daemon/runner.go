@@ -38,7 +38,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		call = claude.Run
 	}
 	allowlist := req.Allowlist
-	if req.ReadOnly && req.Vendor == "claude-local" {
+	if req.ReadOnly {
 		allowlist = engine.LocalReadOnlyAllowlist()
 		if req.Role == engine.RoleSpecCheck {
 			allowlist = append(allowlist, "Bash(adj find*)")

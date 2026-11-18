@@ -126,6 +126,46 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 
 const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(adj show*),Bash(adj check*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
 
+func TestReadOnlyRoleOnCloudClaudeGetsTheReadOnlyList(t *testing.T) {
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleSpecDraft} {
+		t.Run(role, func(t *testing.T) {
+			want := localReadOnlyTools
+			if role == engine.RoleSpecCheck {
+				want += ",Bash(adj find*)"
+			}
+			r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				if strings.Join(s.Allowlist, ",") != want || s.WriteDir != "" {
+					t.Errorf("read-only spec: allowlist %q, WriteDir %q; want %q and no write directory", s.Allowlist, s.WriteDir, want)
+				}
+				args, err := s.Args()
+				expected := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--allowedTools", want, "--permission-prompts", "none", "brief"}
+				if err != nil || !reflect.DeepEqual(args, expected) {
+					t.Errorf("read-only argv %q, err %v; want %q", args, err, expected)
+				}
+				return claude.Round{Class: claude.ClassOK}, nil
+			}}
+			if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: role, ReadOnly: true, TempDir: "/run/tmp/review", Brief: "brief"}); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestUIPassStillGetsItsWriteRule(t *testing.T) {
+	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		args, err := s.Args()
+		want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--add-dir", "/run/tmp/ui",
+			"--allowedTools", localReadOnlyTools + ",Skill,Edit(//run/tmp/ui/**),Write(//run/tmp/ui/**)", "--permission-prompts", "none", "brief"}
+		if err != nil || !reflect.DeepEqual(args, want) {
+			t.Errorf("UI argv %q, err %v; want %q", args, err, want)
+		}
+		return claude.Round{Class: claude.ClassOK}, nil
+	}}
+	if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: engine.RoleUI, ReadOnly: true, TempDir: "/run/tmp/ui", Brief: "brief"}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 // Only a cloud UI pass gets a write directory, its run temp dir (S369).
 func TestClaudeRunnerGivesOnlyTheCloudUIPassAWriteDir(t *testing.T) {
 	for _, tc := range []struct {
@@ -260,7 +300,11 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 							"--allowedTools", localReadOnlyTools+",Skill,Edit(/"+temp+"/**),Write(/"+temp+"/**)",
 							"--permission-prompts", "none")
 					} else {
-						want = append(want, "--permission-mode", "plan")
+						allowed := localReadOnlyTools
+						if role == engine.RoleSpecCheck {
+							allowed += ",Bash(adj find*)"
+						}
+						want = append(want, "--allowedTools", allowed, "--permission-prompts", "none")
 					}
 					want = append(want, "review")
 					if !reflect.DeepEqual(got, want) {

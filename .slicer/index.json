@@ -23223,7 +23223,7 @@
       "id": "S418",
       "title": "Cloud Claude read-only roles run on the read-only allowlist, not plan mode",
       "short_title": "Cloud Claude read-only roles run on the read-only allowlist, not plan mode",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -23310,6 +23310,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5e1564c2-8097-4a85-9d90-d89579b501e9",
+          "kind": "",
+          "text": "**2026-11-18** — Verified cloud Claude read-only roles use the fixed read-only allowlist with no permission prompts or plan-mode flag. UI write grants, claude-local behavior and Grok plan mode are retained. Documentation and field comments match the behavior. Gate PASS; owner approved.",
+          "created_at": "2026-11-18T23:42:47Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -23329,7 +23343,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
