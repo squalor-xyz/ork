@@ -5155,3 +5155,6 @@
 {"when": "2026-11-18T12:27:55Z", "item": "S429", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T12:28:22Z", "item": "S430", "action": "add", "from": "", "to": "open", "note": "adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found"}
 {"when": "2026-11-18T12:28:23Z", "item": "S430", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:33:43Z", "item": "S426", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback"}
+{"when": "2026-11-18T12:33:43Z", "item": "S429", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback"}
+{"when": "2026-11-18T12:33:43Z", "item": "S428", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (reviewer prompt in plan mode), filed again by ork tool feedback"}
