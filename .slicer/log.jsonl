@@ -5224,3 +5224,4 @@
 {"when": "2026-11-18T13:55:22Z", "item": "S442", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T13:56:35Z", "item": "S443", "action": "add", "from": "", "to": "open", "note": "When a resumed gate's tree is unchanged since the reviewer round, say so in the brief, with the diff hash, so the gate need not re-derive it"}
 {"when": "2026-11-18T13:56:35Z", "item": "S443", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T13:59:55Z", "item": "S444", "action": "add", "from": "", "to": "open", "note": "TestHeartbeatStopsAtStepEnd fails under -race"}
