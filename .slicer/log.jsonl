@@ -5088,3 +5088,4 @@
 {"when": "2026-11-17T23:54:52Z", "item": "S418", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-17T23:59:41Z", "item": "S419", "action": "add", "from": "", "to": "open", "note": "Treat a \"prints nothing\" Check line that is a no-match rg (exit 1) as passing, or read the output and not the exit code"}
 {"when": "2026-11-17T23:59:41Z", "item": "S419", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T03:38:08Z", "item": "S419", "action": "note", "from": "", "to": "", "note": "2026-11-18: S388 round 3 ended red only because its Check li", "by": "Jon Robbins"}
