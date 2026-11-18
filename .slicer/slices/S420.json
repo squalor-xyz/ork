@@ -1,0 +1,41 @@
+{
+  "id": "S420",
+  "title": "Grok out of credits on stderr is classified, so the role falls back",
+  "lead": [
+    "When grok prints its credits or spending-limit error outside a stream event (on stderr or as a plain `Error:` line on stdout), the round's exit is out_of_credits with the same fixed reason as today, so the role falls back to the next matrix row and grok is marked out."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-18 03:38 UTC: S388 (run ork-20261117-233556-f24d) implementer round 4 and gate round 5 ran grok-4.7 and each ended in under a second with exit \"unclassified\", no report, and the run stopped. A manual `grok -p \"reply with ok\"` (grok 1.0.77) printed `Error: Internal error: { \"message\": \"API error (status 403 Forbidden): Your team <team> has either used all available credits or reached its monthly spending limit. ...\", \"http_status\": 403 }` on its output and exited 0. The adapter looks for `used all available credits` only in stream `error` events (`internal/agent/grok/grok.go:291-309`) and sets out of credits only from that (`:380-381`), so the stderr form stays unclassified and the role neither falls back nor marks grok out.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Two S388 rounds stopped the run on 2026-11-18 because grok's credit error went unclassified; the orchestrator had to probe grok by hand and mark it out. Classifying vendor failures is deterministic work, and owner rule (2026-11-17) says such steps are code."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/grok/grok.go:291-309`\n- `internal/agent/grok/grok.go:360-395`\n- `internal/agent/grok/grok_test.go`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestGrokCreditsOnStderrIsOutOfCredits` in `internal/agent/grok/grok_test.go`: a fake grok that prints the 403 `Error: Internal error: {...used all available credits...}` text on stderr, no stream events, exit 0; the round's exit is out_of_credits and the reason is the fixed text that does not name the team.\n- `TestGrokCreditsOnStdoutPlainLineIsOutOfCredits`: the same text as a plain non-JSON stdout line; out_of_credits.\n- `TestGrokBadModelAndAuthStayUnclassified` still passes."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests and see them red for the stated reason.\n2. After the process exits, if no stream event set credits, check stderr and any non-JSON stdout lines for `creditsText` and `usageLimitText` and set the same exits and fixed reasons as `fail` does.\n3. Never copy the vendor message (it names the team) into the reason or a report.\n4. CHANGELOG.md: one bullet at the end of `## Unreleased`, written by hand."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- A grok round whose credits or spending-limit error appears only on stderr or a plain stdout line ends out_of_credits, and the role falls back to the next row.\n- The reason does not contain the team id.\n- Other unclassified exits stay unclassified.\n\nCommands:\n- `go test ./internal/agent/grok -run 'TestGrokCreditsOnStderrIsOutOfCredits|TestGrokCreditsOnStdoutPlainLineIsOutOfCredits|TestGrokBadModelAndAuthStayUnclassified' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` must print nothing."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"Grok credits error on stderr is out of credits\"."
+    }
+  ],
+  "notes": []
+}
