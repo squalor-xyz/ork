@@ -1135,14 +1135,19 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 			output := string(res.Stdout) + string(res.Stderr)
 			log += output
 			c.Exit = res.ExitCode
-			c.OK = runErr == nil && (!row.empty || strings.TrimSpace(output) == "")
+			if row.empty {
+				// A timeout is never ok, whatever exit code it reports.
+				c.OK = timeoutErr == nil && printsNothingOK(row.command, c.Exit, output)
+			} else {
+				c.OK = runErr == nil
+			}
 			if runErr != nil {
 				log += "\n" + runErr.Error() + "\n"
 				if c.Exit == 0 {
 					c.Exit = -1
 				}
 			}
-			if runErr == nil && !c.OK {
+			if row.empty && !c.OK && strings.TrimSpace(output) != "" {
 				log += "\ncheck must print nothing\n"
 			}
 		}
@@ -1163,6 +1168,57 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 		}
 	}
 	return failed, false, nil
+}
+
+// printsNothingOK judges a Check line that prints nothing (adj 468,
+// checks.prints-nothing-exit). It is ok when the output is empty and the exit is
+// 0, or 1 from rg, grep or git grep, whose exit 1 is "no match". The command that
+// counts is the last of a pipeline. Any output, an exit of 2 or more, or exit 1
+// from another command is not ok.
+func printsNothingOK(command string, exit int, output string) bool {
+	if strings.TrimSpace(output) != "" {
+		return false
+	}
+	return exit == 0 || (exit == 1 && noMatchExit1(lastPipedCommand(command)))
+}
+
+// noMatchExit1 reports whether command is an rg, grep or git grep call. Leading
+// VAR=value words are skipped.
+func noMatchExit1(command string) bool {
+	words := strings.Fields(command)
+	for len(words) > 0 && regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(words[0]) {
+		words = words[1:]
+	}
+	switch {
+	case len(words) == 0:
+		return false
+	case words[0] == "rg", words[0] == "grep":
+		return true
+	default:
+		return words[0] == "git" && len(words) > 1 && words[1] == "grep"
+	}
+}
+
+// lastPipedCommand is command after its last | outside quotes, with the quote
+// rules of shellSyntaxOutsideQuotes. A command without a pipe comes back whole.
+func lastPipedCommand(command string) string {
+	var quote byte
+	start := 0
+	for i := 0; i < len(command); i++ {
+		c := command[i]
+		switch {
+		case c == '\\' && quote != '\'':
+			i++
+		case c == quote:
+			quote = 0
+		case quote != 0:
+		case c == '\'' || c == '"':
+			quote = c
+		case c == '|':
+			start = i + 1
+		}
+	}
+	return strings.TrimSpace(command[start:])
 }
 
 func latestSliceChecks(checks []runrec.CheckRecord) []runrec.CheckRecord {

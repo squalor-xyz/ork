@@ -1653,7 +1653,17 @@ order: each part has its own row, log and check record, and a failed part
 (nonzero exit or timeout) leaves the later parts recorded as "not run by ork:
 an earlier part of the chain failed". A `&` that is not part of `&&`, a `|`, a
 `;` or any part ork would not run keeps the whole line as one "not run by ork:
-orchestrator" row. A line's "must print nothing" binds every part.
+orchestrator" row. A line's "prints nothing" or "must print nothing" binds every
+part.
+*Proposed (S419, `checks.prints-nothing-exit`, adj 468):* a line worded "prints
+nothing" or "must print nothing" (any case) is an empty-output check. Its row is
+ok when the output is empty and the exit is 0, or 1 from `rg`, `grep` or
+`git grep`, whose exit 1 means "no match". Any output, an exit of 2 or more, a
+timeout, or exit 1 from another command is red. The log of a row that printed
+something ends with "check must print nothing"; the log of any other red row
+names the exit code. ork runs no piped line, so a piped line stays "not run by
+ork: orchestrator"; the orchestrator judges it by its last command, by the same
+rule.
 *Proposed (S368):* a backticked entry whose first word starts with `-` (a
 flag such as `--yes`, left in the Check after a spec answer dropped it) is not
 a command: ork records it as "not run by ork: not a command (starts with -)"
@@ -1665,7 +1675,8 @@ commands in a brief. A Check section without that line is read as before.
 HUMAN CHECK and `[AFTER LAND]` entries keep their existing workflow.
 Each command has the project's check timeout (ten minutes when unset), an exit
 status and its own log and check row. A nonzero exit, timeout or output on a
-line saying "must print nothing" sends the row's log to a fix round. All rows
+line saying "prints nothing" or "must print nothing" (judged as above) sends the
+row's log to a fix round. All rows
 run even when one fails, except the parts of a chain after a failed part. Cancellation returns the context error without a row
 or a spent round. A command that cannot start, or returns an unexpected
 execution error, pauses at the current state instead of becoming a red row.

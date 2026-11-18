@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-440 items · — 74 · done 318 · retired 48
+440 items · — 73 · done 319 · retired 48
 
 ## v1.3
 
@@ -324,7 +324,7 @@ v1.2
 | 260 | [S416](slices/S416.md) | give the UI pass a pre-approved way to render views outside the tree, such as a scratch copy of the module or an ANSI strip into TMPDIR, so it can produce the 120x40 and ASCII renders |  | - |  | discovered from S390 | — |
 | 261 | [S417](slices/S417.md) | let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done |  | - |  | discovered from S381 | — |
 | 262 | [S418](slices/S418.md) | Say in the reviewer prompt that the harness may start the reviewer in plan mode and that the report then goes in the final message |  | - |  | discovered from S388 | — |
-| 263 | [S419](slices/S419.md) | Treat a "prints nothing" Check line that is a no-match rg (exit 1) as passing, or read the output and not the exit code | S | 1 |  | discovered from S388 | — |
+| 263 | [S419](slices/S419.md) | Treat a "prints nothing" Check line that is a no-match rg (exit 1) as passing, or read the output and not the exit code | S | 1 |  | discovered from S388 | done |
 | 264 | [S420](slices/S420.md) | Grok stderr credits | S | 1 |  | 2026-11-18 03:38 UTC: S388 (run ork-20261117-233556-f24d) implementer round 4 and gate round 5 ran grok-4.7 and each ended in under a second with exit "unclassified", no report, and the run stopped. A manual `grok -p "reply with ok"` (grok 1.0.77) printed `Error: Internal error: { "message": "API error (status 403 Forbidden): Your team <team> has either used all available credits or reached its monthly spending limit. ...", "http_status": 403 }` on its output and exited 0. The adapter looks for `used all available credits` only in stream `error` events (`internal/agent/grok/grok.go:291-309`) and sets out of credits only from that (`:380-381`), so the stderr form stays unclassified and the role neither falls back nor marks grok out. | done |
 | 265 | [S421](slices/S421.md) | Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator |  | - |  | Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388's run · discovered from S388 | retired |
 | 266 | [S422](slices/S422.md) | For CLI-only UI passes, the brief should say that renders come from a go test -overlay file in the role's tmp dir, and the role allowlist should permit `go test -overlay` and a leading ENV= prefix |  | - |  | discovered from S403 | — |

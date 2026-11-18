@@ -646,7 +646,11 @@ func sliceCheckCommands(raw string) []sliceCheckCommand {
 		parts := strings.Split(entry, "`")
 		for i := 1; i+1 < len(parts); i += 2 {
 			if command := strings.TrimSpace(parts[i]); command != "" {
-				commands = append(commands, sliceCheckCommand{command: command, empty: strings.Contains(strings.ToLower(entry), "must print nothing")})
+				// "prints nothing" and "must print nothing" are both empty-output
+				// checks (S419, adj 468).
+				lower := strings.ToLower(entry)
+				empty := strings.Contains(lower, "prints nothing") || strings.Contains(lower, "must print nothing")
+				commands = append(commands, sliceCheckCommand{command: command, empty: empty})
 			}
 		}
 	}

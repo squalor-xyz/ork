@@ -272,6 +272,108 @@ func TestSliceChecksChainMustPrintNothingBindsEveryPart(t *testing.T) {
 	}
 }
 
+// printsNothingRow runs the Check body with a fake tool that runs script, and
+// returns the one slice check row it records and that row's log (S419).
+func printsNothingRow(t *testing.T, body, tool, script string) (runrec.CheckRecord, string) {
+	t.Helper()
+	h := sliceChecksHarness(t, body)
+	writeCheckTool(t, h.W, tool, script)
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, paused, err := e.runSliceChecks(context.Background(), e.Snapshot(), runrec.StateGate, "slice-checks", false); err != nil || paused {
+		t.Fatalf("runSliceChecks: paused=%v err=%v", paused, err)
+	}
+	var rows []runrec.CheckRecord
+	for _, c := range e.Snapshot().Checks {
+		if c.Slice {
+			rows = append(rows, c)
+		}
+	}
+	if len(rows) != 1 {
+		t.Fatalf("got %d check records, want 1: %+v", len(rows), rows)
+	}
+	b, err := os.ReadFile(filepath.Join(e.run.Dir(), rows[0].Log))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return rows[0], string(b)
+}
+
+// S419 (adj 468): a "prints nothing" rg that finds nothing exits 1 and passes.
+func TestPrintsNothingRgNoMatchPasses(t *testing.T) {
+	row, log := printsNothingRow(t, "- `rg -n ZZZ docs` prints nothing.", "rg", "exit 1")
+	if !row.OK || row.Exit != 1 || row.NotRun != "" {
+		t.Errorf("row = %+v, want OK on the no-match exit 1\n%s", row, log)
+	}
+}
+
+func TestPrintsNothingRgMatchFails(t *testing.T) {
+	row, log := printsNothingRow(t, "- `rg -n ZZZ docs` prints nothing.", "rg", "echo docs/a.md:1:ZZZ")
+	if row.OK || !strings.Contains(log, "check must print nothing") {
+		t.Errorf("row = %+v, want red with the must-print-nothing line\n%s", row, log)
+	}
+}
+
+func TestPrintsNothingRgErrorFails(t *testing.T) {
+	row, log := printsNothingRow(t, "- `rg -n ZZZ docs` prints nothing.", "rg", "exit 2")
+	if row.OK || row.Exit != 2 || !strings.Contains(log, "exit 2") {
+		t.Errorf("row = %+v, want red naming exit 2\n%s", row, log)
+	}
+}
+
+func TestPrintsNothingOtherCommandExit1Fails(t *testing.T) {
+	row, log := printsNothingRow(t, "- `gofmt -l .` prints nothing.", "gofmt", "exit 1")
+	if row.OK || row.Exit != 1 || !strings.Contains(log, "exit 1") {
+		t.Errorf("row = %+v, want red naming exit 1\n%s", row, log)
+	}
+}
+
+// ork does not run a piped line, so the rule is a pure helper (S419).
+func TestPrintsNothingPipedLineJudgedByLastCommand(t *testing.T) {
+	for _, tc := range []struct {
+		command string
+		exit    int
+		output  string
+		want    bool
+	}{
+		{"rg -n A f | rg B", 1, "", true},
+		{"rg -n A f | rg B", 1, "x\n", false},
+		{"rg -n A f | rg B", 2, "", false},
+		{"rg -n A f | gofmt -l", 1, "", false},
+		{"gofmt -l . | rg B", 1, "", true},
+		{"rg -n 'a|b' f", 1, "", true},
+		{"git grep -n A", 1, "", true},
+		{"grep -rn A docs", 1, "", true},
+		{"rg -n A", 0, "", true},
+		{"rg -n A", 0, " \n", true},
+		{"rg -n A", 0, "hit\n", false},
+		{"gofmt -l .", 1, "", false},
+	} {
+		if got := printsNothingOK(tc.command, tc.exit, tc.output); got != tc.want {
+			t.Errorf("printsNothingOK(%q, %d, %q) = %v, want %v", tc.command, tc.exit, tc.output, got, tc.want)
+		}
+	}
+}
+
+func TestPrintsNothingWordingIsMarked(t *testing.T) {
+	for _, tc := range []struct {
+		entry string
+		want  bool
+	}{
+		{"- `rg -n A f` prints nothing.", true},
+		{"- `rg -n A f` must print nothing.", true},
+		{"- `rg -n A f` Prints Nothing.", true},
+		{"- `rg -n A f` finds the exception.", false},
+	} {
+		got := sliceCheckCommands(checksSpec(tc.entry))
+		if len(got) != 1 || got[0].empty != tc.want {
+			t.Errorf("%q: commands = %+v, want empty = %v", tc.entry, got, tc.want)
+		}
+	}
+}
+
 // S241: an owner's "tighten" left a backticked `--yes` in the Check. It is not
 // a command: ork records and names it, does not run it, and does not pause.
 func TestSliceChecksSkipAFlagOnlyEntry(t *testing.T) {

@@ -505,6 +505,15 @@ The roles run in this order (`docs/design.md:391-631`):
    `VERDICT: FAIL`. The third FAIL stops the run.
 7. **awaiting approval**: your turn (section 10).
 
+**Writing Check lines.** Before the gate, ork runs each backticked plain
+command in the slice's Check section (`docs/design.md`, slice checks). *Proposed
+(S419, `checks.prints-nothing-exit`, adj 468):* word a line that finds nothing
+as "prints nothing" (or "must print nothing"). Such a line passes when its
+output is empty and its exit is 0, or 1 from `rg`, `grep` or `git grep` (their
+no-match code). Output, exit 2 or more, or exit 1 from any other command
+fails it. ork does not run a piped line; the orchestrator runs it and judges it
+by its last command, by the same rule. A line not worded that way must exit 0.
+
 ## 8. Watch it
 
 The Overview shows **Needs you** first, then **Running**, then recent and
