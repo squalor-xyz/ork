@@ -54,7 +54,7 @@ func CarvePrompt() string { return carve }
 // ContractVersion is the version of slicer's relay contract that the prompts
 // are written against. It matches each prompt's first line. ork accepts the
 // versions in AcceptedContracts, which include this one.
-const ContractVersion = 12
+const ContractVersion = 13
 
 // names lists the roles. lead and part are the roles of a split run (S61,
 // *proposed*): the lead is the one implementer of the slice, and a part
@@ -110,10 +110,10 @@ func LocalImplementerPrompt() (string, error) {
 ` + "## Later rounds" + after, nil
 }
 
-// acceptedContracts is the owner-decided supported set: v11 and v12, v10 dropped
-// (adj 326, boundary.contract-set, decided 2026-11-12; it supersedes adj 175
-// and follows S142 and boundary.contract).
-var acceptedContracts = []int{11, 12}
+// acceptedContracts is the owner-decided supported set: v12 and v13.
+// v11 is dropped (adj 470, boundary.contract-set, decided 2026-11-18;
+// supersedes adj 326).
+var acceptedContracts = []int{12, 13}
 
 // AcceptedContracts returns the relay contract versions ork supports
 // (boundary.contract).

@@ -89,6 +89,9 @@ func (r RelayContract) Validate() error {
 		return fmt.Errorf("relay finding_kinds must be exactly fix, owner, later")
 	}
 	needed := []string{"role_order", "gate_rule", "finding_kinds", "stop_rules", "ledger", "finish_after_pass", "run_report", "worktree_scope", "commit_scope", "role_fallback", "blocker_wait"}
+	if version >= 13 {
+		needed = append(needed, "finish_runner")
+	}
 	for _, key := range needed {
 		if !slices.ContainsFunc(r.Conformance, func(v struct {
 			Key  string `json:"key"`

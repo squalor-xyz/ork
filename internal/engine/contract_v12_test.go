@@ -36,7 +36,7 @@ func TestEngineStartRefusesV10NamingTheAcceptedSet(t *testing.T) {
 		}
 	})
 	_, err := New(context.Background(), h.deps, h.cfg)
-	if err == nil || !strings.Contains(err.Error(), "ork accepts relay v11 or v12 and slicer prints v10") {
+	if err == nil || !strings.Contains(err.Error(), "ork accepts relay v12 or v13 and slicer prints v10") {
 		t.Fatalf("v10: %v", err)
 	}
 	if runs, _ := h.store.List(); len(runs) != 0 {

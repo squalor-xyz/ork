@@ -18,11 +18,11 @@ import (
 
 const keyedOwnerFinding = ownerFinding + "\n  Decision key: cache.scope"
 
-// ledgerHarness is a v11 harness; routes answer before the defaults.
+// ledgerHarness is a v12 harness; routes answer before the defaults.
 func ledgerHarness(t *testing.T, routes ...clitest.Route) *harness {
 	t.Helper()
 	return newHarness(t, func(o *harnessOpts) {
-		o.contract = 11
+		o.contract = 12
 		o.routes = append(o.routes, routes...)
 	})
 }
@@ -421,7 +421,7 @@ func TestAnswerFromTheLedgerIsNotFiledInAdj(t *testing.T) {
 	}
 	build := func(t *testing.T, ledger string) (*harness, *Engine) {
 		h := newHarness(t, func(o *harnessOpts) {
-			o.contract = 11
+			o.contract = 12
 			o.project = func(p *registry.Project) { p.Adj = true }
 			o.routes = append(o.routes, getRoute(reply(ledger)))
 			o.routes = append(o.routes, adjRoutes...)

@@ -5527,6 +5527,15 @@
 {"when": "2026-11-18T17:20:31Z", "item": "S432", "action": "set", "from": "", "to": "", "note": "title Accept slicer relay contract v13 (engine runs the finish step)→Accept slicer relay contract v13 (v12-v13); short_title Accept slicer relay contract v13 (engine runs the finish step)→Accept slicer relay contract v13 (v12-v13)"}
 {"when": "2026-11-18T17:20:31Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T17:20:32Z", "item": "S384", "action": "set", "from": "", "to": "", "note": "depends_on S409→S432"}
+{"when": "2026-11-18T17:43:18Z", "item": "S432", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T17:44:47Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T17:45:25Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T17:49:06Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T17:54:28Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T17:55:33Z", "item": "S432", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:43:43Z", "item": "S432", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S432):", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:44:01Z", "item": "S432", "action": "note", "from": "", "to": "", "note": "S432 accepts relay v12 and v13, refuses v11, requires the v1", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:44:06Z", "item": "S432", "action": "status", "from": "started", "to": "done", "note": "S432 accepts relay v12 and v13, refuses v11, requires the v13 finish_runner obligation, and updates role prompt markers and documentation to v13. The engine still resumes the implementer for closing steps. Gate PASS and owner approval received; the after-land doctor check remains deferred.", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:18:10Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 472 cli.wait-queued-resume = ", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:18:10Z", "item": "S338", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 473 cli.spec-check-skip = fla", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:18:11Z", "item": "S339", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-18: adj 474 projects.add-setup = warn", "by": "Jon Robbins"}

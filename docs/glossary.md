@@ -6,7 +6,7 @@ are ork's own.
 
 Sources are in the sibling repos under `squalor-xyz/`. For slicer's relay
 contract the source is the constant in `slicer/src/slicer/ai.py` that prints
-the text (relay v12), since the line numbers move. ork accepts v11 and v12.
+the text (relay v13), since the line numbers move. ork accepts v12 and v13 (adj 470).
 
 ## Relay roles
 
@@ -147,8 +147,8 @@ worktrees of a clone. A run goes stale after 30 minutes with no event. Owner:
 slicer.
 
 **Contract version.** The integer on the first line of `slicer ai relay` and
-`slicer ai relay-orchestrator` (`Contract: relay v12`). ork accepts v11 and v12;
-its embedded role prompts are written against v12. The engine and doctor
+`slicer ai relay-orchestrator` (`Contract: relay v13`). ork accepts v12 and v13 (adj 470);
+its embedded role prompts are written against v13. The engine and doctor
 validate the machine-readable contract with `slicer ai relay --json`.
 It is bumped only when a
 rule changes. The agents-repo orchestrator role carries a matching

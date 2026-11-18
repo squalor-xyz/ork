@@ -641,7 +641,7 @@ func TestDoctorMergeDriver(t *testing.T) {
 			if err := registry.Save(path, &registry.File{Version: registry.Version, Projects: []registry.Project{project}}); err != nil {
 				t.Fatal(err)
 			}
-			contract, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json"))
+			contract, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v12.json"))
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -814,7 +814,7 @@ type doctorOut struct {
 
 func TestLocalDoctorListsOptionalLaunchers(t *testing.T) {
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
-	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v11.json")})
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json"}, Prefix: true, File: filepath.Join("..", "..", "testdata", "cli", "slicer", "relay-v12.json")})
 	app := &App{Call: func(context.Context, string, any, any) error { return fmt.Errorf("no daemon") }, Tools: Tools{Slicer: fake.Bin("slicer"), Adj: fake.Bin("adj"), Git: fake.Bin("git")}}
 	dir := t.TempDir()
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {
@@ -858,8 +858,8 @@ func doctorAppWith(t *testing.T, relayFirstLine string, extra ...clitest.Route) 
 func doctorAppLead(t *testing.T, lead []clitest.Route, relayFirstLine string, extra ...clitest.Route) (app *App, fake *clitest.Fake, logs map[string]string) {
 	t.Helper()
 	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
-	// The recorded v12 contract, with the contract string of the line given.
-	file, recordedAs := "relay-v12.json", `"contract": "relay v12"`
+	// The recorded v13 contract, with the contract string of the line given.
+	file, recordedAs := "relay-v13.json", `"contract": "relay v13"`
 	raw, err := os.ReadFile(filepath.Join("..", "..", "testdata", "cli", "slicer", file))
 	if err != nil {
 		t.Fatal(err)
@@ -1331,7 +1331,7 @@ func TestDoctorReportsEachToolAndTheAcceptedContracts(t *testing.T) {
 }
 
 func TestDoctorTextOutput(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v11")
+	app, _, _ := doctorApp(t, "Contract: relay v12")
 	app.Tools.Grok = filepath.Join(t.TempDir(), "no-such-grok")
 	code, stdout, _ := run(t, app, "doctor")
 	if code != 0 {
@@ -1343,7 +1343,7 @@ func TestDoctorTextOutput(t *testing.T) {
 		"[ok] claude  2.1.303 (Claude Code)\n",
 		"[ok] codex  codex-cli 0.163.0\n",
 		"[--] grok  not found (optional)\n",
-		"[ok] contract  accepts v11 or v12, slicer prints \"Contract: relay v11\"\n",
+		"[ok] contract  accepts v12 or v13, slicer prints \"Contract: relay v12\"\n",
 	} {
 		if !strings.Contains(stdout, want) {
 			t.Errorf("output lacks %q:\n%s", want, stdout)
@@ -1375,12 +1375,12 @@ func TestDoctorReportsWhereTheBinaryIs(t *testing.T) {
 	}
 }
 
-func TestDoctorAcceptsAV11Slicer(t *testing.T) {
-	app, _, _ := doctorApp(t, "Contract: relay v11")
+func TestDoctorAcceptsAV12Slicer(t *testing.T) {
+	app, _, _ := doctorApp(t, "Contract: relay v12")
 	code, stdout, _ := run(t, app, "doctor", "--json")
 	var d doctorOut
 	mustJSON(t, stdout, &d)
-	if code != 0 || !d.OK || !d.Contract.OK || d.Contract.Found != "Contract: relay v11" || !reflect.DeepEqual(d.Contract.Accepted, []int{11, 12}) || d.Contract.Error != "" {
+	if code != 0 || !d.OK || !d.Contract.OK || d.Contract.Found != "Contract: relay v12" || !reflect.DeepEqual(d.Contract.Accepted, []int{12, 13}) || d.Contract.Error != "" {
 		t.Fatalf("exit %d\n%s", code, stdout)
 	}
 }
@@ -1409,12 +1409,12 @@ func TestDoctorContractMismatchFails(t *testing.T) {
 // The accepted set replaces the exact pin (boundary.contract): an older
 // version is refused as well as a newer one, and the error names both sides.
 func TestDoctorRefusesEveryVersionOutsideTheAcceptedSet(t *testing.T) {
-	for _, v := range []int{6, 7, 8, 9, 10, 13, 70} {
+	for _, v := range []int{6, 7, 8, 9, 10, 11, 14, 70} {
 		app, _, _ := doctorApp(t, fmt.Sprintf("Contract: relay v%d", v))
 		code, stdout, _ := run(t, app, "doctor", "--json")
 		var d doctorOut
 		mustJSON(t, stdout, &d)
-		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v11 or v12") {
+		if code != 1 || d.OK || d.Contract.OK || !strings.Contains(d.Contract.Error, fmt.Sprintf("v%d", v)) || !strings.Contains(d.Contract.Error, "ork accepts relay v12 or v13") {
 			t.Errorf("v%d: exit %d\n%s", v, code, stdout)
 		}
 	}
@@ -2670,14 +2670,14 @@ func TestDoctorContractFailLineNamesTheSetOnce(t *testing.T) {
 		line, want string
 		invalid    bool
 	}{
-		{"Contract: relay v9", "[FAIL] contract  ork accepts relay v11 or v12 and slicer prints v9", false},
-		{"Contract: relay v11", `[FAIL] contract  accepts v11 or v12, slicer prints "Contract: relay v11": relay conformance missing finding_kinds`, true},
-		{"something else entirely", "[FAIL] contract  accepts v11 or v12, slicer prints \"Contract: something else entirely\": the first line of `slicer ai relay` is not a contract line", false},
+		{"Contract: relay v9", "[FAIL] contract  ork accepts relay v12 or v13 and slicer prints v9", false},
+		{"Contract: relay v12", `[FAIL] contract  accepts v12 or v13, slicer prints "Contract: relay v12": relay conformance missing finding_kinds`, true},
+		{"something else entirely", "[FAIL] contract  accepts v12 or v13, slicer prints \"Contract: something else entirely\": the first line of `slicer ai relay` is not a contract line", false},
 	} {
 		t.Run(tc.line+fmt.Sprint(tc.invalid), func(t *testing.T) {
 			var lead []clitest.Route
 			if tc.invalid {
-				raw, err := os.ReadFile(recordedSlicer("relay-v11.json"))
+				raw, err := os.ReadFile(recordedSlicer("relay-v12.json"))
 				if err != nil {
 					t.Fatal(err)
 				}

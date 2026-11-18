@@ -147,6 +147,15 @@ Owner decision of 2026-11-12 (`relay.tool-feedback`, adj 325): build it in full.
 | v12.2 | Tool feedback is advisory: not a finding, never gated, never acted on in the slice | met | The lines are removed from a report before triage and before a fix round's brief; no verdict, finding or ledger call reads them (`TestToolFeedbackNeverChangesAGatesVerdictOrFindings`, `TestAGatesToolFeedbackDoesNotChangeTheRun`). A spec check has no run, so its lines are ignored, not recorded. *Proposed* (S387, adj 410-414): ork files an entry of kind `friction` or `deterministic-check` as a slice outside the run, after the report is routed; a failure is `file_error` on the entry and never changes the run (`FileToolFeedback`, `internal/engine/toolfeedback.go`; `TestToolFeedbackFilingFailureDoesNotStopTheRun`). *Proposed* (S388, adj 415, 416): a `feature` entry is asked in the target project's adj (`asked` on the entry), not filed; when the record is decided `file`, by the owner or by the relay-session orchestrator as the owner's delegate, the daemon files one slice (`TestToolFeedbackFeatureIsAskedInAdj`, `TestDecidedToolFeedbackFileIsFiledOnce`) |
 | v12.3 | The run report carries `tool feedback: N. ROLE \| ...` lines and `--json` a `tool_feedback` key | not built | The run record holds the entries. Showing them in the TUI or `ork show` is not in S354 (adj 325) |
 
+## Relay v13 process rules
+
+The v13 change is named by `slicer ai relay --json` (`changes[]`).
+ork accepts v12 and v13 (adj 470); finish behavior stays unchanged (adj 471).
+
+| ID | Rule | Status |
+| --- | --- | --- |
+| v13.1 | A program orchestrator may run the closing note and the finish step | not used: ork resumes the implementer (S384 plans the change, adj 407) |
+
 ## Prioritized gaps
 
 The original order is kept so the owner decisions below retain their gap

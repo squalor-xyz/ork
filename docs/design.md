@@ -1717,7 +1717,7 @@ report remain counts of tests the gate itself ran; ork's evidence is cited
 separately.
 
 - **Prompts.** Embedded in ork and canonical (`roles.prompts`). They are
-  seeded from slicer's v11 contract and now written against v12, with anything
+  seeded from slicer's v11 contract and now written against v13, with anything
   else written fresh (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent
   tool, SendMessage, nesting), because roles here never spawn agents.
   `ork roles print [ROLE]` prints them so the agents repo can generate its
@@ -3232,8 +3232,8 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   when it is newer than the highest (ork is behind), when a slicer checkout
   is behind its upstream, or when slicer or adj is missing; `--upgrade`
   prints all three whether or not anything is behind. Contract reasons say
-  `older than the versions ork accepts (v11 or v12)` or
-  `newer than the versions ork accepts (v11 or v12)`. With `--upgrade`, a
+  `older than the versions ork accepts (v12 or v13)` or
+  `newer than the versions ork accepts (v12 or v13)`. With `--upgrade`, a
   current slicer or adj reason includes `(installed: VERSION)` when known;
   a version that starts with the tool name and a space loses that prefix
   (`slicer 1.22.1` prints as `1.22.1`).
@@ -3252,8 +3252,8 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   a network call or runs a printed command, and a hint never changes the exit
   code;
 - the slicer contract: the `contract` string of `slicer ai relay --json --root
-  ROOT` against the accepted set (`roles.AcceptedContracts`, v11 and v12;
-  `boundary.contract-set`, adj 326, which supersedes adj 175). Any other version fails. The check runs
+  ROOT` against the accepted set (`roles.AcceptedContracts`, v12 and v13;
+  `boundary.contract-set`, adj 470, which supersedes adj 326). Any other version fails. The check runs
   for the directory doctor is run in, and again for each registered project
   with that project as `--root`, listed as `contract.projects` in the JSON
   (`project`, `pinned`, `found`, `ok`, `error`; *proposed:* `adj_pinned`, `adj_found`, `adj_error`) and as one `contract NAME` line
@@ -3286,13 +3286,16 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   Doctor and the engine also validate `ai relay --json`: exact finding kinds `fix`, `owner`, `later`,
   required conformance keys (including `role_fallback` and `blocker_wait`),
   ledger role names (including `gate`), gate criteria and verdicts, outcomes,
-  and on v12 the `tool_feedback` key. The run records its version, roles and
+  from v12 the `tool_feedback` key, and from v13 the non-empty `finish_runner`
+  conformance entry. ork still resumes the implementer for the closing note
+  and finish step; S384 plans the engine change (adj 407, adj 471).
+  The run records its version, roles and
   gate criteria for resumed runs. A gate round closes its ledger step with
   `--phase done --verdict pass|fail`. A gate report with no valid verdict line
   closes without one. *Proposed* (S204): a gate round closes with its verdict
   only when the engine accepts the round; otherwise it closes without one, and
   the retried round is a new ledger step. Embedded role prompts
-  are written against v12;
+  are written against v13;
 - each project's path exists and is a directory; the effective check command
   (slicer's `check_command` when set, else the registry's, S246; a finding from
   slicer's reads `check_command (slicer): ...`) passes `sh -n -c` and its first word after leading `VAR=value` assignments
@@ -3654,12 +3657,12 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `pin` (the `pinned` value that `slicer ai relay --json` prints after the
   set) and `{"project":"NAME","pinned":null}` for `unpin`. Text: `pinned NAME
   at relay vN` and `unpinned NAME`. Exit 2 (usage, before any tool runs): a
-  missing `--relay` and `--adj` (`projects pin needs --relay N (v11 or v12) or --adj M (adj-json v1)`), an N
+  missing `--relay` and `--adj` (`projects pin needs --relay N (v12 or v13) or --adj M (adj-json v1)`), an N
   outside the accepted set, or a wrong argument count. An unregistered NAME
   is `not_found` (exit 1), with a hint to run `ork projects list`.
   Exit 1 also covers when slicer fails the set or unset call (its message is
   shown), or slicer refuses the read-back after the set, for example a pin of
-  v11 on a slicer that serves v12. In that case the pin stays set, and the
+  v12 on a slicer that serves v13. In that case the pin stays set, and the
   message names the project, quotes slicer's error and gives the next step,
   `ork projects pin NAME --relay N` with the version slicer serves or `ork
   projects unpin NAME` (owner, 2026-10-31). On a project with adj on, that

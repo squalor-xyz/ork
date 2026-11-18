@@ -200,7 +200,7 @@ func TestRebuildNotices(t *testing.T) {
 			if command != "" {
 				want += " --rebuild"
 			}
-			a, _, _ := doctorApp(t, "Contract: relay v11")
+			a, _, _ := doctorApp(t, "Contract: relay v12")
 			a.Call = func(_ context.Context, method string, _, result any) error {
 				if method == daemon.MethodStatus {
 					return json.Unmarshal([]byte(st), result)

@@ -37,12 +37,12 @@ Relay-run statistics belong to slicer; ork only displays them through `slicer re
 
 ork implements slicer's relay contract in Go: the outer session's Setup and
 Order, and the orchestrator's rules. Its role prompts are ork's own text,
-seeded from contract v11 (`roles.prompt-seed`) and now written against v12.
+seeded from contract v11 (`roles.prompt-seed`) and now written against v13.
 Two things keep them in line
 (`boundary.contract`):
 
-1. ork accepts exactly v11 and v12 (`boundary.contract-set`, adj 326, which
-   supersedes adj 175; v10 is dropped on 2026-11-12). `ork doctor` and the engine check the contract with `--root`,
+1. ork accepts exactly v12 and v13 (`boundary.contract-set`, adj 470, which
+   supersedes adj 326; v11 is dropped on 2026-11-18). `ork doctor` and the engine check the contract with `--root`,
    respecting the project's pin, before a run starts. A project's pin lives in
    its own slicer config (`relay_contract`), never in ork's `projects.json`.
    ork sets and checks it through slicer: `ork projects pin NAME --relay N`
@@ -60,7 +60,10 @@ Two things keep them in line
    The conformance keys include `role_fallback` and `blocker_wait`, and
    `roles[]` includes the `gate` entry (both since v11); ork decodes the
    `stop[]` keys without requiring them. v12 adds the `tool_feedback` key,
-   which ork requires on a v12 contract. Tool feedback is advisory and ork
+   which ork requires from v12 on. v13 adds the non-empty `finish_runner`
+   conformance entry, which ork requires from v13 on. ork still resumes the
+   implementer for the closing note and finish step (S384, adj 471).
+   Tool feedback is advisory and ork
    owns nothing of it beyond reading the lines from role reports and keeping
    up to 3 in the run record (`relay.tool-feedback`, adj 325); it is no
    finding and no gate input. *Proposed* (S387): ork also files the entries

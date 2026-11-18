@@ -149,7 +149,9 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			// S332: the implementer prompt gained the changelog entry rule.
+			// S432 changes only the contract marker; preserve the byte baseline
+			// for the rest of the brief established by S332.
+			got = strings.Replace(got, "Role: implementer. Contract: relay v13\n", "Role: implementer. Contract: relay v12\n", 1)
 			want := "1423dae9bf4f3f6284cb568bac86846494e9c43d1f1be43294b433484c873e5b"
 			switch vendor {
 			case "claude":
@@ -728,7 +730,7 @@ func TestBuildBriefFillsThePromptPlaceholders(t *testing.T) {
 		i := strings.Index(got, "{{")
 		t.Fatalf("a placeholder is left: %q", got[i:min(len(got), i+30)])
 	}
-	if first, _, _ := strings.Cut(got, "\n"); first != "Role: implementer. Contract: relay v12" {
+	if first, _, _ := strings.Cut(got, "\n"); first != "Role: implementer. Contract: relay v13" {
 		t.Errorf("first line %q", first)
 	}
 	for _, want := range []string{

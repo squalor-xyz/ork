@@ -1,4 +1,4 @@
-Role: lead. Contract: relay v12
+Role: lead. Contract: relay v13
 
 You are the lead implementer in an ork split run. You own one slice, {{slice_id}},
 in the worktree {{worktree}}. A split cuts the slice into parts with disjoint

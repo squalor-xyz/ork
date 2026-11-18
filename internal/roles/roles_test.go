@@ -117,7 +117,7 @@ func TestLocalSystemPromptIsEmbeddedAndShort(t *testing.T) {
 func TestCarvePromptCutsASliceIntoSliversReadOnly(t *testing.T) {
 	p := CarvePrompt()
 	first, _, _ := strings.Cut(p, "\n")
-	if first != "Role: carve. Contract: relay v12" {
+	if first != "Role: carve. Contract: relay v13" {
 		t.Errorf("first line %q", first)
 	}
 	for _, want := range []string{
@@ -163,8 +163,8 @@ func TestEmbeddedFilesMatchNames(t *testing.T) {
 }
 
 func TestContractVersion(t *testing.T) {
-	if ContractVersion != 12 {
-		t.Fatalf("ContractVersion = %d, want 12", ContractVersion)
+	if ContractVersion != 13 {
+		t.Fatalf("ContractVersion = %d, want 13", ContractVersion)
 	}
 	for _, f := range []string{"relay-first-line.txt", "relay-orchestrator-first-line.txt"} {
 		if got := recordedVersion(t, f); got != ContractVersion {
@@ -247,13 +247,13 @@ func TestAcceptedAdjContractsIsOne(t *testing.T) {
 	}
 }
 
-func TestAcceptedContractsAreV11AndV12(t *testing.T) {
-	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{11, 12}) {
-		t.Fatalf("AcceptedContracts() = %v, want [11 12]", got)
+func TestAcceptedContractsAreV12AndV13(t *testing.T) {
+	if got := AcceptedContracts(); !reflect.DeepEqual(got, []int{12, 13}) {
+		t.Fatalf("AcceptedContracts() = %v, want [12 13]", got)
 	}
 	got := AcceptedContracts()
 	got[0] = 99
-	if again := AcceptedContracts(); again[0] != 11 {
+	if again := AcceptedContracts(); again[0] != 12 {
 		t.Fatalf("AcceptedContracts hands out its own slice: %v", again)
 	}
 	if !ContractAccepted(ContractVersion) {
@@ -262,12 +262,12 @@ func TestAcceptedContractsAreV11AndV12(t *testing.T) {
 }
 
 func TestPromptsFirstLineNamesTheirContract(t *testing.T) {
-	if ContractVersion != 12 {
-		t.Errorf("ContractVersion = %d, want 12", ContractVersion)
+	if ContractVersion != 13 {
+		t.Errorf("ContractVersion = %d, want 13", ContractVersion)
 	}
 	for name, p := range prompts(t) {
 		first, _, _ := strings.Cut(p, "\n")
-		if want := "Role: " + name + ". Contract: relay v12"; first != want {
+		if want := "Role: " + name + ". Contract: relay v13"; first != want {
 			t.Errorf("%s: first line %q, want %q", name, first, want)
 		}
 	}
@@ -276,11 +276,11 @@ func TestPromptsFirstLineNamesTheirContract(t *testing.T) {
 func TestCheckContractLine(t *testing.T) {
 	for _, v := range []int{7, 8, 9, 10, 11, 12, 13} {
 		got, err := CheckContractLine(fmt.Sprintf("Contract: relay v%d", v))
-		if got != v || (err == nil) != (v == 11 || v == 12) {
+		if got != v || (err == nil) != (v == 12 || v == 13) {
 			t.Errorf("v%d: %d, %v", v, got, err)
 		}
-		if err != nil && !strings.Contains(err.Error(), "relay v11 or v12 and slicer prints v"+strconv.Itoa(v)) {
-			t.Errorf("v%d: message %q does not name the set {11, 12}", v, err)
+		if err != nil && !strings.Contains(err.Error(), "relay v12 or v13 and slicer prints v"+strconv.Itoa(v)) {
+			t.Errorf("v%d: message %q does not name the set {12, 13}", v, err)
 		}
 	}
 	for _, bad := range []string{"", "something else", "Contract: relay v", "Contract: relay v12 extra"} {
@@ -861,10 +861,10 @@ func TestAcceptedContractsPhrase(t *testing.T) {
 			t.Errorf("phrase(%v) = %q, want %q", tc.versions, got, tc.want)
 		}
 	}
-	if got := AcceptedContractsPhrase(); got != "v11 or v12" {
+	if got := AcceptedContractsPhrase(); got != "v12 or v13" {
 		t.Errorf("accepted phrase: %q", got)
 	}
-	if _, err := CheckContractLine("Contract: relay v9"); err == nil || err.Error() != "ork accepts relay v11 or v12 and slicer prints v9" {
+	if _, err := CheckContractLine("Contract: relay v9"); err == nil || err.Error() != "ork accepts relay v12 or v13 and slicer prints v9" {
 		t.Errorf("contract error: %v", err)
 	}
 }
@@ -1037,5 +1037,25 @@ func TestPromptsAllowAdvisoryToolFeedback(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestCheckContractLineAcceptsV13(t *testing.T) {
+	v, err := CheckContractLine("Contract: relay v13")
+	if v != 13 || err != nil {
+		t.Fatalf("v13: %d, %v", v, err)
+	}
+	for _, v := range []int{11, 14} {
+		got, err := CheckContractLine(fmt.Sprintf("Contract: relay v%d", v))
+		if got != v || err == nil || !strings.Contains(err.Error(), "v12 or v13") {
+			t.Errorf("v%d: %d, %v", v, got, err)
+		}
+	}
+}
+
+func TestCheckContractLineRefusesV11(t *testing.T) {
+	v, err := CheckContractLine("Contract: relay v11")
+	if v != 11 || err == nil || !strings.Contains(err.Error(), "v12 or v13") {
+		t.Fatalf("v11: %d, %v", v, err)
 	}
 }

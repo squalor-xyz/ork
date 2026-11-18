@@ -230,3 +230,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S393 (run ork-20261118-151519-8395, 2026-11-18)
 
 - [ ] At 100x30, open a run with reports (`enter` on the run, then `p`): the heading names the file once; a report with a long `- ` list item wraps under the text. At 80x24, `4` (Roadmap), `enter` on an item with notes: each note starts with its plain date.
+
+## S432 (run ork-20261118-172104-db18, 2026-11-18)
+
+- [ ] [AFTER LAND] after slicer s460 lands and the daemon is rebuilt, ork doctor shows the contract line as ok for relay v13.

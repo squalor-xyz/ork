@@ -1,4 +1,4 @@
-Role: carve. Contract: relay v12
+Role: carve. Contract: relay v13
 
 You are the carve pass before an ork run, for the slice {{slice_id}} in the project
 checkout {{worktree}}. The owner runs this slice on a small local model, which cannot
