@@ -5080,6 +5080,20 @@
 {"when": "2026-11-17T23:19:44Z", "item": "S397", "action": "note", "from": "", "to": "", "note": "Landing check is green. S412-S415 were marked as slices with", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:21:01Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Bug evidence 2026-11-17 23:20: S402 and S396 landing re-chec", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:35:47Z", "item": "S411", "action": "retire", "from": "open", "to": "retired", "note": "Fixed on main by S402 (ad3e9c34): TestSpecCheckAllRowsOutRefuses now builds its expected text with vendorUntilText and claude ends 48h out; run ork-20261117-232657-f1b3 stopped as redundant."}
+{"when": "2026-11-17T23:42:42Z", "item": "S381", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T23:47:37Z", "item": "S381", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T23:54:54Z", "item": "S381", "action": "note", "from": "", "to": "", "note": "Fixture provenance (testdata/reports): nofix-reviewer-1.md i", "by": "Jon Robbins"}
+{"when": "2026-11-17T23:57:31Z", "item": "S381", "action": "note", "from": "", "to": "", "note": "Verified: a reviewer or UI section that opens with nothing o", "by": "Jon Robbins"}
+{"when": "2026-11-17T23:57:32Z", "item": "S381", "action": "status", "from": "started", "to": "done", "note": "Verified: a reviewer or UI section that opens with nothing or none is empty and starts no fix round; a tagged finding after it still counts; untagged findings and sentences starting with Nothing are still findings; blank sections are still shape errors. Prompts, docs/design.md and CHANGELOG.md updated; full suite, gofmt, slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-17T23:42:51Z", "item": "S388", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T23:42:57Z", "item": "S388", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-17T23:43:00Z", "item": "S388", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-17T23:50:26Z", "item": "S388", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-17T23:50:32Z", "item": "S388", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T03:38:05Z", "item": "S388", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T03:43:16Z", "item": "S388", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S388):", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:43:22Z", "item": "S388", "action": "note", "from": "", "to": "", "note": "Verified: a feature tool feedback entry is asked in the targ", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:43:24Z", "item": "S388", "action": "status", "from": "started", "to": "done", "note": "Verified: a feature tool feedback entry is asked in the target project's adj as tool-feedback.SLUG-HASH (options file and drop, file recommended; the entry keeps the record id as asked). A target without adj, or a key adj already holds, leaves file_error and asks nothing. The daemon's fetcher wrapper files one slice per decided tool-feedback.* record whose decision is file, once per record, whoever decided it; drop and other keys file nothing; ork never runs adj decide for these records. docs/boundaries.md names the adj 416 delegate exception. go vet and go test ./... pass (26 packages); the eight slice tests pass and were mutation-checked.", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:44:01Z", "item": "S390", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:52:03Z", "item": "S390", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S390):", "by": "Jon Robbins"}
 {"when": "2026-11-17T23:52:07Z", "item": "S390", "action": "note", "from": "", "to": "", "note": "Verified: with the ASCII option the Overview Recent outcomes", "by": "Jon Robbins"}
@@ -5103,3 +5117,10 @@
 {"when": "2026-11-18T03:53:25Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Git"}
 {"when": "2026-11-18T03:55:06Z", "item": "S332", "action": "note", "from": "", "to": "", "note": "Verified: the gate now fails a slice with no landed-changed/", "by": "Jon Robbins"}
 {"when": "2026-11-18T03:55:08Z", "item": "S332", "action": "status", "from": "started", "to": "done", "note": "Verified: gate fails a slice with no landed-changed/ITEM.md before the gate role runs when changelog_path is set; implementer prompt writes the entry with slicer changelog add; 53 Unreleased bullets imported into landed-changed/ plus S332.md; CHANGELOG resolver unchanged as the fallback; docs updated; go vet, go test ./..., gofmt, slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:42:06Z", "item": "S332", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T03:43:15Z", "item": "S421", "action": "add", "from": "", "to": "open", "note": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator"}
+{"when": "2026-11-18T03:43:15Z", "item": "S421", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T03:46:22Z", "item": "S421", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388's run"}
+{"when": "2026-11-18T03:52:11Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "2026-11-18: recurred three more times. ork's 'Tracking edits", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:52:11Z", "item": "S408", "action": "note", "from": "", "to": "", "note": "2026-11-18 gap: S381 (run ork-20261117-234004-9e8e) committe", "by": "Jon Robbins"}
+{"when": "2026-11-18T03:52:27Z", "item": "S403", "action": "edit", "from": "", "to": "", "note": "Implement"}

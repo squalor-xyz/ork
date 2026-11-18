@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/report.go:506-570`\n- `internal/engine/report.go:636-664`\n- `internal/engine/report_test.go`\n- `internal/engine/states.go:681`\n- `internal/engine/engine_test.go`\n- `internal/roles/prompts/reviewer.md`\n- `internal/roles/prompts/ui.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/engine/report.go:506-567`\n- `internal/engine/report.go:634-676`\n- `internal/engine/report_test.go`\n- `internal/engine/states.go:681`\n- `internal/engine/engine_test.go`\n- `internal/engine/testdata/reports/fix-reviewer-1.md`\n- `internal/engine/testdata/reports/fix-reviewer-2.md`\n- `internal/engine/testdata/reports/fix-ui-1.md`\n- `internal/engine/testdata/reports/nofix-reviewer-1.md`\n- `internal/engine/testdata/reports/nofix-reviewer-2.md`\n- `internal/engine/testdata/reports/nofix-ui-1.md`\n- `internal/roles/prompts/reviewer.md`\n- `internal/roles/prompts/ui.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
     },
     {
       "heading": "Failing tests",

@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -526,7 +527,10 @@ func TestToolFeedbackUnregisteredToolIsFiledInTheRunsProject(t *testing.T) {
 	}
 }
 
-func TestToolFeedbackFeatureIsOnlyKept(t *testing.T) {
+// A feature entry is never filed as a slice by the run (S388: it is asked in
+// adj, and filed only when the owner answers). Here its target has no adj, so
+// the entry only says why nothing was asked.
+func TestToolFeedbackFeatureIsNotFiledAsASlice(t *testing.T) {
 	h, e := toolFeedbackRun(t, "/projects/slicer", fileRoutes("S130"), tfFeature)
 	rec := requireState(t, e, runrec.StateAwaitingApproval)
 	if n := len(h.calls("slicer", "add")) + len(h.calls("slicer", "promote")); n != 0 {
@@ -535,7 +539,7 @@ func TestToolFeedbackFeatureIsOnlyKept(t *testing.T) {
 	if len(rec.ToolFeedback) != 1 {
 		t.Fatalf("entries %+v", rec.ToolFeedback)
 	}
-	if f := rec.ToolFeedback[0]; f.Key != ToolFeedbackKey("slicer", "feature", "Print the run id on start") || f.Filed != "" || f.FileError != "" {
+	if f := rec.ToolFeedback[0]; f.Key != ToolFeedbackKey("slicer", "feature", "Print the run id on start") || f.Filed != "" || f.Asked != 0 {
 		t.Errorf("entry %+v", f)
 	}
 	raw, err := os.ReadFile(filepath.Join(h.store.RunDir(rec.ID), "run.json"))
@@ -547,6 +551,124 @@ func TestToolFeedbackFeatureIsOnlyKept(t *testing.T) {
 	}
 	if err != nil || json.Unmarshal(raw, &disk) != nil || len(disk.ToolFeedback) != 1 || !strings.HasPrefix(disk.ToolFeedback[0].Key, "tool-feedback-slicer-") || disk.ToolFeedback[0].Filed != "" {
 		t.Errorf("run.json tool_feedback %+v (%v), want the entry with its key and no filed", disk.ToolFeedback, err)
+	}
+}
+
+const tfOrkFeature = "tool feedback: 1. reviewer | tool: ork | kind: feature | proposal: Show the run id | evidence: had to run ork status"
+
+// askedKey is the adj key of an ork feature entry: the filing key with its
+// first "-" after "tool-feedback" as ".".
+func askedKey(proposal string) string {
+	return strings.Replace(ToolFeedbackKey("ork", "feature", proposal), "tool-feedback-", "tool-feedback.", 1)
+}
+
+// adjAskRun runs a slice of ork, which has adj, to its approval card with the
+// reviewer's lines; adj check answers check, and adj ask answers 12.
+func adjAskRun(t *testing.T, adj bool, check string, lines ...string) (*harness, *Engine) {
+	t.Helper()
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.Adj = adj }
+		o.routes = append(o.routes,
+			clitest.Route{Tool: "adj", Args: []string{"contract", "--json"}, Prefix: true, Stdout: `{"contract":"adj-json v1","version":1,"pinned":null}`},
+			clitest.Route{Tool: "adj", Args: []string{"check"}, Prefix: true, Stdout: check},
+			clitest.Route{Tool: "adj", Args: []string{"ask"}, Prefix: true, Stdout: "12\n"},
+		)
+	})
+	h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
+	reviewerSays(h, cleanReview+strings.Join(lines, "\n")+"\n")
+	return h, h.start()
+}
+
+// flagValues returns every value that follows flag in args.
+func flagValues(args []string, flag string) []string {
+	var out []string
+	for i := 0; i+1 < len(args); i++ {
+		if args[i] == flag {
+			out = append(out, args[i+1])
+		}
+	}
+	return out
+}
+
+func TestToolFeedbackFeatureIsAskedInAdj(t *testing.T) {
+	h, e := adjAskRun(t, true, `{}`, tfOrkFeature)
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	key := askedKey("Show the run id")
+	if !regexp.MustCompile(`^tool-feedback\.ork-[0-9a-f]{8}$`).MatchString(key) {
+		t.Fatalf("key %q", key)
+	}
+	var verbs []string
+	for _, c := range h.fake.CallsTo("adj") {
+		if c.Args[0] != "contract" {
+			verbs = append(verbs, c.Args[0])
+		}
+	}
+	if !reflect.DeepEqual(verbs, []string{"check", "ask"}) {
+		t.Fatalf("adj calls %v, want check then ask", verbs)
+	}
+	check, ask := h.calls("adj", "check")[0], h.calls("adj", "ask")[0]
+	if check[1] != key {
+		t.Errorf("adj check %q, want key %s", check, key)
+	}
+	if ask[1] != "Tool feedback (feature, ork): Show the run id" || !reflect.DeepEqual(flagValues(ask, "--key"), []string{key}) {
+		t.Errorf("adj ask %q", ask)
+	}
+	wantOptions := []string{"file:ork files it as a slice in ork", "drop:not acted on"}
+	if got := flagValues(ask, "--option"); !reflect.DeepEqual(got, wantOptions) {
+		t.Errorf("options %q, want %q", got, wantOptions)
+	}
+	if got := flagValues(ask, "--recommend"); !reflect.DeepEqual(got, []string{"file"}) {
+		t.Errorf("recommend %q", got)
+	}
+	if got := flagValues(ask, "--reasoning"); !reflect.DeepEqual(got, []string{"A role proposed it; code cannot judge its cost."}) {
+		t.Errorf("reasoning %q", got)
+	}
+	if got := flagValues(ask, "--ref"); !reflect.DeepEqual(got, []string{item}) {
+		t.Errorf("refs %q, want the run's item", got)
+	}
+	ctx := flagValues(ask, "--context")
+	if len(ctx) != 1 || !strings.HasPrefix(ctx[0], "Proposal: Show the run id\n") {
+		t.Fatalf("context %q", ctx)
+	}
+	for _, want := range []string{"reviewer", rec.ID, "ork", item, "had to run ork status"} {
+		if !strings.Contains(ctx[0], want) {
+			t.Errorf("context lacks %q:\n%s", want, ctx[0])
+		}
+	}
+	if n := len(h.calls("slicer", "add")) + len(h.calls("slicer", "promote")); n != 0 {
+		t.Errorf("a feature entry is asked, not filed: %d filing calls", n)
+	}
+	if len(rec.ToolFeedback) != 1 {
+		t.Fatalf("entries %+v", rec.ToolFeedback)
+	}
+	if f := rec.ToolFeedback[0]; f.Asked != 12 || f.Filed != "" || f.FileError != "" || f.Key != ToolFeedbackKey("ork", "feature", "Show the run id") {
+		t.Errorf("entry %+v, want asked 12 and the filing key", f)
+	}
+}
+
+func TestToolFeedbackAskedTwiceIsNotReasked(t *testing.T) {
+	key := askedKey("Show the run id")
+	h, e := adjAskRun(t, true, `{"open":[{"id":12,"key":"`+key+`"}]}`, tfOrkFeature)
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if n := len(h.calls("adj", "ask")); n != 0 {
+		t.Fatalf("adj ask ran %d times for a key that is open", n)
+	}
+	if len(rec.ToolFeedback) != 1 {
+		t.Fatalf("entries %+v", rec.ToolFeedback)
+	}
+	if f := rec.ToolFeedback[0]; f.Asked != 0 || !strings.Contains(f.FileError, "#12") {
+		t.Errorf("entry %+v, want file_error naming #12", f)
+	}
+}
+
+func TestToolFeedbackAskSkipsAProjectWithoutAdj(t *testing.T) {
+	h, e := adjAskRun(t, false, `{}`, tfOrkFeature)
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if calls := h.fake.CallsTo("adj"); len(calls) != 0 {
+		t.Fatalf("adj was called in a project without adj: %q", calls)
+	}
+	if f := rec.ToolFeedback[0]; f.Asked != 0 || !strings.Contains(f.FileError, "adj") {
+		t.Errorf("entry %+v, want a file_error that says the project has no adj", f)
 	}
 }
 

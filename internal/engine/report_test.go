@@ -314,6 +314,115 @@ func TestFindingsErrorsOnAReportWithoutTheSections(t *testing.T) {
 	}
 }
 
+// ---- Triage: a section that opens with nothing (adj 406) ----
+
+const evidence = "I traced engine.go:42 to its caller and the error is returned."
+
+// oneSection is a report whose section letter has the given heading remainder
+// and body, and whose other sections say nothing.
+func oneSection(letter, head, body string) string {
+	sec := func(l, h, b string) string { return "## (" + l + ")" + h + "\n" + b + "\n\n" }
+	text := "Review of S04.\n\n"
+	for _, l := range []string{"A", "B", "C", "D"} {
+		if l == letter {
+			text += sec(l, head, body)
+		} else {
+			text += sec(l, " Section", "nothing")
+		}
+	}
+	return text + "## Owner needed\n\nnone\n"
+}
+
+func TestTriageNothingThenProseIsEmpty(t *testing.T) {
+	cases := map[string]struct{ head, body string }{
+		"nothing":      {" Section", "nothing\n\n" + evidence},
+		"Nothing.":     {" Section", "Nothing.\n\n" + evidence},
+		"**none**":     {" Section", "**none**\n\n" + evidence},
+		"blank first":  {" Section", "\n\nnothing\n" + evidence},
+		"heading line": {" Section: nothing", evidence},
+	}
+	for _, letter := range []string{"A", "B", "D"} {
+		for name, c := range cases {
+			got, err := Triage(oneSection(letter, c.head, c.body))
+			if err != nil || got.Fix != "" {
+				t.Errorf("(%s) %s: fix %q, err %v", letter, name, got.Fix, err)
+			}
+		}
+	}
+}
+
+func TestTriageNothingThenTaggedFindingKeepsTheFinding(t *testing.T) {
+	for _, letter := range []string{"A", "B", "D"} {
+		got, err := Triage(oneSection(letter, " Section", "nothing\n\n"+evidence+"\n\n"+fixFinding))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !got.Tagged || !strings.Contains(got.Fix, "engine.go:42 drops the error.") {
+			t.Errorf("(%s): the tagged finding is lost: tagged %v, fix %q", letter, got.Tagged, got.Fix)
+		}
+		if strings.Contains(got.Fix, "I traced") {
+			t.Errorf("(%s): the evidence is a finding: %q", letter, got.Fix)
+		}
+	}
+}
+
+func TestTriageUntaggedFindingIsStillFix(t *testing.T) {
+	for _, letter := range []string{"A", "B", "D"} {
+		got, err := Triage(oneSection(letter, " Section", "1. run.go:10 crashes on nil.\n\nnothing else was wrong."))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.Tagged || !strings.Contains(got.Fix, "run.go:10 crashes on nil.") {
+			t.Errorf("(%s): tagged %v, fix %q", letter, got.Tagged, got.Fix)
+		}
+	}
+}
+
+func TestTriageNothingAsFirstWordOfASentenceIsAFinding(t *testing.T) {
+	for _, letter := range []string{"A", "B", "D"} {
+		for _, body := range []string{"Nothing checks the error path.", "Nothing checks the error path.\n\n" + evidence} {
+			got, err := Triage(oneSection(letter, " Section", body))
+			if err != nil || !strings.Contains(got.Fix, "Nothing checks the error path.") {
+				t.Errorf("(%s) %q: fix %q, err %v", letter, body, got.Fix, err)
+			}
+		}
+	}
+}
+
+func TestReviewerAndUIPromptsAllowEvidenceAfterNothing(t *testing.T) {
+	for _, role := range []string{"reviewer", "ui"} {
+		prompt, err := roles.Prompt(role)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if !strings.Contains(prompt, `you may add evidence after it`) || !strings.Contains(prompt, "Put no finding after it") {
+			t.Errorf("%s prompt does not say that evidence may follow \"nothing\"", role)
+		}
+	}
+}
+
+func TestSavedReportsTriage(t *testing.T) {
+	files, err := filepath.Glob(filepath.Join("testdata", "reports", "*.md"))
+	if err != nil || len(files) != 6 {
+		t.Fatalf("saved reports %v, %v; want 6", files, err)
+	}
+	for _, file := range files {
+		data, err := os.ReadFile(file)
+		if err != nil {
+			t.Fatal(err)
+		}
+		wantFix := strings.HasPrefix(filepath.Base(file), "fix-")
+		got, err := Triage(string(data))
+		if err != nil {
+			t.Errorf("%s: %v", file, err)
+			continue
+		}
+		if (got.Fix != "") != wantFix {
+			t.Errorf("%s: fix %q, want fix %v", file, got.Fix, wantFix)
+		}
+	}
+}
+
 func TestReportFallbackIsWrittenAt0600EvenOverAnExistingFile(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "report.md")
 	if err := os.WriteFile(path, []byte("  \n"), 0o644); err != nil {

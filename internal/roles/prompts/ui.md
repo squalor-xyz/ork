@@ -91,7 +91,10 @@ Check each view the diff adds or changes against this list:
 - Focus and state. The selected row, the empty state, the error state and the
   waiting state are each told apart on screen.
 
-Report these sections, and write "nothing" for an empty one:
+Report these sections, and write "nothing" for an empty one. A section whose first
+line is "nothing" is empty: you may add evidence after it, such as what you rendered
+or checked, and ork does not read that as a finding. Put no finding after it, unless
+it carries a `[fix]`, `[owner]` or `[later]` tag.
 
 - (A) Defects the owner would see, most severe first: clipping, overflow, wrong
   columns, hidden state. For each give the view, the terminal size, what shows on

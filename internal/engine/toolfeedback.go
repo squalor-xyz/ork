@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
@@ -48,7 +49,7 @@ func ToolFeedbackKey(tool, kind, proposal string) string {
 }
 
 // ToolFeedbackSafe says whether ork files an entry of this kind on its own
-// (adj 411, by kind). A feature request stays kept.
+// (adj 411, by kind). A feature request is asked in adj instead (S388).
 func ToolFeedbackSafe(kind string) bool {
 	return kind == "friction" || kind == "deterministic-check"
 }
@@ -83,12 +84,125 @@ func ToolFeedbackTarget(own registry.Project, item string, lookup func(name stri
 }
 
 // ToolFeedbackResult is what filing one entry came to: its key, the filed
-// item's id (empty when nothing was filed) and the failure, if any. An entry
-// of a kind that is only kept has a key and neither of the others.
+// item's id (empty when nothing was filed), the adj record id of the question
+// asked about it (0 when none was) and the failure, if any.
 type ToolFeedbackResult struct {
 	Key   string
 	Filed string
+	Asked int
 	Err   error
+}
+
+// ToolFeedbackAskKind is the kind that ork asks about in the target's adj
+// instead of filing (S388, *proposed*; adj 415).
+const ToolFeedbackAskKind = "feature"
+
+// toolFeedbackAskPrefix starts the adj key of a tool feedback question; the
+// filing key's own prefix is the same with "-" for ".".
+const (
+	toolFeedbackAskPrefix  = "tool-feedback."
+	toolFeedbackFilePrefix = "tool-feedback-"
+)
+
+// ToolFeedbackAskKey is the adj key of the question about an entry: its filing
+// key with the first "-" after "tool-feedback" as ".", which fits an adj
+// decision key (S388, *proposed*).
+func ToolFeedbackAskKey(filingKey string) string {
+	return toolFeedbackAskPrefix + strings.TrimPrefix(filingKey, toolFeedbackFilePrefix)
+}
+
+// toolFeedbackAskTitleMax is the most runes of a question's title.
+const toolFeedbackAskTitleMax = 120
+
+// toolFeedbackAskSpec is the question about a feature entry: file or drop,
+// with file recommended (adj 415). Its context starts with the proposal line,
+// which filing on a decision reads back, and names the role, run, project,
+// item and evidence, so the question reads on its own.
+func toolFeedbackAskSpec(t FeedbackTarget, f ToolFeedback, own registry.Project, item, runID, key string) adjcli.AskSpec {
+	title := []rune(fmt.Sprintf("Tool feedback (%s, %s): %s", f.Kind, ToolFeedbackSlug(f.Tool), f.Proposal))
+	if len(title) > toolFeedbackAskTitleMax {
+		title = title[:toolFeedbackAskTitleMax]
+	}
+	spec := adjcli.AskSpec{
+		Title: string(title),
+		Key:   ToolFeedbackAskKey(key),
+		Context: fmt.Sprintf("%s%s\nRole: %s\nRun: %s\nProject: %s\nItem: %s\nEvidence: %s",
+			toolFeedbackProposalPrefix, f.Proposal, f.Role, runID, own.Name, item, f.Evidence),
+		Options: []adjcli.AskOption{
+			{Label: "file", Summary: "ork files it as a slice in " + t.Project.Name},
+			{Label: "drop", Summary: "not acted on"},
+		},
+		Recommend: "file",
+		Reasoning: "A role proposed it; code cannot judge its cost.",
+	}
+	if t.DiscoveredFrom != "" {
+		spec.Refs = []string{t.DiscoveredFrom}
+	}
+	return spec
+}
+
+// toolFeedbackProposalPrefix starts the first line of a question's context.
+const toolFeedbackProposalPrefix = "Proposal: "
+
+// askToolFeedback asks about one feature entry in its target project's adj. A
+// target without adj, or a key adj already holds, asks nothing and is an error
+// the caller keeps on the entry.
+func askToolFeedback(ctx context.Context, d Deps, own registry.Project, item, runID string, f ToolFeedback, key string) (int, error) {
+	t := ToolFeedbackTarget(own, item, d.Project, f)
+	if !t.Project.Adj {
+		return 0, fmt.Errorf("%s does not use adj; not asked", t.Project.Name)
+	}
+	id, err := AskRecord(ctx, d, AskRecordConfig{Project: t.Project, Spec: toolFeedbackAskSpec(t, f, own, item, runID, key)})
+	if err != nil {
+		return 0, fmt.Errorf("adj ask in %s: %w", t.Project.Name, err)
+	}
+	return id, nil
+}
+
+// ToolFeedbackDecidedFile says whether a decided adj record is a tool feedback
+// question that was answered "file".
+func ToolFeedbackDecidedFile(rec adjcli.Record) bool {
+	return strings.HasPrefix(rec.Key, toolFeedbackAskPrefix) && rec.Decision == "file"
+}
+
+// FileDecidedToolFeedback files the slice for a tool feedback question that
+// was decided "file", in project p (S388, *proposed*; adj 415, 416). The title
+// is the context's Proposal line, the slicer key is the filing key the adj key
+// stands for, and the first ref is the item it was discovered from. A key
+// slicer already holds returns the item it filed, which is not promoted
+// again, so seeing the record twice files one slice. It never decides the
+// record. An outline is written in dir. It returns the filed item's id.
+func FileDecidedToolFeedback(ctx context.Context, d Deps, w runrec.Writer, dir string, p registry.Project, rec adjcli.Record) (string, error) {
+	title := ""
+	for _, line := range strings.Split(rec.Context, "\n") {
+		if rest, ok := strings.CutPrefix(strings.TrimSpace(line), strings.TrimSpace(toolFeedbackProposalPrefix)); ok {
+			title = strings.TrimSpace(rest)
+			break
+		}
+	}
+	if title == "" {
+		return "", fmt.Errorf("adj #%d has no Proposal line in its context", rec.ID)
+	}
+	key := toolFeedbackFilePrefix + strings.TrimPrefix(rec.Key, toolFeedbackAskPrefix)
+	from := ""
+	if len(rec.Refs) > 0 {
+		from = rec.Refs[0]
+	}
+	added, err := d.Slicer.Add(ctx, w, p.Path, title, from, key)
+	if err != nil {
+		return "", fmt.Errorf("slicer add in %s: %w", p.Name, err)
+	}
+	if !(added.Existing && added.HasSlice) {
+		path := filepath.Join(dir, key+".md")
+		why := fmt.Sprintf("## %s\n\n### Why\n\nA role proposed this as tool feedback, and adj #%d was decided to file it:\n\n%s\n", title, rec.ID, rec.Context)
+		if err := os.WriteFile(path, []byte(why), 0o600); err != nil {
+			return "", fmt.Errorf("outline: %w", err)
+		}
+		if err := d.Slicer.Promote(ctx, w, p.Path, added.ID, path); err != nil {
+			return "", fmt.Errorf("filed %s in %s, but its Why section failed: slicer promote: %w", added.ID, p.Name, err)
+		}
+	}
+	return added.ID, nil
 }
 
 // toolFeedbackWhy is the Why section of a filed entry. It names the role, the
@@ -100,7 +214,8 @@ func toolFeedbackWhy(t FeedbackTarget, f ToolFeedback, own registry.Project, ite
 }
 
 // FileToolFeedback files each entry of a safe kind as an unscored slice and
-// returns one result per entry, in order. It runs `slicer add TITLE --key KEY`
+// returns one result per entry, in order. An entry of the kind feature is
+// asked in its target's adj instead (askToolFeedback). It runs `slicer add TITLE --key KEY`
 // in the target project, then `slicer promote` with a Why outline written in
 // dir; an item that the key already names and that has its spec is not
 // promoted again. A failure is the entry's result, never the call's: the
@@ -114,6 +229,10 @@ func FileToolFeedback(ctx context.Context, d Deps, w runrec.Writer, dir string, 
 			key = ToolFeedbackKey(f.Tool, f.Kind, f.Proposal)
 		}
 		out[i].Key = key
+		if f.Kind == ToolFeedbackAskKind {
+			out[i].Asked, out[i].Err = askToolFeedback(ctx, d, own, item, runID, f, key)
+			continue
+		}
 		if !ToolFeedbackSafe(f.Kind) {
 			continue
 		}
@@ -144,19 +263,19 @@ func FileToolFeedback(ctx context.Context, d Deps, w runrec.Writer, dir string, 
 // written on the entry as file_error and the run goes on, so nothing is
 // returned. It holds fileMu, as filing a later finding does.
 func (e *Engine) fileToolFeedback(added []ToolFeedback) {
-	var safe []ToolFeedback
+	var acted []ToolFeedback
 	for _, f := range added {
-		if ToolFeedbackSafe(f.Kind) {
-			safe = append(safe, f)
+		if ToolFeedbackSafe(f.Kind) || f.Kind == ToolFeedbackAskKind {
+			acted = append(acted, f)
 		}
 	}
-	if len(safe) == 0 {
+	if len(acted) == 0 {
 		return
 	}
 	e.fileMu.Lock()
 	defer e.fileMu.Unlock()
 	rec := e.run.Snapshot()
-	results := FileToolFeedback(context.Background(), e.d, e.wr, e.run.Dir(), e.proj, rec.Item, rec.ID, safe)
+	results := FileToolFeedback(context.Background(), e.d, e.wr, e.run.Dir(), e.proj, rec.Item, rec.ID, acted)
 	now := e.d.now()
 	e.run.Update(func(rr *runrec.Record) {
 		for _, res := range results {
@@ -167,6 +286,8 @@ func (e *Engine) fileToolFeedback(added []ToolFeedback) {
 				switch {
 				case res.Err != nil:
 					rr.ToolFeedback[i].FileError = res.Err.Error()
+				case res.Asked != 0:
+					rr.ToolFeedback[i].Asked, rr.ToolFeedback[i].FileError = res.Asked, ""
 				case res.Filed != "":
 					rr.ToolFeedback[i].Filed, rr.ToolFeedback[i].FiledAt, rr.ToolFeedback[i].FileError = res.Filed, now, ""
 				}

@@ -1010,6 +1010,25 @@ func TestReviewFindingsStartAFixRoundAndTheResumedReviewerGatesIt(t *testing.T) 
 	}
 }
 
+func TestReviewSkipsFixRoundOnNothingProse(t *testing.T) {
+	h := newHarness(t)
+	prose := "\n\nI traced engine.go:42 to its caller and the error is returned."
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleReviewer {
+			return Result{Exit: ExitOK, Session: "sess-reviewer", Report: review("nothing"+prose, "Nothing."+prose, "nothing", "**none**"+prose)}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	if got, want := h.runner.roles(), []string{"implementer-1", "reviewer-1", "gate-1"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("role rounds %v, want %v", got, want)
+	}
+	if rec.Round != 1 {
+		t.Errorf("round %d, want 1", rec.Round)
+	}
+}
+
 func TestGateFailIsNotedAndStartsAFixRound(t *testing.T) {
 	h := newHarness(t)
 	h.runner.script = func(req Request, n int) (Result, error) {

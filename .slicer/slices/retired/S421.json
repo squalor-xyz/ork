@@ -1,0 +1,39 @@
+{
+  "id": "S421",
+  "title": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261117-233556-f24d, project ork, item S388:\n\nRun a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator\n\nEvidence: round 2 counted the no-match rg (exit 1, empty output) as a failed check, which started a fix round that changed no code"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

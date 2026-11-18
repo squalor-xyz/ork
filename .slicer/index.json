@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 421,
+  "next_id": 422,
   "preamble": "",
   "passes": [
     {
@@ -21218,12 +21218,41 @@
       "id": "S381",
       "title": "Fix round: a section that opens with nothing is empty",
       "short_title": "Nothing-plus-prose is no finding",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e397e70d-64f5-4c27-86b1-a90f2bb5b7ac",
+          "kind": "",
+          "text": "**2026-11-17** — Fixture provenance (testdata/reports): nofix-reviewer-1.md is the reviewer-1 report of run ork-20261116-155616-1207 and nofix-reviewer-2.md is the reviewer-1 report of run ork-20261117-130402-15ab (run ids as given in the round-1 review); in both, absolute paths are redacted to <worktree>. The other four fixtures (fix-reviewer-1, fix-reviewer-2, fix-ui-1, nofix-ui-1) are synthetic: line 1 of each says so. The runs named in Why were pruned from local state, and no saved report held a real untagged finding.",
+          "created_at": "2026-11-17T23:54:54Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "dbc6b0ce-2dad-4adf-a1b2-08b51ba7cdb6",
+          "kind": "",
+          "text": "**2026-11-17** — Verified: a reviewer or UI section that opens with nothing or none (heading line or first non-blank body line) is empty; prose after it is evidence and starts no fix round, a tagged finding after it still counts, an untagged section that does not open with nothing is still a fix finding, a sentence that only starts with Nothing is still a finding, and a blank section is still a shape error. Reviewer and UI prompts, docs/design.md and CHANGELOG.md updated. go vet, go test ./..., gofmt, slicer check and adj lint pass; six slice tests plus a prompt test pass, each assertion mutation-checked.",
+          "created_at": "2026-11-17T23:57:31Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -21243,7 +21272,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -21480,13 +21509,42 @@
       "id": "S388",
       "title": "Ask about feature tool feedback in adj and file it when answered",
       "short_title": "Tool feedback owner questions",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S387",
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1a952188-d96d-45b1-a6cb-cde1d7bf15b8",
+          "kind": "",
+          "text": "**2026-11-18** — Human checks at approval (S388):\n- later: In a real run, a feature line reaches Needs you, and answering `file` files one slice in the target.",
+          "created_at": "2026-11-18T03:43:16Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "91a20d41-776b-4416-a48c-b4e97a02da4b",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: a feature tool feedback entry is asked in the target project's adj as tool-feedback.SLUG-HASH (options file and drop, file recommended; the entry keeps the record id as asked). A target without adj, or a key adj already holds, leaves file_error and asks nothing. The daemon's fetcher wrapper files one slice per decided tool-feedback.* record whose decision is file, once per record, whoever decided it; drop and other keys file nothing; ork never runs adj decide for these records. docs/boundaries.md names the adj 416 delegate exception. go vet and go test ./... pass (26 packages); the eight slice tests pass and were mutation-checked.",
+          "created_at": "2026-11-18T03:43:22Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -21504,7 +21562,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22166,6 +22224,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "722bc09a-039f-46a7-9be0-879e8828274b",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18: recurred three more times. ork's 'Tracking edits on main before landing S390/S381' commits (53a72f35, 8a9f3623) committed index.json with S416-S418 marked has_slice but left .slicer/slices/S416-S419.json untracked, so slicer check failed in S390 and S381 after merging main; S388's landing did the same for S421. Each time the land fix implementer could not merge main and paused; the orchestrator committed the files on main (7a6849f7, c87565da) and merged main into the worktree by hand.",
+          "created_at": "2026-11-18T03:52:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -22289,6 +22361,20 @@
           "kind": "",
           "text": "**2026-11-17** — ork retry re-lands a committed run stopped in land: it resets land_fixes and lands when the re-check is green. A red re-check gets one implementer fix round, then stops land-blocked if still red, and the stop names ork retry RUN. Other committed runs, a missing worktree or branch, and --rounds are refused. ork run and ork wave start do not resume that run. At the round cap, retry sets round_limit to round plus 1 and leaves round unchanged. adj 458, adj 459.",
           "created_at": "2026-11-17T20:51:55Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "720c4aa4-067d-4170-b7ba-0893007f800e",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18 gap: S381 (run ork-20261117-234004-9e8e) committed, its land re-check went red, and the land fix round's implementer then failed (grok 403, unclassified). The run stopped with stopped_from implement, so ork retry refused it ('committed its slice; there is nothing to resume'): adj 459 covers only runs stopped in land. The orchestrator merged main, ran the checks and fast-forwarded main by hand (d72cb44d). A land fix round that stops may need the same re-land path; owner call.",
+          "created_at": "2026-11-18T03:52:11Z",
           "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -22711,6 +22797,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S421",
+      "title": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator",
+      "short_title": "Run a Check line that says prints nothing as passing when rg exits 1 with empty output, instead of leaving it to the orchestrator",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S388",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5fefb136",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "Duplicate of S419 (rg no-match exit 1 on a prints-nothing Check line), filed from S388's run",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
