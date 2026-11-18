@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-440 items · — 74 · done 318 · retired 48
+440 items · — 73 · done 318 · retired 49
 
 ## v1.3
 
@@ -191,7 +191,7 @@ v1.2
 | 134 | [S435](slices/S435.md) | treat exit 1 of an absence check such as `rg -n PATTERN PATH` as pass when the slice's Check line says it prints nothing |  | - |  | Duplicate of S419 (no-match rg on a prints-nothing Check line), filed again by tool feedback · discovered from S398 | retired |
 | 135 | [S436](slices/S436.md) | say in the reviewer brief whether the harness may start the role in plan mode, since plan-mode instructions conflict with the report-as-final-message rule |  | - |  | Duplicate of S418 (reviewer prompt in plan mode), filed again by tool feedback · discovered from S392 | retired |
 | 136 | [S437](slices/S437.md) | give role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip |  | - |  | discovered from S431 | — |
-| 137 | [S438](slices/S438.md) | judge a Check line that says "prints nothing" by its output, and treat rg exit 1 (no match) as pass |  | - |  | discovered from S392 | — |
+| 137 | [S438](slices/S438.md) | judge a Check line that says "prints nothing" by its output, and treat rg exit 1 (no match) as pass |  | - |  | Duplicate of S419 (prints-nothing rule, adj 468), filed again by tool feedback · discovered from S392 | retired |
 | 138 | [S439](slices/S439.md) | Rebuild auto-resume | S | 2 |  | 2026-11-18, S431 implementer: after the drain, the successor daemon recovers runs through today's recovery (`internal/engine/recover.go:119`), which pauses each as interrupted until the owner runs `ork retry RUN`. Owner decision adj 467 (`selfhost.auto-rebuild-resume`): mark runs held at a rebuild in their record, and have the successor retry them at start with no owner action. | — |
 | 139 | [S440](slices/S440.md) | allow removing a file the slice moves out of (rm or git rm) in the implementer's allowed commands, so a moved file can be deleted instead of left as a comment-only stub |  | - |  | discovered from S431 | — |
 
