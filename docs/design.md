@@ -1361,7 +1361,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
     The run keeps no second entry with a key it holds, and a skipped repeat does
     not count against the 3.
   - **Safe kinds.** An entry of kind `friction` or `deterministic-check` is
-    filed; a `feature` entry is only kept, with its key and no `filed`.
+    filed. A `feature` entry is never filed by the run: it is asked in adj
+    (see **Ask a feature entry** below).
   - **Target.** The registered project that the tool's slug names, else the run's
     own project. In the run's own project the title is `SLUG: PROPOSAL` unless the
     tool is that project, and `--discovered-from ITEM` is passed; in another
@@ -1377,6 +1378,35 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   - **Failure.** Filing is advisory. A failed call is written on the entry as
     `file_error`; it never pauses, fails or stops the run, and a failed entry is
     not filed again by a later repeat in the same run.
+  - **Ask a feature entry** (*proposed*, S388; owner decisions of 2026-11-17:
+    adj 415 `feedback.question-shape`, 416 `feedback.who-answers`). The target
+    is the one above. When it has adj, ork runs `AskRecord` there (`adj check`
+    on the key, then `adj ask`) with the key `tool-feedback.SLUG-HASH` (the
+    filing key with its first `-` after `tool-feedback` as `.`), the title `Tool
+    feedback (feature, SLUG): PROPOSAL` cut to 120 characters, a context whose
+    first line is `Proposal: PROPOSAL` followed by the role, run, project, item
+    and evidence, the options `file` ("ork files it as a slice in TARGET") and
+    `drop` ("not acted on"), `file` recommended ("A role proposed it; code
+    cannot judge its cost."), and the item as `--ref` when the target is the
+    run's own project. The entry gets `asked`, the adj id. An open record is a
+    row in Needs you like any other; no UI changes. A target without adj, or a
+    key adj already holds, asks nothing and leaves `file_error` (it names the
+    existing record); this never stops the run.
+  - **Filing on a decision** (*proposed*, S388). The daemon's fetcher wrapper,
+    on each fetched `decided` part, takes the records whose key starts with
+    `tool-feedback.` and whose decision is `file`, and that it has not handled
+    since it started, and files each in that project: `slicer add` with the
+    title from the `Proposal:` line, the key `tool-feedback-SLUG-HASH` and
+    `--discovered-from` the first ref when there is one, then `slicer promote`
+    with the context as the Why (`FileDecidedToolFeedback`,
+    `internal/engine/toolfeedback.go`; `fileDecidedToolFeedback`,
+    `internal/daemon/toolfeedback.go`). `drop` files nothing. A restart sees the
+    record again and files nothing new, as `--key` returns the item it filed. A
+    failed filing is printed and tried again on the next fetch. The TUI and `ork
+    adj answer` refresh the decided part after they decide; the relay-session
+    orchestrator's direct `adj decide` (`--by` the owner, `--why` citing the
+    session) is seen on the next scheduled refresh. ork itself never runs `adj
+    decide` for these records.
 - **Structured questions** (`ui.structured-questions`, adj #168). Roles write
   this block under `## Owner needed`, with 2 to 4 options, distinct labels,
   consecutive numbers starting at 1, and a recommendation naming an option:

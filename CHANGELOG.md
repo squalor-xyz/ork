@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- S388 (*proposed*, adj 415, 416): a `feature` tool feedback entry is asked in
+  the target project's adj as `tool-feedback.SLUG-HASH`, with options `file` and
+  `drop` and `file` recommended, so it shows in Needs you. The entry keeps the
+  record id as `asked`; a target without adj, or a key adj already holds, leaves
+  `file_error` and asks nothing. When the record is decided `file`, by the owner
+  or by the relay-session orchestrator as the owner's delegate, the daemon files
+  one slice in that project on its next read of the decided records. ork never
+  runs `adj decide` for these records. Docs updated: `docs/boundaries.md`,
+  `docs/design.md`, `docs/state.md`, `docs/orchestrator-parity.md`.
 - S402 (*proposed*, adj 405): a merged run removes its item's spec-check
   directory only when the run has a commit time and no file in the check is
   newer than that commit. A restart or a git error no longer removes a later spec check
