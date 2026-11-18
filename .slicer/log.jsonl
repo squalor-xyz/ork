@@ -5458,3 +5458,7 @@
 {"when": "2026-11-18T15:36:15Z", "item": "S445", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T15:37:10Z", "item": "S445", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (roles.read-only-plan-mode, option a: brief says not to exit plan mode and to give the report as the final message)."}
 {"when": "2026-11-18T15:37:10Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S445 (2026-11-18, tool feedback from run ork-20261118", "by": "Jon Robbins"}
+{"when": "2026-11-18T15:58:39Z", "item": "S446", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief whether the harness started the role in plan mode, since plan mode tells the role to write a plan file and call ExitPlanMode, which a read-only review cannot do"}
+{"when": "2026-11-18T15:58:40Z", "item": "S446", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T16:05:06Z", "item": "S447", "action": "add", "from": "", "to": "open", "note": "name go test -overlay with a temp-dir test file as the sanctioned render path for read-only UI passes in the brief"}
+{"when": "2026-11-18T16:05:06Z", "item": "S447", "action": "promote", "from": "", "to": "", "note": ""}
