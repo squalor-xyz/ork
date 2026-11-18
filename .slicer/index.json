@@ -22210,6 +22210,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "722bc09a-039f-46a7-9be0-879e8828274b",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18: recurred three more times. ork's 'Tracking edits on main before landing S390/S381' commits (53a72f35, 8a9f3623) committed index.json with S416-S418 marked has_slice but left .slicer/slices/S416-S419.json untracked, so slicer check failed in S390 and S381 after merging main; S388's landing did the same for S421. Each time the land fix implementer could not merge main and paused; the orchestrator committed the files on main (7a6849f7, c87565da) and merged main into the worktree by hand.",
+          "created_at": "2026-11-18T03:52:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -22333,6 +22347,20 @@
           "kind": "",
           "text": "**2026-11-17** — ork retry re-lands a committed run stopped in land: it resets land_fixes and lands when the re-check is green. A red re-check gets one implementer fix round, then stops land-blocked if still red, and the stop names ork retry RUN. Other committed runs, a missing worktree or branch, and --rounds are refused. ork run and ork wave start do not resume that run. At the round cap, retry sets round_limit to round plus 1 and leaves round unchanged. adj 458, adj 459.",
           "created_at": "2026-11-17T20:51:55Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "720c4aa4-067d-4170-b7ba-0893007f800e",
+          "kind": "",
+          "text": "**2026-11-18** — 2026-11-18 gap: S381 (run ork-20261117-234004-9e8e) committed, its land re-check went red, and the land fix round's implementer then failed (grok 403, unclassified). The run stopped with stopped_from implement, so ork retry refused it ('committed its slice; there is nothing to resume'): adj 459 covers only runs stopped in land. The orchestrator merged main, ran the checks and fast-forwarded main by hand (d72cb44d). A land fix round that stops may need the same re-land path; owner call.",
+          "created_at": "2026-11-18T03:52:11Z",
           "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
