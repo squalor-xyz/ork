@@ -21777,12 +21777,41 @@
       "id": "S393",
       "title": "TUI: report viewer and Roadmap notes text polish",
       "short_title": "Report viewer and notes text polish",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "af4fdc00-adc6-49fd-bbfd-32afe6a65bac",
+          "kind": "",
+          "text": "**2026-11-18** — Human checks at approval (S393):\n- later: At 100x30, open a run with reports (`enter` on the run, then `p`): the heading names the file once; a report with a long `- ` list item wraps under the text. At 80x24, `4` (Roadmap), `enter` on an item with notes: each note starts with its plain date.",
+          "created_at": "2026-11-18T22:34:21Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "68ac9a6f-a539-4c4f-9b2d-0416c2eb52f1",
+          "kind": "",
+          "text": "**2026-11-18** — Report and render viewers omit missing-file wire codes; report headings avoid repeated role and round, wrapped list items keep hanging indents, and Roadmap note dates display plainly. Documentation, goldens and regression tests are updated.",
+          "created_at": "2026-11-18T22:42:46Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -21800,7 +21829,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

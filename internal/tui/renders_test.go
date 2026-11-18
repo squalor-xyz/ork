@@ -3,7 +3,6 @@
 package tui
 
 import (
-	"errors"
 	"fmt"
 	"reflect"
 	"strings"
@@ -12,6 +11,8 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/source"
 )
@@ -299,12 +300,28 @@ func TestApprovalCardFetchesRendersOnDemand(t *testing.T) {
 	}
 }
 
+func TestRenderViewerFailedReadHasNoWireCode(t *testing.T) {
+	for _, tc := range []struct{ code, want string }{
+		{daemon.CodeNotFound, "Could not read launch-80x24.txt: no render"},
+		{"internal", "Could not read launch-80x24.txt: internal: no render"},
+	} {
+		t.Run(tc.code, func(t *testing.T) {
+			h := rendersHarness(t)
+			h.live().renderErr = &ipc.Error{Code: tc.code, Message: "no render launch-80x24.txt for run engine"}
+			h.deliver(press("v"))
+			if v := h.at(120, 40); !strings.Contains(v, tc.want) || strings.Contains(v, "not_found") {
+				t.Fatalf("failed state:\n%s", v)
+			}
+		})
+	}
+}
+
 func TestApprovalCardRendersFailedState(t *testing.T) {
 	h := rendersHarness(t)
-	h.live().renderErr = errors.New("not_found: no render launch-80x24.txt for run engine")
+	h.live().renderErr = &ipc.Error{Code: daemon.CodeNotFound, Message: "no render launch-80x24.txt for run engine"}
 	h.deliver(press("v"))
 	v := h.at(80, 24)
-	if !strings.Contains(v, "Could not read launch-80x24.txt: not_found: no render") || !strings.Contains(v, "for run engine") || strings.Contains(v, "Loading") {
+	if !strings.Contains(v, "Could not read launch-80x24.txt: no render") || !strings.Contains(v, "for run engine") || strings.Contains(v, "Loading") {
 		t.Errorf("failed state:\n%s", v)
 	}
 	// The owner can go on to the next render, and back out.
@@ -633,5 +650,14 @@ func TestRenderModeEndsWhenASnapshotDropsTheRender(t *testing.T) {
 	h.deliver(snapshotMsg{name: "ork", snap: full}) // the three renders are back
 	if v := h.at(80, 24); strings.Contains(v, "Render ") || !strings.Contains(v, "Human checks") {
 		t.Errorf("the render came back with the card:\n%s", v)
+	}
+}
+
+func TestRenderViewerMissingFixtureHasNoWireCode(t *testing.T) {
+	h := rendersHarness(t)
+	delete(h.live().renders, "launch-80x24.txt")
+	h.deliver(press("v"))
+	if v := h.at(120, 40); !strings.Contains(v, "Could not read launch-80x24.txt: no render launch-80x24.txt") || strings.Contains(v, "not_found") {
+		t.Fatalf("missing render fixture:\n%s", v)
 	}
 }

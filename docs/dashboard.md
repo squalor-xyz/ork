@@ -1350,12 +1350,18 @@ Ledger panes have no reports. In an answer or fix field, `p` remains text.
 
 The viewer takes the room of the card, findings, tree and Overview rows,
 with a dim rule under the run line. Its heading is
-`Report N of M: NAME  ROLE round R`. The pane asks `run.report` for the text
-each time it moves to a report; run rows carry file names only. The body
+`Report N of M: NAME`, with `  ROLE round R` appended only when the file name
+does not already hold that role and round. The pane asks `run.report` for the
+text each time it moves to a report; run rows carry file names only. The body
 shows `Loading NAME ...` until the answer arrives, or
-`Could not read NAME: WHY` if it fails. `p` and `esc` still work after a
-failure. Prose lines wrap to the pane width. Lines starting with `|` (table
-rows) keep their columns and are cut with `...` at the pane edge.
+`Could not read NAME: WHY` if it fails; a missing report says
+`Could not read NAME: no report NAME`, without the wire code. `p` and `esc`
+still work after a failure. Prose lines wrap to the pane width. *Proposed*
+(S393): list items with `-`, `*`, `+` or a numbered `.` or `)` marker and a
+space keep a hanging indent under their text, including nested items. When
+fewer than ten columns remain after the marker, they wrap as prose.
+Lines starting with `|` (table rows) keep their columns and are cut with
+`...` at the pane edge.
 
 Only `p`, `esc`, the scroll keys (`pgup`/`pgdown` and `ctrl+d`/`ctrl+u`),
 `s` and `ctrl+c` act while the viewer shows. `s` hides or shows the sidebar;
@@ -1369,7 +1375,7 @@ by name. The card holds only each render's name and size; the pane asks the
 daemon for the text (`run.render`) when the viewer opens and again for each
 render the owner moves to. Until the answer arrives the body reads `Loading
 NAME ...`; if the call fails it reads `Could not read NAME: WHY` (for example
-`not_found: no render NAME for run ID`), and `v` and `esc` still work.
+`no render NAME for run ID`), and `v` and `esc` still work.
 
 While a render shows, the Overview rows above the pane are gone: the pane has
 the whole body, from the rule under the view bar to the rule above the status
@@ -2306,7 +2312,9 @@ send cannot be sent twice; an error keeps the text for retry. Success says `Note
 refreshes the project and reloads the item pane if it still shows that item.
 The item pane lists notes after the spec sections under `Notes (N)`, with
 a `- ` bullet for each entry and a two-space hanging indent on wrapped
-continuation lines. Items with no notes have no Notes heading.
+continuation lines. A leading `**YYYY-MM-DD**` shows as a plain date; other
+`**` markup stays as written (S393, adj 432). Items with no notes have no
+Notes heading.
 
 `ork note PROJECT ITEM [--] TEXT [--json]` does the same write from the shell.
 Quote TEXT as one argument. Leading dashes are literal:
