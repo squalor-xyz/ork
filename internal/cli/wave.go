@@ -648,6 +648,53 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 		}
 		if len(missing) > 0 {
 			fmt.Fprintf(w, "held: unanswered spec questions: %s\n", strings.Join(missing, ", "))
+			// S404: print each unanswered question in full, so it can be put to
+			// the owner without listing again.
+			unanswered := map[string]bool{}
+			for _, key := range missing {
+				unanswered[key] = true
+			}
+			for _, item := range params.Items {
+				r, ok := open[item.Item]
+				if !ok || len(r.WaitsOn) > 0 {
+					continue
+				}
+				for i, q := range r.Questions {
+					if address := flags.address(r.Item, q, i); unanswered[address] {
+						printSpecQuestion(w, r, i, q, false, address)
+					}
+				}
+			}
+			if o.json {
+				if code := o.printJSON(flags.data); code != ExitOK {
+					return nil, nil, code
+				}
+			}
+			return nil, nil, ExitWaitQuestion
+		}
+	} else if !a.terminal() {
+		// S404 (cli.spec-answers, adj 452): input that is not a terminal is never
+		// read for answers; it would answer questions the owner did not see.
+		var stalled []string
+		for _, item := range params.Items {
+			r, ok := open[item.Item]
+			if !ok || len(r.WaitsOn) > 0 || len(r.Questions) == 0 {
+				continue
+			}
+			for i, q := range r.Questions {
+				printSpecQuestion(w, r, i, q, false, flags.address(r.Item, q, i))
+			}
+			stalled = append(stalled, r.Item)
+		}
+		if len(stalled) > 0 {
+			// A wave answer needs the item prefix (specFlags.address).
+			form := "KEY=LABEL"
+			if flags.wave {
+				form = "ITEM:KEY=LABEL"
+			}
+			for _, item := range stalled {
+				fmt.Fprintf(w, "held: %s: input is not a terminal; answer with --answer %s\n", plainLine(item), form)
+			}
 			if o.json {
 				if code := o.printJSON(flags.data); code != ExitOK {
 					return nil, nil, code
@@ -800,7 +847,7 @@ func (f *specFlags) result() *specData {
 
 func (f *specFlags) register(fs *flag.FlagSet) {
 	fs.BoolVar(&f.questions, "questions", false, "print all open spec questions and start nothing")
-	fs.Func("answer", "answer KEY=N or KEY=text (wave: ITEM:KEY=value); repeat for each question", func(s string) error {
+	fs.Func("answer", "answer KEY=LABEL, KEY=N or KEY=text (wave: ITEM:KEY=value); repeat for each question", func(s string) error {
 		f.answers = append(f.answers, s)
 		return nil
 	})
@@ -891,6 +938,14 @@ func (f *specFlags) mapAnswers(items []daemon.RunParams, open map[string]daemon.
 				}
 				o := t.question.Ask.Options[n-1]
 				value = o.Label + ": " + o.Summary
+			} else {
+				// S404: the text of an option's label picks that option.
+				for _, o := range t.question.Ask.Options {
+					if strings.EqualFold(strings.TrimSpace(o.Label), value) {
+						value = o.Label + ": " + o.Summary
+						break
+					}
+				}
 			}
 		}
 		// Match RecordSpecAnswers so JSON reports the text that is recorded.

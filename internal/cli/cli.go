@@ -60,7 +60,7 @@ var usageText = strings.NewReplacer(
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
   ork run P ID [--yes] [--well-specified y/n] [--split y/n] [--slivers]
-                              [--questions | --answer KEY=N ...]
+                              [--questions | --answer KEY=LABEL ...]
                               [--stop-after land|commit] [--allow-no-check]
                               [--implementer VENDOR:MODEL:EFFORT]
                               [--reviewer VENDOR:MODEL:EFFORT]
@@ -77,8 +77,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               --slivers runs the parent's slivers as one
                               chain in the parent's worktree.
                               --questions prints all spec questions and starts
-                              nothing; --answer KEY=N or KEY=text repeats for
-                              every question (#N when there is no key)
+                              nothing; --answer KEY=LABEL (or =N, or =text)
+                              repeats for every question (#N when there is no
+                              key). Input that is not a terminal is never read
+                              for answers: the questions print and it exits 3
   ork wave suggest P          show slicer's suggested waves
   ork wave define --project P NAME ITEM... [--replace]
                               save the items under NAME (proposed: saved waves,
@@ -92,7 +94,7 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               start the saved wave NAME; a member that is done,
                               retired or gone from slicer is skipped and named
   ork wave start P ITEM... [--yes] [--well-specified y/n] [--split y/n]
-                              [--questions | --answer ITEM:KEY=N ...]
+                              [--questions | --answer ITEM:KEY=LABEL ...]
                               [--stop-after land|commit] [--allow-no-check]
                               the run lineup and budget flags, for every item;
                               well specified y and split n unless overridden
@@ -134,6 +136,20 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               [--recommend LABEL] [--reasoning TEXT]
                               [--ref R]... [--tag T]...
                               ask an adj question without deciding it
+  ork tracking commit P [--base BRANCH] [--leave PATH]...
+                              commit P's uncommitted tracking files in one
+                              commit on the base branch (main unless --base)
+                              of its main checkout: slicer's .slicer files,
+                              without config.json and relay-roles.json, and
+                              the adj store's files (proposed: the store
+                              folder named in .adjudicate.json); the subject
+                              names the slice IDs and adj numbers (consecutive
+                              runs as ranges); no message
+                              flag; --leave keeps a tracking path out and
+                              repeats; refused, committing nothing, when
+                              another path is staged, when the checkout is not
+                              on the base branch, or when there is nothing
+                              to commit
   ork answer RUN TEXT [--wait]
                               answer and resume a paused role; returns once
                               it runs, --wait waits until it rests
@@ -399,6 +415,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return o.printHelp(words...)
 	case "adj":
 		return a.adj(ctx, o, rest)
+	case "tracking":
+		return a.tracking(ctx, o, rest)
 	case "new":
 		return a.newSlice(ctx, o, rest)
 	case "note":

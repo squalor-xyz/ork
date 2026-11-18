@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 431,
+  "next_id": 432,
   "preamble": "",
   "passes": [
     {
@@ -22219,12 +22219,41 @@
       "id": "S404",
       "title": "Spec answers by option label; piped answers refused",
       "short_title": "Spec answers by label, no piped answers",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "abdd0c98-df64-405f-8ce2-0c4eab8976f2",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: ork run and ork wave start refuse spec answers from input that is not a terminal (print every open question with its answer address, held line, exit 3, nothing started). --answer KEY=LABEL picks the option by label, trimmed and case-insensitive; a held batch prints each unanswered question in full. Held line is 'held: ID: input is not a terminal; answer with --answer KEY=LABEL' (ITEM:KEY=LABEL for wave start). go vet, go test ./... and gofmt are clean; mutation checks went red for each new assertion.",
+          "created_at": "2026-11-18T12:32:48Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9f5dc939-c663-496b-98ff-5b0adfb10660",
+          "kind": "",
+          "text": "**2026-11-18** — Verified on the tree after merging main: ork run and ork wave start refuse spec answers from input that is not a terminal (every open question printed with its answer address, held line, exit 3, nothing started); --answer KEY=LABEL picks the option by label, trimmed and case-insensitive; a held batch prints each unanswered question in full. go vet, go test ./..., gofmt, adj lint and slicer check are clean.",
+          "created_at": "2026-11-18T12:39:58Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -22242,14 +22271,14 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S405",
       "title": "ork tracking commit: commit the tracking files on the base branch",
       "short_title": "ork tracking commit",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
@@ -22296,6 +22325,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "0599c18b-9b54-4970-be24-3a7603bb8c9b",
+          "kind": "",
+          "text": "**2026-11-18** — Verified: ork tracking commit P [--base BRANCH] [--leave PATH]... commits a project's uncommitted slicer and adj store tracking files in one commit on the base branch (main unless --base), by literal path through commitLiteralPaths, with a subject built from the slice IDs and adj numbers (consecutive runs as ranges). It refuses, committing nothing, when another path is staged, the checkout is on another branch, or nothing is left to commit (code nothing_to_commit). config.json, relay-roles.json and --leave paths are never committed. The tracking.commit daemon method runs under specMu. Launch and landing tracking commits are unchanged. go vet, gofmt, go test ./..., slicer check and adj lint pass.",
+          "created_at": "2026-11-18T12:28:28Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3c7b4c28-5c00-4848-b906-1b7bb81448e4",
+          "kind": "",
+          "text": "**2026-11-18** — Verified after landing was re-run: ork tracking commit P [--base BRANCH] [--leave PATH]... commits a project's uncommitted slicer and adj store tracking files in one commit on the base branch, with a subject built from the slice IDs and adj numbers (runs as ranges); it refuses on other staged paths, another branch or nothing to commit. After main was merged, go vet, gofmt, go test ./..., slicer check and adj lint pass.",
+          "created_at": "2026-11-18T12:37:04Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -22315,7 +22372,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -23164,6 +23221,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S431",
+      "title": "Self-host daemon rebuilds itself: drain, build, swap, restart",
+      "short_title": "Daemon auto-rebuild",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "L",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-18: after S332, S403, S405 and S404 landed, the daemon stayed on build 7f5a1f7d, so landed fixes (the changelog-entry gate, ork wait, the tracking commit) did not apply to new runs. `ork daemon restart --rebuild` refuses while any role runs, even with --force (`docs/design.md:3847-3849`, adj 312), and with three runs in flight there was no gap; the orchestrator retried it every 30 s from a shell loop. The rebuild runs in the CLI (`internal/cli/lifecycle.go:88-120`); the daemon only reports behind main (`internal/daemon/build.go:25`, `:173`).",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "selfhost-auto-rebuild",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 3,
         "attempts": 0
       }
     }

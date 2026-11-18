@@ -266,6 +266,50 @@ func TestBatchAnswersAccepted(t *testing.T) {
 	}
 }
 
+// S404 (cli.spec-answers, adj 452): an option label picks that option.
+func TestBatchAnswerByLabel(t *testing.T) {
+	code, out, errs, stub := batchCommand(t, false, specCheckTwoQuestions, "--answer", "cache.store=memory", "--answer", "#2=long", "--yes")
+	want := []string{"memory: rebuilt at each start", "long: --extra"}
+	if code != ExitOK || len(stub.answers) != 1 || !reflect.DeepEqual(stub.answers[0].Answers, want) || !reflect.DeepEqual(stub.started, []string{"S1"}) {
+		t.Fatalf("labels must record their options and start: exit %d answers %+v started %v: %s %s", code, stub.answers, stub.started, out, errs)
+	}
+}
+
+func TestBatchAnswerLabelIgnoresCase(t *testing.T) {
+	code, out, errs, stub := batchCommand(t, false, specCheckTwoQuestions, "--answer", "cache.store=Memory", "--answer", "#2= LONG ", "--yes")
+	want := []string{"memory: rebuilt at each start", "long: --extra"}
+	if code != ExitOK || len(stub.answers) != 1 || !reflect.DeepEqual(stub.answers[0].Answers, want) {
+		t.Fatalf("a label matches trimmed and without case: exit %d answers %+v: %s %s", code, stub.answers, out, errs)
+	}
+}
+
+func TestBatchAnswerOtherTextStaysFreeText(t *testing.T) {
+	code, out, errs, stub := batchCommand(t, false, specCheckTwoQuestions, "--answer", "cache.store=2", "--answer", "#2=longer", "--yes")
+	want := []string{"memory: rebuilt at each start", "longer"}
+	if code != ExitOK || len(stub.answers) != 1 || !reflect.DeepEqual(stub.answers[0].Answers, want) {
+		t.Fatalf("a number picks by position, other text stays text: exit %d answers %+v: %s %s", code, stub.answers, out, errs)
+	}
+}
+
+func TestBatchHeldPrintsTheUnansweredQuestions(t *testing.T) {
+	code, out, errs, stub := batchCommand(t, false, specCheckTwoQuestions, "--answer", "cache.store=file", "--yes")
+	if code != ExitWaitQuestion || len(stub.answers) != 0 || len(stub.started) != 0 {
+		t.Fatalf("exit %d answers %+v started %v: %s %s", code, stub.answers, stub.started, out, errs)
+	}
+	want := "held: unanswered spec questions: #2\n" +
+		"[S1 2/2] What flag?\n" +
+		"  1. short: -x (recommended)\n" +
+		"  2. long: --extra\n" +
+		"  Why 1: short\n" +
+		"  Answer as: #2\n"
+	if !strings.Contains(out, want) {
+		t.Errorf("missing the held question; want\n%s\ngot\n%s", want, out)
+	}
+	if strings.Contains(out, "[S1 1/2]") {
+		t.Errorf("the answered question must not be printed:\n%s", out)
+	}
+}
+
 func TestBatchAnswersRefused(t *testing.T) {
 	for _, tc := range []struct {
 		name, check, key string

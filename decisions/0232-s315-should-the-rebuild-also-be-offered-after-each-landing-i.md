@@ -2,7 +2,7 @@
 {
   "id": 232,
   "title": "S315: should the rebuild also be offered after each landing in a self-host run",
-  "status": "decided",
+  "status": "superseded",
   "key": "selfhost.rebuild-after-landing",
   "decided_by": "Jon",
   "via": "interactive question, relay session 8d711f67, 2026-11-09",
@@ -25,6 +25,7 @@
   },
   "decision": "a",
   "rationale": "Owner accepted the recommended answers for the open questions of S315 on 2026-11-09.",
+  "superseded_by": 464,
   "refs": [
     "S315"
   ],
@@ -36,6 +37,11 @@
     {
       "date": "2026-11-09",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-18",
+      "event": "supersede",
+      "note": "by 464"
     }
   ]
 }

@@ -5138,12 +5138,21 @@
 {"when": "2026-11-18T04:08:23Z", "item": "S423", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T04:11:00Z", "item": "S424", "action": "add", "from": "", "to": "open", "note": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it"}
 {"when": "2026-11-18T04:11:00Z", "item": "S424", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T12:09:02Z", "item": "S405", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:17:35Z", "item": "S405", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T12:28:28Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Verified: ork tracking commit P [--base BRANCH] [--leave PAT", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:28:30Z", "item": "S405", "action": "status", "from": "started", "to": "done", "note": "Verified: ork tracking commit commits a project's uncommitted slicer and adj tracking files in one commit on the base branch with an auto-built subject; refuses on other staged paths, a different branch or nothing to commit. go vet, gofmt, go test ./..., slicer check and adj lint pass.", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:16:22Z", "item": "S383", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:21:53Z", "item": "S383", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-18T12:21:57Z", "item": "S383", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-18T12:30:19Z", "item": "S383", "action": "note", "from": "", "to": "", "note": "Verified: the reviewer's and architect's briefs carry a Dire", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:30:20Z", "item": "S383", "action": "status", "from": "started", "to": "done", "note": "Verified: the reviewer's and architect's briefs carry a Direction section (goals, open items touching the diff's files, the rest by title; at most 8,000 bytes with a left-out count). A failed read falls back to the two slicer commands with no pause. go vet, go test ./..., gofmt and slicer check passed.", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:14:25Z", "item": "S403", "action": "note", "from": "", "to": "", "note": "Verified: ork wait follows several RUN and every unfinished ", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:18:18Z", "item": "S404", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:22:15Z", "item": "S404", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T12:29:44Z", "item": "S404", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T12:32:48Z", "item": "S404", "action": "note", "from": "", "to": "", "note": "Verified: ork run and ork wave start refuse spec answers fro", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:32:50Z", "item": "S404", "action": "status", "from": "started", "to": "done", "note": "Spec answers by option label; piped answers refused. ork run and ork wave start print every open question and exit 3 when input is not a terminal; --answer KEY=LABEL records the option with that label; a held batch prints each unanswered question in full. Verified by go vet, go test ./..., gofmt and mutation checks.", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "add", "from": "", "to": "open", "note": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card"}
 {"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T12:25:26Z", "item": "S426", "action": "add", "from": "", "to": "open", "note": "give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output"}
@@ -5159,6 +5168,7 @@
 {"when": "2026-11-18T12:33:43Z", "item": "S426", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback"}
 {"when": "2026-11-18T12:33:43Z", "item": "S429", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback"}
 {"when": "2026-11-18T12:33:43Z", "item": "S428", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (reviewer prompt in plan mode), filed again by ork tool feedback"}
+{"when": "2026-11-18T12:37:04Z", "item": "S405", "action": "note", "from": "", "to": "", "note": "Verified after landing was re-run: ork tracking commit P [--", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:35:52Z", "item": "S383", "action": "note", "from": "", "to": "", "note": "Verified after landing was re-run: the Direction section rea", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:36:53Z", "item": "S406", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:43:38Z", "item": "S406", "action": "edit", "from": "", "to": "", "note": "Files"}
@@ -5167,3 +5177,5 @@
 {"when": "2026-11-18T12:49:01Z", "item": "S406", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-18T12:52:52Z", "item": "S406", "action": "note", "from": "", "to": "", "note": "Verified: the brief splits Check lines into implementer-runn", "by": "Jon Robbins"}
 {"when": "2026-11-18T12:52:54Z", "item": "S406", "action": "status", "from": "started", "to": "done", "note": "Verified: the brief splits Check lines into implementer-runnable, run by ork and orchestrator-run; ork runs a plain && chain as one row per part, stopping at the first failure (a must-print-nothing line binds every part); the spec-check prompt asks nothing about ork-run lines and lists orchestrator-run lines; go vet, go test ./..., gofmt, slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:39:58Z", "item": "S404", "action": "note", "from": "", "to": "", "note": "Verified on the tree after merging main: ork run and ork wav", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:47:00Z", "item": "S431", "action": "add", "from": "", "to": "open", "note": "Self-host daemon rebuilds itself: drain, build, swap, restart"}
