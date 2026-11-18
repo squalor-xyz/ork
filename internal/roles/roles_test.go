@@ -549,6 +549,32 @@ func TestImplementerPromptReanchorsFirst(t *testing.T) {
 	}
 }
 
+// S383 (*proposed*): ork reads the goals and the queue once and gives the
+// reviewer and the architect a Direction section. The prompts name it, tell the
+// role how to read one item, and no longer require the whole queue.
+func requirePromptNamesTheDigest(t *testing.T, role string) {
+	t.Helper()
+	p := prompts(t)[role]
+	for _, want := range []string{
+		"Direction section",
+		"slicer show ID --json --lean",
+		"could not build",
+	} {
+		if !has(p, want) {
+			t.Errorf("%s prompt lacks %q", role, want)
+		}
+	}
+	for _, gone := range []string{"slicer list --json --lean", "the queue,", "the queue `"} {
+		if has(p, gone) {
+			t.Errorf("%s prompt still requires the whole queue: %q", role, gone)
+		}
+	}
+}
+
+func TestReviewerPromptNamesTheDigest(t *testing.T) { requirePromptNamesTheDigest(t, "reviewer") }
+
+func TestArchitectPromptNamesTheDigest(t *testing.T) { requirePromptNamesTheDigest(t, "architect") }
+
 func TestImplementerPromptSelfCheck(t *testing.T) {
 	p := prompts(t)["implementer"]
 	selfCheck, report := strings.Index(p, "\n## Self-check\n"), strings.Index(p, "\n## Report\n")

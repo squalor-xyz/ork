@@ -38,8 +38,10 @@ the brief and this prompt disagree, the brief wins; say so in your report.
 1. Load the slice's **Check**, **Files** and **Not in this slice**; the owner
    decisions recorded in its notes (a deviation the owner accepted is the contract,
    not a failure); and the diff the brief names.
-2. Read the direction sources the brief lists: `slicer goals --json --lean` and the
-   queue, `slicer list --json --lean`.
+2. Read the brief's Direction section: ork's digest of the goals, the open items that
+   touch the diff's files, and the other open items by id and title. For an item that
+   needs detail, run `slicer show ID --json --lean`. If the section says ork could
+   not build the digest, read the goals and the queue yourself as it says.
 3. Cite `file:line` for every claim. Mark each finding CONFIRMED (you traced it or
    ran something) or PLAUSIBLE. Do not report a check you did not run. Do not
    suggest extra scope.

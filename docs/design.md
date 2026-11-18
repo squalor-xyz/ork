@@ -1742,6 +1742,23 @@ separately.
     without pipes, `&&`, `;`, command substitution or `cd`. A denied command
     calls for an allowed form. These items also appear in finish briefs.
     The existing resolved allowlist appears once; prompts stay vendor-neutral;
+  - *proposed (S383):* for the reviewer and the architect, a `## Direction`
+    section. Before each such round ork reads `slicer goals --json --lean`, the
+    open list (`slicer list --json --lean`, with done and retired items and the
+    slice itself left out), each specified item's Files (`slicer show ID --json
+    --lean`, up to 8 at a time) and the slice's changed paths (`git diff
+    --name-only` from the merge base with the main checkout's branch, plus
+    untracked files). The section holds the active goals and non-goals by
+    title; the open items whose Files hold a changed path or a directory of one
+    (id, title, status, dependencies); and the other open items by id and
+    title, in slicer's order. It is at most 8,000 bytes: past the budget ork
+    stops listing and says how many open items it left out. An item whose
+    `slicer show` failed is not matched, and the section says how many. If a read
+    for the digest fails, the section says ork could not build it and tells the
+    role to run `slicer goals --json --lean` and `slicer list --json --lean`
+    itself; the run does not pause. The prompts tell the role to read the
+    section and to run `slicer show ID --json --lean` for an item that needs
+    detail. The gate and the implementer get no such section;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,

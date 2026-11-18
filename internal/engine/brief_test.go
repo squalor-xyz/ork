@@ -9,11 +9,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
 func TestSavedOrientationReachesOnlyLocalImplementer(t *testing.T) {
@@ -1212,6 +1216,216 @@ func TestDoneWhenSeparatesBulletsAcrossProse(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// directionItem is one open item of the direction fixture. Files are the paths
+// its `slicer show` lists; an item with no spec (noSpec) has none and is never
+// shown.
+type directionItem struct {
+	id, title, status string
+	deps, files       []string
+	noSpec            bool
+	showFails         bool
+}
+
+const directionGoals = `{"records":{"goal":[{"id":"C01","kind":"goal","title":"One clear owner for each relay step","status":"active"},{"id":"C02","kind":"goal","title":"Keep the outer session small","status":"active"}],"non_goal":[{"id":"C05","kind":"non_goal","title":"No unattended runs","status":"active"},{"id":"C06","kind":"non_goal","title":"No tracking state of its own","status":"active"}]}}`
+
+// directionFixture installs fake slicer and git answers for one review of S383
+// whose diff changes the given paths, and returns the engine and run record to
+// build the Direction section from. With listFails, `slicer list` exits non-zero.
+func directionFixture(t *testing.T, items []directionItem, changed []string, listFails bool) (*Engine, runrec.Record) {
+	t.Helper()
+	P := t.TempDir()
+	W := filepath.Join(P, ".worktrees", "S383")
+	var rows []string
+	var routes []clitest.Route
+	for _, it := range items {
+		rows = append(rows, fmt.Sprintf(`{"id":%q,"title":%q,"status":%q,"has_slice":%t,"depends_on":%s,"fields":{}}`, it.id, it.title, it.status, !it.noSpec, jsonList(it.deps)))
+		if it.noSpec {
+			continue
+		}
+		show := clitest.Route{Tool: "slicer", Args: []string{"show", it.id, "--json", "--lean", "--root", W}, Stdout: fmt.Sprintf(`{"id":%q,"title":%q,"status":%q,"paths":%s}`, it.id, it.title, it.status, jsonList(it.files))}
+		if it.showFails {
+			show.Stdout, show.Exit = "", 1
+		}
+		routes = append(routes, show)
+	}
+	list := clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", W}, Stdout: "[" + strings.Join(rows, ",") + "]"}
+	if listFails {
+		list.Stdout, list.Exit = "", 1
+	}
+	routes = append(routes, list,
+		clitest.Route{Tool: "slicer", Args: []string{"goals", "--json", "--lean", "--root", W}, Stdout: directionGoals},
+		clitest.Route{Tool: "git", Args: []string{"-C", P, "symbolic-ref", "--short", "HEAD"}, Stdout: "main\n"},
+		clitest.Route{Tool: "git", Args: []string{"-C", W, "merge-base", "main", "HEAD"}, Stdout: "abc123\n"},
+		clitest.Route{Tool: "git", Args: []string{"-C", W, "diff", "--name-only", "-z", "--no-renames", "--no-relative", "abc123"}, Stdout: strings.Join(changed, "\x00") + "\x00"},
+		clitest.Route{Tool: "git", Args: []string{"-C", W, "ls-files", "--others", "--exclude-standard", "-z", "--full-name"}},
+	)
+	fake := clitest.Install(t, routes...)
+	e := &Engine{d: Deps{Slicer: slicercli.Client{Bin: fake.Bin("slicer")}, GitBin: fake.Bin("git")}, proj: registry.Project{Path: P}}
+	return e, runrec.Record{Item: "S383", Worktree: W}
+}
+
+func jsonList(s []string) string {
+	if s == nil {
+		return "[]"
+	}
+	b, _ := json.Marshal(s)
+	return string(b)
+}
+
+func directionFixtureItems() []directionItem {
+	return []directionItem{
+		{id: "S383", title: "This slice itself", status: "started", files: []string{"internal/engine/brief.go"}},
+		{id: "S10", title: "Touch the brief file", status: "open", deps: []string{"S09", "S08"}, files: []string{"internal/engine/brief.go", "docs/x.md"}},
+		{id: "S11", title: "Touch the engine directory", status: "started", files: []string{"internal/engine"}},
+		{id: "S12", title: "Unrelated tui work", status: "open", files: []string{"internal/tui/model.go"}},
+		{id: "S13", title: "Not specified yet", status: "open", noSpec: true},
+		{id: "S14", title: "Already done", status: "done", files: []string{"internal/engine/brief.go"}},
+		{id: "S15", title: "Already retired", status: "retired", noSpec: true},
+		{id: "S16", title: "Files cannot be read", status: "open", showFails: true},
+	}
+}
+
+// splitDirection cuts a Direction body at the heading of the other open items.
+func splitDirection(t *testing.T, body string) (touching, rest string) {
+	t.Helper()
+	i := strings.Index(body, "Other open items")
+	if i < 0 {
+		t.Fatalf("no Other open items heading in:\n%s", body)
+	}
+	return body[:i], body[i:]
+}
+
+func TestDirectionDigestNamesOverlappingItems(t *testing.T) {
+	e, rec := directionFixture(t, directionFixtureItems(), []string{"internal/engine/brief.go"}, false)
+	section := e.directionSection(context.Background(), rec)
+	if section.Title != "Direction" {
+		t.Fatalf("title %q", section.Title)
+	}
+	touching, rest := splitDirection(t, section.Body)
+	// S10 names the changed file; S11 names its directory.
+	for _, want := range []string{"S10", "Touch the brief file", "open", "S09", "S08", "S11", "Touch the engine directory", "started"} {
+		if !strings.Contains(touching, want) {
+			t.Errorf("touching part lacks %q:\n%s", want, touching)
+		}
+	}
+	for _, id := range []string{"S12", "S13", "S14", "S15", "S16", "S383"} {
+		if strings.Contains(touching, id+" ") {
+			t.Errorf("touching part names %s:\n%s", id, touching)
+		}
+	}
+	// An item whose Files could not be read is not claimed to overlap, and the
+	// digest says so.
+	if !strings.Contains(rest, "S16") || !strings.Contains(section.Body, "Files unread for 1 item") {
+		t.Errorf("an item with unreadable Files is not reported:\n%s", section.Body)
+	}
+}
+
+func TestDirectionDigestListsTheRestByTitle(t *testing.T) {
+	e, rec := directionFixture(t, directionFixtureItems(), []string{"internal/engine/brief.go"}, false)
+	section := e.directionSection(context.Background(), rec)
+	_, rest := splitDirection(t, section.Body)
+	for _, line := range []string{"- S12 Unrelated tui work\n", "- S13 Not specified yet\n"} {
+		if !strings.Contains(rest, line) {
+			t.Errorf("rest lacks the exact line %q:\n%s", line, rest)
+		}
+	}
+	for _, gone := range []string{"S14", "Already done", "S15", "Already retired"} {
+		if strings.Contains(section.Body, gone) {
+			t.Errorf("digest holds a done or retired item (%q):\n%s", gone, section.Body)
+		}
+	}
+	// The slice under review is not its own direction.
+	if strings.Contains(section.Body, "S383") || strings.Contains(section.Body, "This slice itself") {
+		t.Errorf("digest names the slice under review:\n%s", section.Body)
+	}
+}
+
+func TestDirectionDigestHoldsTheGoals(t *testing.T) {
+	e, rec := directionFixture(t, directionFixtureItems(), []string{"internal/engine/brief.go"}, false)
+	body := e.directionSection(context.Background(), rec).Body
+	for _, title := range []string{"One clear owner for each relay step", "Keep the outer session small", "No unattended runs", "No tracking state of its own"} {
+		if !strings.Contains(body, title) {
+			t.Errorf("digest lacks goal %q:\n%s", title, body)
+		}
+	}
+}
+
+func TestDirectionDigestIsBounded(t *testing.T) {
+	var items []directionItem
+	for i := 1; i <= 300; i++ {
+		items = append(items, directionItem{id: fmt.Sprintf("S%d", 1000+i), title: fmt.Sprintf("Open item number %d with a title of ordinary length", i), status: "open", noSpec: true})
+	}
+	e, rec := directionFixture(t, items, []string{"internal/engine/brief.go"}, false)
+	body := e.directionSection(context.Background(), rec).Body
+	if len(body) >= 8000 {
+		t.Fatalf("digest is %d bytes, want under 8000", len(body))
+	}
+	m := regexp.MustCompile(`(\d+) open items? left out`).FindStringSubmatch(body)
+	if m == nil {
+		t.Fatalf("no line says how many items were left out:\n%s", body)
+	}
+	left, _ := strconv.Atoi(m[1])
+	listed := strings.Count(body, "\n- S1")
+	if left == 0 || listed+left != 300 {
+		t.Errorf("%d listed and %d left out, want 300 in all:\n%s", listed, left, body)
+	}
+}
+
+func TestDirectionDigestFailureKeepsTheOldRead(t *testing.T) {
+	e, rec := directionFixture(t, directionFixtureItems(), []string{"internal/engine/brief.go"}, true)
+	section := e.directionSection(context.Background(), rec)
+	if section.Title != "Direction" {
+		t.Fatalf("title %q: the section is not in the brief", section.Title)
+	}
+	// The failed call's own error text names the command, so look for the
+	// instruction, which backticks both commands.
+	for _, want := range []string{"run `slicer goals --json --lean` and `slicer list --json --lean`"} {
+		if !strings.Contains(section.Body, want) {
+			t.Errorf("fallback lacks %q:\n%s", want, section.Body)
+		}
+	}
+	for _, digest := range []string{"One clear owner", "Touch the brief file", "S12"} {
+		if strings.Contains(section.Body, digest) {
+			t.Errorf("fallback holds digest text %q:\n%s", digest, section.Body)
+		}
+	}
+}
+
+// The reviewer and the architect get the section in a real round; the
+// implementer does not (S383, Not in this slice: the gate and implementer briefs).
+func TestReviewerAndArchitectBriefsCarryTheDirectionSection(t *testing.T) {
+	h := architectHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{
+				{Tool: "slicer", Args: []string{"goals", "--json", "--lean", "--root", W}, Stdout: directionGoals},
+				{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", W}, Stdout: `[{"id":"S99","title":"Later work","status":"open","has_slice":false,"fields":{}}]`},
+				{Tool: "git", Args: []string{"-C", W, "merge-base", "main", "HEAD"}, Stdout: "abc123\n"},
+				{Tool: "git", Args: []string{"-C", W, "diff", "--name-only", "-z", "--no-renames", "--no-relative", "abc123"}, Stdout: "internal/engine/brief.go\x00"},
+				{Tool: "git", Args: []string{"-C", W, "ls-files", "--others", "--exclude-standard", "-z", "--full-name"}},
+			}
+		}
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	seen := map[string]bool{}
+	for _, req := range h.runner.requests() {
+		carries := strings.Contains(req.Brief, "## Direction\n") && strings.Contains(req.Brief, "No unattended runs") && strings.Contains(req.Brief, "- S99 Later work")
+		switch req.Role {
+		case RoleReviewer, RoleArchitect:
+			seen[req.Role] = true
+			if !carries {
+				t.Errorf("%s brief lacks the Direction section", req.Role)
+			}
+		case RoleImplementer:
+			if strings.Contains(req.Brief, "## Direction") {
+				t.Errorf("%s brief holds a Direction section", req.Role)
+			}
+		}
+	}
+	if !seen[RoleReviewer] || !seen[RoleArchitect] {
+		t.Fatalf("roles run: %v", h.runner.roles())
 	}
 }
 

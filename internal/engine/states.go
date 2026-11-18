@@ -610,6 +610,7 @@ func (e *Engine) review(ctx context.Context) error {
 	if section := deferredSection(rec.Checks, false); section != nil {
 		rounds[0].sections = append(rounds[0].sections, *section)
 	}
+	rounds[0].sections = append(rounds[0].sections, e.directionSection(ctx, rec))
 	if _, ok := lineup(rec.Lineup, RoleUI); ok {
 		ui, err := e.touchesUI(ctx, rec)
 		if err != nil {
@@ -865,6 +866,7 @@ func (e *Engine) architect(ctx context.Context) error {
 	rec := e.run.Snapshot()
 	r := round{role: RoleArchitect, n: rec.Round, state: runrec.StateArchitect, task: rec.Item + " architect",
 		sections: []BriefSection{{Title: "Architect review", Body: "Review the slice's diff after accepted reviewer findings have been addressed and before the gate (adj 123). You are read-only. The implementer and reviewer reports are under Earlier reports. For each reviewer finding under Earlier reports, report whether it was fixed (CONFIRMED-FIXED, PARTIAL or NOT-FIXED) with evidence. Give change-now findings and later work separately."}}}
+	r.sections = append(r.sections, e.directionSection(ctx, rec))
 	out, err := e.runRound(ctx, r, pend)
 	if err != nil || !out.ok {
 		return err
