@@ -5139,3 +5139,5 @@
 {"when": "2026-11-18T04:11:00Z", "item": "S424", "action": "add", "from": "", "to": "open", "note": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it"}
 {"when": "2026-11-18T04:11:00Z", "item": "S424", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T12:14:25Z", "item": "S403", "action": "note", "from": "", "to": "", "note": "Verified: ork wait follows several RUN and every unfinished ", "by": "Jon Robbins"}
+{"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "add", "from": "", "to": "open", "note": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card"}
+{"when": "2026-11-18T12:21:15Z", "item": "S425", "action": "promote", "from": "", "to": "", "note": ""}

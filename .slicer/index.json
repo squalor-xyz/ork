@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 425,
+  "next_id": 426,
   "preamble": "",
   "passes": [
     {
@@ -22947,6 +22947,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-0221af1b",
+        "pass": "v1.1",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S425",
+      "title": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card",
+      "short_title": "allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S405",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4a8e7f3d",
         "pass": "v1.1",
         "group": "",
         "reason": "",
