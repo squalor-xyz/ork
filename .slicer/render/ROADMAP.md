@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-430 items · — 74 · done 314 · retired 42
+430 items · — 71 · done 314 · retired 45
 
 ## v1.3
 
@@ -321,10 +321,10 @@ v1.2
 | 257 | [S423](slices/S423.md) | say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it" |  | - |  | discovered from S403 | — |
 | 258 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it |  | - |  | discovered from S403 | — |
 | 259 | [S425](slices/S425.md) | allow the ui role to run go run ./cmd/ork with --help so CLI help can be rendered for the approval card |  | - |  | discovered from S405 | — |
-| 260 | [S426](slices/S426.md) | give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output |  | - |  | discovered from S404 | — |
+| 260 | [S426](slices/S426.md) | give the UI pass a way to capture CLI output, such as a module copy in the temp directory or a render hook, because hand-traced renders can drift from real output |  | - |  | Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback · discovered from S404 | retired |
 | 261 | [S427](slices/S427.md) | say in the brief whether gate mode applies so plan-mode harness prompts do not conflict with a read-only review |  | - |  | discovered from S404 | — |
-| 262 | [S428](slices/S428.md) | in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply |  | - |  | discovered from S383 | — |
-| 263 | [S429](slices/S429.md) | give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand |  | - |  | discovered from S404 | — |
+| 262 | [S428](slices/S428.md) | in plan-mode sessions, tell the reviewer role that the plan-file and ExitPlanMode steps do not apply |  | - |  | Duplicate of S418 (reviewer prompt in plan mode), filed again by ork tool feedback · discovered from S383 | retired |
+| 263 | [S429](slices/S429.md) | give the UI pass a way to capture real CLI output, such as a module copy in its temp directory, so renders are not traced by hand |  | - |  | Duplicate of S416 (UI pass render path outside the tree), filed again by ork tool feedback · discovered from S404 | retired |
 | 264 | [S430](slices/S430.md) | adj: when a worktree's docs cite an adj record that exists only on the base branch, adj lint or adj show could say the record is on another branch instead of plain not found |  | - |  | discovered from S405 | — |
 
 ---
