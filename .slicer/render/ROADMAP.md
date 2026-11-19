@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-462 items · — 56 · done 332 · retired 74
+462 items · — 55 · done 333 · retired 74
 
 ## v1.3
 
@@ -189,7 +189,7 @@ v1.2
 | 132 | [S417](slices/S417.md) | let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done | S | 1 |  | discovered from S381 | — |
 | 133 | [S418](slices/S418.md) | Cloud Claude read-only roles run on the read-only allowlist, not plan mode | S | 1 |  | discovered from S388 | done |
 | 134 | [S423](slices/S423.md) | say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it" | S | 1 |  | discovered from S403 | done |
-| 135 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it | M | 2 |  | discovered from S403 | — |
+| 135 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it | M | 2 |  | discovered from S403 | done |
 | 136 | [S431](slices/S431.md) | Daemon auto-rebuild | L | 3 |  | 2026-11-18: after S332, S403, S405 and S404 landed, the daemon stayed on build 7f5a1f7d, so landed fixes (the changelog-entry gate, ork wait, the tracking commit) did not apply to new runs. `ork daemon restart --rebuild` refuses while any role runs, even with --force (`docs/design.md:3847-3849`, adj 312), and with three runs in flight there was no gap; the orchestrator retried it every 30 s from a shell loop. The rebuild runs in the CLI (`internal/cli/lifecycle.go:88-120`); the daemon only reports behind main (`internal/daemon/build.go:25`, `:173`). | done |
 | 137 | [S432](slices/S432.md) | Accept slicer relay contract v13 (v12-v13) | M | - |  |  | done |
 | 138 | [S433](slices/S433.md) | give the UI pass a named render hook, so renders need no overlay test file written by the role |  | - |  | Duplicate of S416 (UI pass render path), filed again by tool feedback · discovered from S392 | retired |

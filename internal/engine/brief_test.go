@@ -109,6 +109,36 @@ func baseBrief() BriefInput {
 	}
 }
 
+func TestResumedBriefUnchangedLine(t *testing.T) {
+	for _, n := range []int{0, 2} {
+		t.Run(fmt.Sprint(n), func(t *testing.T) {
+			in := baseBrief()
+			in.Resumed = true
+			in.TreeUnchangedSince = n
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			section, _ := section(got, "## Resumed session")
+			if n == 0 && strings.Contains(section, "The tree is unchanged since round") {
+				t.Error("unchanged line printed without fingerprint")
+			}
+			if n == 2 && !strings.Contains(section, "The tree is unchanged since round 2, when you last reported.") {
+				t.Error("unchanged line presence wrong")
+			}
+			if strings.Contains(section, "run git status and git diff") != (n == 0) {
+				t.Error("git re-run instruction presence wrong")
+			}
+			if n == 2 && strings.Contains(got, "run git status and git diff") {
+				t.Error("git re-run instruction remains elsewhere in brief")
+			}
+			if !strings.Contains(section, "read again every file you cite") {
+				t.Error("cited-file read instruction missing")
+			}
+		})
+	}
+}
+
 func localImplementerBrief(t *testing.T) string {
 	t.Helper()
 	in := baseBrief()

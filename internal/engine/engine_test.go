@@ -21,6 +21,105 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestTreeFullContentSeesAnUntrackedEdit(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	e := &Engine{d: h.deps}
+	path := filepath.Join(h.P, "new file.txt")
+	writeFile(t, path, "before")
+	before, err := e.treeFullContent(context.Background(), h.P)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, path, "after")
+	after, err := e.treeFullContent(context.Background(), h.P)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if before == after {
+		t.Fatal("untracked content edit did not change full fingerprint")
+	}
+}
+
+func TestTreeFullContentAcceptsAnUntrackedRepository(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	nested := filepath.Join(h.P, "sub")
+	writeFile(t, filepath.Join(nested, "new.txt"), "nested")
+	gitRun(t, nested, "init", "-q")
+	e := &Engine{d: h.deps}
+	if _, err := e.treeFullContent(context.Background(), h.P); err != nil {
+		t.Fatalf("untracked nested repository prevented fingerprinting: %v", err)
+	}
+}
+
+func resumedTreeBrief(t *testing.T, role string, edit, legacy bool) string {
+	t.Helper()
+	h := launchTrackingHarness(t, false)
+	gitRun(t, h.P, "worktree", "add", h.W, "-b", "brief-test")
+	h.cfg.Lineup[RoleArchitect] = h.cfg.Lineup[RoleReviewer]
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e.proj = h.proj
+	if err := e.run.Update(func(r *runrec.Record) { r.Worktree = h.W; r.State = runrec.StateGate; r.Round = 2 }); err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(h.W, "new.txt"), "before")
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Role == RoleImplementer && edit {
+			writeFile(t, filepath.Join(h.W, "new.txt"), "after")
+		}
+		res := defaultResult(req)
+		if req.Role == RoleArchitect {
+			res.Report = cleanReview
+		}
+		return res, nil
+	}
+	run := func(role string, n int, resume bool) {
+		t.Helper()
+		r := round{role: role, n: n, state: runrec.StateGate}
+		if resume {
+			r.resumeFrom = []string{role}
+		}
+		out, err := e.runRound(context.Background(), r, nil)
+		if err != nil || !out.ok {
+			t.Fatalf("%s round %d: ok=%v err=%v record=%+v", role, n, out.ok, err, e.Snapshot())
+		}
+	}
+	run(role, 2, false)
+	if legacy {
+		if err := e.run.Update(func(r *runrec.Record) { r.Roles[len(r.Roles)-1].StartTreeSHA256 = "" }); err != nil {
+			t.Fatal(err)
+		}
+	}
+	run(RoleImplementer, 3, false)
+	run(role, 3, true)
+	return h.runner.requests()[2].Brief
+}
+
+func TestResumedGateBriefSaysTreeUnchanged(t *testing.T) {
+	for _, role := range []string{RoleGate, RoleReviewer, RoleArchitect} {
+		t.Run(role, func(t *testing.T) {
+			brief := resumedTreeBrief(t, role, false, false)
+			if !strings.Contains(brief, "The tree is unchanged since round 2, when you last reported.") {
+				t.Fatal("resumed brief missing unchanged line")
+			}
+		})
+	}
+}
+
+func TestResumedGateBriefOmitsUnchangedAfterAnEdit(t *testing.T) {
+	if strings.Contains(resumedTreeBrief(t, RoleGate, true, false), "The tree is unchanged since round") {
+		t.Fatal("untracked edit incorrectly reported unchanged")
+	}
+}
+
+func TestResumedBriefWithoutStartFingerprintOmitsUnchanged(t *testing.T) {
+	if strings.Contains(resumedTreeBrief(t, RoleGate, false, true), "The tree is unchanged since round") {
+		t.Fatal("legacy row incorrectly reported unchanged")
+	}
+}
+
 // Launch tests use real git so assertions cover the commit and checkout contents.
 func launchTrackingHarness(t *testing.T, subfolder bool) *harness {
 	t.Helper()
