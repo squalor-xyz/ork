@@ -23338,6 +23338,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "be652d45-d6a4-427c-b158-6a57d2228aeb",
+          "kind": "",
+          "text": "**2026-11-19** — Verified cloud Claude read-only roles (reviewer, gate, architect, spec check) run on the fixed read-only allowlist with --permission-prompts none and no plan-mode flag. UI pass write grants, claude-local and Grok plan mode are unchanged. design.md and field comments match. Gate PASS; owner approved.",
+          "created_at": "2026-11-19T03:16:14Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
