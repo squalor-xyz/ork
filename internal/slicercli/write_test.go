@@ -341,6 +341,50 @@ func TestSlicerFreeTextIsAttachedToItsFlag(t *testing.T) {
 	}
 }
 
+func TestFinishWritesAreAttachedAndNameTheOwner(t *testing.T) {
+	ctx := context.Background()
+	for _, tc := range []struct {
+		name string
+		call func(c Client) error
+		verb string
+		want []string
+	}{
+		{"note by owner", func(c Client) error { return c.NoteBy(ctx, runrec.Writer{}, wt, "S04", "-x", "Jon") }, "note",
+			[]string{"note", "S04", "--text=-x", "--owner=Jon", "--render", "--json", "--root", wt}},
+		{"done", func(c Client) error { return c.Done(ctx, runrec.Writer{}, wt, "S04", "-x", "Jon") }, "done",
+			[]string{"done", "S04", "--note=-x", "--owner=Jon", "--render", "--check", "--json", "--root", wt}},
+		{"done without owner", func(c Client) error { return c.Done(ctx, runrec.Writer{}, wt, "S04", "x", "") }, "done",
+			[]string{"done", "S04", "--note=x", "--render", "--check", "--json", "--root", wt}},
+		{"handoff", func(c Client) error { return c.Handoff(ctx, runrec.Writer{}, wt, "S04", "Jon") }, "handoff",
+			[]string{"handoff", "S04", "--owner=Jon", "--render", "--check", "--json", "--root", wt}},
+		{"handoff without owner", func(c Client) error { return c.Handoff(ctx, runrec.Writer{}, wt, "S04", "") }, "handoff",
+			[]string{"handoff", "S04", "--render", "--check", "--json", "--root", wt}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, f := client(t, clitest.Route{Tool: "slicer", Args: []string{tc.verb}, Prefix: true, Stdout: "{}"})
+			if err := tc.call(c); err != nil {
+				t.Fatal(err)
+			}
+			if calls := f.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, tc.want) {
+				t.Fatalf("calls %+v, want %v", calls, tc.want)
+			}
+		})
+	}
+	c, f := client(t)
+	if err := c.Done(ctx, runrec.Writer{}, wt, "S04", " ", ""); err == nil {
+		t.Error("Done with an empty note was accepted")
+	}
+	if err := c.Done(ctx, runrec.Writer{}, wt, "-S04", "x", ""); err == nil {
+		t.Error("Done with a flag-like id was accepted")
+	}
+	if err := c.Handoff(ctx, runrec.Writer{}, wt, "", ""); err == nil {
+		t.Error("Handoff with an empty id was accepted")
+	}
+	if calls := f.CallsTo("slicer"); len(calls) != 0 {
+		t.Errorf("slicer called: %v", calls)
+	}
+}
+
 func TestNoteRefusesEmptyTextByItsName(t *testing.T) {
 	c, f := client(t)
 	err := c.Note(context.Background(), runrec.Writer{}, wt, "S04", " ")

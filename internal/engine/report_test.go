@@ -164,6 +164,46 @@ func TestCheckReportTestsLine(t *testing.T) {
 	}
 }
 
+// A plain v13 implementer report carries exactly one non-empty Outcome line;
+// every other report is unchecked for it (S384).
+func TestCheckReportOutcomeLine(t *testing.T) {
+	const tests = "Tests: 1 passed, 0 failed\n"
+	for _, tc := range []struct {
+		name, text string
+		role       string
+		finish     bool
+		need       bool
+		want       string // the Outcome kept, or "" for a shape error naming it
+		ok         bool
+	}{
+		{"kept", "Outcome: Verified it.\n" + tests + ownerNone, RoleImplementer, false, true, "Verified it.", true},
+		{"trimmed", "Outcome:   spaced out  \n" + tests + ownerNone, RoleImplementer, false, true, "spaced out", true},
+		{"missing", tests + ownerNone, RoleImplementer, false, true, "", false},
+		{"empty", "Outcome:   \n" + tests + ownerNone, RoleImplementer, false, true, "", false},
+		{"twice", "Outcome: one\nOutcome: two\n" + tests + ownerNone, RoleImplementer, false, true, "", false},
+		{"mid line is no outcome", "The Outcome: x\n" + tests + ownerNone, RoleImplementer, false, true, "", false},
+		{"not needed", tests + ownerNone, RoleImplementer, false, false, "", true},
+		{"finish report", "Closed.\n" + ownerNone, RoleImplementer, true, true, "", true},
+		{"gate", "VERDICT: PASS\n" + tests + ownerNone, RoleGate, false, true, "", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			rep, err := CheckReport(tc.role, tc.finish, tc.text, tc.need)
+			if tc.ok {
+				if err != nil {
+					t.Fatalf("refused: %v", err)
+				}
+				if rep.Outcome != tc.want {
+					t.Fatalf("outcome %q, want %q", rep.Outcome, tc.want)
+				}
+				return
+			}
+			if err == nil || !strings.Contains(err.Error(), "need exactly one non-empty Outcome: line") {
+				t.Fatalf("err %v, want the Outcome shape error", err)
+			}
+		})
+	}
+}
+
 func TestCheckReportNeedsAnOwnerNeededSection(t *testing.T) {
 	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate} {
 		text := "x\nTests: 1 passed, 0 failed\n"

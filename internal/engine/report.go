@@ -86,6 +86,7 @@ type ToolFeedback = runrec.ToolFeedback
 
 // Report is what the engine reads from a role's report.
 type Report struct {
+	Outcome  string // verified outcome for the plain v13 finish step
 	Ask      *OwnerQuestion
 	Verdict  string // "PASS" or "FAIL" for a gate, else empty
 	Passed   int    // from the Tests lines
@@ -113,6 +114,8 @@ func (e *ShapeError) Error() string {
 var decisionKey = regexp.MustCompile(`^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$`)
 
 var testsLine = regexp.MustCompile(`(?m)^Tests: (\d+) passed, (\d+) failed\r?$`)
+
+var outcomeLine = regexp.MustCompile(`(?m)^Outcome:([^\r\n]*)\r?$`)
 
 const ownerHeading = "## Owner needed"
 
@@ -176,10 +179,20 @@ func splitToolFeedback(role, text string) (string, []ToolFeedback) {
 // Owner needed section; its whole report is findings context (adj 150).
 // Tool feedback lines are read out of the report first (splitToolFeedback) and
 // never count toward the shape. A shape error is a *ShapeError.
-func CheckReport(role string, finish bool, text string) (*Report, error) {
+// needsOutcome, when true, requires one non-empty Outcome line from a plain
+// v13 implementer. Older contracts, split leads and slivers do not require it.
+func CheckReport(role string, finish bool, text string, needsOutcome ...bool) (*Report, error) {
 	var rep Report
 	var problems []string
 	text, rep.ToolFeedback = splitToolFeedback(role, text)
+	if role == RoleImplementer && !finish && len(needsOutcome) > 0 && needsOutcome[0] {
+		matches := outcomeLine.FindAllStringSubmatch(text, -1)
+		if len(matches) != 1 || strings.TrimSpace(matches[0][1]) == "" {
+			problems = append(problems, "need exactly one non-empty Outcome: line")
+		} else {
+			rep.Outcome = strings.TrimSpace(matches[0][1])
+		}
+	}
 
 	if role == RoleGate {
 		first, _, _ := strings.Cut(text, "\n")

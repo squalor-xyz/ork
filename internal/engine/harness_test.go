@@ -277,6 +277,9 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "step", "run-1"}, Prefix: true, Seq: stepReplies(80)},
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "end", "run-1"}, Prefix: true}, `{"run":{"id":"run-1","state":"ended"}}`),
 		with(clitest.Route{Tool: "slicer", Args: []string{"note", item}, Prefix: true}, `{"id":"S04","added":true}`),
+		// ork's own finish step on a plain v13 run (S384).
+		with(clitest.Route{Tool: "slicer", Args: []string{"done", item}, Prefix: true}, `{"id":"S04","status":"done"}`),
+		with(clitest.Route{Tool: "slicer", Args: []string{"handoff", item}, Prefix: true}, `{"id":"S04","status":"handoff"}`),
 		with(g("-C", P, "rev-parse", "--git-path", "info/exclude"), ".git/info/exclude\n"),
 		g("-C", P, "worktree", "add", W, "-b", branch),
 		// The project is the repository root (S293); a test that wants a

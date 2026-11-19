@@ -108,24 +108,26 @@ type StopResult struct {
 }
 
 // ProjectStatus is one project in a status. NeedsYou counts the project's
-// open adj questions, needs-owner items and Needs-section engine runs.
+// open adj questions, needs-owner items, Needs-section engine runs and open
+// spec-check questions.
 // Parts holds each part's age and state.
 type ProjectStatus struct {
-	BuildCommand string               `json:"build_command,omitempty"` // proposed
-	SelfHost     bool                 `json:"self_host"`               // proposed
-	BehindMain   bool                 `json:"behind_main"`             // proposed
-	Rebuild      *RebuildStatus       `json:"rebuild,omitempty"`       // S431, *proposed*: the daemon's own rebuild of this project, while it drains or after it failed
-	Unavailable  bool                 `json:"unavailable,omitempty"`   // proposed: display only, not registered
-	Open         []OpenRecord         `json:"open,omitempty"`          // proposed
-	Held         []HeldItem           `json:"held,omitempty"`          // proposed
-	EngineRuns   []EngineRun          `json:"engine_runs"`
-	Name         string               `json:"name"`
-	Path         string               `json:"path"`
-	Adj          bool                 `json:"adj"`
-	NeedsYou     int                  `json:"needs_you"`
-	ActiveRelays []Relay              `json:"active_relays"`
-	Parts        map[string]PartState `json:"parts,omitempty"`
-	Errors       []PartError          `json:"errors,omitempty"`
+	BuildCommand  string               `json:"build_command,omitempty"`  // proposed
+	SelfHost      bool                 `json:"self_host"`                // proposed
+	BehindMain    bool                 `json:"behind_main"`              // proposed
+	Rebuild       *RebuildStatus       `json:"rebuild,omitempty"`        // S431, *proposed*: the daemon's own rebuild of this project, while it drains or after it failed
+	Unavailable   bool                 `json:"unavailable,omitempty"`    // proposed: display only, not registered
+	Open          []OpenRecord         `json:"open,omitempty"`           // proposed
+	Held          []HeldItem           `json:"held,omitempty"`           // proposed
+	SpecQuestions []SpecQuestions      `json:"spec_questions,omitempty"` // S340, adj 475: items with open spec-check questions
+	EngineRuns    []EngineRun          `json:"engine_runs"`
+	Name          string               `json:"name"`
+	Path          string               `json:"path"`
+	Adj           bool                 `json:"adj"`
+	NeedsYou      int                  `json:"needs_you"`
+	ActiveRelays  []Relay              `json:"active_relays"`
+	Parts         map[string]PartState `json:"parts,omitempty"`
+	Errors        []PartError          `json:"errors,omitempty"`
 }
 
 // OpenRecord is a proposed status wire summary of an open adj record.
@@ -139,6 +141,17 @@ type OpenRecord struct {
 type HeldItem struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
+}
+
+// SpecQuestions is the status summary of one item's open spec-check questions
+// (S340, adj 475). Keys has one entry per question: its key, or "#N" for a
+// question with none, as `ork wave start` addresses it. List is the command
+// that prints the questions; the owner answers with `ork wave start --answer`
+// or `ork run --answer`.
+type SpecQuestions struct {
+	Item string   `json:"item"`
+	Keys []string `json:"keys"`
+	List string   `json:"list"`
 }
 
 // PartState is one part's age and state as the cache holds it. AgeMs is the

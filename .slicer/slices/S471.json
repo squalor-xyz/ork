@@ -1,0 +1,39 @@
+{
+  "id": "S471",
+  "title": "allow `slicer check --root WT; echo exit=$?` style exit-code capture for read-only roles, or document that plain invocation is required",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-143743-1548, project ork, item S340:\n\nallow `slicer check --root WT; echo exit=$?` style exit-code capture for read-only roles, or document that plain invocation is required\n\nEvidence: \"A variable in this command can't be checked before it runs\" denied both slicer check and adj lint with `$?`"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

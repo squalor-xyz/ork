@@ -449,6 +449,17 @@ func chainMid(rec runrec.Record) bool {
 	return rec.Chain != "" && rec.SliverIndex < rec.SliverCount
 }
 
+// orkFinishes reports whether ork itself runs the closing note and the finish
+// step of rec, with no implementer round: a plain run on relay v13. A split
+// run, a sliver (chain or lone) and every run on v12 keep the implementer's
+// finish round (S384; adj 407 engine.finish-runner, adj 500
+// engine.finish-scope). Every sliver, in a chain or alone, has a Parent (the
+// daemon sets it for each). A plain run's implementer reports also carry the
+// Outcome line that becomes the closing note.
+func orkFinishes(rec runrec.Record) bool {
+	return rec.Contract == 13 && !rec.Split && rec.Parent == ""
+}
+
 // Dismiss records the owner's dismissal on the managed run handle.
 func (e *Engine) Dismiss() error { return e.run.Dismiss() }
 

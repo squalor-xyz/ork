@@ -573,7 +573,14 @@ and a restart clears them. ork does not read a reset time out of a vendor's
 message, so give the end yourself.
 
 On the command line, `ork status [--project P]` prints the same counts and
-rows. *Proposed (S308):* it also lists stale manual relays, marked `stale`,
+rows, plus open spec questions, which the dashboard does not show yet.
+*Proposed (S340, adj 475):* an item whose spec check left questions open
+shows one line after the open adj records and held items, such as
+`S1  2 open spec questions: a.b, c.d (answer: ork wave start P S1 --questions)`,
+and each question counts in needs you. The line goes away once the questions
+are answered or the spec changes; an item that waits on an adj record shows
+that record instead. Answer with `ork wave start --answer` or
+`ork run --answer`; a daemon restart asks again. *Proposed (S308):* `ork status` also lists stale manual relays, marked `stale`,
 and includes them in the active-relays count. Recently ended manual relays
 are not listed. It prints a line such as
 `codex is out until 17:02 (since 16:02; reason)` for each vendor that is out.

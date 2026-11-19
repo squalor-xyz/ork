@@ -2,7 +2,7 @@
 {
   "id": 487,
   "title": "How does a cloud UI pass make its renders without touching the tree?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.ui-pass-render-path",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -29,6 +29,7 @@
   },
   "decision": "overlay",
   "rationale": "Owner chose 'Document the overlay route (Recommended)' in an interactive question, relay session 8d711f67, 2026-11-18.",
+  "superseded_by": 505,
   "refs": [
     "S416"
   ],
@@ -40,6 +41,11 @@
     {
       "date": "2026-11-18",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-19",
+      "event": "supersede",
+      "note": "by 505"
     }
   ]
 }

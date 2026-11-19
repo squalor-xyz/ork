@@ -1,0 +1,39 @@
+{
+  "id": "S472",
+  "title": "allow env-prefixed go test commands, or give the UI role a renders env var already set",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261119-143744-0f7d, project ork, item S348:\n\nallow env-prefixed go test commands, or give the UI role a renders env var already set\n\nEvidence: `S348_RENDERS=... go -C ... test -overlay ...` was denied \"This command requires approval\"; the same command with the path hardcoded ran"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

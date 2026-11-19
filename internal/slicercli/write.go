@@ -208,13 +208,56 @@ func (c Client) RelayEnd(ctx context.Context, w runrec.Writer, root, run, outcom
 // Note runs `slicer note ID --text=TEXT --render --json`. The text is attached
 // to its flag, so a text that starts with a dash stays text.
 func (c Client) Note(ctx context.Context, w runrec.Writer, root, id, text string) error {
+	return c.NoteBy(ctx, w, root, id, text, "")
+}
+
+// NoteBy is Note with `--owner=OWNER`, the author of the note. An empty owner
+// leaves the flag out and slicer picks the author (S384, *proposed*).
+func (c Client) NoteBy(ctx context.Context, w runrec.Writer, root, id, text, owner string) error {
 	if err := checkID("item", id); err != nil {
 		return err
 	}
 	if strings.TrimSpace(text) == "" {
 		return errors.New("note text must not be empty")
 	}
-	_, err := c.write(ctx, w, root, "note", id, "--text="+text, "--render", "--json")
+	argv := []string{"note", id, "--text=" + text}
+	if owner != "" {
+		argv = append(argv, "--owner="+owner)
+	}
+	_, err := c.write(ctx, w, root, append(argv, "--render", "--json")...)
+	return err
+}
+
+// Done runs `slicer done ID --note=NOTE [--owner=OWNER] --render --check
+// --json --root ROOT`: the finish step of implement_finish "done" (S384,
+// *proposed*). A failed check makes slicer exit 1, which is an error here.
+func (c Client) Done(ctx context.Context, w runrec.Writer, root, id, note, owner string) error {
+	if err := checkID("item", id); err != nil {
+		return err
+	}
+	if strings.TrimSpace(note) == "" {
+		return errors.New("done note must not be empty")
+	}
+	argv := []string{"done", id, "--note=" + note}
+	if owner != "" {
+		argv = append(argv, "--owner="+owner)
+	}
+	_, err := c.write(ctx, w, root, append(argv, "--render", "--check", "--json")...)
+	return err
+}
+
+// Handoff runs `slicer handoff ID [--owner=OWNER] --render --check --json
+// --root ROOT`: the finish step of implement_finish "handoff" (S384,
+// *proposed*).
+func (c Client) Handoff(ctx context.Context, w runrec.Writer, root, id, owner string) error {
+	if err := checkID("item", id); err != nil {
+		return err
+	}
+	argv := []string{"handoff", id}
+	if owner != "" {
+		argv = append(argv, "--owner="+owner)
+	}
+	_, err := c.write(ctx, w, root, append(argv, "--render", "--check", "--json")...)
 	return err
 }
 
