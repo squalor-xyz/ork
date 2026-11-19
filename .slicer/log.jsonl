@@ -5716,3 +5716,5 @@
 {"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "note", "from": "", "to": "", "note": "possible duplicate of S458", "by": "Jon Robbins"}
 {"when": "2026-11-19T13:42:36Z", "item": "S467", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note."}
+{"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "add", "from": "", "to": "open", "note": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)"}
+{"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "promote", "from": "", "to": "", "note": ""}

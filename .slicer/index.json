@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 468,
+  "next_id": 469,
   "preamble": "",
   "passes": [
     {
@@ -25222,6 +25222,34 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S468",
+      "title": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)",
+      "short_title": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S424",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-510a0619",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,
