@@ -1734,7 +1734,8 @@ separately.
   - the environment lines from the project's AGENTS.md;
   - the role's own temp directory;
   - the report path. *Proposed (S256):* for a read-only role (reviewer,
-    gate, architect, UI pass, spec check) the line says that ork saves the
+    gate, architect, UI pass, spec check, spec draft, or an implementer under
+    the read-only preset) the line says that ork saves the
     final message there and the role cannot write it, and another line asks
     for the whole report as the final message in plain text, with no code
     fence. The role's permission mode does not let it write the report on any
@@ -1744,7 +1745,12 @@ separately.
     manual mode for claude-local, `-s read-only` for Codex; a cloud
     Claude UI pass has no mode flag but an allowlist with a write rule for its
     temp directory (S369, adj 372), and the report path is not under it),
-    so the final message is the only route (`role.report-io`);
+    so the final message is the only route (`role.report-io`, adj 27).
+    *Proposed (S423):* before filling placeholders, the brief replaces the
+    prompt's write-report sentence with the final-message rule. Its Report
+    section carries that one report rule and names the saved report path
+    once. A missing sentence fails brief construction with the role's name.
+    Write roles keep the prompt's write-report rule;
   - *proposed (S256):* for a resumed round, a `## Resumed session` section
     right after `## Your files`. It says that ork resumed the earlier
     session, that the worktree may have changed, and to run `git status` and
