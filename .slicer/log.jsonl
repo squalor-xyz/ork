@@ -5763,3 +5763,4 @@
 {"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "add", "from": "", "to": "open", "note": "allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full"}
 {"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T14:36:43Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T14:50:24Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "Verified: ork runs the closing note and finish step itself o", "by": "Jon Robbins"}

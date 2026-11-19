@@ -75,10 +75,20 @@ func TestFeedDeliversTheNoticesOfTheProjectInFocus(t *testing.T) {
 	e.src.put("alpha", changedItems())
 	advanceFiveSeconds(e)
 
-	n := waitNotice(t, nextNotice(feed))
-	if n.Project != "alpha" || !slices.Contains(n.Parts, "items") {
-		t.Fatalf("notice %+v, want items of alpha", n)
+	// A poll tick can report the runs part before the items part (a landing
+	// slice's checks saw this on a loaded host), so read notices until the
+	// items change arrives. Every notice must still be for alpha.
+	var n SnapshotChanged
+	for range 3 {
+		n = waitNotice(t, nextNotice(feed))
+		if n.Project != "alpha" {
+			t.Fatalf("notice %+v, want alpha only", n)
+		}
+		if slices.Contains(n.Parts, "items") {
+			return
+		}
 	}
+	t.Fatalf("last notice %+v, want items of alpha", n)
 }
 
 // A new focus replaces the old one: the next notice comes from the project

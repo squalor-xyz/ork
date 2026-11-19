@@ -21731,6 +21731,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "071a51ed-5d3e-4fff-a271-892788689cc0",
+          "kind": "",
+          "text": "**2026-11-19** — Verified: ork runs the closing note and finish step itself on plain relay v13 runs, and the checks are green after the base merge: go vet and go test ./... pass on all 26 packages, slicer check and adj lint pass. The only fix since the earlier finish was hardening the unrelated daemon test TestFeedDeliversTheNoticesOfTheProjectInFocus, which took the first notice and failed when a runs-only notice came first.",
+          "created_at": "2026-11-19T14:50:24Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
