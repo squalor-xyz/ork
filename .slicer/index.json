@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 456,
+  "next_id": 457,
   "preamble": "",
   "passes": [
     {
@@ -24680,6 +24680,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-da0da360",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S456",
+      "title": "give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly",
+      "short_title": "give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S437",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b3833cbb",
         "pass": "v1.2",
         "group": "",
         "reason": "",
