@@ -1,0 +1,39 @@
+{
+  "id": "S463",
+  "title": "start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-125428-c06d, project ork, item S458:\n\nstart reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist\n\nEvidence: adj lint --help denied with \"This command requires approval\" while reviewing S458, the slice that adds Bash(adj lint*)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
