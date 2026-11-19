@@ -162,7 +162,7 @@ type Round struct {
 
 // Spec describes one round.
 type Spec struct {
-	HookCommand string   // claude-local: ork hook pretool, bound to this daemon attempt
+	HookCommand string   // claude-local and cloud write roles: ork hook pretool, bound to this daemon attempt
 	AddDir      string   // additional directory for the exact progress-note permission
 	Bin         string   // default "claude"
 	Dir         string   // working directory

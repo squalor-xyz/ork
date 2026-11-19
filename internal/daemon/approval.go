@@ -155,7 +155,9 @@ func (d *Daemon) prepareApproval(ctx context.Context, req engine.Request, allow 
 	if req.ProjectRoot != "" {
 		scratch = filepath.Join(req.ProjectRoot, ".scratch")
 	}
-	token, finish := d.registerApproval(ctx, req, claude.ApprovalPolicy{Worktree: req.Worktree, Scratch: scratch, AddDir: addDir, TempDir: req.TempDir, ReportFile: req.ReportPath, Allowlist: append([]string(nil), allow...), Role: req.Role})
+	token, finish := d.registerApproval(ctx, req, claude.ApprovalPolicy{Worktree: req.Worktree, Scratch: scratch, AddDir: addDir, TempDir: req.TempDir, ReportFile: req.ReportPath, Allowlist: append([]string(nil), allow...), Role: req.Role,
+		// A cloud role keeps the behaviour its allowlist gave it; the hook only adds the path guard (launch.cloud-hook-scope).
+		PathsOnly: req.Vendor == "claude"})
 	return shellQuoteHook(exe) + " hook pretool --socket " + shellQuoteHook(d.cfg.Paths.Socket) + " --session " + shellQuoteHook(token), finish, nil
 }
 

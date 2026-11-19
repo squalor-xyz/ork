@@ -4,6 +4,7 @@ package engine
 
 import (
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -14,8 +15,10 @@ func TestDefaultImplementerAllowlistIsExactlyTheDecidedOne(t *testing.T) {
 	want := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",
 		"Bash(slicer *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+		"Bash(git ls-files*)", "Bash(git mv*)", "Bash(git rm *)", "Bash(rm *)",
 		"Bash(go -C * test*)", "Bash(go -C * vet*)", "Bash(go test*)", "Bash(go vet*)", "Bash(gofmt *)",
 		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
+		"Bash(git -C * ls-files*)", "Bash(git -C * mv*)", "Bash(git -C * rm *)",
 		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
 		"Bash(go test ./...*)",
 	}
@@ -105,7 +108,9 @@ func TestImplementerPresetPython(t *testing.T) {
 	want := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",
 		"Bash(slicer *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+		"Bash(git ls-files*)", "Bash(git mv*)", "Bash(git rm *)", "Bash(rm *)",
 		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
+		"Bash(git -C * ls-files*)", "Bash(git -C * mv*)", "Bash(git -C * rm *)",
 		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
 		"Bash(python3 -m unittest*)", "Bash(python3 -m unittest discover -s tests -t tests*)",
 	}
@@ -122,6 +127,32 @@ func TestImplementerPresetPython(t *testing.T) {
 	got[0] = "Changed"
 	if again, _ := ImplementerPreset("python", ""); again[0] != "Read" {
 		t.Fatalf("callers share the preset: %q", again)
+	}
+}
+
+func TestImplementerPresetsAllowGitLsFilesAndMv(t *testing.T) {
+	for _, preset := range PresetNames() {
+		for _, entry := range []string{"Bash(git ls-files*)", "Bash(git -C * ls-files*)", "Bash(git mv*)", "Bash(git -C * mv*)"} {
+			t.Run(preset+"/"+entry, func(t *testing.T) {
+				list, err := ImplementerPreset(preset, "")
+				if err != nil || !slices.Contains(list, entry) {
+					t.Fatalf("%s missing %s: %v", preset, entry, err)
+				}
+			})
+		}
+	}
+}
+
+func TestImplementerPresetsAllowFileRemoval(t *testing.T) {
+	for _, preset := range PresetNames() {
+		for _, entry := range []string{"Bash(git rm *)", "Bash(git -C * rm *)", "Bash(rm *)"} {
+			t.Run(preset+"/"+entry, func(t *testing.T) {
+				list, err := ImplementerPreset(preset, "")
+				if err != nil || !slices.Contains(list, entry) {
+					t.Fatalf("%s missing %s: %v", preset, entry, err)
+				}
+			})
+		}
 	}
 }
 

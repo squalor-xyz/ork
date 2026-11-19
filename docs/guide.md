@@ -258,6 +258,19 @@ Three more fields take repeatable flags (*proposed*, S174):
 | `--replace-allow` | with `--allow`, the patterns of the call become the role's whole list; it needs `--allow` and cannot go with `--preset` for the implementer |
 | `--vendor-env VENDOR:KEY=VALUE` | one environment variable for a vendor's processes; `--unset-vendor-env VENDOR:KEY` removes one |
 
+The presets include git ls-files, git mv, git rm (plain and `git -C` forms)
+and non-recursive rm (adj 478). Existing stored lists keep their patterns.
+Run `ork projects set NAME --preset go|python` again to replace the list
+with the current preset, or add an entry with
+`--allow implementer=PATTERN` (adj 190). The approval hook checks paths and
+recursive rm flags for claude-local roles and for cloud Claude write roles
+(`launch.cloud-remove-paths`). For cloud it denies paths outside the
+worktree, a recursive rm and a removal it cannot check, and leaves every
+other call to the CLI's own allowlist: it asks no owner questions and applies
+no Read cap (`launch.cloud-hook-scope`, `launch.cloud-hook-passthrough`).
+Cloud Claude also receives conservative
+recursive rm deny rules; their runtime behavior is unprobed.
+
 A role or a vendor key changes alone, so you do not retype the others. ork's
 text output and error messages name vendor variables and never print their
 values; `--json` prints the project as the registry holds it, values included.

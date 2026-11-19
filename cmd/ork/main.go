@@ -59,14 +59,25 @@ func hookPretool(ctx context.Context, args []string, input io.Reader, output io.
 			}
 		}
 	}
-	if answer.Decision != "allow" && answer.Decision != "deny" {
-		answer = claude.Approval{Decision: "deny", Reason: "invalid approval response"}
-	}
-	response := map[string]any{"hookSpecificOutput": map[string]string{"hookEventName": "PreToolUse", "permissionDecision": answer.Decision, "permissionDecisionReason": answer.Reason}}
-	if err := json.NewEncoder(output).Encode(response); err != nil {
+	if err := json.NewEncoder(output).Encode(hookOutput(answer)); err != nil {
 		return 2
 	}
 	return 0
+}
+
+// hookOutput is the PreToolUse response for an approval. A deferred call
+// (a cloud role's call the hook does not deny) prints no permission decision,
+// so the CLI's own allowlist decides it. Any value but allow, deny or defer
+// fails closed.
+func hookOutput(answer claude.Approval) map[string]any {
+	switch answer.Decision {
+	case claude.DecisionDefer:
+		return map[string]any{}
+	case "allow", "deny":
+	default:
+		answer = claude.Approval{Decision: "deny", Reason: "invalid approval response"}
+	}
+	return map[string]any{"hookSpecificOutput": map[string]string{"hookEventName": "PreToolUse", "permissionDecision": answer.Decision, "permissionDecisionReason": answer.Reason}}
 }
 
 func buildIdentity(info *debug.BuildInfo, ok bool, fallback string) string {

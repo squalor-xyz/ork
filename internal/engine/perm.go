@@ -46,9 +46,11 @@ func ImplementerPreset(name, checkCommand string) ([]string, error) {
 	head := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",
 		"Bash(slicer *)", "Bash(git status*)", "Bash(git diff*)", "Bash(git log*)",
+		"Bash(git ls-files*)", "Bash(git mv*)", "Bash(git rm *)", "Bash(rm *)",
 	}
 	tail := []string{
 		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
+		"Bash(git -C * ls-files*)", "Bash(git -C * mv*)", "Bash(git -C * rm *)",
 		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
 	}
 	var list []string

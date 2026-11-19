@@ -164,8 +164,18 @@ Notes on the fields:
   and an older ork reads it. A later change of the check command does not
   update the list; `ork doctor` warns when the list lacks a pattern for the
   command.
-  For claude-local, ork checks this resolved list at every tool call through
-  the daemon's `tool.approve` request. The request carries the attempt session
+  Preset changes do not rewrite stored lists. To pick up the git ls-files,
+  git mv, git rm and non-recursive rm entries (adj 478), run
+  `ork projects set NAME --preset go|python` again, or add individual
+  patterns with `--allow implementer=PATTERN` (adj 190).
+  For claude-local, and for a cloud Claude write role (S345, owner answer
+  `launch.cloud-remove-paths`), ork checks this resolved list at every tool call through
+  the daemon's `tool.approve` request. A cloud role's check denies outside
+  paths, a recursive rm and a removal it cannot check, never asks the owner,
+  and defers every other call to the CLI's own allowlist: the hook prints no
+  decision and no denial is counted (`launch.cloud-hook-scope`,
+  `launch.cloud-hook-passthrough`).
+  The request carries the attempt session
   id, hook tool input and a deadline; it cannot supply the policy. The
   session and pending permission questions live only in daemon memory and
   are removed when the role attempt ends. They add no `run.json` fields.

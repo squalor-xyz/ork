@@ -34,6 +34,13 @@ type ApprovalPolicy struct {
 	// implementer is capped at 150 lines. Every other role, including an
 	// empty role, keeps the 500-line cap.
 	Role string
+	// PathsOnly is the cloud write role's policy (owner answers
+	// launch.cloud-hook-scope and launch.cloud-hook-passthrough). The hook
+	// denies a path outside the worktree, a recursive rm and a removal or move
+	// whose paths it cannot check. It never asks the owner, applies no Read cap
+	// and adds no read-only grant. Every other call gets DecisionDefer, so the
+	// CLI's own allowlist and deny rules decide it, as before the hook.
+	PathsOnly bool
 }
 
 const (
@@ -67,6 +74,39 @@ func (c ToolCall) ApprovalDetail() string {
 // Evaluate applies hard path/read rules before consulting the role allowlist.
 // An ask is resolved by the daemon, never by Claude's permission classifier.
 func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
+	answer := p.evaluate(call)
+	if p.PathsOnly && answer.Decision != "deny" {
+		// The hook has no objection: the CLI's own allowlist and deny rules
+		// decide, as they did before the hook (launch.cloud-hook-passthrough).
+		return Approval{DecisionDefer, "cloud hook checks paths only; the CLI allowlist decides"}
+	}
+	return answer
+}
+
+// DecisionDefer is the result of a PathsOnly policy for a call it does not
+// deny. The hook prints no permission decision for it, and the daemon neither
+// asks the owner nor counts a denial.
+const DecisionDefer = "defer"
+
+// removalCommand reports whether a Bash command removes or moves files: an
+// rm word, or git with an mv word. The words of a compound command are all
+// scanned, so a removal behind && or ; is still found.
+func removalCommand(words []shellWord) bool {
+	git, mv := false, false
+	for _, word := range words {
+		switch word.text {
+		case "rm":
+			return true
+		case "git":
+			git = true
+		case "mv":
+			mv = true
+		}
+	}
+	return git && mv
+}
+
+func (p ApprovalPolicy) evaluate(call ToolCall) Approval {
 	var in struct {
 		FilePath string `json:"file_path"`
 		Path     string `json:"path"`
@@ -100,11 +140,11 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 		return deny("tool cwd is outside worktree " + p.Worktree)
 	}
 	// This parser validates every path itself before the general Bash scan.
-	if call.ToolName == "Bash" && p.readOnlyOwnFiles(in.Command) {
+	if call.ToolName == "Bash" && !p.PathsOnly && p.readOnlyOwnFiles(in.Command) {
 		return Approval{"allow", "read-only on own files"}
 	}
 	if call.ToolName == "Bash" {
-		tokens, _, valid := scanShell(in.Command)
+		tokens, operators, valid := scanShell(in.Command)
 		expansion := false
 		for _, word := range tokens {
 			expansion = expansion || word.expansion
@@ -121,6 +161,18 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 				}
 			}
 		}
+		// A PathsOnly policy cannot ask, and it must not leave a removal it
+		// cannot check to the CLI's plain rm grant: deny a recursive rm and a
+		// removal or move whose paths the scan cannot read (a variable, a
+		// substitution, a tilde or brace form, a compound command, bad quoting).
+		if p.PathsOnly && removalCommand(tokens) {
+			if len(tokens) > 0 && tokens[0].text == "rm" && recursiveRemove(in.Command) {
+				return deny("a recursive rm is not allowed")
+			}
+			if !valid || expansion || operators != "" {
+				return deny("the paths of this removal or move cannot be checked; use plain paths in one command")
+			}
+		}
 		// A known outside path always denies, even when another word needs review.
 		if !valid {
 			return Approval{"ask", "Bash quoting is incomplete"}
@@ -129,7 +181,7 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 			return Approval{"ask", "Bash tilde or brace expansion requires owner approval"}
 		}
 	}
-	if call.ToolName == "Read" {
+	if call.ToolName == "Read" && !p.PathsOnly {
 		capLines := p.readCap()
 		if in.Limit != nil && (*in.Limit < 1 || *in.Limit > capLines) {
 			return deny(p.readLimitDenial())
@@ -158,6 +210,9 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 		if strings.HasPrefix(rule, "Bash(") && strings.HasSuffix(rule, ")") && call.ToolName == "Bash" {
 			pattern := rule[5 : len(rule)-1]
 			if wildcard(pattern, in.Command) && shellOperators(pattern) == shellOperators(in.Command) {
+				if rule == "Bash(rm *)" && recursiveRemove(in.Command) {
+					continue
+				}
 				return Approval{"allow", "role allowlist"}
 			}
 		}
@@ -169,6 +224,28 @@ func (p ApprovalPolicy) Evaluate(call ToolCall) Approval {
 		}
 	}
 	return Approval{"ask", "call is not covered by the role allowlist"}
+}
+
+// recursiveRemove checks decoded flags, including combined short options and
+// options after a file. A literal -- ends option parsing, so rm -- -report
+// still removes a single file. The plain rm grant never grants recursion.
+func recursiveRemove(command string) bool {
+	words, _, _ := scanShell(command)
+	for _, word := range words[1:] {
+		flag := word.text
+		if flag == "--" {
+			break
+		}
+		if strings.HasPrefix(flag, "--") {
+			name, _, _ := strings.Cut(flag, "=")
+			if strings.HasPrefix("--recursive", name) {
+				return true
+			}
+		} else if strings.HasPrefix(flag, "-") && strings.ContainsAny(flag, "rR") {
+			return true
+		}
+	}
+	return false
 }
 
 // readCap is the most lines one Read may take. The implementer gets the

@@ -31,6 +31,8 @@ brief and this prompt disagree, the brief wins; say so in your report.
   after the gate passes.
 - Never read vendor credential or login files, and never print tokens, keys or
   passwords.
+- Rename a tracked file with `git mv`; ork's commit picks up the move.
+- Remove a file the slice moves code out of, or created by mistake, with `git rm` or `rm`; do not leave a stub.
 
 ## Work
 

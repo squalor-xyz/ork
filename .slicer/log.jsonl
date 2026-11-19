@@ -5590,3 +5590,20 @@
 {"when": "2026-11-18T22:31:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "note", "from": "", "to": "", "note": "Correction 2026-11-18: the owner clicked 'List at landing' b", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:14:50Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:14:50Z", "item": "S345", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:15:26Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T23:18:27Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T23:19:24Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:21:50Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T03:13:55Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:13:55Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T03:13:56Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T03:15:59Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:15:59Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:21:37Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T11:40:42Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T11:40:50Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T11:54:02Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T11:58:40Z", "item": "S345", "action": "note", "from": "", "to": "", "note": "Verified: both implementer presets and the built-in default ", "by": "Jon Robbins"}
+{"when": "2026-11-19T11:58:42Z", "item": "S345", "action": "status", "from": "started", "to": "done", "note": "Verified: presets and the built-in default allow git ls-files, git mv, git rm and non-recursive rm (adj 478); the approval hook denies outside-worktree removals and recursive rm; cloud Claude write roles run the hook for paths only and defer other calls to the CLI allowlist; full test suite, vet, gofmt, slicer check and adj lint passed.", "by": "Jon Robbins"}

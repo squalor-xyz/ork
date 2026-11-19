@@ -9,8 +9,98 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/roles"
 )
+
+func TestApprovalAllowsRemovingAFileInTheWorktree(t *testing.T) {
+	for _, preset := range engine.PresetNames() {
+		allow, _ := engine.ImplementerPreset(preset, "")
+		root := t.TempDir()
+		for _, command := range []string{"git rm cmd/ork/start_unix.go", "rm tests/x.py.tail", "git -C " + root + " rm f", "rm -f x", "rm -- -report"} {
+			t.Run(preset+"/"+command, func(t *testing.T) {
+				got := (ApprovalPolicy{Worktree: root, Allowlist: allow}).Evaluate(ToolCall{ToolName: "Bash", CWD: root, ToolInput: json.RawMessage(`{"command":` + strconvQuote(command) + `}`)})
+				if got.Decision != "allow" {
+					t.Fatalf("%s: %+v, want allow", command, got)
+				}
+			})
+		}
+	}
+}
+
+func TestApprovalDeniesRemovingOutsideTheWorktree(t *testing.T) {
+	for _, command := range []string{"rm ../other/file", "rm /home/x/file", "git -C /elsewhere rm f"} {
+		t.Run(command, func(t *testing.T) {
+			got := (ApprovalPolicy{Worktree: t.TempDir(), Allowlist: []string{"Bash(rm *)", "Bash(git -C * rm *)"}}).Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote(command) + `}`)})
+			if got.Decision != "deny" || !strings.Contains(got.Reason, "outside worktree") {
+				t.Fatalf("%s: %+v, want deny outside worktree", command, got)
+			}
+		})
+	}
+}
+
+// A cloud write role runs the hook for paths and recursive rm only (owner
+// answer launch.cloud-hook-scope, 2026-11-19): no owner question, no Read cap,
+// no grants beyond the role allowlist.
+func TestApprovalPathsOnlyKeepsCloudBehaviour(t *testing.T) {
+	root := t.TempDir()
+	long := filepath.Join(root, "long.go")
+	if err := os.WriteFile(long, []byte(strings.Repeat("line\n", 600)), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(root, "go.mod"), []byte("module x\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	allow, _ := engine.ImplementerPreset("go", "")
+	for _, tc := range []struct {
+		name, tool, input, local, cloud string
+	}{
+		// A call the hook does not deny is left to the CLI's own allowlist
+		// (owner answer launch.cloud-hook-passthrough): "defer".
+		{"Read over the cap", "Read", `{"file_path":` + strconvQuote(long) + `}`, "deny", "defer"},
+		{"uncovered command", "Bash", `{"command":"make test"}`, "ask", "defer"},
+		{"tool outside the allowlist", "TodoWrite", `{"todos":[]}`, "ask", "defer"},
+		{"incomplete quoting", "Bash", `{"command":"git status 'x"}`, "ask", "defer"},
+		{"tilde expansion", "Bash", `{"command":"git status ~/x"}`, "ask", "defer"},
+		{"cat of an own file", "Bash", `{"command":"cat ` + filepath.Join(root, "go.mod") + `"}`, "allow", "defer"},
+		{"ordinary removal", "Bash", `{"command":"git rm a.go"}`, "allow", "defer"},
+		{"ordinary plain rm", "Bash", `{"command":"rm a.go"}`, "allow", "defer"},
+		// What only an ask reached before must still be denied for a removal.
+		{"recursive rm", "Bash", `{"command":"rm -rf tests"}`, "ask", "deny"},
+		{"recursive rm after a file", "Bash", `{"command":"rm x -r"}`, "ask", "deny"},
+		{"rm with a tilde", "Bash", `{"command":"rm ~/x"}`, "ask", "deny"},
+		{"rm with a variable", "Bash", `{"command":"rm $HOME/x"}`, "ask", "deny"},
+		{"rm with incomplete quoting", "Bash", `{"command":"rm 'x"}`, "ask", "deny"},
+		{"git mv with a variable", "Bash", `{"command":"git mv $HOME/a b"}`, "ask", "deny"},
+		{"git rm with a substitution", "Bash", `{"command":"git rm $(echo a)"}`, "ask", "deny"},
+		{"compound removal", "Bash", `{"command":"rm a && rm b"}`, "ask", "deny"},
+		{"outside path", "Bash", `{"command":"rm ../other/file"}`, "deny", "deny"},
+		{"outside Read", "Read", `{"file_path":"/etc/hosts"}`, "deny", "deny"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			policy := ApprovalPolicy{Worktree: root, TempDir: root, Allowlist: allow, Role: "implementer"}
+			call := ToolCall{ToolName: tc.tool, CWD: root, ToolInput: json.RawMessage(tc.input)}
+			if got := policy.Evaluate(call); got.Decision != tc.local {
+				t.Fatalf("local policy: %+v, want %s", got, tc.local)
+			}
+			policy.PathsOnly = true
+			if got := policy.Evaluate(call); got.Decision != tc.cloud {
+				t.Fatalf("paths-only policy: %+v, want %s", got, tc.cloud)
+			}
+		})
+	}
+}
+
+func TestApprovalDeniesRecursiveRemove(t *testing.T) {
+	for _, command := range []string{"rm -r dir", "rm -R dir", "rm -rf .", "rm -fr x", "rm --recursive x", "rm x -r", "rm '-fr' x", `rm -\r x`, "rm --recursive=never x"} {
+		t.Run(command, func(t *testing.T) {
+			got := (ApprovalPolicy{Worktree: t.TempDir(), Allowlist: []string{"Bash(rm *)"}}).Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote(command) + `}`)})
+			if got.Decision == "allow" {
+				t.Fatalf("%s: %+v, must not allow recursive removal", command, got)
+			}
+		})
+	}
+}
 
 // S370: the approval detail is never cut, keeps the newline that separates
 // commands, and drops terminal controls.

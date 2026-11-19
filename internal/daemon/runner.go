@@ -67,7 +67,10 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	live := newLiveRedactor(r.env, req.OnLive)
 	hookCommand := ""
 	finishApproval := func() []runrec.DeniedCommand { return nil }
-	if req.Vendor == "claude-local" && r.approval != nil {
+	// A cloud write role runs the same path-checking hook (owner answer
+	// launch.cloud-remove-paths, 2026-11-18), so a removal outside the
+	// worktree is denied there too. A failed setup stops the role before launch.
+	if (req.Vendor == "claude-local" || (req.Vendor == "claude" && !req.ReadOnly)) && r.approval != nil {
 		var err error
 		hookCommand, finishApproval, err = r.approval(ctx, req, allowlist, addDir)
 		if err != nil {

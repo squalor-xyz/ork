@@ -132,9 +132,25 @@ func (s Spec) Args() ([]string, error) {
 			}
 		}
 		args = append(args, "--allowedTools", strings.Join(allow, ","), "--permission-prompts", "none")
+		if s.Bin != "claude-local" && slices.Contains(allow, "Bash(rm *)") {
+			// Deny rules supplement the plain rm grant and the approval hook
+			// below (owner: launch.rm-guard-scope, launch.cloud-remove-paths).
+			// These patterns are conservative; the CLI behavior remains
+			// unprobed.
+			args = append(args, "--disallowedTools", strings.Join([]string{
+				"Bash(rm -*r*)", "Bash(rm -*R*)",
+				"Bash(rm * -*r*)", "Bash(rm * -*R*)",
+				"Bash(rm --recursive*)", "Bash(rm * --recursive*)",
+			}, ","))
+		}
 	}
 	if s.Bin == "claude-local" {
 		args = append(args, "--permission-mode", "manual", "--settings", HookSettings(s.HookCommand))
+	} else if !s.ReadOnly && s.HookCommand != "" {
+		// A cloud write role runs the same path-checking hook as a local
+		// role (owner: launch.cloud-remove-paths, 2026-11-18). It keeps its
+		// permission mode; only the hook is added.
+		args = append(args, "--settings", HookSettings(s.HookCommand))
 	}
 	return append(args, s.Prompt), nil
 }
