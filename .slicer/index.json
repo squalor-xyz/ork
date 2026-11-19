@@ -25671,6 +25671,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "be070d9f-7e98-481c-83c9-aaa78946efde",
+          "kind": "",
+          "text": "**2026-11-19** — Owner decisions 2026-11-19: adj 508 ui.render-flag-dir = tempdir; adj 509 ui.render-flag-width = as-printed (drop 'at 80 columns' from TestRenderCLIViewsWritesFiles).",
+          "created_at": "2026-11-19T23:43:52Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
