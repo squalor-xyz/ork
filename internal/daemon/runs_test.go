@@ -3924,7 +3924,7 @@ func TestRunPlanCarriesSetupWarnings(t *testing.T) {
 	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "" })
 	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
 	want := []string{
-		"no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)",
+		"no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)",
 		"the implementer has the built-in Go allowlist, but p has no go.mod (fix: ork projects set p --preset python)",
 	}
 	if !reflect.DeepEqual(plan.Warnings, want) {
@@ -4316,7 +4316,7 @@ func TestRunStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
 	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "" })
 	_, err := d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1"}`))
 	re := ipc.ErrorOf(err)
-	want := "project p: no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"
+	want := "project p: no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)"
 	if err == nil || re.Code != CodeRefused || re.Message != want {
 		t.Fatalf("got %v, want %s: %s", err, CodeRefused, want)
 	}

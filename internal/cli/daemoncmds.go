@@ -22,6 +22,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
@@ -290,14 +291,25 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 			if err != nil {
 				return o.failErr(err)
 			}
+			effective, _ := effectiveCheckCommand(ctx, slicercli.Client{Bin: a.Tools.Slicer, Timeout: versionTimeout}, p)
+			setup := engine.SetupWarnings(effective, func(name string) bool {
+				_, err := os.Stat(filepath.Join(p.Path, name))
+				return err == nil
+			})
+			if setup == nil {
+				setup = []string{}
+			}
 			if o.json {
-				return o.printJSON(map[string]any{"project": p})
+				return o.printJSON(map[string]any{"project": p, "setup": setup})
 			}
 			adj := ""
 			if p.Adj {
 				adj = " (adj)"
 			}
 			fmt.Fprintf(o.stdout, "added %s %s%s\n", p.Name, p.Path, adj)
+			for _, warning := range setup {
+				fmt.Fprintf(o.stdout, "setup: %s\n", warning)
+			}
 			return ExitOK
 		})
 	case "rm":

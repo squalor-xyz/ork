@@ -3611,10 +3611,17 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   block. Strings are cleaned to one line without terminal
   controls. No NAME or more than one is a usage error (exit 2) and calls no
   daemon; an unknown project is `not_found` (exit 1).
-- `projects add [PATH] [--name N]`: `{"project":{...}}`. The name defaults to the
+- `projects add [PATH] [--name N]`: `{"project":{...},"setup":[...]}`. The name defaults to the
   path's base name. `adj` is true when `PATH/.adjudicate.json` exists. A
   duplicate name, a relative path, or a path that is not an existing
   directory is refused (`projects.add-path`). Text: `added NAME PATH [(adj)]`.
+  After registration, `engine.SetupWarnings` supplies advisory lines using
+  slicer's `check_command` when set, else the registry's. Text prints each as
+  `setup: LINE` after `added`; JSON carries those lines under `setup` (an
+  empty array when none apply). The no-check fix names both
+  `slicer config check_command CMD` and `ork projects set NAME --check CMD`,
+  keeping `--allow-no-check`. The Python marker suggests `--preset python`.
+  Warnings keep exit 0 and apply no preset or check settings (adj 474).
   Without PATH, text mode offers the current directory with
   `Add DIR as project NAME? [y/N]: `. Only y or yes accepts, without regard
   to case. Enter, EOF and other answers cancel with exit 1. JSON mode

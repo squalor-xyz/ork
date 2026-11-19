@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-481 items · — 57 · done 341 · retired 83
+481 items · — 56 · done 342 · retired 83
 
 ## v1.3
 
@@ -117,7 +117,7 @@ v1.2
 | 60 | [S336](slices/S336.md) | Idle polling backoff | S | 1 |  | Owner 2026-11-11 (polling too frequent). The daemon's cache keeps reading every registered project every 30 s with no TUI attached; a visible live run is read every 1 s. | done |
 | 61 | [S337](slices/S337.md) | wave start launches without --yes when stdin is not a terminal | S | 1 |  |  | — |
 | 62 | [S338](slices/S338.md) | wave start: no way to skip the spec check the owner declined | S | 1 |  |  | done |
-| 63 | [S339](slices/S339.md) | projects add: a Python project gets the Go allowlist and no check command | S | 1 |  |  | — |
+| 63 | [S339](slices/S339.md) | projects add: a Python project gets the Go allowlist and no check command | S | 1 |  |  | done |
 | 64 | [S340](slices/S340.md) | wave start: spec-check questions can only be answered on a terminal, one at a time | M | 2 |  |  | done |
 | 65 | [S341](slices/S341.md) | Read-only role check blames the role for any change to the shared tree | S | 1 |  |  | done |
 | 66 | [S342](slices/S342.md) | wave start: an owner's landing-order answer does not order the wave | M | 2 |  |  | — |
