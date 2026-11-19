@@ -798,6 +798,13 @@ explaining the failure.
 
 ### Approve and land
 
+A slice's Git section names its commit title in double quotes, for example
+`One commit on the slice branch, message "S04: engine core".` ork uses the
+first double-quoted title. Anything without a double-quoted title, including
+an empty or missing Git section, gives `ID: slice title` from `slicer show`.
+An explicit empty quoted title (`""`) pauses the run at commit
+(adj 485, `git.commit-title`).
+
 *Proposed (S331; owner decision 2026-11-11, adj 281):* there is no approve step
 for a run that passes everything. When the gate says `VERDICT: PASS`, no owner
 finding is still open and the latest check is green, ork approves the run

@@ -18,7 +18,11 @@ func sliceCommitTitle(detail slicercli.Detail) (string, error) {
 	if detail.Slice != nil {
 		for _, s := range detail.Slice.Sections {
 			if strings.EqualFold(s.Heading, "Git") && strings.TrimSpace(s.Body) != "" {
-				return ParseGitTitle(s.Body)
+				title, err := ParseGitTitle(s.Body)
+				if err != nil || title != "" {
+					return title, err
+				}
+				break
 			}
 		}
 	}
@@ -26,7 +30,7 @@ func sliceCommitTitle(detail slicercli.Detail) (string, error) {
 }
 
 // ParseGitTitle returns the commit title from the Git section of a slice: the
-// first double-quoted text, else the first non-blank line.
+// first double-quoted text, or no title when there is no quoted text.
 func ParseGitTitle(body string) (string, error) {
 	if m := quoted.FindStringSubmatch(body); m != nil {
 		if title := strings.TrimSpace(m[1]); title != "" {
@@ -34,10 +38,5 @@ func ParseGitTitle(body string) (string, error) {
 		}
 		return "", errors.New("the Git section holds an empty title")
 	}
-	for _, line := range strings.Split(body, "\n") {
-		if line = strings.TrimSpace(line); line != "" {
-			return line, nil
-		}
-	}
-	return "", errors.New("the Git section is empty")
+	return "", nil
 }
