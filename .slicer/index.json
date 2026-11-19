@@ -25189,7 +25189,7 @@
       "id": "S467",
       "title": "allow read-only adj lint for reviewer roles (S458 covers this)",
       "short_title": "allow read-only adj lint for reviewer roles (S458 covers this)",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -25221,7 +25221,7 @@
         "key": "tool-feedback-ork-22add6d3",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note.",
         "importance": 2,
         "urgency": 2,
         "effort": null,

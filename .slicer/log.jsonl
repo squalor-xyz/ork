@@ -5712,3 +5712,7 @@
 {"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T13:40:22Z", "item": "S466", "action": "add", "from": "", "to": "open", "note": "give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand"}
 {"when": "2026-11-19T13:40:23Z", "item": "S466", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "add", "from": "", "to": "open", "note": "allow read-only adj lint for reviewer roles (S458 covers this)"}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "note", "from": "", "to": "", "note": "possible duplicate of S458", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:42:36Z", "item": "S467", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note."}
