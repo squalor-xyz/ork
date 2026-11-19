@@ -31,6 +31,17 @@ func TestMergeDrivers(t *testing.T) {
 	check(nil)
 }
 
+func TestMissingDriversWarning(t *testing.T) {
+	got := MissingDriversWarning([]string{"slicer-index", "slicer-render"})
+	want := "merge drivers missing: slicer-index, slicer-render (fix: run the lines slicer setup-git prints)"
+	if got != want {
+		t.Errorf("MissingDriversWarning = %q, want %q", got, want)
+	}
+	if got := MissingDriversWarning([]string{"slicer-render"}); got != "merge drivers missing: slicer-render (fix: run the lines slicer setup-git prints)" {
+		t.Errorf("one name: %q", got)
+	}
+}
+
 func TestSetupWarnings(t *testing.T) {
 	const pyCheck = "python3 -m unittest discover -s tests -t tests"
 	const noCheck = "no check command: ork refuses to start a run (fix: ork projects set slicer --check CMD, or start with --allow-no-check)"

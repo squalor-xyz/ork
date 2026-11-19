@@ -3016,7 +3016,14 @@ The proposed optional `warnings` (S265) lists setup problems
 (`engine.SetupWarnings`), in this order: no check command; the built-in Go
 allowlist on a project with no `go.mod`; an implementer allowlist without
 `Read`, `Edit` or `Write`; an implementer allowlist with no pattern for the
-check command. *Proposed (S295):* a last warning, `check command cannot run in
+check command. *Proposed (S348, adj 480):* then, when the project path is a
+directory, one `merge drivers missing: NAME, NAME (fix: run the lines slicer
+setup-git prints)` (`engine.MissingDriversWarning`, the text `ork doctor` prints)
+for the drivers `.slicer/.gitattributes` names that the clone's git config lacks
+(`engine.MissingMergeDrivers`), or `merge drivers: ERR` when that read fails. A
+project with no `.slicer/.gitattributes` gets none. The plan only warns: it
+never refuses the start and never runs `slicer setup-git` (`ork doctor --fix`
+stays the only place ork runs those lines, adj 289). *Proposed (S295):* a last warning, `check command cannot run in
 DIR: PROBLEM (command: CMD) (fix: ork projects set NAME --check CMD)`
 (`--round-check` when the round command fails; the TUI launch confirm shows it
 by the check line instead of after the roles, where a long plan can clip it), when

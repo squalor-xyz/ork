@@ -19815,7 +19815,7 @@
       "id": "S348",
       "title": "Warn before a run starts when the slicer merge drivers are not configured",
       "short_title": "Warn before a run starts when the slicer merge drivers are not configured",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19825,6 +19825,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 480 plan.merge-driver-warning = warn.",
           "created_at": "2026-11-18T22:23:32Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "bc40248e-f697-4aa6-bc06-56dd0b6ebb43",
+          "kind": "",
+          "text": "**2026-11-19** — Run plans warn before the start when the slicer merge drivers are not configured: planRun appends the doctor-worded merge drivers warning (or merge drivers: ERR), the TUI launch confirm shows it by the check line so 80x24 does not clip it, and it never refuses the start. Full suite, go vet, slicer check and adj lint pass.",
+          "created_at": "2026-11-19T14:54:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19851,7 +19865,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

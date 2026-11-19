@@ -826,6 +826,16 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		_, err := os.Stat(filepath.Join(proj.Path, name))
 		return err == nil
 	})
+	// S348 (adj 480): missing slicer merge drivers show in the plan, before
+	// the start, as ork doctor words them. A warning never refuses the
+	// start, and the plan does not run slicer setup-git (adj 289).
+	if info, err := os.Stat(proj.Path); err == nil && info.IsDir() {
+		if missing, err := engine.MissingMergeDrivers(ctx, proj.Path, d.runs.deps.GitBin); err != nil {
+			plan.Warnings = append(plan.Warnings, fmt.Sprintf(engine.MissingDriversPrefix+": %v", err))
+		} else if len(missing) > 0 {
+			plan.Warnings = append(plan.Warnings, engine.MissingDriversWarning(missing))
+		}
+	}
 	// S295 (*proposed*): a check command that cannot run in the project's
 	// folder shows in the plan, before the start. The worktree does not exist
 	// yet, so the main checkout's folder stands in for the folder the check

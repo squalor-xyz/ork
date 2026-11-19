@@ -59,6 +59,17 @@ func MissingMergeDrivers(ctx context.Context, dir, git string) ([]string, error)
 	return missing, nil
 }
 
+// MissingDriversPrefix starts both plan warnings about merge drivers, `merge
+// drivers missing: ...` and `merge drivers: ERR`, so the TUI launch confirm can
+// show either by the check line (S348).
+const MissingDriversPrefix = "merge drivers"
+
+// MissingDriversWarning is the text for unconfigured merge drivers. ork doctor
+// and the run plan word it the same way (S328, S348).
+func MissingDriversWarning(names []string) string {
+	return MissingDriversPrefix + " missing: " + strings.Join(names, ", ") + " (fix: run the lines slicer setup-git prints)"
+}
+
 // ShellWord quotes s for a shell only when it needs it.
 func ShellWord(s string) string {
 	plain := s != ""

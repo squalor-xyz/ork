@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-470 items · — 55 · done 336 · retired 79
+470 items · — 54 · done 337 · retired 79
 
 ## v1.3
 
@@ -126,7 +126,7 @@ v1.2
 | 69 | [S345](slices/S345.md) | Implementer presets allow moving and removing files (with S440) | S | 1 |  |  | done |
 | 70 | [S346](slices/S346.md) | A paused run cannot get the permission it was denied without stopping every run in the project | M | 2 |  |  | — |
 | 71 | [S347](slices/S347.md) | Launch commit leaves orphan index entries | S | 1 |  | 2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported "S345: marked as having a slice, but no file exists" and the same for S346. ork's launch commits a56c3f8 (S123) and d5880ab (S343) took main's whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items' slice files. | done |
-| 72 | [S348](slices/S348.md) | Warn before a run starts when the slicer merge drivers are not configured | S | 1 |  |  | — |
+| 72 | [S348](slices/S348.md) | Warn before a run starts when the slicer merge drivers are not configured | S | 1 |  |  | done |
 | 73 | [S349](slices/S349.md) | Retry of a stopped run skips the implementer and goes straight to checks and the gate | S | 1 |  |  | — |
 | 74 | [S350](slices/S350.md) | Implementer has no way to remove a file it created by mistake | S | - |  | Merged into S440 (implementer may remove a file: one it created by mistake or one the slice moved code out of), 2026-11-18 duplicate sweep | retired |
 | 75 | [S351](slices/S351.md) | Landing commits the owner's uncommitted edits on main into its tracking commit | S | 1 |  |  | — |

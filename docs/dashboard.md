@@ -2039,7 +2039,11 @@ the same `note: TEXT` line after them. *Proposed* (S265): a plan with an
 empty check command shows `check: none`, and a plan with setup `warnings`
 (`engine.SetupWarnings`) shows a `warning: TEXT` line for each in the warning
 colour, wrapped to the pane, after the role rows and before the note (`ork run`
-prints the same lines). With no check command the daemon refuses the start
+prints the same lines). *Proposed (S348, adj 480):* a missing merge drivers
+warning (`merge drivers missing: NAME (fix: ...)`, or `merge drivers: ERR`)
+shows by the check line, not after the roles, where a plan with ui and
+architect rows clips it at 80x24, and is said once; `ork run` and `ork wave
+start` print every warning in their plan text. With no check command the daemon refuses the start
 (adj 191), so the confirm shows, in the warning colour (plain in mono) just
 under the `check: none` line, `refused: PROJECT has no check command, so only
 slicer check would run.`, `fix: ork projects set PROJECT --check CMD` and

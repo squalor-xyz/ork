@@ -192,7 +192,7 @@ func checkProject(ctx context.Context, p registry.Project, source string) projec
 			check.addFinding("merge drivers: %v", err)
 		} else if len(missing) > 0 {
 			check.missingDrivers = missing
-			check.addFinding("merge drivers missing: %s (fix: run the lines slicer setup-git prints)", strings.Join(missing, ", "))
+			check.addFinding("%s", engine.MissingDriversWarning(missing))
 		}
 		for _, warning := range engine.SetupWarnings(p, func(name string) bool {
 			_, err := os.Stat(filepath.Join(p.Path, name))
