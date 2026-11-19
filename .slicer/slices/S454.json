@@ -1,0 +1,41 @@
+{
+  "id": "S454",
+  "title": "The landing's tracking commit takes the slice files that the index lists",
+  "lead": [
+    "When ork commits uncommitted tracking edits on main before a landing, it also commits the untracked slice files and renders that `.slicer/index.json` lists, as the start-time commit already does, so main never holds an index whose slice files are untracked."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-18: commit f197f7dc \"Tracking edits on main before landing S418\" committed `.slicer/index.json` with S452 and S453 in it but left `.slicer/slices/S452.json`, `.slicer/slices/S453.json` and their renders untracked on main; the S418 worktree then failed `slicer check` and the run paused asking where the bodies were (run ork-20261118-225521-b892). The same happened with S446/S447 (S444) and S450 earlier the same day.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Tool feedback files slices on main while runs work. The start-time commit (`internal/engine/landdirty.go:122-155`) adds the untracked `.slicer/slices/ID.json` and `.slicer/render/slices/ID.md` that slicer lists; the landing-time commit in `checkMain` (`internal/engine/landdirty.go:166-188`) commits only the dirty files that overlap the slice, so the index goes in without the new files. Every later worktree that merges main then fails `slicer check`, and the orchestrator fixes it by hand. Seen three times on 2026-11-18 (S444, S439, S418)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/landdirty.go:110-188` (share the untracked-listed-files step between the start and landing commits)\n- `internal/engine/landdirty_test.go`\n- `docs/design.md` (landing: the tracking commit on main)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestLandingTrackingCommitTakesListedUntrackedSlices` in `internal/engine/landdirty_test.go`: main has a modified `.slicer/index.json` that lists S900 and an untracked `.slicer/slices/S900.json` and `.slicer/render/slices/S900.md`; the slice branch also changed `.slicer/index.json`. `checkMain` with commit true commits all three files. Red today: only the index is committed.\n- `TestLandingTrackingCommitLeavesUnlistedUntrackedFiles`: an untracked `.slicer/slices/S901.json` that slicer does not list, and an untracked `notes.txt`, stay untracked. Guard."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. Move the start-time step that adds the untracked slice files and renders slicer lists into a helper, and call it from `checkMain` when `.slicer/index.json` is among the tracking files it commits.\n3. Docs: `docs/design.md` landing section says the landing's tracking commit includes the listed new slice files. Changelog entry with `slicer changelog add S454 --text \"...\"`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- After a landing's tracking commit, every slice that `.slicer/index.json` lists on main has its slice file and render committed.\n- Untracked files that slicer does not list stay untracked.\n\nCommands:\n- `go test ./internal/engine -run 'TestLandingTrackingCommit' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"Landing tracking commit takes the slice files the index lists\"."
+    }
+  ],
+  "notes": []
+}

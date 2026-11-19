@@ -1,0 +1,39 @@
+{
+  "id": "S453",
+  "title": "Resume the gate without Claude Code plan mode until S418 lands in the daemon binary",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261118-225521-b892, project ork, item S418:\n\nResume the gate without Claude Code plan mode until S418 lands in the daemon binary\n\nEvidence: this resumed gate session (run ork-20261118-225521-b892) again carried the plan-mode ExitPlanMode instruction the slice removes"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

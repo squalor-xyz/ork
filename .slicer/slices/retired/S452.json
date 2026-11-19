@@ -1,0 +1,39 @@
+{
+  "id": "S452",
+  "title": "Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-225521-b892, project ork, item S418:\n\nStart the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored\n\nEvidence: this reviewer session (run ork-20261118-225521-b892) started in plan mode demanding ExitPlanMode and a plan file, the conflict S418 fixes; this run predates the fix landing"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
