@@ -24847,8 +24847,8 @@
     },
     {
       "id": "S458",
-      "title": "allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it",
-      "short_title": "allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it",
+      "title": "Read-only roles may run adj lint",
+      "short_title": "Read-only roles may run adj lint",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -24870,7 +24870,7 @@
       ],
       "claim": null,
       "fields": {
-        "size": "",
+        "size": "S",
         "flags": [],
         "trees": [],
         "trees_literal": false,

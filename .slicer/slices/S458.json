@@ -1,10 +1,10 @@
 {
   "id": "S458",
-  "title": "allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it",
+  "title": "Read-only roles may run adj lint",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
-  "size": "",
+  "size": "S",
   "flags": [],
   "trees_note": "",
   "trees_plural": false,
@@ -16,23 +16,23 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/perm.go:20-33` (`LocalReadOnlyAllowlist`)\n- `internal/engine/perm_test.go`\n- `docs/design.md` (the read-only allowlist)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "Owner decision adj 499 (`roles.read-only-adj-lint` = add, 2026-11-19).\n\n- `TestReadOnlyAllowlistIncludesAdjLint` in `internal/engine/perm_test.go`: `LocalReadOnlyAllowlist()` contains `Bash(adj lint*)`. Red today.\n- Update any test that pins the exact read-only list (for example in `internal/engine/perm_test.go`, `internal/daemon/runner_test.go` or `internal/agent/claude/args_test.go`) to the new list."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. Write the failing test and see it red.\n2. Add `Bash(adj lint*)` after `Bash(adj check*)` in `LocalReadOnlyAllowlist`.\n3. Docs: `docs/design.md` read-only allowlist lists adj lint, citing adj 499. Changelog entry with `slicer changelog add S458 --text \"...\"`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- A read-only role (local or cloud Claude) may run adj lint, including with --root after the subcommand.\n\nCommands:\n- `go test ./internal/engine -run TestReadOnlyAllowlistIncludesAdjLint -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",
-      "body": ""
+      "body": "One commit on the slice branch, message \"S458: read-only roles may run adj lint\"."
     }
   ],
   "notes": []
