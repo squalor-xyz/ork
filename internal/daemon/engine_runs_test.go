@@ -4,11 +4,13 @@ package daemon
 
 import (
 	"encoding/json"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
+	"github.com/squalor-xyz/ork/internal/engine"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
@@ -129,6 +131,82 @@ func TestStatusCountsHeldItems(t *testing.T) {
 	b, _ := json.Marshal(ps)
 	if !strings.Contains(string(b), `"needs_you":1`) {
 		t.Fatalf("held item absent from needs_you: %s", b)
+	}
+}
+
+// statusSpecEntry is a spec cache entry made against the spec the fake slicer
+// shows for every item (S340).
+func statusSpecEntry(t *testing.T, e specEntry) specEntry {
+	t.Helper()
+	fp, err := engine.SpecFingerprint([]byte(`{"title":"Title","slice":{"sections":[{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if e.fingerprint == "" {
+		e.fingerprint = fp
+	}
+	return e
+}
+
+func statusOf(t *testing.T, d *Daemon) ProjectStatus {
+	t.Helper()
+	var out StatusResult
+	if err := json.Unmarshal(request(t, d, "status", `{"project":"p"}`), &out); err != nil {
+		t.Fatal(err)
+	}
+	return out.Projects[0]
+}
+
+// Open spec questions are needs-you, listed by item (S340, adj 475).
+func TestStatusCountsOpenSpecQuestions(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	before := statusOf(t, d).NeedsYou
+	two := []engine.SpecQuestion{{Key: "a.b", Text: "one?"}, {Key: "c.d", Text: "two?"}}
+	d.runs.mu.Lock()
+	d.runs.specs[specKey(p.Name, "S1")] = statusSpecEntry(t, specEntry{questions: two})
+	d.runs.specs[specKey(p.Name, "S2")] = statusSpecEntry(t, specEntry{ready: true})
+	d.runs.specs[specKey(p.Name, "S3")] = statusSpecEntry(t, specEntry{fingerprint: "an older spec", questions: two})
+	d.runs.specs[specKey(p.Name, "S4")] = statusSpecEntry(t, specEntry{})
+	d.runs.specs[specKey("other", "S5")] = statusSpecEntry(t, specEntry{questions: two})
+	d.runs.mu.Unlock()
+	got := statusOf(t, d)
+	if got.NeedsYou != before+2 {
+		t.Fatalf("needs_you=%d, want %d", got.NeedsYou, before+2)
+	}
+	want := []SpecQuestions{{Item: "S1", Keys: []string{"a.b", "c.d"}, List: "ork wave start p S1 --questions"}}
+	if !reflect.DeepEqual(got.SpecQuestions, want) {
+		t.Fatalf("spec_questions=%+v, want %+v", got.SpecQuestions, want)
+	}
+	if b := request(t, d, "status", `{"project":"p"}`); !strings.Contains(string(b), `"spec_questions":[{"item":"S1","keys":["a.b","c.d"],"list":"ork wave start p S1 --questions"}]`) {
+		t.Fatalf("status JSON lacks spec_questions: %s", b)
+	}
+}
+
+// A question with no key is addressed by its place, as ork wave start does.
+func TestStatusSpecQuestionsNumberKeylessQuestions(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	d.runs.mu.Lock()
+	d.runs.specs[specKey(p.Name, "S1")] = statusSpecEntry(t, specEntry{questions: []engine.SpecQuestion{{Text: "one?"}, {Key: "c.d", Text: "two?"}}})
+	d.runs.mu.Unlock()
+	got := statusOf(t, d).SpecQuestions
+	if len(got) != 1 || !reflect.DeepEqual(got[0].Keys, []string{"#1", "c.d"}) {
+		t.Fatalf("spec_questions=%+v, want keys #1 and c.d", got)
+	}
+}
+
+// An item held on an open adj record counts through that record (S340).
+func TestStatusSpecQuestionsWaitingOnAdjAreNotCounted(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	before := statusOf(t, d).NeedsYou
+	d.runs.mu.Lock()
+	d.runs.specs[specKey(p.Name, "S1")] = statusSpecEntry(t, specEntry{waitsOn: []int{7}, questions: []engine.SpecQuestion{{Key: "a.b", Text: "one?"}}})
+	// The control: an item that waits on nothing is counted, so the test cannot
+	// pass for want of the field.
+	d.runs.specs[specKey(p.Name, "S2")] = statusSpecEntry(t, specEntry{questions: []engine.SpecQuestion{{Key: "e.f", Text: "two?"}}})
+	d.runs.mu.Unlock()
+	got := statusOf(t, d)
+	if got.NeedsYou != before+1 || len(got.SpecQuestions) != 1 || got.SpecQuestions[0].Item != "S2" {
+		t.Fatalf("needs_you=%d (was %d), spec_questions=%+v; want only S2: an item that waits on adj is not counted twice", got.NeedsYou, before, got.SpecQuestions)
 	}
 }
 
