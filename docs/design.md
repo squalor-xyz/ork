@@ -1431,6 +1431,17 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
     nothing new. The entry gets `filed` (the item id) and `filed_at`. The
     writes are logged in `writes[]` like any other slicer write
     (`FileToolFeedback`, `internal/engine/toolfeedback.go`).
+  - **Possible duplicates** (adj 493 `feedback.near-duplicates`, alongside
+    adj 414's exact-key rule). After a safe-kind entry files a new slice, ork
+    lists the target project's unfinished items and adds one note on the new
+    slice: `possible duplicate of ID, ID`. Matches are stored in the entry's
+    `near` ids. Titles use word-set Jaccard similarity at or above 0.5:
+    lower-case ASCII letters and digits, split at all other runes, dropping
+    one-letter words and a fixed short stop-word list. Self, done and retired
+    items are excluded; matches keep list order. Exact-key repeats add no
+    duplicate note. Wording alone cannot detect every duplicate. A failed list
+    or note leaves the slice filed, records `file_error`, and never stops the
+    run (adj 413); ork does not retire matches.
   - **Failure.** Filing is advisory. A failed call is written on the entry as
     `file_error`; it never pauses, fails or stops the run, and a failed entry is
     not filed again by a later repeat in the same run.

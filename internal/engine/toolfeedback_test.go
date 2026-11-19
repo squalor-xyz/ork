@@ -16,7 +16,91 @@ import (
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 )
+
+func nearFeedbackRun(t *testing.T, title string, listExit, noteExit int) (*harness, runrec.Record, string) {
+	t.Helper()
+	root := filepath.Join(t.TempDir(), "target")
+	rows, _ := json.Marshal([]slicercli.Item{{ID: "S419", Title: near419, Status: "open"}})
+	h, e := toolFeedbackRun(t, root, func(o *harnessOpts) {
+		fileRoutes("S900")(o)
+		o.routes = append(o.routes,
+			clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", root}, Stdout: string(rows), Exit: listExit},
+			clitest.Route{Tool: "slicer", Args: []string{"note", "S900"}, Prefix: true, Stdout: `{}`, Exit: noteExit},
+		)
+	}, "tool feedback: 1. reviewer | tool: slicer | kind: friction | proposal: "+title+" | evidence: measured pair")
+	return h, requireState(t, e, runrec.StateAwaitingApproval), root
+}
+
+func checkNearFeedback(t *testing.T, h *harness, rec runrec.Record, root string, wantNear bool) {
+	t.Helper()
+	wantList := []string{"list", "--json", "--lean", "--root", root}
+	var found bool
+	for _, call := range h.calls("slicer", "list") {
+		found = found || reflect.DeepEqual(call, wantList)
+	}
+	if !found {
+		t.Error("missing target slicer list call")
+	}
+	if len(rec.ToolFeedback) != 1 || rec.ToolFeedback[0].Filed != "S900" {
+		t.Errorf("filing lost: %+v", rec.ToolFeedback)
+	}
+	raw, err := os.ReadFile(filepath.Join(h.store.RunDir(rec.ID), "run.json"))
+	var disk struct {
+		ToolFeedback []map[string]json.RawMessage `json:"tool_feedback"`
+	}
+	if err != nil || json.Unmarshal(raw, &disk) != nil || len(disk.ToolFeedback) != 1 {
+		t.Fatalf("read persisted feedback: %s, %v", raw, err)
+	}
+	var gotNear []string
+	if rawNear, ok := disk.ToolFeedback[0]["near"]; ok {
+		if err := json.Unmarshal(rawNear, &gotNear); err != nil {
+			t.Fatal(err)
+		}
+	}
+	var want []string
+	if wantNear {
+		want = []string{"S419"}
+	}
+	if !reflect.DeepEqual(gotNear, want) {
+		t.Errorf("persisted near = %v, want %v", gotNear, want)
+	}
+	var notes [][]string
+	for _, call := range h.calls("slicer", "note") {
+		if len(call) > 1 && call[1] == "S900" {
+			notes = append(notes, call)
+		}
+	}
+	if wantNear {
+		wantNote := []string{"note", "S900", "--text=possible duplicate of S419", "--render", "--json", "--root", root}
+		if !reflect.DeepEqual(notes, [][]string{wantNote}) {
+			t.Errorf("notes = %q, want %q", notes, wantNote)
+		}
+	} else if len(notes) != 0 {
+		t.Errorf("unexpected notes: %q", notes)
+	}
+}
+
+func TestToolFeedbackNearDuplicateIsNotedOnTheNewSlice(t *testing.T) {
+	h, rec, root := nearFeedbackRun(t, near438, 0, 0)
+	checkNearFeedback(t, h, rec, root, true)
+}
+
+func TestToolFeedbackWithNoNearDuplicateAddsNoNote(t *testing.T) {
+	h, rec, root := nearFeedbackRun(t, "capture dashboard screenshots", 0, 0)
+	checkNearFeedback(t, h, rec, root, false)
+}
+
+func TestToolFeedbackListFailureStillFiles(t *testing.T) {
+	h, rec, root := nearFeedbackRun(t, near438, 3, 0)
+	checkNearFeedback(t, h, rec, root, false)
+}
+
+func TestToolFeedbackNearDuplicateNoteFailureStillFiles(t *testing.T) {
+	h, rec, root := nearFeedbackRun(t, near438, 0, 3)
+	checkNearFeedback(t, h, rec, root, true)
+}
 
 const (
 	tf1 = "tool feedback: 1. reviewer | tool: slicer | kind: friction | proposal: show the Check line in --lean | evidence: ran slicer show S12 --lean twice"
@@ -468,7 +552,10 @@ const (
 
 func TestToolFeedbackFrictionIsFiledInTheToolsProject(t *testing.T) {
 	slicerPath := filepath.Join(t.TempDir(), "slicer")
-	h, e := toolFeedbackRun(t, slicerPath, fileRoutes("S130"), tfFriction)
+	h, e := toolFeedbackRun(t, slicerPath, func(o *harnessOpts) {
+		fileRoutes("S130")(o)
+		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", slicerPath}, Stdout: `[]`})
+	}, tfFriction)
 	rec := requireState(t, e, runrec.StateAwaitingApproval)
 	adds := h.calls("slicer", "add")
 	key := ToolFeedbackKey("slicer", "friction", "Print the run id on start")
@@ -708,6 +795,8 @@ func TestToolFeedbackRepeatAcrossRunsReturnsTheSameItem(t *testing.T) {
 		o.routes = append(o.routes,
 			clitest.Route{Tool: "slicer", Args: []string{"add"}, Prefix: true, Stdout: `{"id":"S130","existing":true,"has_slice":true}`},
 			clitest.Route{Tool: "slicer", Args: []string{"promote"}, Prefix: true, Stdout: `{"id":"S130"}`},
+			clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", slicerPath}, Stdout: `[{"id":"S419","title":"Print the run id on start","status":"open"}]`},
+			clitest.Route{Tool: "slicer", Args: []string{"note", "S130"}, Prefix: true, Stdout: `{}`},
 		)
 	}
 	h2, e2 := toolFeedbackRun(t, slicerPath, again, tfFriction)
@@ -718,6 +807,12 @@ func TestToolFeedbackRepeatAcrossRunsReturnsTheSameItem(t *testing.T) {
 	}
 	if n := len(h2.calls("slicer", "promote")); n != 0 {
 		t.Errorf("promote ran %d times for an item that has its spec", n)
+	}
+	if calls := h2.calls("slicer", "list"); len(calls) != 0 {
+		t.Errorf("exact-key repeat listed near duplicates: %q", calls)
+	}
+	if calls := h2.calls("slicer", "note"); len(calls) != 0 {
+		t.Errorf("exact-key repeat added a duplicate note: %q", calls)
 	}
 	if f := rec.ToolFeedback[0]; f.Filed != "S130" {
 		t.Errorf("entry %+v", f)

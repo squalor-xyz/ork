@@ -24257,7 +24257,7 @@
       "id": "S442",
       "title": "When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing",
       "short_title": "When a slice lists its duplicates in Why, have ork flag any other open item with a near-identical title (here S438) so the orchestrator retires it at landing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -24302,6 +24302,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "818afd17-1c78-4c3e-a9c3-2f014ba0a704",
+          "kind": "",
+          "text": "**2026-11-19** — Verified near-duplicate tool feedback titles are noted on newly filed slices at similarity 0.5 and persisted as near ids. Exact-key repeats skip listing and noting; list and note failures remain advisory. Tests, mutation evidence and documentation reviewed; gate PASS and owner approved.",
+          "created_at": "2026-11-19T12:44:42Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -24321,7 +24335,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

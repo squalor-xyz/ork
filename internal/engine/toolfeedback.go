@@ -90,6 +90,7 @@ type ToolFeedbackResult struct {
 	Key   string
 	Filed string
 	Asked int
+	Near  []string
 	Err   error
 }
 
@@ -254,6 +255,19 @@ func FileToolFeedback(ctx context.Context, d Deps, w runrec.Writer, dir string, 
 			}
 		}
 		out[i].Filed = added.ID
+		if !added.Existing {
+			items, err := d.Slicer.List(ctx, t.Project.Path)
+			if err != nil {
+				out[i].Err = fmt.Errorf("near duplicates: slicer list in %s: %w", t.Project.Name, err)
+				continue
+			}
+			out[i].Near = NearDuplicateTitles(t.Title, added.ID, items, nearDuplicateMin)
+			if len(out[i].Near) > 0 {
+				if err := d.Slicer.Note(ctx, w, t.Project.Path, added.ID, "possible duplicate of "+strings.Join(out[i].Near, ", ")); err != nil {
+					out[i].Err = fmt.Errorf("near duplicates: slicer note in %s: %w", t.Project.Name, err)
+				}
+			}
+		}
 	}
 	return out
 }
@@ -283,13 +297,16 @@ func (e *Engine) fileToolFeedback(added []ToolFeedback) {
 				if rr.ToolFeedback[i].Key != res.Key {
 					continue
 				}
+				if res.Filed != "" {
+					rr.ToolFeedback[i].Filed, rr.ToolFeedback[i].FiledAt, rr.ToolFeedback[i].Near = res.Filed, now, res.Near
+				}
 				switch {
 				case res.Err != nil:
 					rr.ToolFeedback[i].FileError = res.Err.Error()
 				case res.Asked != 0:
 					rr.ToolFeedback[i].Asked, rr.ToolFeedback[i].FileError = res.Asked, ""
 				case res.Filed != "":
-					rr.ToolFeedback[i].Filed, rr.ToolFeedback[i].FiledAt, rr.ToolFeedback[i].FileError = res.Filed, now, ""
+					rr.ToolFeedback[i].FileError = ""
 				}
 			}
 		}

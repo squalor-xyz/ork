@@ -409,6 +409,7 @@ type ToolFeedback struct {
 	FiledAt   time.Time `json:"filed_at,omitzero"`
 	FileError string    `json:"file_error,omitempty"`
 	Asked     int       `json:"asked,omitempty"`
+	Near      []string  `json:"near,omitempty"` // possible duplicate item ids (adj 493)
 }
 
 // AddToolFeedback appends entries in the order given and keeps the first
