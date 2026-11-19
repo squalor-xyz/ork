@@ -1,0 +1,39 @@
+{
+  "id": "S468",
+  "title": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261119-125602-8f8f, project ork, item S424:\n\nwhen a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)\n\nEvidence: this resumed gate brief still told me to re-run git status and git diff, because the previous rows were written by the older binary without start_tree_sha256"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
