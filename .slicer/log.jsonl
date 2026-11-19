@@ -5614,3 +5614,9 @@
 {"when": "2026-11-19T03:14:57Z", "item": "S455", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T03:17:23Z", "item": "S456", "action": "add", "from": "", "to": "open", "note": "give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly"}
 {"when": "2026-11-19T03:17:24Z", "item": "S456", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T03:22:53Z", "item": "S454", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:23:05Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:23:05Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:25:57Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:38:05Z", "item": "S454", "action": "note", "from": "", "to": "", "note": "Landing tracking commits include listed untracked slice JSON", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:38:05Z", "item": "S454", "action": "status", "from": "started", "to": "done", "note": "Landing tracking commits include listed untracked slice JSON and renders when committing the slicer index, while unlisted files remain untracked. Regression tests and mutation checks verified the behavior; gate PASS and owner approval authorize finalization.", "by": "Jon Robbins"}

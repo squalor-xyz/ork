@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/landdirty.go:110-188` (share the untracked-listed-files step between the start and landing commits)\n- `internal/engine/landdirty_test.go`\n- `docs/design.md` (landing: the tracking commit on main)"
+      "body": "- `internal/engine/landdirty.go:109-217` (`commitLaunchTracking`, `listedUntrackedSlices`, and `checkMain`; share the listed untracked slice files step)\n- `internal/engine/landdirty_test.go:68-109` (`landingTrackingIndex` and both landing tracking regression tests)\n- `docs/design.md:958-976` (landing: the tracking commit on main)"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestLandingTrackingCommitTakesListedUntrackedSlices` in `internal/engine/landdirty_test.go`: main has a modified `.slicer/index.json` that lists S900 and an untracked `.slicer/slices/S900.json` and `.slicer/render/slices/S900.md`; the slice branch also changed `.slicer/index.json`. `checkMain` with commit true commits all three files. Red today: only the index is committed.\n- `TestLandingTrackingCommitLeavesUnlistedUntrackedFiles`: an untracked `.slicer/slices/S901.json` that slicer does not list, and an untracked `notes.txt`, stay untracked. Guard."
+      "body": "- `TestLandingTrackingCommitTakesListedUntrackedSlices` in `internal/engine/landdirty_test.go`: main has a modified `.slicer/index.json` listing S900, plus its untracked slice JSON and render; the slice branch also changes the index. `checkMain` with commit true must commit exactly those three paths. Red before implementation: only the index is committed.\n- `TestLandingTrackingCommitLeavesUnlistedUntrackedFiles` in `internal/engine/landdirty_test.go`: the same landing setup additionally has unlisted `.slicer/slices/S901.json` and `notes.txt`. After `checkMain`, status must contain exactly those two untracked paths. Red before implementation: listed S900 files also remain untracked."
     },
     {
       "heading": "Implement",

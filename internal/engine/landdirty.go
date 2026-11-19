@@ -120,31 +120,13 @@ func (e *Engine) commitLaunchTracking(ctx context.Context, item string) string {
 		return oneLine("git rev-parse: " + err.Error())
 	}
 	tracking, _ := splitTracking(strings.TrimSpace(out), files)
+	listed, err := e.listedUntrackedSlices(ctx, P, tracking)
+	if err != nil {
+		return oneLine(err.Error())
+	}
 	include := map[string]bool{}
-	for _, rel := range tracking {
-		if rel == ".slicer/index.json" {
-			items, err := e.d.Slicer.List(ctx, P)
-			if err != nil {
-				return oneLine("slicer list: " + err.Error())
-			}
-			untracked, err := e.gitRead(ctx, P, "ls-files", "--others", "--exclude-standard", "-z")
-			if err != nil {
-				return oneLine("git ls-files: " + err.Error())
-			}
-			listed := map[string]bool{}
-			for _, it := range items {
-				if it.HasSlice {
-					listed[".slicer/slices/"+it.ID+".json"] = true
-					listed[".slicer/render/slices/"+it.ID+".md"] = true
-				}
-			}
-			for _, path := range strings.Split(untracked, "\x00") {
-				if listed[path] {
-					include[path] = true
-				}
-			}
-			break
-		}
+	for _, rel := range listed {
+		include[rel] = true
 	}
 	var own []string
 	for _, rel := range tracking {
@@ -156,6 +138,39 @@ func (e *Engine) commitLaunchTracking(ctx context.Context, item string) string {
 		return ""
 	}
 	return e.commitTracking(ctx, P, own, "Tracking edits on main before starting "+item)
+}
+
+// listedUntrackedSlices returns the untracked slice files and renders that
+// slicer lists, only when tracking includes the index that refers to them.
+func (e *Engine) listedUntrackedSlices(ctx context.Context, P string, tracking []string) ([]string, error) {
+	for _, rel := range tracking {
+		if rel != ".slicer/index.json" {
+			continue
+		}
+		items, err := e.d.Slicer.List(ctx, P)
+		if err != nil {
+			return nil, fmt.Errorf("slicer list: %w", err)
+		}
+		untracked, err := e.gitRead(ctx, P, "ls-files", "--others", "--exclude-standard", "-z")
+		if err != nil {
+			return nil, fmt.Errorf("git ls-files: %w", err)
+		}
+		listed := map[string]bool{}
+		for _, it := range items {
+			if it.HasSlice {
+				listed[".slicer/slices/"+it.ID+".json"] = true
+				listed[".slicer/render/slices/"+it.ID+".md"] = true
+			}
+		}
+		var files []string
+		for _, path := range strings.Split(untracked, "\x00") {
+			if listed[path] {
+				files = append(files, path)
+			}
+		}
+		return files, nil
+	}
+	return nil, nil
 }
 
 // checkMain looks at the main checkout P before the landing merges the base
@@ -183,6 +198,19 @@ func (e *Engine) checkMain(ctx context.Context, P, base, B, item string, commit 
 	}
 	if !commit {
 		return false, dirtyReason(P, files)
+	}
+	listed, err := e.listedUntrackedSlices(ctx, P, tracking)
+	if err != nil {
+		return false, oneLine(err.Error())
+	}
+	seen := map[string]bool{}
+	for _, rel := range tracking {
+		seen[rel] = true
+	}
+	for _, rel := range listed {
+		if !seen[rel] {
+			tracking = append(tracking, rel)
+		}
 	}
 	reason = e.commitTracking(ctx, P, tracking, "Tracking edits on main before landing "+item)
 	return reason == "", reason

@@ -958,7 +958,12 @@ slice.
   - If every overlapping path is a tracking file, ork commits them on the
     base branch as `Tracking edits on main before landing ID`, by name
     (`git add -A -- PATHS`, `git commit -m MSG -- PATHS`, never a pathspec of
-    `.`, so staged files stay staged). The base moved, so step 1 merges it in
+    `.`, so staged files stay staged). *Proposed (S454):* when the commit
+    includes `.slicer/index.json`, it also includes each listed item's
+    untracked slice JSON and render when `has_slice` is true, using the same
+    selection as the start-time tracking commit. Unlisted untracked files
+    stay untracked. A list or untracked-file read error pauses before staging.
+    The base moved, so step 1 merges it in
     with slicer's merge drivers and re-checks. The commit is silent: it shows
     in `git log` and the run's `writes[]`. Pathspecs are literal
     (`:(literal)PATH`), so a name with a glob character takes no other file

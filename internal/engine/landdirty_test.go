@@ -66,6 +66,48 @@ func TestLaunchTrackingListedSlices(t *testing.T) {
 	}
 }
 
+// landingTrackingIndex gives both branches index edits, with newly listed
+// slice files present only as untracked files in the main checkout.
+func landingTrackingIndex(t *testing.T) *landEnv {
+	t.Helper()
+	env := newLandEnv(t)
+	writeFile(t, filepath.Join(env.P, ".slicer/index.json"), "[]\n")
+	gitRun(t, env.P, "add", ".slicer/index.json")
+	gitRun(t, env.P, "commit", "-qm", "index base")
+	gitRun(t, env.W, "merge", "--ff-only", "main")
+	writeFile(t, filepath.Join(env.W, ".slicer/index.json"), `[{"id":"S454"}]`+"\n")
+	gitRun(t, env.W, "add", ".slicer/index.json")
+	gitRun(t, env.W, "commit", "-qm", "slice index")
+	writeFile(t, filepath.Join(env.P, ".slicer/index.json"), `[{"id":"S900","has_slice":true}]`+"\n")
+	writeFile(t, filepath.Join(env.P, ".slicer/slices/S900.json"), "{}\n")
+	writeFile(t, filepath.Join(env.P, ".slicer/render/slices/S900.md"), "# S900\n")
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", env.P}, Stdout: `[{"id":"S900","has_slice":true}]`})
+	env.e.d.Slicer = slicercli.Client{Bin: fake.Bin("slicer")}
+	return env
+}
+
+func TestLandingTrackingCommitTakesListedUntrackedSlices(t *testing.T) {
+	env := landingTrackingIndex(t)
+	committed, reason := env.e.checkMain(context.Background(), env.P, "main", item, item, true)
+	got := gitRun(t, env.P, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD")
+	want := ".slicer/index.json\n.slicer/render/slices/S900.md\n.slicer/slices/S900.json"
+	if !committed || reason != "" || got != want {
+		t.Errorf("landing committed %v, reason %q; committed paths %q, want %q", committed, reason, got, want)
+	}
+}
+
+func TestLandingTrackingCommitLeavesUnlistedUntrackedFiles(t *testing.T) {
+	env := landingTrackingIndex(t)
+	writeFile(t, filepath.Join(env.P, ".slicer/slices/S901.json"), "owner\n")
+	writeFile(t, filepath.Join(env.P, "notes.txt"), "owner\n")
+	committed, reason := env.e.checkMain(context.Background(), env.P, "main", item, item, true)
+	got := gitRun(t, env.P, "status", "--porcelain", "--untracked-files=all")
+	want := "?? .slicer/slices/S901.json\n?? notes.txt"
+	if !committed || reason != "" || got != want {
+		t.Errorf("landing committed %v, reason %q; owner status %q, want %q", committed, reason, got, want)
+	}
+}
+
 // S254: the landing looks at the main checkout before it merges, and again
 // before the fast-forward. These tests run real git in temp repos (newLandEnv).
 
