@@ -2365,12 +2365,40 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   default, which the registry replaces as a whole: `Read`, `Grep`, `Glob`,
   `Edit`, `Write`, `Bash(slicer *)`, `Bash(git status*)`, `Bash(git
   diff*)`, `Bash(git log*)` and `Bash(<check command>*)`
-  (`launch.default-allowlist`). The default also includes
+  (`launch.default-allowlist`, adj 75). The default also includes
   `Bash(go -C * test*)`, `Bash(go -C * vet*)`, `Bash(go test*)`,
   `Bash(go vet*)`, `Bash(gofmt *)`, `Bash(git -C * status*)`,
   `Bash(git -C * diff*)`, `Bash(git -C * log*)`, `Bash(adj check*)`,
   `Bash(adj lint*)`, `Bash(adj show*)` and `Bash(adj inbox*)`
-  (`engine.default-allowlist`). A registry allowlist for a read-only role is
+  (`engine.default-allowlist`, adj 94). Both presets and the built-in default
+  also include `Bash(git ls-files*)`, `Bash(git -C * ls-files*)`,
+  `Bash(git mv*)`, `Bash(git -C * mv*)`, `Bash(git rm *)`,
+  `Bash(git -C * rm *)` and `Bash(rm *)` (adj 478).
+  The approval hook checks paths before matching these patterns and
+  does not grant recursive flags through the plain `Bash(rm *)` entry.
+  Short options containing `r` or `R`, and the long recursive option, require
+  owner approval for claude-local and are denied for cloud; `--` ends option
+  parsing.
+  A cloud Claude write role runs the same hook (owner answer
+  `launch.cloud-remove-paths`, 2026-11-18): the daemon binds a session to the
+  role's worktree and allowlist and passes the hook in `--settings`, and a
+  removal outside the worktree, including through a symlink inside it, is
+  denied. For cloud the policy is paths only (owner answers
+  `launch.cloud-hook-scope` and `launch.cloud-hook-passthrough`): it denies
+  outside paths, a recursive rm, and a removal or move (`rm`, or `git` with
+  `mv`) whose paths it cannot check, such as one with a variable, a
+  substitution, a tilde or brace form, bad quoting or a second command. It
+  has no Read cap and no read-only grant for own files and never asks the
+  owner. Every other call is deferred: the hook prints no permission
+  decision, ork counts no denial, and the CLI's own allowlist and deny rules
+  decide it as they did before the hook. A cloud read-only role runs no hook. A
+  failed hook setup stops the role before it launches. When the allowlist includes
+  `Bash(rm *)`, ork also passes `--disallowedTools` patterns for recursive
+  rm options, including combined flags and options after filenames
+  (owner decision `launch.rm-guard-scope`). These conservative patterns can
+  also deny filenames containing flag-like text. Their CLI behavior is
+  unprobed; the hook is the guard that is tested.
+  A registry allowlist for a read-only role is
   an error. An allowlist denial stops an unsuccessful round; a success proceeds.
   The spike measured the claude allowlist
   denial: it exits 0 and shows only in `permission_denials`, so ork must read
@@ -2388,6 +2416,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `Bash(<check command>*)` when the command is set. `ork projects set --preset`
   writes the expanded list into the registry as plain patterns. Broader
   Python forms such as `Bash(python3 *)` are left to `--allow`.
+  Stored lists are not rewritten when presets change. Run
+  `ork projects set NAME --preset go|python` again to replace a stored list,
+  or add individual entries with `--allow implementer=PATTERN` (adj 190).
 - **Credentials:** ork uses each CLI's own login. It never reads, stores
   or passes credentials.
 
@@ -3639,7 +3670,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `--permission implementer=...` or with `--replace-allow --allow
   implementer=...` is a usage error. The text line counts the roles changed
   by `--preset` and `--allow` and names the preset applied
-  (`implementer:18 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
+  (`implementer:25 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
   first `:` ends the vendor and the first `=` ends the key) and
   `--unset-vendor-env VENDOR:KEY` removes one key, and the vendor once it is
   empty; an empty value (`VENDOR:KEY=`) is kept as an empty string. A role or a key changes alone, so a second command does not need the

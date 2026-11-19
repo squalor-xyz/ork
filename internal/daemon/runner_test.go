@@ -13,6 +13,7 @@ import (
 	"slices"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/agent/claude"
 	"github.com/squalor-xyz/ork/internal/agent/codex"
@@ -347,6 +348,232 @@ func TestClaudeRunnerGivesOnlyTheCloudUIPassAWriteDir(t *testing.T) {
 				t.Fatalf("UI pass allowlist = %q", got.Allowlist)
 			}
 		})
+	}
+}
+
+// cloudLauncher installs a fake cloud claude that records its argv, waits for
+// the release file when one is named, then prints one result. It uses shell
+// builtins only, because PATH holds nothing but its directory.
+func cloudLauncher(t *testing.T, exit int) (capture, release string) {
+	t.Helper()
+	dir := t.TempDir()
+	capture, release = filepath.Join(dir, "args"), filepath.Join(dir, "release")
+	script := "#!/bin/sh\nprintf '%s\\n' \"$@\" > \"$ORK_CAPTURE\"\nwhile [ -n \"$ORK_RELEASE\" ] && [ ! -e \"$ORK_RELEASE\" ]; do :; done\n" +
+		`printf '%s\n' '{"type":"result","subtype":"success","is_error":false,"result":"report","session_id":"cloud"}'` + "\nexit " + fmt.Sprint(exit) + "\n"
+	if err := os.WriteFile(filepath.Join(dir, "claude"), []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	t.Setenv("PATH", dir)
+	t.Setenv("ORK_CAPTURE", capture)
+	t.Setenv("ORK_RELEASE", release)
+	// A failed test must not leave the launcher spinning.
+	t.Cleanup(func() { _ = os.WriteFile(release, []byte("go"), 0600) })
+	return capture, release
+}
+
+// hookToken reads the approval session token from the --settings the cloud
+// launcher received, failing when the argv carries no hook.
+func hookToken(t *testing.T, capture string) string {
+	t.Helper()
+	b, err := os.ReadFile(capture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	actual := strings.Split(strings.TrimSuffix(string(b), "\n"), "\n")
+	i := slices.Index(actual, "--settings")
+	if i < 0 || i+1 >= len(actual) || !strings.Contains(actual[i+1], "hook pretool --socket") {
+		t.Fatalf("cloud write argv carries no approval hook: %q", actual)
+	}
+	var settings struct {
+		Hooks struct {
+			PreToolUse []struct {
+				Hooks []struct{ Command string }
+			}
+		}
+	}
+	if err := json.Unmarshal([]byte(actual[i+1]), &settings); err != nil || len(settings.Hooks.PreToolUse) != 1 || len(settings.Hooks.PreToolUse[0].Hooks) != 1 {
+		t.Fatalf("hook settings %q: %v", actual[i+1], err)
+	}
+	words := strings.Fields(settings.Hooks.PreToolUse[0].Hooks[0].Command)
+	return strings.Trim(words[len(words)-1], "'")
+}
+
+func waitFile(t *testing.T, path string) {
+	t.Helper()
+	until := time.Now().Add(5 * time.Second)
+	for time.Now().Before(until) {
+		if b, err := os.ReadFile(path); err == nil && len(b) > 0 {
+			return
+		}
+		time.Sleep(time.Millisecond)
+	}
+	t.Fatalf("%s was not written", path)
+}
+
+// The real dispatcher binds a cloud write role to the one approval policy
+// (owner answer launch.cloud-remove-paths, 2026-11-18): removals inside the
+// worktree pass and every removal outside it, by a relative path, an absolute
+// path or a symlink inside the worktree, is denied.
+func TestCloudRunnerRemovalApproval(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	d.runs.deps.Runner = nil
+	root := t.TempDir()
+	outside := t.TempDir()
+	if err := os.Symlink(outside, filepath.Join(root, "link")); err != nil {
+		t.Fatal(err)
+	}
+	capture, release := cloudLauncher(t, 0)
+	allow, err := engine.ImplementerPreset("go", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	req := engine.Request{Vendor: "claude", Role: engine.RoleImplementer, Worktree: root, TempDir: t.TempDir(), Brief: "brief", Allowlist: allow}
+	done := make(chan error, 1)
+	go func() { _, err := d.runDeps(p).Runner.Run(context.Background(), req); done <- err }()
+	waitFile(t, capture)
+	token := hookToken(t, capture)
+	for _, tc := range []struct {
+		command, want string
+	}{
+		// An ordinary removal is left to the CLI's allowlist (defer).
+		{"git rm cmd/ork/start_unix.go", claude.DecisionDefer},
+		{"rm tests/x.py.tail", claude.DecisionDefer},
+		{"rm " + filepath.Join(root, "a.go"), claude.DecisionDefer},
+		{"git -C " + root + " rm f", claude.DecisionDefer},
+		{"rm ../other/file", "deny"},
+		{"rm " + filepath.Join(outside, "file"), "deny"},
+		{"rm " + filepath.Join(root, "link", "file"), "deny"},
+		{"git -C /elsewhere rm f", "deny"},
+		{"rm -rf tests", "deny"},
+		{"rm ~/x", "deny"},
+		{"rm $HOME/x", "deny"},
+	} {
+		got, err := approvalRequest(d, context.Background(), ApprovalParams{Session: token, Call: claude.ToolCall{ToolName: "Bash", CWD: root, ToolInput: json.RawMessage(`{"command":` + quoteJSON(tc.command) + `}`)}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.Decision != tc.want {
+			t.Errorf("%s: %+v, want %s", tc.command, got, tc.want)
+		}
+	}
+	if err := os.WriteFile(release, []byte("go"), 0600); err != nil {
+		t.Fatal(err)
+	}
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+}
+
+// The cloud hook covers paths and recursive rm only (owner answers
+// launch.cloud-hook-scope and launch.cloud-hook-passthrough): the same session
+// as a claude-local role would cap the implementer's Read and turn an
+// uncovered call into an owner question. A cloud role gets neither: the hook
+// defers every call it does not deny, with no owner question and no counted
+// denial, so the CLI's own allowlist decides.
+func TestCloudRunnerHookIsPathsOnly(t *testing.T) {
+	for _, vendor := range []string{"claude", "claude-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			d, req := approvalRun(t)
+			req.Vendor = vendor
+			req.Allowlist = []string{"Read", "Bash(git status*)"}
+			long := filepath.Join(req.Worktree, "long.go")
+			if err := os.WriteFile(long, []byte(strings.Repeat("line\n", 600)), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			var token string
+			runner := claudeRunner{approval: d.prepareApproval, round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				words := strings.Fields(s.HookCommand)
+				token = strings.Trim(words[len(words)-1], "'")
+				// A 600-line Read: deferred for cloud, capped at 150 lines for claude-local.
+				want := map[string]string{"claude": claude.DecisionDefer, "claude-local": "deny"}[vendor]
+				got, err := approvalRequest(d, context.Background(), ApprovalParams{Session: token, Call: claude.ToolCall{ToolName: "Read", ToolInput: json.RawMessage(`{"file_path":` + quoteJSON(long) + `}`)}})
+				if err != nil || got.Decision != want {
+					return claude.Round{}, fmt.Errorf("%s Read: %+v, %v; want %s", vendor, got, err, want)
+				}
+				if vendor == "claude" {
+					// A call outside the allowlist, a Bash command and a tool, is
+					// deferred: neither denied nor turned into an owner question.
+					for _, call := range []claude.ToolCall{
+						{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":"make test"}`)},
+						{ToolName: "TodoWrite", ToolInput: json.RawMessage(`{"todos":[]}`)},
+					} {
+						got, err := approvalRequest(d, context.Background(), ApprovalParams{Session: token, Call: call})
+						if err != nil || got.Decision != claude.DecisionDefer {
+							return claude.Round{}, fmt.Errorf("%s: %+v, %v; want defer", call.ToolName, got, err)
+						}
+					}
+				}
+				return claude.Round{Class: claude.ClassOK}, nil
+			}}
+			got, err := runner.Run(context.Background(), req)
+			if err != nil {
+				t.Fatal(err)
+			}
+			// The cloud role's Read and uncovered calls were deferred, so no
+			// denial is counted; the claude-local Read was denied once.
+			wantDenials := map[string]int{"claude": 0, "claude-local": 1}[vendor]
+			if got.ApprovalDenials != wantDenials {
+				t.Fatalf("hook denials = %d (%+v), want %d", got.ApprovalDenials, got.Denials, wantDenials)
+			}
+		})
+	}
+}
+
+func TestCloudRunnerApprovalSessionClosesOnError(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	d.runs.deps.Runner = nil
+	capture, _ := cloudLauncher(t, 1)
+	t.Setenv("ORK_RELEASE", "")
+	req := engine.Request{Vendor: "claude", Role: engine.RoleImplementer, Worktree: t.TempDir(), TempDir: t.TempDir(), Brief: "brief", Allowlist: []string{"Bash(git status*)"}}
+	d.runDeps(p).Runner.Run(context.Background(), req) // the round fails; the error is not the point
+	token := hookToken(t, capture)
+	got, err := approvalRequest(d, context.Background(), ApprovalParams{Session: token, Call: claude.ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":"git status"}`)}})
+	if err != nil || got.Decision != "deny" || !strings.Contains(got.Reason, "no longer active") {
+		t.Fatalf("hook session after a failed round: %+v, %v", got, err)
+	}
+	d.runs.mu.Lock()
+	left := len(d.runs.approvals)
+	d.runs.mu.Unlock()
+	if left != 0 {
+		t.Fatalf("%d approval sessions remain after the round", left)
+	}
+}
+
+func TestCloudRunnerStopsWhenApprovalSetupFails(t *testing.T) {
+	setup := errors.New("no executable")
+	rounds := 0
+	r := claudeRunner{
+		approval: func(context.Context, engine.Request, []string, string) (string, func() []runrec.DeniedCommand, error) {
+			return "", nil, setup
+		},
+		round: func(context.Context, claude.Spec) (claude.Round, error) {
+			rounds++
+			return claude.Round{Class: claude.ClassOK}, nil
+		},
+	}
+	_, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: engine.RoleImplementer, Worktree: t.TempDir(), Brief: "brief", Allowlist: []string{"Read"}})
+	if !errors.Is(err, setup) || rounds != 0 {
+		t.Fatalf("err = %v, rounds = %d; want the setup error and no launch", err, rounds)
+	}
+}
+
+// A cloud read-only role never ran the hook and still does not.
+func TestCloudRunnerReadOnlyRoleHasNoApprovalHook(t *testing.T) {
+	var got claude.Spec
+	r := claudeRunner{
+		approval: func(context.Context, engine.Request, []string, string) (string, func() []runrec.DeniedCommand, error) {
+			return "hook", func() []runrec.DeniedCommand { return nil }, nil
+		},
+		round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+			got = s
+			return claude.Round{Class: claude.ClassOK}, nil
+		},
+	}
+	if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: engine.RoleReviewer, ReadOnly: true, Worktree: t.TempDir(), Brief: "brief"}); err != nil {
+		t.Fatal(err)
+	}
+	if got.HookCommand != "" {
+		t.Fatalf("cloud read-only role got hook %q", got.HookCommand)
 	}
 }
 

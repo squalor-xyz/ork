@@ -5,10 +5,60 @@ package claude
 import (
 	"reflect"
 	"slices"
+	"strings"
 	"testing"
 )
 
 const localSystemPath = "/run/tmp/local-system.md"
+
+func TestArgsCloudRemovalDenyRules(t *testing.T) {
+	for _, rule := range []string{"Bash(rm -*r*)", "Bash(rm -*R*)", "Bash(rm * -*r*)", "Bash(rm * -*R*)", "Bash(rm --recursive*)", "Bash(rm * --recursive*)"} {
+		t.Run(rule, func(t *testing.T) {
+			got, err := (Spec{Bin: "claude", Prompt: "implement", Allowlist: []string{"Bash(rm *)"}}).Args()
+			if err != nil {
+				t.Fatal(err)
+			}
+			i := slices.Index(got, "--disallowedTools")
+			if i < 0 || i+1 >= len(got) || !slices.Contains(strings.Split(got[i+1], ","), rule) {
+				t.Fatalf("cloud argv lacks deny rule %s: %q", rule, got)
+			}
+		})
+	}
+}
+
+func TestArgsCloudWriteRoleUsesApprovalHook(t *testing.T) {
+	const hook = "'/bin/ork' hook pretool --socket '/s' --session 'tok'"
+	for _, resume := range []string{"", "prior"} {
+		t.Run("resume="+resume, func(t *testing.T) {
+			got, err := (Spec{Bin: "claude", Prompt: "implement", Resume: resume, HookCommand: hook, Allowlist: []string{"Read", "Bash(rm *)"}}).Args()
+			if err != nil {
+				t.Fatal(err)
+			}
+			i := slices.Index(got, "--settings")
+			if i < 0 || i+3 != len(got) || got[i+1] != HookSettings(hook) || got[i+2] != "implement" {
+				t.Fatalf("cloud write argv lacks the bound hook settings: %q", got)
+			}
+			if slices.Contains(got, "--permission-mode") {
+				t.Fatalf("cloud write argv gained a permission mode: %q", got)
+			}
+		})
+	}
+	// A cloud role with no hook command, and a cloud read-only role, keep no hook.
+	for name, spec := range map[string]Spec{
+		"no hook":   {Bin: "claude", Prompt: "p", Allowlist: []string{"Read"}},
+		"read-only": {Bin: "claude", Prompt: "p", ReadOnly: true, HookCommand: hook, Allowlist: []string{"Read"}},
+	} {
+		t.Run(name, func(t *testing.T) {
+			got, err := spec.Args()
+			if err != nil {
+				t.Fatal(err)
+			}
+			if slices.Contains(got, "--settings") {
+				t.Fatalf("unexpected hook settings: %q", got)
+			}
+		})
+	}
+}
 
 func TestCloudClaudeReadOnlyRunsOnTheAllowlist(t *testing.T) {
 	got, err := (Spec{Bin: "claude", Prompt: "review", ReadOnly: true, Allowlist: []string{"Read", "Bash(go test*)"}}).Args()
