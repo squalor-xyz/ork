@@ -509,7 +509,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			connectionRetried = true
 		}
 	}
-	perm, err := ResolvePermission(e.proj, r.role)
+	perm, err := e.rolePermission(rec, r.role)
 	if err != nil {
 		return outcome{}, e.pauseError(r, "permissions: "+err.Error())
 	}

@@ -161,11 +161,15 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               it runs, --wait waits until it rests
   ork dismiss RUN             clear a stopped run from Needs you
   ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
+                              [--allow PATTERN ...]
                               retry a paused role or step, with an optional
                               note for the rerun; returns like answer;
                               a stopped run resumes from its worktree with
                               N more implementer rounds (default 2) and
-                              takes no TEXT; after two shape pauses in a
+                              takes no TEXT; --allow grants a tool pattern
+                              to this run's implementer only, also while
+                              other runs of the project run, and writes
+                              no registry; after two shape pauses in a
                               row a plain retry is refused: --accept-shape
                               keeps owner findings that have no options,
                               --again runs the role once more

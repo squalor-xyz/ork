@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -244,7 +245,7 @@ func TestDaemonFileLaterWire(t *testing.T) {
 		if err := json.Unmarshal(params, &a); err != nil {
 			return nil, err
 		}
-		if method != "run.file" || a != (daemon.RunAction{Run: "engine", Finding: 2}) {
+		if method != "run.file" || !reflect.DeepEqual(a, daemon.RunAction{Run: "engine", Finding: 2}) {
 			return nil, fmt.Errorf("wrong request: %s %s", method, params)
 		}
 		return daemon.RunReply{Message: "filed as S130"}, nil

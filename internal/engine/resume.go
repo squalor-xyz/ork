@@ -137,12 +137,12 @@ func (e *Engine) checkResumable(ctx context.Context, rec runrec.Record) error {
 // resets that one fix round (adj 458, adj 459). The engine must have been
 // loaded with the project as it is now, so a fixed check command takes
 // effect. The caller holds e.mu.
-func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note string, rounds []int) error {
+func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note string, rounds []int, allow []string) error {
 	if why := NotResumable(rec); why != "" {
 		return refusef("%s", why)
 	}
 	if RelandsOnRetry(rec) {
-		return e.resumeLand(ctx, rec, note, rounds)
+		return e.resumeLand(ctx, rec, note, rounds, allow)
 	}
 	grant := 2
 	if len(rounds) > 0 && rounds[0] != 0 {
@@ -184,6 +184,7 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 		r.Pending = nil
 		r.QueuedQuestions = nil
 		r.Resume = nil
+		r.Grants = mergeGrants(r.Grants, allow)
 		r.Round = round
 		r.RoundLimit = limit
 		r.Fails = 0
@@ -213,7 +214,7 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 // that run. When the run is already at the round cap, it raises the limit
 // by one and leaves the round unchanged, so that one land fix can start.
 // The caller holds e.mu.
-func (e *Engine) resumeLand(ctx context.Context, rec runrec.Record, note string, rounds []int) error {
+func (e *Engine) resumeLand(ctx context.Context, rec runrec.Record, note string, rounds []int, allow []string) error {
 	if note != "" {
 		return refusef("a stopped run resumes without a note; run ork retry %s", rec.ID)
 	}
@@ -248,6 +249,7 @@ func (e *Engine) resumeLand(ctx context.Context, rec runrec.Record, note string,
 		r.Pending = nil
 		r.QueuedQuestions = nil
 		r.Resume = nil
+		r.Grants = mergeGrants(r.Grants, allow)
 		r.RoundLimit = limit
 		r.LandFixes = 0
 		r.LandRecheck = true

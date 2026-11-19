@@ -2966,3 +2966,29 @@ func TestProjectsSetPresetFlag(t *testing.T) {
 		t.Fatalf("unknown preset: exit %d: %q", code, stderr)
 	}
 }
+
+// S346 (*proposed*; adj 479): ork retry RUN --allow PATTERN.
+
+func TestRetryAllowSendsEachPattern(t *testing.T) {
+	calls, code, _, stderr := ownerCalls(t, "retry", "r1", "--allow", "Bash(git mv*)", "--allow", "Bash(git rm *)")
+	if want := `run.retry {"run":"r1","allow":["Bash(git mv*)","Bash(git rm *)"],"no_wait":true}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
+		t.Errorf("retry --allow: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
+	}
+	// Only retry takes it.
+	if calls, code, _, _ := ownerCalls(t, "answer", "r1", "text", "--allow", "Bash(git mv*)"); code != ExitUsage || len(calls) != 0 {
+		t.Errorf("answer --allow: code %d, calls %q, want a usage error", code, calls)
+	}
+}
+
+func TestRetryAllowRefusesABadPattern(t *testing.T) {
+	for name, pattern := range map[string]string{"empty": "", "blank": "  ", "newline": "Bash(git mv*)\nRead", "NUL": "Bash(git\x00 mv*)"} {
+		calls, code, _, stderr := ownerCalls(t, "retry", "r1", "--allow", pattern)
+		if code != ExitUsage || len(calls) != 0 || !strings.Contains(stderr, "--allow") {
+			t.Errorf("%s pattern: code %d, calls %q, stderr %q, want a usage error naming --allow and no call", name, code, calls, stderr)
+		}
+	}
+	// One bad pattern among good ones sends nothing.
+	if calls, code, _, _ := ownerCalls(t, "retry", "r1", "--allow", "Bash(git mv*)", "--allow", ""); code != ExitUsage || len(calls) != 0 {
+		t.Errorf("a bad pattern after a good one: code %d, calls %q", code, calls)
+	}
+}

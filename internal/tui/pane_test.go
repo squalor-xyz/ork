@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -606,7 +607,7 @@ func TestAnswerAdjErrorKeepsTextAndDoesNotResume(t *testing.T) {
 	live := h.m.cfg.Live.(*actionLive)
 	live.err = &ipc.Error{Code: "io", Message: "disk full verbatim"}
 	h.deliver(press("enter"))
-	if live.answerRequest != (daemon.RunAction{Run: "engine", Text: "use local storage", Adj: true, By: "caller"}) {
+	if !reflect.DeepEqual(live.answerRequest, daemon.RunAction{Run: "engine", Text: "use local storage", Adj: true, By: "caller"}) {
 		t.Fatalf("request: %+v", live.answerRequest)
 	}
 	if h.m.pane.input.Value() != "use local storage" || !strings.Contains(h.m.actionStatus, "io: disk full verbatim") {
@@ -629,7 +630,7 @@ func TestPaneAdjAnswerWire(t *testing.T) {
 		if err := json.Unmarshal(params, &a); err != nil {
 			return nil, err
 		}
-		if method != "run.answer" || a != (daemon.RunAction{Run: "engine", Text: "yes", Adj: true, By: "caller"}) {
+		if method != "run.answer" || !reflect.DeepEqual(a, daemon.RunAction{Run: "engine", Text: "yes", Adj: true, By: "caller"}) {
 			return nil, fmt.Errorf("wrong request: %s %s", method, params)
 		}
 		return daemon.RunReply{Message: "storage.engine already decided as #21; not changed"}, nil
@@ -1013,7 +1014,7 @@ func TestAdjToggleFilesTheOptionAsTheDecisionText(t *testing.T) {
 	h.deliver(press("y"))
 	h.deliver(press("y"))
 	live := h.m.cfg.Live.(*actionLive)
-	if live.answerRequest != (daemon.RunAction{Run: "engine", Text: "use: local storage", Adj: true, By: "owner"}) {
+	if !reflect.DeepEqual(live.answerRequest, daemon.RunAction{Run: "engine", Text: "use: local storage", Adj: true, By: "owner"}) {
 		t.Fatalf("answer: %+v", live.answerRequest)
 	}
 	if h.m.byName["ork"].snap.EngineRuns[0].State != "implement" {

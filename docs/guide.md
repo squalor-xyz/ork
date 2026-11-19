@@ -284,6 +284,20 @@ no Read cap (`launch.cloud-hook-scope`, `launch.cloud-hook-passthrough`).
 Cloud Claude also receives conservative
 recursive rm deny rules; their runtime behavior is unprobed.
 
+*Proposed (S346; adj 479):* when a run's implementer was denied a call that you
+want to allow (`ork show RUN` names the denied calls), retry the run with the
+pattern: `ork retry RUN --allow "Bash(git mv*)"`. Repeat `--allow` to grant
+several. The grant goes to that run's implementer only (and the lead or parts of
+a split run, less the slicer writes for a part); the reviewer, the gate and the
+other read-only roles stay read-only, other runs of the project do not get it,
+and the registry is not written. It works on a paused run and on a stopped run
+you resume, also while other runs of the project are running. The run keeps the
+grant for its later rounds; `ork show RUN` lists it as `granted: ...`. A blank
+pattern, or one with a newline or a NUL byte, is refused before anything
+changes, and so is a project whose implementer is `read-only`. To change the
+default for every run, use `ork projects set --allow implementer=PATTERN`; it is
+refused while the project has an unfinished run, so set it once none is left.
+
 A role or a vendor key changes alone, so you do not retype the others. ork's
 text output and error messages name vendor variables and never print their
 values; `--json` prints the project as the registry holds it, values included.
@@ -1039,6 +1053,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork approve RUN [--later-checks]
     ork approve WAVE-ID
     ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
+              [--allow PATTERN ...]
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N
