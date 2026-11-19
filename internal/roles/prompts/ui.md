@@ -56,7 +56,7 @@ ork shows the owner the views the diff changes on the approval card, so the owne
 sees them without opening a terminal. You produce them with the project's own
 tooling (its `AGENTS.md`, its UI tests and view snapshots say how); ork has no render
 code of its own. Do not add a render path to the tree. For each view the diff adds
-or changes, write plain text files in `{{temp_dir}}/renders/`:
+or changes, write plain text files in `{{renders_dir}}/`:
 
 - `VIEW-80x24.txt`: the view at 80 columns by 24 rows.
 - `VIEW-120x40.txt`: the view at 120 columns by 40 rows.

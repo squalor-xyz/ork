@@ -5590,6 +5590,19 @@
 {"when": "2026-11-18T22:31:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "note", "from": "", "to": "", "note": "Correction 2026-11-18: the owner clicked 'List at landing' b", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:11:38Z", "item": "S437", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:12:54Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:12:54Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T23:13:30Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:13:30Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T02:51:57Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T02:51:57Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:04:46Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:04:46Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:04:46Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T03:18:46Z", "item": "S437", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S437):", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:18:50Z", "item": "S437", "action": "note", "from": "", "to": "", "note": "Verified: role runs get a separate process TMPDIR under STAT", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:18:51Z", "item": "S437", "action": "status", "from": "started", "to": "done", "note": "Verified: role runs get a separate process TMPDIR under STATE/t/<run-key>/<round-key> (62 bytes with the default state root), created mode 0700 before launch and removed with the run at retention. Claude and Codex get it as TMPDIR with only that directory added to sandbox and approval grants; asset, render and Go cache paths are unchanged. Six new tests pass, as do vet, gofmt, the full suite and slicer check in the gate. The socket acceptance run in a real role launch awaits the next-run human check.", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:55:47Z", "item": "S418", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-18T22:56:01Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-18T22:56:01Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Failing tests"}

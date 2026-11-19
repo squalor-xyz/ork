@@ -39,6 +39,7 @@ type BriefInput struct {
 	SliceID      string
 	Worktree     string
 	TempDir      string
+	TMPDir       string // process temporary directory; empty uses TempDir
 	ReportPath   string
 	SliceJSON    string   // `slicer show ID --json --lean`
 	EnvLines     []string // the project's environment lines, verbatim
@@ -103,10 +104,15 @@ func BuildBrief(in BriefInput) (string, error) {
 		line, rest, _ := strings.Cut(prompt, "\n")
 		prompt = line + "\n\n## Tool rules\n\nAllowed forms, verbatim: " + strings.Join(in.Allow, "; ") + "; any other command is denied. Run one plain command per call; no pipes, no && or ;, no command substitution, no cd, no env prefix unless an entry allows it. Change files with the Edit and Write tools only.\n\n## Note first\n\nWrite your progress note now to `" + in.ProgressFile + "` with Edit or Write, before reading any file. This exact file is an exception to the workspace limit. Record done, next and open problems, even when nothing is done yet. After each step, update the note. Append an anchor log every few reads (`file:line symbol: purpose`); keep existing anchors when updating the note. ork may start a fresh session past 70,000 context tokens; the note preserves your work.\n" + rest
 	}
+	processTemp := in.TMPDir
+	if processTemp == "" {
+		processTemp = in.TempDir
+	}
 	prompt = strings.NewReplacer(
 		"{{slice_id}}", in.SliceID,
 		"{{worktree}}", in.Worktree,
-		"{{temp_dir}}", in.TempDir,
+		"{{temp_dir}}", processTemp,
+		"{{renders_dir}}", filepath.Join(in.TempDir, "renders"),
 		"{{report_path}}", in.ReportPath,
 	).Replace(prompt)
 	if i := strings.Index(prompt, "{{"); i >= 0 {
@@ -145,6 +151,7 @@ func BuildBrief(in BriefInput) (string, error) {
 		b.WriteString("\n")
 	}
 	if in.Role == RoleUI {
+		fmt.Fprintf(&b, "The UI renders directory `%s` is also an exception to the workspace limit. Keep renders there, separately from TMPDIR.\n\n", filepath.Join(in.TempDir, "renders"))
 		if (in.Vendor == "claude" || in.Vendor == "claude-local") && len(in.UIPassSkills) > 0 {
 			fmt.Fprintf(&b, "## Skills\n\nLoad these skills for the UI pass: %s. If one is not available, say so in your report and go on.\n\n", strings.Join(in.UIPassSkills, ", "))
 		}
@@ -158,9 +165,9 @@ func BuildBrief(in BriefInput) (string, error) {
 	if in.ReadOnly {
 		// A read-only role cannot write the report path; ork saves its final
 		// message there (adj 27, role.report-io; S256, *proposed*).
-		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s (ork saves your final message there; you cannot write it)\nGive your whole report as your final message, as plain text. Do not wrap it or any part of it in a code fence.\n\n", in.TempDir, in.ReportPath)
+		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s (ork saves your final message there; you cannot write it)\nGive your whole report as your final message, as plain text. Do not wrap it or any part of it in a code fence.\n\n", processTemp, in.ReportPath)
 	} else {
-		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", in.TempDir, in.ReportPath)
+		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", processTemp, in.ReportPath)
 	}
 	if in.Resumed {
 		b.WriteString("## Resumed session\n\nork resumed your earlier session. The worktree may have changed since your last report. Before you judge or change anything, run git status and git diff again and read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n")

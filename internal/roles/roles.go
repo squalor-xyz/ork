@@ -14,7 +14,8 @@
 //	{{temp_dir}}    the role's own temp directory
 //	{{report_path}} the file where the role writes its final report
 //
-// Every prompt names {{report_path}} and {{temp_dir}}.
+// Every prompt names {{report_path}} and {{temp_dir}}. The UI prompt also uses
+// {{renders_dir}}, the stable run asset path independent of process TMPDIR.
 package roles
 
 import (

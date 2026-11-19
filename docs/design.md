@@ -2279,7 +2279,10 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   the tool call cannot replace them. Hard rules run before allowlist rules:
   paths must stay in the worktree, the exact progress-note file,
   this Claude session's `tool-results/` directory,
-  the assigned role temp directory, or its exact report file. The report
+  the assigned role asset directory, its assigned process TMPDIR, or its
+  exact report file. Slice-run TMPDIRs use `STATE/t/<run-key>/<round-key>/`
+  (S437, adj 491); only that round's directory is an exception, not its
+  parent or siblings. The report
   exception does not permit its parent directory or sibling files. These
   path exceptions retain the role allowlist and the Read cap.
   The progress-note exception does not permit its parent directory,
@@ -2399,9 +2402,16 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   The model reported the write outside them denied with "operation not
   permitted"; that write has no command event, and `.repo-status` is empty.
   If no worktree is set, the array contains only TEMP. Read-only roles get neither extra writable-root setting.
+  Slice rounds also grant their separate process TMPDIR: another
+  `--add-dir TMPDIR` on a fresh write round, or TMPDIR between TEMP and
+  WORKTREE in the resumed writable roots. These grants do not include the
+  state root or another role's directory (S437, adj 491).
   When the role has a temp directory, its environment sets `GOCACHE` to
-  `TEMP/gocache` and `TMPDIR` to `TEMP` (S271, *proposed*), replacing any
-  inherited value of either and keeping other entries.
+  `TEMP/gocache` and `TMPDIR` to its process temp directory, replacing any
+  inherited value of either and keeping other entries. In slice runs the
+  process TMPDIR is the short state-root path documented in `docs/state.md`;
+  otherwise it remains TEMP. The engine creates it mode 0700 before launch,
+  and retention removes it with its run (S437, adj 491).
   JSONL thread, item and turn events supply the session, last agent
   message, command lifecycle events and usage. Input plus output tokens
   form the total. Whether cached input and reasoning output are subsets
@@ -2471,11 +2481,18 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   <level>` is listed by `claude --help` ("Effort level for the current
   session", claude 2.1.x). When the role has a temp directory, the process
   environment (the daemon's, plus the project's `vendor_env` for `claude`)
-  sets `TMPDIR` to it (S271, *proposed*), replacing any inherited or
+  sets `TMPDIR` to the assigned process directory (S271; S437, adj 491),
+  replacing any inherited or
   `vendor_env` value, so the role needs no `env TMPDIR=DIR` prefix and no
   `mkdir`; the engine makes the directory before the role starts
-  (`internal/engine/round.go`, `internal/engine/speccheck.go`). Whether the
-  Claude CLI's own tool shell keeps `TMPDIR` is *unverified*. The process runs in its own process group, using
+  (`internal/engine/round.go`, `internal/engine/speccheck.go`). A slice-run
+  role's process TMPDIR is
+  separate from the run asset directory. Write rounds and the cloud UI
+  pass get an additional `--add-dir TMPDIR`; existing allowlist and hook
+  rules still apply. The brief names the process directory for scratch
+  work and keeps UI renders at their existing run-relative path.
+  Whether the Claude CLI's own tool shell keeps `TMPDIR` is *unverified*.
+  The process runs in its own process group, using
   `internal/clirun`'s helpers (`code.process-groups`). `stream_event` text
   deltas reach the output tail as they arrive. Session id, final text,
   tokens and `total_cost_usd` come from the `result` event. Cancelling the

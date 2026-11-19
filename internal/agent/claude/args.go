@@ -101,6 +101,12 @@ func (s Spec) Args() ([]string, error) {
 		}
 	}
 	cloudReadOnly := s.ReadOnly && s.Bin != "claude-local"
+	if s.TMPDir != "" && (!s.ReadOnly || s.WriteDir != "") {
+		if !filepath.IsAbs(s.TMPDir) || filepath.Clean(s.TMPDir) != s.TMPDir {
+			return nil, errors.New("claude: TMPDIR is not an absolute clean path")
+		}
+		args = append(args, "--add-dir", s.TMPDir)
+	}
 	allow := s.Allowlist
 	if cloudReadOnly && s.WriteDir != "" {
 		// A cloud UI pass (S369, adj 372, *proposed*). Plan mode refuses
@@ -117,6 +123,9 @@ func (s Spec) Args() ([]string, error) {
 		}
 		args = append(args, "--add-dir", s.WriteDir)
 		allow = append(slices.Clone(allow), editRules(s.WriteDir)...)
+		if s.TMPDir != "" {
+			allow = append(allow, editRules(s.TMPDir)...)
+		}
 	} else if len(allow) == 0 {
 		return nil, errors.New("claude: a role needs an allowlist")
 	}

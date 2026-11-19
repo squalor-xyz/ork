@@ -16,7 +16,8 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
 | Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
 | Check output per round (S04); `checks[].log` keeps the name, read on demand by `run.report` and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/checks-<round>.log`, and `land-checks-<round>.log` for the landing re-check |
-| A role's own temp directory (S04) | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
+| A role's run assets (S04), including the local system prompt and Codex Go cache | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
+| A slice-run role's process `TMPDIR` (S437, adj 491), mode 0700, removed when retention removes the run | `~/.local/state/ork/t/<run-key>/<round-key>/` |
 | A claude-local role's progress note (S361, adj 347) | `~/.local/state/ork/runs/<run>/tmp/progress-<role>.md` |
 | A claude-local role's read log (S371, *proposed*): one line per allowed Read (`path:start-end`) or Grep (`pattern in path`), appended by the approval point | `~/.local/state/ork/runs/<run>/tmp/readlog-<role>-<round>.txt` |
 | The UI pass's renders (S121, *proposed*): `VIEW-80x24.txt`, `VIEW-120x40.txt`, `VIEW-ascii.txt` | `~/.local/state/ork/runs/<run>/tmp/ui-<round>/renders/` |
@@ -30,6 +31,13 @@ worktree, the branch, the commit, and the ledger and notes through slicer
 commands. *Proposed (S254):* the one other git write is the landing's commit
 of the project's uncommitted tracking files on the base branch (see
 `docs/boundaries.md`).
+
+The process temp path uses the first 16 hexadecimal characters of SHA-256
+of the run id and of `<role-or-part-label>-<round>` for its two keys. With
+the default state root on this host, it leaves room for test directories
+and a Unix socket. A longer configured state root still consumes socket
+path space. The run asset, UI render, progress-note and read-log paths do
+not move. Checks outside a slice run retain their existing temp directory.
 
 ## projects.json
 
@@ -300,7 +308,8 @@ Notes on the fields:
   keys left is removed. A hand-edited file that holds values these checks
   refuse still loads: `Load` does not apply them.
   A `TMPDIR` key does not reach a Claude or Codex role: ork sets `TMPDIR` to
-  the role's own temp directory (S271, *proposed*).
+  the role's process temp directory (S271; slice runs use the short
+  state-root path, S437, adj 491).
 - `ork settings set` (*proposed*, S174, owner decision 2026-10-29) writes the
   file-level `global_cap` and `daemon_idle_minutes`; 0 clears one. Unlike
   `projects set` it is not refused while runs are unfinished: the cap is read

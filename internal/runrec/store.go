@@ -4,6 +4,7 @@ package runrec
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -46,6 +47,20 @@ func DefaultDir() (string, error) {
 
 // RunDir returns the directory of the run with this id.
 func (s *Store) RunDir(id string) string { return filepath.Join(s.Dir, id) }
+
+// roleTempRoot groups one run's process temporary directories for retention.
+func roleTempRoot(stateRoot, runID string) string {
+	key := sha256.Sum256([]byte(runID))
+	return filepath.Join(stateRoot, "t", fmt.Sprintf("%x", key[:8]))
+}
+
+// RoleTMPDir builds a bounded role round name under the state root (adj 491).
+// Hashes keep long role/part names and run ids from consuming socket path space.
+// Asset directories remain under runs/<run>/tmp, independently of TMPDIR.
+func RoleTMPDir(stateRoot, runID, label string, round int) string {
+	key := sha256.Sum256([]byte(fmt.Sprintf("%s-%d", label, round)))
+	return filepath.Join(roleTempRoot(stateRoot, runID), fmt.Sprintf("%x", key[:8]))
+}
 
 // Run is one open run record. Its methods are safe for concurrent use.
 type Run struct {
@@ -205,6 +220,12 @@ func (s *Store) Prune(keep int, landed func(Record) bool) ([]string, error) {
 	for i := 0; i < excess && landed != nil; i++ {
 		rec := finished[i].Snapshot()
 		if !landed(rec) {
+			continue
+		}
+		// Remove TMPDIRs first, so a failure leaves the run available for a
+		// later retention attempt. Older runs need not have this directory.
+		if rmErr := os.RemoveAll(roleTempRoot(filepath.Dir(s.Dir), rec.ID)); rmErr != nil {
+			errs = append(errs, rmErr)
 			continue
 		}
 		if rmErr := os.RemoveAll(finished[i].dir); rmErr != nil {
