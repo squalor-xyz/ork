@@ -1,0 +1,39 @@
+{
+  "id": "S483",
+  "title": "give the UI pass a sandbox-safe way to render CLI command output, such as a test helper that prints the output to a file in the temp dir",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261119-230547-39fc, project ork, item S339:\n\ngive the UI pass a sandbox-safe way to render CLI command output, such as a test helper that prints the output to a file in the temp dir\n\nEvidence: the renders for projects add had to be built from the strings the tests assert, because running the real binary would contact the owner's live daemon"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -5857,3 +5857,8 @@
 {"when": "2026-11-19T23:06:33Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-19T23:06:33Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-19T23:06:33Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-19T23:22:33Z", "item": "S482", "action": "add", "from": "", "to": "open", "note": "let read-only reviewer roles run `slicer COMMAND --help` to check the CLI syntax a message cites"}
+{"when": "2026-11-19T23:22:34Z", "item": "S482", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T23:22:34Z", "item": "S482", "action": "note", "from": "", "to": "", "note": "possible duplicate of S469", "by": "Jon Robbins"}
+{"when": "2026-11-19T23:23:29Z", "item": "S483", "action": "add", "from": "", "to": "open", "note": "give the UI pass a sandbox-safe way to render CLI command output, such as a test helper that prints the output to a file in the temp dir"}
+{"when": "2026-11-19T23:23:29Z", "item": "S483", "action": "promote", "from": "", "to": "", "note": ""}

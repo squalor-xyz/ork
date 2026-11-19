@@ -1,0 +1,39 @@
+{
+  "id": "S482",
+  "title": "let read-only reviewer roles run `slicer COMMAND --help` to check the CLI syntax a message cites",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-230547-39fc, project ork, item S339:\n\nlet read-only reviewer roles run `slicer COMMAND --help` to check the CLI syntax a message cites\n\nEvidence: `slicer config --help` denied with \"This command requires approval\"; fell back to reading slicer/docs/configuration.md:148"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
