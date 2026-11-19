@@ -368,7 +368,7 @@ func TestRunStartResumesTheStoppedRunWhenTheTreeIsUnchanged(t *testing.T) {
 			if reply.ID != "r1" || reply.State == runrec.StateStopped {
 				t.Fatalf("run.start answered %s in state %s, want the resumed run r1", reply.ID, reply.State)
 			}
-			for _, want := range []string{"resumed stopped run r1", "implementer round 3", "granted 2 more implementer rounds", "uses the stopped run's lineup, budgets and stop-after"} {
+			for _, want := range []string{"resumed stopped run r1", "implementer round 3", "re-enters the checks", "granted 2 more implementer rounds", "uses the stopped run's lineup, budgets and stop-after"} {
 				if !strings.Contains(reply.Message, want) {
 					t.Errorf("message %q lacks %q", reply.Message, want)
 				}
@@ -386,6 +386,25 @@ func TestRunStartResumesTheStoppedRunWhenTheTreeIsUnchanged(t *testing.T) {
 			}
 		})
 	}
+}
+
+// S349: the message names what the resume enters. A stopped run that holds the
+// gate's findings starts an implementer fix round, not the checks.
+func TestRunStartResumeMessageNamesTheFixRound(t *testing.T) {
+	rig := stoppedDaemon(t, retryRunner, true, stoppedDiff, func(r *runrec.Record) {
+		r.Feedback = &runrec.Feedback{Kind: "fail", File: "gate-3-fix.md"}
+	})
+	var reply RunReply
+	if err := json.Unmarshal(request(t, rig.d, "run.start", `{"project":"p","item":"S1"}`), &reply); err != nil {
+		t.Fatal(err)
+	}
+	if want := "starts with an implementer fix round carrying the gate's findings"; !strings.Contains(reply.Message, want) {
+		t.Errorf("message %q lacks %q", reply.Message, want)
+	}
+	if strings.Contains(reply.Message, "re-enters the checks") {
+		t.Errorf("message %q names the checks path", reply.Message)
+	}
+	waitIdle(t, rig.d, "r1")
 }
 
 func TestRunStartStartsFreshAndSaysWhyWhenTheTreeChanged(t *testing.T) {

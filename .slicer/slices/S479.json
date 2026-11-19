@@ -1,0 +1,39 @@
+{
+  "id": "S479",
+  "title": "allow read-only roles to set a shell variable for the worktree path in a compound command",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-145500-0d5c, project ork, item S349:\n\nallow read-only roles to set a shell variable for the worktree path in a compound command\n\nEvidence: a Bash call with W=/path and sed/rg on $W was denied as \"A variable in this command can't be checked before it runs\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

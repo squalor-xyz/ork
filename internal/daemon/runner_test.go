@@ -276,7 +276,7 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 	}
 }
 
-const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(adj show*),Bash(adj check*),Bash(adj lint*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
+const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(slicer check*),Bash(adj show*),Bash(adj check*),Bash(adj lint*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
 
 func TestReadOnlyRoleOnCloudClaudeGetsTheReadOnlyList(t *testing.T) {
 	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleSpecDraft} {

@@ -1,0 +1,39 @@
+{
+  "id": "S481",
+  "title": "say in the reviewer brief that shell variables in commands are denied, so reviewers use literal absolute paths from the start",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-150234-f362, project ork, item S346:\n\nsay in the reviewer brief that shell variables in commands are denied, so reviewers use literal absolute paths from the start\n\nEvidence: a Bash call that used W=... and $W was auto-denied with \"A variable in this command can't be checked before it runs\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
