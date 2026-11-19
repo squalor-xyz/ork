@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 467,
+  "next_id": 468,
   "preamble": "",
   "passes": [
     {
@@ -25176,6 +25176,49 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-4f57bee3",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S467",
+      "title": "allow read-only adj lint for reviewer roles (S458 covers this)",
+      "short_title": "allow read-only adj lint for reviewer roles (S458 covers this)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "04bfff24-09c7-4fa2-93a9-70c1a120e9cc",
+          "kind": "",
+          "text": "**2026-11-19** — possible duplicate of S458",
+          "created_at": "2026-11-19T13:41:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S338",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-22add6d3",
         "pass": "v1.2",
         "group": "",
         "reason": "",
