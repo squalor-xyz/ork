@@ -1458,7 +1458,7 @@ func (d *Daemon) autoResumeLocked(ctx context.Context, f *registry.File, proj re
 		return e.RetryNote(ctx, "")
 	})
 	launch.done, launch.result = m.done, m.result
-	return fmt.Sprintf("resumed stopped run %s: its worktree is unchanged since implementer round %d; granted 2 more implementer rounds; uses the stopped run's lineup, budgets and stop-after", id, probe.round), launch, nil
+	return fmt.Sprintf("resumed stopped run %s: its worktree is unchanged since implementer round %d; %s; granted 2 more implementer rounds; uses the stopped run's lineup, budgets and stop-after", id, probe.round, engine.ResumeEntry(*cand)), launch, nil
 }
 
 // unfinishedOfItemLocked names another unfinished run of the item. The caller

@@ -692,6 +692,195 @@ func TestResumeJoinsTheWaveNameOfTheCaller(t *testing.T) {
 	}
 }
 
+// S349: a stopped run that holds review or gate findings resumes with an
+// implementer round that carries them (owner decisions 2026-11-18, adj 481 and
+// adj 482), and a resume resets the gate FAIL count.
+
+const (
+	gateFixText   = "engine.go:10 missing nil check"
+	reviewFixText = "run.go:10 crashes on nil."
+)
+
+// gateFixFail is a gate FAIL with one [fix] finding.
+const gateFixFail = "VERDICT: FAIL\n\n- [fix] " + gateFixText + "\nTests: 12 passed, 0 failed\n\n## Owner needed\n\nnone\n"
+
+// stoppedAtAFindingsPause runs a run to its rounds pause with feedback of the
+// given kind, then stops it as the owner does. Kind "fail": the gate FAILs with
+// a [fix] finding in rounds 1 and 2 and the run pauses at round 2 (the limit).
+// Kind "findings": the reviewer reports a finding in round 1 and the run
+// pauses at round 1; the reviewer runs once, so the later rounds go to the
+// gate. The gate passes from round 3 on unless the test sets stillFailing.
+func stoppedAtAFindingsPause(t *testing.T, kind string, stillFailing bool) (*harness, runrec.Record) {
+	t.Helper()
+	h := resumeHarness(t)
+	h.mkWorktree()
+	pausedRound := 2
+	if kind == "findings" {
+		pausedRound = 1
+	}
+	h.deps.MaxRounds = pausedRound
+	failing := func(round int) bool { return stillFailing || round < 3 }
+	h.runner.script = func(req Request, n int) (Result, error) {
+		switch {
+		case kind == "fail" && req.Role == RoleGate && failing(req.Round):
+			return Result{Exit: ExitOK, Session: "sess-gate", Report: gateFixFail}, nil
+		case kind == "findings" && req.Role == RoleReviewer && failing(req.Round):
+			return Result{Exit: ExitOK, Session: "sess-reviewer", Report: findingsReview("1. " + reviewFixText)}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	paused := requireState(t, e, runrec.StatePaused)
+	if paused.Round != pausedRound || paused.Pending == nil || paused.Pending.Kind != runrec.PendingRounds || paused.Feedback == nil || paused.Feedback.Kind != kind {
+		t.Fatalf("rounds pause: round %d pending %+v feedback %+v, want round %d and %q feedback", paused.Round, paused.Pending, paused.Feedback, pausedRound, kind)
+	}
+	if err := e.Stop(context.Background(), "fix the allow first"); err != nil {
+		t.Fatal(err)
+	}
+	return h, requireState(t, e, runrec.StateStopped)
+}
+
+func requireImplementerFixRound(t *testing.T, h *harness, stopped runrec.Record, kind, fixText string) {
+	t.Helper()
+	if stopped.Feedback == nil || stopped.Feedback.Kind != kind {
+		t.Fatalf("the stopped run's feedback %+v, want kind %q", stopped.Feedback, kind)
+	}
+	rolesBefore := len(h.runner.roles())
+	var checksBeforeImplementer []string
+	script := h.runner.script
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleImplementer {
+			checksBeforeImplementer = append(checksBeforeImplementer, h.checks.calls...)
+		}
+		return script(req, n)
+	}
+	e, err := h.resume(stopped.ID, h.proj, "", 2)
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	// The reviewer ran in round 1 and is not asked again: the fix round is
+	// followed by the checks and the gate.
+	next := stopped.Round + 1
+	if got, want := h.runner.roles()[rolesBefore:], []string{fmt.Sprintf("implementer-%d", next), fmt.Sprintf("gate-%d", next)}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("roles after the resume %v, want %v: an implementer fix round first, then the gate", got, want)
+	}
+	brief := h.runner.requests()[rolesBefore].Brief
+	if !strings.Contains(brief, fixText) || !strings.Contains(brief, fmt.Sprintf("This is fix round %d.", stopped.Round)) {
+		t.Errorf("the implementer's brief lacks the stopped run's findings:\n%s", brief)
+	}
+	if len(checksBeforeImplementer) != 0 {
+		t.Errorf("checks ran before the implementer's fix round: %v", checksBeforeImplementer)
+	}
+	if len(h.checks.calls) != 1 || rec.Checks[len(rec.Checks)-1].Round != next {
+		t.Errorf("the checks must run once, after the fix round: calls %v, checks %+v", h.checks.calls, rec.Checks)
+	}
+	if rec.Round != next || rec.RoundLimit != next+1 || rec.Feedback != nil || rec.Pending != nil || rec.StoppedFrom != "" {
+		t.Errorf("round %d limit %d feedback %+v pending %+v stopped_from %q, want round %d and limit %d", rec.Round, rec.RoundLimit, rec.Feedback, rec.Pending, rec.StoppedFrom, next, next+1)
+	}
+}
+
+func TestResumeWithGateFixFindingsStartsAnImplementerRound(t *testing.T) {
+	h, stopped := stoppedAtAFindingsPause(t, "fail", false)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	requireImplementerFixRound(t, h, stopped, "fail", gateFixText)
+}
+
+func TestResumeWithReviewerFindingsStartsAnImplementerRound(t *testing.T) {
+	h, stopped := stoppedAtAFindingsPause(t, "findings", false)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	requireImplementerFixRound(t, h, stopped, "findings", reviewFixText)
+}
+
+func TestResumeAfterRedChecksStillEntersChecks(t *testing.T) {
+	for name, clear := range map[string]bool{"red checks": false, "no feedback": true} {
+		t.Run(name, func(t *testing.T) {
+			h, stopped := stoppedAtTheRoundsPause(t)
+			if clear {
+				saved, err := h.store.Open(stopped.ID)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if err := saved.Update(func(r *runrec.Record) { r.Feedback = nil }); err != nil {
+					t.Fatal(err)
+				}
+			} else if stopped.Feedback == nil || stopped.Feedback.Kind != "checks" {
+				t.Fatalf("feedback %+v, want the red check's", stopped.Feedback)
+			}
+			h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+			rolesBefore := len(h.runner.roles())
+			e, err := h.resume(stopped.ID, h.proj, "", 2)
+			if err != nil {
+				t.Fatalf("resume: %v", err)
+			}
+			rec := requireState(t, e, runrec.StateAwaitingApproval)
+			if got, want := h.runner.roles()[rolesBefore:], []string{"reviewer-4", "gate-4"}; !reflect.DeepEqual(got, want) {
+				t.Fatalf("roles after the resume %v, want %v: the checks, with no implementer round first", got, want)
+			}
+			if rec.Round != 4 || rec.RoundLimit != 6 || len(h.checks.calls) != 1 {
+				t.Errorf("round %d limit %d checks %v", rec.Round, rec.RoundLimit, h.checks.calls)
+			}
+		})
+	}
+}
+
+func TestResumeResetsTheGateFailCount(t *testing.T) {
+	h := resumeHarness(t)
+	h.mkWorktree()
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleGate && req.Round <= 4 {
+			return Result{Exit: ExitOK, Session: "sess-gate", Report: gateFixFail}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	stopped := requireState(t, e, runrec.StateStopped)
+	if stopped.Fails != 3 || stopped.StoppedFrom != runrec.StateGate {
+		t.Fatalf("fails %d stopped_from %q, want the third gate FAIL to stop the run in the gate", stopped.Fails, stopped.StoppedFrom)
+	}
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	rolesBefore := len(h.runner.roles())
+
+	e, err := h.resume(stopped.ID, h.proj, "", 2)
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	rec := requireState(t, e, runrec.StateAwaitingApproval)
+	// Gate 4 FAILs once more (the fourth in all), and the fix round follows
+	// where it would have stopped the run. The reviewer ran in round 1 and is
+	// not asked again.
+	if got, want := h.runner.roles()[rolesBefore:], []string{"gate-4", "implementer-5", "gate-5"}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("roles after the resume %v, want %v", got, want)
+	}
+	if rec.Fails != 1 {
+		t.Errorf("fails %d after the resume, want 1 (reset to 0, then the one FAIL of gate 4)", rec.Fails)
+	}
+}
+
+func TestResumeGrantCountsTheFirstImplementerRound(t *testing.T) {
+	// The gate keeps failing; each FAIL carries its [fix] to the next round.
+	h, stopped := stoppedAtAFindingsPause(t, "fail", true)
+	h.checks.reset()
+	rolesBefore := len(h.runner.roles())
+	e, err := h.resume(stopped.ID, h.proj, "", 2)
+	if err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	rec := requireState(t, e, runrec.StatePaused)
+	var implementers []string
+	for _, role := range h.runner.roles()[rolesBefore:] {
+		if strings.HasPrefix(role, RoleImplementer+"-") {
+			implementers = append(implementers, role)
+		}
+	}
+	if want := []string{"implementer-3", "implementer-4"}; !reflect.DeepEqual(implementers, want) {
+		t.Fatalf("implementer rounds after the resume %v, want exactly the 2 granted rounds %v", implementers, want)
+	}
+	if rec.Round != 4 || rec.RoundLimit != 4 || rec.Pending == nil || rec.Pending.Kind != runrec.PendingRounds {
+		t.Errorf("round %d limit %d pending %+v, want round 4, limit 4 and the rounds pause", rec.Round, rec.RoundLimit, rec.Pending)
+	}
+}
+
 func TestAFailedCommitStopsFromTheCommitState(t *testing.T) {
 	h := resumeHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {

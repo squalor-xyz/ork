@@ -51,6 +51,30 @@ func hasImplementerRound(rec runrec.Record) bool {
 	return false
 }
 
+// resumesFixRound reports a stopped run that holds findings for its next
+// implementer round: review, architect, gate or owner findings (S349, adj
+// 481). Red checks, or no feedback, re-enter the checks.
+func resumesFixRound(rec runrec.Record) bool {
+	return rec.Feedback != nil && rec.Feedback.Kind != "checks"
+}
+
+// ResumeEntry says, for a message, what a resume of the stopped run enters
+// (S349): an implementer fix round carrying the stored findings, the checks,
+// or implementer round 1 when no implementer round has run.
+func ResumeEntry(rec runrec.Record) string {
+	switch {
+	case resumesFixRound(rec):
+		who := map[string]string{"findings": "the reviewer's", "architect": "the architect's", "fail": "the gate's", "owner": "the owner's"}[rec.Feedback.Kind]
+		if who == "" {
+			who = "the stored"
+		}
+		return "starts with an implementer fix round carrying " + who + " findings"
+	case hasImplementerRound(rec):
+		return "re-enters the checks"
+	}
+	return "starts at implementer round 1"
+}
+
 // waveKey carries the wave a resume joins (WithWave).
 type waveKey struct{}
 
@@ -106,7 +130,9 @@ func (e *Engine) checkResumable(ctx context.Context, rec runrec.Record) error {
 
 // resumeStopped continues a stopped run from its worktree (S296, *proposed*).
 // It grants rounds (2 by default), begins a new ledger run and re-enters the
-// checks, or implement when no implementer round has run. A committed run
+// checks, or implement when no implementer round has run, or when the run
+// holds findings for its next implementer round (S349, adj 481, adj 482: that
+// round starts, and the gate FAIL count is reset). A committed run
 // that stopped in land is the exception: resumeLand re-enters landing and
 // resets that one fix round (adj 458, adj 459). The engine must have been
 // loaded with the project as it is now, so a fixed check command takes
@@ -135,7 +161,15 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 	// fix rounds follow it. Entering implement, round 1 is itself the first of
 	// the N rounds.
 	state, round, limit := runrec.StateImplement, rec.Round, rec.Round+grant-1
-	if hasImplementerRound(rec) {
+	switch {
+	case resumesFixRound(rec):
+		// The stopped run holds the file the next implementer round would have
+		// fixed: review, architect, gate or owner findings (S349, adj 481). Keep
+		// it and start that round; it is the first of the granted rounds. A
+		// gate FAIL does not carry over: the count starts again (adj 482).
+		round = rec.Round + 1
+		limit = round + grant - 1
+	case hasImplementerRound(rec):
 		// The work is there: check it. The checks take a round number of
 		// their own, so the earlier check log is kept.
 		state, round = runrec.StateChecks, rec.Round+1
@@ -152,6 +186,7 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 		r.Resume = nil
 		r.Round = round
 		r.RoundLimit = limit
+		r.Fails = 0
 		r.ChainFrom = len(r.Roles) // the new round restarts the vendor chain (S255, *proposed*)
 		if wave != "" {
 			r.Wave = wave

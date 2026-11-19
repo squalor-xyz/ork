@@ -1291,10 +1291,23 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   It re-enters `checks` in the next round number (the earlier check log is
   kept), or `implement` in the same round when no implementer round has run
   (a run stopped from S295's setup pause): implementer round 1 runs first
-  with the first-round brief. N rounds mean N implementer rounds: entering
+  with the first-round brief. A stopped run whose `feedback` is set and is
+  not of kind `checks` (a reviewer, architect or gate FAIL file, or the
+  owner's fix note: S349, owner decision 2026-11-18, adj 481) enters
+  `implement` in the next round number with that `feedback` kept, so the
+  implementer's fix round carries those findings; the checks run after it.
+  A stopped run whose `feedback` is of kind `checks`, or unset, re-enters
+  `checks` as before. The resume resets the gate FAIL count (`fails`) to 0
+  (adj 482), so a run stopped by its third gate FAIL gets a fix round after
+  the next FAIL. N rounds mean N implementer rounds: entering
   the checks, `round_limit` is the entered round plus N (the entered round is
   not an implementer round); entering implement, round 1 is the first of the
-  N, so `round_limit` is N (the first-pause floor of 3 rounds still applies).
+  N, and so is the fix round of a run that holds findings, so `round_limit`
+  is N (the first-pause floor of 3 rounds still applies) or the entered
+  round plus N minus 1. The start message of `ork run` names the path:
+  "re-enters the checks", "starts with an implementer fix round carrying the
+  gate's findings" (or the reviewer's, architect's or owner's), or "starts at
+  implementer round 1".
   A red result at the limit pauses with kind `rounds` as above. `stop`
   records `stopped_from`: the state the run left, and for a paused run its
   pending step. Resuming bypasses the project and global caps, like every
