@@ -1,0 +1,41 @@
+{
+  "id": "S475",
+  "title": "UI passes render CLI text views through a test flag",
+  "lead": [
+    "A UI pass can write the text views of ork's CLI commands (status, show, help blocks and the other views the slice changes) as plain files into its own temp directory with one `go test` command and a flag, without editing the tree, and the brief tells it how."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-19, adj 502 (tool feedback from the S340 UI pass, run ork-20261119-143743-1548): CLI status renders had to be copied from a test's want string, because `internal/cli` cannot be imported from outside the module and the tree is read-only. Owner decision adj 505 (`roles.ui-pass-render-flag` = flag, supersedes adj 487): add a test flag that writes CLI renders as plain text to a given temp directory. Earlier filings of the same need: S466 (retired 2026-11-19 under adj 487).",
+  "size": "M",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "UI passes review CLI output (rule u10), but they run read-only and cannot build a program that imports `internal/cli`. Today they copy views from test want strings by hand, which misses wrapping and width effects. adj 505 replaces the overlay-only route of adj 487 with a flag in the CLI tests, like the TUI's `-update` golden flag (`internal/tui/golden_test.go:27`)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/cli/render_test.go` (new: the render flag and a test that writes the views)\n- `internal/cli/cli_test.go`\n- `internal/engine/brief.go` (UI pass brief: the render command, with the role's temp directory)\n- `internal/engine/brief_test.go`\n- `docs/design.md` (UI pass renders, adj 505)\n- `docs/guide.md`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestRenderCLIViewsWritesFiles` in `internal/cli/render_test.go`: with `-renders DIR` set to a temp directory, the test writes one plain-text file per view (at least `ork status`, `ork show RUN` and `ork help`), each with no ANSI escapes, at 80 columns; with the flag unset it writes nothing and passes. Red today: no flag.\n- `TestUIPassBriefNamesTheRenderCommand` in `internal/engine/brief_test.go`: a UI pass brief names `go test ./internal/cli -run TestRenderCLIViews -renders` with the role's temp directory. Red today."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing tests and see each red for the stated reason.\n2. Add a `-renders DIR` test flag in `internal/cli` and `TestRenderCLIViews`, which runs each view against the existing test fixtures and writes `DIR/NAME.txt`. Reuse the fixtures the CLI tests already build; add no dependency.\n3. The UI pass brief names the command with its temp directory; `go test` with that flag is already in the read-only allowlist (`Bash(go test*)`).\n4. Docs: `docs/design.md` UI pass renders (adj 505 supersedes adj 487), `docs/guide.md`. Changelog entry with `slicer changelog add S475 --text \"...\"`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- One go test command with -renders writes the CLI views as plain text into the given directory and changes nothing in the tree.\n- Without the flag the test writes nothing.\n- The UI pass brief tells the role the command and its directory.\n\nCommands:\n- `go test ./internal/cli -run TestRenderCLIViews -v`\n- `go test ./internal/engine -run TestUIPassBriefNamesTheRenderCommand -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"UI passes render CLI views through a test flag\"."
+    }
+  ],
+  "notes": []
+}

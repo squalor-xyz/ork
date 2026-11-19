@@ -5751,3 +5751,22 @@
 {"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "add", "from": "", "to": "open", "note": "allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full"}
 {"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T14:36:43Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T14:45:26Z", "item": "S471", "action": "add", "from": "", "to": "open", "note": "allow `slicer check --root WT; echo exit=$?` style exit-code capture for read-only roles, or document that plain invocation is required"}
+{"when": "2026-11-19T14:45:26Z", "item": "S471", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:45:32Z", "item": "S472", "action": "add", "from": "", "to": "open", "note": "allow env-prefixed go test commands, or give the UI role a renders env var already set"}
+{"when": "2026-11-19T14:45:32Z", "item": "S472", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:45:35Z", "item": "S473", "action": "add", "from": "", "to": "open", "note": "allow slicer check --root WT and adj lint --root WT as plain commands for the reviewer (same as S470)"}
+{"when": "2026-11-19T14:45:35Z", "item": "S473", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:45:36Z", "item": "S473", "action": "note", "from": "", "to": "", "note": "possible duplicate of S470", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:46:04Z", "item": "S474", "action": "add", "from": "", "to": "open", "note": "TestFeedDeliversTheNoticesOfTheProjectInFocus waits for the items notice"}
+{"when": "2026-11-19T14:46:08Z", "item": "S474", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T14:48:14Z", "item": "S473", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S470 (slicer check for read-only roles)."}
+{"when": "2026-11-19T14:48:14Z", "item": "S470", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T14:48:14Z", "item": "S470", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T14:48:14Z", "item": "S470", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T14:48:14Z", "item": "S470", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T14:48:14Z", "item": "S470", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-19T14:48:15Z", "item": "S470", "action": "set", "from": "", "to": "", "note": "title allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full→Read-only roles may run slicer check; size -→S; short_title allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full→Read-only roles may run slicer check"}
+{"when": "2026-11-19T14:48:15Z", "item": "S470", "action": "note", "from": "", "to": "", "note": "Merged S473 (2026-11-19). The adj lint half was done by S458", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:48:37Z", "item": "S475", "action": "add", "from": "", "to": "open", "note": "UI passes render CLI text views through a test flag"}
+{"when": "2026-11-19T14:48:37Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Implement"}
