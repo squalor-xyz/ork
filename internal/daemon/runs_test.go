@@ -3942,6 +3942,82 @@ func TestRunPlanCarriesSetupWarnings(t *testing.T) {
 	}
 }
 
+// driverPlanDaemon is a daemon whose project p is a real git repository with a
+// go.mod and the default check command, using the real git for the driver
+// lookup and no git config of the machine (S348).
+func driverPlanDaemon(t *testing.T) (*Daemon, string) {
+	t.Helper()
+	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(t.TempDir(), "gitconfig"))
+	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
+	d, _, p := runDaemon(t, nil)
+	setGitBin(d, "git")
+	if err := os.MkdirAll(p.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(p.Path, "go.mod"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	trackingGit(t, p.Path, "init", "-q")
+	return d, p.Path
+}
+
+// driverLines are the plan's warnings that name merge drivers.
+func driverLines(warnings []string) []string {
+	var out []string
+	for _, w := range warnings {
+		if strings.HasPrefix(w, "merge drivers") {
+			out = append(out, w)
+		}
+	}
+	return out
+}
+
+// S348 (adj 480): a plan warns, before any slice starts, when the slicer merge
+// drivers are not configured; the warning is ork doctor's text.
+func TestRunPlanWarnsOnMissingMergeDrivers(t *testing.T) {
+	d, dir := driverPlanDaemon(t)
+	if err := os.MkdirAll(filepath.Join(dir, ".slicer"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, ".slicer", ".gitattributes"), []byte("render/* merge=slicer-render\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	want := []string{engine.MissingDriversWarning([]string{"slicer-render"})}
+	if got := driverLines(plan.Warnings); !reflect.DeepEqual(got, want) {
+		t.Fatalf("driver warnings %q, want %q (all: %q)", got, want, plan.Warnings)
+	}
+	if !strings.Contains(want[0], "slicer-render") || len(plan.Warnings) != 1 {
+		t.Fatalf("warnings %q, want only the drivers line naming slicer-render", plan.Warnings)
+	}
+	trackingGit(t, dir, "config", "merge.slicer-render.driver", "true")
+	if plan := launchPlan(t, d, `{"project":"p","item":"S1"}`); len(plan.Warnings) != 0 {
+		t.Errorf("warnings %q, want none once the driver is configured", plan.Warnings)
+	}
+}
+
+func TestRunPlanWithoutSlicerAttributesHasNoDriverWarning(t *testing.T) {
+	d, _ := driverPlanDaemon(t)
+	if plan := launchPlan(t, d, `{"project":"p","item":"S1"}`); len(plan.Warnings) != 0 {
+		t.Errorf("warnings %q, want none without .slicer/.gitattributes", plan.Warnings)
+	}
+}
+
+func TestRunPlanDriverReadErrorIsAWarning(t *testing.T) {
+	d, dir := driverPlanDaemon(t)
+	if err := os.MkdirAll(filepath.Join(dir, ".slicer", ".gitattributes"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+	got := driverLines(plan.Warnings)
+	if len(got) != 1 || !strings.HasPrefix(got[0], "merge drivers: ") || strings.HasPrefix(got[0], "merge drivers missing") {
+		t.Fatalf("driver warnings %q, want one `merge drivers: ERR`", got)
+	}
+	if len(plan.Warnings) != 1 {
+		t.Errorf("warnings %q, want only the read error", plan.Warnings)
+	}
+}
+
 // S295 (*proposed*): the plan says when the check command cannot run in the
 // project's folder, so the launch shows it before the start.
 func TestRunPlanWarnsWhenTheCheckCannotRun(t *testing.T) {

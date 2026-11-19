@@ -569,9 +569,10 @@ func (m *Model) launchView(w int) overviewView {
 			warn("start anyway: ork run " + engine.ShellWord(name) + " " + p.Item + " --allow-no-check")
 		}
 		// S295 (*proposed*): a check that cannot run is said by the check line
-		// too, and not again after the roles.
+		// too, and not again after the roles. S348: so are the missing merge
+		// drivers, which a plan with ui and architect rows would clip at 80x24.
 		for _, warning := range p.Warnings {
-			if strings.HasPrefix(warning, engine.CheckCannotRunPrefix) {
+			if byTheCheckLine(warning) {
 				warn("warning: " + warning)
 			}
 		}
@@ -608,7 +609,7 @@ func (m *Model) launchView(w int) overviewView {
 			}
 		}
 		for _, warning := range p.Warnings {
-			if warning != engine.NoCheckMessage(p.Project.Name) && !strings.HasPrefix(warning, engine.CheckCannotRunPrefix) {
+			if warning != engine.NoCheckMessage(p.Project.Name) && !byTheCheckLine(warning) {
 				warn("warning: " + warning)
 			}
 		}
@@ -617,4 +618,11 @@ func (m *Model) launchView(w int) overviewView {
 		}
 	}
 	return out
+}
+
+// byTheCheckLine reports whether the launch confirm shows a plan warning by the
+// check line, and not after the role rows, where a long plan clips it: a check
+// that cannot run (S295) and missing merge drivers (S348).
+func byTheCheckLine(warning string) bool {
+	return strings.HasPrefix(warning, engine.CheckCannotRunPrefix) || strings.HasPrefix(warning, engine.MissingDriversPrefix)
 }

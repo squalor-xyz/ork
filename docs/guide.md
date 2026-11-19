@@ -105,6 +105,11 @@ with `merge drivers configured: NAME, NAME`; the project shows `[ok]` when no
 other warning remains. With `--json`, commands are in
 `merge_driver_commands`; confirmation prompts go to stderr.
 
+The run plan names missing merge drivers too, in the same words, as
+`warning: merge drivers missing: NAME, NAME (fix: ...)` in `ork run` and
+`ork wave start` and in the TUI launch confirm. It is shown before the start and
+does not refuse it; the plan never runs the commands (S348, adj 480).
+
 ork never reads vendor credentials. Log in with each vendor CLI's own login
 (`AGENTS.md`, Project Rules).
 
