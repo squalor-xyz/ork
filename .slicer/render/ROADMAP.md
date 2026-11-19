@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-453 items · — 59 · done 325 · retired 69
+453 items · — 57 · done 325 · retired 71
 
 ## v1.3
 
@@ -211,8 +211,8 @@ v1.2
 | 154 | [S449](slices/S449.md) | S307 TUI follow-ups | M | 2 |  | S258 and S274 reviews and gates, 2026-11-07; re-anchored 2026-11-18; split from S307 by the owner on 2026-11-18. | — |
 | 155 | [S450](slices/S450.md) | skip the UI pass or say "no TUI views changed" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files |  | - |  | discovered from S432 | — |
 | 156 | [S451](slices/S451.md) | tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode |  | - |  | Duplicate of S418 (plan mode in read-only briefs; adj 489 moves cloud Claude read-only roles off plan mode). · discovered from S432 | retired |
-| 157 | [S452](slices/S452.md) | Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored |  | - |  | discovered from S418 | — |
-| 158 | [S453](slices/S453.md) | Resume the gate without Claude Code plan mode until S418 lands in the daemon binary |  | - |  | discovered from S418 | — |
+| 157 | [S452](slices/S452.md) | Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored |  | - |  | Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418 | retired |
+| 158 | [S453](slices/S453.md) | Resume the gate without Claude Code plan mode until S418 lands in the daemon binary |  | - |  | Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418 | retired |
 
 ---
 

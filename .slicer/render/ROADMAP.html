@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">453 items · — 59 · done 325 · retired 69</p>
+<p class="summary">453 items · — 57 · done 325 · retired 71</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -209,8 +209,8 @@
 <tr class="open"><td>154</td><td>S449</td><td>S307 TUI follow-ups</td><td>M</td><td>2</td><td></td><td>S258 and S274 reviews and gates, 2026-11-07; re-anchored 2026-11-18; split from S307 by the owner on 2026-11-18.</td><td class="status">—</td></tr>
 <tr class="open"><td>155</td><td>S450</td><td>skip the UI pass or say &quot;no TUI views changed&quot; in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files</td><td></td><td>-</td><td></td><td>discovered from S432</td><td class="status">—</td></tr>
 <tr class="retired"><td>156</td><td>S451</td><td>tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode</td><td></td><td>-</td><td></td><td>Duplicate of S418 (plan mode in read-only briefs; adj 489 moves cloud Claude read-only roles off plan mode). · discovered from S432</td><td class="status">retired</td></tr>
-<tr class="open"><td>157</td><td>S452</td><td>Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored</td><td></td><td>-</td><td></td><td>discovered from S418</td><td class="status">—</td></tr>
-<tr class="open"><td>158</td><td>S453</td><td>Resume the gate without Claude Code plan mode until S418 lands in the daemon binary</td><td></td><td>-</td><td></td><td>discovered from S418</td><td class="status">—</td></tr>
+<tr class="retired"><td>157</td><td>S452</td><td>Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored</td><td></td><td>-</td><td></td><td>Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418</td><td class="status">retired</td></tr>
+<tr class="retired"><td>158</td><td>S453</td><td>Resume the gate without Claude Code plan mode until S418 lands in the daemon binary</td><td></td><td>-</td><td></td><td>Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418</td><td class="status">retired</td></tr>
 </tbody></table>
 <h2>v1.1</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>

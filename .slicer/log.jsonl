@@ -5595,3 +5595,6 @@
 {"when": "2026-11-18T23:14:43Z", "item": "S452", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-18T23:42:25Z", "item": "S453", "action": "add", "from": "", "to": "open", "note": "Resume the gate without Claude Code plan mode until S418 lands in the daemon binary"}
 {"when": "2026-11-18T23:42:25Z", "item": "S453", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T02:50:27Z", "item": "S452", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran."}
+{"when": "2026-11-19T02:50:27Z", "item": "S453", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran."}
+{"when": "2026-11-19T02:50:27Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S452 and S453 (2026-11-18, tool feedback filed during", "by": "Jon Robbins"}
