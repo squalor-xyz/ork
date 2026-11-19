@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 454,
+  "next_id": 455,
   "preamble": "",
   "passes": [
     {
@@ -24602,6 +24602,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S454",
+      "title": "The landing's tracking commit takes the slice files that the index lists",
+      "short_title": "Landing commits new slice files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-18: commit f197f7dc \"Tracking edits on main before landing S418\" committed `.slicer/index.json` with S452 and S453 in it but left `.slicer/slices/S452.json`, `.slicer/slices/S453.json` and their renders untracked on main; the S418 worktree then failed `slicer check` and the run paused asking where the bodies were (run ork-20261118-225521-b892). The same happened with S446/S447 (S444) and S450 earlier the same day.",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "land-tracking-untracked-slices",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 1,
         "attempts": 0
       }
     }
