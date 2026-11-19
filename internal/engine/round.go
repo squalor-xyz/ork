@@ -487,6 +487,10 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	if err := os.MkdirAll(tempDir, 0o700); err != nil {
 		return fail("temp directory", err)
 	}
+	tmpDir := runrec.RoleTMPDir(filepath.Dir(filepath.Dir(e.run.Dir())), rec.ID, r.label(), r.n)
+	if err := os.MkdirAll(tmpDir, 0o700); err != nil {
+		return fail("process temp directory", err)
+	}
 	if r.role == RoleUI {
 		// A rerun starts with no renders: an earlier attempt's files are not
 		// this attempt's views (S121, *proposed*).
@@ -512,7 +516,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		return fail("slicer show", err)
 	}
 	in := BriefInput{
-		Role: r.role, SliceID: rec.Item, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
+		Role: r.role, SliceID: rec.Item, Worktree: rec.Worktree, TempDir: tempDir, TMPDir: tmpDir, ReportPath: reportPath,
 		SliceJSON: string(sliceJSON), EnvLines: e.proj.EnvironmentLines,
 		CheckCommand: e.proj.CheckCommand,
 		Allow:        perm.Allow,
@@ -663,7 +667,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		res, runErr = e.d.Runner.Run(sessionCtx, Request{
 			RunID: rec.ID,
 			Role:  r.role, Part: r.part, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
-			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, ReportPath: reportPath,
+			Brief: brief, Worktree: rec.Worktree, TempDir: tempDir, TMPDir: tmpDir, ReportPath: reportPath,
 			ProgressFile: progressFile, ReadLog: readLog,
 			OnContext: func(tokens int) {
 				if entry.Vendor == "claude-local" && tokens > localFreshLimit() && contextTokens.CompareAndSwap(0, int64(tokens)) {

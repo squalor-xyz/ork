@@ -234,3 +234,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S432 (run ork-20261118-172104-db18, 2026-11-18)
 
 - [ ] [AFTER LAND] after slicer s460 lands and the daemon is rebuilt, ork doctor shows the contract line as ok for relay v13.
+
+## S437 (run ork-20261118-225522-3de5, 2026-11-19)
+
+- [ ] in the next ork run on this project, the implementer's report shows the daemon tests ran with no "no temp directory short enough for a socket" skip.

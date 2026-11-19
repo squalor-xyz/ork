@@ -85,7 +85,7 @@ func TestFirstRowBriefIsUnchanged(t *testing.T) {
 	req := h.runner.requests()[0]
 	want, err := BuildBrief(BriefInput{
 		Role: req.Role, SliceID: item, Worktree: req.Worktree,
-		TempDir: req.TempDir, ReportPath: req.ReportPath,
+		TempDir: req.TempDir, TMPDir: req.TMPDir, ReportPath: req.ReportPath,
 		SliceJSON: sliceJSON(), EnvLines: h.proj.EnvironmentLines,
 		CheckCommand: h.proj.CheckCommand,
 		Allow:        DefaultImplementerAllowlist(h.proj.CheckCommand),
@@ -981,6 +981,24 @@ func yourFilesSection(t *testing.T, brief string) string {
 	}
 	section, _, _ := strings.Cut(rest, "\n## ")
 	return section
+}
+
+func TestClaudeReadOnlyBriefHasNoPlanModeText(t *testing.T) {
+	for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck, RoleSpecDraft} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Vendor, in.Role, in.ReadOnly = "claude", role, true
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, forbidden := range []string{"plan mode", "ExitPlanMode"} {
+				if strings.Contains(strings.ToLower(got), strings.ToLower(forbidden)) {
+					t.Errorf("Claude brief contains %q", forbidden)
+				}
+			}
+		})
+	}
 }
 
 func TestReadOnlyBriefSaysTheReportIsTheFinalMessage(t *testing.T) {

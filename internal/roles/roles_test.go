@@ -17,7 +17,7 @@ import (
 
 // knownPlaceholders are the only {{name}} tokens a prompt may hold. The
 // engine fills them (S04); roles.go lists them in its top comment.
-var knownPlaceholders = []string{"report_path", "slice_id", "temp_dir", "worktree"}
+var knownPlaceholders = []string{"report_path", "slice_id", "temp_dir", "worktree", "renders_dir"}
 
 func TestImplementerPromptSaysHowToRename(t *testing.T) {
 	p := prompts(t)["implementer"]

@@ -5607,3 +5607,52 @@
 {"when": "2026-11-19T11:54:02Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-19T11:58:40Z", "item": "S345", "action": "note", "from": "", "to": "", "note": "Verified: both implementer presets and the built-in default ", "by": "Jon Robbins"}
 {"when": "2026-11-19T11:58:42Z", "item": "S345", "action": "status", "from": "started", "to": "done", "note": "Verified: presets and the built-in default allow git ls-files, git mv, git rm and non-recursive rm (adj 478); the approval hook denies outside-worktree removals and recursive rm; cloud Claude write roles run the hook for paths only and defer other calls to the CLI allowlist; full test suite, vet, gofmt, slicer check and adj lint passed.", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:11:38Z", "item": "S437", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:12:54Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:12:54Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T23:13:30Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:13:30Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T02:51:57Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T02:51:57Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:04:46Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:04:46Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:04:46Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T03:18:46Z", "item": "S437", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S437):", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:18:50Z", "item": "S437", "action": "note", "from": "", "to": "", "note": "Verified: role runs get a separate process TMPDIR under STAT", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:18:51Z", "item": "S437", "action": "status", "from": "started", "to": "done", "note": "Verified: role runs get a separate process TMPDIR under STATE/t/<run-key>/<round-key> (62 bytes with the default state root), created mode 0700 before launch and removed with the run at retention. Claude and Codex get it as TMPDIR with only that directory added to sandbox and approval grants; asset, render and Go cache paths are unchanged. Six new tests pass, as do vet, gofmt, the full suite and slicer check in the gate. The socket acceptance run in a real role launch awaits the next-run human check.", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:55:47Z", "item": "S418", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:56:01Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T22:56:01Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T23:00:41Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:00:41Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T23:31:26Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:32:54Z", "item": "S418", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:42:47Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Verified cloud Claude read-only roles use the fixed read-onl", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:42:51Z", "item": "S418", "action": "status", "from": "started", "to": "done", "note": "Verified cloud Claude read-only roles use the fixed read-only allowlist with no permission prompts or plan-mode flag. UI write grants, claude-local behavior and Grok plan mode are retained. Documentation and field comments match the behavior. Gate PASS; owner approved.", "by": "Jon Robbins"}
+{"when": "2026-11-18T22:59:31Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-18T23:14:43Z", "item": "S452", "action": "add", "from": "", "to": "open", "note": "Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored"}
+{"when": "2026-11-18T23:14:43Z", "item": "S452", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-18T23:42:25Z", "item": "S453", "action": "add", "from": "", "to": "open", "note": "Resume the gate without Claude Code plan mode until S418 lands in the daemon binary"}
+{"when": "2026-11-18T23:42:25Z", "item": "S453", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T02:50:27Z", "item": "S452", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran."}
+{"when": "2026-11-19T02:50:27Z", "item": "S453", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran."}
+{"when": "2026-11-19T02:50:27Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Merged S452 and S453 (2026-11-18, tool feedback filed during", "by": "Jon Robbins"}
+{"when": "2026-11-19T02:50:54Z", "item": "S454", "action": "add", "from": "", "to": "open", "note": "The landing's tracking commit takes the slice files that the index lists"}
+{"when": "2026-11-19T02:51:00Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T03:16:14Z", "item": "S418", "action": "note", "from": "", "to": "", "note": "Verified cloud Claude read-only roles (reviewer, gate, archi", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:14:57Z", "item": "S455", "action": "add", "from": "", "to": "open", "note": "Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change"}
+{"when": "2026-11-19T03:14:57Z", "item": "S455", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T03:17:23Z", "item": "S456", "action": "add", "from": "", "to": "open", "note": "give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly"}
+{"when": "2026-11-19T03:17:24Z", "item": "S456", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T03:22:53Z", "item": "S454", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:23:05Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:23:05Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:25:57Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:38:05Z", "item": "S454", "action": "note", "from": "", "to": "", "note": "Landing tracking commits include listed untracked slice JSON", "by": "Jon Robbins"}
+{"when": "2026-11-19T03:38:05Z", "item": "S454", "action": "status", "from": "started", "to": "done", "note": "Landing tracking commits include listed untracked slice JSON and renders when committing the slicer index, while unlisted files remain untracked. Regression tests and mutation checks verified the behavior; gate PASS and owner approval authorize finalization.", "by": "Jon Robbins"}
+{"when": "2026-11-19T11:43:42Z", "item": "S457", "action": "add", "from": "", "to": "open", "note": "flag docs whose example CLI output strings disagree with the expected output in cli_test.go"}
+{"when": "2026-11-19T11:43:42Z", "item": "S457", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T11:46:49Z", "item": "S458", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it"}
+{"when": "2026-11-19T11:46:49Z", "item": "S458", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR in the reviewer sandbox since the slice Check names it"}
+{"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "promote", "from": "", "to": "", "note": ""}

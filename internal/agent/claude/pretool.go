@@ -28,7 +28,7 @@ type Approval struct {
 }
 type ApprovalPolicy struct {
 	Worktree, Scratch, AddDir, ToolResults string
-	TempDir, ReportFile                    string
+	TempDir, TMPDir, ReportFile            string
 	Allowlist                              []string
 	// Role selects the Read cap (roles.local-read-cap, *proposed*). The
 	// implementer is capped at 150 lines. Every other role, including an
@@ -381,9 +381,11 @@ func (p ApprovalPolicy) readOnlyOwnFiles(command string) bool {
 		}
 		path = resolveAncestor(path)
 		own := p.ReportFile != "" && path == resolveAncestor(p.ReportFile)
-		if p.TempDir != "" {
-			rel, err := filepath.Rel(resolveAncestor(p.TempDir), path)
-			own = own || (err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))
+		for _, root := range []string{p.TempDir, p.TMPDir} {
+			if root != "" {
+				rel, err := filepath.Rel(resolveAncestor(root), path)
+				own = own || (err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)))
+			}
 		}
 		for _, rule := range p.Allowlist {
 			if progress := progressPath(rule); progress != "" && path == resolveAncestor(progress) {
@@ -503,7 +505,7 @@ func (p ApprovalPolicy) contains(path string) bool {
 			return true
 		}
 	}
-	for _, root := range []string{p.Worktree, p.Scratch, p.ToolResults, p.TempDir} {
+	for _, root := range []string{p.Worktree, p.Scratch, p.ToolResults, p.TempDir, p.TMPDir} {
 		if root == "" {
 			continue
 		}

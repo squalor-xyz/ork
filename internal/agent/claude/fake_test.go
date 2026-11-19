@@ -162,6 +162,7 @@ func fakeSpec(t *testing.T, p plan) Spec {
 		Env:        append(os.Environ(), envHelper+"=1", envPlan+"="+string(data), "GORACE=atexit_sleep_ms=0"),
 		Prompt:     "Reply with exactly the word OK.",
 		Model:      "haiku",
+		Allowlist:  []string{"Read"},
 		FixtureDir: t.TempDir(),
 	}
 }

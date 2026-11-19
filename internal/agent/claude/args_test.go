@@ -46,7 +46,7 @@ func TestArgsCloudWriteRoleUsesApprovalHook(t *testing.T) {
 	// A cloud role with no hook command, and a cloud read-only role, keep no hook.
 	for name, spec := range map[string]Spec{
 		"no hook":   {Bin: "claude", Prompt: "p", Allowlist: []string{"Read"}},
-		"read-only": {Bin: "claude", Prompt: "p", ReadOnly: true, HookCommand: hook},
+		"read-only": {Bin: "claude", Prompt: "p", ReadOnly: true, HookCommand: hook, Allowlist: []string{"Read"}},
 	} {
 		t.Run(name, func(t *testing.T) {
 			got, err := spec.Args()
@@ -57,6 +57,21 @@ func TestArgsCloudWriteRoleUsesApprovalHook(t *testing.T) {
 				t.Fatalf("unexpected hook settings: %q", got)
 			}
 		})
+	}
+}
+
+func TestCloudClaudeReadOnlyRunsOnTheAllowlist(t *testing.T) {
+	got, err := (Spec{Bin: "claude", Prompt: "review", ReadOnly: true, Allowlist: []string{"Read", "Bash(go test*)"}}).Args()
+	want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages",
+		"--allowedTools", "Read,Bash(go test*)", "--permission-prompts", "none", "review"}
+	if err != nil || !reflect.DeepEqual(got, want) {
+		t.Fatalf("cloud read-only argv = %q, err = %v; want %q", got, err, want)
+	}
+}
+
+func TestCloudClaudeReadOnlyNeedsAnAllowlist(t *testing.T) {
+	if _, err := (Spec{Bin: "claude", Prompt: "review", ReadOnly: true}).Args(); err == nil {
+		t.Fatal("cloud read-only role accepted an empty allowlist")
 	}
 }
 
@@ -72,7 +87,7 @@ func TestArgsLocalReadOnlyUsesAllowlist(t *testing.T) {
 				want = append(want, "--system-prompt-file", localSystemPath, "--tools", "Read,Grep,Glob,Bash", "--disable-slash-commands", "--allowedTools", "Read,Grep,Glob", "--permission-prompts", "none")
 				want = append(want, "--permission-mode", "manual", "--settings", HookSettings(""))
 			} else {
-				want = append(want, "--permission-mode", "plan")
+				want = append(want, "--allowedTools", "Read,Grep,Glob", "--permission-prompts", "none")
 			}
 			want = append(want, "review")
 			if !reflect.DeepEqual(got, want) {
@@ -141,7 +156,7 @@ func TestArgsLocalSystemPromptFileMustBeAbsolute(t *testing.T) {
 // file commands in the worktree (adj 371), so the UI pass has no permission
 // mode flag: its allowlist (read-only tools plus Edit and Write under the
 // directory) and --permission-prompts none deny every other call. A reviewer,
-// with no write directory, keeps plain plan mode.
+// with no write directory, gets only the read-only allowlist (adj 489).
 func TestUIPassMayWriteOnlyItsTempDir(t *testing.T) {
 	base := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
 	ui, err := (Spec{Bin: "claude", Dir: "/work/tree", WriteDir: "/run/tmp/ui-1", Prompt: "ui", ReadOnly: true, KeepSkills: true, Allowlist: []string{"Read", "Bash(go test*)"}}).Args()
@@ -154,11 +169,11 @@ func TestUIPassMayWriteOnlyItsTempDir(t *testing.T) {
 	if !reflect.DeepEqual(ui, want) {
 		t.Fatalf("UI pass argv: got %q; want %q", ui, want)
 	}
-	reviewer, err := (Spec{Bin: "claude", Dir: "/work/tree", Prompt: "review", ReadOnly: true}).Args()
+	reviewer, err := (Spec{Bin: "claude", Dir: "/work/tree", Prompt: "review", ReadOnly: true, Allowlist: []string{"Read", "Bash(go test*)"}}).Args()
 	if err != nil {
 		t.Fatal(err)
 	}
-	want = append(slices.Clone(base), "--permission-mode", "plan", "review")
+	want = append(slices.Clone(base), "--allowedTools", "Read,Bash(go test*)", "--permission-prompts", "none", "review")
 	if !reflect.DeepEqual(reviewer, want) {
 		t.Fatalf("reviewer argv: got %q; want %q", reviewer, want)
 	}

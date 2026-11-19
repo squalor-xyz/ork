@@ -164,18 +164,20 @@ type Round struct {
 type Spec struct {
 	HookCommand string   // claude-local and cloud write roles: ork hook pretool, bound to this daemon attempt
 	AddDir      string   // additional directory for the exact progress-note permission
+	TMPDir      string   // assigned process TMPDIR, separate from run assets
 	Bin         string   // default "claude"
 	Dir         string   // working directory
 	Env         []string // full environment; nil inherits
 	Prompt      string
 	Model       string // omitted when empty
 	Effort      string // omitted when empty
-	ReadOnly    bool   // cloud: plan mode; claude-local: manual mode and read-only allowlist
+	ReadOnly    bool   // cloud: read-only allowlist, no mode flag (adj 489); claude-local: manual mode and read-only allowlist
 	Allowlist   []string
 	// WriteDir is the one directory a cloud read-only role may write (S369,
-	// *proposed*): the UI pass's run temp dir. Set, the role has no plan mode:
-	// it runs on Allowlist plus Edit and Write rules for this directory, with
-	// --permission-prompts none. Empty gives plain plan mode. claude-local
+	// *proposed*): the UI pass's run temp dir. Set, it adds Edit and Write
+	// rules for this directory to Allowlist. Empty, the role needs a non-empty
+	// Allowlist and gets no write rules. Both cloud forms use
+	// --permission-prompts none and no mode flag (adj 489). claude-local
 	// ignores it (AddDir).
 	WriteDir   string
 	KeepSkills bool // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)

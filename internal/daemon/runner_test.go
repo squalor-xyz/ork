@@ -24,6 +24,157 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestRoleTMPDIRIsWritableByTheRole(t *testing.T) {
+	for _, vendor := range []string{"claude", "claude-local", "codex", "codex-local"} {
+		for _, resume := range []string{"", "session"} {
+			for _, readOnly := range []bool{false, true} {
+				t.Run(fmt.Sprintf("%s/%s/readonly=%t", vendor, resume, readOnly), func(t *testing.T) {
+					root := t.TempDir()
+					assets := filepath.Join(root, "assets")
+					short := filepath.Join(root, "short")
+					for _, dir := range []string{assets, short} {
+						if err := os.Mkdir(dir, 0o700); err != nil {
+							t.Fatal(err)
+						}
+					}
+					req := engine.Request{Vendor: vendor, Worktree: filepath.Join(root, "worktree"), TempDir: assets, TMPDir: short, Brief: "brief", Resume: resume, ReadOnly: readOnly, Allowlist: []string{"Write"}}
+					check := func(env, args []string, err error) {
+						t.Helper()
+						if err != nil {
+							t.Fatal(err)
+						}
+						var got []string
+						for _, entry := range env {
+							if strings.HasPrefix(entry, "TMPDIR=") {
+								got = append(got, entry)
+							}
+						}
+						if !reflect.DeepEqual(got, []string{"TMPDIR=" + short}) {
+							t.Errorf("process environment TMPDIR %v, want %s", got, short)
+						}
+						if strings.Contains(strings.Join(args, "\n"), short) == readOnly {
+							t.Errorf("sandbox TMPDIR grant inconsistent with readonly=%t: %v", readOnly, args)
+						}
+						var dirs []string
+						for i := 0; i+1 < len(args); i++ {
+							if args[i] == "--add-dir" {
+								dirs = append(dirs, args[i+1])
+							}
+						}
+						wantDirs := []string{short}
+						if readOnly {
+							wantDirs = nil
+							for _, arg := range args {
+								if strings.HasPrefix(arg, "sandbox_workspace_write.writable_roots=") {
+									t.Errorf("read-only role has writable roots: %v", args)
+								}
+							}
+						} else if strings.HasPrefix(vendor, "codex") {
+							wantDirs = []string{assets, short}
+							if resume != "" {
+								wantDirs = nil
+								want := fmt.Sprintf("sandbox_workspace_write.writable_roots=[%q,%q,%q]", assets, short, req.Worktree)
+								if !slices.Contains(args, want) {
+									t.Errorf("resume roots lack exact directories: %v", args)
+								}
+							}
+						}
+						if !reflect.DeepEqual(dirs, wantDirs) {
+							t.Errorf("additional directories %v, want %v", dirs, wantDirs)
+						}
+					}
+					var runner engine.Runner
+					if strings.HasPrefix(vendor, "claude") {
+						runner = claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+							args, err := s.Args()
+							check(s.Env, args, err)
+							return claude.Round{Class: claude.ClassOK}, nil
+						}}
+					} else {
+						runner = codexRunner{round: func(_ context.Context, s codex.Spec) (codex.Round, error) {
+							args, err := s.Args()
+							check(s.Env, args, err)
+							return codex.Round{Exit: codex.ExitOK}, nil
+						}}
+					}
+					if _, err := runner.Run(context.Background(), req); err != nil {
+						t.Fatal(err)
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestRoleTMPDIRApprovalBoundaries(t *testing.T) {
+	root := t.TempDir()
+	d := &Daemon{}
+	req := engine.Request{Worktree: filepath.Join(root, "worktree"), TempDir: filepath.Join(root, "assets"), TMPDir: filepath.Join(root, "t", "run", "role")}
+	if err := os.MkdirAll(req.TMPDir, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(root, filepath.Join(req.TMPDir, "escape")); err != nil {
+		t.Fatal(err)
+	}
+	_, finish, err := d.prepareApproval(context.Background(), req, []string{"Write"}, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer finish()
+	var policy claude.ApprovalPolicy
+	for _, session := range d.runs.approvals {
+		policy = session.policy
+	}
+	for _, tc := range []struct{ name, path, want string }{
+		{"assigned", filepath.Join(req.TMPDir, "output"), "allow"},
+		{"assets", filepath.Join(req.TempDir, "output"), "allow"},
+		{"parent", filepath.Join(filepath.Dir(req.TMPDir), "output"), "deny"},
+		{"sibling", req.TMPDir + "-other/output", "deny"},
+		{"symlink", filepath.Join(req.TMPDir, "escape", "output"), "deny"},
+	} {
+		for _, tool := range []string{"Write", "Bash"} {
+			t.Run(tc.name+"/"+tool, func(t *testing.T) {
+				input := map[string]string{"file_path": tc.path}
+				if tool == "Bash" {
+					input = map[string]string{"command": "cat " + tc.path}
+				}
+				in, err := json.Marshal(input)
+				if err != nil {
+					t.Fatal(err)
+				}
+				got := policy.Evaluate(claude.ToolCall{ToolName: tool, ToolInput: in})
+				if got.Decision != tc.want {
+					t.Errorf("write %s: %s, want %s (%s)", tc.path, got.Decision, tc.want, got.Reason)
+				}
+			})
+		}
+	}
+}
+
+func TestRoleTMPDIRCloudUIKeepsScratchAndRenderWrites(t *testing.T) {
+	runner := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		args, err := s.Args()
+		if err != nil {
+			t.Fatal(err)
+		}
+		allow := ""
+		for i := 0; i+1 < len(args); i++ {
+			if args[i] == "--allowedTools" {
+				allow = args[i+1]
+			}
+		}
+		for _, rule := range []string{"Edit(//state/t/run/role/**)", "Write(//state/t/run/role/**)", "Edit(//state/runs/run/tmp/ui-1/**)", "Write(//state/runs/run/tmp/ui-1/**)"} {
+			if !slices.Contains(strings.Split(allow, ","), rule) {
+				t.Errorf("cloud UI allowlist lacks %s: %s", rule, allow)
+			}
+		}
+		return claude.Round{Class: claude.ClassOK}, nil
+	}}
+	if _, err := runner.Run(context.Background(), engine.Request{Vendor: "claude", Role: engine.RoleUI, ReadOnly: true, Brief: "brief", TempDir: "/state/runs/run/tmp/ui-1", TMPDir: "/state/t/run/role"}); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestClaudeRunnerCountsApprovalDenials(t *testing.T) {
 	hook := runrec.DeniedCommand{Tool: "Read", Command: "long.go"}
 	duplicate := claude.Denial{ToolName: "Read", ToolInput: json.RawMessage(`{"file_path":"long.go"}`)}
@@ -126,6 +277,46 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 }
 
 const localReadOnlyTools = "Read,Grep,Glob,Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(adj show*),Bash(adj check*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
+
+func TestReadOnlyRoleOnCloudClaudeGetsTheReadOnlyList(t *testing.T) {
+	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleSpecDraft} {
+		t.Run(role, func(t *testing.T) {
+			want := localReadOnlyTools
+			if role == engine.RoleSpecCheck {
+				want += ",Bash(adj find*)"
+			}
+			r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				if strings.Join(s.Allowlist, ",") != want || s.WriteDir != "" {
+					t.Errorf("read-only spec: allowlist %q, WriteDir %q; want %q and no write directory", s.Allowlist, s.WriteDir, want)
+				}
+				args, err := s.Args()
+				expected := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--allowedTools", want, "--permission-prompts", "none", "brief"}
+				if err != nil || !reflect.DeepEqual(args, expected) {
+					t.Errorf("read-only argv %q, err %v; want %q", args, err, expected)
+				}
+				return claude.Round{Class: claude.ClassOK}, nil
+			}}
+			if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: role, ReadOnly: true, TempDir: "/run/tmp/review", Brief: "brief"}); err != nil {
+				t.Fatal(err)
+			}
+		})
+	}
+}
+
+func TestUIPassStillGetsItsWriteRule(t *testing.T) {
+	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+		args, err := s.Args()
+		want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--add-dir", "/run/tmp/ui",
+			"--allowedTools", localReadOnlyTools + ",Skill,Edit(//run/tmp/ui/**),Write(//run/tmp/ui/**)", "--permission-prompts", "none", "brief"}
+		if err != nil || !reflect.DeepEqual(args, want) {
+			t.Errorf("UI argv %q, err %v; want %q", args, err, want)
+		}
+		return claude.Round{Class: claude.ClassOK}, nil
+	}}
+	if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: engine.RoleUI, ReadOnly: true, TempDir: "/run/tmp/ui", Brief: "brief"}); err != nil {
+		t.Fatal(err)
+	}
+}
 
 // Only a cloud UI pass gets a write directory, its run temp dir (S369).
 func TestClaudeRunnerGivesOnlyTheCloudUIPassAWriteDir(t *testing.T) {
@@ -487,7 +678,11 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 							"--allowedTools", localReadOnlyTools+",Skill,Edit(/"+temp+"/**),Write(/"+temp+"/**)",
 							"--permission-prompts", "none")
 					} else {
-						want = append(want, "--permission-mode", "plan")
+						allowed := localReadOnlyTools
+						if role == engine.RoleSpecCheck {
+							allowed += ",Bash(adj find*)"
+						}
+						want = append(want, "--allowedTools", allowed, "--permission-prompts", "none")
 					}
 					want = append(want, "review")
 					if !reflect.DeepEqual(got, want) {

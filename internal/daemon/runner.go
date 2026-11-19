@@ -38,7 +38,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		call = claude.Run
 	}
 	allowlist := req.Allowlist
-	if req.ReadOnly && req.Vendor == "claude-local" {
+	if req.ReadOnly {
 		allowlist = engine.LocalReadOnlyAllowlist()
 		if req.Role == engine.RoleSpecCheck {
 			allowlist = append(allowlist, "Bash(adj find*)")
@@ -100,7 +100,11 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	total := func(u claude.Usage) int {
 		return int(u.InputTokens + u.OutputTokens + u.CacheReadTokens + u.CacheCreationTokens)
 	}
-	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, WriteDir: writeDir, Env: claudeEnv(r.env, req.TempDir, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
+	processTemp := req.TMPDir
+	if processTemp == "" {
+		processTemp = req.TempDir
+	}
+	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, TMPDir: req.TMPDir, WriteDir: writeDir, Env: claudeEnv(r.env, processTemp, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
 		HookCommand: hookCommand, SystemPromptFile: systemFile,
 		ReadOnly: req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			if ev.ContextTokens > 0 {
@@ -223,7 +227,11 @@ func (r codexRunner) Run(ctx context.Context, req engine.Request) (engine.Result
 		call = codex.Run
 	}
 	live := newLiveRedactor(r.env, req.OnLive)
-	round, err := call(ctx, codex.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: req.TempDir, Env: codexEnv(r.env, req.TempDir), Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev codex.Event) {
+	env := codexEnv(r.env, req.TempDir)
+	if req.TMPDir != "" {
+		env = roleEnv(env, map[string]string{"TMPDIR": req.TMPDir})
+	}
+	round, err := call(ctx, codex.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: req.TempDir, TMPDir: req.TMPDir, Env: env, Prompt: req.Brief, Model: req.Model, Effort: req.Effort, ReadOnly: req.ReadOnly, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev codex.Event) {
 		if ev.Type == "item.completed" && ev.Item != nil && ev.Item.Type == "agent_message" {
 			live.send(ev.Item.Text+"\n", 0, false)
 		}
