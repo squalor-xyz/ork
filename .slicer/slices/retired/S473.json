@@ -1,0 +1,39 @@
+{
+  "id": "S473",
+  "title": "allow slicer check --root WT and adj lint --root WT as plain commands for the reviewer (same as S470)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-143744-0f7d, project ork, item S348:\n\nallow slicer check --root WT and adj lint --root WT as plain commands for the reviewer (same as S470)\n\nEvidence: slicer check --root /home/jon/code/squalor-xyz/ork/.worktrees/S348 was denied with \"this session has no approval surface\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,41 @@
+{
+  "id": "S474",
+  "title": "TestFeedDeliversTheNoticesOfTheProjectInFocus waits for the items notice",
+  "lead": [
+    "`TestFeedDeliversTheNoticesOfTheProjectInFocus` waits for the first notice of alpha that carries the `items` part, skipping a `runs` notice that arrives first, so it no longer fails under load."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-19, S384 landing (run ork-20261119-131145-b70c, land-slice-checks-2-2.log): `go test ./...` failed with `feed_test.go:80: notice {Project:alpha Parts:[runs] ...}, want items of alpha`. On main the test passes 20 of 20 alone (`-count=20 -run TestFeedDeliversTheNoticesOfTheProjectInFocus`), so it fails only under full-suite load.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The test takes the first notice after focusing alpha (`internal/daemon/feed_test.go:76-80`). A `runs` notice for alpha can arrive before the `items` notice, and the test then fails although the feed behaves correctly. It turned S384's landing red on 2026-11-19 for a reason the slice did not cause."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/daemon/feed_test.go:57-81`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestFeedDeliversTheNoticesOfTheProjectInFocus` in `internal/daemon/feed_test.go`: with a `runs` notice for alpha sent before the `items` notice (inject it in the test), the test still passes, and it still fails if no `items` notice for alpha arrives or a beta notice arrives. Red today when the `runs` notice comes first."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Make the test red by sending a `runs` notice for alpha first.\n2. Loop over notices until one for alpha has the `items` part, failing on any notice for beta and on the wait timeout.\n3. Check the other feed tests in the file for the same pattern and fix them the same way.\n4. Changelog entry with `slicer changelog add S474 --text \"...\"`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- The feed test does not depend on the order of notices for the focused project.\n- A notice for a project not in focus still fails the test.\n\nCommands:\n- `go test -count=20 ./internal/daemon -run 'TestFeed' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"Feed test waits for the items notice\"."
+    }
+  ],
+  "notes": []
+}
