@@ -1,0 +1,39 @@
+{
+  "id": "S461",
+  "title": "this reviewer brief's role prompt still carried \"write your final report to PATH\" beside \"you cannot write it\", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-115016-07da, project ork, item S423:\n\nthis reviewer brief's role prompt still carried \"write your final report to PATH\" beside \"you cannot write it\", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt\n\nEvidence: Rules and Report sections of this run's reviewer-1 brief"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

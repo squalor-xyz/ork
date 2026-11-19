@@ -1,0 +1,39 @@
+{
+  "id": "S462",
+  "title": "allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-120630-a290, project ork, item S357:\n\nallow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief\n\nEvidence: the implementer's full suite failed with \"setsockopt: operation not permitted\" in ipc, tui, daemon, cmd/ork and cli, so nobody verified full-suite green for this slice"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

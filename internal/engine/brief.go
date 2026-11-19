@@ -68,6 +68,15 @@ func fenceFor(text string) string {
 
 const trackingRule = "Do not open, search, parse, or edit tracking files; use the slicer commands."
 
+const originalReportSentence = "write your final report to {{report_path}} and exit. If you cannot\nwrite that file, put the whole report in your final message instead."
+
+func readOnlyReportPrompt(role, prompt string) (string, error) {
+	if !strings.Contains(prompt, originalReportSentence) {
+		return "", fmt.Errorf("brief for %s: prompt is missing the report sentence", role)
+	}
+	return strings.Replace(prompt, originalReportSentence, "give your whole report as your final message and exit; ork saves it to {{report_path}}.", 1), nil
+}
+
 // BuildBrief returns the brief for a role: the role prompt with its
 // placeholders filled, then the slice, the tracking rule, the workspace
 // limit, the environment lines, the role's temp directory and report path,
@@ -103,6 +112,12 @@ func BuildBrief(in BriefInput) (string, error) {
 		}
 		line, rest, _ := strings.Cut(prompt, "\n")
 		prompt = line + "\n\n## Tool rules\n\nAllowed forms, verbatim: " + strings.Join(in.Allow, "; ") + "; any other command is denied. Run one plain command per call; no pipes, no && or ;, no command substitution, no cd, no env prefix unless an entry allows it. Change files with the Edit and Write tools only.\n\n## Note first\n\nWrite your progress note now to `" + in.ProgressFile + "` with Edit or Write, before reading any file. This exact file is an exception to the workspace limit. Record done, next and open problems, even when nothing is done yet. After each step, update the note. Append an anchor log every few reads (`file:line symbol: purpose`); keep existing anchors when updating the note. ork may start a fresh session past 70,000 context tokens; the note preserves your work.\n" + rest
+	}
+	if in.ReadOnly {
+		prompt, err = readOnlyReportPrompt(in.Role, prompt)
+		if err != nil {
+			return "", err
+		}
 	}
 	processTemp := in.TMPDir
 	if processTemp == "" {

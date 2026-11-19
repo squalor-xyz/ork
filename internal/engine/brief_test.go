@@ -16,6 +16,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
@@ -999,6 +1000,87 @@ func TestClaudeReadOnlyBriefHasNoPlanModeText(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestReadOnlyReportSentenceRejectsDrift(t *testing.T) {
+	got, err := readOnlyReportPrompt(RoleReviewer, "When you finish, write a report elsewhere.")
+	if err == nil {
+		t.Fatal("drifted report sentence accepted")
+	}
+	if !strings.Contains(err.Error(), RoleReviewer) {
+		t.Errorf("error does not name role: %v", err)
+	}
+	if got != "" {
+		t.Errorf("drift returned a usable prompt: %q", got)
+	}
+}
+
+func requireOneReadOnlyReportRule(t *testing.T, in BriefInput) {
+	t.Helper()
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(got, "write your final report to") {
+		t.Error("read-only brief still tells the role to write its report")
+	}
+	_, report, found := strings.Cut(got, "\n## Report\n")
+	if !found {
+		t.Fatal("missing Report section")
+	}
+	report, _, _ = strings.Cut(report, "\n# Brief\n")
+	if !strings.Contains(report, "give your whole report as your final message and exit; ork saves it to "+in.ReportPath+".") {
+		t.Error("Report section lacks the final-message rule with the report path")
+	}
+	if n := strings.Count(report, in.ReportPath); n != 1 {
+		t.Errorf("Report section names the report path %d times, want 1", n)
+	}
+}
+
+func TestReadOnlyBriefHasOneReportRule(t *testing.T) {
+	for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck, RoleSpecDraft} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.ReadOnly = role, true
+			requireOneReadOnlyReportRule(t, in)
+		})
+	}
+}
+
+func TestReadOnlyPresetImplementerBriefHasOneReportRule(t *testing.T) {
+	in := baseBrief()
+	in.ReadOnly = true
+	requireOneReadOnlyReportRule(t, in)
+}
+
+func TestWriteRoleBriefKeepsTheReportPathRule(t *testing.T) {
+	in := baseBrief()
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(got, "write your final report to "+in.ReportPath) {
+		t.Fatal("write-role brief lost its report-path rule")
+	}
+}
+
+func TestReadOnlyReportSentenceIsInEveryPrompt(t *testing.T) {
+	for _, name := range roles.Names() {
+		t.Run(name, func(t *testing.T) {
+			prompt, err := roles.Prompt(name)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(prompt, originalReportSentence) {
+				t.Fatal("prompt lacks the exact report sentence replaced for read-only roles")
+			}
+		})
+	}
+	t.Run("carve", func(t *testing.T) {
+		if !strings.Contains(roles.CarvePrompt(), originalReportSentence) {
+			t.Fatal("carve prompt lacks the exact report sentence replaced for read-only roles")
+		}
+	})
 }
 
 func TestReadOnlyBriefSaysTheReportIsTheFinalMessage(t *testing.T) {
