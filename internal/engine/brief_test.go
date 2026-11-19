@@ -150,16 +150,16 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			// Normalize the contract marker (S432). S345 updates the baseline
-			// for the tracked rename and file removal guidance.
+			// Normalize the contract marker (S432). S384 adds the plain-v13
+			// Outcome report guidance to the implementer prompt.
 			got = strings.Replace(got, "Role: implementer. Contract: relay v13\n", "Role: implementer. Contract: relay v12\n", 1)
-			want := "97c67d412196a119b90db1a1b7386c2ad66ae2b2c6c0d324cdeb346419d05da7"
+			want := "88009306bb82ceb9ee5da9e6eaa67a7bf33786f880e8646a78e1a98a6672cab6"
 			switch vendor {
 			case "claude":
-				want = "17590783c0d6327e436f58e48ea74e4329a9e0735438922f4cd12b272e21fe9a"
+				want = "590b4669a37fac851c9ae541df45e56fa3e4e145c1d5d1767333fc194ba96d93"
 			case "grok":
 				// S305: a grok implementer's checklist names dontAsk mode.
-				want = "871311b9404361313191b18f2a42457997e48820e5bb9945b04be9395441bed0"
+				want = "ca8d9bd13406bc59aafd16eca4dd396e5af05fbac0ad8333c6996e53008dc5d7"
 			}
 			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
 				t.Fatalf("%s cloud brief changed %x", vendor, sha256.Sum256([]byte(got)))

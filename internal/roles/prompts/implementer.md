@@ -86,6 +86,11 @@ affected tests and the full suite.
   verified outcome" --render --check`. For `handoff`, run `slicer handoff
   {{slice_id}} --render --check`; then `slicer done` runs on main at landing, not in
   the worktree.
+- On relay v13, ork runs the closing note and the finish step itself for a plain
+  run (not a split run, not a sliver). Its note is the `Outcome:` line of your
+  last accepted report. Run neither step in that run, even after the gate's
+  `VERDICT: PASS`. When a brief section names the finish step for you, you run
+  it as that section says.
 - If a slicer step is denied by a permission check, do not work around it and do not
   run it another way. For steps outside the finish step, follow this rule:
   Skip that step, finish the rest of the work, and put the denial's exact text
@@ -140,6 +145,11 @@ removed, using your mutation-check evidence. Fix any problems and rerun the
 affected checks before writing the report.
 
 ## Report
+
+On relay v13, write exactly one `Outcome:` line in your report: one non-empty
+line with the verified outcome, which becomes the closing note. A plain run needs
+it, and ork refuses a report without it. A split run, a sliver, a relay v12 run
+and the report of a finish step do not need it.
 
 When you finish, write your final report to {{report_path}} and exit. If you cannot
 write that file, put the whole report in your final message instead. Keep it

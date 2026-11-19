@@ -37,15 +37,16 @@ func localFreshLimit() int {
 
 // round is one role round the state machine asks for.
 type round struct {
-	role     string
-	n        int    // the round number, for file names
-	state    string // the state the round belongs to; a pause re-enters it
-	task     string // the ledger step's label
-	finish   bool   // the implementer's finish step
-	lead     bool   // the implementer's slot is the lead of a split run (S61, *proposed*)
-	part     string // the split part's id, for a RolePart round (S61, *proposed*)
-	parent   string // the ledger step the round's step goes under; empty means the orchestrator's
-	sections []BriefSection
+	role         string
+	n            int    // the round number, for file names
+	state        string // the state the round belongs to; a pause re-enters it
+	task         string // the ledger step's label
+	finish       bool   // the implementer's finish step
+	needsOutcome bool   // plain v13 implementer report
+	lead         bool   // the implementer's slot is the lead of a split run (S61, *proposed*)
+	part         string // the split part's id, for a RolePart round (S61, *proposed*)
+	parent       string // the ledger step the round's step goes under; empty means the orchestrator's
+	sections     []BriefSection
 	// resumeFrom lists the roles whose latest session this round resumes. A
 	// pause on a question or a shape error also lets the round resume its own
 	// role's session.
@@ -367,6 +368,7 @@ func (e *Engine) overBudget(rec runrec.Record) (string, bool) {
 // an automatic retry ready (or err says why not).
 func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (outcome, error) {
 	rec := e.run.Snapshot()
+	r.needsOutcome = orkFinishes(rec)
 	// A sibling can own the single pending slot. The latest role record keeps
 	// this role's automatic retry durable until its next attempt ends.
 	if pend == nil {
@@ -963,7 +965,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 // With lenient set (the owner accepted the report, S298, *proposed*) an owner
 // finding whose options are not right is kept as a plain finding.
 func judgeReport(r round, text string, lenient bool) (rep *Report, tri *Triaged, findings string, bad *ShapeError, err error) {
-	rep, err = CheckReport(r.role, r.finish, text)
+	rep, err = CheckReport(r.role, r.finish, text, r.needsOutcome)
 	var problems, shown []string
 	var se *ShapeError
 	if errors.As(err, &se) {

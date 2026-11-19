@@ -61,8 +61,11 @@ Two things keep them in line
    `roles[]` includes the `gate` entry (both since v11); ork decodes the
    `stop[]` keys without requiring them. v12 adds the `tool_feedback` key,
    which ork requires from v12 on. v13 adds the non-empty `finish_runner`
-   conformance entry, which ork requires from v13 on. ork still resumes the
-   implementer for the closing note and finish step (S384, adj 471).
+   conformance entry, which ork requires from v13 on. On v13, ork runs the
+   closing note and the finish step itself (`slicer note`, then `slicer done`
+   or `slicer handoff`) for a plain run, with no implementer round (S384, adj
+   407 `engine.finish-runner`, adj 471). A split run, a sliver and a run on v12
+   keep the implementer's finish round (adj 500, `engine.finish-scope`).
    Tool feedback is advisory and ork
    owns nothing of it beyond reading the lines from role reports and keeping
    up to 3 in the run record (`relay.tool-feedback`, adj 325); it is no

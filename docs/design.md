@@ -1183,7 +1183,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   role`, `ID implementer fix round N` or `ID implementer finish step`, and
   its phase is set to `done` or `fail` when the round ends. A stop ends the
   run with outcome `stopped` and `--close-steps fail`; the finish step ends
-  it with `pass` and `--close-steps done`.
+  it with `pass` and `--close-steps done`. ork's own finish step of a plain v13
+  run is no role round and has no step of its own (S384).
 - **Checks.** The project's check command runs with `sh -c` in the
   worktree, then `slicer check --json`. Either red sends the implementer
   back, resumed, with the output (last 30 KB) in the brief, and spends no
@@ -1330,6 +1331,10 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   report with no `Tests: N passed, M failed` line (the finish step needs
   none), and any report with no `## Owner needed` section. All problems are
   listed. A gate PASS with a nonzero failed-test count is also refused.
+  A plain relay v13 implementer report also needs exactly one non-empty
+  `Outcome:` line with the verified outcome. Split leads, sliver chains,
+  lone slivers, v12 runs and finish reports keep their existing shape
+  (S384; adj 500, `engine.finish-scope`).
   *Proposed (S275, S287):* a shape error automatically
   retries the same reporting role once in the same round and session. Its brief
   names the shape problems. When the refused report also asks the owner (an
@@ -1611,9 +1616,22 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   `NAME (WHY)`. The directory is cleared when the UI pass starts, so a rerun keeps
   no file of an earlier attempt. After an owner fix round the card is built again with the
   same renders; its `ui_round` says which round they come from.
-- **Commit and finish.** On `Approve`, the implementer is resumed for the
-  finish step first: the closing note, then `slicer done` or `slicer handoff`
-  per `slicer config implement_finish`. Then ork commits in the worktree with
+- **Commit and finish.** On `Approve`, the finish step runs first: the closing
+  note, then `slicer done` or `slicer handoff` per `slicer config
+  implement_finish`. On relay v13, a plain run's finish step is ork's own, with
+  no role round (S384; adj 407, `engine.finish-runner`): ork runs `slicer note`
+  with the `Outcome:` line of the last accepted implementer report, then
+  `slicer done --note` (that line again) or `slicer handoff`, each with
+  `--render --check` where slicer takes it, in the worktree, under the item's
+  claim owner. A failed call pauses the run on the finish step with slicer's
+  message; `ork retry` runs it again and does not write a closing note that the
+  item already has. `slicer done` exits 1 when it landed but the tracking check
+  failed, so a retry that finds the item already done (review, for handoff)
+  runs `slicer check` instead of the finish call again, and commits when it
+  passes. Every other run keeps the finish step as an implementer
+  round, resumed: a split run, a sliver (chain or lone), a run on v12 (adj
+  500, `engine.finish-scope`), and a plain v13 run whose accepted implementer
+  reports hold no `Outcome:` line (it began on an ork build from before S384). Then ork commits in the worktree with
   `git add -A` and `git commit -m "<title>"`, the title being the quoted text
   of the slice's Git section. With no double-quoted title, including an empty
   or missing Git section, it uses `ID: slice title` from `slicer show`
@@ -3366,8 +3384,9 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   required conformance keys (including `role_fallback` and `blocker_wait`),
   ledger role names (including `gate`), gate criteria and verdicts, outcomes,
   from v12 the `tool_feedback` key, and from v13 the non-empty `finish_runner`
-  conformance entry. ork still resumes the implementer for the closing note
-  and finish step; S384 plans the engine change (adj 407, adj 471).
+  conformance entry. On v13, ork runs the closing note and the finish step
+  itself for a plain run (S384, adj 407, adj 471, adj 500); see Commit and
+  finish.
   The run records its version, roles and
   gate criteria for resumed runs. A gate round closes its ledger step with
   `--phase done --verdict pass|fail`. A gate report with no valid verdict line

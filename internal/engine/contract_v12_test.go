@@ -25,6 +25,36 @@ func TestEngineStartWithV12CreatesARun(t *testing.T) {
 	}
 }
 
+// A v12 project keeps the finish step as an implementer round, and its report
+// needs no Outcome line (S384).
+func TestFinishOnOlderContractResumesTheImplementer(t *testing.T) {
+	h := newHarness(t)
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	before := len(h.runner.requests())
+	if err := e.Approve(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateCommitted)
+	reqs := h.runner.requests()
+	if len(reqs) != before+1 {
+		t.Fatalf("%d requests after approve, want %d", len(reqs), before+1)
+	}
+	fin := reqs[before]
+	if fin.Role != RoleImplementer || fin.Resume != "sess-implementer" {
+		t.Errorf("finish request: %+v", fin)
+	}
+	section := finishSection(t, fin.Brief)
+	for _, want := range []string{`slicer note S04 --text "Describe the verified outcome" --render`, `slicer done S04 --note "Describe the verified outcome" --render --check`} {
+		if !strings.Contains(section, want) {
+			t.Errorf("finish brief lacks %q", want)
+		}
+	}
+	if len(h.calls("slicer", "done")) != 0 || len(h.calls("slicer", "note")) != 0 {
+		t.Errorf("ork ran the finish step on v12: %v", finishOrder(h))
+	}
+}
+
 func TestEngineStartRefusesV10NamingTheAcceptedSet(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {

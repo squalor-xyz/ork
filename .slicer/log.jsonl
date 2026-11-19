@@ -5712,3 +5712,15 @@
 {"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T13:40:22Z", "item": "S466", "action": "add", "from": "", "to": "open", "note": "give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand"}
 {"when": "2026-11-19T13:40:23Z", "item": "S466", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:55:57Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T13:55:57Z", "item": "S384", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:57:24Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:57:25Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T14:02:47Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T14:03:49Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T14:19:16Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T14:19:19Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T14:27:29Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T14:36:38Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T14:37:16Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "Verified: on a plain relay v13 run ork writes the closing no", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:37:18Z", "item": "S384", "action": "status", "from": "started", "to": "done", "note": "Verified: ork runs the closing note and finish step itself on plain relay v13 runs; go vet, go test ./..., slicer check and adj lint pass.", "by": "Jon Robbins"}

@@ -12,6 +12,7 @@ import (
 	pathpkg "path"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -1326,6 +1327,12 @@ func (e *Engine) finish(ctx context.Context) error {
 	default:
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateFinish, Reason: fmt.Sprintf("implement_finish is %q; ork knows done and handoff", mode)})
 	}
+	// A plain v13 run whose accepted reports hold no Outcome line (it began on
+	// an ork build from before S384) has no closing note for ork to write; it
+	// keeps the implementer's finish round below.
+	if outcome := e.lastOutcome(rec); orkFinishes(rec) && outcome != "" {
+		return e.finishInOrk(ctx, rec, mode, outcome)
+	}
 	approved := "the owner approved"
 	if chainMid(rec) {
 		approved = "this sliver passed with no owner stop (the owner approves once, after the last sliver of the chain)"
@@ -1349,6 +1356,94 @@ func (e *Engine) finish(ctx context.Context) error {
 	if err != nil || !out.ok {
 		return err
 	}
+	return e.finishDone(ctx)
+}
+
+// finishInOrk is the finish step of a plain relay v13 run (orkFinishes): ork
+// writes the closing note, the Outcome line of the last accepted implementer
+// report, and runs `slicer done` or `slicer handoff` itself, in the worktree,
+// under the item's claim owner. A failed call pauses the run on this step;
+// ork retry runs it again, and a closing note already on the item is not
+// written twice. `slicer done` exits 1 when it landed but the tracking check
+// failed, so a retry that finds the item already finished (done, or review
+// for handoff) does not run the finish call again: it runs `slicer check`
+// (S384, adj 407 engine.finish-runner).
+func (e *Engine) finishInOrk(ctx context.Context, rec runrec.Record, mode, outcome string) error {
+	pauseWith := func(reason string) error {
+		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateFinish, Reason: reason})
+	}
+	raw, err := e.d.Slicer.ShowRaw(ctx, rec.Worktree, rec.Item)
+	if err != nil {
+		return pauseWith("slicer show: " + err.Error())
+	}
+	var detail slicercli.Detail
+	if err := json.Unmarshal(raw, &detail); err != nil {
+		return pauseWith("slicer show: " + err.Error())
+	}
+	owner := ""
+	if detail.Claim != nil {
+		owner = detail.Claim.Owner
+	}
+	noted := slices.ContainsFunc(detail.Notes, func(n string) bool { return strings.Contains(n, outcome) })
+	if !noted {
+		if err := e.d.Slicer.NoteBy(ctx, e.wr, rec.Worktree, rec.Item, outcome, owner); err != nil {
+			return pauseWith("slicer note: " + err.Error())
+		}
+	}
+	if detail.Status == finishedStatus(mode) {
+		res, err := e.d.Slicer.Check(ctx, rec.Worktree)
+		if err != nil {
+			return pauseWith("slicer check: " + err.Error())
+		}
+		if !res.OK {
+			return pauseWith(fmt.Sprintf("slicer %s landed (the item is %s) but slicer check fails: %s", mode, detail.Status, strings.Join(strings.Fields(res.Output), " ")))
+		}
+		return e.finishDone(ctx)
+	}
+	switch mode {
+	case "done":
+		err = e.d.Slicer.Done(ctx, e.wr, rec.Worktree, rec.Item, outcome, owner)
+	case "handoff":
+		err = e.d.Slicer.Handoff(ctx, e.wr, rec.Worktree, rec.Item, owner)
+	}
+	if err != nil {
+		return pauseWith("slicer " + mode + ": " + err.Error())
+	}
+	return e.finishDone(ctx)
+}
+
+// finishedStatus is the status of an item after the finish call of mode: done
+// for `slicer done`, review for `slicer handoff`.
+func finishedStatus(mode string) string {
+	if mode == "handoff" {
+		return "review"
+	}
+	return "done"
+}
+
+// lastOutcome is the Outcome line of the last implementer report that the
+// plain v13 shape accepts, or empty when none has one. A report that was
+// refused for its shape does not count.
+func (e *Engine) lastOutcome(rec runrec.Record) string {
+	for i := len(rec.Roles) - 1; i >= 0; i-- {
+		r := rec.Roles[i]
+		if r.Role != RoleImplementer || r.Report == "" || r.Exit != string(ExitOK) {
+			continue
+		}
+		b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report))
+		if err != nil {
+			continue
+		}
+		if rep, err := CheckReport(RoleImplementer, false, string(b), true); err == nil && rep.Outcome != "" {
+			return rep.Outcome
+		}
+	}
+	return ""
+}
+
+// finishDone moves a run whose finish step passed on to its commit and ends
+// the ledger run once.
+func (e *Engine) finishDone(ctx context.Context) error {
 	// A finish step that follows a blocked landing finds the ledger run ended.
 	first := e.run.Snapshot().Commit == nil
 	if err := e.run.Update(func(rr *runrec.Record) { rr.State = runrec.StateCommit; rr.Reason = "" }); err != nil {
