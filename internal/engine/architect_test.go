@@ -63,7 +63,7 @@ func TestArchitectRunsAfterTheFixRoundAndBeforeTheGate(t *testing.T) {
 		t.Fatalf("roles %v, want %v", got, want)
 	}
 	archReq := h.runner.requests()[3]
-	for _, text := range []string{h.W, "architect-2.md", "tmp/architect-2", implReport, "states.go:10 fix the reviewer finding", "For each reviewer finding under Earlier reports", "CONFIRMED-FIXED", "PARTIAL", "NOT-FIXED", "with evidence"} {
+	for _, text := range []string{h.W, "architect-2.md", archReq.TMPDir, implReport, "states.go:10 fix the reviewer finding", "For each reviewer finding under Earlier reports", "CONFIRMED-FIXED", "PARTIAL", "NOT-FIXED", "with evidence"} {
 		if !strings.Contains(archReq.Brief, text) {
 			t.Errorf("architect brief missing %q", text)
 		}

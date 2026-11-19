@@ -1,0 +1,39 @@
+{
+  "id": "S437",
+  "title": "give role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The implementer reported this as tool feedback (friction) on ork in ork run ork-20261118-130342-787e, project ork, item S431:\n\ngive role runs a TMPDIR short enough for a Unix socket (under about 90 bytes) so the Run-based daemon tests do not skip\n\nEvidence: TMPDIR is /home/jon/.local/state/ork/runs/ork-20261118-130342-787e/tmp/implementer-1 (77 bytes); shortDir skips with \"no temp directory short enough for a socket\" (75 skipped tests)\n\nCode evidence (2026-11-18):\n\n- The engine makes each round's temp directory `RUNDIR/tmp/LABEL-N` (`internal/engine/round.go:486`), and the runner sets the role's `TMPDIR` to it for Claude (`internal/daemon/runner.go:321-332`) and Codex (`internal/daemon/runner.go:336-343`). `docs/state.md:19` documents the path.\n- Four test helpers make a directory with `os.MkdirTemp` under `TMPDIR` (adds about 14 bytes), then skip when the socket path under it is over 100 bytes: `internal/daemon/daemon_test.go:33-47` and `internal/cli/cli_test.go:65-79` (`state/ork.sock`), `internal/ipc/ipc_test.go:25-39` (`d/ork.sock`), `cmd/ork/main_test.go:38-50` (`state/ork/ork.sock`). With a 77-byte `TMPDIR` the path is about 106 to 110 bytes, so every socket test skips inside a role run, and the implementer, reviewer and gate never see them run.\n- To pass the 100-byte check with `state/ork/ork.sock`, `TMPDIR` must be at most about 67 bytes. The run directory alone is 57 bytes on this host (`/home/jon/.local/state/ork/runs/ork-20261118-130342-787e`).\n- The role's temp directory is also a path the approval hook allows (`docs/design.md:2268-2280`) and holds the UI pass's renders (`docs/state.md:22`, `internal/engine/round.go:489-495`), so moving or renaming it reaches past the env var.\n- No slicer item covers this (`slicer find socket`, `slicer find TMPDIR` in slicer, 2026-11-18); ork items S271 (TMPDIR for Claude roles) and S290 are done and do not cover the length.\n\nOpen owner question: how ork gets a short enough `TMPDIR`, per the owner's answer to `roles.socket-tmpdir`."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/round.go:490`, `internal/engine/round_test.go:21` (create and wire separate process TMPDIR)\n- `internal/engine/runner.go:71`, `internal/engine/brief.go:75` (request and brief wiring; preserve assets)\n- `internal/engine/brief_test.go:82`, `internal/engine/architect_test.go:51` (update existing brief expectations for process TMPDIR)\n- `internal/daemon/runner.go:100`, `internal/daemon/runner.go:228`, `internal/daemon/runner_test.go:26` (vendor environment, sandbox and UI write integration)\n- `internal/daemon/approval.go:149`, `internal/agent/claude/pretool.go:418` (assigned TMPDIR permission exception)\n- `internal/agent/claude/types.go:167`, `internal/agent/claude/args.go:60`, `internal/agent/codex/codex.go:44` (vendor directory grants)\n- `internal/runrec/store.go:60`, `internal/runrec/store.go:209`, `internal/runrec/runrec_test.go:495` (shared pure helper and retention cleanup)\n- `internal/roles/prompts/ui.md:59`, `internal/roles/roles.go:18`, `internal/roles/roles_test.go:20` (stable UI render path)\n- `docs/state.md:19-23`, `docs/design.md:2273`, `docs/design.md:2396`, `docs/design.md:2473`\n- `landed-changed/S437.md` (written through slicer changelog add)\nOwner selected separate TMPDIR in the resumed session on 2026-11-18, authorizing cleanup and permission/interface scope. Socket helper fallbacks are excluded by that answer."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestRoleTMPDIRLeavesRoomForASocket`, `internal/engine/round_test.go:21`: pure helper, specified state root and run id, seven labels, socket length <=100 bytes, state-root containment and one-variable identity isolation.\n- `TestRoleTMPDIRCreatedBeforeRunner`, `internal/engine/round_test.go:47`: actual round request carries a directory already created mode 0700, writable by the role, and named in its brief.\n- `TestRoleTMPDIRIsWritableByTheRole`, `internal/daemon/runner_test.go:26`: cloud/local Claude and Codex, fresh/resumed, process environment and exact directory grants; read-only roles retain restrictions.\n- `TestRoleTMPDIRApprovalBoundaries`, `internal/daemon/runner_test.go:108`: assigned TMPDIR and existing assets allowed, parent/siblings and symlink escape denied, including own-file shell reads.\n- `TestRoleTMPDIRCloudUIKeepsScratchAndRenderWrites`, `internal/daemon/runner_test.go:153`: cloud UI Edit/Write rules include both assigned process scratch and existing render assets.\n- `TestPruneRemovesRoleTMPDIRWithRun`, `internal/runrec/runrec_test.go:495`: remove a pruned run TMPDIR; retained, unlanded and active run contents survive.\nOwner answer 1 in the resumed session on 2026-11-18 omits the option-b fallback test and long-TMPDIR fallback behavior."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner chose state-root (adj 491) and separate process TMPDIR (resumed session, answer 1, 2026-11-18).\n\n1. Write the TMPDIR path, launch wiring, approval, cloud UI and retention tests and see them fail before implementing their behavior.\n2. Add a shared pure helper from state root, run id, role/part label and round. Create the short process directory mode 0700 before the runner starts; forward it separately from the existing run asset directory.\n3. Keep UI renders, progress notes, read logs, system prompts and Go caches at their existing paths. Name process TMPDIR in the brief and give UI renders their existing explicit destination. Forward only the assigned process directory through vendor sandbox and approval wiring.\n4. Remove the short per-run directory when run retention removes the run. Keep active, retained and unlanded runs untouched.\n5. Run the socket suites and full project checks; report socket sandbox restrictions without adding fallback behavior. The next-run human check verifies real role launches use the new short TMPDIR.\n6. Update docs/state.md and docs/design.md, and add the changelog entry through slicer changelog add S437. Mutation-check every new assertion and restore product files exactly."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- Inside a role run on this host, the daemon, CLI, ipc and cmd/ork socket tests run instead of skipping for a long temp directory.\n- A role can still write only where it could before, plus the new directory if the owner's answer adds one.\n- docs/state.md names the TMPDIR path a role gets.\n\nCommands:\n- `go test ./internal/engine ./internal/daemon -run 'TestRoleTMPDIR|TestShortDir' -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] in the next ork run on this project, the implementer's report shows the daemon tests ran with no \"no temp directory short enough for a socket\" skip."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"S437: give roles a TMPDIR short enough for a Unix socket\"."
+    }
+  ],
+  "notes": []
+}

@@ -11,11 +11,64 @@ import (
 	"reflect"
 	"runtime"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestRoleTMPDIRLeavesRoomForASocket(t *testing.T) {
+	const root = "/home/jon/.local/state/ork"
+	const run = "ork-20261118-130342-787e"
+	for _, label := range []string{RoleImplementer, RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck, RolePart + "-backend"} {
+		t.Run(label, func(t *testing.T) {
+			dir := runrec.RoleTMPDir(root, run, label, 1)
+			if !strings.HasPrefix(dir, filepath.Join(root, "t")+string(filepath.Separator)) {
+				t.Errorf("TMPDIR %s is not under state-root/t", dir)
+			}
+			for _, other := range []string{
+				runrec.RoleTMPDir(root, run+"-other", label, 1),
+				runrec.RoleTMPDir(root, run, label+"-other", 1),
+				runrec.RoleTMPDir(root, run, label, 2),
+			} {
+				if dir == other {
+					t.Error("distinct role rounds share TMPDIR")
+				}
+			}
+			path := filepath.Join(dir, "ork1234567890", "state", "ork", "ork.sock")
+			if len(path) > 100 {
+				t.Errorf("socket path has %d bytes, want <=100: %s", len(path), path)
+			}
+		})
+	}
+}
+
+func TestRoleTMPDIRCreatedBeforeRunner(t *testing.T) {
+	h := newHarness(t)
+	var mu sync.Mutex
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		mu.Lock()
+		defer mu.Unlock()
+		want := runrec.RoleTMPDir(filepath.Dir(h.store.Dir), req.RunID, req.Role, req.Round)
+		if req.TMPDir != want {
+			t.Errorf("process TMPDIR %q, want %q", req.TMPDir, want)
+		}
+		if info, err := os.Stat(want); err != nil {
+			t.Errorf("process TMPDIR missing before runner: %v", err)
+		} else if !info.IsDir() || info.Mode().Perm() != 0o700 {
+			t.Errorf("process TMPDIR mode %v, want directory 0700", info.Mode())
+		}
+		if err := os.WriteFile(filepath.Join(want, "role-output"), []byte("ok"), 0o600); err != nil {
+			t.Errorf("role cannot write process TMPDIR: %v", err)
+		}
+		if !strings.Contains(req.Brief, "ork sets TMPDIR to "+want+" for Claude and Codex roles") {
+			t.Error("brief does not name process TMPDIR")
+		}
+		return Result{}, nil
+	}
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+}
 
 func TestApprovalDenialTimeoutFallback(t *testing.T) {
 	for _, tc := range []struct {

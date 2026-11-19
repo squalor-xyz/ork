@@ -85,7 +85,7 @@ func TestFirstRowBriefIsUnchanged(t *testing.T) {
 	req := h.runner.requests()[0]
 	want, err := BuildBrief(BriefInput{
 		Role: req.Role, SliceID: item, Worktree: req.Worktree,
-		TempDir: req.TempDir, ReportPath: req.ReportPath,
+		TempDir: req.TempDir, TMPDir: req.TMPDir, ReportPath: req.ReportPath,
 		SliceJSON: sliceJSON(), EnvLines: h.proj.EnvironmentLines,
 		CheckCommand: h.proj.CheckCommand,
 		Allow:        DefaultImplementerAllowlist(h.proj.CheckCommand),

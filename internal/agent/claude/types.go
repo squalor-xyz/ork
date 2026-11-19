@@ -164,6 +164,7 @@ type Round struct {
 type Spec struct {
 	HookCommand string   // claude-local: ork hook pretool, bound to this daemon attempt
 	AddDir      string   // additional directory for the exact progress-note permission
+	TMPDir      string   // assigned process TMPDIR, separate from run assets
 	Bin         string   // default "claude"
 	Dir         string   // working directory
 	Env         []string // full environment; nil inherits

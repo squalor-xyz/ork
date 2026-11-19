@@ -32,6 +32,7 @@ const (
 type Spec struct {
 	Bin, Dir, Prompt, Model, Effort, Resume, ReportFile, FixtureDir string
 	AddDir                                                          string // the role's temp directory
+	TMPDir                                                          string // separate process TMPDIR
 	Env                                                             []string
 	ReadOnly                                                        bool
 	OnStart                                                         func(int)
@@ -71,20 +72,29 @@ func (s Spec) Args() ([]string, error) {
 	}
 	if s.Resume != "" {
 		args = append(args, "-c", `sandbox_mode="`+mode+`"`)
-		if !s.ReadOnly && s.AddDir != "" {
-			roots := fmt.Sprintf("%q", s.AddDir)
-			if s.Dir != "" {
-				roots += fmt.Sprintf(",%q", s.Dir)
+		if !s.ReadOnly && (s.AddDir != "" || s.TMPDir != "") {
+			var dirs []string
+			for _, dir := range []string{s.AddDir, s.TMPDir} {
+				if dir != "" {
+					dirs = append(dirs, fmt.Sprintf("%q", dir))
+				}
 			}
-			args = append(args, "-c", "sandbox_workspace_write.writable_roots=["+roots+"]")
+			if s.Dir != "" {
+				dirs = append(dirs, fmt.Sprintf("%q", s.Dir))
+			}
+			args = append(args, "-c", "sandbox_workspace_write.writable_roots=["+strings.Join(dirs, ",")+"]")
 		}
 	} else {
 		args = append(args, "-s", mode)
 		if s.Dir != "" {
 			args = append(args, "-C", s.Dir)
 		}
-		if !s.ReadOnly && s.AddDir != "" {
-			args = append(args, "--add-dir", s.AddDir)
+		if !s.ReadOnly {
+			for _, dir := range []string{s.AddDir, s.TMPDir} {
+				if dir != "" {
+					args = append(args, "--add-dir", dir)
+				}
+			}
 		}
 	}
 	return append(args, s.Prompt), nil

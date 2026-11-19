@@ -4,6 +4,7 @@ package runrec
 
 import (
 	"context"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -488,6 +489,45 @@ func TestDefaultDirHonorsXDGStateHome(t *testing.T) {
 	t.Setenv("HOME", "/h")
 	if got, err := DefaultDir(); err != nil || got != "/h/.local/state/ork/runs" {
 		t.Fatalf("%q, %v", got, err)
+	}
+}
+
+func TestPruneRemovesRoleTMPDIRWithRun(t *testing.T) {
+	s := newStore(t)
+	shortPath := func(id string) string {
+		runKey := sha256.Sum256([]byte(id))
+		roleKey := sha256.Sum256([]byte("implementer-1"))
+		return filepath.Join(filepath.Dir(s.Dir), "t", fmt.Sprintf("%x", runKey[:8]), fmt.Sprintf("%x", roleKey[:8]))
+	}
+	for _, tc := range []struct{ id, state string }{
+		{"old", StateCommitted}, {"unlanded", StateCommitted}, {"active", StateImplement}, {"retained", StateCommitted},
+	} {
+		r := rec(tc.id)
+		r.State = tc.state
+		if _, err := s.Create(r); err != nil {
+			t.Fatal(err)
+		}
+		dir := shortPath(tc.id)
+		if err := os.MkdirAll(dir, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "output"), []byte(tc.id), 0o600); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := s.Prune(1, func(r Record) bool { return r.ID != "unlanded" }); err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range []string{"old", "unlanded", "active", "retained"} {
+		path := filepath.Join(shortPath(id), "output")
+		got, err := os.ReadFile(path)
+		if id == "old" {
+			if !os.IsNotExist(err) {
+				t.Errorf("pruned run TMPDIR output remains: %q, %v", got, err)
+			}
+		} else if err != nil || string(got) != id {
+			t.Errorf("kept run %s lost TMPDIR output: %q, %v", id, got, err)
+		}
 	}
 }
 
