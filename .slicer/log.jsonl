@@ -5697,3 +5697,10 @@
 {"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "2026-11-19: slicer s460 landed (slicer c13f3756); ork doctor", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:08:43Z", "item": "S463", "action": "add", "from": "", "to": "open", "note": "start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist"}
+{"when": "2026-11-19T13:08:43Z", "item": "S463", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:10:04Z", "item": "S464", "action": "add", "from": "", "to": "open", "note": "start read-only roles from a build that includes the slice's own permission change, or say in the brief that they run under the old allowlist"}
+{"when": "2026-11-19T13:10:05Z", "item": "S464", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:10:05Z", "item": "S464", "action": "note", "from": "", "to": "", "note": "possible duplicate of S463", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:11:44Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T13:11:52Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-19: adj 500 engine.finish-scope = pla", "by": "Jon Robbins"}
