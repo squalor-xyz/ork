@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-464 items · — 58 · done 332 · retired 74
+464 items · — 56 · done 332 · retired 76
 
 ## v1.3
 
@@ -221,9 +221,9 @@ v1.2
 | 164 | [S459](slices/S459.md) | allow adj lint --root DIR in the reviewer sandbox since the slice Check names it |  | - |  | Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S345 | retired |
 | 165 | [S460](slices/S460.md) | allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it |  | - |  | Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S442 | retired |
 | 166 | [S461](slices/S461.md) | this reviewer brief's role prompt still carried "write your final report to PATH" beside "you cannot write it", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt |  | - |  | Covered by S423, which fixes this brief text; filed while S423 ran. · discovered from S423 | retired |
-| 167 | [S462](slices/S462.md) | allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief |  | - |  | discovered from S357 | — |
+| 167 | [S462](slices/S462.md) | allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief |  | - |  | Duplicate of S456 (short TMPDIR for read-only reviewers so socket tests run). · discovered from S357 | retired |
 | 168 | [S463](slices/S463.md) | start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist |  | - |  | discovered from S458 | — |
-| 169 | [S464](slices/S464.md) | start read-only roles from a build that includes the slice's own permission change, or say in the brief that they run under the old allowlist |  | - |  | discovered from S458 | — |
+| 169 | [S464](slices/S464.md) | start read-only roles from a build that includes the slice's own permission change, or say in the brief that they run under the old allowlist |  | - |  | Duplicate of S463 (read-only roles run under the daemon's allowlist, not the slice's). · discovered from S458 | retired |
 
 ---
 

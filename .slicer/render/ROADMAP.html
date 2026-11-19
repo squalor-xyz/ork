@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">464 items · — 58 · done 332 · retired 74</p>
+<p class="summary">464 items · — 56 · done 332 · retired 76</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -219,9 +219,9 @@
 <tr class="retired"><td>164</td><td>S459</td><td>allow adj lint --root DIR in the reviewer sandbox since the slice Check names it</td><td></td><td>-</td><td></td><td>Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S345</td><td class="status">retired</td></tr>
 <tr class="retired"><td>165</td><td>S460</td><td>allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it</td><td></td><td>-</td><td></td><td>Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S442</td><td class="status">retired</td></tr>
 <tr class="retired"><td>166</td><td>S461</td><td>this reviewer brief&#x27;s role prompt still carried &quot;write your final report to PATH&quot; beside &quot;you cannot write it&quot;, the defect S423 fixes; expected until S423 lands and the daemon is rebuilt</td><td></td><td>-</td><td></td><td>Covered by S423, which fixes this brief text; filed while S423 ran. · discovered from S423</td><td class="status">retired</td></tr>
-<tr class="open"><td>167</td><td>S462</td><td>allow the reviewer&#x27;s go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief</td><td></td><td>-</td><td></td><td>discovered from S357</td><td class="status">—</td></tr>
+<tr class="retired"><td>167</td><td>S462</td><td>allow the reviewer&#x27;s go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief</td><td></td><td>-</td><td></td><td>Duplicate of S456 (short TMPDIR for read-only reviewers so socket tests run). · discovered from S357</td><td class="status">retired</td></tr>
 <tr class="open"><td>168</td><td>S463</td><td>start reviewer sessions from a build that includes the slice&#x27;s own permission change, or say in the brief that the reviewer runs under the old allowlist</td><td></td><td>-</td><td></td><td>discovered from S458</td><td class="status">—</td></tr>
-<tr class="open"><td>169</td><td>S464</td><td>start read-only roles from a build that includes the slice&#x27;s own permission change, or say in the brief that they run under the old allowlist</td><td></td><td>-</td><td></td><td>discovered from S458</td><td class="status">—</td></tr>
+<tr class="retired"><td>169</td><td>S464</td><td>start read-only roles from a build that includes the slice&#x27;s own permission change, or say in the brief that they run under the old allowlist</td><td></td><td>-</td><td></td><td>Duplicate of S463 (read-only roles run under the daemon&#x27;s allowlist, not the slice&#x27;s). · discovered from S458</td><td class="status">retired</td></tr>
 </tbody></table>
 <h2>v1.1</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
