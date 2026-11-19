@@ -69,6 +69,8 @@ type SessionRestart struct {
 
 // RoleRecord is ork's record of one role round, possibly with fresh sessions.
 type RoleRecord struct {
+	StartTreeSHA256 string `json:"start_tree_sha256,omitempty"` // proposed: full tree content at read-only round start
+
 	Restarts   []SessionRestart `json:"restarts,omitempty"`
 	TreeSHA256 string           `json:"tree_sha256,omitempty"` // proposed: tracked content and untracked names
 	Role       string           `json:"role"`

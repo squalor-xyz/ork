@@ -1771,8 +1771,19 @@ separately.
     `git diff` again, read again every file it cites and not repeat an earlier
     finding, verdict or answer without checking it. It then shows ork's own
     `git status --porcelain` from when the round started, in a fence, or says
-    that the tree had no uncommitted changes. The listing is the same call as
-    the read-only fingerprint, so a read-only role costs no extra git call;
+    that the tree had no uncommitted changes. The listing uses the same call as
+    the read-only fingerprint.
+    *Proposed (S424):* reviewer, gate and architect rounds also save a start
+    fingerprint of the tracked binary diff against HEAD and untracked names
+    and contents. Other untracked entries, including nested repositories,
+    contribute only their name and mode; ork does not traverse them.
+    On resume, if the previous row of that role belongs to the
+    resumed session and has the same fingerprint, the section says
+    "The tree is unchanged since round N, when you last reported."
+    It drops the git status and git diff re-run instructions, including in
+    Done when, but keeps re-reading every cited file (adj 490).
+    Missing fingerprints in older records and changed contents keep the
+    original instructions. The implementer's existing tree hash is unchanged;
   - for the implementer, the project check command (when configured) and
     `slicer check`, which ork runs after the round (not the finish step)
     outside the role's sandbox;

@@ -5701,3 +5701,35 @@
 {"when": "2026-11-19T13:29:38Z", "item": "S338", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-19T14:09:03Z", "item": "S338", "action": "note", "from": "", "to": "", "note": "Verified: ork run and ork wave start accept --spec-check off", "by": "Jon Robbins"}
 {"when": "2026-11-19T14:09:04Z", "item": "S338", "action": "status", "from": "started", "to": "done", "note": "Verified: --spec-check off on ork run and ork wave start (CLI only, adj 473) skips the spec check, prints one off line before the usual confirm, accepts only off, is refused with --questions or --answer, and leaves the daemon's open-question refusal intact. Focused tests, vet, slicer check and adj lint passed; gate PASS.", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:06:38Z", "item": "S424", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:07:03Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:07:03Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T13:18:05Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:38:55Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T13:40:22Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T14:09:03Z", "item": "S424", "action": "note", "from": "", "to": "", "note": "Verified: reviewer, gate and architect rounds store a full-c", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:09:04Z", "item": "S424", "action": "status", "from": "started", "to": "done", "note": "Verified: reviewer, gate and architect rounds store a full-content start fingerprint (diff plus untracked names, contents and non-regular modes); a resumed round whose tree matches its previous round says so and drops the git status/diff re-run (adj 490); older rows resume with no unchanged line; treeContent and TreeSHA256 unchanged. Gate PASS, slice checks green.", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "2026-11-19: slicer s460 landed (slicer c13f3756); ork doctor", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:08:43Z", "item": "S463", "action": "add", "from": "", "to": "open", "note": "start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist"}
+{"when": "2026-11-19T13:08:43Z", "item": "S463", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:10:04Z", "item": "S464", "action": "add", "from": "", "to": "open", "note": "start read-only roles from a build that includes the slice's own permission change, or say in the brief that they run under the old allowlist"}
+{"when": "2026-11-19T13:10:05Z", "item": "S464", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:10:05Z", "item": "S464", "action": "note", "from": "", "to": "", "note": "possible duplicate of S463", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:11:44Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T13:11:52Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-19: adj 500 engine.finish-scope = pla", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:12:01Z", "item": "S464", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S463 (read-only roles run under the daemon's allowlist, not the slice's)."}
+{"when": "2026-11-19T13:12:02Z", "item": "S462", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S456 (short TMPDIR for read-only reviewers so socket tests run)."}
+{"when": "2026-11-19T13:12:02Z", "item": "S463", "action": "note", "from": "", "to": "", "note": "Merged S464 (2026-11-19, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:12:02Z", "item": "S456", "action": "note", "from": "", "to": "", "note": "Merged S462 (2026-11-19, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "add", "from": "", "to": "open", "note": "allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture"}
+{"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:40:22Z", "item": "S466", "action": "add", "from": "", "to": "open", "note": "give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand"}
+{"when": "2026-11-19T13:40:23Z", "item": "S466", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "add", "from": "", "to": "open", "note": "allow read-only adj lint for reviewer roles (S458 covers this)"}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "note", "from": "", "to": "", "note": "possible duplicate of S458", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:42:36Z", "item": "S467", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note."}
+{"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "add", "from": "", "to": "open", "note": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)"}
+{"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "promote", "from": "", "to": "", "note": ""}
