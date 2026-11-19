@@ -84,6 +84,7 @@ func specHarnessStatusReads(t *testing.T, heads []clitest.Reply, status ...strin
 			}
 			return []clitest.Route{
 				{Tool: "git", Args: []string{"-C", P, "rev-parse", "HEAD"}, Seq: heads},
+				{Tool: "git", Args: []string{"-C", P, "rev-parse", "--show-prefix"}},
 				{Tool: "slicer", Args: []string{"show", "S10", "--json", "--lean", "--root", P}, Stdout: specSliceJSON("S10", "ten")},
 				{Tool: "slicer", Args: []string{"show", "S11", "--json", "--lean", "--root", P}, Stdout: specSliceJSON("S11", "eleven")},
 				{Tool: "git", Args: []string{"-C", P, "status", "--porcelain"}, Prefix: true, Seq: seq},
@@ -350,7 +351,9 @@ func TestSpecCheckIgnoresASiblingProjectsWrite(t *testing.T) {
 }
 
 func TestSpecCheckStillCatchesAWriteInItsOwnProject(t *testing.T) {
-	for _, path := range []string{"b/notes.txt", "b/.slicer/log.jsonl"} {
+	// The project's own .slicer/ is not here: adj 476 leaves it out of the
+	// fingerprint (TestSpecCheckIgnoresItsOwnProjectsSlicerDirInASubdirectory).
+	for _, path := range []string{"b/notes.txt", "b/sub/.slicer/log.jsonl"} {
 		t.Run(path, func(t *testing.T) {
 			h := specRepoHarness(t, "b")
 			h.runner.script = func(req Request, n int) (Result, error) {
@@ -481,6 +484,98 @@ func TestSpecCheckOnADirtyButUnchangedTreeIsFine(t *testing.T) {
 	h := specHarness(t, " M a.go\n?? b.txt\n")
 	if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// S341: the read-only error names the paths whose status line changed.
+
+func TestStatusChangedPaths(t *testing.T) {
+	before := " M .slicer/log.jsonl\n"
+	after := " M .slicer/log.jsonl\n?? .slicer/slices/s459.json\n M src/a.py\n"
+	if got, want := statusChangedPaths(before, after), []string{".slicer/slices/s459.json", "src/a.py"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("added lines: %q, want %q", got, want)
+	}
+	// A line that went away is listed too; a line in both is not.
+	if got, want := statusChangedPaths(" M a.go\n M b.go\n", " M b.go\n"), []string{"a.go"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("removed line: %q, want %q", got, want)
+	}
+	// The same path with a different status is one path, listed once.
+	if got, want := statusChangedPaths(" M a.go\n", "MM a.go\n"), []string{"a.go"}; !reflect.DeepEqual(got, want) {
+		t.Errorf("changed status: %q, want %q", got, want)
+	}
+	if got := statusChangedPaths(" M a.go\n", " M a.go\n"); len(got) != 0 {
+		t.Errorf("unchanged: %q", got)
+	}
+}
+
+func TestTreeChangedErrorCapsTheListAtFivePaths(t *testing.T) {
+	base := errors.New("changed the tree")
+	var after string
+	for _, p := range []string{"g", "f", "e", "d", "c", "b", "a"} {
+		after += "?? " + p + "\n"
+	}
+	err := treeChangedError(base, "", after)
+	if !errors.Is(err, base) || !strings.HasSuffix(err.Error(), ": changed a, b, c, d, e and 2 more") {
+		t.Fatalf("error %q", err)
+	}
+	if got := treeChangedError(base, "", "?? a\n?? b\n").Error(); !strings.HasSuffix(got, ": changed a, b") {
+		t.Fatalf("two paths: %q", got)
+	}
+}
+
+func TestSpecCheckTreeChangeNamesThePaths(t *testing.T) {
+	h := specHarnessStatusReads(t, nil, "", "", "?? src/a.py\n")
+	_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	if err == nil || !strings.Contains(err.Error(), "spec-check changed the tree, and it is a read-only role") || !strings.HasSuffix(err.Error(), ": changed src/a.py") {
+		t.Fatalf("error %v", err)
+	}
+}
+
+// adj 476 (specs.readonly-tracking-change = ignore): the project's own
+// .slicer/ is left out of the spec check's fingerprint, so another session
+// filing a slice while the role runs is neither blamed on the role nor retried.
+func TestSpecCheckIgnoresProjectSlicerChanges(t *testing.T) {
+	h := specHarnessStatusReads(t, nil, "", "", "?? .slicer/slices/s459.json\n M .slicer/log.jsonl\n")
+	res, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	if err != nil || res == nil {
+		t.Fatalf("a tracking change failed the spec check: %v", err)
+	}
+	if n := len(h.runner.requests()); n != 1 {
+		t.Errorf("%d role rounds, want 1 (no retry)", n)
+	}
+}
+
+func TestSpecCheckIgnoresItsOwnProjectsSlicerDirInASubdirectory(t *testing.T) {
+	for _, path := range []string{"b/.slicer/log.jsonl", "b/.slicer/slices/X.json"} {
+		t.Run(path, func(t *testing.T) {
+			h := specRepoHarness(t, "b")
+			h.runner.script = func(req Request, n int) (Result, error) {
+				writeFile(t, filepath.Join(h.P, path), "{}\n{}\n")
+				return Result{Exit: ExitOK, Report: specReport}, nil
+			}
+			if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err != nil {
+				t.Fatalf("own tracking write failed the spec check: %v", err)
+			}
+		})
+	}
+}
+
+func TestSpecCheckFingerprintKeepsOtherSlicerDirs(t *testing.T) {
+	h := specHarnessStatusReads(t, nil, "", "", "?? sub/.slicer/x.json\n")
+	_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	if err == nil || !strings.Contains(err.Error(), "read-only role") || !strings.HasSuffix(err.Error(), ": changed sub/.slicer/x.json") {
+		t.Fatalf("error %v", err)
+	}
+}
+
+func TestSpecCheckNonTrackingChangeStillFails(t *testing.T) {
+	h := specHarnessStatusReads(t, nil, "", "", "?? src/a.py\n?? .slicer/x.json\n")
+	_, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t))
+	if err == nil || !strings.Contains(err.Error(), "read-only role") || !strings.HasSuffix(err.Error(), ": changed src/a.py") {
+		t.Fatalf("error %v", err)
+	}
+	if n := len(h.runner.requests()); n != 1 {
+		t.Errorf("%d role rounds: the change fails at once, without a retry", n)
 	}
 }
 

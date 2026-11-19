@@ -128,7 +128,7 @@ entries:
 		case afterHead != head:
 			return nil, errSpecMainMoved
 		case after != before:
-			return nil, errCarveStatusChanged
+			return nil, treeChangedError(errCarveStatusChanged, before, after)
 		}
 		class := res.Exit
 		if runErr != nil || class == "" {

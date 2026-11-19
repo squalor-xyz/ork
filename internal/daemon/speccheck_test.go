@@ -640,8 +640,9 @@ func TestSpecCheckBadParams(t *testing.T) {
 }
 
 func TestSpecCheckStopsWhenTheRoleChangedTheTree(t *testing.T) {
-	// Script the status reads; HEAD stays unchanged.
-	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "git", Args: []string{"-C"}, Prefix: true, Seq: []clitest.Reply{{}, {}, {}, {Stdout: " M a.go\n"}, {}, {}, {}, {}, {}, {}}})
+	// Script the git reads (HEAD, the project prefix, then the status reads);
+	// HEAD stays unchanged.
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "git", Args: []string{"-C"}, Prefix: true, Seq: []clitest.Reply{{}, {}, {}, {}, {Stdout: " M a.go\n"}, {}, {}, {}, {}, {}, {}}})
 	_, err := rig.d.handle(context.Background(), MethodSpecCheck, json.RawMessage(`{"project":"p","items":["S1","S2"]}`))
 	if err == nil || !strings.Contains(err.Error(), "changed the tree") {
 		t.Fatalf("error %v", err)

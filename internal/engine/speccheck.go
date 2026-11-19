@@ -96,6 +96,82 @@ func gitStatusAt(ctx context.Context, d Deps, dir string) (string, error) {
 	return string(res.Stdout), nil
 }
 
+// specStatusAt is the spec check's fingerprint: gitStatusAt without the
+// project's own .slicer/ (adj 476, specs.readonly-tracking-change = ignore,
+// which narrows adj 28). Another session may file or edit a slice in the
+// project while the role runs, and the role is not to blame for that. A
+// .slicer/ elsewhere in the tree stays in. prefix is the project directory
+// relative to the repository root (projectPrefix), because porcelain paths
+// are relative to the repository root.
+func specStatusAt(ctx context.Context, d Deps, dir, prefix string) (string, error) {
+	status, err := gitStatusAt(ctx, d, dir)
+	if err != nil {
+		return "", err
+	}
+	tracking := prefix + ".slicer/"
+	var kept strings.Builder
+	for _, line := range strings.SplitAfter(status, "\n") {
+		if len(line) > 3 && strings.HasPrefix(line[3:], tracking) {
+			continue
+		}
+		kept.WriteString(line)
+	}
+	return kept.String(), nil
+}
+
+// statusChangedPaths lists the path of every porcelain line that is in one of
+// the two fingerprints and not in the other, sorted and without repeats. A path
+// whose status code changed is listed once.
+func statusChangedPaths(before, after string) []string {
+	lines := func(s string) map[string]bool {
+		m := map[string]bool{}
+		for _, line := range strings.Split(s, "\n") {
+			if line != "" {
+				m[line] = true
+			}
+		}
+		return m
+	}
+	b, a := lines(before), lines(after)
+	seen := map[string]bool{}
+	var paths []string
+	for _, side := range []struct{ from, other map[string]bool }{{b, a}, {a, b}} {
+		for line := range side.from {
+			if side.other[line] {
+				continue
+			}
+			path := line
+			if len(line) > 3 {
+				path = line[3:]
+			}
+			if !seen[path] {
+				seen[path] = true
+				paths = append(paths, path)
+			}
+		}
+	}
+	slices.Sort(paths)
+	return paths
+}
+
+// treeChangedError is base followed by ": changed PATH, PATH": the paths whose
+// status changed between the two fingerprints, at most five and then "and N
+// more". It wraps base. With no path to name it is base.
+func treeChangedError(base error, before, after string) error {
+	paths := statusChangedPaths(before, after)
+	if len(paths) == 0 {
+		return base
+	}
+	const most = 5
+	more := ""
+	if len(paths) > most {
+		more = fmt.Sprintf(" and %d more", len(paths)-most)
+		paths = paths[:most]
+	}
+	return fmt.Errorf("%w: changed %s%s", base, strings.Join(paths, ", "), more)
+}
+
+var errSpecTreeChanged = errors.New("spec-check changed the tree, and it is a read-only role")
 var errSpecMainMoved = errors.New("main moved during the spec check")
 var errSpecStatusChanged = errors.New("the main checkout changed outside the check")
 
@@ -231,7 +307,11 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 	if err != nil {
 		return nil, err
 	}
-	baseline, err := gitStatusAt(ctx, d, root)
+	prefix, err := projectPrefixWith(ctx, d.gitBin(), root)
+	if err != nil {
+		return nil, fmt.Errorf("read-only fingerprint: %w", err)
+	}
+	baseline, err := specStatusAt(ctx, d, root, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("read-only fingerprint: %w", err)
 	}
@@ -254,7 +334,7 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		return nil, fmt.Errorf("temp directory: %w", err)
 	}
 	reportPath := filepath.Join(cfg.Dir, "spec-check.md")
-	before, err := gitStatusAt(ctx, d, root)
+	before, err := specStatusAt(ctx, d, root, prefix)
 	if err != nil {
 		return nil, fmt.Errorf("read-only fingerprint: %w", err)
 	}
@@ -348,7 +428,7 @@ entries:
 			if err := ctx.Err(); err != nil {
 				return nil, err
 			}
-			after, statusErr := gitStatusAt(ctx, d, root)
+			after, statusErr := specStatusAt(ctx, d, root, prefix)
 			if statusErr != nil {
 				return nil, fmt.Errorf("read-only fingerprint: %w", statusErr)
 			}
@@ -372,7 +452,7 @@ entries:
 				return nil, errSpecMainMoved
 			}
 			if after != before {
-				return nil, errors.New("spec-check changed the tree, and it is a read-only role")
+				return nil, treeChangedError(errSpecTreeChanged, before, after)
 			}
 			if class == ExitOK {
 				text = readSpecReport(reportPath, res.Report)

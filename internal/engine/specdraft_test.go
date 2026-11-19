@@ -3,12 +3,15 @@
 package engine
 
 import (
+	"context"
 	"errors"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 const draftReport = `## Section Why
@@ -92,6 +95,20 @@ func TestSpecDraftReportParsesOneBlockPerSection(t *testing.T) {
 				t.Fatalf("want a shape error naming %q, got %v", tc.want, err)
 			}
 		})
+	}
+}
+
+// S341: the draft's read-only error names the paths that changed, and still
+// is errDraftTreeChanged.
+func TestSpecDraftTreeChangeNamesThePaths(t *testing.T) {
+	h := specHarnessStatusReads(t, nil, "", "", "?? src/a.py\n")
+	h.runner.script = func(Request, int) (Result, error) {
+		return Result{Exit: ExitOK, Report: draftReport}, nil
+	}
+	cfg := SpecDraftConfig{Project: h.proj, Item: "S10", Dir: t.TempDir(), Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}}
+	_, err := RunSpecDraft(context.Background(), h.deps, cfg)
+	if !errors.Is(err, errDraftTreeChanged) || !strings.HasSuffix(err.Error(), ": changed src/a.py") {
+		t.Fatalf("error %v", err)
 	}
 }
 

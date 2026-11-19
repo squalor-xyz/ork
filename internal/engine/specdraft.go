@@ -297,7 +297,7 @@ entries:
 				return nil, errSpecMainMoved
 			}
 			if after != before {
-				return nil, errDraftTreeChanged
+				return nil, treeChangedError(errDraftTreeChanged, before, after)
 			}
 			if problem != nil {
 				return nil, problem

@@ -19430,7 +19430,7 @@
       "id": "S341",
       "title": "Read-only role check blames the role for any change to the shared tree",
       "short_title": "Read-only role check blames the role for any change to the shared tree",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19440,6 +19440,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 476 specs.readonly-tracking-change = ignore (leave the project's .slicer/ out of the spec check fingerprint; replaces S292's 2026-11-04 answer). The spec's recommended option a no longer applies; follow adj 476.",
           "created_at": "2026-11-18T22:21:02Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b6bdee96-cfd8-4c35-8a42-b3d70d6f6425",
+          "kind": "",
+          "text": "**2026-11-19** — Verified: the read-only check of the spec check, spec draft and carve names the changed paths (at most five, then 'and N more'); the spec check leaves the project's own .slicer/ out of its fingerprint (adj 476, narrowing adj 28); a change to any other path still fails at once and a dirty but unchanged tree passes. Full go test ./... green (4266 passed, 0 failed), go vet, gofmt, slicer check and adj lint clean.",
+          "created_at": "2026-11-19T14:34:23Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19466,7 +19480,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

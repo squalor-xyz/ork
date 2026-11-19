@@ -14,7 +14,12 @@ import (
 // projectPrefix is the project directory relative to the repository root,
 // with a trailing slash, or empty when root is the repository root.
 func projectPrefix(ctx context.Context, root string) (string, error) {
-	res, err := clirun.Run(ctx, clirun.Call{Bin: "git", Args: []string{"-C", root, "rev-parse", "--show-prefix"}, Timeout: 30 * time.Second})
+	return projectPrefixWith(ctx, "git", root)
+}
+
+// projectPrefixWith is projectPrefix with the git binary of the caller's Deps.
+func projectPrefixWith(ctx context.Context, bin, root string) (string, error) {
+	res, err := clirun.Run(ctx, clirun.Call{Bin: bin, Args: []string{"-C", root, "rev-parse", "--show-prefix"}, Timeout: 30 * time.Second})
 	if err != nil {
 		return "", fmt.Errorf("git project prefix: %w", err)
 	}

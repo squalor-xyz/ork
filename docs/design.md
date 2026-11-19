@@ -330,13 +330,22 @@ ork (TUI)  ork status --json (CLI)
    first. The check is one read-only pass of the spec-check role over the
    whole batch: for each slice it answers ready, or asks the
    owner structured questions (S111 shape, with an optional decision key).
-   *Proposed* (S292): its read-only fingerprint uses
+   *Proposed* (S292, S341): its read-only fingerprint uses
    `git -C PROJECT status --porcelain -- .`. It covers paths under the project
-   root, including its own `.slicer/` tracking files visible to git status.
-   A sibling project in the same repository can change its tracking files
-   without failing this check. The spec check takes no lock. A status change
-   inside the project during the role still fails the read-only check; the
-   existing whole-repository HEAD check and retry rules stay in place.
+   root, but leaves out the project's own `.slicer/` (adj 476,
+   `specs.readonly-tracking-change` = ignore, which narrows adj 28
+   `role.readonly-fingerprint`): another session may file or edit a slice in
+   the project while the role runs, and the check does not blame the role for
+   that. A `.slicer/` elsewhere in the tree stays in the fingerprint. A sibling
+   project in the same repository can change its tracking files without
+   failing this check. The spec check takes no lock. A status change under any
+   other path inside the project during the role still fails the read-only
+   check at once, and the error names the paths whose status line changed
+   (at most five, then `and N more`), for example
+   `spec-check changed the tree, and it is a read-only role: changed src/a.py`.
+   The spec draft and the carve name the changed paths the same way; they keep
+   `.slicer/` in their fingerprint. The existing whole-repository HEAD check and
+   retry rules stay in place. A dirty tree that does not change passes.
    A ready slice's Failing tests name their assertions and its Check gives a
    sandbox-runnable command and expected result, or a `[HUMAN CHECK]` saying what
    the owner looks at and should see; criteria gaps that reading the slice, Files
