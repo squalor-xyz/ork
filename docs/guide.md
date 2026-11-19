@@ -258,6 +258,19 @@ Three more fields take repeatable flags (*proposed*, S174):
 | `--replace-allow` | with `--allow`, the patterns of the call become the role's whole list; it needs `--allow` and cannot go with `--preset` for the implementer |
 | `--vendor-env VENDOR:KEY=VALUE` | one environment variable for a vendor's processes; `--unset-vendor-env VENDOR:KEY` removes one |
 
+The presets include git ls-files, git mv, git rm (plain and `git -C` forms)
+and non-recursive rm (adj 478). Existing stored lists keep their patterns.
+Run `ork projects set NAME --preset go|python` again to replace the list
+with the current preset, or add an entry with
+`--allow implementer=PATTERN` (adj 190). The approval hook checks paths and
+recursive rm flags for claude-local roles and for cloud Claude write roles
+(`launch.cloud-remove-paths`). For cloud it denies paths outside the
+worktree, a recursive rm and a removal it cannot check, and leaves every
+other call to the CLI's own allowlist: it asks no owner questions and applies
+no Read cap (`launch.cloud-hook-scope`, `launch.cloud-hook-passthrough`).
+Cloud Claude also receives conservative
+recursive rm deny rules; their runtime behavior is unprobed.
+
 A role or a vendor key changes alone, so you do not retype the others. ork's
 text output and error messages name vendor variables and never print their
 values; `--json` prints the project as the registry holds it, values included.
@@ -784,6 +797,13 @@ asked normally. A lookup failure keeps the question and prints one notice
 explaining the failure.
 
 ### Approve and land
+
+A slice's Git section names its commit title in double quotes, for example
+`One commit on the slice branch, message "S04: engine core".` ork uses the
+first double-quoted title. Anything without a double-quoted title, including
+an empty or missing Git section, gives `ID: slice title` from `slicer show`.
+An explicit empty quoted title (`""`) pauses the run at commit
+(adj 485, `git.commit-title`).
 
 *Proposed (S331; owner decision 2026-11-11, adj 281):* there is no approve step
 for a run that passes everything. When the gate says `VERDICT: PASS`, no owner

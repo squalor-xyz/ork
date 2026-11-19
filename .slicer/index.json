@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 459,
+  "next_id": 463,
   "preamble": "",
   "passes": [
     {
@@ -19630,7 +19630,7 @@
       "id": "S345",
       "title": "Implementer presets allow moving and removing files (with S440)",
       "short_title": "Implementer presets allow moving and removing files (with S440)",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19640,6 +19640,20 @@
           "text": "**2026-11-18** — Merged S440 (file removal) on 2026-11-18 per adj 478 (owner: 'ls-files, mv, git rm, rm').",
           "created_at": "2026-11-18T22:21:02Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7b04f5c1-123f-47e7-b6ab-0d17fd0d669e",
+          "kind": "",
+          "text": "**2026-11-19** — Verified: both implementer presets and the built-in default allow git ls-files, git mv, git rm and non-recursive rm (adj 478). The approval hook denies a removal outside the worktree and a recursive rm. Cloud Claude write roles run the hook for paths only: it denies outside paths, a recursive rm and a removal it cannot check, and defers every other call to the CLI allowlist. Cloud argv also carries recursive rm deny rules, whose CLI behaviour is unprobed. The implementer prompt, docs and changelog are updated. Full go test, go vet, gofmt, slicer check and adj lint passed.",
+          "created_at": "2026-11-19T11:58:40Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19666,7 +19680,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -20185,7 +20199,7 @@
       "id": "S357",
       "title": "Slice commit titled with the Git section's text",
       "short_title": "Slice commit titled with the Git section's text",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -20195,6 +20209,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 485 git.commit-title = id-title.",
           "created_at": "2026-11-18T22:25:21Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "8bdb0a9f-1950-4c51-b070-f41435b89238",
+          "kind": "",
+          "text": "**2026-11-19** — Verified quoted Git titles are preserved, unquoted sections fall back to ID: title, and explicit empty quoted titles still pause. Regression tests, mutation checks and behavior documentation are included; the gate returned PASS and the owner approved.",
+          "created_at": "2026-11-19T12:40:46Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -20221,7 +20249,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -23534,10 +23562,25 @@
       "id": "S423",
       "title": "say in the brief whether the reviewer may write the report path, instead of giving both \"write your report to PATH\" and \"you cannot write it\"",
       "short_title": "say in the brief whether the reviewer may write the report path, instead of giving both \"write your report to PATH\" and \"you cannot write it\"",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "da7dace2-dbbf-4eb8-9296-b3debfcbaa5d",
+          "kind": "",
+          "text": "**2026-11-19** — Verified read-only briefs use the final-message report rule, writable briefs keep the file-writing rule, and missing report sentences fail with the role name. Tests and mutation checks completed; gate returned VERDICT: PASS and owner approved.",
+          "created_at": "2026-11-19T12:40:16Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -23555,7 +23598,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -24809,7 +24852,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f408bee4-077e-4060-891d-77c7e6239381",
+          "kind": "",
+          "text": "**2026-11-19** — Merged S459 and S460 (2026-11-19, tool feedback). Cause: since S418, cloud Claude read-only roles use LocalReadOnlyAllowlist (internal/engine/perm.go), which has adj show and adj check but not adj lint.",
+          "created_at": "2026-11-19T12:22:53Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -24821,6 +24879,118 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-e1ad7ec7",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S459",
+      "title": "allow adj lint --root DIR in the reviewer sandbox since the slice Check names it",
+      "short_title": "allow adj lint --root DIR in the reviewer sandbox since the slice Check names it",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S345",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-a39bf04d",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S458 (adj lint in the read-only allowlist).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S460",
+      "title": "allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it",
+      "short_title": "allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S442",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-aeefda1e",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S458 (adj lint in the read-only allowlist).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S461",
+      "title": "this reviewer brief's role prompt still carried \"write your final report to PATH\" beside \"you cannot write it\", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt",
+      "short_title": "this reviewer brief's role prompt still carried \"write your final report to PATH\" beside \"you cannot write it\", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S423",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ce0497f7",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Covered by S423, which fixes this brief text; filed while S423 ran.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S462",
+      "title": "allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief",
+      "short_title": "allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S357",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4d89ac31",
         "pass": "v1.2",
         "group": "",
         "reason": "",

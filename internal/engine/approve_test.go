@@ -192,15 +192,17 @@ func TestParseGitTitle(t *testing.T) {
 		`One commit: "S04: engine core for one slice".`: "S04: engine core for one slice",
 		"One commit: \"S04: x\"\n":                      "S04: x",
 		`Commit "S04: a" then stop.`:                    "S04: a",
-		"S04: engine core\n":                            "S04: engine core",
-		"\n  S04: engine core  \n\nMore text\n":         "S04: engine core",
+		"S04: engine core\n":                            "",
+		"\n  S04: engine core  \n\nMore text\n":         "",
+		"":                                              "",
+		"  \n":                                          "",
 	} {
 		got, err := ParseGitTitle(body)
 		if err != nil || got != want {
 			t.Errorf("%q: %q, %v; want %q", body, got, err, want)
 		}
 	}
-	for _, bad := range []string{"", "  \n", `One commit: "".`} {
+	for _, bad := range []string{`One commit: "".`} {
 		if got, err := ParseGitTitle(bad); err == nil {
 			t.Errorf("%q gave %q", bad, got)
 		}
@@ -231,7 +233,7 @@ func TestCommitTitleFallsBackToIDAndTitle(t *testing.T) {
 		{"empty", `[{"heading":"Git","body":""}]`, "S04: Engine"},
 		{"whitespace", `[{"heading":"Git","body":"  \n\t "}]`, "S04: Engine"},
 		{"quoted", `[{"heading":"Git","body":"One commit: \"custom title\"."}]`, "custom title"},
-		{"plain", `[{"heading":"git","body":"  custom title\nMore text"}]`, "custom title"},
+		{"plain", `[{"heading":"git","body":"  custom title\nMore text"}]`, "S04: Engine"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			h := newHarness(t, func(o *harnessOpts) {
@@ -256,6 +258,35 @@ func TestCommitTitleFallsBackToIDAndTitle(t *testing.T) {
 				t.Errorf("commits: %v", calls)
 			}
 		})
+	}
+}
+
+func TestCommitTitleIgnoresAnUnquotedGitSection(t *testing.T) {
+	testCommitTitle(t, `One commit on the slice branch.`, "S04: Engine")
+}
+
+func TestCommitTitleKeepsAQuotedGitTitle(t *testing.T) {
+	testCommitTitle(t, `One commit on the slice branch, message \"S04: engine core\".`, "S04: engine core")
+}
+
+// body is JSON-escaped text for the fake slicer response.
+func testCommitTitle(t *testing.T, body, want string) {
+	t.Helper()
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{
+				{Tool: "slicer", Args: []string{"show", item}, Prefix: true,
+					Stdout: `{"id":"S04","title":"Engine","slice":{"id":"S04","title":"Engine","sections":[{"heading":"Git","body":"` + body + `"}]}}`},
+				{Tool: "git", Args: []string{"-C", W, "commit", "-m", want}},
+			}
+		}
+	})
+	e := h.start()
+	if err := e.Approve(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if calls := h.calls("git", "-C", h.W, "commit"); len(calls) != 1 || join(calls[0][2:]) != "commit -m "+want {
+		t.Errorf("commits: %v, want commit -m %s", calls, want)
 	}
 }
 

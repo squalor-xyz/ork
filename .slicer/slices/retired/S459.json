@@ -1,0 +1,39 @@
+{
+  "id": "S459",
+  "title": "allow adj lint --root DIR in the reviewer sandbox since the slice Check names it",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-225932-056b, project ork, item S345:\n\nallow adj lint --root DIR in the reviewer sandbox since the slice Check names it\n\nEvidence: adj lint --root /home/jon/code/squalor-xyz/ork/.worktrees/S345 was denied with \"This command requires approval\" in both rounds, while slicer check --root ran."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

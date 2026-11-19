@@ -347,7 +347,7 @@ func (d *Daemon) runDeps(p registry.Project) engine.Deps {
 			return env
 		}
 		deps.Runner = vendorRunner{
-			claude:      claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: envFor("claude")},
+			claude:      claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude"), env: envFor("claude"), approval: d.prepareApproval},
 			codex:       codexRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "codex"), env: envFor("codex")},
 			grok:        grokRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "grok"), env: envFor("grok")},
 			claudeLocal: claudeRunner{fixtureDir: filepath.Join(d.cfg.Paths.Dir, "fixtures", "claude-local"), approval: d.prepareApproval},

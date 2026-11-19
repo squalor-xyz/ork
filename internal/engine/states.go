@@ -1250,7 +1250,7 @@ func failSummary(report string) string {
 	return s
 }
 
-// commit commits the approved slice in its worktree with the title of the
+// commit commits the approved slice in its worktree with the quoted title of the
 // slice's Git section, falling back to "ID: title", and no attribution
 // (git.commit). The run stops here for stop_after commit; otherwise landing follows.
 func (e *Engine) commit(ctx context.Context) error {

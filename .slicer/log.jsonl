@@ -5590,6 +5590,23 @@
 {"when": "2026-11-18T22:31:59Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-18T22:32:00Z", "item": "S442", "action": "note", "from": "", "to": "", "note": "Correction 2026-11-18: the owner clicked 'List at landing' b", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:14:50Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:14:50Z", "item": "S345", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-18T23:15:26Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-18T23:18:27Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-18T23:19:24Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-18T23:21:50Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T03:13:55Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:13:55Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T03:13:56Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T03:15:59Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T03:15:59Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T03:21:37Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T11:40:42Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T11:40:50Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T11:54:02Z", "item": "S345", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T11:58:40Z", "item": "S345", "action": "note", "from": "", "to": "", "note": "Verified: both implementer presets and the built-in default ", "by": "Jon Robbins"}
+{"when": "2026-11-19T11:58:42Z", "item": "S345", "action": "status", "from": "started", "to": "done", "note": "Verified: presets and the built-in default allow git ls-files, git mv, git rm and non-recursive rm (adj 478); the approval hook denies outside-worktree removals and recursive rm; cloud Claude write roles run the hook for paths only and defer other calls to the CLI allowlist; full test suite, vet, gofmt, slicer check and adj lint passed.", "by": "Jon Robbins"}
 {"when": "2026-11-18T23:11:38Z", "item": "S437", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-18T23:12:54Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-18T23:12:54Z", "item": "S437", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
@@ -5641,3 +5658,30 @@
 {"when": "2026-11-19T12:30:58Z", "item": "S442", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-19T12:44:42Z", "item": "S442", "action": "note", "from": "", "to": "", "note": "Verified near-duplicate tool feedback titles are noted on ne", "by": "Jon Robbins"}
 {"when": "2026-11-19T12:44:47Z", "item": "S442", "action": "status", "from": "started", "to": "done", "note": "Verified near-duplicate tool feedback titles are noted on newly filed slices at similarity 0.5 and persisted as near ids. Exact-key repeats skip listing and noting; list and note failures remain advisory. Tests, mutation evidence and documentation reviewed; gate PASS and owner approved.", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:06:32Z", "item": "S423", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:06:40Z", "item": "S423", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T12:07:16Z", "item": "S423", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T12:07:17Z", "item": "S423", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T12:40:16Z", "item": "S423", "action": "note", "from": "", "to": "", "note": "Verified read-only briefs use the final-message report rule,", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:40:20Z", "item": "S423", "action": "status", "from": "started", "to": "done", "note": "Verified read-only briefs use the final-message report rule, writable briefs keep the file-writing rule, and missing report sentences fail with the role name. Gate returned VERDICT: PASS and owner approved.", "by": "Jon Robbins"}
+{"when": "2026-11-19T11:43:42Z", "item": "S457", "action": "add", "from": "", "to": "open", "note": "flag docs whose example CLI output strings disagree with the expected output in cli_test.go"}
+{"when": "2026-11-19T11:43:42Z", "item": "S457", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T11:46:49Z", "item": "S458", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it"}
+{"when": "2026-11-19T11:46:49Z", "item": "S458", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR in the reviewer sandbox since the slice Check names it"}
+{"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T12:18:56Z", "item": "S357", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T12:18:57Z", "item": "S357", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:19:29Z", "item": "S357", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T12:40:46Z", "item": "S357", "action": "note", "from": "", "to": "", "note": "Verified quoted Git titles are preserved, unquoted sections ", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:40:46Z", "item": "S357", "action": "status", "from": "started", "to": "done", "note": "Verified quoted Git titles are preserved, unquoted sections fall back to ID: title, and explicit empty quoted titles still pause. Regression tests, mutation checks and behavior documentation are included; the gate returned PASS and the owner approved.", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:08:42Z", "item": "S460", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it"}
+{"when": "2026-11-19T12:08:42Z", "item": "S460", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T12:21:19Z", "item": "S461", "action": "add", "from": "", "to": "open", "note": "this reviewer brief's role prompt still carried \"write your final report to PATH\" beside \"you cannot write it\", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt"}
+{"when": "2026-11-19T12:21:19Z", "item": "S461", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T12:22:53Z", "item": "S459", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint in the read-only allowlist)."}
+{"when": "2026-11-19T12:22:53Z", "item": "S460", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint in the read-only allowlist)."}
+{"when": "2026-11-19T12:22:53Z", "item": "S461", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S423, which fixes this brief text; filed while S423 ran."}
+{"when": "2026-11-19T12:22:53Z", "item": "S458", "action": "note", "from": "", "to": "", "note": "Merged S459 and S460 (2026-11-19, tool feedback). Cause: sin", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:32:48Z", "item": "S462", "action": "add", "from": "", "to": "open", "note": "allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief"}
+{"when": "2026-11-19T12:32:48Z", "item": "S462", "action": "promote", "from": "", "to": "", "note": ""}

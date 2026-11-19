@@ -897,9 +897,11 @@ slice.
   landing fix round, S119) it sees only that round's uncommitted edits
   (adj 438).
   Nothing from this check is recorded in `run.json`.
-- **commit:** ork commits in the worktree with the title from the slice's
-  Git section. An empty or missing Git section falls back to `ID: slice title`
-  from `slicer show`; it does not block launch (S139, owner decision 2026-10-26).
+- **commit:** ork commits in the worktree with the first double-quoted title
+  from the slice's Git section. With no quoted title, including an empty or
+  missing Git section, it falls back to `ID: slice title` from `slicer show`
+  (S139; adj 485, `git.commit-title`). An explicit empty quoted title pauses
+  at the commit step.
   There is no AI attribution, and roles never commit
   (`git.commit`). The finish step precedes this commit (adj #81).
   The per-run `stop_after` input (*proposed*, S177) is `land` by default or
@@ -1613,9 +1615,10 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   finish step first: the closing note, then `slicer done` or `slicer handoff`
   per `slicer config implement_finish`. Then ork commits in the worktree with
   `git add -A` and `git commit -m "<title>"`, the title being the quoted text
-  of the slice's Git section (or its first non-blank line without quotes).
-  An empty or missing Git section uses `ID: slice title` from `slicer show`
-  (S139). There is nothing else in the message (no attribution), so one
+  of the slice's Git section. With no double-quoted title, including an empty
+  or missing Git section, it uses `ID: slice title` from `slicer show`
+  (S139; adj 485). An explicit empty quoted title pauses at commit.
+  There is nothing else in the message (no attribution), so one
   commit carries the code and the tracking change. A rejected slice runs no
   finish step. A failed commit stops the slice in needs-you with git's error
   and does not undo the finish step or close its passed ledger run again
@@ -1745,7 +1748,8 @@ separately.
   - the environment lines from the project's AGENTS.md;
   - the role's own temp directory;
   - the report path. *Proposed (S256):* for a read-only role (reviewer,
-    gate, architect, UI pass, spec check) the line says that ork saves the
+    gate, architect, UI pass, spec check, spec draft, or an implementer under
+    the read-only preset) the line says that ork saves the
     final message there and the role cannot write it, and another line asks
     for the whole report as the final message in plain text, with no code
     fence. The role's permission mode does not let it write the report on any
@@ -1755,7 +1759,12 @@ separately.
     manual mode for claude-local, `-s read-only` for Codex; a cloud
     Claude UI pass has no mode flag but an allowlist with a write rule for its
     temp directory (S369, adj 372), and the report path is not under it),
-    so the final message is the only route (`role.report-io`);
+    so the final message is the only route (`role.report-io`, adj 27).
+    *Proposed (S423):* before filling placeholders, the brief replaces the
+    prompt's write-report sentence with the final-message rule. Its Report
+    section carries that one report rule and names the saved report path
+    once. A missing sentence fails brief construction with the role's name.
+    Write roles keep the prompt's write-report rule;
   - *proposed (S256):* for a resumed round, a `## Resumed session` section
     right after `## Your files`. It says that ork resumed the earlier
     session, that the worktree may have changed, and to run `git status` and
@@ -2370,12 +2379,40 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   default, which the registry replaces as a whole: `Read`, `Grep`, `Glob`,
   `Edit`, `Write`, `Bash(slicer *)`, `Bash(git status*)`, `Bash(git
   diff*)`, `Bash(git log*)` and `Bash(<check command>*)`
-  (`launch.default-allowlist`). The default also includes
+  (`launch.default-allowlist`, adj 75). The default also includes
   `Bash(go -C * test*)`, `Bash(go -C * vet*)`, `Bash(go test*)`,
   `Bash(go vet*)`, `Bash(gofmt *)`, `Bash(git -C * status*)`,
   `Bash(git -C * diff*)`, `Bash(git -C * log*)`, `Bash(adj check*)`,
   `Bash(adj lint*)`, `Bash(adj show*)` and `Bash(adj inbox*)`
-  (`engine.default-allowlist`). A registry allowlist for a read-only role is
+  (`engine.default-allowlist`, adj 94). Both presets and the built-in default
+  also include `Bash(git ls-files*)`, `Bash(git -C * ls-files*)`,
+  `Bash(git mv*)`, `Bash(git -C * mv*)`, `Bash(git rm *)`,
+  `Bash(git -C * rm *)` and `Bash(rm *)` (adj 478).
+  The approval hook checks paths before matching these patterns and
+  does not grant recursive flags through the plain `Bash(rm *)` entry.
+  Short options containing `r` or `R`, and the long recursive option, require
+  owner approval for claude-local and are denied for cloud; `--` ends option
+  parsing.
+  A cloud Claude write role runs the same hook (owner answer
+  `launch.cloud-remove-paths`, 2026-11-18): the daemon binds a session to the
+  role's worktree and allowlist and passes the hook in `--settings`, and a
+  removal outside the worktree, including through a symlink inside it, is
+  denied. For cloud the policy is paths only (owner answers
+  `launch.cloud-hook-scope` and `launch.cloud-hook-passthrough`): it denies
+  outside paths, a recursive rm, and a removal or move (`rm`, or `git` with
+  `mv`) whose paths it cannot check, such as one with a variable, a
+  substitution, a tilde or brace form, bad quoting or a second command. It
+  has no Read cap and no read-only grant for own files and never asks the
+  owner. Every other call is deferred: the hook prints no permission
+  decision, ork counts no denial, and the CLI's own allowlist and deny rules
+  decide it as they did before the hook. A cloud read-only role runs no hook. A
+  failed hook setup stops the role before it launches. When the allowlist includes
+  `Bash(rm *)`, ork also passes `--disallowedTools` patterns for recursive
+  rm options, including combined flags and options after filenames
+  (owner decision `launch.rm-guard-scope`). These conservative patterns can
+  also deny filenames containing flag-like text. Their CLI behavior is
+  unprobed; the hook is the guard that is tested.
+  A registry allowlist for a read-only role is
   an error. An allowlist denial stops an unsuccessful round; a success proceeds.
   The spike measured the claude allowlist
   denial: it exits 0 and shows only in `permission_denials`, so ork must read
@@ -2393,6 +2430,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `Bash(<check command>*)` when the command is set. `ork projects set --preset`
   writes the expanded list into the registry as plain patterns. Broader
   Python forms such as `Bash(python3 *)` are left to `--allow`.
+  Stored lists are not rewritten when presets change. Run
+  `ork projects set NAME --preset go|python` again to replace a stored list,
+  or add individual entries with `--allow implementer=PATTERN` (adj 190).
 - **Credentials:** ork uses each CLI's own login. It never reads, stores
   or passes credentials.
 
@@ -3644,7 +3684,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `--permission implementer=...` or with `--replace-allow --allow
   implementer=...` is a usage error. The text line counts the roles changed
   by `--preset` and `--allow` and names the preset applied
-  (`implementer:18 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
+  (`implementer:25 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
   first `:` ends the vendor and the first `=` ends the key) and
   `--unset-vendor-env VENDOR:KEY` removes one key, and the vendor once it is
   empty; an empty value (`VENDOR:KEY=`) is kept as an empty string. A role or a key changes alone, so a second command does not need the

@@ -19,6 +19,20 @@ import (
 // engine fills them (S04); roles.go lists them in its top comment.
 var knownPlaceholders = []string{"report_path", "slice_id", "temp_dir", "worktree", "renders_dir"}
 
+func TestImplementerPromptSaysHowToRename(t *testing.T) {
+	p := prompts(t)["implementer"]
+	for _, want := range []string{
+		"Rename a tracked file with `git mv`; ork's commit picks up the move.",
+		"Remove a file the slice moves code out of, or created by mistake, with `git rm` or `rm`; do not leave a stub.",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(p, want) {
+				t.Errorf("implementer prompt lacks %q", want)
+			}
+		})
+	}
+}
+
 // has reports whether p holds want, ignoring how the prompt wraps its lines.
 func has(p, want string) bool {
 	return strings.Contains(strings.Join(strings.Fields(p), " "), want)
