@@ -5633,3 +5633,9 @@
 {"when": "2026-11-19T03:25:57Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-19T03:38:05Z", "item": "S454", "action": "note", "from": "", "to": "", "note": "Landing tracking commits include listed untracked slice JSON", "by": "Jon Robbins"}
 {"when": "2026-11-19T03:38:05Z", "item": "S454", "action": "status", "from": "started", "to": "done", "note": "Landing tracking commits include listed untracked slice JSON and renders when committing the slicer index, while unlisted files remain untracked. Regression tests and mutation checks verified the behavior; gate PASS and owner approval authorize finalization.", "by": "Jon Robbins"}
+{"when": "2026-11-19T11:43:42Z", "item": "S457", "action": "add", "from": "", "to": "open", "note": "flag docs whose example CLI output strings disagree with the expected output in cli_test.go"}
+{"when": "2026-11-19T11:43:42Z", "item": "S457", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T11:46:49Z", "item": "S458", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it"}
+{"when": "2026-11-19T11:46:49Z", "item": "S458", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR in the reviewer sandbox since the slice Check names it"}
+{"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "promote", "from": "", "to": "", "note": ""}
