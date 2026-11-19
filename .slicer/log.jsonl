@@ -5656,3 +5656,11 @@
 {"when": "2026-11-19T11:46:49Z", "item": "S458", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR in the reviewer sandbox since the slice Check names it"}
 {"when": "2026-11-19T11:51:06Z", "item": "S459", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T12:08:42Z", "item": "S460", "action": "add", "from": "", "to": "open", "note": "allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it"}
+{"when": "2026-11-19T12:08:42Z", "item": "S460", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T12:21:19Z", "item": "S461", "action": "add", "from": "", "to": "open", "note": "this reviewer brief's role prompt still carried \"write your final report to PATH\" beside \"you cannot write it\", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt"}
+{"when": "2026-11-19T12:21:19Z", "item": "S461", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T12:22:53Z", "item": "S459", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint in the read-only allowlist)."}
+{"when": "2026-11-19T12:22:53Z", "item": "S460", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint in the read-only allowlist)."}
+{"when": "2026-11-19T12:22:53Z", "item": "S461", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S423, which fixes this brief text; filed while S423 ran."}
+{"when": "2026-11-19T12:22:53Z", "item": "S458", "action": "note", "from": "", "to": "", "note": "Merged S459 and S460 (2026-11-19, tool feedback). Cause: sin", "by": "Jon Robbins"}
