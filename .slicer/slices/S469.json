@@ -1,0 +1,39 @@
+{
+  "id": "S469",
+  "title": "let read-only reviewer roles run slicer COMMAND --help and slicer ai relay",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-131145-b70c, project ork, item S384:\n\nlet read-only reviewer roles run slicer COMMAND --help and slicer ai relay\n\nEvidence: slicer done --help, slicer note --help and slicer ai relay were all denied, so the review could not confirm whether --owner on slicer note is accepted or what the relay contract's first line says"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

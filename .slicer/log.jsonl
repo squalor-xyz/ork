@@ -5739,3 +5739,7 @@
 {"when": "2026-11-19T13:42:36Z", "item": "S467", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note."}
 {"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "add", "from": "", "to": "open", "note": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)"}
 {"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:24:52Z", "item": "S469", "action": "add", "from": "", "to": "open", "note": "let read-only reviewer roles run slicer COMMAND --help and slicer ai relay"}
+{"when": "2026-11-19T14:24:52Z", "item": "S469", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:25:39Z", "item": "S468", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S424 (landed 2026-11-19): the resumed gate brief says the tree is unchanged."}
+{"when": "2026-11-19T14:25:40Z", "item": "S466", "action": "retire", "from": "open", "to": "retired", "note": "Owner turned down a per-project render command for the UI pass (adj 487, roles.ui-pass-render-path = overlay); S416 documents the overlay route."}
