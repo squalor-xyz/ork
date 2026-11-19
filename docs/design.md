@@ -1932,7 +1932,17 @@ separately.
   to the one before it is dropped.
 - **Spec check.** A read-only role with its own prompt (`spec-check.md`) that
   runs once over a batch of slices before a wave (see the Check step of the
-  Wave lifecycle). It works in the project checkout, not in a worktree, and
+  Wave lifecycle). The owner may skip it for one CLI start with
+  `ork run ... --spec-check off` or `ork wave start ... --spec-check off`
+  (adj 473, `cli.spec-check-skip`). Only `off` is accepted, and it conflicts
+  with `--questions` and `--answer`. The CLI prints
+  `spec check: off (--spec-check off)` to its prompts writer and keeps the
+  planned items for the usual confirmation. The TUI still runs the check.
+  Skipping produces no new answers' decisions, local orientation pack or
+  local carve; cached material remains available. The daemon still refuses
+  open questions against the same spec and a local slice above size S
+  without its filed slivers.
+  It works in the project checkout, not in a worktree, and
   has no engine run record. It begins a ledger run on the batch, records
   `spec-check` steps with no parent, and ends it with `pass` after reading the
   report, or `stopped` on failure or cancellation. The daemon runs it as a job,

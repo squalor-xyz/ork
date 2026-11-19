@@ -19287,7 +19287,7 @@
       "id": "S338",
       "title": "wave start: no way to skip the spec check the owner declined",
       "short_title": "wave start: no way to skip the spec check the owner declined",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19297,6 +19297,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 473 cli.spec-check-skip = flag (--spec-check off on ork run and ork wave start, CLI only).",
           "created_at": "2026-11-18T22:18:10Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "dbee1785-c605-4ffc-8a8d-b8ec7f803766",
+          "kind": "",
+          "text": "**2026-11-19** — Verified: ork run and ork wave start accept --spec-check off (CLI only, adj 473). The flag skips the spec check, prints 'spec check: off (--spec-check off)' before the usual confirm, and keeps every planned item. Only off is accepted; it is refused with --questions or --answer. The daemon still refuses items with open spec questions. Focused tests, vet, slicer check and adj lint passed; the gate returned PASS.",
+          "created_at": "2026-11-19T14:09:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19323,7 +19337,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
