@@ -983,6 +983,24 @@ func yourFilesSection(t *testing.T, brief string) string {
 	return section
 }
 
+func TestClaudeReadOnlyBriefHasNoPlanModeText(t *testing.T) {
+	for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck, RoleSpecDraft} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Vendor, in.Role, in.ReadOnly = "claude", role, true
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, forbidden := range []string{"plan mode", "ExitPlanMode"} {
+				if strings.Contains(strings.ToLower(got), strings.ToLower(forbidden)) {
+					t.Errorf("Claude brief contains %q", forbidden)
+				}
+			}
+		})
+	}
+}
+
 func TestReadOnlyBriefSaysTheReportIsTheFinalMessage(t *testing.T) {
 	const pathLine = "Your report path: /state/runs/r1/implementer-1.md (ork saves your final message there; you cannot write it)\n"
 	const finalLine = "Give your whole report as your final message, as plain text. Do not wrap it or any part of it in a code fence.\n"

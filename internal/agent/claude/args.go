@@ -42,14 +42,14 @@ func editRules(dir string) []string {
 //	-p [--resume SESSION] --output-format stream-json --verbose
 //	   --include-partial-messages [--model M] [--effort E]
 //	   [--system-prompt-file F --tools a,b [--disable-slash-commands]]   (claude-local only)
-//	   (--allowedTools a,b --permission-prompts none | --permission-mode plan |
+//	   (--allowedTools a,b --permission-prompts none |
 //	    --add-dir DIR --allowedTools a,b,Edit(//DIR/**),Write(//DIR/**) --permission-prompts none)
 //	   [--permission-mode manual --settings JSON]          (claude-local only)
 //	   PROMPT
 //
-// A write role needs an allowlist. A cloud read-only role runs in plan mode
-// and ignores it (except a UI pass with a WriteDir, which uses it and has no
-// mode flag); claude-local uses manual mode and ork's PreToolUse hook
+// Every role needs an allowlist. Cloud read-only roles use the fixed read-only
+// list with no mode flag (adj 489); a UI pass also gets its WriteDir rules
+// (adj 372). claude-local uses manual mode and ork's PreToolUse hook
 // with a read-only allowlist for read-only roles (adj 307, 328-331).
 // `--include-partial-messages` gives the
 // text deltas for the output tail. `--effort <level>` is listed by
@@ -107,41 +107,37 @@ func (s Spec) Args() ([]string, error) {
 		}
 		args = append(args, "--add-dir", s.TMPDir)
 	}
-	if cloudReadOnly && s.WriteDir == "" {
-		args = append(args, "--permission-mode", "plan")
-	} else {
-		allow := s.Allowlist
-		if cloudReadOnly {
-			// A cloud UI pass (S369, adj 372, *proposed*). Plan mode refuses
-			// every write, even under an allow rule (probe, claude 2.1,
-			// 2026-11-16), and accept-edits mode auto-approves shell file
-			// commands in the worktree (adj 371). So it has no permission
-			// mode flag: the allowlist (the caller's read-only tools plus
-			// Edit and Write under the write directory) and
-			// --permission-prompts none deny every other call. --add-dir
-			// matches the probe and the claude-local progress note, and comes
-			// before --allowedTools like there.
-			if !filepath.IsAbs(s.WriteDir) || filepath.Clean(s.WriteDir) != s.WriteDir {
-				return nil, errors.New("claude: write directory is not an absolute clean path")
-			}
-			args = append(args, "--add-dir", s.WriteDir)
-			allow = append(slices.Clone(allow), editRules(s.WriteDir)...)
-			if s.TMPDir != "" {
-				allow = append(allow, editRules(s.TMPDir)...)
-			}
-		} else if len(allow) == 0 {
-			return nil, errors.New("claude: a write role needs an allowlist")
+	allow := s.Allowlist
+	if cloudReadOnly && s.WriteDir != "" {
+		// A cloud UI pass (S369, adj 372, *proposed*). Plan mode refuses
+		// every write, even under an allow rule (probe, claude 2.1,
+		// 2026-11-16), and accept-edits mode auto-approves shell file
+		// commands in the worktree (adj 371). So it has no permission
+		// mode flag: the allowlist (the caller's read-only tools plus
+		// Edit and Write under the write directory) and
+		// --permission-prompts none deny every other call. --add-dir
+		// matches the probe and the claude-local progress note, and comes
+		// before --allowedTools like there.
+		if !filepath.IsAbs(s.WriteDir) || filepath.Clean(s.WriteDir) != s.WriteDir {
+			return nil, errors.New("claude: write directory is not an absolute clean path")
 		}
-		for _, tool := range allow {
-			if strings.TrimSpace(tool) == "" {
-				return nil, errors.New("claude: empty allowlist entry")
-			}
-			if strings.Contains(tool, ",") {
-				return nil, errors.New("claude: allowlist entry " + tool + " holds a comma")
-			}
+		args = append(args, "--add-dir", s.WriteDir)
+		allow = append(slices.Clone(allow), editRules(s.WriteDir)...)
+		if s.TMPDir != "" {
+			allow = append(allow, editRules(s.TMPDir)...)
 		}
-		args = append(args, "--allowedTools", strings.Join(allow, ","), "--permission-prompts", "none")
+	} else if len(allow) == 0 {
+		return nil, errors.New("claude: a role needs an allowlist")
 	}
+	for _, tool := range allow {
+		if strings.TrimSpace(tool) == "" {
+			return nil, errors.New("claude: empty allowlist entry")
+		}
+		if strings.Contains(tool, ",") {
+			return nil, errors.New("claude: allowlist entry " + tool + " holds a comma")
+		}
+	}
+	args = append(args, "--allowedTools", strings.Join(allow, ","), "--permission-prompts", "none")
 	if s.Bin == "claude-local" {
 		args = append(args, "--permission-mode", "manual", "--settings", HookSettings(s.HookCommand))
 	}

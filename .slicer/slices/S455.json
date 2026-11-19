@@ -1,0 +1,39 @@
+{
+  "id": "S455",
+  "title": "Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261118-225521-b892, project ork, item S418:\n\nSkip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change\n\nEvidence: round 3 brief shows slice status done, a clean tree, and an implementer report of \"No changes; worktree clean\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

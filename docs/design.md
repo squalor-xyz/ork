@@ -1733,10 +1733,12 @@ separately.
     final message there and the role cannot write it, and another line asks
     for the whole report as the final message in plain text, with no code
     fence. The role's permission mode does not let it write the report on any
-    vendor (`--permission-mode plan` for cloud Claude and Grok, the fixed
-    read-only allowlist for claude-local, `-s read-only` for Codex; a cloud
+    vendor (the fixed read-only allowlist with `--permission-prompts none`
+    and no permission mode flag for cloud Claude, adj 489;
+    `--permission-mode plan` for Grok, the fixed read-only allowlist with
+    manual mode for claude-local, `-s read-only` for Codex; a cloud
     Claude UI pass has no mode flag but an allowlist with a write rule for its
-    temp directory (S369), and the report path is not under it),
+    temp directory (S369, adj 372), and the report path is not under it),
     so the final message is the only route (`role.report-io`);
   - *proposed (S256):* for a resumed round, a `## Resumed session` section
     right after `## Your files`. It says that ork resumed the earlier
@@ -2254,15 +2256,17 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   the slice for the owner.
 - **Permissions** (`launch.permissions`): there is a per-project, per-role
   allowlist in the registry. Read-only roles run in their vendor's read-only
-  mode, except claude-local (adj 307): its fixed read-only allowlist replaces
-  plan mode to avoid the model-backed classifier. It allows `Read`, `Grep`,
+  mode, except Claude: cloud Claude (adj 489) and claude-local (adj 307)
+  share a fixed read-only allowlist instead of plan mode. Cloud Claude uses
+  `--permission-prompts none` and no permission mode flag; Grok read-only
+  roles keep plan mode. The list allows `Read`, `Grep`,
   `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
   `adj show`, `adj check`, `go test`, `go vet` (also with `go -C`)
   and `gofmt -l`, with trailing argument wildcards. S358 adds an exact-file
   Edit/Write exception for the local progress note described under Roles.
-  It allows no other edits, broad Bash or tracking-write commands. Cloud
-  permissions stay the same.
+  It allows no other edits, broad Bash or tracking-write commands. The cloud
+  UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs
   a `PreToolUse` command hook for every call, including allowlisted calls.
   The hook calls `tool.approve` on the daemon socket with a per-attempt
@@ -2446,10 +2450,12 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   file) plus a ~2.2 KB preview. The owner chose 10000 for local roles. Cloud
   roles get neither change.
   Then `--allowedTools a,b --permission-prompts none` for a write role or a
-  read-only claude-local role (using its fixed read-only list). A local role
+  read-only Claude role (using its fixed read-only list). A local role
   also gets `--permission-mode manual --settings JSON`, containing the ork
-  hook; it never gets plan or auto mode. Cloud roles retain their flags, with
-  `--permission-mode plan` for a cloud read-only role, then the prompt.
+  hook; it never gets plan or auto mode. A cloud read-only role runs on the
+  fixed read-only list with `--allowedTools ... --permission-prompts none`
+  and no permission mode flag (adj 489), then the prompt. Only a cloud UI
+  pass adds the scoped write rules described below.
   *Proposed (S369; adj 372 and 374, owner decisions 2026-11-16, which
   supersede adj 371 and 370):* a cloud Claude UI pass, which writes its
   renders, has no permission mode flag. It runs as `--add-dir TEMPDIR
@@ -2463,9 +2469,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `--add-dir` returns "Cannot write to ... while in plan mode". `acceptEdits`
   mode does not work either: it auto-approves `mkdir`, `touch`, `rm`, `rmdir`,
   `mv`, `cp` and `sed` in the working directory, and a Bash deny rule is not a
-  boundary (adj 371, from the Claude Code docs). Every other cloud read-only
-  role (reviewer, architect, gate, spec check) keeps plain `--permission-mode
-  plan`. *Unverified:* that a UI pass run this way writes under TEMPDIR and is
+  boundary (adj 371, from the Claude Code docs). Other cloud read-only roles
+  keep the fixed read-only list without the UI pass's write rules (adj 489).
+  *Unverified:* that a UI pass run this way writes under TEMPDIR and is
   denied in the worktree; the probe covered plan mode only. `--effort
   <level>` is listed by `claude --help` ("Effort level for the current
   session", claude 2.1.x). When the role has a temp directory, the process
