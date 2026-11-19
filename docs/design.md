@@ -2287,9 +2287,10 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   roles keep plan mode. The list allows `Read`, `Grep`,
   `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
-  `adj show`, `adj check`, `go test`, `go vet` (also with `go -C`)
-  and `gofmt -l`, with trailing argument wildcards. S358 adds an exact-file
-  Edit/Write exception for the local progress note described under Roles.
+  `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
+  with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
+  `adj lint --root DIR`. S358 adds an exact-file Edit/Write exception for
+  the local progress note described under Roles.
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-462 items · — 56 · done 332 · retired 74
+462 items · — 55 · done 333 · retired 74
 
 ## v1.3
 
@@ -217,7 +217,7 @@ v1.2
 | 160 | [S455](slices/S455.md) | Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change |  | - |  | discovered from S418 | — |
 | 161 | [S456](slices/S456.md) | give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly |  | - |  | discovered from S437 | — |
 | 162 | [S457](slices/S457.md) | flag docs whose example CLI output strings disagree with the expected output in cli_test.go |  | - |  | discovered from S345 | — |
-| 163 | [S458](slices/S458.md) | Read-only roles may run adj lint | S | - |  | discovered from S345 | — |
+| 163 | [S458](slices/S458.md) | Read-only roles may run adj lint | S | - |  | discovered from S345 | done |
 | 164 | [S459](slices/S459.md) | allow adj lint --root DIR in the reviewer sandbox since the slice Check names it |  | - |  | Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S345 | retired |
 | 165 | [S460](slices/S460.md) | allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it |  | - |  | Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S442 | retired |
 | 166 | [S461](slices/S461.md) | this reviewer brief's role prompt still carried "write your final report to PATH" beside "you cannot write it", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt |  | - |  | Covered by S423, which fixes this brief text; filed while S423 ran. · discovered from S423 | retired |
