@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 476,
+  "next_id": 477,
   "preamble": "",
   "passes": [
     {
@@ -25535,6 +25535,34 @@
         "importance": 3,
         "urgency": 2,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S476",
+      "title": "give UI passes a sanctioned way to render CLI text views, such as a test flag that writes plain output to a given directory",
+      "short_title": "give UI passes a sanctioned way to render CLI text views, such as a test flag that writes plain output to a given directory",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S340",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-78468b20",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

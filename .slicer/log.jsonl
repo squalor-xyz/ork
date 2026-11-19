@@ -5770,3 +5770,5 @@
 {"when": "2026-11-19T14:48:15Z", "item": "S470", "action": "note", "from": "", "to": "", "note": "Merged S473 (2026-11-19). The adj lint half was done by S458", "by": "Jon Robbins"}
 {"when": "2026-11-19T14:48:37Z", "item": "S475", "action": "add", "from": "", "to": "open", "note": "UI passes render CLI text views through a test flag"}
 {"when": "2026-11-19T14:48:37Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T14:48:43Z", "item": "S476", "action": "add", "from": "", "to": "open", "note": "give UI passes a sanctioned way to render CLI text views, such as a test flag that writes plain output to a given directory"}
+{"when": "2026-11-19T14:48:43Z", "item": "S476", "action": "promote", "from": "", "to": "", "note": ""}
