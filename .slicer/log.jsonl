@@ -5708,3 +5708,5 @@
 {"when": "2026-11-19T13:12:02Z", "item": "S462", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S456 (short TMPDIR for read-only reviewers so socket tests run)."}
 {"when": "2026-11-19T13:12:02Z", "item": "S463", "action": "note", "from": "", "to": "", "note": "Merged S464 (2026-11-19, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-19T13:12:02Z", "item": "S456", "action": "note", "from": "", "to": "", "note": "Merged S462 (2026-11-19, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "add", "from": "", "to": "open", "note": "allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture"}
+{"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "promote", "from": "", "to": "", "note": ""}

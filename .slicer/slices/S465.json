@@ -1,0 +1,39 @@
+{
+  "id": "S465",
+  "title": "allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-125602-8f8f, project ork, item S424:\n\nallow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture\n\nEvidence: mkdir and git init under the reviewer temp dir were denied, which left the nested-repo finding PLAUSIBLE"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

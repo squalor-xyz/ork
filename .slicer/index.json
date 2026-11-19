@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 465,
+  "next_id": 466,
   "preamble": "",
   "passes": [
     {
@@ -25123,6 +25123,34 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Duplicate of S463 (read-only roles run under the daemon's allowlist, not the slice's).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S465",
+      "title": "allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture",
+      "short_title": "allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S424",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-d86bdd4a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,
