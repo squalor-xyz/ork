@@ -1,0 +1,39 @@
+{
+  "id": "S456",
+  "title": "give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261118-225522-3de5, project ork, item S437:\n\ngive read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly\n\nEvidence: reviewer TMPDIR was runs/ork-20261118-225522-3de5/tmp/reviewer-1 (71 bytes); 21 socket tests skipped in daemon, cli and cmd/ork"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

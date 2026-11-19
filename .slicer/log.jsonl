@@ -5602,3 +5602,5 @@
 {"when": "2026-11-19T02:51:00Z", "item": "S454", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-19T03:14:57Z", "item": "S455", "action": "add", "from": "", "to": "open", "note": "Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change"}
 {"when": "2026-11-19T03:14:57Z", "item": "S455", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T03:17:23Z", "item": "S456", "action": "add", "from": "", "to": "open", "note": "give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly"}
+{"when": "2026-11-19T03:17:24Z", "item": "S456", "action": "promote", "from": "", "to": "", "note": ""}
