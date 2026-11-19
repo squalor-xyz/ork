@@ -5716,3 +5716,5 @@
 {"when": "2026-11-19T13:12:02Z", "item": "S456", "action": "note", "from": "", "to": "", "note": "Merged S462 (2026-11-19, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "add", "from": "", "to": "open", "note": "allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture"}
 {"when": "2026-11-19T13:26:52Z", "item": "S465", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:40:22Z", "item": "S466", "action": "add", "from": "", "to": "open", "note": "give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand"}
+{"when": "2026-11-19T13:40:23Z", "item": "S466", "action": "promote", "from": "", "to": "", "note": ""}

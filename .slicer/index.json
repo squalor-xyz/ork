@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 466,
+  "next_id": 467,
   "preamble": "",
   "passes": [
     {
@@ -25162,6 +25162,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-d86bdd4a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S466",
+      "title": "give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand",
+      "short_title": "give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S338",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4f57bee3",
         "pass": "v1.2",
         "group": "",
         "reason": "",
