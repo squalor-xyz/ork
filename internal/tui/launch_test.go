@@ -1563,6 +1563,37 @@ func TestLaunchConfirmShowsACheckThatCannotRunByTheCheckLine(t *testing.T) {
 	}
 }
 
+// The merge drivers warning shows by the check line too, so a plan with ui and
+// architect rows does not clip it at 80x24 (S348, UI pass finding). It is said
+// once, for both its texts.
+func TestLaunchConfirmShowsMissingMergeDriversByTheCheckLine(t *testing.T) {
+	// key is the start of each text, short enough not to wrap at 80 columns.
+	for _, tc := range []struct{ warning, key string }{
+		{engine.MissingDriversWarning([]string{"slicer-render"}), "warning: merge drivers missing: slicer-render"},
+		{engine.MissingDriversPrefix + ": read .slicer/.gitattributes: is a directory", "warning: merge drivers: read"},
+	} {
+		warning, key := tc.warning, tc.key
+		h, l := launchHarness(t)
+		h.m.cfg.Theme = NewTheme(true)
+		l.plan.Lineup["ui"] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}}
+		l.plan.Lineup["architect"] = []runrec.LineupEntry{{Vendor: "codex", Model: "sol", Effort: "high"}}
+		l.plan.Permissions["ui"] = engine.Permission{ReadOnly: true}
+		l.plan.Permissions["architect"] = engine.Permission{ReadOnly: true}
+		l.plan.Warnings = []string{"other warning", warning}
+		launchConfirmed(t, h)
+		for name, view := range map[string]string{"100x30": h.view(), "80x24": h.view80()} {
+			at := func(s string) int { return strings.Index(view, s) }
+			if n := strings.Count(view, key); n != 1 {
+				t.Fatalf("%s: %q shows %d times, want once:\n%s", name, key, n, view)
+			}
+			check, warn, stop := at("check: "), at(key), at("stop: ")
+			if check < 0 || warn < check || warn > stop {
+				t.Errorf("%s: order: check %d, drivers warning %d, stop %d; want check < warning < stop:\n%s", name, check, warn, stop, view)
+			}
+		}
+	}
+}
+
 // A plan with no check command cannot start (adj 191): the confirm says why
 // and how to fix it, once, and y starts nothing.
 func TestLaunchConfirmRefusesAPlanWithNoCheckCommand(t *testing.T) {

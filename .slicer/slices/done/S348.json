@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/setup.go:19-61` (a shared `MissingDriversWarning(names)` text beside `MissingMergeDrivers`)\n- `internal/engine/setup_test.go`\n- `internal/cli/doctor.go:190-196` (use the shared text; output unchanged)\n- `internal/daemon/runs.go:808-828` (`planRun`: append the warning)\n- `internal/daemon/runs_test.go:3743` (beside `TestRunPlanCarriesSetupWarnings`)\n- `docs/design.md:2905-2925` (the plan's warnings list)\n- `docs/guide.md:95` (doctor and the plan both name missing drivers)"
+      "body": "- `internal/engine/setup.go:19-73` (a shared `MissingDriversWarning(names)` text and `MissingDriversPrefix` beside `MissingMergeDrivers`)\n- `internal/engine/setup_test.go`\n- `internal/cli/doctor.go:190-196` (use the shared text; output unchanged)\n- `internal/daemon/runs.go:825-845` (`planRun`: append the warning)\n- `internal/daemon/runs_test.go:3916` (beside `TestRunPlanCarriesSetupWarnings`)\n- `internal/tui/launch.go:571-620` (the launch confirm shows the warning by the check line, UI pass finding)\n- `internal/tui/launch_test.go:1550` (beside `TestLaunchConfirmShowsACheckThatCannotRunByTheCheckLine`)\n- `docs/design.md:3015-3040` (the plan's warnings list)\n- `docs/guide.md:96-112` (doctor and the plan both name missing drivers)\n- `docs/dashboard.md:2038-2046` (the confirm shows the warning by the check line)"
     },
     {
       "heading": "Failing tests",

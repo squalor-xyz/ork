@@ -1,0 +1,39 @@
+{
+  "id": "S478",
+  "title": "let read-only roles run `slicer check --help` the way they can run `slicer check`, or put the command's read-only note in the brief",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-145438-e916, project ork, item S470:\n\nlet read-only roles run `slicer check --help` the way they can run `slicer check`, or put the command's read-only note in the brief\n\nEvidence: I needed `slicer check --help` to confirm the command writes nothing before accepting it on a read-only list; it ran here, but S469 shows other `--help` calls are not allowed for read-only roles."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
