@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 455,
+  "next_id": 456,
   "preamble": "",
   "passes": [
     {
@@ -24658,6 +24658,34 @@
         "importance": 3,
         "urgency": 3,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S455",
+      "title": "Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change",
+      "short_title": "Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S418",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-da0da360",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
