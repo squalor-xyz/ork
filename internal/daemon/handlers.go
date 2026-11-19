@@ -412,6 +412,7 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 	out := &StatusResult{BuildID: d.cfg.BuildID, RolesRunning: d.cfg.WaveRunning() || d.activeRuns(), VendorsOut: d.vendorsOut(), Projects: make([]ProjectStatus, 0, len(projects))}
 	for i, s := range snaps {
 		ps := projectStatus(projects[i], s, now)
+		d.addSpecQuestions(ctx, projects[i], &ps)
 		ps.SelfHost, ps.BehindMain = d.projectBuild(ctx, projects[i])
 		ps.Rebuild = d.rebuildStatus(projects[i])
 		out.Projects = append(out.Projects, ps)
@@ -422,6 +423,51 @@ func (d *Daemon) status(ctx context.Context, p StatusParams) (*StatusResult, err
 		}
 	}
 	return out, nil
+}
+
+// addSpecQuestions lists the open spec-check questions the daemon remembers
+// for the project and counts each in NeedsYou (S340, adj 475). An item counts
+// while its remembered check still matches the spec: the fingerprint is read
+// from slicer outside the runs lock, and an item whose spec cannot be read is
+// left out. An item that waits on an open adj record is left out too: that
+// record is already in NeedsYou. The questions are the daemon's cache and are
+// not saved (S143).
+func (d *Daemon) addSpecQuestions(ctx context.Context, proj registry.Project, ps *ProjectStatus) {
+	type candidate struct {
+		item        string
+		fingerprint string
+		keys        []string
+	}
+	var found []candidate
+	prefix := proj.Name + "\x00"
+	d.runs.mu.Lock()
+	for key, e := range d.runs.specs {
+		item, ok := strings.CutPrefix(key, prefix)
+		if !ok || e.ready || len(e.waitsOn) > 0 || len(e.questions) == 0 {
+			continue
+		}
+		keys := make([]string, len(e.questions))
+		for i, q := range e.questions {
+			keys[i] = q.Key
+			if q.Key == "" {
+				keys[i] = fmt.Sprintf("#%d", i+1) // as ork wave start addresses it
+			}
+		}
+		found = append(found, candidate{item, e.fingerprint, keys})
+	}
+	d.runs.mu.Unlock()
+	sort.Slice(found, func(i, j int) bool { return found[i].item < found[j].item })
+	for _, c := range found {
+		raw, err := d.runDeps(proj).Slicer.ShowRaw(ctx, proj.Path, c.item)
+		if err != nil {
+			continue
+		}
+		if fp, err := engine.SpecFingerprint(raw); err != nil || fp != c.fingerprint {
+			continue
+		}
+		ps.SpecQuestions = append(ps.SpecQuestions, SpecQuestions{Item: c.item, Keys: c.keys, List: "ork wave start " + proj.Name + " " + c.item + " --questions"})
+		ps.NeedsYou += len(c.keys)
+	}
 }
 
 // unavailableProjects keeps display-only groups apart from registered projects.

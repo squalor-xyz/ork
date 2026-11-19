@@ -119,7 +119,7 @@ ork (TUI)  ork status --json (CLI)
 
   | Method | Params | Result |
   |---|---|---|
-  | `status` | `{"project"?}` | `{"build_id","roles_running","projects":[{name, path, adj, needs_you, open?, held?, active_relays, engine_runs, errors?}]}` |
+  | `status` | `{"project"?}` | `{"build_id","roles_running","projects":[{name, path, adj, needs_you, open?, held?, spec_questions?, active_relays, engine_runs, errors?}]}` |
   | `daemon.info` (proposed wire) | none | `{"build_id"}`; no registry or project reads |
   | `daemon.stop` (proposed wire) | `{"force"?}` | `{"stopped":true}`; `daemon_busy` refuses active work without force |
   | `snapshot` | `{"project"}` | the project's `source.Snapshot` (`items`, `deps`, `goals`, `runs`, `open`, `decided`) from the cache, plus the daemon's `engine_runs` array and *proposed* `board_runs` (neither is a Part); *proposed (S103)* `daemon_build` is the daemon's build ID, omitted when empty, for refreshing the TUI stale-build marker; each part is `{"value", "age_ms", "read_at"?, "stale"?, "error"?}`: the last good value, its age in ms (0 if never read), when it was read (absent if never), and the last read's error |
@@ -3481,7 +3481,7 @@ on stderr.
 
 Text output is plain lines meant to be stable. `--json` output, indented:
 
-- `status`: `{"projects":[{"name","path","adj","needs_you","open"?,"held"?,
+- `status`: `{"projects":[{"name","path","adj","needs_you","open"?,"held"?,"spec_questions"?,
   "engine_runs","active_relays":[
   {"id","items","state","worktree","begun_at","updated_at","steps",
   "running"}],"parts":{"items":{"age_ms","stale"?,"error"?}},
@@ -3491,9 +3491,19 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   adj #69). A stopped run stops counting once a newer engine run exists for
   the same slice, ordered by created time (adj #92). The *proposed* optional
   `open:[{id,key,title}]` and `held:[{id,title}]` fields list each open adj
-  record and needs-owner item; empty lists are omitted. Text status prints
+  record and needs-owner item; empty lists are omitted. The *proposed* optional
+  `spec_questions:[{item,keys,list}]` field lists each item whose remembered
+  spec check has open questions (`status.spec-questions`, adj #475, S340): the
+  question keys (`#N` for a question with no key, as `ork wave start`
+  addresses it) and `list`, the command that prints them. Each open question
+  counts once in `needs_you`. An item is left out when it is ready, when the
+  spec no longer matches the check's fingerprint, or when it waits on an open
+  adj record, which already counts. The daemon reads the questions from its
+  spec cache and the fingerprint from `slicer show`; nothing is saved, so a
+  restart asks again (S143). Answering stays with `ork wave start --answer` and
+  `ork run --answer`. Text status prints
   these entries under the project before relay and engine rows, using the
-  Overview wording. Its engine rows use the same Needs, Running and Hidden
+  Overview wording (spec-question lines have no Overview row). Its engine rows use the same Needs, Running and Hidden
   classification as the Overview: committed and superseded runs are hidden
   (`ui.status-list`, adj #125). JSON keeps every engine run, including hidden
   ones. The *proposed*

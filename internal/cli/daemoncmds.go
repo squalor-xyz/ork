@@ -75,6 +75,13 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 		for _, it := range p.Held {
 			fmt.Fprintf(o.stdout, "  %s  %s  (needs-owner)\n", it.ID, it.Title)
 		}
+		for _, q := range p.SpecQuestions {
+			noun := "questions"
+			if len(q.Keys) == 1 {
+				noun = "question"
+			}
+			fmt.Fprintf(o.stdout, "  %s  %d open spec %s: %s (answer: %s)\n", q.Item, len(q.Keys), noun, strings.Join(q.Keys, ", "), q.List)
+		}
 		for _, r := range p.ActiveRelays {
 			items := strings.Join(r.Items, ",")
 			if items == "" {

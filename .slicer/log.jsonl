@@ -5751,3 +5751,6 @@
 {"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "add", "from": "", "to": "open", "note": "allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full"}
 {"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T14:36:43Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T14:37:51Z", "item": "S340", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:49:18Z", "item": "S340", "action": "note", "from": "", "to": "", "note": "ork status lists each item whose spec check left questions o", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:49:20Z", "item": "S340", "action": "status", "from": "started", "to": "done", "note": "ork status lists open spec-check questions and counts them in needs you; verified by the new daemon and CLI tests, go vet, go test ./..., gofmt and slicer check.", "by": "Jon Robbins"}
