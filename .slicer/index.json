@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 462,
+  "next_id": 463,
   "preamble": "",
   "passes": [
     {
@@ -24923,6 +24923,34 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Covered by S423, which fixes this brief text; filed while S423 ran.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S462",
+      "title": "allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief",
+      "short_title": "allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S357",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4d89ac31",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,

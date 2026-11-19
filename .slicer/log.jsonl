@@ -5664,3 +5664,5 @@
 {"when": "2026-11-19T12:22:53Z", "item": "S460", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint in the read-only allowlist)."}
 {"when": "2026-11-19T12:22:53Z", "item": "S461", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S423, which fixes this brief text; filed while S423 ran."}
 {"when": "2026-11-19T12:22:53Z", "item": "S458", "action": "note", "from": "", "to": "", "note": "Merged S459 and S460 (2026-11-19, tool feedback). Cause: sin", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:32:48Z", "item": "S462", "action": "add", "from": "", "to": "open", "note": "allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief"}
+{"when": "2026-11-19T12:32:48Z", "item": "S462", "action": "promote", "from": "", "to": "", "note": ""}
