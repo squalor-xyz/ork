@@ -1,0 +1,39 @@
+{
+  "id": "S480",
+  "title": "allow the UI role to run `go -C WORKTREE run ./cmd/ork help` (read-only, prints to stdout) so it can render CLI output with the project's own binary",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261119-150234-f362, project ork, item S346:\n\nallow the UI role to run `go -C WORKTREE run ./cmd/ork help` (read-only, prints to stdout) so it can render CLI output with the project's own binary\n\nEvidence: go run ./cmd/ork help was denied with \"This command requires approval\"; the usage render had to be copied by hand from the constant"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
