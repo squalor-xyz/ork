@@ -5691,9 +5691,30 @@
 {"when": "2026-11-19T12:53:36Z", "item": "S458", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-19T12:53:36Z", "item": "S458", "action": "edit", "from": "", "to": "", "note": "Git"}
 {"when": "2026-11-19T12:53:36Z", "item": "S458", "action": "set", "from": "", "to": "", "note": "title allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it→Read-only roles may run adj lint; size -→S; short_title allow adj lint --root DIR in the reviewer's sandbox, since the slice Check names it→Read-only roles may run adj lint"}
+{"when": "2026-11-19T12:55:08Z", "item": "S458", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T12:55:08Z", "item": "S458", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T12:55:08Z", "item": "S458", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T12:57:08Z", "item": "S458", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:38:02Z", "item": "S458", "action": "note", "from": "", "to": "", "note": "Read-only local and cloud Claude allowlists now include adj ", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:38:02Z", "item": "S458", "action": "status", "from": "started", "to": "done", "note": "Read-only local and cloud Claude roles may run adj lint, including --root arguments (adj 499). Regression and launcher tests verified the allowlist; docs and changelog updated. Gate PASS and owner approval received.", "by": "Jon Robbins"}
 {"when": "2026-11-19T12:55:34Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-19T12:55:34Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-19T12:55:35Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-19T13:23:27Z", "item": "S338", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:24:13Z", "item": "S338", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:24:13Z", "item": "S338", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T13:29:38Z", "item": "S338", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:29:38Z", "item": "S338", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T14:09:03Z", "item": "S338", "action": "note", "from": "", "to": "", "note": "Verified: ork run and ork wave start accept --spec-check off", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:09:04Z", "item": "S338", "action": "status", "from": "started", "to": "done", "note": "Verified: --spec-check off on ork run and ork wave start (CLI only, adj 473) skips the spec check, prints one off line before the usual confirm, accepts only off, is refused with --questions or --answer, and leaves the daemon's open-question refusal intact. Focused tests, vet, slicer check and adj lint passed; gate PASS.", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:06:38Z", "item": "S424", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:07:03Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:07:03Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T13:18:05Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T13:38:55Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T13:40:22Z", "item": "S424", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T14:09:03Z", "item": "S424", "action": "note", "from": "", "to": "", "note": "Verified: reviewer, gate and architect rounds store a full-c", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:09:04Z", "item": "S424", "action": "status", "from": "started", "to": "done", "note": "Verified: reviewer, gate and architect rounds store a full-content start fingerprint (diff plus untracked names, contents and non-regular modes); a resumed round whose tree matches its previous round says so and drops the git status/diff re-run (adj 490); older rows resume with no unchanged line; treeContent and TreeSHA256 unchanged. Gate PASS, slice checks green.", "by": "Jon Robbins"}
 {"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-19T13:04:28Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "2026-11-19: slicer s460 landed (slicer c13f3756); ork doctor", "by": "Jon Robbins"}
@@ -5724,3 +5745,21 @@
 {"when": "2026-11-19T14:36:38Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-19T14:37:16Z", "item": "S384", "action": "note", "from": "", "to": "", "note": "Verified: on a plain relay v13 run ork writes the closing no", "by": "Jon Robbins"}
 {"when": "2026-11-19T14:37:18Z", "item": "S384", "action": "status", "from": "started", "to": "done", "note": "Verified: ork runs the closing note and finish step itself on plain relay v13 runs; go vet, go test ./..., slicer check and adj lint pass.", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "add", "from": "", "to": "open", "note": "allow read-only adj lint for reviewer roles (S458 covers this)"}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T13:41:30Z", "item": "S467", "action": "note", "from": "", "to": "", "note": "possible duplicate of S458", "by": "Jon Robbins"}
+{"when": "2026-11-19T13:42:36Z", "item": "S467", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note."}
+{"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "add", "from": "", "to": "open", "note": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)"}
+{"when": "2026-11-19T13:49:13Z", "item": "S468", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:22:42Z", "item": "S341", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:28:16Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T14:28:22Z", "item": "S341", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T14:34:23Z", "item": "S341", "action": "note", "from": "", "to": "", "note": "Verified: the read-only check of the spec check, spec draft ", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:34:24Z", "item": "S341", "action": "status", "from": "started", "to": "done", "note": "Verified: the read-only check of the spec check, spec draft and carve names the changed paths; the spec check leaves the project's own .slicer/ out of its fingerprint (adj 476). Full go test ./... green, go vet, gofmt, slicer check and adj lint clean.", "by": "Jon Robbins"}
+{"when": "2026-11-19T14:24:52Z", "item": "S469", "action": "add", "from": "", "to": "open", "note": "let read-only reviewer roles run slicer COMMAND --help and slicer ai relay"}
+{"when": "2026-11-19T14:24:52Z", "item": "S469", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:25:39Z", "item": "S468", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S424 (landed 2026-11-19): the resumed gate brief says the tree is unchanged."}
+{"when": "2026-11-19T14:25:40Z", "item": "S466", "action": "retire", "from": "open", "to": "retired", "note": "Owner turned down a per-project render command for the UI pass (adj 487, roles.ui-pass-render-path = overlay); S416 documents the overlay route."}
+{"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "add", "from": "", "to": "open", "note": "allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full"}
+{"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T14:36:43Z", "item": "S384", "action": "edit", "from": "", "to": "", "note": "Check"}

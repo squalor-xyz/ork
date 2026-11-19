@@ -19,6 +19,137 @@ import (
 	"github.com/squalor-xyz/ork/internal/ipc"
 )
 
+func TestWaveStartSpecCheckOffSkipsTheCheck(t *testing.T) {
+	testSpecCheckOffLaunch(t, true)
+}
+
+func testSpecCheckOffLaunch(t *testing.T, wave bool) {
+	t.Helper()
+	for _, tc := range []struct {
+		name, input string
+		flags       []string
+		start       bool
+	}{
+		{"yes", "", []string{"--yes"}, true},
+		{"confirm", "y\n", nil, true},
+		{"decline", "n\n", nil, false},
+		{"json", "", []string{"--yes", "--json"}, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stub := &specStub{t: t, check: specCheckTwoQuestions}
+			var out, errs bytes.Buffer
+			args := []string{"run", "p", "S1"}
+			method := daemon.MethodRunStart
+			wantItems := []string{"S1"}
+			if wave {
+				args = []string{"wave", "start", "p", "S1", "S2"}
+				method = daemon.MethodWaveStart
+				wantItems = []string{"S1", "S2"}
+			}
+			var starts [][]string
+			app := &App{Input: strings.NewReader(tc.input), Call: func(ctx context.Context, m string, params, result any) error {
+				if m == daemon.MethodSpecCheck {
+					t.Error("spec.check called with --spec-check off")
+				}
+				if m == method {
+					prompts := out.String()
+					if containsFlag(tc.flags, "--json") {
+						prompts = errs.String()
+					}
+					if !strings.Contains(prompts, "spec check: off (--spec-check off)\n") {
+						t.Error("off line missing before start on prompts writer")
+					}
+					if wave {
+						var items []string
+						for _, p := range params.(daemon.WaveStartParams).Items {
+							items = append(items, p.Item)
+						}
+						starts = append(starts, items)
+					} else {
+						starts = append(starts, []string{params.(daemon.RunParams).Item})
+						return json.Unmarshal([]byte(`{"id":"r1","state":"setup"}`), result)
+					}
+				}
+				return stub.call(ctx, m, params, result)
+			}}
+			args = append(args, "--spec-check", "off")
+			code := app.Run(context.Background(), append(args, tc.flags...), &out, &errs)
+			if code != ExitOK {
+				t.Fatalf("code %d: %s", code, errs.String())
+			}
+			var want [][]string
+			if tc.start {
+				want = [][]string{wantItems}
+			}
+			if !reflect.DeepEqual(starts, want) {
+				t.Errorf("started items: %v, want %v", starts, want)
+			}
+			if containsFlag(tc.flags, "--json") && strings.Contains(out.String(), "spec check:") {
+				t.Errorf("diagnostic on JSON stdout: %s", out.String())
+			}
+		})
+	}
+}
+
+func containsFlag(args []string, flag string) bool {
+	for _, arg := range args {
+		if arg == flag {
+			return true
+		}
+	}
+	return false
+}
+
+func TestSpecCheckFlagTakesOnlyOff(t *testing.T) {
+	for _, prefix := range [][]string{{"run", "p", "S1"}, {"wave", "start", "p", "S1", "S2"}} {
+		for _, value := range []string{"on", "maybe", ""} {
+			t.Run(prefix[0]+"/"+value, func(t *testing.T) {
+				var out, errs bytes.Buffer
+				app := &App{Call: func(_ context.Context, method string, _, _ any) error {
+					return fmt.Errorf("unexpected call: %s", method)
+				}}
+				code := app.Run(context.Background(), append(prefix, "--spec-check="+value), &out, &errs)
+				if code != ExitUsage || !strings.Contains(errs.String(), "--spec-check takes only off") {
+					t.Fatalf("code %d: %s", code, errs.String())
+				}
+			})
+		}
+	}
+}
+
+func TestSpecCheckOffWithQuestionsOrAnswerIsAUsageError(t *testing.T) {
+	for _, prefix := range [][]string{{"run", "p", "S1"}, {"wave", "start", "p", "S1", "S2"}} {
+		for _, flag := range []string{"--questions", "--answer=store=file"} {
+			t.Run(prefix[0]+"/"+flag, func(t *testing.T) {
+				var out, errs bytes.Buffer
+				app := &App{Call: func(_ context.Context, method string, _, _ any) error {
+					return fmt.Errorf("unexpected call: %s", method)
+				}}
+				code := app.Run(context.Background(), append(prefix, "--spec-check", "off", flag), &out, &errs)
+				if code != ExitUsage || !strings.Contains(errs.String(), "--spec-check off cannot be used with --questions or --answer") {
+					t.Fatalf("code %d: %s", code, errs.String())
+				}
+			})
+		}
+	}
+}
+
+func TestSpecCheckOffStillRefusesOpenQuestions(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	var out, errs bytes.Buffer
+	const refusal = "S1 has 2 open spec questions; answer them first"
+	app := &App{Call: func(ctx context.Context, method string, params, result any) error {
+		if method == daemon.MethodWaveStart {
+			return &ipc.Error{Code: daemon.CodeSpecQuestions, Message: refusal}
+		}
+		return stub.call(ctx, method, params, result)
+	}}
+	code := app.Run(context.Background(), []string{"wave", "start", "p", "S1", "--spec-check", "off", "--yes"}, &out, &errs)
+	if code != ExitFailure || !strings.Contains(errs.String(), refusal) {
+		t.Fatalf("code %d: %s", code, errs.String())
+	}
+}
+
 func TestSpecCheckSendsRunLineupOverrides(t *testing.T) {
 	for _, args := range [][]string{
 		{"run", "p", "S1", "--implementer", "claude-local:qwen3.8-27b:low", "--yes"},

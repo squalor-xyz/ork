@@ -852,6 +852,10 @@ func containsYes(args []string) bool {
 	return false
 }
 
+func TestRunSpecCheckOffSkipsTheCheck(t *testing.T) {
+	testSpecCheckOffLaunch(t, false)
+}
+
 func TestRunCallsTheSpecCheckAfterThePlanAndBeforeConfirmation(t *testing.T) {
 	for _, yes := range []bool{false, true} {
 		flags := []string{}

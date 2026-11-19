@@ -11,6 +11,12 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 )
 
+func TestReadOnlyAllowlistIncludesAdjLint(t *testing.T) {
+	if !slices.Contains(LocalReadOnlyAllowlist(), "Bash(adj lint*)") {
+		t.Fatal("read-only allowlist missing Bash(adj lint*)")
+	}
+}
+
 func TestDefaultImplementerAllowlistIsExactlyTheDecidedOne(t *testing.T) {
 	want := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",

@@ -121,7 +121,7 @@ func TestRunCarveIsOneReadOnlyPassOfTheSpecCheckRow(t *testing.T) {
 func TestRunCarveRefusesARoleThatChangedTheTree(t *testing.T) {
 	h := specHarnessStatusReads(t, nil, "", " M edited.go\n")
 	h.runner.script = carveScript(carveReport)
-	if got, err := RunCarve(context.Background(), h.deps, carveConfig(h, t)); err == nil || !strings.Contains(err.Error(), "changed") {
+	if got, err := RunCarve(context.Background(), h.deps, carveConfig(h, t)); !errors.Is(err, errCarveStatusChanged) || !strings.HasSuffix(err.Error(), ": changed edited.go") {
 		t.Fatalf("a carve that changed the checkout: %+v, %v", got, err)
 	}
 }

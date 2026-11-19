@@ -60,6 +60,7 @@ var usageText = strings.NewReplacer(
 const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
 
   ork run P ID [--yes] [--well-specified y/n] [--split y/n] [--slivers]
+                              [--spec-check off]
                               [--questions | --answer KEY=LABEL ...]
                               [--stop-after land|commit] [--allow-no-check]
                               [--implementer VENDOR:MODEL:EFFORT]
@@ -74,6 +75,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               flags say otherwise
                               --well-specified and --split do not skip
                               the spec check.
+                              --spec-check off skips it for this start; refused
+                              with --questions or --answer
                               --slivers runs the parent's slivers as one
                               chain in the parent's worktree.
                               --questions prints all spec questions and starts
@@ -94,12 +97,15 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               start the saved wave NAME; a member that is done,
                               retired or gone from slicer is skipped and named
   ork wave start P ITEM... [--yes] [--well-specified y/n] [--split y/n]
+                              [--spec-check off]
                               [--questions | --answer ITEM:KEY=LABEL ...]
                               [--stop-after land|commit] [--allow-no-check]
                               the run lineup and budget flags, for every item;
                               well specified y and split n unless overridden
                               show the plans and launch the chosen items;
                               refused with no check command, as ork run
+                              --spec-check off skips the check for this start;
+                              refused with --questions or --answer
   ork spec draft P ID         draft the spec sections of one slice with the
                               spec check's row (proposed: a read-only role;
                               it may draft every section from the title

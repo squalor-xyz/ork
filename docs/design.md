@@ -330,13 +330,22 @@ ork (TUI)  ork status --json (CLI)
    first. The check is one read-only pass of the spec-check role over the
    whole batch: for each slice it answers ready, or asks the
    owner structured questions (S111 shape, with an optional decision key).
-   *Proposed* (S292): its read-only fingerprint uses
+   *Proposed* (S292, S341): its read-only fingerprint uses
    `git -C PROJECT status --porcelain -- .`. It covers paths under the project
-   root, including its own `.slicer/` tracking files visible to git status.
-   A sibling project in the same repository can change its tracking files
-   without failing this check. The spec check takes no lock. A status change
-   inside the project during the role still fails the read-only check; the
-   existing whole-repository HEAD check and retry rules stay in place.
+   root, but leaves out the project's own `.slicer/` (adj 476,
+   `specs.readonly-tracking-change` = ignore, which narrows adj 28
+   `role.readonly-fingerprint`): another session may file or edit a slice in
+   the project while the role runs, and the check does not blame the role for
+   that. A `.slicer/` elsewhere in the tree stays in the fingerprint. A sibling
+   project in the same repository can change its tracking files without
+   failing this check. The spec check takes no lock. A status change under any
+   other path inside the project during the role still fails the read-only
+   check at once, and the error names the paths whose status line changed
+   (at most five, then `and N more`), for example
+   `spec-check changed the tree, and it is a read-only role: changed src/a.py`.
+   The spec draft and the carve name the changed paths the same way; they keep
+   `.slicer/` in their fingerprint. The existing whole-repository HEAD check and
+   retry rules stay in place. A dirty tree that does not change passes.
    A ready slice's Failing tests name their assertions and its Check gives a
    sandbox-runnable command and expected result, or a `[HUMAN CHECK]` saying what
    the owner looks at and should see; criteria gaps that reading the slice, Files
@@ -1789,8 +1798,19 @@ separately.
     `git diff` again, read again every file it cites and not repeat an earlier
     finding, verdict or answer without checking it. It then shows ork's own
     `git status --porcelain` from when the round started, in a fence, or says
-    that the tree had no uncommitted changes. The listing is the same call as
-    the read-only fingerprint, so a read-only role costs no extra git call;
+    that the tree had no uncommitted changes. The listing uses the same call as
+    the read-only fingerprint.
+    *Proposed (S424):* reviewer, gate and architect rounds also save a start
+    fingerprint of the tracked binary diff against HEAD and untracked names
+    and contents. Other untracked entries, including nested repositories,
+    contribute only their name and mode; ork does not traverse them.
+    On resume, if the previous row of that role belongs to the
+    resumed session and has the same fingerprint, the section says
+    "The tree is unchanged since round N, when you last reported."
+    It drops the git status and git diff re-run instructions, including in
+    Done when, but keeps re-reading every cited file (adj 490).
+    Missing fingerprints in older records and changed contents keep the
+    original instructions. The implementer's existing tree hash is unchanged;
   - for the implementer, the project check command (when configured) and
     `slicer check`, which ork runs after the round (not the finish step)
     outside the role's sandbox;
@@ -1950,7 +1970,17 @@ separately.
   to the one before it is dropped.
 - **Spec check.** A read-only role with its own prompt (`spec-check.md`) that
   runs once over a batch of slices before a wave (see the Check step of the
-  Wave lifecycle). It works in the project checkout, not in a worktree, and
+  Wave lifecycle). The owner may skip it for one CLI start with
+  `ork run ... --spec-check off` or `ork wave start ... --spec-check off`
+  (adj 473, `cli.spec-check-skip`). Only `off` is accepted, and it conflicts
+  with `--questions` and `--answer`. The CLI prints
+  `spec check: off (--spec-check off)` to its prompts writer and keeps the
+  planned items for the usual confirmation. The TUI still runs the check.
+  Skipping produces no new answers' decisions, local orientation pack or
+  local carve; cached material remains available. The daemon still refuses
+  open questions against the same spec and a local slice above size S
+  without its filed slivers.
+  It works in the project checkout, not in a worktree, and
   has no engine run record. It begins a ledger run on the batch, records
   `spec-check` steps with no parent, and ends it with `pass` after reading the
   report, or `stopped` on failure or cancellation. The daemon runs it as a job,
@@ -2305,9 +2335,10 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   roles keep plan mode. The list allows `Read`, `Grep`,
   `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
-  `adj show`, `adj check`, `go test`, `go vet` (also with `go -C`)
-  and `gofmt -l`, with trailing argument wildcards. S358 adds an exact-file
-  Edit/Write exception for the local progress note described under Roles.
+  `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
+  with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
+  `adj lint --root DIR`. S358 adds an exact-file Edit/Write exception for
+  the local progress note described under Roles.
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs

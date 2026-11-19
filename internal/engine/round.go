@@ -160,6 +160,49 @@ func (e *Engine) treeContent(ctx context.Context, worktree string) (string, erro
 	return fmt.Sprintf("%x", sha256.Sum256([]byte(diff+"\x00"+names))), nil
 }
 
+// treeFullContent includes untracked contents for resumed read-only briefs.
+// Keep treeContent's historical format for comparisons with older records.
+func (e *Engine) treeFullContent(ctx context.Context, worktree string) (string, error) {
+	diff, err := e.gitRead(ctx, worktree, "diff", "HEAD", "--binary", "--no-ext-diff")
+	if err != nil {
+		return "", fmt.Errorf("git diff: %w", err)
+	}
+	names, err := e.gitRead(ctx, worktree, "ls-files", "--others", "--exclude-standard", "-z")
+	if err != nil {
+		return "", fmt.Errorf("git ls-files: %w", err)
+	}
+	h := sha256.New()
+	fmt.Fprintf(h, "%d:%s", len(diff), diff)
+	for _, name := range strings.Split(names, "\x00") {
+		if name == "" {
+			continue
+		}
+		path := filepath.Join(worktree, name)
+		info, err := os.Lstat(path)
+		if err != nil {
+			return "", fmt.Errorf("untracked %q: %w", name, err)
+		}
+		var content []byte
+		if info.Mode()&os.ModeSymlink != 0 {
+			var target string
+			target, err = os.Readlink(path)
+			content = []byte(target)
+		} else if info.Mode().IsRegular() {
+			content, err = os.ReadFile(path)
+		} else {
+			// Git lists an untracked nested repository as a directory entry.
+			// Other modes contribute metadata without opening or traversing them.
+			fmt.Fprintf(h, "%d:%s:%d\x00", len(name), name, info.Mode())
+			continue
+		}
+		if err != nil {
+			return "", fmt.Errorf("untracked %q: %w", name, err)
+		}
+		fmt.Fprintf(h, "%d:%s%x", len(name), name, sha256.Sum256(content))
+	}
+	return fmt.Sprintf("%x", h.Sum(nil)), nil
+}
+
 // earlierReports reads the reports of the rounds so far.
 func (e *Engine) earlierReports(rec runrec.Record) []EarlierReport {
 	var out []EarlierReport
@@ -610,6 +653,25 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		}
 		in.Tree = before
 	}
+	var startTree string
+	if r.role == RoleReviewer || r.role == RoleGate || r.role == RoleArchitect {
+		startTree, err = e.treeFullContent(ctx, rec.Worktree)
+		if err != nil {
+			return fail("round start content fingerprint", err)
+		}
+		if in.Resumed {
+			for i := len(rec.Roles) - 1; i >= 0; i-- {
+				old := rec.Roles[i]
+				if old.Role != r.role || old.Part != r.part {
+					continue
+				}
+				if old.Session == session && old.StartTreeSHA256 != "" && old.StartTreeSHA256 == startTree {
+					in.TreeUnchangedSince = old.Round
+				}
+				break
+			}
+		}
+	}
 	brief, err := BuildBrief(in)
 	if err != nil {
 		return fail("brief", err)
@@ -631,7 +693,8 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			}
 		}
 		rr.Roles = append(rr.Roles, runrec.RoleRecord{
-			Role: r.role, Part: r.part, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
+			StartTreeSHA256: startTree,
+			Role:            r.role, Part: r.part, Round: r.n, Vendor: entry.Vendor, Model: entry.Model, Effort: entry.Effort,
 			ShapeRetry: retry,
 			Step:       stepID, StartedAt: e.d.now(),
 		})

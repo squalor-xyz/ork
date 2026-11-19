@@ -568,6 +568,15 @@ subfolder of its repository, each `$ COMMAND` line of the check log is followed
 by a line `(in libraries/p)`, the folder of the worktree the command ran in; a
 project at the repository root has no such line. Both adjacent hashes must be present and equal for
 the immediate no-progress pause. Older records without hashes remain readable.
+*Proposed (S424):* reviewer, gate and architect rows save
+`roles[].start_tree_sha256`, omitted when empty. It hashes the tracked binary
+diff against HEAD and each untracked file's name and content (a symlink's
+target text). Other untracked entries, including nested repositories, contribute
+only their name and mode and are not traversed. The next resumed round compares
+it with the previous row of
+that role and session to state that the tree is unchanged since that round
+(adj 490). A missing field leaves the original resumed instructions in place.
+This field does not replace `tree_sha256` or change its older comparisons.
 *Proposed (S317):* slice Check commands add rows to `checks[]` with `slice:
 true`, `command`, `exit`, `ok`, `seconds`, `log` and `log_sha256`. Unsupported
 commands have `not_run: "not run by ork: orchestrator"` and no execution.

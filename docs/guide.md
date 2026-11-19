@@ -422,11 +422,22 @@ fails with `no_spec_check_row`; the message gives the fix:
 `ork projects set NAME --spec-check-rows rNN` or a
 `Spec check row (rNN)` rule in the matrix.
 For a script, give `--yes`; it needs no other flag and still runs the spec
-check. `--well-specified y/n` and `--split y/n` override the defaults (yes and
+check by default. `--well-specified y/n` and `--split y/n` override the defaults (yes and
 no). With `--json`, the sitting goes to stderr and
 stdout holds one result. A held slice returns
 `{"started":false,"held":["ID"]}`; declining the start returns
 `{"started":false,"held":[]}` (`internal/cli/run.go`).
+
+Use `--spec-check off` on `ork run` or `ork wave start` to skip the check
+for one start (adj 473, `cli.spec-check-skip`). Only `off` is accepted;
+it cannot be combined with `--questions` or `--answer`. Ork prints
+`spec check: off (--spec-check off)`, keeps every planned item, and asks
+the usual start confirmation unless `--yes` is given. With `--json`, that
+line goes to stderr. The TUI still runs the check.
+A skip produces no new answers' decisions paragraph, local orientation pack
+or local carve. Existing cached material is retained. A local slice above
+size S still needs its slivers filed before it can start, and the daemon
+still refuses unanswered questions from the last check of the same spec.
 
 *Proposed (S312):* `ork run PROJECT ID --questions` runs only the spec check
 and prints every open question, numbered with its options, recommendation
@@ -720,8 +731,9 @@ puts each further one alone in the next wave, with the reason `engine: ID`
 with it.
 
 Like `ork run`, `wave start` asks the spec-check questions on standard input
+unless `--spec-check off` skips the check for this start (also for saved waves),
 and prints each plan before it asks to start (`docs/design.md:1958-1973`,
-`internal/cli/wave.go:416-419`). `ork stop` takes the `wave-` id it prints and
+`internal/cli/wave.go:418-421`). `ork stop` takes the `wave-` id it prints and
 stops every unfinished run in that wave, queued ones included
 (`docs/design.md:2045-2051`).
 
