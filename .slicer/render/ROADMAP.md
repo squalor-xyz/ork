@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-476 items · — 57 · done 339 · retired 80
+476 items · — 56 · done 339 · retired 81
 
 ## v1.3
 
@@ -233,7 +233,7 @@ v1.2
 | 176 | [S471](slices/S471.md) | allow `slicer check --root WT; echo exit=$?` style exit-code capture for read-only roles, or document that plain invocation is required |  | - |  | discovered from S340 | — |
 | 177 | [S472](slices/S472.md) | allow env-prefixed go test commands, or give the UI role a renders env var already set |  | - |  | discovered from S348 | — |
 | 178 | [S473](slices/S473.md) | allow slicer check --root WT and adj lint --root WT as plain commands for the reviewer (same as S470) |  | - |  | Duplicate of S470 (slicer check for read-only roles). · discovered from S348 | retired |
-| 179 | [S474](slices/S474.md) | Feed test flake | S | 1 |  | 2026-11-19, S384 landing (run ork-20261119-131145-b70c, land-slice-checks-2-2.log): `go test ./...` failed with `feed_test.go:80: notice {Project:alpha Parts:[runs] ...}, want items of alpha`. On main the test passes 20 of 20 alone (`-count=20 -run TestFeedDeliversTheNoticesOfTheProjectInFocus`), so it fails only under full-suite load. | — |
+| 179 | [S474](slices/S474.md) | Feed test flake | S | 1 |  | 2026-11-19, S384 landing (run ork-20261119-131145-b70c, land-slice-checks-2-2.log): `go test ./...` failed with `feed_test.go:80: notice {Project:alpha Parts:[runs] ...}, want items of alpha`. On main the test passes 20 of 20 alone (`-count=20 -run TestFeedDeliversTheNoticesOfTheProjectInFocus`), so it fails only under full-suite load. · Fixed in S384's fix round (commit c7c0d096, internal/daemon/feed_test.go waits for the items notice). | retired |
 | 180 | [S475](slices/S475.md) | CLI render flag for UI passes | M | 2 |  | 2026-11-19, adj 502 (tool feedback from the S340 UI pass, run ork-20261119-143743-1548): CLI status renders had to be copied from a test's want string, because `internal/cli` cannot be imported from outside the module and the tree is read-only. Owner decision adj 505 (`roles.ui-pass-render-flag` = flag, supersedes adj 487): add a test flag that writes CLI renders as plain text to a given temp directory. Earlier filings of the same need: S466 (retired 2026-11-19 under adj 487). | — |
 | 181 | [S476](slices/S476.md) | give UI passes a sanctioned way to render CLI text views, such as a test flag that writes plain output to a given directory |  | - |  | discovered from S340 | — |
 
