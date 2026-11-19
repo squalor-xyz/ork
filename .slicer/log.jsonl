@@ -5743,3 +5743,5 @@
 {"when": "2026-11-19T14:24:52Z", "item": "S469", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-19T14:25:39Z", "item": "S468", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S424 (landed 2026-11-19): the resumed gate brief says the tree is unchanged."}
 {"when": "2026-11-19T14:25:40Z", "item": "S466", "action": "retire", "from": "open", "to": "retired", "note": "Owner turned down a per-project render command for the UI pass (adj 487, roles.ui-pass-render-path = overlay); S416 documents the overlay route."}
+{"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "add", "from": "", "to": "open", "note": "allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full"}
+{"when": "2026-11-19T14:33:01Z", "item": "S470", "action": "promote", "from": "", "to": "", "note": ""}

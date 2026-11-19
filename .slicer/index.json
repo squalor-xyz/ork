@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 470,
+  "next_id": 471,
   "preamble": "",
   "passes": [
     {
@@ -25317,6 +25317,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-1d5e8a06",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S470",
+      "title": "allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full",
+      "short_title": "allow `slicer check --root WT` and `adj lint --root WT` for the reviewer as plain commands so the Check list can be run in full",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S341",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-8818857c",
         "pass": "v1.2",
         "group": "",
         "reason": "",
