@@ -167,6 +167,47 @@ func TestResumeAStoppedRunReentersChecksWithMoreRounds(t *testing.T) {
 	}
 }
 
+// S346 (*proposed*; adj 479): ork retry RUN --allow reaches a stopped run too.
+func TestRetryAllowReachesAResumedStoppedRun(t *testing.T) {
+	h, stopped := stoppedAtTheRoundsPause(t)
+	h.checks.reset(redRounds("after the resume", 4)...)
+	saved, err := h.store.Open(stopped.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const pattern = "Bash(make test*)"
+	e := Load(h.deps, h.proj, saved)
+	if err := e.RetryWith(context.Background(), RetryOptions{Rounds: 2, Allow: []string{pattern}}); err != nil {
+		t.Fatalf("resume: %v", err)
+	}
+	requireState(t, e, runrec.StatePaused)
+	base := DefaultImplementerAllowlist("go test ./...")
+	lists := implementerAllowlists(h)
+	if len(lists) != 5 {
+		t.Fatalf("implementer rounds %d, want the 3 before the stop and fix rounds 5 and 6", len(lists))
+	}
+	for i := 0; i < 3; i++ {
+		if !reflect.DeepEqual(lists[i], base) {
+			t.Errorf("round %d, before the stop: allowlist %v, want the project's", i+1, lists[i])
+		}
+	}
+	for _, list := range lists[3:] {
+		if want := append(append([]string(nil), base...), pattern); !reflect.DeepEqual(list, want) {
+			t.Errorf("a resumed round's allowlist %v, want %v", list, want)
+		}
+	}
+	if got := e.Snapshot().Grants; !reflect.DeepEqual(got, []string{pattern}) {
+		t.Errorf("record grants %v, want [%s]", got, pattern)
+	}
+	reread, err := h.store.Open(stopped.ID)
+	if err != nil || !reflect.DeepEqual(reread.Snapshot().Grants, []string{pattern}) {
+		t.Errorf("stored grants %v, %v", reread.Snapshot().Grants, err)
+	}
+	if len(h.proj.Permissions) != 0 {
+		t.Errorf("the project gained permissions: %v", h.proj.Permissions)
+	}
+}
+
 func TestResumeRedChecksStartsAFixRoundWithTheLastFeedback(t *testing.T) {
 	h, stopped := stoppedAtTheRoundsPause(t)
 	h.checks.reset(redRounds("after the resume", 4)...)

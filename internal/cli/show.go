@@ -159,6 +159,14 @@ func writeShow(o *output, r daemon.ShowReply) {
 	if r.Next != "" {
 		fmt.Fprintf(w, "next: %s\n", r.Next)
 	}
+	if len(r.Grants) > 0 {
+		// ork retry --allow patterns (S346, *proposed*), on one line.
+		plain := make([]string, len(r.Grants))
+		for i, g := range r.Grants {
+			plain[i] = runrec.PlainText(g)
+		}
+		fmt.Fprintf(w, "granted: %s\n", strings.Join(plain, ", "))
+	}
 	if len(r.Roles) > 0 {
 		fmt.Fprintln(w, "roles:")
 	}

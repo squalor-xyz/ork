@@ -1270,6 +1270,24 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   run is already at the round cap, the retry sets `round_limit` to `round` + 1
   and leaves `round` unchanged, so that one land fix can start. Under the
   cap it does not change `round_limit`.
+- **A grant on retry** (S346, *proposed*; adj 479, `run.retry-allow`).
+  `ork retry RUN --allow PATTERN` (repeatable) sends `allow` on `run.retry`.
+  The CLI and the daemon check each pattern with the registry's rule
+  (`registry.ValidatePatterns`: not blank, no NUL byte or newline), and the
+  engine checks it again with `RetryOptions.Allow`, before anything changes.
+  The engine appends the patterns to `Record.Grants` (deduplicated, in order)
+  in the same update that leaves the pause, or that resumes a stopped run
+  (including a re-landing), so a refused retry stores nothing. A retry that
+  waits for a slot carries `allow` in `resume` and stores it when it starts.
+  A project whose implementer is `read-only` refuses the retry with a line
+  that says so. `rolePermission` adds the run's grants to the permission of
+  the implementer, a lead and a part (a part keeps no slicer write entry,
+  a grant included); a read-only role keeps its permission. Each round
+  reads the grants from the record, so a started engine needs no new
+  registry project, and the registry is never written. This is the path
+  past `projects set --allow` while another run is unfinished (adj 279 keeps
+  the allowlist in the busy set). `ork show RUN` lists the grants on one line
+  (`granted: ...`); `run.show` carries them as `grants`.
 - **Resume a stopped run** (S296, *proposed*). `ork retry RUN [--rounds N]`
   also accepts a stopped run that has no commit, did not stop in setup or
   while queued (`stopped_from`), and whose worktree path exists and passes
@@ -2765,7 +2783,9 @@ ork dismiss RUN             clear a stopped run from Needs you
 ork retry RUN [TEXT]        retry a paused role or step; TEXT is a note for
                             the rerun (S256, proposed); resume a stopped
                             run from its worktree, --rounds N more rounds
-                            (S296, proposed); after two shape pauses in a
+                            (S296, proposed); --allow PATTERN grants a tool
+                            pattern to this run's implementer (S346,
+                            proposed); after two shape pauses in a
                             row a plain retry is refused, --accept-shape
                             keeps owner findings that have no options and
                             --again reruns the role (S298, proposed)

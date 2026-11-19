@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-476 items · — 56 · done 339 · retired 81
+476 items · — 55 · done 340 · retired 81
 
 ## v1.3
 
@@ -124,7 +124,7 @@ v1.2
 | 67 | [S343](slices/S343.md) | Local roles fit the local server | M | 2 |  | S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer's Bash calls went through Claude Code's model-backed classifier (plan mode), which timed out three times. · discovered from S304 | done |
 | 68 | [S344](slices/S344.md) | Local spec check and UI pass rows | M | 2 |  | S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role. · discovered from S304 | done |
 | 69 | [S345](slices/S345.md) | Implementer presets allow moving and removing files (with S440) | S | 1 |  |  | done |
-| 70 | [S346](slices/S346.md) | A paused run cannot get the permission it was denied without stopping every run in the project | M | 2 |  |  | — |
+| 70 | [S346](slices/S346.md) | A paused run cannot get the permission it was denied without stopping every run in the project | M | 2 |  |  | done |
 | 71 | [S347](slices/S347.md) | Launch commit leaves orphan index entries | S | 1 |  | 2026-11-11: S312, S315 and S123 passed their gates but every landing went red after merging main: slicer check reported "S345: marked as having a slice, but no file exists" and the same for S346. ork's launch commits a56c3f8 (S123) and d5880ab (S343) took main's whole `.slicer/index.json`, which held S345 and S346 from another session, but not those items' slice files. | done |
 | 72 | [S348](slices/S348.md) | Warn before a run starts when the slicer merge drivers are not configured | S | 1 |  |  | done |
 | 73 | [S349](slices/S349.md) | Retry of a stopped run skips the implementer and goes straight to checks and the gate | S | 1 |  |  | — |

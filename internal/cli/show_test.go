@@ -109,6 +109,30 @@ func TestShowPrintsTheSummaryAndThePendingReport(t *testing.T) {
 	}
 }
 
+// S346 (*proposed*; adj 479): ork show names the patterns granted to the run
+// with ork retry --allow, on one line.
+func TestShowNamesTheGrantsOnOneLine(t *testing.T) {
+	show := pausedShow()
+	show.Grants = []string{"Bash(git mv*)", "Bash(make test*)", "Bash(evil\x1b[31m*)"}
+	log := showDouble(show, nil)
+	code, out, errs := runCLI(&App{Call: log.call}, "show", "r1")
+	if code != ExitOK || errs != "" {
+		t.Fatalf("code %d, stderr %q", code, errs)
+	}
+	const want = "granted: Bash(git mv*), Bash(make test*), Bash(evil*)\n"
+	if strings.Count(out, "\ngranted: ") != 1 || !strings.Contains(out, "\n"+want) {
+		t.Errorf("output lacks one %q line:\n%q", want, out)
+	}
+	if strings.Contains(out, "\x1b") {
+		t.Errorf("a control character reached the terminal: %q", out)
+	}
+	// A run with no grants prints no line.
+	log = showDouble(pausedShow(), nil)
+	if _, out, _ = runCLI(&App{Call: log.call}, "show", "r1"); strings.Contains(out, "granted:") {
+		t.Errorf("a run with no grants prints a granted line:\n%s", out)
+	}
+}
+
 func TestShowSaysWhenThePendingReportCannotBeRead(t *testing.T) {
 	log := showDouble(pausedShow(), nil)
 	code, out, _ := runCLI(&App{Call: log.call}, "show", "r1")

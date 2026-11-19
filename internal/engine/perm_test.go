@@ -9,7 +9,38 @@ import (
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// S346 (*proposed*): rolePermission adds a run's grants to the implementer and
+// to a part (less its slicer writes), and to no other role.
+func TestRolePermissionAddsTheRunsGrants(t *testing.T) {
+	grants := []string{"Bash(make test*)", "Bash(slicer note*)"}
+	e := &Engine{proj: registry.Project{Permissions: map[string]registry.Permission{RoleImplementer: {Allow: []string{"Read", "Edit"}}}}}
+	rec := runrec.Record{Grants: grants}
+	for _, tc := range []struct {
+		role string
+		want []string // nil: read-only
+	}{
+		{RoleImplementer, []string{"Read", "Edit", "Bash(make test*)", "Bash(slicer note*)"}},
+		{RolePart, []string{"Read", "Edit", "Bash(make test*)"}},
+		{RoleReviewer, nil}, {RoleGate, nil}, {RoleArchitect, nil}, {RoleUI, nil},
+	} {
+		got, err := e.rolePermission(rec, tc.role)
+		if err != nil || got.ReadOnly != (tc.want == nil) || !reflect.DeepEqual(got.Allow, tc.want) {
+			t.Errorf("%s: %+v, %v; want allow %v", tc.role, got, err, tc.want)
+		}
+	}
+	// A run with no grants resolves as the registry says; a read-only
+	// implementer stays read-only.
+	if got, _ := e.rolePermission(runrec.Record{}, RoleImplementer); !reflect.DeepEqual(got.Allow, []string{"Read", "Edit"}) {
+		t.Errorf("no grants: %v", got.Allow)
+	}
+	e.proj.Permissions = map[string]registry.Permission{RoleImplementer: {Preset: "read-only"}}
+	if got, err := e.rolePermission(rec, RoleImplementer); err != nil || !got.ReadOnly || len(got.Allow) != 0 {
+		t.Errorf("read-only implementer with grants: %+v, %v", got, err)
+	}
+}
 
 func TestReadOnlyAllowlistIncludesAdjLint(t *testing.T) {
 	if !slices.Contains(LocalReadOnlyAllowlist(), "Bash(adj lint*)") {

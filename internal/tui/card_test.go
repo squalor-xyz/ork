@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -662,9 +663,9 @@ func TestDaemonFixAndCheckWire(t *testing.T) {
 		t.Fatal(err)
 	}
 	if strings.Join(methods, " ") != "run.fix run.check run.check" ||
-		seen[0] != (daemon.RunAction{Run: "engine", Text: "Rename it."}) ||
-		seen[1] != (daemon.RunAction{Run: "engine", Check: 2, State: "later"}) ||
-		seen[2] != (daemon.RunAction{Run: "engine", Check: 2}) {
+		!reflect.DeepEqual(seen[0], daemon.RunAction{Run: "engine", Text: "Rename it."}) ||
+		!reflect.DeepEqual(seen[1], daemon.RunAction{Run: "engine", Check: 2, State: "later"}) ||
+		!reflect.DeepEqual(seen[2], daemon.RunAction{Run: "engine", Check: 2}) {
 		t.Errorf("requests %v %+v", methods, seen)
 	}
 }
@@ -699,8 +700,8 @@ func TestDaemonRenderWire(t *testing.T) {
 		t.Errorf("action error %q", got)
 	}
 	if strings.Join(methods, " ") != "run.render run.render" ||
-		seen[0] != (daemon.RunAction{Run: "engine", Name: "x-80x24.txt"}) ||
-		seen[1] != (daemon.RunAction{Run: "engine", Name: "gone-80x24.txt"}) {
+		!reflect.DeepEqual(seen[0], daemon.RunAction{Run: "engine", Name: "x-80x24.txt"}) ||
+		!reflect.DeepEqual(seen[1], daemon.RunAction{Run: "engine", Name: "gone-80x24.txt"}) {
 		t.Errorf("requests %v %+v", methods, seen)
 	}
 }

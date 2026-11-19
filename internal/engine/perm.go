@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/registry"
+	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
 // Permission is how a role may act: in the vendor's read-only mode, or with
@@ -101,6 +102,25 @@ func partAllowlist(implementer []string) []string {
 		}
 	}
 	return out
+}
+
+// rolePermission is ResolvePermission for a role of this run (S346,
+// *proposed*; adj 479): the implementer, and a lead or part that derives from
+// it, also get the patterns the owner granted the run with ork retry --allow.
+// A part keeps no slicer write entry, a grant included. A read-only role, and
+// an implementer the project made read-only, keep their permission. The
+// project in the registry is never changed.
+func (e *Engine) rolePermission(rec runrec.Record, role string) (Permission, error) {
+	perm, err := ResolvePermission(e.proj, role)
+	if err != nil || perm.ReadOnly || len(rec.Grants) == 0 || (role != RoleImplementer && role != RolePart) {
+		return perm, err
+	}
+	grants := rec.Grants
+	if role == RolePart {
+		grants = partAllowlist(grants)
+	}
+	perm.Allow = mergeGrants(perm.Allow, grants)
+	return perm, nil
 }
 
 func readOnlyRole(role string) bool {

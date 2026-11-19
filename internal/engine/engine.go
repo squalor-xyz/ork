@@ -691,8 +691,11 @@ func (e *Engine) SetResume(req runrec.ResumeRequest) error {
 	defer e.mu.Unlock()
 	rec := e.run.Snapshot()
 	if req.Method == runrec.ResumeRetry {
-		o := RetryOptions{Rounds: req.Rounds, AcceptShape: req.AcceptShape, Again: req.Again}
+		o := RetryOptions{Rounds: req.Rounds, AcceptShape: req.AcceptShape, Again: req.Again, Allow: req.Allow}
 		if _, err := retryGrant(rec, []int{req.Rounds}, o); err != nil {
+			return err
+		}
+		if err := e.checkAllow(o.Allow); err != nil {
 			return err
 		}
 		if req.AcceptShape {
@@ -742,12 +745,49 @@ type RetryOptions struct {
 	AcceptShape bool
 	// Again reruns the role once more at a capped shape pause.
 	Again bool
+	// Allow grants tool patterns to this run's implementer (S346, *proposed*;
+	// adj 479). They are kept in the record's Grants; the registry is not
+	// written.
+	Allow []string
+}
+
+// checkAllow refuses a grant before anything changes (S346): a bad pattern, or
+// a project whose implementer is read-only.
+func (e *Engine) checkAllow(allow []string) error {
+	if len(allow) == 0 {
+		return nil
+	}
+	if err := registry.ValidatePatterns("--allow", allow); err != nil {
+		return refusef("%v", err)
+	}
+	perm, err := ResolvePermission(e.proj, RoleImplementer)
+	if err != nil {
+		return refusef("implementer permissions: %v", err)
+	}
+	if perm.ReadOnly {
+		return refusef("the project's implementer is read-only, so --allow cannot grant it a tool")
+	}
+	return nil
+}
+
+// mergeGrants appends the patterns that the grants lack, in order.
+func mergeGrants(have, add []string) []string {
+	out := slices.Clone(have)
+	for _, pattern := range add {
+		if !slices.Contains(out, pattern) {
+			out = append(out, pattern)
+		}
+	}
+	return out
 }
 
 // RetryWith is RetryNote with the options of ork retry.
 func (e *Engine) RetryWith(ctx context.Context, o RetryOptions) error {
 	e.mu.Lock()
 	defer e.mu.Unlock()
+	if err := e.checkAllow(o.Allow); err != nil {
+		return err
+	}
 	note := strings.TrimSpace(o.Note)
 	rounds := []int{}
 	if o.Rounds != 0 {
@@ -759,7 +799,7 @@ func (e *Engine) RetryWith(ctx context.Context, o RetryOptions) error {
 		if o.AcceptShape {
 			return refusef("run %s is stopped; --accept-shape applies only to a report-shape pause", rec.ID)
 		}
-		return e.resumeStopped(ctx, rec, note, rounds)
+		return e.resumeStopped(ctx, rec, note, rounds, o.Allow)
 	case runrec.StateCommitted:
 		return refusef("run %s is committed; there is nothing to resume", rec.ID)
 	}
@@ -789,6 +829,7 @@ func (e *Engine) RetryWith(ctx context.Context, o RetryOptions) error {
 		defer e.ownerWait(ctx)
 		err := e.run.Update(func(r *runrec.Record) {
 			grantRounds(r)
+			r.Grants = mergeGrants(r.Grants, o.Allow)
 			q := r.QueuedQuestions[0]
 			r.QueuedQuestions = r.QueuedQuestions[1:]
 			retry := *r.Pending
@@ -807,6 +848,7 @@ func (e *Engine) RetryWith(ctx context.Context, o RetryOptions) error {
 	}
 	if err := e.run.Update(func(r *runrec.Record) {
 		grantRounds(r)
+		r.Grants = mergeGrants(r.Grants, o.Allow)
 		r.State = r.Pending.State
 		r.Reason = ""
 		if note != "" {

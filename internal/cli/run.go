@@ -14,6 +14,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -354,6 +355,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	// rests again, as the TUI's calls do (S237, *proposed*).
 	var wait, acceptShape, again, laterChecks bool
 	var rounds int
+	var allows stringList
 	// approve --later-checks marks every open human check later, then approves
 	// (S316, *proposed*; adj 233). The owner chooses it; it is never the default.
 	if command == "approve" {
@@ -363,6 +365,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		fs.IntVar(&rounds, "rounds", 0, "grant additional implementer rounds (default 2 at a rounds pause or a resume)")
 		fs.BoolVar(&acceptShape, "accept-shape", false, "keep a refused report's owner findings that have no options (S298, proposed)")
 		fs.BoolVar(&again, "again", false, "run the role once more after a repeated shape pause (S298, proposed)")
+		fs.Var(&allows, "allow", "PATTERN grants a tool pattern to this run's implementer; repeat to grant several (S346, proposed)")
 	}
 	if command == "answer" || command == "retry" {
 		fs.BoolVar(&wait, "wait", false, "wait until the run rests")
@@ -382,6 +385,9 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	}
 	if acceptShape && again {
 		return o.usage("retry: --accept-shape and --again cannot be used together")
+	}
+	if err := registry.ValidatePatterns("retry --allow", allows); err != nil {
+		return o.usage("%v", err)
 	}
 	want := 1
 	if command == "answer" || command == "file" {
@@ -420,7 +426,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		}
 		return printWaveApprove(o, result)
 	}
-	p := daemon.RunAction{Run: pos[0], Rounds: rounds, AcceptShape: acceptShape, Again: again, NoWait: (command == "answer" || command == "retry") && !wait}
+	p := daemon.RunAction{Run: pos[0], Rounds: rounds, AcceptShape: acceptShape, Again: again, Allow: allows, NoWait: (command == "answer" || command == "retry") && !wait}
 	if command == "file" {
 		n, err := strconv.Atoi(pos[1])
 		if err != nil || n < 1 {

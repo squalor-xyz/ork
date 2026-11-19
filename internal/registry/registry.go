@@ -221,7 +221,14 @@ func ValidatePermissionEntry(role string, p Permission) error {
 	case len(p.Allow) == 0:
 		return fmt.Errorf("%s must be the preset read-only or a non-empty list of patterns", name)
 	}
-	for _, pat := range p.Allow {
+	return ValidatePatterns(name, p.Allow)
+}
+
+// ValidatePatterns checks a list of tool patterns (S346, *proposed*): none is
+// blank, none holds a NUL byte or newline. name opens the error. It is the
+// check of a permissions entry's list, and of ork retry --allow.
+func ValidatePatterns(name string, patterns []string) error {
+	for _, pat := range patterns {
 		if strings.TrimSpace(pat) == "" {
 			return fmt.Errorf("%s has a blank pattern", name)
 		}

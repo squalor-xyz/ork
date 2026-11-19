@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -157,6 +158,31 @@ func TestRunRetryResumesAStoppedRunAfterARestart(t *testing.T) {
 	}
 	if rig.d.runs.runs["r1"] == nil {
 		t.Error("the resumed run is not managed")
+	}
+}
+
+// S346 (*proposed*; adj 479): run.retry of a stopped run carries allow into the
+// resume, and a bad pattern is refused before the daemon builds an engine.
+func TestRunRetryAllowResumesAStoppedRunWithTheGrant(t *testing.T) {
+	rig := stoppedDaemon(t, retryRunner, false, stoppedDiff, nil)
+	got := decodeRecord(t, request(t, rig.d, "run.retry", `{"run":"r1","allow":["Bash(make test*)"]}`))
+	if got.State != runrec.StateAwaitingApproval || !reflect.DeepEqual(got.Grants, []string{"Bash(make test*)"}) {
+		t.Fatalf("resumed record: state %s grants %v", got.State, got.Grants)
+	}
+}
+
+func TestRunRetryAllowWithABadPatternBuildsNoEngine(t *testing.T) {
+	rig := stoppedDaemon(t, retryRunner, false, stoppedDiff, nil)
+	_, err := rig.d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"r1","allow":["  "]}`))
+	if err == nil || !strings.Contains(err.Error(), "blank pattern") {
+		t.Fatalf("retry with a blank pattern: %v", err)
+	}
+	if rig.d.runs.runs["r1"] != nil {
+		t.Error("the refused retry built an engine for the stopped run")
+	}
+	stored, err := rig.store.Open("r1")
+	if err != nil || stored.Snapshot().State != runrec.StateStopped || len(stored.Snapshot().Grants) != 0 {
+		t.Errorf("stored record: %+v, %v", stored.Snapshot(), err)
 	}
 }
 
