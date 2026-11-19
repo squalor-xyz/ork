@@ -27,6 +27,8 @@ type EarlierReport struct{ Name, Text string }
 
 // BriefInput is what a brief is built from (docs/design.md, Roles).
 type BriefInput struct {
+	TreeUnchangedSince int // previous read-only round with the same full-content fingerprint
+
 	Orientation  string   // saved spec-check pack, shown only to a claude-local implementer
 	ProgressFile string   // exact file the local role may write outside its worktree
 	Allow        []string // resolved sandbox command forms, verbatim
@@ -185,7 +187,11 @@ func BuildBrief(in BriefInput) (string, error) {
 		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", processTemp, in.ReportPath)
 	}
 	if in.Resumed {
-		b.WriteString("## Resumed session\n\nork resumed your earlier session. The worktree may have changed since your last report. Before you judge or change anything, run git status and git diff again and read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n")
+		if in.TreeUnchangedSince > 0 {
+			fmt.Fprintf(&b, "## Resumed session\n\nork resumed your earlier session. The tree is unchanged since round %d, when you last reported. Before you judge or change anything, read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n", in.TreeUnchangedSince)
+		} else {
+			b.WriteString("## Resumed session\n\nork resumed your earlier session. The worktree may have changed since your last report. Before you judge or change anything, run git status and git diff again and read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n")
+		}
 		if tree := strings.TrimRight(in.Tree, "\n"); tree != "" {
 			fence := fenceFor(tree)
 			fmt.Fprintf(&b, "git status --porcelain when this round started:\n\n%s\n%s\n%s\n\n", fence, tree, fence)
@@ -266,7 +272,11 @@ func doneWhen(in BriefInput) string {
 	add := func(text string) { items = append(items, strings.Join(strings.Fields(text), " ")) }
 	isGrok := in.Vendor == "grok" || in.Vendor == "grok-local"
 	if in.Resumed {
-		add("First re-run git status and git diff and re-read every cited file before judging or changing anything.")
+		if in.TreeUnchangedSince > 0 {
+			add("First re-read every cited file before judging or changing anything.")
+		} else {
+			add("First re-run git status and git diff and re-read every cited file before judging or changing anything.")
+		}
 	}
 	if in.ReadOnly || readOnlyRole(in.Role) {
 		add("You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.")

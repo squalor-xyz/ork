@@ -378,7 +378,9 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 	}
 	// A saved wave with nothing startable has no item to check.
 	held, noSpec, code := []string{}, []string{}, ExitOK
-	if len(params.Items) > 0 {
+	if opts.spec.off {
+		fmt.Fprintln(prompts, "spec check: off (--spec-check off)")
+	} else if len(params.Items) > 0 {
 		held, noSpec, code = a.specCheck(ctx, o, reader, prompts, &params, &opts.spec)
 	} else if opts.spec.questions {
 		if o.json {
@@ -810,6 +812,7 @@ func plural(n int, noun string) string {
 // S312 (*proposed*): batch flags are handled entirely before the existing
 // spec.answer path. A wave uses item-qualified addresses.
 type specFlags struct {
+	off       bool
 	questions bool
 	answers   []string
 	wave      bool
@@ -846,6 +849,13 @@ func (f *specFlags) result() *specData {
 }
 
 func (f *specFlags) register(fs *flag.FlagSet) {
+	fs.Func("spec-check", "off skips the spec check for this start", func(s string) error {
+		if s != "off" {
+			return fmt.Errorf("--spec-check takes only off")
+		}
+		f.off = true
+		return nil
+	})
 	fs.BoolVar(&f.questions, "questions", false, "print all open spec questions and start nothing")
 	fs.Func("answer", "answer KEY=LABEL, KEY=N or KEY=text (wave: ITEM:KEY=value); repeat for each question", func(s string) error {
 		f.answers = append(f.answers, s)
@@ -854,6 +864,9 @@ func (f *specFlags) register(fs *flag.FlagSet) {
 }
 
 func (f *specFlags) validate(yes bool) error {
+	if f.off && f.active() {
+		return fmt.Errorf("--spec-check off cannot be used with --questions or --answer")
+	}
 	if f.questions && yes {
 		return fmt.Errorf("--questions cannot be used with --yes")
 	}

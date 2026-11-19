@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 467,
+  "next_id": 469,
   "preamble": "",
   "passes": [
     {
@@ -19287,7 +19287,7 @@
       "id": "S338",
       "title": "wave start: no way to skip the spec check the owner declined",
       "short_title": "wave start: no way to skip the spec check the owner declined",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19297,6 +19297,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 473 cli.spec-check-skip = flag (--spec-check off on ork run and ork wave start, CLI only).",
           "created_at": "2026-11-18T22:18:10Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "dbee1785-c605-4ffc-8a8d-b8ec7f803766",
+          "kind": "",
+          "text": "**2026-11-19** — Verified: ork run and ork wave start accept --spec-check off (CLI only, adj 473). The flag skips the spec check, prints 'spec check: off (--spec-check off)' before the usual confirm, and keeps every planned item. Only off is accepted; it is refused with --questions or --answer. The daemon still refuses items with open spec questions. Focused tests, vet, slicer check and adj lint passed; the gate returned PASS.",
+          "created_at": "2026-11-19T14:09:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19323,7 +19337,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -23633,7 +23647,7 @@
       "id": "S424",
       "title": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it",
       "short_title": "have ork compare the diff hash with the previous round's and state \"tree unchanged since round N\" in the brief, so a resumed gate does not need to re-derive it",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -23643,6 +23657,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 490 brief.tree-unchanged = state.",
           "created_at": "2026-11-18T22:28:43Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2d1aa500-23ce-4f36-806d-6753e963d0bf",
+          "kind": "",
+          "text": "**2026-11-19** — Verified: reviewer, gate and architect rounds store a full-content start fingerprint (diff plus untracked names, contents and non-regular modes); a resumed round whose tree matches its previous round says so and drops the git status/diff re-run (adj 490); older rows resume with no unchanged line; treeContent and TreeSHA256 unchanged. Gate PASS, slice checks green.",
+          "created_at": "2026-11-19T14:09:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -23669,7 +23697,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -25190,6 +25218,77 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-4f57bee3",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S467",
+      "title": "allow read-only adj lint for reviewer roles (S458 covers this)",
+      "short_title": "allow read-only adj lint for reviewer roles (S458 covers this)",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "04bfff24-09c7-4fa2-93a9-70c1a120e9cc",
+          "kind": "",
+          "text": "**2026-11-19** — possible duplicate of S458",
+          "created_at": "2026-11-19T13:41:30Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S338",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-22add6d3",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S468",
+      "title": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)",
+      "short_title": "when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S424",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-510a0619",
         "pass": "v1.2",
         "group": "",
         "reason": "",

@@ -1771,8 +1771,19 @@ separately.
     `git diff` again, read again every file it cites and not repeat an earlier
     finding, verdict or answer without checking it. It then shows ork's own
     `git status --porcelain` from when the round started, in a fence, or says
-    that the tree had no uncommitted changes. The listing is the same call as
-    the read-only fingerprint, so a read-only role costs no extra git call;
+    that the tree had no uncommitted changes. The listing uses the same call as
+    the read-only fingerprint.
+    *Proposed (S424):* reviewer, gate and architect rounds also save a start
+    fingerprint of the tracked binary diff against HEAD and untracked names
+    and contents. Other untracked entries, including nested repositories,
+    contribute only their name and mode; ork does not traverse them.
+    On resume, if the previous row of that role belongs to the
+    resumed session and has the same fingerprint, the section says
+    "The tree is unchanged since round N, when you last reported."
+    It drops the git status and git diff re-run instructions, including in
+    Done when, but keeps re-reading every cited file (adj 490).
+    Missing fingerprints in older records and changed contents keep the
+    original instructions. The implementer's existing tree hash is unchanged;
   - for the implementer, the project check command (when configured) and
     `slicer check`, which ork runs after the round (not the finish step)
     outside the role's sandbox;
@@ -1932,7 +1943,17 @@ separately.
   to the one before it is dropped.
 - **Spec check.** A read-only role with its own prompt (`spec-check.md`) that
   runs once over a batch of slices before a wave (see the Check step of the
-  Wave lifecycle). It works in the project checkout, not in a worktree, and
+  Wave lifecycle). The owner may skip it for one CLI start with
+  `ork run ... --spec-check off` or `ork wave start ... --spec-check off`
+  (adj 473, `cli.spec-check-skip`). Only `off` is accepted, and it conflicts
+  with `--questions` and `--answer`. The CLI prints
+  `spec check: off (--spec-check off)` to its prompts writer and keeps the
+  planned items for the usual confirmation. The TUI still runs the check.
+  Skipping produces no new answers' decisions, local orientation pack or
+  local carve; cached material remains available. The daemon still refuses
+  open questions against the same spec and a local slice above size S
+  without its filed slivers.
+  It works in the project checkout, not in a worktree, and
   has no engine run record. It begins a ledger run on the batch, records
   `spec-check` steps with no parent, and ends it with `pass` after reading the
   report, or `stopped` on failure or cancellation. The daemon runs it as a job,
