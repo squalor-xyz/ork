@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-476 items · — 57 · done 338 · retired 81
+476 items · — 56 · done 339 · retired 81
 
 ## v1.3
 
@@ -229,7 +229,7 @@ v1.2
 | 172 | [S467](slices/S467.md) | allow read-only adj lint for reviewer roles (S458 covers this) |  | - |  | Duplicate of S458 (adj lint for read-only roles); flagged by S442's near-duplicate note. · discovered from S338 | retired |
 | 173 | [S468](slices/S468.md) | when a round's start fingerprint matches the gate's previous row, say the tree is unchanged in the gate brief (this slice's feature, now dogfooded) |  | - |  | Covered by S424 (landed 2026-11-19): the resumed gate brief says the tree is unchanged. · discovered from S424 | retired |
 | 174 | [S469](slices/S469.md) | let read-only reviewer roles run slicer COMMAND --help and slicer ai relay |  | - |  | discovered from S384 | — |
-| 175 | [S470](slices/S470.md) | Read-only roles may run slicer check | S | - |  | discovered from S341 | — |
+| 175 | [S470](slices/S470.md) | Read-only roles may run slicer check | S | - |  | discovered from S341 | done |
 | 176 | [S471](slices/S471.md) | allow `slicer check --root WT; echo exit=$?` style exit-code capture for read-only roles, or document that plain invocation is required |  | - |  | discovered from S340 | — |
 | 177 | [S472](slices/S472.md) | allow env-prefixed go test commands, or give the UI role a renders env var already set |  | - |  | discovered from S348 | — |
 | 178 | [S473](slices/S473.md) | allow slicer check --root WT and adj lint --root WT as plain commands for the reviewer (same as S470) |  | - |  | Duplicate of S470 (slicer check for read-only roles). · discovered from S348 | retired |

@@ -17,6 +17,12 @@ func TestReadOnlyAllowlistIncludesAdjLint(t *testing.T) {
 	}
 }
 
+func TestReadOnlyAllowlistIncludesSlicerCheck(t *testing.T) {
+	if !slices.Contains(LocalReadOnlyAllowlist(), "Bash(slicer check*)") {
+		t.Fatal("read-only allowlist missing Bash(slicer check*)")
+	}
+}
+
 func TestDefaultImplementerAllowlistIsExactlyTheDecidedOne(t *testing.T) {
 	want := []string{
 		"Read", "Grep", "Glob", "Edit", "Write",

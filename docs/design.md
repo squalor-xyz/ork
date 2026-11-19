@@ -2335,7 +2335,7 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   roles keep plan mode. The list allows `Read`, `Grep`,
   `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
-  `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
+  `slicer check` (adj 504, including `slicer check --root DIR`), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
   `adj lint --root DIR`. S358 adds an exact-file Edit/Write exception for
   the local progress note described under Roles.

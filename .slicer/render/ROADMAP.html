@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">476 items · — 57 · done 338 · retired 81</p>
+<p class="summary">476 items · — 56 · done 339 · retired 81</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -227,7 +227,7 @@
 <tr class="retired"><td>172</td><td>S467</td><td>allow read-only adj lint for reviewer roles (S458 covers this)</td><td></td><td>-</td><td></td><td>Duplicate of S458 (adj lint for read-only roles); flagged by S442&#x27;s near-duplicate note. · discovered from S338</td><td class="status">retired</td></tr>
 <tr class="retired"><td>173</td><td>S468</td><td>when a round&#x27;s start fingerprint matches the gate&#x27;s previous row, say the tree is unchanged in the gate brief (this slice&#x27;s feature, now dogfooded)</td><td></td><td>-</td><td></td><td>Covered by S424 (landed 2026-11-19): the resumed gate brief says the tree is unchanged. · discovered from S424</td><td class="status">retired</td></tr>
 <tr class="open"><td>174</td><td>S469</td><td>let read-only reviewer roles run slicer COMMAND --help and slicer ai relay</td><td></td><td>-</td><td></td><td>discovered from S384</td><td class="status">—</td></tr>
-<tr class="open"><td>175</td><td>S470</td><td>Read-only roles may run slicer check</td><td>S</td><td>-</td><td></td><td>discovered from S341</td><td class="status">—</td></tr>
+<tr class="done"><td>175</td><td>S470</td><td>Read-only roles may run slicer check</td><td>S</td><td>-</td><td></td><td>discovered from S341</td><td class="status">done</td></tr>
 <tr class="open"><td>176</td><td>S471</td><td>allow `slicer check --root WT; echo exit=$?` style exit-code capture for read-only roles, or document that plain invocation is required</td><td></td><td>-</td><td></td><td>discovered from S340</td><td class="status">—</td></tr>
 <tr class="open"><td>177</td><td>S472</td><td>allow env-prefixed go test commands, or give the UI role a renders env var already set</td><td></td><td>-</td><td></td><td>discovered from S348</td><td class="status">—</td></tr>
 <tr class="retired"><td>178</td><td>S473</td><td>allow slicer check --root WT and adj lint --root WT as plain commands for the reviewer (same as S470)</td><td></td><td>-</td><td></td><td>Duplicate of S470 (slicer check for read-only roles). · discovered from S348</td><td class="status">retired</td></tr>
