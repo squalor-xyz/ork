@@ -1200,7 +1200,7 @@ func noCheckRun(t *testing.T, args ...string) (code int, out, errs string, metho
 		case daemon.MethodProjectsList:
 			return json.Unmarshal([]byte(`{"projects":[]}`), result)
 		case daemon.MethodRunPlan:
-			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","warnings":["no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"]}`), result)
+			return json.Unmarshal([]byte(`{"project":{"name":"p"},"item":"S1","warnings":["no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)"]}`), result)
 		case daemon.MethodSpecCheck:
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true}]}`), result)
 		case daemon.MethodRunStart:
@@ -1262,7 +1262,7 @@ func TestRunRefusesAPlanWithNoCheckCommand(t *testing.T) {
 			if !strings.Contains(out, "check: none\n") || strings.Contains(out, "no check command") {
 				t.Errorf("the plan must show check: none, and leave the refusal text to the error:\n%s", out)
 			}
-			if want := "ork: project p: no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)\n"; errs != want {
+			if want := "ork: project p: no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)\n"; errs != want {
 				t.Errorf("stderr %q, want %q", errs, want)
 			}
 			if slices.Contains(methods, daemon.MethodSpecCheck) {

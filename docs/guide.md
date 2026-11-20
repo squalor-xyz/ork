@@ -140,6 +140,14 @@ Add it in either way:
   mode it offers the current directory (`internal/cli/daemoncmds.go:234-247`,
   `docs/design.md:2561-2568`).
 
+After adding a path, the CLI prints advisory `setup:` lines with fix commands
+for missing setup. A Python project with `pyproject.toml` and no `go.mod` gets
+a `--preset python` suggestion. A missing check command gets both
+`slicer config check_command CMD` and `ork projects set NAME --check CMD`
+as fixes. The check command is read from slicer first, with the registry as
+fallback. These warnings keep exit 0 and apply no settings. JSON output has
+the same lines in a `setup` array beside `project`, empty when none apply.
+
 To add every project in a folder such as `~/code`, press `+` in the TUI, type
 the folder and press Enter: when it holds projects below it, ork shows a
 checklist (space ticks, `a` all, `n` none, `y` adds; Enter does nothing there).

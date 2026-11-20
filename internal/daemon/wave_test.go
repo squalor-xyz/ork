@@ -476,7 +476,7 @@ func TestWaveStartCarriesStopAfterPerItem(t *testing.T) {
 func TestWaveStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
 	w := newWaveRig(t, 4, 0)
 	editProject(t, w.d, func(p *registry.Project) { p.CheckCommand = "" })
-	want := "project p: no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"
+	want := "project p: no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)"
 	// The whole wave is refused, even when one item carries the flag.
 	for _, raw := range []string{
 		`{"items":[{"project":"p","item":"S1"},{"project":"p","item":"S2"}]}`,

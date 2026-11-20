@@ -44,7 +44,7 @@ func TestMissingDriversWarning(t *testing.T) {
 
 func TestSetupWarnings(t *testing.T) {
 	const pyCheck = "python3 -m unittest discover -s tests -t tests"
-	const noCheck = "no check command: ork refuses to start a run (fix: ork projects set slicer --check CMD, or start with --allow-no-check)"
+	const noCheck = "no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set slicer --check CMD, or start with --allow-no-check)"
 	const goDefault = "the implementer has the built-in Go allowlist, but slicer has no go.mod (fix: ork projects set slicer --preset python)"
 	files := func(names ...string) func(string) bool {
 		return func(name string) bool {
@@ -86,7 +86,7 @@ func TestSetupWarnings(t *testing.T) {
 			`the implementer allowlist has no pattern for the check command "make test all" (fix: ork projects set slicer --allow 'implementer=Bash(make test all*)')`}},
 		{"read-only implementer", registry.Project{Name: "slicer", CheckCommand: pyCheck, Permissions: map[string]registry.Permission{"implementer": {Preset: "read-only"}}}, files(), nil},
 		{"a name with a space", registry.Project{Name: "my proj"}, files("go.mod"), []string{
-			"no check command: ork refuses to start a run (fix: ork projects set 'my proj' --check CMD, or start with --allow-no-check)"}},
+			"no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set 'my proj' --check CMD, or start with --allow-no-check)"}},
 	}
 	for _, tt := range tests {
 		if got := SetupWarnings(tt.p, tt.has); !reflect.DeepEqual(got, tt.want) {
@@ -104,8 +104,15 @@ func TestShellWordQuotesOnlyWhenNeeded(t *testing.T) {
 }
 
 func TestNoCheckMessage(t *testing.T) {
-	if got := NoCheckMessage("p"); got != "no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)" {
+	if got := NoCheckMessage("p"); got != "no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)" {
 		t.Fatal(got)
+	}
+}
+
+func TestNoCheckMessageNamesSlicerCheckCommand(t *testing.T) {
+	want := "no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)"
+	if got := NoCheckMessage("p"); got != want {
+		t.Fatalf("NoCheckMessage = %q; want %q", got, want)
 	}
 }
 
