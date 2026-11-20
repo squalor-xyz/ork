@@ -5979,3 +5979,14 @@
 {"when": "2026-11-20T02:46:17Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-20T02:51:13Z", "item": "S416", "action": "note", "from": "", "to": "", "note": "S416 done: the UI prompt tells the pass to write helper file", "by": "Jon Robbins"}
 {"when": "2026-11-20T02:51:13Z", "item": "S416", "action": "status", "from": "started", "to": "done", "note": "S416 done: the UI prompt tells the pass to write helper files in its temp dir with Write, run one plain command per call and render TUI views from a `go test -overlay` file outside the tree (CLI views by the test flag); a cloud Claude UI pass's brief lists its allowed forms from one source, `engine.CloudUIAllowlist()`; ork's AGENTS.md has the TUI render recipe (verified: it wrote 80x24, 120x40 and ASCII renders with no tree change); no permission added; go vet, go test ./..., gofmt, slicer check and adj lint are green.", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:42:14Z", "item": "S499", "action": "add", "from": "", "to": "open", "note": "let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card"}
+{"when": "2026-11-20T02:42:14Z", "item": "S499", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:42:46Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Scope widened 2026-11-20 (owner, adj 514 folded in): TestRen", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:42:46Z", "item": "S495", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S481 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:46Z", "item": "S496", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S479 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:46Z", "item": "S498", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S479 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:46Z", "item": "S497", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S471 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:54Z", "item": "S500", "action": "add", "from": "", "to": "open", "note": "TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test"}
+{"when": "2026-11-20T02:42:54Z", "item": "S500", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:49:55Z", "item": "S501", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it"}
+{"when": "2026-11-20T02:49:55Z", "item": "S501", "action": "promote", "from": "", "to": "", "note": ""}

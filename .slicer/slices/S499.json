@@ -1,0 +1,39 @@
+{
+  "id": "S499",
+  "title": "let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #513 was decided to file it:\n\nProposal: let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card\nRole: ui\nRun: ork-20261120-014727-adb2\nProject: ork\nItem: S307\nEvidence: TestRenderCLIViews writes only status.txt, show.txt and help.txt; this slice changes only projects set and refusal texts"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
