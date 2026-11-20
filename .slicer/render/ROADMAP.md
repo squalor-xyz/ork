@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-486 items · — 55 · done 344 · retired 87
+486 items · — 54 · done 345 · retired 87
 
 ## v1.3
 
@@ -131,7 +131,7 @@ v1.2
 | 74 | [S350](slices/S350.md) | Implementer has no way to remove a file it created by mistake | S | - |  | Merged into S440 (implementer may remove a file: one it created by mistake or one the slice moved code out of), 2026-11-18 duplicate sweep | retired |
 | 75 | [S351](slices/S351.md) | Landing commits the owner's uncommitted edits on main into its tracking commit | S | 1 |  |  | done |
 | 76 | [S352](slices/S352.md) | Accept slicer relay v12 and read its tool_feedback line | M | - |  | Duplicate: S354 (landed 767295db, 2026-11-12) accepts relay v11 and v12 (adj 324, 326) and parses role tool feedback into the run record (adj 325); ork doctor reports the contract ok for every project. Carrying tool feedback into Needs you is S320. | retired |
-| 77 | [S353](slices/S353.md) | A slicer contract bump on main breaks ork everywhere at once | M | 2 |  |  | — |
+| 77 | [S353](slices/S353.md) | A slicer contract bump on main breaks ork everywhere at once | M | 2 |  |  | done |
 | 78 | [S354](slices/S354.md) | Accept relay v12 | M | 2 |  | 2026-11-12: slicer 1.21.0 (s453) prints `Contract: relay v12`; `ork doctor` reports "[FAIL] contract ork accepts relay v10 or v11 and slicer prints v12" for every project, and a new ork run refuses to start. | done |
 | 79 | [S355](slices/S355.md) | Run answers use the owner setting | M | 2 |  | S314 (2026-11-12) files spec-check answers in adj under the owner setting (`ork settings set --owner`, adj 322, 323); run-question answers (ctrl+a, `FileAnswer`) still need `ADJ_DECIDED_BY`. · discovered from S314 | — |
 | 80 | [S356](slices/S356.md) | ork approves local tool calls | L | 3 |  | S304 trial 2 (2026-11-12, S314): claude-local read whole files despite the brief's targeted-read paragraph (S343), reached 86k tokens, spent 50 of 90 min in three auto-compactions, and read its own transcript outside the worktree. The allowlist's `Read` entry has no path or size limit, and a call outside the allowlist is denied with nobody asked. · discovered from S304 | done |

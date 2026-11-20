@@ -5893,3 +5893,13 @@
 {"when": "2026-11-20T00:05:40Z", "item": "S469", "action": "note", "from": "", "to": "", "note": "Merged S482 and S478 asks the same for slicer check --help (", "by": "Jon Robbins"}
 {"when": "2026-11-20T00:05:41Z", "item": "S457", "action": "note", "from": "", "to": "", "note": "Merged S484 (2026-11-20).", "by": "Jon Robbins"}
 {"when": "2026-11-20T00:05:41Z", "item": "S351", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-20: adj 510 landing.index-listed-file", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:23:06Z", "item": "S353", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:24:22Z", "item": "S353", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T00:24:23Z", "item": "S353", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T00:32:07Z", "item": "S353", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T00:32:41Z", "item": "S353", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T00:47:25Z", "item": "S353", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T00:47:25Z", "item": "S353", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T01:00:28Z", "item": "S353", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S353):", "by": "Jon Robbins"}
+{"when": "2026-11-20T01:00:28Z", "item": "S353", "action": "note", "from": "", "to": "", "note": "Contract probes pause incompatible or failed landings before", "by": "Jon Robbins"}
+{"when": "2026-11-20T01:00:29Z", "item": "S353", "action": "status", "from": "started", "to": "done", "note": "Contract probes pause incompatible or failed landings before fast-forward and now appear in projects show as the configured command or unset; the contract-probe and round-check tests have correctly attached comments.", "by": "Jon Robbins"}

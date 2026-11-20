@@ -297,6 +297,107 @@ func (env *landEnv) moveBase(name, text string) string {
 	return gitRun(env.t, env.P, "rev-parse", "main")
 }
 
+func TestLandPausesWhenTheContractProbePrintsAnUnacceptedVersion(t *testing.T) {
+	env := newLandEnv(t, func(p *registry.Project) { p.ContractProbe = "probe relay" })
+	answer := "Contract: relay v14\n"
+	env.e.d.Check = func(context.Context, string, string, time.Duration) (CheckOutput, error) {
+		return CheckOutput{OK: true, Output: answer}, nil
+	}
+	env.approve()
+	r := env.run.Snapshot()
+	if r.Pending == nil || r.Pending.Kind != runrec.PendingError || r.Pending.State != runrec.StateLand {
+		t.Fatalf("pending: %+v", r.Pending)
+	}
+	for _, part := range []string{"v14", "v12 or v13", "land it after an ork that accepts relay v14"} {
+		if !strings.Contains(r.Pending.Reason, part) {
+			t.Errorf("reason %q missing %q", r.Pending.Reason, part)
+		}
+	}
+	if indexOf(env.gitCalls(), "P: merge --ff-only") >= 0 {
+		t.Error("fast-forwarded refused contract")
+	}
+	if got := gitRun(t, env.P, "rev-parse", "main"); got != env.baseTip {
+		t.Errorf("main moved: %s", got)
+	}
+	if r.LandFixes != 0 {
+		t.Errorf("probe spent %d fix rounds", r.LandFixes)
+	}
+	answer = "Contract: relay v12\n"
+	if err := env.e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if got := env.run.Snapshot(); got.State != runrec.StateCommitted || got.Pending != nil || got.LandedAt.IsZero() {
+		t.Fatalf("retry: %+v", got)
+	}
+}
+
+func TestLandProceedsWhenTheContractProbePrintsAnAcceptedVersion(t *testing.T) {
+	env := newLandEnv(t, func(p *registry.Project) { p.ContractProbe = "probe relay"; p.CheckMinutes = 3 })
+	env.moveBase("other.txt", "base moved\n")
+	checked := false
+	probeReceipt := filepath.Join(env.fakes, "probe-receipt")
+	env.e.d.Check = func(ctx context.Context, dir, command string, timeout time.Duration) (CheckOutput, error) {
+		if command != "probe relay" {
+			checked = true
+			return CheckOutput{OK: true}, nil
+		}
+		writeFile(t, probeReceipt, "Contract: relay v12\n")
+		if dir != env.W || timeout != 3*time.Minute || !checked {
+			t.Errorf("probe dir=%q timeout=%s after-check=%v", dir, timeout, checked)
+		}
+		if indexOf(env.gitCalls(), "P: merge --ff-only") >= 0 {
+			t.Error("probe ran after fast-forward")
+		}
+		return CheckOutput{OK: true, Output: "Contract: relay v12\nother text\n"}, nil
+	}
+	env.approve()
+	if b, err := os.ReadFile(probeReceipt); err != nil || string(b) != "Contract: relay v12\n" {
+		t.Errorf("probe receipt %q: %v", b, err)
+	}
+	if got := env.run.Snapshot(); got.State != runrec.StateCommitted || got.LandedAt.IsZero() {
+		t.Fatalf("did not land: %+v", got)
+	}
+}
+
+func TestLandPausesWhenTheContractProbeFails(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		out    CheckOutput
+		err    error
+		reason string
+	}{
+		{"exit", CheckOutput{Output: "probe broke"}, nil, "probe broke"},
+		{"runner", CheckOutput{}, errors.New("cannot start probe"), "cannot start probe"},
+		{"timeout", CheckOutput{TimedOut: true}, nil, "timed out"},
+		{"missing", CheckOutput{OK: true, Output: "hello\nContract: relay v12\n"}, nil, "not a contract line"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			env := newLandEnv(t, func(p *registry.Project) { p.ContractProbe = "probe relay" })
+			env.e.d.Check = func(context.Context, string, string, time.Duration) (CheckOutput, error) { return tc.out, tc.err }
+			env.approve()
+			r := env.run.Snapshot()
+			if r.Pending == nil || r.Pending.Kind != runrec.PendingError || r.Pending.State != runrec.StateLand || !strings.Contains(r.Pending.Reason, tc.reason) {
+				t.Fatalf("pending: %+v, want %q", r.Pending, tc.reason)
+			}
+			if indexOf(env.gitCalls(), "P: merge --ff-only") >= 0 || gitRun(t, env.P, "rev-parse", "main") != env.baseTip {
+				t.Error("fast-forwarded failed probe")
+			}
+		})
+	}
+}
+
+func TestLandWithoutAContractProbeIsUnchanged(t *testing.T) {
+	env := newLandEnv(t)
+	env.e.d.Check = func(context.Context, string, string, time.Duration) (CheckOutput, error) {
+		t.Fatal("unexpected probe")
+		return CheckOutput{}, nil
+	}
+	env.approve()
+	if got := env.run.Snapshot(); got.State != runrec.StateCommitted || got.LandedAt.IsZero() {
+		t.Fatalf("did not land: %+v", got)
+	}
+}
+
 func (env *landEnv) approve() {
 	env.t.Helper()
 	if err := env.e.Approve(context.Background()); err != nil {

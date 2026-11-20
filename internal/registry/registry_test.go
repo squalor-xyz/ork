@@ -71,6 +71,38 @@ func dirNames(t *testing.T, dir string) []string {
 	return names
 }
 
+func TestRegistryRoundTripsContractProbe(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "projects.json")
+	writeFile(t, path, []byte(`{"version":3,"projects":[{"name":"demo","path":"/p/demo"}]}`))
+	f, err := Load(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if f.Projects[0].ContractProbe != "" {
+		t.Fatal("missing probe was not empty")
+	}
+	for _, value := range []string{"probe relay", ""} {
+		f.Projects[0].ContractProbe = value
+		if err := Save(path, f); err != nil {
+			t.Fatal(err)
+		}
+		b, err := os.ReadFile(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(string(b), `"contract_probe"`) != (value != "") {
+			t.Fatalf("probe JSON: %s", b)
+		}
+		got, err := Load(path)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if got.Projects[0].ContractProbe != value {
+			t.Fatalf("loaded probe %q, want %q", got.Projects[0].ContractProbe, value)
+		}
+	}
+}
+
 func TestRoundTripKeepsEveryField(t *testing.T) {
 	example := stateExample(t)
 	dir := t.TempDir()

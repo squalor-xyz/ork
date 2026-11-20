@@ -1091,7 +1091,17 @@ slice.
      skips the merge and goes on to render and re-check; if the owner aborted
      it, ork merges again and pauses again. A failed merge commit pauses with
      git's message.
-  2. `git -C P merge --ff-only BRANCH` in the main checkout. A failure (a
+  2. When `contract_probe` is set (S353; adj 484, `land.contract-bump-guard`),
+     run it in the worktree after the merge-in re-check and before the
+     fast-forward. Use the check runner and `check_minutes` limit (10 minutes
+     when unset). The first output line must be `Contract: relay vN` accepted
+     by `roles.CheckContractLine`. A refused version pauses with the version,
+     accepted set and advice to land after an ork that accepts that version.
+     A command error, failed exit, timeout or missing contract line also
+     pauses with `PendingError` in land. No fast-forward occurs and no
+     `LandFixes` is spent; `ork retry` runs the probe again. With no probe,
+     landing proceeds as before. The command must only read the worktree.
+     Then `git -C P merge --ff-only BRANCH` in the main checkout. A failure (a
      file written in the main checkout after the second check, say) pauses
      the slice with the git message folded onto one line (*proposed*,
      S254); `t` retries.
@@ -3697,7 +3707,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
 - `projects set NAME [--push on|off] [--bell on|off] [--auto-land on|off] [--ui-doc PATH]
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--ui-pass-rows rNN,rNN]
   [--worktree-pattern P]
-  [--branch-pattern P] [--check CMD] [--round-check CMD] [--no-verify] [--check-minutes N] [--cap N]
+  [--branch-pattern P] [--check CMD] [--contract-probe CMD] [--round-check CMD] [--no-verify] [--check-minutes N] [--cap N]
   [--budget-minutes N] [--budget-tokens N] [--env-line LINE]...
   [--preset go|python] [--permission ROLE=read-only|ROLE=]...
   [--allow ROLE=PATTERN]... [--replace-allow]

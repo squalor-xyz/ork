@@ -1788,6 +1788,34 @@ func TestProjectsSetUpdatesOneField(t *testing.T) {
 	}
 }
 
+// --contract-probe sets or clears the landing probe and names it in the summary.
+func TestProjectsSetContractProbe(t *testing.T) {
+	w := newWorld(t, stubSource{}, registry.Project{Name: "demo", Path: "/p/demo"})
+	for _, value := range []string{"probe relay", ""} {
+		code, stdout, stderr := run(t, w.app, "projects", "set", "demo", "--contract-probe", value)
+		want := "updated demo: contract_probe=\"probe relay\"\n"
+		if value == "" {
+			want = "updated demo: contract_probe=unset\n"
+		}
+		if code != 0 || stdout != want {
+			t.Fatalf("set %q: exit %d stdout %q stderr %q", value, code, stdout, stderr)
+		}
+		saved, err := registry.Load(w.regPath)
+		if err != nil {
+			t.Fatal(err)
+		}
+		b, _ := json.Marshal(saved.Projects[0])
+		var fields map[string]any
+		if err := json.Unmarshal(b, &fields); err != nil {
+			t.Fatal(err)
+		}
+		got, _ := fields["contract_probe"].(string)
+		if got != value {
+			t.Fatalf("stored probe %q, want %q", got, value)
+		}
+	}
+}
+
 // --round-check sets the round check command beside --check (S285, *proposed*).
 // The daemon refuses it while the project has no check command.
 func TestProjectsSetRoundCheck(t *testing.T) {
@@ -2571,6 +2599,29 @@ func showBlock(t *testing.T, stdout, heading string) []string {
 	}
 	t.Fatalf("no block %q in:\n%s", heading, stdout)
 	return nil
+}
+
+func TestProjectsShowContractProbe(t *testing.T) {
+	for _, tc := range []struct {
+		name, probe, want string
+	}{
+		{"set", "probe relay", "contract_probe probe relay"},
+		{"unset", "", "contract_probe unset"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			res := showFixture
+			res.Project.ContractProbe = tc.probe
+			code, stdout, stderr := run(t, showApp(t, res, nil), "projects", "show", "ork")
+			if code != ExitOK || stderr != "" {
+				t.Fatalf("exit %d, stderr %q", code, stderr)
+			}
+			block := showBlock(t, stdout, "ork (projects.json)")
+			at := slices.Index(block, "build_command unset")
+			if at < 0 || at+1 >= len(block) || block[at+1] != tc.want {
+				t.Errorf("want %q immediately after build_command, got %q", tc.want, block)
+			}
+		})
+	}
 }
 
 func TestProjectsShowTextHasOneBlockPerOwner(t *testing.T) {

@@ -838,6 +838,9 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	if p.BuildCommand != nil {
 		proj.BuildCommand = *p.BuildCommand
 	}
+	if p.ContractProbe != nil {
+		proj.ContractProbe = *p.ContractProbe
+	}
 	if p.AutoRebuild != nil {
 		proj.AutoRebuild = *p.AutoRebuild
 	}

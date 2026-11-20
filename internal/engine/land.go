@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
+	"github.com/squalor-xyz/ork/internal/roles"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -92,6 +93,9 @@ func (e *Engine) land(ctx context.Context) error {
 				break
 			}
 		}
+		if reason := e.probeContract(ctx, W); reason != "" {
+			return pauseWith(reason)
+		}
 		if _, err := e.gitWrite(ctx, P, "merge", "--ff-only", B); err != nil {
 			return pauseWith(oneLine("git merge --ff-only " + B + ": " + errText(err)))
 		}
@@ -167,6 +171,43 @@ func (e *Engine) land(ctx context.Context) error {
 		}
 		r.State = runrec.StateCommitted
 	})
+}
+
+// probeContract is a read-only landing guard (adj 484). It never spends a
+// fix round; retry runs it again before the fast-forward.
+func (e *Engine) probeContract(ctx context.Context, worktree string) string {
+	if e.proj.ContractProbe == "" {
+		return ""
+	}
+	defer e.beginWork("contract-probe", nil)()
+	check := e.d.Check
+	if check == nil {
+		check = RunCheck
+	}
+	timeout := time.Duration(e.proj.CheckMinutes) * time.Minute
+	if timeout <= 0 {
+		timeout = 10 * time.Minute
+	}
+	out, err := check(ctx, worktree, e.proj.ContractProbe, timeout)
+	if err != nil {
+		return "contract probe: " + oneLine(err.Error())
+	}
+	if out.TimedOut {
+		return "contract probe timed out: " + oneLine(out.Output)
+	}
+	if !out.OK {
+		return "contract probe failed: " + oneLine(out.Output)
+	}
+	line, _, _ := strings.Cut(out.Output, "\n")
+	v, err := roles.CheckContractLine(line)
+	if err == nil {
+		return ""
+	}
+	reason := "contract probe: " + err.Error()
+	if v != 0 {
+		return fmt.Sprintf("%s; land it after an ork that accepts relay v%d", reason, v)
+	}
+	return reason + "; ork accepts relay " + roles.AcceptedContractsPhrase()
 }
 
 // mergeBaseIn merges the base branch into the slice branch in the worktree

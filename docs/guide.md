@@ -62,6 +62,20 @@ always shows a daemon line, and shows behind-main even while roles run.
 `ork daemon stop` refuses
 while a role is running unless you add `--force` (`docs/design.md:41-48`).
 
+When the slicer project is an editable install, protect its landings with a
+probe that imports the worktree's source (S353; adj 484,
+`land.contract-bump-guard`):
+
+    ork projects set slicer --contract-probe 'PYTHONPATH="$PWD/src" python3 -m slicer ai relay'
+
+The probe runs in the slice worktree before the fast-forward. Its first
+output line must name a relay contract ork accepts. A newer contract, failed
+command or missing contract line pauses the landing. Update ork to accept
+the new contract, then use `ork retry RUN` to probe again and land. The
+command must be read-only. Clear it with `--contract-probe ""`. The installed
+`slicer` command can still import main, even with `--root WORKTREE`; the
+explicit `PYTHONPATH` makes this probe read the worktree instead.
+
 ## 3. Check your tools: `ork doctor`
 
     ork doctor

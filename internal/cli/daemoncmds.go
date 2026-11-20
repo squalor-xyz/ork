@@ -410,7 +410,7 @@ func printProjectShow(w io.Writer, r daemon.ProjectsShowResult) {
 		{"name", text(p.Name)}, {"path", text(p.Path)}, {"adj", onOff(p.Adj)}, {"push", onOff(p.Push)},
 		{"bell", onOff(p.BellOn())}, {"auto_land", onOff(p.AutoLandOn())}, {"cap", unsetOr(p.Cap)},
 		{"check_command", text(p.CheckCommand)}, {"round_check_command", text(p.RoundCheckCommand)},
-		{"build_command", text(p.BuildCommand)}, {"no_verify_check", onOff(p.NoVerifyCheck)},
+		{"build_command", text(p.BuildCommand)}, {"contract_probe", text(p.ContractProbe)}, {"no_verify_check", onOff(p.NoVerifyCheck)},
 		{"check_minutes", unsetOr(p.CheckMinutes)}, {"budget_minutes", unsetOr(p.Budgets.Minutes)},
 		{"budget_tokens", unsetOr(p.Budgets.Tokens)}, {"worktree_pattern", text(p.WorktreePattern)},
 		{"branch_pattern", text(p.BranchPattern)}, {"ui_doc", text(p.UIDoc)},
@@ -521,6 +521,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	worktree := fs.String("worktree-pattern", "", "the worktree path, with {id} or {id_lower}")
 	branch := fs.String("branch-pattern", "", "the branch name, with {id} or {id_lower}")
 	check := fs.String("check", "", "the check command")
+	contractProbe := fs.String("contract-probe", "", "read-only command that prints the worktree's relay contract before landing; empty clears it")
 	build := fs.String("build", "", "the self-host build-only command; empty clears it")
 	autoRebuild := fs.String("auto-rebuild", "", "on or off: a self-host daemon rebuilds and restarts itself after a landing that leaves it behind main; needs --build (off unless set on)")
 	roundCheck := fs.String("round-check", "", "a faster check command for the checks after implementer rounds; needs --check; empty clears it")
@@ -632,6 +633,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if given["check"] {
 		p.CheckCommand = check
 	}
+	if given["contract-probe"] {
+		p.ContractProbe = contractProbe
+	}
 	if given["build"] {
 		p.BuildCommand = build
 	}
@@ -674,7 +678,7 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		p.Preset = preset
 	}
 	if p.SetsNothing() {
-		return o.usage("projects set needs at least one field flag (--push, --bell, --notify, --auto-land, --auto-rebuild, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
+		return o.usage("projects set needs at least one field flag (--push, --bell, --notify, --auto-land, --auto-rebuild, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --contract-probe, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		proj, err := c.SetProject(ctx, p)
@@ -743,6 +747,9 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 		}
 		if p.RoundCheckCommand != nil {
 			changed = append(changed, text("round_check_command", proj.RoundCheckCommand))
+		}
+		if p.ContractProbe != nil {
+			changed = append(changed, text("contract_probe", proj.ContractProbe))
 		}
 		if p.CheckMinutes != nil {
 			changed = append(changed, number("check_minutes", proj.CheckMinutes))

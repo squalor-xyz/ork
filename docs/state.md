@@ -118,6 +118,14 @@ Notes on the fields:
   start --allow-no-check`), and `ork doctor` reports the missing command. A
   project whose only command is slicer's is not refused. Only an empty
   effective command leaves landing on `slicer check` alone.
+- `contract_probe` (S353; adj 484, `land.contract-bump-guard`) is an optional
+  read-only command run in the worktree after the landing re-check and before
+  the fast-forward. Its first output line must be `Contract: relay vN` for a
+  version ork accepts. Failure, timeout or an invalid line pauses in land;
+  retry runs the probe again without spending a fix round. It uses the check
+  runner and `check_minutes` (10 minutes when unset). Set or clear it with
+  `ork projects set NAME --contract-probe CMD`; an empty value clears it.
+  An absent field is empty and skips the probe.
 - `build_command` (*proposed*, S315; adj 231) is an optional shell command
   for an explicit self-host rebuild. `ork projects set NAME --build CMD`
   stores it; `--build ''` clears it. A started run does not read it, so it
@@ -268,7 +276,7 @@ Notes on the fields:
   started run does not read it.
 - `ork projects set` (*proposed*, S161, owner decision 2026-10-27) is the only
   way ork writes the optional per-project fields. It changes `push`, `bell` (S224), `ui_doc`,
-  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `build_command` (S315), `round_check_command` (S285), `no_verify_check` (S295, with `--no-verify`), `check_minutes`,
+  `ui_pass_skills`, `spec_check_rows` (S258), `worktree_pattern`, `branch_pattern`, `check_command`, `contract_probe` (S353), `build_command` (S315), `round_check_command` (S285), `no_verify_check` (S295, with `--no-verify`), `check_minutes`,
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and

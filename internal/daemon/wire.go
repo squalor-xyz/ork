@@ -322,6 +322,7 @@ type SetProjectParams struct {
 	WorktreePattern   *string                         `json:"worktree_pattern,omitempty"`
 	BranchPattern     *string                         `json:"branch_pattern,omitempty"`
 	CheckCommand      *string                         `json:"check_command,omitempty"`
+	ContractProbe     *string                         `json:"contract_probe,omitempty"`
 	BuildCommand      *string                         `json:"build_command,omitempty"`       // S315, proposed
 	AutoRebuild       *bool                           `json:"auto_rebuild,omitempty"`        // S431, *proposed*; adj 464: true lets a self-host daemon rebuild and restart itself after a landing; needs a build command
 	RoundCheckCommand *string                         `json:"round_check_command,omitempty"` // S285, *proposed*: needs a check command; "" clears it
@@ -342,7 +343,7 @@ type SetProjectParams struct {
 // so it cannot be compared with ==. The daemon and the command line both use it.
 func (p SetProjectParams) SetsNothing() bool {
 	return p.Push == nil && p.Bell == nil && p.NotifyCommand == nil && p.AutoLand == nil && p.UIDoc == nil && p.UIPassSkills == nil && p.SpecCheckRows == nil && p.UIPassRows == nil && p.WorktreePattern == nil && p.BranchPattern == nil &&
-		p.CheckCommand == nil && p.BuildCommand == nil && p.AutoRebuild == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
+		p.CheckCommand == nil && p.ContractProbe == nil && p.BuildCommand == nil && p.AutoRebuild == nil && p.RoundCheckCommand == nil && p.CheckMinutes == nil && p.Cap == nil && p.BudgetMinutes == nil &&
 		p.BudgetTokens == nil && p.EnvironmentLines == nil && len(p.Permissions) == 0 && p.Preset == nil && len(p.AllowAdd) == 0 && len(p.VendorEnv) == 0
 }
 
@@ -362,6 +363,7 @@ func (p SetProjectParams) fieldsReadByARun() []string {
 		{"--push", p.Push != nil}, {"--auto-land", p.AutoLand != nil}, {"--ui-doc", p.UIDoc != nil}, {"--ui-pass-skills", p.UIPassSkills != nil},
 		{"--spec-check-rows", p.SpecCheckRows != nil}, {"--ui-pass-rows", p.UIPassRows != nil}, {"--check", p.CheckCommand != nil},
 		{"--round-check", p.RoundCheckCommand != nil}, {"--check-minutes", p.CheckMinutes != nil}, {"--env-line", p.EnvironmentLines != nil},
+		{"--contract-probe", p.ContractProbe != nil},
 		{"--permission", len(p.Permissions) != 0}, {"--preset", p.Preset != nil},
 		{"--allow", len(p.AllowAdd) != 0}, {"--vendor-env", len(p.VendorEnv) != 0},
 	} {

@@ -20126,7 +20126,7 @@
       "id": "S353",
       "title": "A slicer contract bump on main breaks ork everywhere at once",
       "short_title": "A slicer contract bump on main breaks ork everywhere at once",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -20136,6 +20136,34 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 484 land.contract-bump-guard = probe.",
           "created_at": "2026-11-18T22:25:21Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "04734a8e-9f56-42b2-b193-9ae7d00276bc",
+          "kind": "",
+          "text": "**2026-11-20** — Human checks at approval (S353):\n- later: deferred to land: the owner sets the probe on the slicer project and runs ork doctor; it shows the contract line as ok.",
+          "created_at": "2026-11-20T01:00:28Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0b3032ef-0b37-4f08-9c99-bb3b3fb286c1",
+          "kind": "",
+          "text": "**2026-11-20** — Contract probes pause incompatible or failed landings before fast-forward and now appear in projects show as the configured command or unset; the contract-probe and round-check tests have correctly attached comments.",
+          "created_at": "2026-11-20T01:00:28Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -20162,7 +20190,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
