@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-508 items · — 45 · done 353 · retired 110
+508 items · — 43 · done 353 · retired 112
 
 ## v1.3
 
@@ -265,8 +265,8 @@ v1.2
 | 208 | [S503](slices/S503.md) | say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines |  | - |  | Folded into S505 (adj 519: the brief names the denied forms). · discovered from S391 | retired |
 | 209 | [S504](slices/S504.md) | allow `python3 -I -c` reading stdin in read-only reviewer roles, or name `grep -o` as the way to pick fields out of slicer JSON |  | - |  | Folded into S505 (adj 519: brief-first; python3 -c is not added). · discovered from S318 | retired |
 | 210 | [S505](slices/S505.md) | Read-only allowlist batch | M | 2 |  | 2026-11-18 to 11-20: ten tool-feedback slices from reviewer, gate and UI passes (S465, S469, S471, S472, S478, S479, S481, S485, S486, S488) report denied commands: shell variables for the worktree path, `; echo exit=$?`, env-prefixed `go test`, `slicer COMMAND --help`, `slicer ai relay`, `rg` on test globs, `ls` and `git ls-files` in the role's own TMPDIR, `git init` for a fixture, and implementers reporting socket tests that fail only in their sandbox. Owner decision adj 519 (`roles.read-only-allowlist-batch` = brief-first, 2026-11-20). | — |
-| 211 | [S506](slices/S506.md) | For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views |  | - |  | discovered from S337 | — |
-| 212 | [S507](slices/S507.md) | let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render |  | - |  | discovered from S318 | — |
+| 211 | [S506](slices/S506.md) | For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views |  | - |  | Folded into S499 per the owner (adj 515). · discovered from S337 | retired |
+| 212 | [S507](slices/S507.md) | let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render |  | - |  | Folded into S499 per the owner (adj 517). · discovered from S318 | retired |
 | 213 | [S508](slices/S508.md) | Lint Check commands at plan time | S | 1 |  | 2026-11-18 to 11-20: three runs stopped at slice checks because a Check section had backticked text that is not a command: S392 (a test name in prose ran the race test), S384 ("Contract: relay v13": exec "Contract:" not found), S318 ("internal/cli": fork/exec permission denied). Each cost a stop and a hand fix in the worktree. | — |
 
 ---
