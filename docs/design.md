@@ -2099,7 +2099,15 @@ separately.
   `spec-check`. Its report and temp directory are under
   `~/.local/state/ork/spec-checks/<project-key>/<item-key>/` (hashed identities).
   Each item has `check.json` identifying the project and item, `spec-check.md`,
-  and, after an answer, `answers.json`. *Proposed (S264):* the `Owner needed`
+  and, after an answer, `answers.json`. *Proposed (S494):* a report that fails
+  its shape is kept as `spec-check-failed-N.md` there (N counts the failed
+  reports of this check, from 1), and the error ends with the path and, for
+  each section that is neither `Ready` nor a `Question:` block, `ID begins
+  "first line"` (cut at 120 characters). A new check removes the old failed
+  reports when it starts, and a check that passes removes its own, so the files
+  mean the last check failed. What the parser accepts does not change. The
+  report of a round that ork resumed is not kept; the resumed round's is.
+  *Proposed (S264):* the `Owner needed`
   text ork keeps from the report (`engine.SpecOwnerText`) drops code fence lines
   and is empty when its first non-blank line is `none`; `spec-check.md` keeps
   the whole report, and a loaded `answers.json` is cleaned the same way without
