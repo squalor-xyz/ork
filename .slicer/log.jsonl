@@ -5945,3 +5945,5 @@
 {"when": "2026-11-20T01:47:39Z", "item": "S493", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S485 (socket tests fail inside the implementer sandbox)."}
 {"when": "2026-11-20T01:47:39Z", "item": "S491", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S475 (landed 2026-11-20): UI passes render CLI views with the -renders test flag."}
 {"when": "2026-11-20T01:47:39Z", "item": "S485", "action": "note", "from": "", "to": "", "note": "Merged S490, S492 and S493 (2026-11-20, tool feedback).", "by": "Jon Robbins"}
+{"when": "2026-11-20T01:49:20Z", "item": "S494", "action": "add", "from": "", "to": "open", "note": "A spec check that fails its report shape keeps the report and says what it found"}
+{"when": "2026-11-20T01:49:20Z", "item": "S494", "action": "edit", "from": "", "to": "", "note": "Implement"}

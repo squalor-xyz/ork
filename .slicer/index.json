@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 494,
+  "next_id": 495,
   "preamble": "",
   "passes": [
     {
@@ -26409,6 +26409,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S494",
+      "title": "A spec check that fails its report shape keeps the report and says what it found",
+      "short_title": "Spec check shape failures keep the report",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "2026-11-19 to 11-20: spec checks of S424, S384, S339, S342 and S416 failed twice with \"report shape: ID: write Ready, or question blocks that start with Question:\", and a later rerun or a spec edit passed. The failed report is not kept (`internal/engine/speccheck.go:336-460` removes or overwrites spec-check.md), so the orchestrator cannot see what the role wrote. The parser accepts only a body that is exactly \"Ready\" or starts with \"Question:\" (`internal/engine/speccheck.go:712-725`).",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "speccheck-shape-evidence",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 3,
+        "effort": 2,
         "attempts": 0
       }
     }
