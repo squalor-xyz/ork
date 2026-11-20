@@ -1,0 +1,41 @@
+{
+  "id": "S508",
+  "title": "The plan flags a backticked Check entry that is not a runnable command",
+  "lead": [
+    "When the run plan reads a slice's Check commands, it warns about each backticked entry whose first word is not a command it can find on PATH or a path to an executable in the worktree, naming the line, so the spec is fixed before the run starts."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-18 to 11-20: three runs stopped at slice checks because a Check section had backticked text that is not a command: S392 (a test name in prose ran the race test), S384 (\"Contract: relay v13\": exec \"Contract:\" not found), S318 (\"internal/cli\": fork/exec permission denied). Each cost a stop and a hand fix in the worktree.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork runs every backticked entry in a Check section (`internal/engine/brief.go:640-710`, `sliceCheckCommands`). Prose with backticked paths or quoted output reaches the slice checks and stops the run late. The plan already prints warnings and the spec check reads the slice first, so the cheapest place to catch it is the plan."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/brief.go:677-731` (`SliceCheckCommandWarnings` and `sliceCheckCommands`: shared Check entry extraction and command warnings)\n- `internal/daemon/runs.go:841-918` (`planRun`: plan warnings and resolved worktree)\n- `internal/daemon/runs_test.go:4160-4208` (`TestPlanWarnsOnANonCommandCheckEntry`)\n- `docs/design.md:3179-3211` (plan warnings and slice checks)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestPlanWarnsOnANonCommandCheckEntry` in `internal/daemon/runs_test.go` (beside `TestRunPlanCarriesSetupWarnings`): a slice whose Check has \"- UI pass: `internal/cli` output changes.\" and \"- `slicer ai relay` prints `Contract: relay v13`.\" gets plan warnings naming `internal/cli` and `Contract:`; `go test ./...` and `gofmt -l .` get none. Red today. Cover executable worktree paths, non-executable files and directories, and acceptance of a warned plan at start."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing test and see it red.\n2. For each Check entry, look up its first word with `exec.LookPath`, or as a path relative to the worktree that is an executable file; warn when neither finds it. The warning does not refuse the start.\n3. Docs: `docs/design.md` slice checks. Changelog entry with `slicer changelog add S508 --text \"...\"`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- The plan warns about each backticked Check entry that is not a runnable command and names it.\n- Real commands get no warning, and the warning never refuses a start.\n\nCommands:\n- `go test ./internal/daemon -run TestPlanWarnsOnANonCommandCheckEntry -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"Plan warns about a Check entry that is not a command\"."
+    }
+  ],
+  "notes": []
+}

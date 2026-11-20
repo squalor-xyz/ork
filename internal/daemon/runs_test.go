@@ -4179,6 +4179,60 @@ func editProject(t *testing.T, d *Daemon, change func(*registry.Project)) {
 	}
 }
 
+func TestPlanWarnsOnANonCommandCheckEntry(t *testing.T) {
+	for _, tc := range []struct {
+		name, body string
+		want       []string
+	}{
+		{"prose path", "- UI pass: `internal/cli` output changes.", []string{`Check entry "internal/cli": first word "internal/cli" is not a runnable command`}},
+		{"quoted output", "- `slicer ai relay` prints `Contract: relay v13`.", []string{`Check entry "Contract: relay v13": first word "Contract:" is not a runnable command`}},
+		{"go", "- `go test ./...`", nil},
+		{"gofmt", "- `gofmt -l .` prints nothing.", nil},
+		{"local executable", "- `./check-local`", nil},
+		{"bare local executable", "- `check-local`", []string{`Check entry "check-local": first word "check-local" is not a runnable command`}},
+		{"env prefix", "- `GOFLAGS=-count=1 go test ./...`", nil},
+		{"env prefix local executable", "- `A=1 B=2 ./check-local`", nil},
+		{"env prefix bare local executable", "- `A=1 check-local`", []string{`Check entry "A=1 check-local": first word "check-local" is not a runnable command`}},
+		{"env only", "- `A=1`", []string{`Check entry "A=1": first word "A=1" is not a runnable command`}},
+		{"quoted local executable", "- `\"./check local\" --check`", nil},
+		{"non executable", "- `./check-text`", []string{`Check entry "./check-text": first word "./check-text" is not a runnable command`}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": tc.body}}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			d, _, p := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+				<-ctx.Done()
+				return engine.Result{}, ctx.Err()
+			}, clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: string(raw)})
+			if err := os.MkdirAll(filepath.Join(p.Path, "internal", "cli"), 0o755); err != nil {
+				t.Fatal(err)
+			}
+			for _, file := range []struct {
+				name string
+				mode os.FileMode
+			}{{"go.mod", 0o644}, {"check-local", 0o755}, {"check local", 0o755}, {"check-text", 0o644}} {
+				if err := os.WriteFile(filepath.Join(p.Path, file.name), nil, file.mode); err != nil {
+					t.Fatal(err)
+				}
+			}
+			plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
+			if !reflect.DeepEqual(plan.Warnings, tc.want) {
+				t.Errorf("warnings %q, want %q", plan.Warnings, tc.want)
+			}
+			shown, err := json.Marshal(plan)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var rec runrec.Record
+			if err := json.Unmarshal(request(t, d, MethodRunStart, `{"project":"p","item":"S1","expected":`+string(shown)+`}`), &rec); err != nil || rec.ID == "" {
+				t.Fatalf("start with a warned plan: %+v, %v", rec, err)
+			}
+		})
+	}
+}
+
 func TestRunPlanCarriesSetupWarnings(t *testing.T) {
 	d, _, p := runDaemon(t, nil)
 	if err := os.MkdirAll(p.Path, 0o755); err != nil {

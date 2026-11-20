@@ -629,6 +629,28 @@ CMD (ok|red, round N)`, the command of the newest check, so you can tell the
 round command from the full one. Add `--json` to any command for scripts (`internal/cli/cli.go:54`,
 `internal/cli/cli.go:212`).
 
+*Proposed (S318):* `ork status --summary [--project P]` shows one project's
+Running, Needs you, Blocked and Next sections. Without `--project`, the current
+folder selects the registered project. Each section shows up to five rows and
+`+N more` for the rest; an empty section says `none`. Running names the run,
+item, state, current vendor and role round, and elapsed working time. Needs you
+names open adj and spec questions, approval and paused runs, and human checks
+marked `later`, with commands to inspect or act on them. After approval, the
+summary keeps the check text and points to `ork show RUN` for run details.
+Landed checks also live in
+`human-checks-todo.md`. Blocked uses slicer's dependency reasons and items flagged
+`needs-owner`. Next starts with slicer's next item, followed by unblocked items
+in slicer's order, excluding held items, with a note for existing open spec
+questions. ork does not
+score items or compute dependencies. `--json` has `project`, `running`,
+`needs_you`, `blocked` and `next`; each section has `rows` and a `more` count.
+Text wraps each logical row at 80 columns, with two spaces on its first line
+and four on continuation lines. JSON keeps each row whole. Runs awaiting
+approval point to `ork approve RUN`; other needs-you runs point to `ork show RUN`
+for the reason and next steps. Failures reading items or open adj records, or
+slicer status or deps, are errors rather than empty sections. Failed snapshot
+parts the summary does not read do not prevent it from printing.
+
 ### Wait for a change
 
 *Proposed (S257, S403):* `ork wait [RUN...] [--until STATE,...] [--timeout D]
@@ -1087,7 +1109,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
 
     ork                          open the TUI
     ork --version
-    ork status [--project P]
+    ork status [--project P] [--summary]
     ork show RUN [NAME]
     ork wait [RUN...] [--until STATE,...] [--timeout D] [--project P] [--stage]
     ork projects list | add [PATH] [--name N] | rm NAME | set NAME [flags]

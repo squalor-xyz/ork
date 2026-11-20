@@ -2448,6 +2448,18 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
   `adj lint --root DIR`. S358 adds an exact-file Edit/Write exception for
   the local progress note described under Roles.
+  adj 519 adds plain `slicer COMMAND --help` (the command must end in
+  `--help`, so a quoted value cannot carry it), exactly `slicer ai relay` (no
+  trailing wildcard, so `--init-roles` is denied), `ls` and
+  `git ls-files` (also with `git -C`). `rg` stays out because `rg --pre`
+  runs a program (adj 520, adj 457); roles use Grep instead. Every read-only
+  brief names the denied forms: pipes, `&&` and `;` chains, redirects,
+  command substitution, shell variables, env prefixes and `cd`. It directs
+  roles to use literal absolute paths with `git -C` and `go -C`. These
+  additions grant no shell variables, chains, env prefixes or `git init`.
+  Implementer briefs say socket-bound tests may fail inside their sandbox,
+  report those as sandbox-limited, and use ork's round check outside the
+  sandbox as the evidence (adj 519).
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs
@@ -2846,7 +2858,9 @@ own line, `usage: ork daemon run`.
 
 ```
 ork                         open the TUI (start the daemon if needed)
-ork status [--project P]    waves, slices, roles, needs-you
+ork status [--project P] [--summary]
+                            waves, slices, roles, needs-you;
+                            --summary shows one project
 ork stats [PROJECT] [--since DATE] [--json]
                             slicer's relay-run statistics (S123, proposed)
 ork wave suggest P          slicer's suggested waves, in order, with reasons
@@ -3200,7 +3214,16 @@ check command keeps `ork projects set NAME --round-check CMD`. The daemon checks
 the role rows and before the note, and the TUI launch confirm shows each in
 the Warn style, wrapped. Both show an empty check command as `check: none`.
 The `expected` plan check compares the JSON, so a plan with warnings starts as
-any other. A start on a project with no check command is refused (adj 191,
+any other. *Proposed (S508):* the plan also warns for each backticked Check
+entry whose first word is neither found on PATH nor, when it has a path
+separator, an executable file in the worktree. A bare name is looked up on PATH
+only, as the slice checks run it. Leading `NAME=value` words are skipped, as
+the slice checks treat them as environment. Each warning quotes the entry and
+its first word. Before the worktree
+exists, the project checkout stands in for it. The same Check entry parser as
+the slice checks excludes acceptance criteria, human checks and after-land
+checks. These warnings never refuse a start or change which checks run.
+A start on a project with no check command is refused (adj 191,
 `launch.no-check-command`, *proposed*): `run.start` carries `allow_no_check`
 (`ork run P ID --allow-no-check`; `ork wave start` sets it on every item), and
 without it the daemon replies `refused` with the message `project NAME: no
@@ -3648,6 +3671,26 @@ daemon, which the CLI starts on demand; with `--json` an error is
 on stderr.
 
 ### Output
+
+*Proposed (S318):* `status --summary [--project P]` is assembled in the CLI
+from the existing daemon status, `slicer status --json --lean` and
+`slicer deps --json --lean`. Without a project flag the deepest registered
+project containing the current folder is selected. Slicer's blocked reasons
+are kept verbatim; `needs-owner` items are added as owner blockers. Next is
+slicer's next item followed by its unblocked order, deduplicated by id and
+excluding held items, with existing spec-question counts. There is no ork score
+or dependency traversal.
+JSON has `project` plus `running`, `needs_you`, `blocked` and `next`, each
+`{"rows":["..."],"more":N}`. Each section has at most five logical rows,
+`+N more` for overflow and `none` when empty. Text rows wrap at 80 columns with
+two spaces on the first line and four on continuation lines. JSON keeps each
+row whole. Only status errors for `items` or `open`, and slicer errors, fail
+the command. Non-approval needs-you runs point to `ork show RUN`; approval
+rows point to `ork approve RUN`. The optional engine-run `human_checks` field
+carries the card's marks with original indexes even after approval; the approval card
+itself still appears only while awaiting approval. Summary lists checks marked
+`later`; on an approved run its command is `ork show RUN`, since `ork check`
+accepts marks only while awaiting approval.
 
 Text output is plain lines meant to be stable. `--json` output, indented:
 

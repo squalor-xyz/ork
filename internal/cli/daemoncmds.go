@@ -30,6 +30,7 @@ import (
 func (a *App) status(ctx context.Context, o *output, args []string) int {
 	fs := flag.NewFlagSet("status", flag.ContinueOnError)
 	project := fs.String("project", "", "show only this project")
+	summary := fs.Bool("summary", false, "summarize one project's running, needs-you, blocked and next items")
 	fs.BoolVar(&o.json, "json", o.json, "print JSON")
 	pos, err := parse(fs, args)
 	if err != nil {
@@ -41,6 +42,9 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 	var res daemon.StatusResult
 	if code := a.call(ctx, o, daemon.MethodStatus, daemon.StatusParams{Project: *project}, &res); code != 0 {
 		return code
+	}
+	if *summary {
+		return a.statusSummary(ctx, o, res, *project)
 	}
 	if o.json {
 		return o.printJSON(res)

@@ -404,6 +404,7 @@ type EngineCheck struct {
 
 // EngineRun is the daemon's display of one engine run. Wire fields are proposed.
 type EngineRun struct {
+	HumanChecks    []runrec.HumanCheck   `json:"human_checks,omitempty"`    // proposed (S318): marks retained after approval, with original check indexes
 	LastCheck      *EngineCheck          `json:"last_check,omitempty"`      // proposed (S285): the newest check row, so a status names the command that ran
 	ShapeRetry     bool                  `json:"shape_retry,omitempty"`     // proposed (S275): automatic retry active
 	ResumeWaiting  bool                  `json:"resume_waiting,omitempty"`  // proposed (S274, adj 177): a paused run whose answer or retry waits for a slot

@@ -906,6 +906,13 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		treeID = plan.Parent
 	}
 	plan.Worktree, plan.Branch = filledTree(proj, treeID)
+	if raw, err := d.runs.deps.Slicer.ShowRaw(ctx, proj.Path, p.Item); err == nil {
+		checkDir := plan.Worktree
+		if info, err := os.Stat(checkDir); err != nil || !info.IsDir() {
+			checkDir = proj.Path
+		}
+		plan.Warnings = append(plan.Warnings, engine.SliceCheckCommandWarnings(string(raw), checkDir)...)
+	}
 	return plan, nil
 }
 
@@ -3018,6 +3025,9 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 			lastCheck = &source.EngineCheck{Round: c.Round, Command: c.Command, OK: c.OK, Log: c.Log}
 		}
 		runs = append(runs, EngineRun{ResumeQueuedAt: resumeQueuedAt, LastCheck: lastCheck, Lineup: rec.Lineup, VendorWait: vendorWait, StopAfter: rec.StopAfter, Findings: findings, Card: card, Question: question, Key: questionKey, Unavailable: unavailable, Error: failure, Activity: activity, Working: working, Tail: live.Text, TailTruncated: live.TailTruncated, UsageKnown: usageKnown || live.UsageKnown, LiveUsageKnown: live.UsageKnown, Tokens: tokens, CostUSD: cost, Roles: roles, Denials: denials, ID: rec.ID, Item: rec.Item, Parent: rec.Parent, Chain: rec.Chain, SliverIndex: rec.SliverIndex, SliverCount: rec.SliverCount, Branch: rec.Branch, Worktree: rec.Worktree, Merged: d.runs.merged[rec.ID], Landed: !rec.LandedAt.IsZero(), LandFixes: rec.LandFixes, Dismissed: !rec.DismissedAt.IsZero(), CleanupFailed: cleanupFailed(rec), Cleaned: rec.Cleaned(), WorktreeGone: rec.State == runrec.StateCommitted && !rec.Cleaned() && worktreeGone(rec), State: rec.State, ShapeRetry: shapeRetry, Wait: wait, ResumeWaiting: rec.State == runrec.StatePaused && rec.Resume != nil, Pending: pending, RelayRun: rec.RelayRun, Wave: rec.Wave, CreatedAt: rec.CreatedAt, UpdatedAt: rec.UpdatedAt, WaitStartedAt: rec.WaitStartedAt})
+		if rec.Card != nil {
+			runs[len(runs)-1].HumanChecks = rec.Card.HumanChecks
+		}
 	}
 	return runs
 }

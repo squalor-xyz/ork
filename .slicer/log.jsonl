@@ -6004,6 +6004,21 @@
 {"when": "2026-11-20T03:19:05Z", "item": "S503", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines"}
 {"when": "2026-11-20T03:19:05Z", "item": "S503", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T12:30:00Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-20T12:30:36Z", "item": "S318", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T12:31:24Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T12:31:24Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T12:36:37Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T12:36:38Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T12:40:26Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T12:52:32Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T12:52:32Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T12:53:29Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T13:09:36Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T13:09:36Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T13:16:18Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T13:38:10Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-20T13:38:41Z", "item": "S318", "action": "note", "from": "", "to": "", "note": "Corrected S318 held-item selection, run commands, source err", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:38:42Z", "item": "S318", "action": "status", "from": "started", "to": "done", "note": "Corrected S318 held-item selection, run commands, source errors, count nouns and text wrapping; updated documentation and verified isolated CLI renders.", "by": "Jon Robbins"}
 {"when": "2026-11-20T13:06:47Z", "item": "S504", "action": "add", "from": "", "to": "open", "note": "allow `python3 -I -c` reading stdin in read-only reviewer roles, or name `grep -o` as the way to pick fields out of slicer JSON"}
 {"when": "2026-11-20T13:06:47Z", "item": "S504", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T13:07:02Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Scope widened 2026-11-20 (owner, adj 515 and adj 517 folded ", "by": "Jon Robbins"}
@@ -6036,3 +6051,36 @@
 {"when": "2026-11-20T14:57:15Z", "item": "S449", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S449):", "by": "Jon Robbins"}
 {"when": "2026-11-20T14:57:15Z", "item": "S449", "action": "note", "from": "", "to": "", "note": "Waves refuses no-check plans before the spec check; the laun", "by": "Jon Robbins"}
 {"when": "2026-11-20T14:57:15Z", "item": "S449", "action": "status", "from": "started", "to": "done", "note": "Waves refuses no-check plans before the spec check; the launch confirm scrolls one line per up/down press; queued resumes show their own wait age, `resume queued` in the role cell, `x stop` at 80x24 and a one-line refusal.", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:44:54Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:05:37Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:05:37Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T14:48:42Z", "item": "S505", "action": "note", "from": "", "to": "", "note": "Made the slicer relay and help allowlist entries exact so no", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:48:42Z", "item": "S505", "action": "status", "from": "started", "to": "done", "note": "Made the slicer relay and help allowlist entries exact so no tracking write matches, added matching-based negative tests, and let the local implementer brief keep env prefixes its allowed forms start with.", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "add", "from": "", "to": "open", "note": "For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views"}
+{"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:38:02Z", "item": "S507", "action": "add", "from": "", "to": "open", "note": "let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render"}
+{"when": "2026-11-20T13:38:03Z", "item": "S507", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:38:10Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-20T13:38:25Z", "item": "S508", "action": "add", "from": "", "to": "open", "note": "The plan flags a backticked Check entry that is not a runnable command"}
+{"when": "2026-11-20T13:38:26Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:38:35Z", "item": "S506", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 515)."}
+{"when": "2026-11-20T13:38:35Z", "item": "S507", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 517)."}
+{"when": "2026-11-20T14:34:59Z", "item": "S508", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:35:12Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:35:12Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T14:37:28Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:51:08Z", "item": "S508", "action": "note", "from": "", "to": "", "note": "Plans warn about non-command Check entries without refusing ", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:51:08Z", "item": "S508", "action": "status", "from": "started", "to": "done", "note": "Plans warn about non-command Check entries without refusing start; env-prefixed commands get no false warning and a bare name that exists only in the worktree is warned, as os/exec cannot run it.", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:19:48Z", "item": "S509", "action": "add", "from": "", "to": "open", "note": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match"}
+{"when": "2026-11-20T14:19:48Z", "item": "S509", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:38:35Z", "item": "S510", "action": "add", "from": "", "to": "open", "note": "allow the reviewer to write to its own role temp dir, as the prompt says it may"}
+{"when": "2026-11-20T14:38:35Z", "item": "S510", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:39:17Z", "item": "S511", "action": "add", "from": "", "to": "open", "note": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key"}
+{"when": "2026-11-20T14:39:17Z", "item": "S511", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:46:19Z", "item": "S512", "action": "add", "from": "", "to": "open", "note": "allow the reviewer's own TMPDIR as a Write target in the reviewer's permission settings"}
+{"when": "2026-11-20T14:46:19Z", "item": "S512", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "add", "from": "", "to": "open", "note": "check each read-only allowlist entry against Claude Code's real permission matcher on fixed write commands, instead of the test's own regex model"}
+{"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "promote", "from": "", "to": "", "note": ""}

@@ -176,7 +176,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork stats [PROJECT] [--since DATE]
                               show slicer's relay-run statistics; all-time
                               by default, current directory without PROJECT
-  ork status [--project P]    projects, needs-you counts and active relays
+  ork status [--project P] [--summary]
+                              projects, needs-you counts and active relays;
+                              --summary shows running, needs you, blocked
+                              and next for one project
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log
   ork wait [RUN...] [--until STATE,...] [--timeout D] [--project P] [--stage]

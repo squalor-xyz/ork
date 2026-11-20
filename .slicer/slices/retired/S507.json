@@ -1,0 +1,39 @@
+{
+  "id": "S507",
+  "title": "let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #517 was decided to file it:\n\nProposal: let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render\nRole: ui\nRun: ork-20261120-123026-80f4\nProject: ork\nItem: S318\nEvidence: the default summary fixture uses ids like r1 and S7, so every row fits; real-sized data in my overlay gave rows of about 98, 112 and 167 columns"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
