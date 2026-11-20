@@ -6019,3 +6019,34 @@
 {"when": "2026-11-20T13:38:10Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-20T13:38:41Z", "item": "S318", "action": "note", "from": "", "to": "", "note": "Corrected S318 held-item selection, run commands, source err", "by": "Jon Robbins"}
 {"when": "2026-11-20T13:38:42Z", "item": "S318", "action": "status", "from": "started", "to": "done", "note": "Corrected S318 held-item selection, run commands, source errors, count nouns and text wrapping; updated documentation and verified isolated CLI renders.", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:06:47Z", "item": "S504", "action": "add", "from": "", "to": "open", "note": "allow `python3 -I -c` reading stdin in read-only reviewer roles, or name `grep -o` as the way to pick fields out of slicer JSON"}
+{"when": "2026-11-20T13:06:47Z", "item": "S504", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:07:02Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Scope widened 2026-11-20 (owner, adj 515 and adj 517 folded ", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:07:30Z", "item": "S505", "action": "add", "from": "", "to": "open", "note": "Read-only roles: the brief names the denied forms, and a few plain read-only commands are allowed"}
+{"when": "2026-11-20T13:07:36Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:07:37Z", "item": "S465", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S469", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S471", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S472", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S478", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S479", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S481", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S485", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S486", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S488", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S505", "action": "note", "from": "", "to": "", "note": "Replaces S465, S469, S471, S472, S478, S479, S481, S485, S48", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:07:46Z", "item": "S503", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519: the brief names the denied forms)."}
+{"when": "2026-11-20T13:07:46Z", "item": "S504", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519: brief-first; python3 -c is not added)."}
+{"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-20T13:36:13Z", "item": "S449", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "add", "from": "", "to": "open", "note": "For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views"}
+{"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:38:02Z", "item": "S507", "action": "add", "from": "", "to": "open", "note": "let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render"}
+{"when": "2026-11-20T13:38:03Z", "item": "S507", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:38:10Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-20T13:38:25Z", "item": "S508", "action": "add", "from": "", "to": "open", "note": "The plan flags a backticked Check entry that is not a runnable command"}
+{"when": "2026-11-20T13:38:26Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:38:35Z", "item": "S506", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 515)."}
+{"when": "2026-11-20T13:38:35Z", "item": "S507", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 517)."}
