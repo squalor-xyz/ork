@@ -3,8 +3,9 @@
 package claude
 
 import (
-	"os"
 	"strings"
+
+	"github.com/squalor-xyz/ork/internal/clirun"
 )
 
 // ReadReport returns the role's report: the report file when it exists and is
@@ -14,7 +15,7 @@ import (
 // earlier round would be read as this round's.
 func ReadReport(path string, r *Result) (string, ReportSource) {
 	if path != "" {
-		if data, err := os.ReadFile(path); err == nil && strings.TrimSpace(string(data)) != "" {
+		if data, err := clirun.ReadRegularFile(path); err == nil && strings.TrimSpace(string(data)) != "" {
 			return string(data), ReportFromFile
 		}
 	}

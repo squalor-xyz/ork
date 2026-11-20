@@ -148,7 +148,7 @@ func appendFile(path, s string) error {
 // feedbackSection reads the file a fix round must act on.
 func (e *Engine) feedbackSection(fb *runrec.Feedback) BriefSection {
 	body := "(the file is gone)"
-	if b, err := os.ReadFile(filepath.Join(e.run.Dir(), fb.File)); err == nil {
+	if b, err := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), fb.File)); err == nil {
 		body = string(b)
 		if fb.Kind != "checks" {
 			// A role's tool feedback is advisory and is not sent back (relay v12).
@@ -207,7 +207,7 @@ func (e *Engine) bumpRound(ctx context.Context, fb runrec.Feedback, failure ...s
 	rec := e.run.Snapshot()
 	stalled := fb.Kind == "checks" && noProgress(rec)
 	if stalled || rec.Round >= e.roundLimit(rec) {
-		log, _ := os.ReadFile(filepath.Join(e.run.Dir(), fb.File))
+		log, _ := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), fb.File))
 		lines := strings.Split(strings.TrimSpace(string(log)), "\n")
 		last := strings.TrimSpace(lines[len(lines)-1])
 		if len(failure) > 0 {
@@ -595,7 +595,7 @@ func (e *Engine) runChecks(ctx context.Context, rec runrec.Record, state, prefix
 func (e *Engine) latestReport(rec runrec.Record, role string) (name, text string) {
 	for i := len(rec.Roles) - 1; i >= 0; i-- {
 		if r := rec.Roles[i]; r.Role == role && r.Report != "" {
-			if b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report)); err == nil {
+			if b, err := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), r.Report)); err == nil {
 				return strings.TrimSuffix(r.Report, ".md"), string(b)
 			}
 		}
@@ -764,7 +764,7 @@ func (e *Engine) roundReport(rec runrec.Record, role string) (name, text string)
 		if r.Role != role || r.Round != rec.Round {
 			continue
 		}
-		if b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report)); err == nil && r.Report != "" {
+		if b, err := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), r.Report)); err == nil && r.Report != "" {
 			return r.Report, string(b)
 		}
 		return "", ""
@@ -789,7 +789,7 @@ func (e *Engine) reviewDone(rec runrec.Record, pend *runrec.Pending, role string
 		if r.Exit != string(ExitOK) || r.Report == "" {
 			return false
 		}
-		b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report))
+		b, err := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), r.Report))
 		if err != nil {
 			return false
 		}
@@ -1430,7 +1430,7 @@ func (e *Engine) lastOutcome(rec runrec.Record) string {
 		if r.Role != RoleImplementer || r.Report == "" || r.Exit != string(ExitOK) {
 			continue
 		}
-		b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report))
+		b, err := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), r.Report))
 		if err != nil {
 			continue
 		}

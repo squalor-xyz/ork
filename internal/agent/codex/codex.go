@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -289,7 +288,7 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 		round.Report = ""
 	}
 	if s.ReportFile != "" {
-		if b, err := os.ReadFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
+		if b, err := clirun.ReadRegularFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
 			round.Report = string(b)
 		}
 	}

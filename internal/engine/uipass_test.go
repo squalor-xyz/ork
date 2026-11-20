@@ -644,6 +644,32 @@ func TestLostPauseNamesEveryLostRole(t *testing.T) {
 	}
 }
 
+func TestRestartLostSiblingsBothGetTheLostBriefOnRetry(t *testing.T) {
+	h := uiHarness(t, tuiFiles)
+	h.seed("parallel-lost", runrec.StateReview, runningRole(RoleReviewer, 111, "2"), runningRole(RoleUI, 222, "3"))
+	h.proc.alive[111] = true
+	e := h.recover()["parallel-lost"]
+	requireState(t, e, runrec.StatePaused)
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	seen := map[string]bool{}
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleReviewer && req.Role != RoleUI {
+			continue
+		}
+		seen[req.Role] = true
+		for _, want := range []string{"## Earlier process lost", "reviewer round 1 lost", "ui round 1 lost"} {
+			if !strings.Contains(req.Brief, want) {
+				t.Errorf("the retry brief of the %s lacks %q", req.Role, want)
+			}
+		}
+	}
+	if !seen[RoleReviewer] || !seen[RoleUI] {
+		t.Errorf("retry ran the roles %v, want the reviewer and the UI pass", seen)
+	}
+}
+
 func TestSiblingOwnerQuestionKept(t *testing.T) {
 	for _, first := range []string{RoleReviewer, RoleUI} {
 		t.Run(first, func(t *testing.T) {

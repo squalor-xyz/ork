@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"os"
 	"os/exec"
 	"slices"
 	"strings"
@@ -403,7 +402,7 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 			}
 		}
 		if s.ReportFile != "" {
-			if b, err := os.ReadFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
+			if b, err := clirun.ReadRegularFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
 				round.Exit, round.Report = ExitOK, string(b)
 			}
 		}
@@ -417,7 +416,7 @@ func Run(ctx context.Context, s Spec) (round Round, err error) {
 		round.Report = ""
 	}
 	if round.Exit == ExitOK && s.ReportFile != "" {
-		if b, err := os.ReadFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
+		if b, err := clirun.ReadRegularFile(s.ReportFile); err == nil && strings.TrimSpace(string(b)) != "" {
 			round.Report = string(b)
 		}
 	}

@@ -964,10 +964,17 @@ func TestAHungRoleDoesNotMarkItsVendorOut(t *testing.T) {
 // share the Vendors value.
 func startWaiter(t *testing.T, h *harness) (*fakeRunner, *Engine, chan error) {
 	t.Helper()
+	return startWaiterAs(t, h, "c3d4")
+}
+
+// startWaiterAs is startWaiter with the run's id suffix, so that two waiters
+// have two run records.
+func startWaiterAs(t *testing.T, h *harness, hex string) (*fakeRunner, *Engine, chan error) {
+	t.Helper()
 	deps := h.deps
 	runner := &fakeRunner{}
 	deps.Runner = runner
-	deps.RandHex = func() string { return "c3d4" }
+	deps.RandHex = func() string { return hex }
 	e, err := New(context.Background(), deps, h.cfg)
 	if err != nil {
 		t.Fatal(err)
@@ -1042,6 +1049,47 @@ func TestWaiterTakesAnotherRowWhenTheSlotHolderMarksTheVendorOut(t *testing.T) {
 	requireState(t, e1, runrec.StateAwaitingApproval)
 	if !vendors.IsOut("codex") {
 		t.Fatal("the rate limit did not mark codex out")
+	}
+}
+
+func TestTwoWaitersBothTakeAnotherRowWhenTheSlotHolderHitsALimit(t *testing.T) {
+	h, vendors, _ := vendorHarness(t)
+	started, release := make(chan struct{}), make(chan struct{})
+	var once sync.Once
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Role == RoleImplementer && req.Vendor == "codex" {
+			once.Do(func() { close(started) })
+			<-release
+			return Result{Exit: ExitRateLimited, Reason: "You've hit your usage limit"}, nil
+		}
+		return Result{}, nil
+	}
+	e1, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	done1 := make(chan error, 1)
+	go func() { done1 <- e1.Run(context.Background()) }()
+	select {
+	case <-started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the first run's codex round did not start")
+	}
+
+	runner2, e2, done2 := startWaiterAs(t, h, "c3d4")
+	runner3, e3, done3 := startWaiterAs(t, h, "e5f6")
+	close(release)
+	requireFirstRoundOnClaude(t, vendors, runner2, e2, done2)
+	requireFirstRoundOnClaude(t, vendors, runner3, e3, done3)
+	if err := <-done1; err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e1, runrec.StateAwaitingApproval)
+	if !vendors.IsOut("codex") {
+		t.Fatal("the rate limit did not mark codex out")
+	}
+	if n := vendors.holders("codex"); n != 0 {
+		t.Fatalf("%d codex slots held after all runs ended", n)
 	}
 }
 

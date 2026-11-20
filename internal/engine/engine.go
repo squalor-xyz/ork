@@ -923,7 +923,9 @@ func (e *Engine) stop(ctx context.Context, reason string) error {
 // pause moves the slice to paused, waiting for the owner. The caller holds
 // e.mu. A slice that is already paused or stopped keeps its first pause or
 // stop: two roles of one state (the reviewer and the UI pass) may both ask.
-// A sibling owner question is persisted in the queue until its turn.
+// A sibling owner question is persisted in the queue until its turn. A second
+// lost pause of the same state and round adds its reason to the first, so the
+// pause names every role that was lost (S391, *proposed*).
 // stop() is the stronger of the two: it refuses only when already stopped.
 func (e *Engine) pause(p runrec.Pending) error {
 	return e.run.Update(func(r *runrec.Record) {
@@ -933,6 +935,10 @@ func (e *Engine) pause(p runrec.Pending) error {
 		if r.State == runrec.StatePaused {
 			if p.Kind == runrec.PendingQuestion {
 				r.QueuedQuestions = append(r.QueuedQuestions, p)
+			}
+			if first := r.Pending; p.Kind == runrec.PendingLost && first != nil && first.Kind == runrec.PendingLost && first.State == p.State && first.Round == p.Round {
+				first.Reason += "; " + p.Reason
+				r.Reason += "; " + p.Reason
 			}
 			return
 		}

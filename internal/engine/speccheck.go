@@ -709,7 +709,7 @@ func specDenialNudge(denials []runrec.DeniedCommand, ids []string) string {
 // readSpecReport returns the report file's text, else the vendor's final
 // result text (role.report-io).
 func readSpecReport(path, fallback string) string {
-	if b, err := os.ReadFile(path); err == nil && strings.TrimSpace(string(b)) != "" {
+	if b, err := clirun.ReadRegularFile(path); err == nil && strings.TrimSpace(string(b)) != "" {
 		return string(b)
 	}
 	return fallback

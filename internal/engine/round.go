@@ -210,7 +210,7 @@ func (e *Engine) earlierReports(rec runrec.Record) []EarlierReport {
 		if r.Report == "" {
 			continue
 		}
-		if b, err := os.ReadFile(filepath.Join(e.run.Dir(), r.Report)); err == nil {
+		if b, err := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), r.Report)); err == nil {
 			// A role's tool feedback is advisory and is not sent on (relay v12).
 			text, _ := splitToolFeedback("", string(b))
 			out = append(out, EarlierReport{Name: strings.TrimSuffix(r.Report, ".md"), Text: text})
@@ -319,7 +319,35 @@ func pendingKindSection(p *runrec.Pending) []BriefSection {
 		}
 		return []BriefSection{{Title: "Report shape", Body: body}}
 	case runrec.PendingLost:
-		return []BriefSection{{Title: "Earlier process lost", Body: "The process that ran this role before was lost (" + p.Reason + "). The worktree may hold its partial work. Look at it, then continue from it."}}
+		return []BriefSection{lostBrief(p.Reason)}
+	}
+	return nil
+}
+
+// lostBrief is the "Earlier process lost" section of a role that runs again.
+func lostBrief(reason string) BriefSection {
+	return BriefSection{Title: "Earlier process lost", Body: "The process that ran this role before was lost (" + reason + "). The worktree may hold its partial work. Look at it, then continue from it."}
+}
+
+// lostSection is the lost section for a role whose own process was lost or hung
+// while the pause names another role: the reviewer and the UI pass of one state
+// can both end that way, and the pending slot holds one role (S391, *proposed*).
+// It is nil when the round's pending already gave this role the section, or
+// when the role's newest record of the round did not end hung or lost.
+func lostSection(rec runrec.Record, r round, pend *runrec.Pending) []BriefSection {
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingLost {
+		return nil
+	}
+	if pend != nil && pend.Kind == runrec.PendingLost {
+		return nil
+	}
+	for i := len(rec.Roles) - 1; i >= 0; i-- {
+		if old := rec.Roles[i]; r.is(old) {
+			if old.Exit == "hung" || old.Exit == "lost" {
+				return []BriefSection{lostBrief(rec.Pending.Reason)}
+			}
+			return nil
+		}
 	}
 	return nil
 }
@@ -570,7 +598,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		UIPassSkills: e.proj.UIPassSkills,
 		Finish:       r.finish,
 		Lead:         r.lead,
-		Sections:     append(pendingSection(pend), r.sections...),
+		Sections:     append(append(lostSection(rec, r, pend), pendingSection(pend)...), r.sections...),
 	}
 	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
 		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
@@ -1192,7 +1220,7 @@ func (e *Engine) refusedReport(rec runrec.Record, role string, round int, part s
 	if file == "" {
 		return "", "", errors.New("the refused report is not in the run record")
 	}
-	b, err := os.ReadFile(filepath.Join(e.run.Dir(), file))
+	b, err := clirun.ReadRegularFile(filepath.Join(e.run.Dir(), file))
 	if err != nil {
 		return "", "", fmt.Errorf("the refused report cannot be read: %w", err)
 	}
@@ -1263,15 +1291,24 @@ func fallbackReasons(rec runrec.Record, role string) string {
 // is saved to the report path. file is the report's name in the run
 // directory, empty when there is no report.
 func (e *Engine) readReport(path, name, fallback string) (text, file string) {
-	if b, err := os.ReadFile(path); err == nil && strings.TrimSpace(string(b)) != "" {
+	if b, err := clirun.ReadRegularFile(path); err == nil && strings.TrimSpace(string(b)) != "" {
 		return string(b), name
 	}
 	if strings.TrimSpace(fallback) == "" {
 		return "", ""
 	}
-	err := os.WriteFile(path, []byte(fallback), 0o600)
+	// A role can leave a FIFO or a symlink at the report path: it is no report
+	// file, and the write must not block on it or follow it.
+	f, err := clirun.OpenNoBlockWrite(path, 0o600)
+	if err != nil {
+		return fallback, ""
+	}
+	_, err = f.WriteString(fallback)
 	if err == nil {
-		err = os.Chmod(path, 0o600)
+		err = f.Chmod(0o600)
+	}
+	if cerr := f.Close(); err == nil {
+		err = cerr
 	}
 	if err != nil {
 		return fallback, ""

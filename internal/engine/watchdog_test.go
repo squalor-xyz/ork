@@ -600,6 +600,75 @@ func TestTwoHungSiblingRoundsPauseOnce(t *testing.T) {
 	}
 }
 
+// newestHungRunnerRequest is the newest request the runner got for role.
+func newestHungRunnerRequest(t *testing.T, hr *hangRunner, role string) Request {
+	t.Helper()
+	reqs := hr.requests()
+	for i := len(reqs) - 1; i >= 0; i-- {
+		if reqs[i].Role == role {
+			return reqs[i]
+		}
+	}
+	t.Fatalf("no request for %s", role)
+	return Request{}
+}
+
+func TestTwoHungSiblingsBothGetTheLostBriefOnRetry(t *testing.T) {
+	var silent atomic.Bool
+	silent.Store(true)
+	hr := &hangRunner{silent: func(req Request) bool {
+		return (req.Role == RoleReviewer || req.Role == RoleUI) && silent.Load()
+	}, script: blockUntilKilled(make(chan struct{}))}
+	h := uiHarness(t, tuiFiles)
+	h.deps.Now = time.Now
+	h.deps.HungAfter = 50 * time.Millisecond
+	h.deps.Runner = hr
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingLost {
+		t.Fatalf("pending: %+v", rec.Pending)
+	}
+	reason := rec.Pending.Reason
+	for _, want := range []string{"reviewer round 1 hung: no output for", "ui round 1 hung: no output for"} {
+		if !strings.Contains(reason, want) {
+			t.Errorf("the pause reason omits %q: %s", want, reason)
+		}
+	}
+	if rec.Reason != reason {
+		t.Errorf("record reason %q differs from the pending reason %q", rec.Reason, reason)
+	}
+	silent.Store(false)
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	for _, role := range []string{RoleReviewer, RoleUI} {
+		req := newestHungRunnerRequest(t, hr, role)
+		if !strings.Contains(req.Brief, "## Earlier process lost") || !strings.Contains(req.Brief, reason) {
+			t.Errorf("the retry brief of the %s lacks the lost section with the reason %q", role, reason)
+		}
+	}
+	if final := e.Snapshot(); final.State != runrec.StateAwaitingApproval {
+		t.Errorf("state %q (reason %q) after the retry", final.State, final.Reason)
+	}
+}
+
+func TestLostBriefIsNotRepeatedForANamedRole(t *testing.T) {
+	var silent atomic.Bool
+	silent.Store(true)
+	hr := &hangRunner{silent: func(req Request) bool { return req.Role == RoleImplementer && silent.Load() }, script: blockUntilKilled(make(chan struct{}))}
+	h := hungHarness(t, 50*time.Millisecond, hr)
+	e := h.start()
+	requireState(t, e, runrec.StatePaused)
+	silent.Store(false)
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	req := newestHungRunnerRequest(t, hr, RoleImplementer)
+	if n := strings.Count(req.Brief, "## Earlier process lost"); n != 1 {
+		t.Errorf("the implementer brief has the lost section %d times, want 1", n)
+	}
+}
+
 // Sleep and wake (S235, *proposed*). The tests move a clock that the engine
 // and the sleep detector share by an hour while a role is silent, as a sleep
 // does, and watch whether the watchdog kills the role.

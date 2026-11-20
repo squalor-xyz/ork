@@ -22252,12 +22252,27 @@
       "id": "S391",
       "title": "Engine: lost brief for every hung sibling, FIFO-safe report reads, multi-waiter test",
       "short_title": "Lost brief for siblings, FIFO-safe report reads",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c82a4781-9943-49f6-a4a2-4617d8cb2e66",
+          "kind": "",
+          "text": "**2026-11-20** — After two sibling roles hang or are lost, the pause names both and a retry briefs both with \"Earlier process lost\"; every role-written report read in the engine and the claude, codex and grok adapters goes through `clirun.ReadRegularFile` and never blocks on a FIFO; a test pins two waiters re-picking a row.",
+          "created_at": "2026-11-20T03:23:47Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -22275,7 +22290,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

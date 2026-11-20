@@ -1956,7 +1956,10 @@ separately.
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
   (`role.report-io`). If the file is missing, ork uses the vendor JSON's
-  final result text. A read-only role cannot write the file, so its brief
+  final result text. ork reads a report file only when it is a regular file,
+  and the read never blocks: a FIFO, a symlink or a device counts as no report
+  file, and the result text is used, for every read of a role-written report
+  in the engine and in the vendor adapters (S391, *proposed*). A read-only role cannot write the file, so its brief
   tells it to report in its final message, which ork saves to the report path
   (S256, *proposed*). ork validates the shape: the gate's first line, the
   test counts. The prompts ask for one line `Tests: N passed, M failed`
@@ -2177,7 +2180,11 @@ separately.
   one, the killed process group. A hang is not a vendor limit: it does not fall back to the next
   lineup row and marks no vendor out. There is no automatic retry. The owner
   retries (`ork retry RUN`, or `t`), and the same row runs again with the
-  "Earlier process lost" section in its brief. An owner stop during the role
+  "Earlier process lost" section in its brief. When the reviewer and the UI
+  pass of one state both hang, the second hang adds its reason to the pause,
+  and on retry every role of the state whose newest record of the round ended
+  `hung` or `lost` gets the section, not only the role the pause names
+  (S391, *proposed*). An owner stop during the role
   stays a stop (exit `cancelled`). A role that returns a result with no error
   in the tick the watchdog fires is recorded as it exited (S194).
   Local launchers instead have a fixed 90-minute elapsed runtime limit
