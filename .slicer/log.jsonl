@@ -5975,3 +5975,7 @@
 {"when": "2026-11-20T02:27:53Z", "item": "S497", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "add", "from": "", "to": "open", "note": "let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied"}
 {"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:42:18Z", "item": "S416", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:46:17Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T02:51:13Z", "item": "S416", "action": "note", "from": "", "to": "", "note": "S416 done: the UI prompt tells the pass to write helper file", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:51:13Z", "item": "S416", "action": "status", "from": "started", "to": "done", "note": "S416 done: the UI prompt tells the pass to write helper files in its temp dir with Write, run one plain command per call and render TUI views from a `go test -overlay` file outside the tree (CLI views by the test flag); a cloud Claude UI pass's brief lists its allowed forms from one source, `engine.CloudUIAllowlist()`; ork's AGENTS.md has the TUI render recipe (verified: it wrote 80x24, 120x40 and ASCII renders with no tree change); no permission added; go vet, go test ./..., gofmt, slicer check and adj lint are green.", "by": "Jon Robbins"}

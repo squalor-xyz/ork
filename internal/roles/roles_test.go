@@ -730,6 +730,38 @@ func TestUIPromptHasNoOrkPaths(t *testing.T) {
 	}
 }
 
+// S416 (adj 505, adj 507): the UI pass renders outside the tree. Helper files go
+// in its temp dir by the Write tool, each shell call is one plain command, a TUI
+// view may come from a test file kept outside the tree, and CLI views come from
+// the render flag of S475.
+func TestUIPromptNamesTheOutOfTreeRenderRoute(t *testing.T) {
+	p := prompts(t)["ui"]
+	rules, renders, ok := strings.Cut(p, "\n## Renders\n")
+	if !ok {
+		t.Fatal("ui prompt has no Renders section")
+	}
+	rules, _, _ = strings.Cut(rules, "\n## UI pass\n")
+	renders, _, _ = strings.Cut(renders, "\n## Finding kinds\n")
+	for _, want := range []string{
+		"Write helper files in {{temp_dir}} with the Write tool.",
+		"Run one plain command per shell call: no `&&`, `;`, pipe, redirect or env prefix.",
+	} {
+		if !has(rules, want) {
+			t.Errorf("ui rules lack %q", want)
+		}
+	}
+	for _, want := range []string{
+		"-overlay",
+		"a test file kept outside the tree",
+		"{{temp_dir}}/renders/",
+		"CLI views come from the render flag",
+	} {
+		if !has(renders, want) {
+			t.Errorf("ui Renders lacks %q", want)
+		}
+	}
+}
+
 func ascii(s string) bool {
 	for _, r := range s {
 		if r > 127 {

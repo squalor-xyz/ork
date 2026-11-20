@@ -97,6 +97,18 @@ and the owner's words. Anything the owner did not decide stays an open ask.
   only, since S11).
 - Rewrite TUI golden views after an intended layout change:
   `go test ./internal/tui -update`, then review the diff in `testdata/golden/`.
+- Render TUI views outside the tree (the UI pass; adj 507, S416). Write two
+  files in the role's temp dir with the Write tool. The first is a test file
+  in `package tui` that builds the view with `launchHarness` and the other
+  harness helpers, then for each size calls
+  `h.m.Update(tea.WindowSizeMsg{Width: W, Height: H})` and writes
+  `plainView(h.m)` to an absolute path under `TEMPDIR/renders/`, for 80x24
+  and 120x40, and again with `h.m.cfg.Theme, h.m.cfg.ASCII = NewTheme(true), true`
+  for the ASCII render. The second is an overlay JSON,
+  `{"Replace": {"WORKTREE/internal/tui/render_overlay_test.go": "TEMPDIR/render_overlay_test.go"}}`.
+  Then run one plain command:
+  `go -C WORKTREE test -overlay TEMPDIR/overlay.json -run TestRenderOverlay ./internal/tui`.
+  The tree gets no file. CLI views use the test flag of S475 (adj 505).
 - Run tests: `go test ./...`, plus `go vet ./...` and `gofmt -l .`.
 - Check tracking: `slicer check`.
 - Check decisions: `adj lint`.

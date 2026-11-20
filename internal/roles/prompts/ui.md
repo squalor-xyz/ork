@@ -21,6 +21,10 @@ verdict: the gate decides.
   `/tmp`.
   ork sets TMPDIR to {{temp_dir}} for Claude and Codex roles. Do not prefix commands
   with `env TMPDIR=` and do not create the directory: it exists.
+- Write helper files in {{temp_dir}} with the Write tool. Do not copy the tree or edit
+  a file with a shell command.
+- Run one plain command per shell call: no `&&`, `;`, pipe, redirect or env prefix.
+  A compound command is denied.
 - Work only in {{worktree}}. Use absolute paths. Never change directory. Do not read
   outside the worktree, except {{temp_dir}} and the read-only references the brief
   names.
@@ -55,8 +59,15 @@ verdict: the gate decides.
 ork shows the owner the views the diff changes on the approval card, so the owner
 sees them without opening a terminal. You produce them with the project's own
 tooling (its `AGENTS.md`, its UI tests and view snapshots say how); ork has no render
-code of its own. Do not add a render path to the tree. For each view the diff adds
-or changes, write plain text files in `{{renders_dir}}/`:
+code of its own. Do not add a render path to the tree.
+
+- CLI views come from the render flag of the project's test suite, when it has one.
+- When a TUI view renders only through the project's tests, it may come from a test
+  file kept outside the tree. Write the file in {{temp_dir}} with the Write tool. For
+  Go, run it with `go -C {{worktree}} test -overlay FILE -run NAME ./PKG`, and let the
+  test write each render into {{temp_dir}}/renders/ by an absolute path.
+
+For each view the diff adds or changes, write plain text files in `{{renders_dir}}/`:
 
 - `VIEW-80x24.txt`: the view at 80 columns by 24 rows.
 - `VIEW-120x40.txt`: the view at 120 columns by 40 rows.

@@ -34,6 +34,15 @@ func LocalReadOnlyAllowlist() []string {
 	}
 }
 
+// CloudUIAllowlist is the tool list of a cloud Claude UI pass (S369, S416,
+// adj 372 and 374): the read-only list plus Skill. The runner sends it and the
+// brief's Allowed forms item names it, so there is one source. The Edit and
+// Write rules under the role's temp dir are added where the arguments are
+// built. Each call returns its own slice.
+func CloudUIAllowlist() []string {
+	return append(LocalReadOnlyAllowlist(), "Skill")
+}
+
 // presetReadOnly is the one registry preset (docs/state.md).
 const presetReadOnly = "read-only"
 

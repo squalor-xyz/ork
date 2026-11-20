@@ -23417,7 +23417,7 @@
       "id": "S416",
       "title": "give the UI pass a pre-approved way to render views outside the tree, such as a scratch copy of the module or an ANSI strip into TMPDIR, so it can produce the 120x40 and ASCII renders",
       "short_title": "give the UI pass a pre-approved way to render views outside the tree, such as a scratch copy of the module or an ANSI strip into TMPDIR, so it can produce the 120x40 and ASCII renders",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -23462,6 +23462,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "b221b0c1-1266-4f03-9b20-693b3f4c926f",
+          "kind": "",
+          "text": "**2026-11-20** — S416 done: the UI prompt tells the pass to write helper files in its temp dir with Write, run one plain command per call and render TUI views from a `go test -overlay` file outside the tree (CLI views by the test flag); a cloud Claude UI pass's brief lists its allowed forms from one source, `engine.CloudUIAllowlist()`; ork's AGENTS.md has the TUI render recipe (verified: it wrote 80x24, 120x40 and ASCII renders with no tree change); no permission added; go vet, go test ./..., gofmt, slicer check and adj lint are green.",
+          "created_at": "2026-11-20T02:51:13Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -23481,7 +23495,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

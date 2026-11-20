@@ -51,7 +51,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	writeDir := ""
 	if req.ReadOnly && req.Vendor == "claude" && req.Role == engine.RoleUI && req.TempDir != "" {
 		writeDir = req.TempDir
-		allowlist = append(engine.LocalReadOnlyAllowlist(), "Skill")
+		allowlist = engine.CloudUIAllowlist()
 	}
 	addDir := ""
 	if req.Vendor == "claude-local" && req.ProgressFile != "" {

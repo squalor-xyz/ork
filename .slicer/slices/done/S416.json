@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/roles/prompts/ui.md:19-23` (helper files in {{temp_dir}} by the Write tool; one plain command per shell call)\n- `internal/roles/prompts/ui.md:53-72` (Renders: TUI views may come from a Go `-overlay` test file in {{temp_dir}}; CLI views use S475's flag)\n- `internal/roles/roles_test.go:662-700` (`TestUIPrompt`)\n- `internal/engine/brief.go:250-256` (`doneWhen`: a cloud Claude UI pass gets its allowed forms)\n- `internal/engine/brief_test.go`\n- `AGENTS.md:94-100` (Project Commands: the UI pass render recipe for TUI views)\n- `docs/design.md` (UI pass renders)"
+      "body": "- `internal/roles/prompts/ui.md:19-23` (helper files in {{temp_dir}} by the Write tool; one plain command per shell call)\n- `internal/roles/prompts/ui.md:53-72` (Renders: TUI views may come from a Go `-overlay` test file in {{temp_dir}}; CLI views use S475's flag)\n- `internal/roles/roles_test.go` (`TestUIPromptNamesTheOutOfTreeRenderRoute`, beside `TestUIPrompt`)\n- `internal/engine/brief.go` (`doneWhen`: a cloud Claude UI pass gets its allowed forms)\n- `internal/engine/brief_test.go`\n- `internal/engine/perm.go` (`CloudUIAllowlist`: the one source of the cloud UI pass list)\n- `internal/daemon/runner.go` (`claudeRunner.Run` uses `CloudUIAllowlist`)\n- `AGENTS.md:94-100` (Project Commands: the UI pass render recipe for TUI views)\n- `docs/design.md` (UI pass renders)"
     },
     {
       "heading": "Failing tests",

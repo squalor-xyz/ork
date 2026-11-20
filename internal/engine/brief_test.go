@@ -1039,6 +1039,53 @@ func yourFilesSection(t *testing.T, brief string) string {
 	return section
 }
 
+// S416: a cloud Claude UI pass runs on an allowlist, so its brief names the
+// forms it may run. The list is the one the runner sends (CloudUIAllowlist).
+func TestCloudUIPassDoneWhenListsItsAllowedForms(t *testing.T) {
+	item := func(t *testing.T, in BriefInput) string {
+		t.Helper()
+		got, err := BuildBrief(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		_, rest, ok := strings.Cut(got, "## Done when\n")
+		if !ok {
+			t.Fatalf("no Done when section:\n%s", got)
+		}
+		done, _, _ := strings.Cut(rest, "\n## ")
+		for _, line := range strings.Split(done, "\n") {
+			if strings.Contains(line, "Allowed forms") {
+				return line
+			}
+		}
+		return ""
+	}
+	in := baseBrief()
+	in.Role, in.Vendor, in.ReadOnly = RoleUI, "claude", true
+	line := item(t, in)
+	if line == "" {
+		t.Fatal("cloud UI pass Done when has no Allowed forms item")
+	}
+	for _, entry := range CloudUIAllowlist() {
+		if !strings.Contains(line, entry) {
+			t.Errorf("Allowed forms lacks %q", entry)
+		}
+	}
+	for _, want := range []string{"Skill", "Edit and Write under " + in.TempDir, "any other command is denied", "one plain command"} {
+		if !strings.Contains(line, want) {
+			t.Errorf("Allowed forms lacks %q", want)
+		}
+	}
+	// No other role or vendor gets it: the reviewer's brief has no such item.
+	for _, other := range []struct{ role, vendor string }{{RoleReviewer, "claude"}, {RoleUI, "codex"}, {RoleUI, "claude-local"}} {
+		o := baseBrief()
+		o.Role, o.Vendor, o.ReadOnly = other.role, other.vendor, true
+		if got := item(t, o); got != "" {
+			t.Errorf("%s %s brief has an Allowed forms item: %s", other.role, other.vendor, got)
+		}
+	}
+}
+
 func TestClaudeReadOnlyBriefHasNoPlanModeText(t *testing.T) {
 	for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleUI, RoleSpecCheck, RoleSpecDraft} {
 		t.Run(role, func(t *testing.T) {
@@ -1326,6 +1373,20 @@ func TestClaudeAndCodexReadOnlyDoneWhenIsUnchanged(t *testing.T) {
 			in := baseBrief()
 			in.Role, in.Vendor = role, vendor
 			got := checklist(t, in)
+			if vendor == "claude" && role == RoleUI {
+				// S416: a cloud Claude UI pass adds one Allowed forms item;
+				// TestCloudUIPassDoneWhenListsItsAllowedForms checks its text.
+				var kept []string
+				for _, line := range strings.SplitAfter(got, "\n") {
+					if !strings.HasPrefix(line, "- [ ] Allowed forms, verbatim: ") {
+						kept = append(kept, line)
+					}
+				}
+				if len(kept) == strings.Count(got, "\n")+1 {
+					t.Error("claude ui checklist lacks the Allowed forms item")
+				}
+				got = strings.Join(kept, "")
+			}
 			want := wantByRole[role]
 			if got != want {
 				t.Errorf("%s %s checklist changed", vendor, role)

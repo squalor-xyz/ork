@@ -809,7 +809,19 @@ slice.
     (adj 509). These are scratch files in the role's temp directory named
     in the brief under Your files. The pass
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
-    names for the approval card. The role prompt is unchanged.
+    names for the approval card.
+    TUI views and the pass's commands (*proposed*, S416; adj 507):
+    a TUI view may come from a test file kept outside the tree, run with
+    `go -C WORKTREE test -overlay FILE -run NAME ./PKG` (for ork, the recipe is
+    in AGENTS.md, Project Commands). The pass writes the test file, the overlay
+    JSON and any other helper file in its temp directory with the Write tool, and
+    the test writes each render into `TEMPDIR/renders/` by an absolute path. The
+    prompt tells the pass to run one plain command per shell call (no `&&`, `;`,
+    pipe, redirect or env prefix). A cloud Claude UI pass's brief adds an
+    "Allowed forms" Done-when item that lists the allowlist the runner sends
+    (the fixed read-only list plus Skill, `engine.CloudUIAllowlist()`), the Edit
+    and Write rule under the temp directory, and says any other command is
+    denied. No permission is added.
 - **architect:** one read-only review with the fingerprint applied. The report
   needs only the shared `## Owner needed` section. The whole report goes to an
   implementer fix round, even when it has no findings; ork adds no parser
