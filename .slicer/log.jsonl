@@ -5925,3 +5925,6 @@
 {"when": "2026-11-20T00:42:42Z", "item": "S491", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T00:43:29Z", "item": "S492", "action": "add", "from": "", "to": "open", "note": "tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them"}
 {"when": "2026-11-20T00:43:29Z", "item": "S492", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T01:00:27Z", "item": "S493", "action": "add", "from": "", "to": "open", "note": "tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence"}
+{"when": "2026-11-20T01:00:27Z", "item": "S493", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T01:00:28Z", "item": "S493", "action": "note", "from": "", "to": "", "note": "possible duplicate of S492", "by": "Jon Robbins"}
