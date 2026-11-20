@@ -1,0 +1,39 @@
+{
+  "id": "S500",
+  "title": "TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #514 was decided to file it:\n\nProposal: TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test\nRole: ui\nRun: ork-20261120-015050-c27e\nProject: ork\nItem: S342\nEvidence: the -renders fixtures are status (rebuild only), show and help; to render the S342 views I had to add an overlay test file in TMPDIR"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

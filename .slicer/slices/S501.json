@@ -1,0 +1,39 @@
+{
+  "id": "S501",
+  "title": "say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-024211-b28b, project ork, item S416:\n\nsay in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it\n\nEvidence: \"This Bash command contains multiple operations\" denied a `cd /dev/null; grep` probe in the reviewer session"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

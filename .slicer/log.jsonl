@@ -5982,3 +5982,7 @@
 {"when": "2026-11-20T02:42:46Z", "item": "S496", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S479 (tool feedback, 2026-11-20)."}
 {"when": "2026-11-20T02:42:46Z", "item": "S498", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S479 (tool feedback, 2026-11-20)."}
 {"when": "2026-11-20T02:42:46Z", "item": "S497", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S471 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:54Z", "item": "S500", "action": "add", "from": "", "to": "open", "note": "TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test"}
+{"when": "2026-11-20T02:42:54Z", "item": "S500", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:49:55Z", "item": "S501", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it"}
+{"when": "2026-11-20T02:49:55Z", "item": "S501", "action": "promote", "from": "", "to": "", "note": ""}
