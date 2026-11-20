@@ -5938,3 +5938,5 @@
 {"when": "2026-11-20T01:00:27Z", "item": "S493", "action": "add", "from": "", "to": "open", "note": "tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence"}
 {"when": "2026-11-20T01:00:27Z", "item": "S493", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T01:00:28Z", "item": "S493", "action": "note", "from": "", "to": "", "note": "possible duplicate of S492", "by": "Jon Robbins"}
+{"when": "2026-11-20T01:46:31Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-20: adj 511 cli.wait-queued-resume-s", "by": "Jon Robbins"}
+{"when": "2026-11-20T01:46:51Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Implement"}
