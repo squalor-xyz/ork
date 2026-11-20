@@ -6050,3 +6050,13 @@
 {"when": "2026-11-20T13:38:26Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-20T13:38:35Z", "item": "S506", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 515)."}
 {"when": "2026-11-20T13:38:35Z", "item": "S507", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 517)."}
+{"when": "2026-11-20T14:19:48Z", "item": "S509", "action": "add", "from": "", "to": "open", "note": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match"}
+{"when": "2026-11-20T14:19:48Z", "item": "S509", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:38:35Z", "item": "S510", "action": "add", "from": "", "to": "open", "note": "allow the reviewer to write to its own role temp dir, as the prompt says it may"}
+{"when": "2026-11-20T14:38:35Z", "item": "S510", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:39:17Z", "item": "S511", "action": "add", "from": "", "to": "open", "note": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key"}
+{"when": "2026-11-20T14:39:17Z", "item": "S511", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:46:19Z", "item": "S512", "action": "add", "from": "", "to": "open", "note": "allow the reviewer's own TMPDIR as a Write target in the reviewer's permission settings"}
+{"when": "2026-11-20T14:46:19Z", "item": "S512", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "add", "from": "", "to": "open", "note": "check each read-only allowlist entry against Claude Code's real permission matcher on fixed write commands, instead of the test's own regex model"}
+{"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "promote", "from": "", "to": "", "note": ""}

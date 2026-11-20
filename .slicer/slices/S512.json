@@ -1,0 +1,39 @@
+{
+  "id": "S512",
+  "title": "allow the reviewer's own TMPDIR as a Write target in the reviewer's permission settings",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-140546-0966, project ork, item S508:\n\nallow the reviewer's own TMPDIR as a Write target in the reviewer's permission settings\n\nEvidence: Write to /home/jon/.local/state/ork/t/db41067e215e97dd/3b735833065ebf2c/bare/main.go denied: \"Path is outside allowed working directories\", although the prompt names that directory as the reviewer's scratch space"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
