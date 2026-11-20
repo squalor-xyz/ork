@@ -5893,3 +5893,9 @@
 {"when": "2026-11-20T00:05:40Z", "item": "S469", "action": "note", "from": "", "to": "", "note": "Merged S482 and S478 asks the same for slicer check --help (", "by": "Jon Robbins"}
 {"when": "2026-11-20T00:05:41Z", "item": "S457", "action": "note", "from": "", "to": "", "note": "Merged S484 (2026-11-20).", "by": "Jon Robbins"}
 {"when": "2026-11-20T00:05:41Z", "item": "S351", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-20: adj 510 landing.index-listed-file", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:14:41Z", "item": "S487", "action": "add", "from": "", "to": "open", "note": "have the UI brief print the resolved -renders path and say whether it equals TMPDIR"}
+{"when": "2026-11-20T00:14:41Z", "item": "S487", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:15:40Z", "item": "S488", "action": "add", "from": "", "to": "open", "note": "allow ls of the role's own temp directory for read-only roles, since the brief tells them to write and check renders there"}
+{"when": "2026-11-20T00:15:40Z", "item": "S488", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:15:59Z", "item": "S487", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S475: the UI brief names the -renders directory, the role's temp directory (TMPDIR), per adj 508."}
+{"when": "2026-11-20T00:15:59Z", "item": "S475", "action": "note", "from": "", "to": "", "note": "Merged S487 (2026-11-20). -renders uses the brief's 'Your te", "by": "Jon Robbins"}
