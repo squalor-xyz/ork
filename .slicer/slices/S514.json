@@ -1,0 +1,39 @@
+{
+  "id": "S514",
+  "title": "Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261120-145742-cab5, project ork, item S389:\n\nInclude a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section\n\nEvidence: internal/cli/render_test.go:26 renders pausedShow(), which has no ToolFeedback; the section needed an overlay test to render"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

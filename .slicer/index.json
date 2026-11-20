@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 514,
+  "next_id": 515,
   "preamble": "",
   "passes": [
     {
@@ -27181,6 +27181,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-151fc07e",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S514",
+      "title": "Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section",
+      "short_title": "Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S389",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-51201613",
         "pass": "v1.2",
         "group": "",
         "reason": "",

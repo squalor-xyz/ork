@@ -6084,3 +6084,5 @@
 {"when": "2026-11-20T14:46:19Z", "item": "S512", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "add", "from": "", "to": "open", "note": "check each read-only allowlist entry against Claude Code's real permission matcher on fixed write commands, instead of the test's own regex model"}
 {"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:06:53Z", "item": "S514", "action": "add", "from": "", "to": "open", "note": "Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section"}
+{"when": "2026-11-20T15:06:53Z", "item": "S514", "action": "promote", "from": "", "to": "", "note": ""}
