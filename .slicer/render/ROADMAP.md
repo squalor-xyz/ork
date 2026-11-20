@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-493 items · — 58 · done 347 · retired 88
+493 items · — 54 · done 347 · retired 92
 
 ## v1.3
 
@@ -249,10 +249,10 @@ v1.2
 | 192 | [S487](slices/S487.md) | have the UI brief print the resolved -renders path and say whether it equals TMPDIR |  | - |  | Covered by S475: the UI brief names the -renders directory, the role's temp directory (TMPDIR), per adj 508. · discovered from S475 | retired |
 | 193 | [S488](slices/S488.md) | allow ls of the role's own temp directory for read-only roles, since the brief tells them to write and check renders there |  | - |  | discovered from S475 | — |
 | 194 | [S489](slices/S489.md) | when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path |  | - |  | discovered from S475 | — |
-| 195 | [S490](slices/S490.md) | tell the implementer in the brief that socket-bound packages fail inside its sandbox and that ork runs the suite itself, so its Tests line does not report sandbox failures |  | - |  | discovered from S417 | — |
-| 196 | [S491](slices/S491.md) | allow the UI pass to run `go run ./cmd/ork ... --help` (no pipe) so the CLI help can be rendered |  | - |  | discovered from S353 | — |
-| 197 | [S492](slices/S492.md) | tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them |  | - |  | discovered from S353 | — |
-| 198 | [S493](slices/S493.md) | tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence |  | - |  | discovered from S353 | — |
+| 195 | [S490](slices/S490.md) | tell the implementer in the brief that socket-bound packages fail inside its sandbox and that ork runs the suite itself, so its Tests line does not report sandbox failures |  | - |  | Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S417 | retired |
+| 196 | [S491](slices/S491.md) | allow the UI pass to run `go run ./cmd/ork ... --help` (no pipe) so the CLI help can be rendered |  | - |  | Covered by S475 (landed 2026-11-20): UI passes render CLI views with the -renders test flag. · discovered from S353 | retired |
+| 197 | [S492](slices/S492.md) | tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them |  | - |  | Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S353 | retired |
+| 198 | [S493](slices/S493.md) | tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence |  | - |  | Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S353 | retired |
 
 ---
 

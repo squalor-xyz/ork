@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">493 items · — 58 · done 347 · retired 88</p>
+<p class="summary">493 items · — 54 · done 347 · retired 92</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -247,10 +247,10 @@
 <tr class="retired"><td>192</td><td>S487</td><td>have the UI brief print the resolved -renders path and say whether it equals TMPDIR</td><td></td><td>-</td><td></td><td>Covered by S475: the UI brief names the -renders directory, the role&#x27;s temp directory (TMPDIR), per adj 508. · discovered from S475</td><td class="status">retired</td></tr>
 <tr class="open"><td>193</td><td>S488</td><td>allow ls of the role&#x27;s own temp directory for read-only roles, since the brief tells them to write and check renders there</td><td></td><td>-</td><td></td><td>discovered from S475</td><td class="status">—</td></tr>
 <tr class="open"><td>194</td><td>S489</td><td>when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path</td><td></td><td>-</td><td></td><td>discovered from S475</td><td class="status">—</td></tr>
-<tr class="open"><td>195</td><td>S490</td><td>tell the implementer in the brief that socket-bound packages fail inside its sandbox and that ork runs the suite itself, so its Tests line does not report sandbox failures</td><td></td><td>-</td><td></td><td>discovered from S417</td><td class="status">—</td></tr>
-<tr class="open"><td>196</td><td>S491</td><td>allow the UI pass to run `go run ./cmd/ork ... --help` (no pipe) so the CLI help can be rendered</td><td></td><td>-</td><td></td><td>discovered from S353</td><td class="status">—</td></tr>
-<tr class="open"><td>197</td><td>S492</td><td>tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them</td><td></td><td>-</td><td></td><td>discovered from S353</td><td class="status">—</td></tr>
-<tr class="open"><td>198</td><td>S493</td><td>tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork&#x27;s round check is the evidence</td><td></td><td>-</td><td></td><td>discovered from S353</td><td class="status">—</td></tr>
+<tr class="retired"><td>195</td><td>S490</td><td>tell the implementer in the brief that socket-bound packages fail inside its sandbox and that ork runs the suite itself, so its Tests line does not report sandbox failures</td><td></td><td>-</td><td></td><td>Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S417</td><td class="status">retired</td></tr>
+<tr class="retired"><td>196</td><td>S491</td><td>allow the UI pass to run `go run ./cmd/ork ... --help` (no pipe) so the CLI help can be rendered</td><td></td><td>-</td><td></td><td>Covered by S475 (landed 2026-11-20): UI passes render CLI views with the -renders test flag. · discovered from S353</td><td class="status">retired</td></tr>
+<tr class="retired"><td>197</td><td>S492</td><td>tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them</td><td></td><td>-</td><td></td><td>Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S353</td><td class="status">retired</td></tr>
+<tr class="retired"><td>198</td><td>S493</td><td>tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork&#x27;s round check is the evidence</td><td></td><td>-</td><td></td><td>Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S353</td><td class="status">retired</td></tr>
 </tbody></table>
 <h2>v1.1</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>

@@ -5940,3 +5940,8 @@
 {"when": "2026-11-20T01:00:28Z", "item": "S493", "action": "note", "from": "", "to": "", "note": "possible duplicate of S492", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:46:31Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-20: adj 511 cli.wait-queued-resume-s", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:46:51Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T01:47:38Z", "item": "S490", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S485 (socket tests fail inside the implementer sandbox)."}
+{"when": "2026-11-20T01:47:39Z", "item": "S492", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S485 (socket tests fail inside the implementer sandbox)."}
+{"when": "2026-11-20T01:47:39Z", "item": "S493", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S485 (socket tests fail inside the implementer sandbox)."}
+{"when": "2026-11-20T01:47:39Z", "item": "S491", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S475 (landed 2026-11-20): UI passes render CLI views with the -renders test flag."}
+{"when": "2026-11-20T01:47:39Z", "item": "S485", "action": "note", "from": "", "to": "", "note": "Merged S490, S492 and S493 (2026-11-20, tool feedback).", "by": "Jon Robbins"}
