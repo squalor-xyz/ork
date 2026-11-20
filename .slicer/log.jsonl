@@ -5992,3 +5992,5 @@
 {"when": "2026-11-20T02:49:55Z", "item": "S501", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T02:53:36Z", "item": "S500", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 514)."}
 {"when": "2026-11-20T02:53:36Z", "item": "S501", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S481 (say in the reviewer brief which shell forms are denied)."}
+{"when": "2026-11-20T03:01:45Z", "item": "S502", "action": "add", "from": "", "to": "open", "note": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff"}
+{"when": "2026-11-20T03:01:46Z", "item": "S502", "action": "promote", "from": "", "to": "", "note": ""}
