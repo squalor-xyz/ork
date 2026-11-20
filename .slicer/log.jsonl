@@ -6093,3 +6093,4 @@
 {"when": "2026-11-20T15:06:53Z", "item": "S514", "action": "add", "from": "", "to": "open", "note": "Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section"}
 {"when": "2026-11-20T15:06:53Z", "item": "S514", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T15:22:27Z", "item": "S355", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-20: adj 524 owner.run-answers-scope ", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:25:51Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-20: adj 526 ui.status-text-layout = c", "by": "Jon Robbins"}
