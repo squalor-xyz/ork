@@ -1,0 +1,39 @@
+{
+  "id": "S518",
+  "title": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261120-152522-c419, project ork, item S394:\n\nflag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph\n\nEvidence: docs/dashboard.md:535-536 inserted proposed paragraph runs straight into the existing 1-9 key paragraph"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
