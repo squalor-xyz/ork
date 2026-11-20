@@ -1,0 +1,39 @@
+{
+  "id": "S503",
+  "title": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-025523-b35a, project ork, item S391:\n\nsay in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines\n\nEvidence: a compound rg with echo exit=$? and a for-loop cat were both auto-denied in this review"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

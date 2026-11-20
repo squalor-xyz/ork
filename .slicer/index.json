@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 503,
+  "next_id": 504,
   "preamble": "",
   "passes": [
     {
@@ -26756,6 +26756,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-b241c892",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S503",
+      "title": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines",
+      "short_title": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S391",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-d140736f",
         "pass": "v1.2",
         "group": "",
         "reason": "",
