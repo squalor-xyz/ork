@@ -5951,3 +5951,6 @@
 {"when": "2026-11-20T02:09:24Z", "item": "S494", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-20T02:16:16Z", "item": "S494", "action": "note", "from": "", "to": "", "note": "A spec check whose report fails its shape keeps it as spec-c", "by": "Jon Robbins"}
 {"when": "2026-11-20T02:16:16Z", "item": "S494", "action": "status", "from": "started", "to": "done", "note": "A spec check whose report fails its shape keeps it as spec-check-failed-N.md in the check's directory; the error names the file and quotes the first line of each offending section; a passing check or a new check clears old failed reports.", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that shell variables are denied, so reviewers use literal absolute paths"}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "note", "from": "", "to": "", "note": "possible duplicate of S481", "by": "Jon Robbins"}
