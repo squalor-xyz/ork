@@ -1,0 +1,39 @@
+{
+  "id": "S484",
+  "title": "when a slice changes an expected CLI output count in cli_test.go, flag docs/design.md lines that quote the old string",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (deterministic-check) on ork in ork run ork-20261119-230703-0874, project ork, item S417:\n\nwhen a slice changes an expected CLI output count in cli_test.go, flag docs/design.md lines that quote the old string\n\nEvidence: docs/design.md:3770 still says implementer:25 patterns while cli_test.go:2864 now expects 26 (same class as S457)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

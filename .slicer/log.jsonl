@@ -5869,3 +5869,19 @@
 {"when": "2026-11-19T23:22:34Z", "item": "S482", "action": "note", "from": "", "to": "", "note": "possible duplicate of S469", "by": "Jon Robbins"}
 {"when": "2026-11-19T23:23:29Z", "item": "S483", "action": "add", "from": "", "to": "open", "note": "give the UI pass a sandbox-safe way to render CLI command output, such as a test helper that prints the output to a file in the temp dir"}
 {"when": "2026-11-19T23:23:29Z", "item": "S483", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T23:43:53Z", "item": "S475", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-19: adj 508 ui.render-flag-dir = tem", "by": "Jon Robbins"}
+{"when": "2026-11-19T23:43:54Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-19T23:49:12Z", "item": "S484", "action": "add", "from": "", "to": "open", "note": "when a slice changes an expected CLI output count in cli_test.go, flag docs/design.md lines that quote the old string"}
+{"when": "2026-11-19T23:49:12Z", "item": "S484", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-19T23:50:21Z", "item": "S485", "action": "add", "from": "", "to": "open", "note": "run the full go test suite outside the implementer's sandbox, or tell the implementer in the brief that socket tests will fail there, so it does not report 212 failures that pass in the reviewer session"}
+{"when": "2026-11-19T23:50:21Z", "item": "S485", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:04:47Z", "item": "S486", "action": "add", "from": "", "to": "open", "note": "allow read-only rg on test globs in the reviewer allowlist"}
+{"when": "2026-11-20T00:04:47Z", "item": "S486", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:05:40Z", "item": "S480", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S475 (CLI render flag for UI passes, adj 505)."}
+{"when": "2026-11-20T00:05:40Z", "item": "S483", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S475 (CLI render flag for UI passes, adj 505)."}
+{"when": "2026-11-20T00:05:40Z", "item": "S482", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S469 (slicer COMMAND --help for read-only roles)."}
+{"when": "2026-11-20T00:05:40Z", "item": "S484", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S457 (docs quoting CLI output that cli_test.go changed)."}
+{"when": "2026-11-20T00:05:40Z", "item": "S475", "action": "note", "from": "", "to": "", "note": "Merged S480 and S483 (2026-11-20).", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:05:40Z", "item": "S469", "action": "note", "from": "", "to": "", "note": "Merged S482 and S478 asks the same for slicer check --help (", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:05:41Z", "item": "S457", "action": "note", "from": "", "to": "", "note": "Merged S484 (2026-11-20).", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:05:41Z", "item": "S351", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-20: adj 510 landing.index-listed-file", "by": "Jon Robbins"}
