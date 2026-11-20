@@ -182,14 +182,15 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 			}
 			// Normalize the contract marker (S432). S384 adds the plain-v13
 			// Outcome report guidance to the implementer prompt.
+			// S417 adds guidance for reading named run reports with ork show.
 			got = strings.Replace(got, "Role: implementer. Contract: relay v13\n", "Role: implementer. Contract: relay v12\n", 1)
-			want := "88009306bb82ceb9ee5da9e6eaa67a7bf33786f880e8646a78e1a98a6672cab6"
+			want := "13b86d9e134ba2d515dc171761d919bd4ad1399340a8954603d96943ef36fc14"
 			switch vendor {
 			case "claude":
-				want = "590b4669a37fac851c9ae541df45e56fa3e4e145c1d5d1767333fc194ba96d93"
+				want = "579e282df19fe50b99d80360d41e9c98956f9a70421f2225378a0f73fb87db8c"
 			case "grok":
 				// S305: a grok implementer's checklist names dontAsk mode.
-				want = "ca8d9bd13406bc59aafd16eca4dd396e5af05fbac0ad8333c6996e53008dc5d7"
+				want = "adbcdf1d1a45522fcd94e8dbc57b2ed192b3eb314fba2e3558311690b09dbd68"
 			}
 			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
 				t.Fatalf("%s cloud brief changed %x", vendor, sha256.Sum256([]byte(got)))
@@ -894,6 +895,30 @@ func checkBriefInstructionsOnlyForImplementer(t *testing.T) {
 			}
 			if strings.Contains(got, "## Checks ork runs") {
 				t.Error("non-implementer brief includes check instructions")
+			}
+		})
+	}
+}
+
+func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
+	for _, tc := range []struct {
+		name, tmpDir, want string
+	}{
+		{"TMPDir", "/state/process-temp", "/state/process-temp"},
+		{"TempDir fallback", "", "'/state/role scratch/ui-1'"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = RoleUI
+			in.TempDir = "/state/role scratch/ui-1"
+			in.TMPDir = tc.tmpDir
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "go test ./internal/cli -run TestRenderCLIViews -renders " + tc.want
+			if !strings.Contains(got, want) {
+				t.Fatalf("UI brief lacks render command %q", want)
 			}
 		})
 	}

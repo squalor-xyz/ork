@@ -905,6 +905,18 @@ approval, and directory-versus-file clashes are not detected.
   project's `push` setting is on, and removes the worktree and the branch
   (`docs/design.md:646-810`).
 
+For ork CLI text views, the UI pass brief gives this command with the temp
+directory named under Your files in its brief in place of DIR:
+
+    go test ./internal/cli -run TestRenderCLIViews -renders DIR
+
+It writes `status.txt`, `show.txt` and `help.txt` from the CLI test fixtures
+to that existing directory, without changing the tree. The files contain
+plain text as printed, without imposing a terminal width. Without `-renders`
+the render test writes nothing. The pass copies selected scratch files into
+its `renders/` directory with the prompt's `VIEW-80x24.txt` names so they
+appear on the approval card.
+
 *Proposed (S254):* before it merges, ork looks at the main checkout. If you
 have uncommitted changes there to a file the slice also changes, the run
 pauses at once with one line that names the files; commit or stash them and

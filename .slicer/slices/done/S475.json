@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/cli/render_test.go` (new: the render flag and a test that writes the views)\n- `internal/cli/cli_test.go`\n- `internal/engine/brief.go` (UI pass brief: the render command, with the role's temp directory)\n- `internal/engine/brief_test.go`\n- `docs/design.md` (UI pass renders, adj 505)\n- `docs/guide.md`"
+      "body": "- `internal/cli/render_test.go` (new: the render flag, `TestRenderCLIViews`, and `TestRenderCLIViewsWritesFiles`)\n- `internal/cli/cli_test.go` (reuse the status fixture from `TestStatusPrintsTheDaemonRebuild`)\n- `internal/engine/brief.go` (`BuildBrief`: UI pass render command with `processTemp`, the directory named under Your files)\n- `internal/engine/brief_test.go` (`TestUIPassBriefNamesTheRenderCommand`: TMPDir and TempDir fallback)\n- `docs/design.md` (UI pass renders, adj 505)\n- `docs/guide.md`"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestRenderCLIViewsWritesFiles` in `internal/cli/render_test.go`: with `-renders DIR` set to a temp directory, the test writes one plain-text file per view (at least `ork status`, `ork show RUN` and `ork help`), each with no ANSI escapes, at 80 columns; with the flag unset it writes nothing and passes. Red today: no flag.\n- `TestUIPassBriefNamesTheRenderCommand` in `internal/engine/brief_test.go`: a UI pass brief names `go test ./internal/cli -run TestRenderCLIViews -renders` with the role's temp directory. Red today."
+      "body": "- `TestRenderCLIViewsWritesFiles` in `internal/cli/render_test.go`: with `-renders DIR` set to a temp directory, the test writes one plain-text file per view (at least `ork status`, `ork show RUN` and `ork help`), each with no ANSI escapes and non-empty text; with the flag unset it writes nothing and passes. Files hold exactly what each command prints. Red today: no flag.\n- `TestUIPassBriefNamesTheRenderCommand` in `internal/engine/brief_test.go`: a UI pass brief names `go test ./internal/cli -run TestRenderCLIViews -renders` with the directory named under Your files (`TMPDir`, falling back to `TempDir` when unset). Red in fix round: the command uses TempDir even when TMPDir is set."
     },
     {
       "heading": "Implement",

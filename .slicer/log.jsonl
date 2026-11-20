@@ -5864,6 +5864,17 @@
 {"when": "2026-11-19T23:06:33Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-19T23:06:33Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-19T23:06:33Z", "item": "S416", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-19T23:20:37Z", "item": "S417", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-19T23:21:20Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T23:21:20Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T23:24:46Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T23:28:19Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T23:29:29Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-19T23:39:18Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-19T23:39:50Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T00:13:53Z", "item": "S417", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T00:25:21Z", "item": "S417", "action": "note", "from": "", "to": "", "note": "The Python preset CLI example now documents 26 permission pa", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:25:21Z", "item": "S417", "action": "status", "from": "started", "to": "done", "note": "The Python preset CLI example now documents 26 permission patterns, matching the updated CLI test and added ork show permission.", "by": "Jon Robbins"}
 {"when": "2026-11-19T23:48:56Z", "item": "S351", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-19T23:48:56Z", "item": "S351", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-19T23:48:57Z", "item": "S351", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
@@ -5877,6 +5888,13 @@
 {"when": "2026-11-19T23:22:34Z", "item": "S482", "action": "note", "from": "", "to": "", "note": "possible duplicate of S469", "by": "Jon Robbins"}
 {"when": "2026-11-19T23:23:29Z", "item": "S483", "action": "add", "from": "", "to": "open", "note": "give the UI pass a sandbox-safe way to render CLI command output, such as a test helper that prints the output to a file in the temp dir"}
 {"when": "2026-11-19T23:23:29Z", "item": "S483", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:00:54Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T00:01:21Z", "item": "S475", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:06:14Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T00:41:55Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T00:41:55Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T00:48:56Z", "item": "S475", "action": "note", "from": "", "to": "", "note": "UI briefs render CLI views into the temp directory named und", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:48:56Z", "item": "S475", "action": "status", "from": "started", "to": "done", "note": "UI briefs render CLI views into the temp directory named under Your files, using TMPDir with a quoted TempDir fallback; regression cases and mutation checks pass, and docs match.", "by": "Jon Robbins"}
 {"when": "2026-11-19T23:43:53Z", "item": "S475", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-19: adj 508 ui.render-flag-dir = tem", "by": "Jon Robbins"}
 {"when": "2026-11-19T23:43:54Z", "item": "S475", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-19T23:49:12Z", "item": "S484", "action": "add", "from": "", "to": "open", "note": "when a slice changes an expected CLI output count in cli_test.go, flag docs/design.md lines that quote the old string"}
@@ -5903,3 +5921,20 @@
 {"when": "2026-11-20T01:00:28Z", "item": "S353", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S353):", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:00:28Z", "item": "S353", "action": "note", "from": "", "to": "", "note": "Contract probes pause incompatible or failed landings before", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:00:29Z", "item": "S353", "action": "status", "from": "started", "to": "done", "note": "Contract probes pause incompatible or failed landings before fast-forward and now appear in projects show as the configured command or unset; the contract-probe and round-check tests have correctly attached comments.", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:14:41Z", "item": "S487", "action": "add", "from": "", "to": "open", "note": "have the UI brief print the resolved -renders path and say whether it equals TMPDIR"}
+{"when": "2026-11-20T00:14:41Z", "item": "S487", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:15:40Z", "item": "S488", "action": "add", "from": "", "to": "open", "note": "allow ls of the role's own temp directory for read-only roles, since the brief tells them to write and check renders there"}
+{"when": "2026-11-20T00:15:40Z", "item": "S488", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:15:59Z", "item": "S487", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S475: the UI brief names the -renders directory, the role's temp directory (TMPDIR), per adj 508."}
+{"when": "2026-11-20T00:15:59Z", "item": "S475", "action": "note", "from": "", "to": "", "note": "Merged S487 (2026-11-20). -renders uses the brief's 'Your te", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:16:28Z", "item": "S489", "action": "add", "from": "", "to": "open", "note": "when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path"}
+{"when": "2026-11-20T00:16:28Z", "item": "S489", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:25:20Z", "item": "S490", "action": "add", "from": "", "to": "open", "note": "tell the implementer in the brief that socket-bound packages fail inside its sandbox and that ork runs the suite itself, so its Tests line does not report sandbox failures"}
+{"when": "2026-11-20T00:25:20Z", "item": "S490", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:42:42Z", "item": "S491", "action": "add", "from": "", "to": "open", "note": "allow the UI pass to run `go run ./cmd/ork ... --help` (no pipe) so the CLI help can be rendered"}
+{"when": "2026-11-20T00:42:42Z", "item": "S491", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:43:29Z", "item": "S492", "action": "add", "from": "", "to": "open", "note": "tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them"}
+{"when": "2026-11-20T00:43:29Z", "item": "S492", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T01:00:27Z", "item": "S493", "action": "add", "from": "", "to": "open", "note": "tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence"}
+{"when": "2026-11-20T01:00:27Z", "item": "S493", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T01:00:28Z", "item": "S493", "action": "note", "from": "", "to": "", "note": "possible duplicate of S492", "by": "Jon Robbins"}

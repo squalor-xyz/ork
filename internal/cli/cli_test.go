@@ -324,12 +324,7 @@ func TestStatusErrorsAreListedInText(t *testing.T) {
 // S431 (*proposed*; adj 464): status prints the daemon's own rebuild under the
 // project line: the drain's message, or a failed build's message and its output.
 func TestStatusPrintsTheDaemonRebuild(t *testing.T) {
-	a := App{Call: func(_ context.Context, method string, _, result any) error {
-		return json.Unmarshal([]byte(`{"projects":[
-			{"name":"a","rebuild":{"state":"draining","waiting":2,"message":"rebuild pending: waiting for 2 roles"}},
-			{"name":"b","rebuild":{"state":"failed","message":"daemon not rebuilt: build failed (exit 1)","output":["x.go:1: undefined: y","make: *** Error 1"]}},
-			{"name":"c"}]}`), result)
-	}}
+	a := statusRebuildFixture()
 	var out, errout bytes.Buffer
 	if code := a.Run(context.Background(), []string{"status"}, &out, &errout); code != 0 {
 		t.Fatalf("exit %d: %s", code, &errout)
@@ -340,6 +335,15 @@ func TestStatusPrintsTheDaemonRebuild(t *testing.T) {
 	if out.String() != want {
 		t.Fatalf("status:\n%s\nwant:\n%s", out.String(), want)
 	}
+}
+
+func statusRebuildFixture() App {
+	return App{Call: func(_ context.Context, method string, _, result any) error {
+		return json.Unmarshal([]byte(`{"build_id":"dev","projects":[
+			{"name":"a","rebuild":{"state":"draining","waiting":2,"message":"rebuild pending: waiting for 2 roles"}},
+			{"name":"b","rebuild":{"state":"failed","message":"daemon not rebuilt: build failed (exit 1)","output":["x.go:1: undefined: y","make: *** Error 1"]}},
+			{"name":"c"}]}`), result)
+	}}
 }
 
 func TestStatusUnknownProject(t *testing.T) {
@@ -2988,7 +2992,7 @@ func TestProjectsSetPresetFlag(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "slicer", Path: "/p/slicer"})
 	const check = "python3 -m unittest discover -s tests -t tests"
 	code, stdout, stderr := run(t, w.app, "projects", "set", "slicer", "--check", check, "--preset", "python")
-	want := `updated slicer: check_command="` + check + `", permissions=implementer:25 patterns (preset python)` + "\n"
+	want := `updated slicer: check_command="` + check + `", permissions=implementer:26 patterns (preset python)` + "\n"
 	if code != 0 || stdout != want {
 		t.Fatalf("exit %d\nstdout: %q\nwant:   %q\nstderr: %q", code, stdout, want, stderr)
 	}
@@ -2999,7 +3003,7 @@ func TestProjectsSetPresetFlag(t *testing.T) {
 	}
 	// --allow after the preset adds to it.
 	code, stdout, _ = run(t, w.app, "projects", "set", "slicer", "--preset", "python", "--allow", "implementer=Bash(make *)")
-	if code != 0 || stdout != "updated slicer: permissions=implementer:26 patterns (preset python)\n" {
+	if code != 0 || stdout != "updated slicer: permissions=implementer:27 patterns (preset python)\n" {
 		t.Fatalf("preset and allow: exit %d: %q", code, stdout)
 	}
 	for _, args := range [][]string{

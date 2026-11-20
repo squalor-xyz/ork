@@ -1,0 +1,39 @@
+{
+  "id": "S493",
+  "title": "tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261120-001408-907b, project ork, item S353:\n\ntell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence\n\nEvidence: implementer-2 reported 322 sandbox failures (setsockopt/connect not permitted), while ork's checks-2.log and my focused run were green"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

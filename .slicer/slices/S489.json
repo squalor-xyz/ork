@@ -1,0 +1,39 @@
+{
+  "id": "S489",
+  "title": "when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (deterministic-check) on ork in ork run ork-20261119-234354-c0f6, project ork, item S475:\n\nwhen building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path\n\nEvidence: brief.go:173 sends -renders to TempDir, which is outside the writable set that brief.go:171 and brief.go:188 give the role."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

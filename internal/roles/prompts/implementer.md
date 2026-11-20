@@ -13,6 +13,8 @@ brief and this prompt disagree, the brief wins; say so in your report.
 - Work only in {{worktree}}. Use absolute paths. Never change directory. Do not read
   or write outside the worktree, except your temp directory {{temp_dir}}, your
   report path, and the read-only references the brief names.
+- When the slice names a run report (a run id and a report name), read it with
+  `ork show RUN NAME`. Do not read ork's state directory directly.
 - Put scratch files in {{temp_dir}}, never in a shared system temp directory such as
   `/tmp`. The directory is yours alone.
   ork sets TMPDIR to {{temp_dir}} for Claude and Codex roles. Do not prefix commands
