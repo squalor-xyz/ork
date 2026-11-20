@@ -21,6 +21,42 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+func TestReadOnlyBriefsNameTheDeniedForms(t *testing.T) {
+	const want = "Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C."
+	for _, vendor := range []string{"claude", "claude-local", "codex", "grok"} {
+		for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleSpecCheck, RoleSpecDraft, RoleUI} {
+			t.Run(vendor+"/"+role, func(t *testing.T) {
+				in := baseBrief()
+				in.Role, in.Vendor, in.ReadOnly = role, vendor, true
+				got, err := BuildBrief(in)
+				if err != nil {
+					t.Fatal(err)
+				}
+				if strings.Count(got, want) != 1 {
+					t.Error("brief must have exactly one shared denied-forms line")
+				}
+			})
+		}
+	}
+}
+
+func TestImplementerBriefNotesSandboxSocketTests(t *testing.T) {
+	const want = "Socket-bound tests may fail in sandbox; report as sandbox-limited. ork's round check is the evidence."
+	for _, vendor := range []string{"claude", "claude-local", "codex", "grok"} {
+		t.Run(vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.Vendor = RoleImplementer, vendor
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !strings.Contains(got, want) {
+				t.Error("implementer brief lacks sandbox socket-test reporting and round-check evidence")
+			}
+		})
+	}
+}
+
 func TestSavedOrientationReachesOnlyLocalImplementer(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "claude"} {
 		t.Run(vendor, func(t *testing.T) {
@@ -160,7 +196,7 @@ func TestLocalImplementerStartsWithToolsAndNote(t *testing.T) {
 			t.Fatal("tool rules are not first after the role line")
 		}
 	})
-	for _, phrase := range []string{"one plain command per call", "no pipes", "Write your progress note now", "/state/runs/r1/tmp/progress-implementer.md"} {
+	for _, phrase := range []string{"one plain command per call", "no pipes", "An env prefix is allowed only where an allowed form starts with one.", "Write your progress note now", "/state/runs/r1/tmp/progress-implementer.md"} {
 		t.Run(phrase, func(t *testing.T) {
 			prefix := got[:max(0, strings.Index(got, "Read the project's"))]
 			if !strings.Contains(prefix, phrase) {
@@ -183,14 +219,15 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 			// Normalize the contract marker (S432). S384 adds the plain-v13
 			// Outcome report guidance to the implementer prompt.
 			// S417 adds guidance for reading named run reports with ork show.
+			// S505 adds the sandbox socket-test note to the checklist.
 			got = strings.Replace(got, "Role: implementer. Contract: relay v13\n", "Role: implementer. Contract: relay v12\n", 1)
-			want := "13b86d9e134ba2d515dc171761d919bd4ad1399340a8954603d96943ef36fc14"
+			want := "05d20aa4bf069abea441c2fb89b1583a510a45dfb4324970290465584c156b43"
 			switch vendor {
 			case "claude":
-				want = "579e282df19fe50b99d80360d41e9c98956f9a70421f2225378a0f73fb87db8c"
+				want = "095a8e4b4f0785da57f82aafb16c1bf953e860a1794cb46edc8a5f7cb70c4e40"
 			case "grok":
 				// S305: a grok implementer's checklist names dontAsk mode.
-				want = "adbcdf1d1a45522fcd94e8dbc57b2ed192b3eb314fba2e3558311690b09dbd68"
+				want = "000c8469ba9e870aa0ee11cf67c9cb01ef77c9184bb670bc854e667dbff742db"
 			}
 			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
 				t.Fatalf("%s cloud brief changed %x", vendor, sha256.Sum256([]byte(got)))
@@ -1360,7 +1397,7 @@ func TestGrokWriteDoneWhenNamesTheDontAskLimits(t *testing.T) {
 	}
 }
 
-func TestClaudeAndCodexReadOnlyDoneWhenIsUnchanged(t *testing.T) {
+func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 	wantByRole := map[string]string{
 		RoleReviewer:  "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.\n- [ ] A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.\n- [ ] Complete sections (A)-(D), marking findings CONFIRMED or PLAUSIBLE; end with the exact unnumbered heading ## Owner needed and questions or none. In gate mode use the gate's first line and one evidence line per criterion; put denied tracking in a Deviation for the orchestrator evidence line.\n- [ ] Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.\n",
 		RoleGate:      "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.\n- [ ] Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.\n- [ ] For a tracking step denied to the implementer, add one Deviation for the orchestrator evidence line beside the criterion lines, never a [fix]; it is not a finding and starts no fix round.\n- [ ] Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts; end with the exact unnumbered heading ## Owner needed and questions or none.\n- [ ] Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.\n",
@@ -1388,6 +1425,7 @@ func TestClaudeAndCodexReadOnlyDoneWhenIsUnchanged(t *testing.T) {
 				got = strings.Join(kept, "")
 			}
 			want := wantByRole[role]
+			want = strings.Replace(want, "\n", "\n- [ ] Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C.\n", 1)
 			if got != want {
 				t.Errorf("%s %s checklist changed", vendor, role)
 			}

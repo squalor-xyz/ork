@@ -6041,6 +6041,14 @@
 {"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-20T13:36:13Z", "item": "S449", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:44:54Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:05:37Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:05:37Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T14:48:42Z", "item": "S505", "action": "note", "from": "", "to": "", "note": "Made the slicer relay and help allowlist entries exact so no", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:48:42Z", "item": "S505", "action": "status", "from": "started", "to": "done", "note": "Made the slicer relay and help allowlist entries exact so no tracking write matches, added matching-based negative tests, and let the local implementer brief keep env prefixes its allowed forms start with.", "by": "Jon Robbins"}
 {"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "add", "from": "", "to": "open", "note": "For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views"}
 {"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T13:38:02Z", "item": "S507", "action": "add", "from": "", "to": "open", "note": "let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render"}
@@ -6056,3 +6064,13 @@
 {"when": "2026-11-20T14:37:28Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-20T14:51:08Z", "item": "S508", "action": "note", "from": "", "to": "", "note": "Plans warn about non-command Check entries without refusing ", "by": "Jon Robbins"}
 {"when": "2026-11-20T14:51:08Z", "item": "S508", "action": "status", "from": "started", "to": "done", "note": "Plans warn about non-command Check entries without refusing start; env-prefixed commands get no false warning and a bare name that exists only in the worktree is warned, as os/exec cannot run it.", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:19:48Z", "item": "S509", "action": "add", "from": "", "to": "open", "note": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match"}
+{"when": "2026-11-20T14:19:48Z", "item": "S509", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:38:35Z", "item": "S510", "action": "add", "from": "", "to": "open", "note": "allow the reviewer to write to its own role temp dir, as the prompt says it may"}
+{"when": "2026-11-20T14:38:35Z", "item": "S510", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:39:17Z", "item": "S511", "action": "add", "from": "", "to": "open", "note": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key"}
+{"when": "2026-11-20T14:39:17Z", "item": "S511", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:46:19Z", "item": "S512", "action": "add", "from": "", "to": "open", "note": "allow the reviewer's own TMPDIR as a Write target in the reviewer's permission settings"}
+{"when": "2026-11-20T14:46:19Z", "item": "S512", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "add", "from": "", "to": "open", "note": "check each read-only allowlist entry against Claude Code's real permission matcher on fixed write commands, instead of the test's own regex model"}
+{"when": "2026-11-20T14:48:41Z", "item": "S513", "action": "promote", "from": "", "to": "", "note": ""}

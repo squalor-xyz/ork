@@ -81,6 +81,8 @@ func readOnlyReportPrompt(role, prompt string) (string, error) {
 	return strings.Replace(prompt, originalReportSentence, "give your whole report as your final message and exit; ork saves it to {{report_path}}.", 1), nil
 }
 
+const deniedCommandForms = "Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C."
+
 // BuildBrief returns the brief for a role: the role prompt with its
 // placeholders filled, then the slice, the tracking rule, the workspace
 // limit, the environment lines, the role's temp directory and report path,
@@ -115,7 +117,7 @@ func BuildBrief(in BriefInput) (string, error) {
 			return "", err
 		}
 		line, rest, _ := strings.Cut(prompt, "\n")
-		prompt = line + "\n\n## Tool rules\n\nAllowed forms, verbatim: " + strings.Join(in.Allow, "; ") + "; any other command is denied. Run one plain command per call; no pipes, no && or ;, no command substitution, no cd, no env prefix unless an entry allows it. Change files with the Edit and Write tools only.\n\n## Note first\n\nWrite your progress note now to `" + in.ProgressFile + "` with Edit or Write, before reading any file. This exact file is an exception to the workspace limit. Record done, next and open problems, even when nothing is done yet. After each step, update the note. Append an anchor log every few reads (`file:line symbol: purpose`); keep existing anchors when updating the note. ork may start a fresh session past 70,000 context tokens; the note preserves your work.\n" + rest
+		prompt = line + "\n\n## Tool rules\n\nAllowed forms, verbatim: " + strings.Join(in.Allow, "; ") + "; any other command is denied. " + deniedCommandForms + " An env prefix is allowed only where an allowed form starts with one. Change files with the Edit and Write tools only.\n\n## Note first\n\nWrite your progress note now to `" + in.ProgressFile + "` with Edit or Write, before reading any file. This exact file is an exception to the workspace limit. Record done, next and open problems, even when nothing is done yet. After each step, update the note. Append an anchor log every few reads (`file:line symbol: purpose`); keep existing anchors when updating the note. ork may start a fresh session past 70,000 context tokens; the note preserves your work.\n" + rest
 	}
 	if in.ReadOnly {
 		prompt, err = readOnlyReportPrompt(in.Role, prompt)
@@ -285,10 +287,11 @@ func doneWhen(in BriefInput) string {
 	}
 	if in.ReadOnly || readOnlyRole(in.Role) {
 		add("You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.")
+		add(deniedCommandForms)
 		if in.Role == RoleUI && in.Vendor == "claude" {
 			// S416: a cloud UI pass runs on an allowlist, not plan mode (adj 372),
 			// so it is told the forms it may run. Same list the runner sends.
-			items = append(items, "Allowed forms, verbatim: "+strings.Join(CloudUIAllowlist(), "; ")+"; Edit and Write under "+in.TempDir+"; any other command is denied; run one plain command per shell call: no pipes, no `&&` or `;`, no redirect, no cd, no env prefix.")
+			items = append(items, "Allowed forms, verbatim: "+strings.Join(CloudUIAllowlist(), "; ")+"; Edit and Write under "+in.TempDir+"; any other command is denied; run one plain command per shell call.")
 		}
 		if isGrok {
 			add("Grok plan mode: the fixtures show git status --short, git diff -- PATH and git diff --check -- PATH running, plus the built-in file tools read_file, grep and list_dir. rg, slicer and test commands remain unverified.")
@@ -330,6 +333,7 @@ func doneWhen(in BriefInput) string {
 			add("Item 4 has the literal line Tests: N passed, M failed, with integer counts of your own tests actually run; nothing may follow the counts. End with the exact unnumbered heading ## Owner needed. Both lines stand alone; skipped tests go under item 6.")
 			add("Each test of your part is red before the code and green after; mutation-check every new assertion.")
 		case RoleImplementer:
+			add("Socket-bound tests may fail in sandbox; report as sandbox-limited. ork's round check is the evidence.")
 			if in.Lead {
 				add("In a first round, list every part under `## Parts`, before `## Owner needed`, one `- ID: files PATH, PATH; tests NAME, NAME` line each, or write `none`. In a fix round or the finish step, write no `## Parts` section. In a fix round you may hand a file's findings back to its part under `## Hand back` (or write `none`).")
 			}
