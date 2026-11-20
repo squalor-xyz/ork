@@ -6094,3 +6094,13 @@
 {"when": "2026-11-20T15:06:53Z", "item": "S514", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T15:22:27Z", "item": "S355", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-20: adj 524 owner.run-answers-scope ", "by": "Jon Robbins"}
 {"when": "2026-11-20T15:25:51Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-20: adj 526 ui.status-text-layout = c", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:25:58Z", "item": "S240", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T15:38:04Z", "item": "S515", "action": "add", "from": "", "to": "open", "note": "flag when a pane field that one mode overwrites is read as a default by another mode"}
+{"when": "2026-11-20T15:38:04Z", "item": "S515", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:38:09Z", "item": "S516", "action": "add", "from": "", "to": "open", "note": "create the renders directory before starting the UI role, or say in the prompt that the role must create it"}
+{"when": "2026-11-20T15:38:10Z", "item": "S516", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:38:45Z", "item": "S512", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S510 (reviewer may write its own temp dir)."}
+{"when": "2026-11-20T15:38:45Z", "item": "S513", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S509 (test read-only allowlist entries against write commands)."}
+{"when": "2026-11-20T15:38:45Z", "item": "S509", "action": "note", "from": "", "to": "", "note": "Merged S513 (2026-11-20): prefer Claude Code's real permissi", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:38:45Z", "item": "S514", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 (render test fixtures, adj 513/514/515/517)."}
+{"when": "2026-11-20T15:38:45Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Merged S514 (2026-11-20): the pausedShow fixture includes a ", "by": "Jon Robbins"}

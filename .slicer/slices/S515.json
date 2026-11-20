@@ -1,0 +1,39 @@
+{
+  "id": "S515",
+  "title": "flag when a pane field that one mode overwrites is read as a default by another mode",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261120-152521-6bf4, project ork, item S355:\n\nflag when a pane field that one mode overwrites is read as a default by another mode\n\nEvidence: pane.adj is set by both the finding Owner key (internal/tui/pane.go:431) and ctrl+a, but read as the run-question opt-out (internal/tui/model.go:1906)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
