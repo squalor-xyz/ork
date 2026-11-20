@@ -23348,7 +23348,7 @@
       "id": "S417",
       "title": "let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done",
       "short_title": "let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -23358,6 +23358,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 488 roles.implementer-run-reports = allow (add Bash(ork show*) to both implementer presets).",
           "created_at": "2026-11-18T22:28:43Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "749ad2fb-900a-486b-89ed-e4a5bfe078c0",
+          "kind": "",
+          "text": "**2026-11-20** — The Python preset CLI example now documents 26 permission patterns, matching the updated CLI test and added ork show permission.",
+          "created_at": "2026-11-20T00:25:21Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -23384,7 +23398,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

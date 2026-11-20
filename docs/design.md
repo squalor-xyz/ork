@@ -2450,6 +2450,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   also include `Bash(git ls-files*)`, `Bash(git -C * ls-files*)`,
   `Bash(git mv*)`, `Bash(git -C * mv*)`, `Bash(git rm *)`,
   `Bash(git -C * rm *)` and `Bash(rm *)` (adj 478).
+  Both presets also include `Bash(ork show*)` (adj 488). An implementer reads
+  a run report named by its slice with `ork show RUN NAME`, without reading
+  ork's state directory directly. No other ork command is added.
   The approval hook checks paths before matching these patterns and
   does not grant recursive flags through the plain `Bash(rm *)` entry.
   Short options containing `r` or `R`, and the long recursive option, require
@@ -3764,7 +3767,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `--permission implementer=...` or with `--replace-allow --allow
   implementer=...` is a usage error. The text line counts the roles changed
   by `--preset` and `--allow` and names the preset applied
-  (`implementer:25 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
+  (`implementer:26 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
   first `:` ends the vendor and the first `=` ends the key) and
   `--unset-vendor-env VENDOR:KEY` removes one key, and the vendor once it is
   empty; an empty value (`VENDOR:KEY=`) is kept as an empty string. A role or a key changes alone, so a second command does not need the

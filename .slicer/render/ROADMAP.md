@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-481 items · — 57 · done 341 · retired 83
+481 items · — 56 · done 342 · retired 83
 
 ## v1.3
 
@@ -186,7 +186,7 @@ v1.2
 | 129 | [S408](slices/S408.md) | ork retry re-lands a committed run whose landing was blocked | M | 1 |  | 2026-11-17: S387 (run ork-20261117-021246-a004) committed, then its landing re-check went red because main's adj records were uncommitted (orchestrator error, fixed in 037800d8). landBlocked (internal/engine/land.go:262-266) stopped the run after its one land fix; NotResumable (internal/engine/resume.go:24-25) refuses retry for any committed run, so the orchestrator merged main, re-ran the checks and fast-forwarded main by hand (dae60175). Owner rule 2026-11-17: deterministic work runs as code. | done |
 | 130 | [S415](slices/S415.md) | Let the reviewer run go test, gofmt, slicer show, and slicer goals in the foreground without an approval prompt. | S | 1 |  | Owner 2026-11-18 (adj 486): not worth it; Grok is out until 2026-12-01 and ends 2026-12-09. · discovered from S396 | retired |
 | 131 | [S416](slices/S416.md) | give the UI pass a pre-approved way to render views outside the tree, such as a scratch copy of the module or an ANSI strip into TMPDIR, so it can produce the 120x40 and ASCII renders | S | 1 |  | discovered from S390 | — |
-| 132 | [S417](slices/S417.md) | let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done | S | 1 |  | discovered from S381 | — |
+| 132 | [S417](slices/S417.md) | let the implementer role read run reports through ork show, or copy the named reports into the brief, so fixture steps can be done | S | 1 |  | discovered from S381 | done |
 | 133 | [S418](slices/S418.md) | Cloud Claude read-only roles run on the read-only allowlist, not plan mode | S | 1 |  | discovered from S388 | done |
 | 134 | [S423](slices/S423.md) | say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it" | S | 1 |  | discovered from S403 | done |
 | 135 | [S424](slices/S424.md) | have ork compare the diff hash with the previous round's and state "tree unchanged since round N" in the brief, so a resumed gate does not need to re-derive it | M | 2 |  | discovered from S403 | done |

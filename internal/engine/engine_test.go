@@ -1079,7 +1079,7 @@ func TestChecksWithoutACheckCommandRunOnlySlicerCheck(t *testing.T) {
 	if len(h.checks.calls) != 0 || len(h.calls("slicer", "check")) != 1 {
 		t.Fatalf("check calls %v, slicer check %v", h.checks.calls, h.calls("slicer", "check"))
 	}
-	if req := h.runner.requests()[0]; len(req.Allowlist) != 28 {
+	if req := h.runner.requests()[0]; len(req.Allowlist) != 29 {
 		t.Errorf("allowlist without a check command: %v", req.Allowlist)
 	}
 }
@@ -1876,7 +1876,8 @@ func TestFixBriefKeepsTheAssertionWhenTheOutputIsLong(t *testing.T) {
 			t.Errorf("the brief lost %q:\n%.1500s", want, brief)
 		}
 	}
-	if n := len(brief); n > 30000+8000+8000 {
+	// S417 adds named-report guidance to the implementer prompt.
+	if n := len(brief); n > 30000+8200+8000 {
 		t.Errorf("the brief grew to %d bytes", n)
 	}
 }

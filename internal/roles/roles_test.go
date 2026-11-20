@@ -19,6 +19,21 @@ import (
 // engine fills them (S04); roles.go lists them in its top comment.
 var knownPlaceholders = []string{"report_path", "slice_id", "temp_dir", "worktree", "renders_dir"}
 
+func TestImplementerPromptNamesOrkShowForRunReports(t *testing.T) {
+	p := prompts(t)["implementer"]
+	for _, want := range []string{
+		"When the slice names a run report (a run id and a report name)",
+		"read it with `ork show RUN NAME`",
+		"Do not read ork's state directory directly.",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(p, want) {
+				t.Errorf("implementer prompt lacks %q", want)
+			}
+		})
+	}
+}
+
 func TestImplementerPromptSaysHowToRename(t *testing.T) {
 	p := prompts(t)["implementer"]
 	for _, want := range []string{
