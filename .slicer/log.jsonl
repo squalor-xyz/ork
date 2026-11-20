@@ -6022,3 +6022,7 @@
 {"when": "2026-11-20T13:07:38Z", "item": "S505", "action": "note", "from": "", "to": "", "note": "Replaces S465, S469, S471, S472, S478, S479, S481, S485, S48", "by": "Jon Robbins"}
 {"when": "2026-11-20T13:07:46Z", "item": "S503", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519: the brief names the denied forms)."}
 {"when": "2026-11-20T13:07:46Z", "item": "S504", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519: brief-first; python3 -c is not added)."}
+{"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-20T13:36:13Z", "item": "S449", "action": "edit", "from": "", "to": "", "note": "Implement"}
