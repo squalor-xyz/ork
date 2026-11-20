@@ -1513,8 +1513,8 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   record with the reporting role, and the record keeps the first 3 of a run, in
   report order. They are advisory: the gate never decides on them, a fix round
   and the next brief do not carry them, and nothing runs `slicer feedback` for
-  them. A spec check has no run, so its lines are dropped. Showing them in the
-  TUI or `ork show` is not built.
+  them. A spec check has no run, so it keeps none (see **Spec check** below).
+  The TUI does not show them; `ork show` does (see **In `ork show`** below).
 
   *Proposed* (S387, owner decisions of 2026-11-17: adj 410 `feedback.auto-file`,
   411 `feedback.safe-kinds`, 412 `feedback.target`, 413 `feedback.when`, 414
@@ -1584,6 +1584,23 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
     orchestrator's direct `adj decide` (`--by` the owner, `--why` citing the
     session) is seen on the next scheduled refresh. ork itself never runs `adj
     decide` for these records.
+  - **In `ork show`** (*proposed*, S389; owner decision of 2026-11-17: adj 417
+    `feedback.scope-extras`, `both`). `run.show` carries `tool_feedback`, a
+    list of `{n, role, tool, kind, proposal, filed, asked, error}` (`asked` is
+    the adj id, `error` the entry's `file_error`; evidence and key stay in the
+    record). `ork show RUN` prints, after the findings, `tool feedback:` and one
+    line per entry, `  N ROLE KIND TOOL  PROPOSAL`, then `    filed as ID`,
+    `    asked as adj #ID` or `    not filed: ERROR` when there is one. A run
+    with no entries prints no section and `--json` has no `tool_feedback` key.
+  - **Spec check** (*proposed*, S389; adj 417). A spec check has no run record,
+    so it keeps no entries. When its report is accepted, ork files the entries
+    through the same `FileToolFeedback`, with the check's project, no run id,
+    and as the item the check's one item (none for a batch of several, so no
+    `--discovered-from`). The Why section says `spec check of ITEMS`. The
+    results are not stored. A failure changes no verdict and is no error of the
+    check. The key is the run's key, so a repeated or retried check files
+    nothing new (`runSpecCheckOnce`, `internal/engine/speccheck.go`;
+    `TestSpecCheckFilesItsToolFeedback`).
 - **Structured questions** (`ui.structured-questions`, adj #168). Roles write
   this block under `## Owner needed`, with 2 to 4 options, distinct labels,
   consecutive numbers starting at 1, and a recommendation naming an option:

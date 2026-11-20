@@ -226,6 +226,22 @@ func writeShow(o *output, r daemon.ShowReply) {
 			fmt.Fprintf(w, "    filed as %s\n", f.Filed)
 		}
 	}
+	if len(r.ToolFeedback) > 0 {
+		// Tool feedback (S389, *proposed*; adj 417): each kept entry, then what
+		// came of filing it.
+		fmt.Fprintln(w, "tool feedback:")
+	}
+	for _, f := range r.ToolFeedback {
+		fmt.Fprintf(w, "  %d %s %s %s  %s\n", f.N, runrec.PlainText(f.Role), runrec.PlainText(f.Kind), runrec.PlainText(f.Tool), runrec.PlainText(f.Proposal))
+		switch {
+		case f.Filed != "":
+			fmt.Fprintf(w, "    filed as %s\n", runrec.PlainText(f.Filed))
+		case f.Asked != 0:
+			fmt.Fprintf(w, "    asked as adj #%d\n", f.Asked)
+		case f.Error != "":
+			fmt.Fprintln(w, labeled("    ", "not filed: ", f.Error))
+		}
+	}
 	if len(showNames(r)) > 0 {
 		fmt.Fprintf(w, "read a report or log: ork show %s NAME\n", r.ID)
 	}

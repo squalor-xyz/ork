@@ -22192,12 +22192,41 @@
       "id": "S389",
       "title": "Show tool feedback in ork show and file a spec check's tool feedback",
       "short_title": "Tool feedback in ork show and spec checks",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S388"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "dc6848f7-593e-4464-87eb-635fe6e0a816",
+          "kind": "",
+          "text": "**2026-11-20** — Human checks at approval (S389):\n- later: UI pass (r14): `ork show RUN` with three entries reads clearly at 80 columns.",
+          "created_at": "2026-11-20T15:11:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5a9df5a0-220d-495e-833c-f4d0571b8ddb",
+          "kind": "",
+          "text": "**2026-11-20** — `ork show` prints a run's tool feedback with each entry's filed item, adj question or filing error, `run.show` carries it as `tool_feedback`, and a spec check files its own tool feedback through `FileToolFeedback` without changing its verdicts; go vet, gofmt, go test ./..., slicer check pass.",
+          "created_at": "2026-11-20T15:11:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -22215,7 +22244,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/runs.go:2863-2872` (`ShowReply.ToolFeedback`, a `ShowToolFeedback` type)\n- `internal/daemon/runs.go:3006-3058` (fill it from the record)\n- `internal/daemon/show_test.go`\n- `internal/cli/show.go:206-220` (print the section)\n- `internal/cli/show_test.go`\n- `internal/engine/speccheck.go:417-424` (file the entries)\n- `internal/engine/speccheck_test.go`\n- `docs/design.md:1313-1325`\n- `docs/orchestrator-parity.md:148`\n- `CHANGELOG.md`"
+      "body": "- `internal/daemon/runs.go:3101-3114` (`ShowReply.ToolFeedback`, a `ShowToolFeedback` type)\n- `internal/daemon/runs.go:3302-3304` (fill it from the record)\n- `internal/daemon/show_test.go`\n- `internal/cli/show.go:229-244` (print the section)\n- `internal/cli/show_test.go`\n- `internal/engine/speccheck.go:564-574` (file the entries)\n- `internal/engine/toolfeedback.go` (`ToolFeedbackSource`: the filer names a run or a spec check)\n- `internal/engine/toolfeedback_test.go` (the spec check tests)\n- `internal/engine/speccheck_test.go` (`specHarnessRoutes`)\n- `docs/design.md:1505-1517`\n- `docs/design.md:1587-1603`\n- `docs/orchestrator-parity.md:147-148`\n- `landed-changed/S389.md` (written by `slicer changelog add`; `CHANGELOG.md` is not edited)"
     },
     {
       "heading": "Failing tests",

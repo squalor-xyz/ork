@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"reflect"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 
@@ -465,6 +466,142 @@ func TestSpecCheckOwnerTextLeavesOutToolFeedback(t *testing.T) {
 	saved, err := os.ReadFile(filepath.Join(cfg.Dir, "spec-check.md"))
 	if err != nil || !strings.Contains(string(saved), line) {
 		t.Fatalf("saved report %q, %v", saved, err)
+	}
+}
+
+const specTFLine = "tool feedback: 1. spec-check | tool: ork | kind: friction | proposal: Name the item in the check outline | evidence: had to read the brief twice"
+
+// specFilingCheck runs a spec check of items whose report ends with lines,
+// with `slicer add` answering add. It returns the harness, the result and the
+// check's directory.
+func specFilingCheck(t *testing.T, add clitest.Route, items []string, report string, lines ...string) (*harness, *SpecCheckResult, string, error) {
+	t.Helper()
+	add.Tool, add.Args, add.Prefix = "slicer", []string{"add"}, true
+	h := specHarnessRoutes(t, []clitest.Route{
+		add,
+		{Tool: "slicer", Args: []string{"promote"}, Prefix: true, Stdout: `{"id":"S130"}`},
+		{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[]`},
+	}, nil)
+	h.deps.Project = registeredProjects(h.proj)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role != RoleSpecCheck {
+			return Result{}, nil
+		}
+		return Result{Exit: ExitOK, Session: "sess", Report: report + strings.Join(lines, "\n") + "\n"}, nil
+	}
+	cfg := specConfig(h, t)
+	cfg.Items = items
+	res, err := RunSpecCheck(context.Background(), h.deps, cfg)
+	return h, res, cfg.Dir, err
+}
+
+const (
+	specOneReport = "## Slice S10\nReady\n\n## Owner needed\n\nnone\n"
+	specAddNew    = `{"id":"S130","title":"x","status":"open","existing":false}`
+)
+
+// A spec check has no run record, so its tool feedback is filed and not kept
+// (S389, *proposed*; adj 417): the verdicts are the ones the report gives
+// without the line.
+func TestSpecCheckFilesItsToolFeedback(t *testing.T) {
+	_, base, _, err := specFilingCheck(t, clitest.Route{Stdout: specAddNew}, []string{"S10"}, specOneReport)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h, res, dir, err := specFilingCheck(t, clitest.Route{Stdout: specAddNew}, []string{"S10"}, specOneReport, specTFLine)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(res.Verdicts, base.Verdicts) || len(res.Verdicts) != 1 || !res.Verdicts[0].Ready {
+		t.Fatalf("verdicts %+v, want %+v", res.Verdicts, base.Verdicts)
+	}
+	key := ToolFeedbackKey("ork", "friction", "Name the item in the check outline")
+	want := []string{"add", "Name the item in the check outline", "--discovered-from", "S10", "--key", key, "--render", "--json", "--lean", "--root", h.P}
+	adds := h.calls("slicer", "add")
+	if len(adds) != 1 || !reflect.DeepEqual(adds[0], want) {
+		t.Fatalf("slicer add calls %q, want %q", adds, want)
+	}
+	promotes := h.calls("slicer", "promote")
+	if len(promotes) != 1 || promotes[0][1] != "S130" {
+		t.Fatalf("slicer promote calls %q", promotes)
+	}
+	outline, err := os.ReadFile(promotes[0][3])
+	if err != nil {
+		t.Fatal(err)
+	}
+	if filepath.Dir(promotes[0][3]) != dir {
+		t.Errorf("the outline is written in the check's directory, not %s", promotes[0][3])
+	}
+	for _, want := range []string{"### Why", "spec-check", "spec check of S10", "had to read the brief twice"} {
+		if !strings.Contains(string(outline), want) {
+			t.Errorf("outline lacks %q:\n%s", want, outline)
+		}
+	}
+	if strings.Contains(string(outline), "ork run") {
+		t.Errorf("a spec check has no run:\n%s", outline)
+	}
+}
+
+// With more than one item the entry has no item to be discovered from, and the
+// outline names all of them.
+func TestSpecCheckToolFeedbackOfSeveralItemsHasNoDiscoveredFrom(t *testing.T) {
+	h, _, _, err := specFilingCheck(t, clitest.Route{Stdout: specAddNew}, []string{"S10", "S11"}, specReport, specTFLine)
+	if err != nil {
+		t.Fatal(err)
+	}
+	adds := h.calls("slicer", "add")
+	if len(adds) != 1 || slices.Contains(adds[0], "--discovered-from") {
+		t.Fatalf("slicer add calls %q", adds)
+	}
+	promotes := h.calls("slicer", "promote")
+	if len(promotes) != 1 {
+		t.Fatalf("slicer promote calls %q", promotes)
+	}
+	if outline, _ := os.ReadFile(promotes[0][3]); !strings.Contains(string(outline), "spec check of S10, S11") {
+		t.Errorf("outline:\n%s", outline)
+	}
+}
+
+// The key is the same on every check, and an item the key already names that
+// has its spec is not promoted again, so a retried check files nothing new.
+func TestSpecCheckToolFeedbackRepeatFilesNothingNew(t *testing.T) {
+	existing := clitest.Route{Stdout: `{"id":"S130","title":"x","status":"open","existing":true,"has_slice":true}`}
+	var keys []string
+	for range 2 {
+		h, _, _, err := specFilingCheck(t, existing, []string{"S10"}, specOneReport, specTFLine)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if n := len(h.calls("slicer", "promote")); n != 0 {
+			t.Errorf("promote ran %d times", n)
+		}
+		adds := h.calls("slicer", "add")
+		if len(adds) != 1 {
+			t.Fatalf("slicer add calls %q", adds)
+		}
+		keys = append(keys, flagValues(adds[0], "--key")...)
+	}
+	if len(keys) != 2 || keys[0] != keys[1] {
+		t.Errorf("keys %q", keys)
+	}
+}
+
+// Tool feedback is advisory: a filing that fails leaves the verdicts as they
+// were and is no error of the check.
+func TestSpecCheckToolFeedbackFailureKeepsTheVerdict(t *testing.T) {
+	_, base, _, err := specFilingCheck(t, clitest.Route{Stdout: specAddNew}, []string{"S10"}, specOneReport)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h, res, _, err := specFilingCheck(t, clitest.Route{Exit: 3, Stderr: "slicer: broken"}, []string{"S10"}, specOneReport, specTFLine)
+	if err != nil {
+		t.Fatalf("error %v", err)
+	}
+	if n := len(h.calls("slicer", "add")); n != 1 {
+		t.Fatalf("slicer add ran %d times, want 1", n)
+	}
+	if !reflect.DeepEqual(res.Verdicts, base.Verdicts) {
+		t.Fatalf("verdicts %+v, want %+v", res.Verdicts, base.Verdicts)
 	}
 }
 

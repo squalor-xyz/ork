@@ -561,7 +561,17 @@ entries:
 		return nil, fmt.Errorf("save spec report: %w", err)
 	}
 	removeFailedSpecReports(cfg.Dir) // a passing check keeps none, even from its own first attempt (S494)
-	clean, _ := splitToolFeedback("", text)
+	clean, feedback := splitToolFeedback(RoleSpecCheck, text)
+	// A spec check has no run record, so its tool feedback is filed and not
+	// kept (S389, *proposed*; adj 417). The filer's key keeps a retried check
+	// from filing twice; a failure changes no verdict.
+	if len(feedback) > 0 {
+		item := ""
+		if len(cfg.Items) == 1 {
+			item = cfg.Items[0]
+		}
+		FileToolFeedback(ctx, d, cfg.ledger.writer, cfg.Dir, cfg.Project, item, ToolFeedbackSource{SpecItems: cfg.Items}, feedback)
+	}
 	owner, _ := section(clean, ownerHeading)
 	packs := map[string]string{}
 	for _, id := range cfg.LocalItems {

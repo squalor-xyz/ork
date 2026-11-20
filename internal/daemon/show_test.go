@@ -8,6 +8,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -82,6 +83,45 @@ func TestRunShowReturnsThePauseInFull(t *testing.T) {
 	}
 	if MethodRunShow != "run.show" {
 		t.Fatalf("method %q", MethodRunShow)
+	}
+}
+
+// run.show carries each kept tool feedback entry with its filed item, its adj
+// question or its filing error (S389, *proposed*; adj 417). A run with none
+// has no field.
+func TestShowJSONCarriesToolFeedback(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	_, err := store.Create(runrec.Record{
+		ID: "r1", Project: p.Name, Item: "S1", State: runrec.StateAwaitingApproval,
+		ToolFeedback: []runrec.ToolFeedback{
+			{Role: "reviewer", Tool: "slicer", Kind: "friction", Proposal: "Print the id", Evidence: "E", Key: "tool-feedback-slicer-1", Filed: "S500"},
+			{Role: "implementer", Tool: "adj", Kind: "feature", Proposal: "Add a flag", Evidence: "E", Key: "tool-feedback-adj-2", Asked: 21},
+			{Role: "gate", Tool: "ork", Kind: "deterministic-check", Proposal: "Check it", Evidence: "E", Key: "tool-feedback-ork-3", FileError: "slicer add: exit 3"},
+		},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Create(runrec.Record{ID: "r2", Project: p.Name, Item: "S2", State: runrec.StateAwaitingApproval}); err != nil {
+		t.Fatal(err)
+	}
+	got := showShow(t, d, "r1")
+	want := []ShowToolFeedback{
+		{N: 1, Role: "reviewer", Tool: "slicer", Kind: "friction", Proposal: "Print the id", Filed: "S500"},
+		{N: 2, Role: "implementer", Tool: "adj", Kind: "feature", Proposal: "Add a flag", Asked: 21},
+		{N: 3, Role: "gate", Tool: "ork", Kind: "deterministic-check", Proposal: "Check it", Error: "slicer add: exit 3"},
+	}
+	if !reflect.DeepEqual(got.ToolFeedback, want) {
+		t.Fatalf("tool feedback %+v, want %+v", got.ToolFeedback, want)
+	}
+	raw := string(request(t, d, MethodRunShow, `{"run":"r1"}`))
+	for _, w := range []string{`"tool_feedback":[{"n":1,"role":"reviewer","tool":"slicer","kind":"friction","proposal":"Print the id","filed":"S500"}`, `"asked":21`, `"error":"slicer add: exit 3"`} {
+		if !strings.Contains(raw, w) {
+			t.Errorf("reply lacks %s: %s", w, raw)
+		}
+	}
+	if raw := string(request(t, d, MethodRunShow, `{"run":"r2"}`)); strings.Contains(raw, "tool_feedback") {
+		t.Errorf("a run with no entries carries the field: %s", raw)
 	}
 }
 

@@ -70,7 +70,15 @@ func specHarnessHead(t *testing.T, heads []clitest.Reply, status ...string) *har
 
 func specHarnessStatusReads(t *testing.T, heads []clitest.Reply, status ...string) *harness {
 	t.Helper()
+	return specHarnessRoutes(t, nil, heads, status...)
+}
+
+// specHarnessRoutes is specHarnessStatusReads with extra routes, answered
+// before the rest.
+func specHarnessRoutes(t *testing.T, extra []clitest.Route, heads []clitest.Reply, status ...string) *harness {
+	t.Helper()
 	h := newHarness(t, func(o *harnessOpts) {
+		o.routes = append(o.routes, extra...)
 		o.routesFor = func(P, W string) []clitest.Route {
 			if len(heads) == 0 {
 				heads = []clitest.Reply{{Stdout: "abc\n"}}

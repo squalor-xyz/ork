@@ -190,6 +190,47 @@ func TestShowJSON(t *testing.T) {
 	}
 }
 
+// The tool feedback section lists each kept entry, then what came of filing it:
+// the item, the adj question or the reason nothing was filed (S389, *proposed*;
+// adj 417).
+func TestShowListsToolFeedbackWithFiledAndAsked(t *testing.T) {
+	show := daemon.ShowReply{ID: "r1", Item: "S9", State: "awaiting-approval", ToolFeedback: []daemon.ShowToolFeedback{
+		{N: 1, Role: "reviewer", Tool: "slicer", Kind: "friction", Proposal: "Print the run id on start", Filed: "S500"},
+		{N: 2, Role: "implementer", Tool: "adj", Kind: "feature", Proposal: "Add a --json flag", Asked: 21},
+		{N: 3, Role: "gate", Tool: "ork", Kind: "deterministic-check", Proposal: "Check the flag order", Error: "slicer add: exit 3"},
+	}}
+	log := showDouble(show, nil)
+	code, out, errs := runCLI(&App{Call: log.call}, "show", "r1")
+	if code != ExitOK || errs != "" {
+		t.Fatalf("code %d, stderr %q", code, errs)
+	}
+	want := "tool feedback:\n" +
+		"  1 reviewer friction slicer  Print the run id on start\n" +
+		"    filed as S500\n" +
+		"  2 implementer feature adj  Add a --json flag\n" +
+		"    asked as adj #21\n" +
+		"  3 gate deterministic-check ork  Check the flag order\n" +
+		"    not filed: slicer add: exit 3\n"
+	if !strings.Contains(out, want) {
+		t.Errorf("output lacks\n%s\nin:\n%s", want, out)
+	}
+}
+
+// A run with no entries has no tool feedback section, and an entry that was not
+// filed yet is listed with no outcome line.
+func TestShowWithoutToolFeedbackPrintsNoSection(t *testing.T) {
+	log := showDouble(daemon.ShowReply{ID: "r1", Item: "S9", State: "awaiting-approval"}, nil)
+	code, out, _ := runCLI(&App{Call: log.call}, "show", "r1")
+	if code != ExitOK || strings.Contains(out, "tool feedback") {
+		t.Errorf("code %d, output:\n%s", code, out)
+	}
+	show := daemon.ShowReply{ID: "r1", Item: "S9", State: "implement", ToolFeedback: []daemon.ShowToolFeedback{{N: 1, Role: "reviewer", Tool: "slicer", Kind: "friction", Proposal: "P"}}}
+	_, out, _ = runCLI(&App{Call: showDouble(show, nil).call}, "show", "r1")
+	if !strings.Contains(out, "tool feedback:\n  1 reviewer friction slicer  P\n") || strings.Contains(out, "filed") || strings.Contains(out, "asked") {
+		t.Errorf("output:\n%s", out)
+	}
+}
+
 func TestShowQuestionPausePrintsTheOptions(t *testing.T) {
 	ask := &runrec.OwnerQuestion{Title: "Which store?", Options: []runrec.Option{{Label: "sqlite", Summary: "one file"}, {Label: "json", Summary: "plain"}}, Recommend: 2, Reason: "no dependency"}
 	show := daemon.ShowReply{

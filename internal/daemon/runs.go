@@ -3097,6 +3097,22 @@ type ShowReply struct {
 	LatestReport string        `json:"latest_report,omitempty"` // the pending role and round's newest report, else the newest report
 	Landed       bool          `json:"landed,omitempty"`        // proposed (S257): committed and landed on the base branch by ork
 	Grants       []string      `json:"grants,omitempty"`        // proposed (S346): the patterns ork retry --allow granted this run's implementer
+
+	ToolFeedback []ShowToolFeedback `json:"tool_feedback,omitempty"` // proposed (S389; adj 417): the kept entries, in report order
+}
+
+// ShowToolFeedback is one kept tool feedback entry with what came of filing it:
+// Filed is the new item's id, Asked the adj record id of its question and Error
+// why nothing was filed or asked. It has no evidence and no key.
+type ShowToolFeedback struct {
+	N        int    `json:"n"`
+	Role     string `json:"role"`
+	Tool     string `json:"tool"`
+	Kind     string `json:"kind"`
+	Proposal string `json:"proposal"`
+	Filed    string `json:"filed,omitempty"`
+	Asked    int    `json:"asked,omitempty"`
+	Error    string `json:"error,omitempty"`
 }
 
 // ShowCheck is one run of the project's checks, with the name of its log. It
@@ -3282,6 +3298,9 @@ func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
 	}
 	for i, f := range rec.Findings {
 		reply.Findings = append(reply.Findings, ShowFinding{Ask: f.Ask, N: i + 1, Kind: f.Kind, Title: f.Title, Text: f.Text, Answer: f.Answer, Filed: f.Filed})
+	}
+	for i, f := range rec.ToolFeedback {
+		reply.ToolFeedback = append(reply.ToolFeedback, ShowToolFeedback{N: i + 1, Role: f.Role, Tool: f.Tool, Kind: f.Kind, Proposal: f.Proposal, Filed: f.Filed, Asked: f.Asked, Error: f.FileError})
 	}
 	return reply, nil
 }
