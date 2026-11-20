@@ -6104,3 +6104,10 @@
 {"when": "2026-11-20T15:38:45Z", "item": "S509", "action": "note", "from": "", "to": "", "note": "Merged S513 (2026-11-20): prefer Claude Code's real permissi", "by": "Jon Robbins"}
 {"when": "2026-11-20T15:38:45Z", "item": "S514", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 (render test fixtures, adj 513/514/515/517)."}
 {"when": "2026-11-20T15:38:45Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Merged S514 (2026-11-20): the pausedShow fixture includes a ", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:39:02Z", "item": "S517", "action": "add", "from": "", "to": "open", "note": "create the renders directory before the UI role starts"}
+{"when": "2026-11-20T15:39:02Z", "item": "S517", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:39:02Z", "item": "S517", "action": "note", "from": "", "to": "", "note": "possible duplicate of S516", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:43:15Z", "item": "S518", "action": "add", "from": "", "to": "open", "note": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph"}
+{"when": "2026-11-20T15:43:15Z", "item": "S518", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:47:16Z", "item": "S519", "action": "add", "from": "", "to": "open", "note": "allow go -C WORKTREE run ./cmd/ork help in the reviewer allowlist so the slice's Check line can be run as written"}
+{"when": "2026-11-20T15:47:16Z", "item": "S519", "action": "promote", "from": "", "to": "", "note": ""}

@@ -1,0 +1,39 @@
+{
+  "id": "S517",
+  "title": "create the renders directory before the UI role starts",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261120-152522-c419, project ork, item S394:\n\ncreate the renders directory before the UI role starts\n\nEvidence: the first overlay run failed with \"open .../tmp/ui-1/renders/note-field-80x24.txt: no such file or directory\" and mkdir is not an allowed command"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
