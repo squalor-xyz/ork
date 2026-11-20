@@ -5899,3 +5899,7 @@
 {"when": "2026-11-20T00:15:40Z", "item": "S488", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T00:15:59Z", "item": "S487", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S475: the UI brief names the -renders directory, the role's temp directory (TMPDIR), per adj 508."}
 {"when": "2026-11-20T00:15:59Z", "item": "S475", "action": "note", "from": "", "to": "", "note": "Merged S487 (2026-11-20). -renders uses the brief's 'Your te", "by": "Jon Robbins"}
+{"when": "2026-11-20T00:16:28Z", "item": "S489", "action": "add", "from": "", "to": "open", "note": "when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path"}
+{"when": "2026-11-20T00:16:28Z", "item": "S489", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T00:25:20Z", "item": "S490", "action": "add", "from": "", "to": "open", "note": "tell the implementer in the brief that socket-bound packages fail inside its sandbox and that ork runs the suite itself, so its Tests line does not report sandbox failures"}
+{"when": "2026-11-20T00:25:20Z", "item": "S490", "action": "promote", "from": "", "to": "", "note": ""}
