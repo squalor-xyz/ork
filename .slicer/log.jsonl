@@ -5954,3 +5954,9 @@
 {"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that shell variables are denied, so reviewers use literal absolute paths"}
 {"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "note", "from": "", "to": "", "note": "possible duplicate of S481", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:24:40Z", "item": "S496", "action": "add", "from": "", "to": "open", "note": "allow shell variables or give reviewers a grep of a fixed file path without a var"}
+{"when": "2026-11-20T02:24:40Z", "item": "S496", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:27:53Z", "item": "S497", "action": "add", "from": "", "to": "open", "note": "allow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied"}
+{"when": "2026-11-20T02:27:53Z", "item": "S497", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "add", "from": "", "to": "open", "note": "let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied"}
+{"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "promote", "from": "", "to": "", "note": ""}

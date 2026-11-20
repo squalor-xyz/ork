@@ -1,0 +1,39 @@
+{
+  "id": "S498",
+  "title": "let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261120-014727-adb2, project ork, item S307:\n\nlet read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied\n\nEvidence: last round, a Bash call with F=path then grep $F was denied: \"A variable in this command can't be checked before it runs\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

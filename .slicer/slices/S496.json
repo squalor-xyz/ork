@@ -1,0 +1,39 @@
+{
+  "id": "S496",
+  "title": "allow shell variables or give reviewers a grep of a fixed file path without a var",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-014727-adb2, project ork, item S307:\n\nallow shell variables or give reviewers a grep of a fixed file path without a var\n\nEvidence: Bash with F=path; grep ... $F was denied: \"A variable in this command can't be checked before it runs\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
