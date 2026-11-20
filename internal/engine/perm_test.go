@@ -4,6 +4,7 @@ package engine
 
 import (
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -11,6 +12,71 @@ import (
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+// allowlistMatches reports whether a Bash(...) entry matches the command, with
+// `*` as a wildcard for any text (Claude Code's prefix-pattern rule).
+func allowlistMatches(entry, command string) bool {
+	pat, ok := strings.CutSuffix(strings.TrimPrefix(entry, "Bash("), ")")
+	if !ok || !strings.HasPrefix(entry, "Bash(") {
+		return false
+	}
+	parts := strings.Split(pat, "*")
+	for i := range parts {
+		parts[i] = regexp.QuoteMeta(parts[i])
+	}
+	return regexp.MustCompile("^" + strings.Join(parts, ".*") + "$").MatchString(command)
+}
+
+// The slicer entries must be plain read-only: no form that writes tracking
+// may match (S505 fix round 2, adj 519).
+func TestReadOnlyAllowlistMatchesNoTrackingWrite(t *testing.T) {
+	list := LocalReadOnlyAllowlist()
+	for _, command := range []string{
+		"slicer ai relay --init-roles",
+		"slicer ai relay --init-roles --force",
+		"slicer ai relay --init-roles --force --root /w",
+		`slicer note S505 --text " --help"`,
+		`slicer note S505 --text "x --help"`,
+	} {
+		t.Run(command, func(t *testing.T) {
+			for _, entry := range list {
+				if allowlistMatches(entry, command) {
+					t.Errorf("entry %s matches %q", entry, command)
+				}
+			}
+		})
+	}
+	for _, command := range []string{"slicer ai relay", "slicer ai relay --help", "slicer show --help"} {
+		t.Run("allows "+command, func(t *testing.T) {
+			for _, entry := range list {
+				if allowlistMatches(entry, command) {
+					return
+				}
+			}
+			t.Errorf("no entry matches %q", command)
+		})
+	}
+}
+
+func TestReadOnlyAllowlistBatch(t *testing.T) {
+	list := LocalReadOnlyAllowlist()
+	for _, entry := range []string{"Bash(slicer * --help)", "Bash(slicer ai relay)", "Bash(ls*)", "Bash(git ls-files*)", "Bash(git -C * ls-files*)"} {
+		t.Run(entry, func(t *testing.T) {
+			if !slices.Contains(list, entry) {
+				t.Errorf("read-only allowlist missing %s", entry)
+			}
+		})
+	}
+	for _, forbidden := range []string{"rg", "$", ";", "&&", "="} {
+		t.Run("excludes_"+forbidden, func(t *testing.T) {
+			for _, entry := range list {
+				if strings.Contains(entry, forbidden) {
+					t.Errorf("read-only allowlist contains forbidden %q in %s", forbidden, entry)
+				}
+			}
+		})
+	}
+}
 
 // S346 (*proposed*): rolePermission adds a run's grants to the implementer and
 // to a part (less its slicer writes), and to no other role.

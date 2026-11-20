@@ -2448,6 +2448,18 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
   `adj lint --root DIR`. S358 adds an exact-file Edit/Write exception for
   the local progress note described under Roles.
+  adj 519 adds plain `slicer COMMAND --help` (the command must end in
+  `--help`, so a quoted value cannot carry it), exactly `slicer ai relay` (no
+  trailing wildcard, so `--init-roles` is denied), `ls` and
+  `git ls-files` (also with `git -C`). `rg` stays out because `rg --pre`
+  runs a program (adj 520, adj 457); roles use Grep instead. Every read-only
+  brief names the denied forms: pipes, `&&` and `;` chains, redirects,
+  command substitution, shell variables, env prefixes and `cd`. It directs
+  roles to use literal absolute paths with `git -C` and `go -C`. These
+  additions grant no shell variables, chains, env prefixes or `git init`.
+  Implementer briefs say socket-bound tests may fail inside their sandbox,
+  report those as sandbox-limited, and use ork's round check outside the
+  sandbox as the evidence (adj 519).
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs

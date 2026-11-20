@@ -6026,3 +6026,11 @@
 {"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-20T13:36:13Z", "item": "S449", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T13:38:58Z", "item": "S505", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:44:54Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:05:37Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:05:37Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T14:48:42Z", "item": "S505", "action": "note", "from": "", "to": "", "note": "Made the slicer relay and help allowlist entries exact so no", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:48:42Z", "item": "S505", "action": "status", "from": "started", "to": "done", "note": "Made the slicer relay and help allowlist entries exact so no tracking write matches, added matching-based negative tests, and let the local implementer brief keep env prefixes its allowed forms start with.", "by": "Jon Robbins"}

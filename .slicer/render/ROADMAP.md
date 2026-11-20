@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-505 items · — 42 · done 353 · retired 110
+505 items · — 41 · done 354 · retired 110
 
 ## v1.3
 
@@ -264,7 +264,7 @@ v1.2
 | 207 | [S502](slices/S502.md) | flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff |  | - |  | discovered from S337 | — |
 | 208 | [S503](slices/S503.md) | say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines |  | - |  | Folded into S505 (adj 519: the brief names the denied forms). · discovered from S391 | retired |
 | 209 | [S504](slices/S504.md) | allow `python3 -I -c` reading stdin in read-only reviewer roles, or name `grep -o` as the way to pick fields out of slicer JSON |  | - |  | Folded into S505 (adj 519: brief-first; python3 -c is not added). · discovered from S318 | retired |
-| 210 | [S505](slices/S505.md) | Read-only allowlist batch | M | 2 |  | 2026-11-18 to 11-20: ten tool-feedback slices from reviewer, gate and UI passes (S465, S469, S471, S472, S478, S479, S481, S485, S486, S488) report denied commands: shell variables for the worktree path, `; echo exit=$?`, env-prefixed `go test`, `slicer COMMAND --help`, `slicer ai relay`, `rg` on test globs, `ls` and `git ls-files` in the role's own TMPDIR, `git init` for a fixture, and implementers reporting socket tests that fail only in their sandbox. Owner decision adj 519 (`roles.read-only-allowlist-batch` = brief-first, 2026-11-20). | — |
+| 210 | [S505](slices/S505.md) | Read-only allowlist batch | M | 2 |  | 2026-11-18 to 11-20: ten tool-feedback slices from reviewer, gate and UI passes (S465, S469, S471, S472, S478, S479, S481, S485, S486, S488) report denied commands: shell variables for the worktree path, `; echo exit=$?`, env-prefixed `go test`, `slicer COMMAND --help`, `slicer ai relay`, `rg` on test globs, `ls` and `git ls-files` in the role's own TMPDIR, `git init` for a fixture, and implementers reporting socket tests that fail only in their sandbox. Owner decision adj 519 (`roles.read-only-allowlist-batch` = brief-first, 2026-11-20). | done |
 
 ---
 

@@ -26854,7 +26854,7 @@
       "id": "S505",
       "title": "Read-only roles: the brief names the denied forms, and a few plain read-only commands are allowed",
       "short_title": "Read-only allowlist batch",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -26864,6 +26864,20 @@
           "text": "**2026-11-20** — Replaces S465, S469, S471, S472, S478, S479, S481, S485, S486 and S488 (2026-11-20). Not adopted per adj 519: shell variables, ; echo exit=$?, env-prefixed go test, git init in TMPDIR.",
           "created_at": "2026-11-20T13:07:38Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2ce1df39-e941-48fb-bf74-c5fb50ddae02",
+          "kind": "",
+          "text": "**2026-11-20** — Made the slicer relay and help allowlist entries exact so no tracking write matches, added matching-based negative tests, and let the local implementer brief keep env prefixes its allowed forms start with.",
+          "created_at": "2026-11-20T14:48:42Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -26890,7 +26904,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
