@@ -1590,7 +1590,7 @@ func TestProjectsSetUpdatesOneField(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if res, ok := got.(registry.Project); !ok || !res.Push || res.Name != "p" {
+	if res, ok := got.(SetProjectResult); !ok || !res.Project.Push || res.Project.Name != "p" {
 		t.Fatalf("result: %#v", got)
 	}
 	after, err := registry.Load(d.registryPath())
@@ -1617,8 +1617,8 @@ func TestProjectsSetDryRunSavesNothing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("dry run: %v", err)
 	}
-	res, ok := got.(registry.Project)
-	if !ok || !res.Push {
+	res, ok := got.(SetProjectResult)
+	if !ok || !res.Project.Push {
 		t.Fatalf("result: %#v", got)
 	}
 	if after, _ := os.ReadFile(d.registryPath()); string(after) != string(before) {
@@ -1728,7 +1728,7 @@ func TestProjectsSetRoundCheckNeedsACheckCommand(t *testing.T) {
 		if err != nil {
 			return registry.Project{}, err
 		}
-		return got.(registry.Project), nil
+		return got.(SetProjectResult).Project, nil
 	}
 	badParams := func(raw string) {
 		t.Helper()
@@ -1934,7 +1934,7 @@ func TestProjectsSetCheckRefusesAMissingFile(t *testing.T) {
 
 	// The same command with no_verify is stored.
 	got, err := d.handle(context.Background(), MethodProjectsSet, setParams(t, `{"name":"p","check_command":"`+cmd+`","no_verify":true}`))
-	if err != nil || got.(registry.Project).CheckCommand != cmd {
+	if err != nil || got.(SetProjectResult).Project.CheckCommand != cmd {
 		t.Fatalf("no_verify: %+v, %v", got, err)
 	}
 	if f, _ := registry.Load(d.registryPath()); f.Projects[0].CheckCommand != cmd {
@@ -2115,7 +2115,7 @@ func TestProjectsSetEnvironmentPermissionsAndVendorEnv(t *testing.T) {
 		if err != nil {
 			t.Fatalf("%s: %v", raw, err)
 		}
-		return got.(registry.Project)
+		return got.(SetProjectResult).Project
 	}
 
 	res := call(`{"name":"p","environment_lines":["zsh on darwin","Go 1.27.x"],"permissions":{"implementer":["Read","Grep"],"reviewer":"read-only"},"vendor_env":{"codex":{"A":"1","B":"two words"},"claude":{"X":"y"}}}`)
@@ -2304,7 +2304,7 @@ func TestProjectsSetOverTheSocket(t *testing.T) {
 	c := e.dial(t)
 	push, doc := true, "docs/ui.md"
 	p, err := c.SetProject(context.Background(), SetProjectParams{Name: "keep", Push: &push, UIDoc: &doc})
-	if err != nil || !p.Push || p.UIDoc != doc {
+	if err != nil || !p.Project.Push || p.Project.UIDoc != doc {
 		t.Fatalf("set: %+v, %v", p, err)
 	}
 	saved, _ := registry.Load(e.regPath)
@@ -2429,7 +2429,9 @@ func TestProjectsSetUIPassSkills(t *testing.T) {
 			t.Fatal(err)
 		}
 		data, _ := json.Marshal(got)
-		var result map[string]json.RawMessage
+		var result struct {
+			Project map[string]json.RawMessage `json:"project"`
+		}
 		if err := json.Unmarshal(data, &result); err != nil {
 			t.Fatal(err)
 		}
@@ -2438,8 +2440,8 @@ func TestProjectsSetUIPassSkills(t *testing.T) {
 		}
 		json.Unmarshal([]byte(raw), &input)
 		var skills []string
-		if result["ui_pass_skills"] != nil {
-			json.Unmarshal(result["ui_pass_skills"], &skills)
+		if result.Project["ui_pass_skills"] != nil {
+			json.Unmarshal(result.Project["ui_pass_skills"], &skills)
 		}
 		if len(input.Skills) != len(skills) || (len(skills) > 0 && !reflect.DeepEqual(input.Skills, skills)) {
 			t.Fatalf("returned %s", data)
@@ -2506,7 +2508,7 @@ func TestProjectsSetUIPassRows(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		proj := got.(registry.Project)
+		proj := got.(SetProjectResult).Project
 		if !reflect.DeepEqual(proj.UIPassRows, append([]string(nil), rows...)) {
 			t.Errorf("returned rows %v, want %v", proj.UIPassRows, rows)
 		}
@@ -2541,7 +2543,7 @@ func TestProjectsSetSpecCheckRows(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if proj, ok := got.(registry.Project); !ok || !reflect.DeepEqual(proj.SpecCheckRows, tc.want) {
+		if result, ok := got.(SetProjectResult); !ok || !reflect.DeepEqual(result.Project.SpecCheckRows, tc.want) {
 			t.Fatalf("returned %+v", got)
 		}
 		f, err := registry.Load(d.registryPath())
@@ -2572,7 +2574,7 @@ func TestProjectsSetAllowAddAppendsToTheList(t *testing.T) {
 		if err != nil {
 			return registry.Project{}, err
 		}
-		return got.(registry.Project), nil
+		return got.(SetProjectResult).Project, nil
 	}
 	list := func() []string {
 		t.Helper()
@@ -2651,7 +2653,7 @@ func TestProjectsSetImplementerPreset(t *testing.T) {
 		if err != nil {
 			return registry.Project{}, err
 		}
-		return got.(registry.Project), nil
+		return got.(SetProjectResult).Project, nil
 	}
 	res, err := set(`{"name":"p","check_command":"` + check + `","implementer_preset":"python"}`)
 	if err != nil {

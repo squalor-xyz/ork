@@ -426,7 +426,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		}
 		return printWaveApprove(o, result)
 	}
-	p := daemon.RunAction{Run: pos[0], Rounds: rounds, AcceptShape: acceptShape, Again: again, Allow: allows, NoWait: (command == "answer" || command == "retry") && !wait}
+	p := daemon.RunAction{Run: pos[0], Rounds: rounds, AcceptShape: acceptShape, Again: again, Allow: allows, NoWait: (command == "answer" || command == "retry") && !wait, WaitQueued: (command == "answer" || command == "retry") && wait}
 	if command == "file" {
 		n, err := strconv.Atoi(pos[1])
 		if err != nil || n < 1 {

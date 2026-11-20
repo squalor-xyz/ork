@@ -87,8 +87,9 @@ type RunAction struct {
 	Again       bool `json:"again,omitempty"`
 	// run.retry (S346, *proposed*; adj 479): tool patterns granted to this run's
 	// implementer only. The registry is not written.
-	Allow  []string `json:"allow,omitempty"`
-	NoWait bool     `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
+	Allow      []string `json:"allow,omitempty"`
+	NoWait     bool     `json:"no_wait,omitempty"`     // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
+	WaitQueued bool     `json:"wait_queued,omitempty"` // CLI answer/retry --wait also waits for a stored resume (adj 511)
 	// S316 (*proposed*; adj 233, 234): run.check with All marks every open check
 	// later (State must be "later"); run.approve with LaterChecks does the same
 	// and then approves.
@@ -149,11 +150,13 @@ type managedRun struct {
 	filed          chan struct{} // closed when that filing ends; a stop waits on it
 	stopping       bool
 	stop           *stopCall // the owner stop in flight, which later stops join
+	queuedResume   *stopCall // a CLI waiter joins the next resume or stop job
 }
 
 // stopCall is an owner stop that has not returned. A stop that arrives while
 // it is in flight joins it: the joiner waits for the stop's job and returns
-// that job's record and error.
+// that job's record and error. A queued CLI resume uses the same handle to
+// wait for the next resume or stop job.
 type stopCall struct {
 	started chan struct{} // closed once done and result are set
 	done    chan struct{} // closed when the stop's job ends
@@ -484,6 +487,10 @@ func (d *Daemon) closeRuns() {
 		d.runs.localWakeCancel()
 	}
 	for _, r := range d.runs.runs {
+		if r.queuedResume != nil {
+			r.queuedResume.abandon(errors.New("run manager is closed"))
+			r.queuedResume = nil
+		}
 		if r.cancel != nil {
 			r.cancel()
 		}
@@ -653,6 +660,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		// An error from the permission waits for the check below.
 		perm, permErr := engine.ResolvePermission(proj, role)
 		var skipped []string
+		var specSkipped []string
 		for _, choice := range rec.Roles {
 			if choice.Role != sourceRole {
 				continue
@@ -667,6 +675,7 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			}
 			for _, row := range rows {
 				if sourceRole == engine.RoleReviewer && slices.Contains(specRows, row.ID) {
+					specSkipped = append(specSkipped, row.ID)
 					continue
 				}
 				if sourceRole == engine.RoleReviewer && slices.Contains(uiSet, row.ID) {
@@ -685,6 +694,9 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 			continue
 		}
 		if len(chains[role]) == 0 {
+			if len(specSkipped) > 0 {
+				return nil, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("spec_check_rows excludes reviewer rows %s and leaves no reviewer chain; fix: ork projects set %s --spec-check-rows ... (keep a reviewer row for review)", strings.Join(specSkipped, ", "), engine.ShellWord(proj.Name))}
+			}
 			if len(skipped) > 0 {
 				return nil, fmt.Errorf("lineup has no row that can run as %s: %s", sourceRole, strings.Join(skipped, "; "))
 			}
@@ -2247,6 +2259,10 @@ func (d *Daemon) launchRun(r *managedRun, fn func(context.Context) error) {
 	r.failure = nil
 	r.recoveryFailed = false
 	r.stop = nil // a handle left by an earlier stop must not join this job
+	if r.queuedResume != nil {
+		r.queuedResume.begin(r.done, r.result)
+		r.queuedResume = nil
+	}
 	result := r.result
 	d.runs.wg.Add(1)
 	go func() {
@@ -2486,8 +2502,9 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		return RunReply{}, errors.New("unknown owner action")
 	}
 	// A paused run holds no slot, so its answer or retry needs one (adj 177). With
-	// none free the request is kept in the record, the owner is told at once, and
-	// the run starts ahead of queued runs when a slot frees (startResumesLocked).
+	// none free the request is kept in the record, and the run starts ahead of
+	// queued runs when a slot frees (startResumesLocked). Only CLI --wait joins
+	// that future job; other callers hear the slot-wait notice at once.
 	if resume != nil {
 		f, err := d.loadRunRegistryLocked()
 		if err != nil {
@@ -2496,7 +2513,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		waits := f != nil && d.runBlockedByLocked(f, r.engine) != ""
 		if waits && resume.Adj && r.engine.Snapshot().Pending.Key != "" {
 			// The answer goes to adj now; only the engine resume waits.
-			notice, err := d.fileWaitingAnswerLocked(ctx, r, p)
+			notice, err := d.fileWaitingAnswerLocked(d.runs.ctx, r, p)
 			if err != nil {
 				d.runs.mu.Unlock()
 				return RunReply{}, err
@@ -2513,6 +2530,12 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			resume.At = time.Now()
 			err := r.engine.SetResume(*resume)
 			rec := r.engine.Snapshot()
+			if err == nil && p.WaitQueued {
+				queued := &stopCall{started: make(chan struct{})}
+				r.queuedResume = queued
+				rec, err := d.joinStop(ctx, queued)
+				return d.finishOwnerReply(ctx, r, p.Run, RunReply{Record: rec, Message: message}, err)
+			}
 			d.runs.mu.Unlock()
 			if engine.IsRefusal(err) {
 				err = &ipc.Error{Code: CodeRefused, Message: err.Error()}
@@ -2560,12 +2583,34 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 		}
 	case <-done:
 	}
-	err := result.err
+	return d.finishOwnerReply(ctx, r, p.Run, RunReply{Record: result.record, Message: message, Deferred: deferred}, result.err)
+}
+
+// finishOwnerReply keeps the filing notice when a stop cancelled either an
+// immediate answer or a queued answer whose resumed round has now started.
+func (d *Daemon) finishOwnerReply(ctx context.Context, r *managedRun, id string, reply RunReply, err error) (RunReply, error) {
+	if errors.Is(err, context.Canceled) && reply.Message != "" {
+		d.runs.mu.Lock()
+		if stop := r.stop; stop != nil {
+			rec, stopErr := d.joinStop(ctx, stop)
+			if stopErr != nil {
+				return RunReply{}, stopErr
+			}
+			if number, filed := strings.CutPrefix(reply.Message, "decided in adj as #"); filed {
+				reply.Message = fmt.Sprintf("run %s was stopped; answer filed in adj as #%s", id, number)
+			} else {
+				reply.Message = fmt.Sprintf("run %s was stopped; %s", id, reply.Message)
+			}
+			reply.Record = rec
+			return reply, nil
+		}
+		d.runs.mu.Unlock()
+	}
 	if engine.IsRefusal(err) {
 		// A refusal has its own wire code, so a client shows its text as it is (S141).
 		err = &ipc.Error{Code: CodeRefused, Message: err.Error()}
 	}
-	return RunReply{Record: result.record, Message: message, Deferred: deferred}, err
+	return reply, err
 }
 
 // joinStop waits for the stop in flight and returns its outcome. The caller
@@ -2575,11 +2620,15 @@ func (d *Daemon) joinStop(ctx context.Context, c *stopCall) (runrec.Record, erro
 	select {
 	case <-ctx.Done():
 		return runrec.Record{}, ctx.Err()
+	case <-d.runs.ctx.Done():
+		return runrec.Record{}, d.runs.ctx.Err()
 	case <-c.started:
 	}
 	select {
 	case <-ctx.Done():
 		return runrec.Record{}, ctx.Err()
+	case <-d.runs.ctx.Done():
+		return runrec.Record{}, d.runs.ctx.Err()
 	case <-c.done:
 	}
 	return c.result.record, c.result.err

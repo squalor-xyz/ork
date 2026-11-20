@@ -662,6 +662,99 @@ func TestSpecCheckRefusesAnEmptyLineupAndNoItems(t *testing.T) {
 	}
 }
 
+// S494: a report that fails its shape stays on disk beside the check's files,
+// and the error names it and quotes the offending section's first line.
+func TestSpecCheckShapeFailureKeepsTheReport(t *testing.T) {
+	const report = "## Slice S10\nReady, with one note\n\n## Slice S11\nReady\n\n## Owner needed\n\nnone\n"
+	h := specHarness(t)
+	h.runner.script = func(Request, int) (Result, error) {
+		return Result{Exit: ExitOK, Report: report}, nil
+	}
+	cfg := specConfig(h, t)
+	res, err := RunSpecCheck(context.Background(), h.deps, cfg)
+	var se *ShapeError
+	if res != nil || !errors.As(err, &se) {
+		t.Fatalf("result %+v, error %v", res, err)
+	}
+	if n := len(h.runner.requests()); n != 2 {
+		t.Fatalf("%d rounds, want the first and its retry", n)
+	}
+	kept := filepath.Join(cfg.Dir, "spec-check-failed-2.md")
+	if !strings.Contains(err.Error(), kept) {
+		t.Errorf("the error does not name %s: %v", kept, err)
+	}
+	if !strings.Contains(err.Error(), `S10 begins "Ready, with one note"`) {
+		t.Errorf("the error does not quote the first line of the S10 section: %v", err)
+	}
+	if strings.Contains(err.Error(), "S11 begins") {
+		t.Errorf("the error quotes a section that is well formed: %v", err)
+	}
+	for _, name := range []string{"spec-check-failed-1.md", "spec-check-failed-2.md"} {
+		b, rerr := os.ReadFile(filepath.Join(cfg.Dir, name))
+		if rerr != nil || string(b) != report {
+			t.Errorf("%s: %q, %v; want the report the role wrote", name, b, rerr)
+		}
+	}
+}
+
+func TestSpecCheckShapeSuccessKeepsNoFailedReport(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(Request, int) (Result, error) {
+		return Result{Exit: ExitOK, Report: specReport}, nil
+	}
+	cfg := specConfig(h, t)
+	// A failed report an earlier check of the same items left behind.
+	if err := os.WriteFile(filepath.Join(cfg.Dir, "spec-check-failed-1.md"), []byte("old"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RunSpecCheck(context.Background(), h.deps, cfg); err != nil {
+		t.Fatal(err)
+	}
+	failed, err := filepath.Glob(filepath.Join(cfg.Dir, "spec-check-failed-*"))
+	if err != nil || len(failed) != 0 {
+		t.Errorf("failed reports %v, %v; want none", failed, err)
+	}
+}
+
+func TestSpecCheckShapeRetryThatPassesKeepsNoFailedReport(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(_ Request, n int) (Result, error) {
+		if n == 0 {
+			return Result{Exit: ExitOK, Report: "Looks fine."}, nil
+		}
+		return Result{Exit: ExitOK, Report: specReport}, nil
+	}
+	cfg := specConfig(h, t)
+	if _, err := RunSpecCheck(context.Background(), h.deps, cfg); err != nil {
+		t.Fatal(err)
+	}
+	if n := len(h.runner.requests()); n != 2 {
+		t.Fatalf("%d rounds, want a failed first and a passing retry", n)
+	}
+	failed, err := filepath.Glob(filepath.Join(cfg.Dir, "spec-check-failed-*"))
+	if err != nil || len(failed) != 0 {
+		t.Errorf("failed reports %v, %v; want none", failed, err)
+	}
+}
+
+func TestSpecCheckShapeFailureDropsFailedReportsOfAnOldCheck(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(Request, int) (Result, error) {
+		return Result{Exit: ExitOK, Report: "Looks fine."}, nil
+	}
+	cfg := specConfig(h, t)
+	stale := filepath.Join(cfg.Dir, "spec-check-failed-3.md")
+	if err := os.WriteFile(stale, []byte("old"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := RunSpecCheck(context.Background(), h.deps, cfg); err == nil {
+		t.Fatal("a malformed report passed")
+	}
+	if _, err := os.Stat(stale); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("the failed report of an old check stayed: %v", err)
+	}
+}
+
 func TestSpecCheckShapeErrorsAreReported(t *testing.T) {
 	for name, report := range map[string]string{
 		"missing slice":  "## Slice S10\nReady\n\n## Owner needed\n\nnone\n",

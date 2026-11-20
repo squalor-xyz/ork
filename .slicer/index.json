@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 495,
+  "next_id": 499,
   "preamble": "",
   "passes": [
     {
@@ -17773,7 +17773,7 @@
       "id": "S307",
       "title": "Later notes from S258 and S274: daemon and CLI",
       "short_title": "S258 and S274 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17832,6 +17832,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "97b035d6-477d-4f59-8615-6abbb9e498f3",
+          "kind": "",
+          "text": "**2026-11-20** — S307 daemon and CLI items A1-A5, B1-B3 and C1-C2 are implemented and verified (go vet, go test ./... on 26 packages, go test -race ./internal/daemon, gofmt, slicer check and adj lint all clean), and the slice's Git commit message no longer names the Waves no-check item that moved to S449.",
+          "created_at": "2026-11-20T02:31:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -17855,7 +17869,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -26430,10 +26444,25 @@
       "id": "S494",
       "title": "A spec check that fails its report shape keeps the report and says what it found",
       "short_title": "Spec check shape failures keep the report",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d4be27b0-cec1-4b4d-85e9-00424ded5f01",
+          "kind": "",
+          "text": "**2026-11-20** — A spec check whose report fails its shape keeps it as spec-check-failed-N.md in the check's directory; the error names the file and quotes the first line of each offending section; a passing check or a new check clears old failed reports.",
+          "created_at": "2026-11-20T02:16:16Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -26451,6 +26480,133 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
+        "attempts": 1
+      }
+    },
+    {
+      "id": "S495",
+      "title": "say in the reviewer brief that shell variables are denied, so reviewers use literal absolute paths",
+      "short_title": "say in the reviewer brief that shell variables are denied, so reviewers use literal absolute paths",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d79942c3-7952-4b6f-b131-105473f7522d",
+          "kind": "",
+          "text": "**2026-11-20** — possible duplicate of S481",
+          "created_at": "2026-11-20T02:14:41Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S494",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-d7d1fab8",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S496",
+      "title": "allow shell variables or give reviewers a grep of a fixed file path without a var",
+      "short_title": "allow shell variables or give reviewers a grep of a fixed file path without a var",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S307",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-085f6a98",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S497",
+      "title": "allow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied",
+      "short_title": "allow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S342",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0b6248ee",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S498",
+      "title": "let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied",
+      "short_title": "let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S307",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-d69d36dd",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

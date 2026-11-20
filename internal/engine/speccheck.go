@@ -223,6 +223,64 @@ type specLedger struct {
 	// times the check starts over; first is the error that earned the resume.
 	resumed bool
 	first   error
+	// failed counts the reports kept for a shape failure (S494); it numbers
+	// the files spec-check-failed-N.md.
+	failed int
+}
+
+// specShapeKept is a ShapeError that says where its report was kept and how
+// the offending sections begin (S494). It unwraps to the ShapeError.
+type specShapeKept struct {
+	Cause *ShapeError
+	Path  string
+	Heads []string // `ID begins "first line"`, one for each offending section
+}
+
+func (e *specShapeKept) Unwrap() error { return e.Cause }
+func (e *specShapeKept) Error() string {
+	msg := e.Cause.Error()
+	if len(e.Heads) > 0 {
+		msg += " (" + strings.Join(e.Heads, "; ") + ")"
+	}
+	return msg + " [report kept in " + e.Path + "]"
+}
+
+// removeFailedSpecReports deletes the spec-check-failed-N.md files of dir.
+func removeFailedSpecReports(dir string) {
+	old, _ := filepath.Glob(filepath.Join(dir, "spec-check-failed-*.md"))
+	for _, p := range old {
+		os.Remove(p)
+	}
+}
+
+// keepFailedSpecReport copies a report that failed its shape to
+// spec-check-failed-N.md in the check's directory and returns err with the
+// path and the first line of each offending section. When the copy fails, err
+// comes back as it was.
+func keepFailedSpecReport(cfg SpecCheckConfig, text string, err error) error {
+	var shape *ShapeError
+	if !errors.As(err, &shape) {
+		return err
+	}
+	path := filepath.Join(cfg.Dir, fmt.Sprintf("spec-check-failed-%d.md", cfg.ledger.failed+1))
+	if werr := os.WriteFile(path, []byte(text), 0600); werr != nil {
+		return err
+	}
+	cfg.ledger.failed++
+	kept := &specShapeKept{Cause: shape, Path: path}
+	clean, _ := splitToolFeedback("", text)
+	for _, id := range cfg.Items {
+		if !slices.ContainsFunc(shape.Problems, func(p string) bool { return strings.HasPrefix(p, id+": write Ready") }) {
+			continue
+		}
+		body, _ := section(clean, "## Slice "+id)
+		first, _, _ := strings.Cut(strings.TrimSpace(body), "\n")
+		if r := []rune(strings.TrimSpace(first)); len(r) > 120 {
+			first = string(r[:117]) + "..."
+		}
+		kept.Heads = append(kept.Heads, fmt.Sprintf("%s begins %q", id, strings.TrimSpace(first)))
+	}
+	return kept
 }
 
 // RunSpecCheck checks every item read-only and returns its verdict. A change
@@ -240,6 +298,7 @@ func RunSpecCheck(ctx context.Context, d Deps, cfg SpecCheckConfig) (result *Spe
 	if err != nil {
 		return nil, fmt.Errorf("slicer ai relay --json: %w", err)
 	}
+	removeFailedSpecReports(cfg.Dir) // a new check starts with no failed report of an old one (S494)
 	cfg.ledger = &specLedger{contract: contract, exhausted: map[string]bool{}, writer: runrec.Writer{Now: d.now, Sleep: d.Sleep, Backoff: d.Backoff}}
 	if run, err := d.Slicer.RelayBegin(ctx, cfg.ledger.writer, cfg.Project.Path, cfg.Project.Path, cfg.Items...); err == nil {
 		cfg.ledger.run = run.ID
@@ -496,11 +555,12 @@ entries:
 	}
 	verdicts, err := ParseSpecCheck(text, cfg.Items)
 	if err != nil {
-		return nil, err
+		return nil, keepFailedSpecReport(cfg, text, err)
 	}
 	if err := os.WriteFile(reportPath, []byte(text), 0600); err != nil {
 		return nil, fmt.Errorf("save spec report: %w", err)
 	}
+	removeFailedSpecReports(cfg.Dir) // a passing check keeps none, even from its own first attempt (S494)
 	clean, _ := splitToolFeedback("", text)
 	owner, _ := section(clean, ownerHeading)
 	packs := map[string]string{}

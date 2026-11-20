@@ -5940,6 +5940,15 @@
 {"when": "2026-11-20T01:00:28Z", "item": "S493", "action": "note", "from": "", "to": "", "note": "possible duplicate of S492", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:46:31Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-20: adj 511 cli.wait-queued-resume-s", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:46:51Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T01:47:42Z", "item": "S307", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T01:49:02Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T01:49:02Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T02:02:23Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T02:03:56Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T02:14:05Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T02:24:49Z", "item": "S307", "action": "edit", "from": "", "to": "", "note": "Git"}
+{"when": "2026-11-20T02:31:01Z", "item": "S307", "action": "note", "from": "", "to": "", "note": "S307 daemon and CLI items A1-A5, B1-B3 and C1-C2 are impleme", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:31:01Z", "item": "S307", "action": "status", "from": "started", "to": "done", "note": "S307 daemon and CLI items A1-A5, B1-B3 and C1-C2 are implemented and verified (go vet, go test ./... on 26 packages, go test -race ./internal/daemon, gofmt, slicer check and adj lint all clean), and the slice's Git commit message no longer names the Waves no-check item that moved to S449.", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:47:38Z", "item": "S490", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S485 (socket tests fail inside the implementer sandbox)."}
 {"when": "2026-11-20T01:47:39Z", "item": "S492", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S485 (socket tests fail inside the implementer sandbox)."}
 {"when": "2026-11-20T01:47:39Z", "item": "S493", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S485 (socket tests fail inside the implementer sandbox)."}
@@ -5953,3 +5962,16 @@
 {"when": "2026-11-20T02:29:50Z", "item": "S342", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-20T02:32:49Z", "item": "S342", "action": "note", "from": "", "to": "", "note": "wave start holds a member whose Files share a path with an e", "by": "Jon Robbins"}
 {"when": "2026-11-20T02:32:49Z", "item": "S342", "action": "status", "from": "started", "to": "done", "note": "wave start holds a member whose Files share a path with an earlier member until that member's run has landed, including when the earlier member runs as a sliver chain (its last sliver stands for it); a stopped or failed earlier run keeps the member queued, `ork status` says what it waits on, `ork wave start` prints the order before the confirm, and members with no shared path start as before.", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:07:20Z", "item": "S494", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:09:24Z", "item": "S494", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T02:16:16Z", "item": "S494", "action": "note", "from": "", "to": "", "note": "A spec check whose report fails its shape keeps it as spec-c", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:16:16Z", "item": "S494", "action": "status", "from": "started", "to": "done", "note": "A spec check whose report fails its shape keeps it as spec-check-failed-N.md in the check's directory; the error names the file and quotes the first line of each offending section; a passing check or a new check clears old failed reports.", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that shell variables are denied, so reviewers use literal absolute paths"}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "note", "from": "", "to": "", "note": "possible duplicate of S481", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:24:40Z", "item": "S496", "action": "add", "from": "", "to": "open", "note": "allow shell variables or give reviewers a grep of a fixed file path without a var"}
+{"when": "2026-11-20T02:24:40Z", "item": "S496", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:27:53Z", "item": "S497", "action": "add", "from": "", "to": "open", "note": "allow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied"}
+{"when": "2026-11-20T02:27:53Z", "item": "S497", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "add", "from": "", "to": "open", "note": "let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied"}
+{"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "promote", "from": "", "to": "", "note": ""}

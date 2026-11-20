@@ -182,7 +182,7 @@ func quoteWord(s string) string {
 // matrixUse is what ork does with a row. The gate follows the reviewer's
 // lineup (S83), ork is the orchestrator, and a row maps to an engine adapter
 // by its agent (adj 155). The UI pass row and the Spec check row are
-// reviewer rows that a rule names; they use the same adapters. A grok row of
+// reviewer rows named by project settings or rules; they use the same adapters. A grok row of
 // the implementer is used as grok: it runs a write role (S305, adj 373).
 func matrixUse(row slicercli.Row, uiRows, specRows []string) string {
 	switch row.Role {
@@ -202,10 +202,10 @@ func matrixUse(row slicercli.Row, uiRows, specRows []string) string {
 		}
 	}
 	switch {
+	case row.Role == engine.RoleReviewer && slices.Contains(specRows, row.ID):
+		return "Spec check row, " + use
 	case row.ID != "" && slices.Contains(uiRows, row.ID):
 		return "UI pass row, " + use
-	case slices.Contains(specRows, row.ID):
-		return "Spec check row, " + use
 	}
 	return use
 }

@@ -680,143 +680,147 @@ func (a *App) projectsSet(ctx context.Context, o *output, fs *flag.FlagSet, args
 	if p.SetsNothing() {
 		return o.usage("projects set needs at least one field flag (--push, --bell, --notify, --auto-land, --auto-rebuild, --ui-doc, --ui-pass-skills, --spec-check-rows, --ui-pass-rows, --worktree-pattern, --branch-pattern, --check, --contract-probe, --build, --round-check, --check-minutes, --cap, --budget-minutes, --budget-tokens, --env-line, --preset, --permission, --allow, --vendor-env, --unset-vendor-env)")
 	}
-	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
-		proj, err := c.SetProject(ctx, p)
-		if err != nil {
-			return o.failErr(err)
+	var result daemon.SetProjectResult
+	if code := a.call(ctx, o, daemon.MethodProjectsSet, p, &result); code != ExitOK {
+		return code
+	}
+	if o.json {
+		return o.printJSON(struct {
+			daemon.SetProjectResult
+			DryRun bool `json:"dry_run,omitempty"`
+		}{result, *dryRun})
+	}
+	// Say what the registry holds now: the daemon may clean a value.
+	proj := result.Project
+	text := func(name, value string) string {
+		if value == "" {
+			return name + "=unset"
 		}
-		if o.json {
-			m := map[string]any{"project": proj}
-			if *dryRun {
-				m["dry_run"] = true
+		return fmt.Sprintf("%s=%q", name, value)
+	}
+	number := func(name string, value int) string {
+		if value == 0 {
+			return name + "=unset"
+		}
+		return fmt.Sprintf("%s=%d", name, value)
+	}
+	var changed []string
+	if p.NotifyCommand != nil {
+		changed = append(changed, text("notify_command", proj.NotifyCommand))
+	}
+	if p.Push != nil {
+		changed = append(changed, map[bool]string{true: "push=on", false: "push=off"}[proj.Push])
+	}
+	if p.Bell != nil {
+		changed = append(changed, map[bool]string{true: "bell=on", false: "bell=off"}[proj.BellOn()])
+	}
+	if p.AutoLand != nil {
+		changed = append(changed, map[bool]string{true: "auto_land=on", false: "auto_land=off"}[proj.AutoLandOn()])
+	}
+	if p.AutoRebuild != nil {
+		changed = append(changed, map[bool]string{true: "auto_rebuild=on", false: "auto_rebuild=off"}[proj.AutoRebuild])
+	}
+	if p.UIDoc != nil {
+		changed = append(changed, text("ui_doc", proj.UIDoc))
+	}
+	if p.UIPassSkills != nil {
+		changed = append(changed, text("ui_pass_skills", strings.Join(proj.UIPassSkills, ",")))
+	}
+	if p.SpecCheckRows != nil {
+		changed = append(changed, text("spec_check_rows", strings.Join(proj.SpecCheckRows, ",")))
+	}
+	if p.UIPassRows != nil {
+		changed = append(changed, text("ui_pass_rows", strings.Join(proj.UIPassRows, ",")))
+	}
+	if p.WorktreePattern != nil {
+		changed = append(changed, text("worktree_pattern", proj.WorktreePattern))
+	}
+	if p.BranchPattern != nil {
+		changed = append(changed, text("branch_pattern", proj.BranchPattern))
+	}
+	if p.CheckCommand != nil {
+		changed = append(changed, text("check_command", proj.CheckCommand))
+	}
+	if p.BuildCommand != nil {
+		changed = append(changed, text("build_command", proj.BuildCommand))
+	}
+	if p.RoundCheckCommand != nil {
+		changed = append(changed, text("round_check_command", proj.RoundCheckCommand))
+	}
+	if p.ContractProbe != nil {
+		changed = append(changed, text("contract_probe", proj.ContractProbe))
+	}
+	if p.CheckMinutes != nil {
+		changed = append(changed, number("check_minutes", proj.CheckMinutes))
+	}
+	if p.Cap != nil {
+		changed = append(changed, number("cap", proj.Cap))
+	}
+	if p.BudgetMinutes != nil {
+		changed = append(changed, number("budget_minutes", proj.Budgets.Minutes))
+	}
+	if p.BudgetTokens != nil {
+		changed = append(changed, number("budget_tokens", proj.Budgets.Tokens))
+	}
+	if p.EnvironmentLines != nil {
+		if len(proj.EnvironmentLines) == 0 {
+			changed = append(changed, "environment_lines=unset")
+		} else {
+			changed = append(changed, "environment_lines="+count(len(proj.EnvironmentLines), "line"))
+		}
+	}
+	if len(p.Permissions) != 0 || p.Preset != nil || len(p.AllowAdd) != 0 {
+		touched := map[string]bool{}
+		for role := range p.Permissions {
+			touched[role] = true
+		}
+		for role := range p.AllowAdd {
+			touched[role] = true
+		}
+		if p.Preset != nil {
+			touched[engine.RoleImplementer] = true
+		}
+		var roles []string
+		for _, role := range slices.Sorted(maps.Keys(touched)) {
+			entry, has := proj.Permissions[role]
+			switch {
+			case len(p.AllowAdd[role]) > 0:
+				summary := role + ": " + count(len(result.Added[role]), "pattern") + " added, " + fmt.Sprint(len(result.AlreadyListed[role])) + " already listed"
+				if role == engine.RoleImplementer && p.Preset != nil {
+					summary += " (preset " + *p.Preset + ")"
+				}
+				roles = append(roles, summary)
+			case !has:
+				roles = append(roles, role+":default")
+			case entry.Preset != "":
+				roles = append(roles, role+":"+entry.Preset)
+			case role == engine.RoleImplementer && p.Preset != nil:
+				roles = append(roles, role+":"+count(len(entry.Allow), "pattern")+" (preset "+*p.Preset+")")
+			default:
+				roles = append(roles, role+":"+count(len(entry.Allow), "pattern"))
 			}
-			return o.printJSON(m)
 		}
-		// Say what the registry holds now: the daemon may clean a value.
-		text := func(name, value string) string {
-			if value == "" {
-				return name + "=unset"
-			}
-			return fmt.Sprintf("%s=%q", name, value)
-		}
-		number := func(name string, value int) string {
-			if value == 0 {
-				return name + "=unset"
-			}
-			return fmt.Sprintf("%s=%d", name, value)
-		}
-		var changed []string
-		if p.NotifyCommand != nil {
-			changed = append(changed, text("notify_command", proj.NotifyCommand))
-		}
-		if p.Push != nil {
-			changed = append(changed, map[bool]string{true: "push=on", false: "push=off"}[proj.Push])
-		}
-		if p.Bell != nil {
-			changed = append(changed, map[bool]string{true: "bell=on", false: "bell=off"}[proj.BellOn()])
-		}
-		if p.AutoLand != nil {
-			changed = append(changed, map[bool]string{true: "auto_land=on", false: "auto_land=off"}[proj.AutoLandOn()])
-		}
-		if p.AutoRebuild != nil {
-			changed = append(changed, map[bool]string{true: "auto_rebuild=on", false: "auto_rebuild=off"}[proj.AutoRebuild])
-		}
-		if p.UIDoc != nil {
-			changed = append(changed, text("ui_doc", proj.UIDoc))
-		}
-		if p.UIPassSkills != nil {
-			changed = append(changed, text("ui_pass_skills", strings.Join(proj.UIPassSkills, ",")))
-		}
-		if p.SpecCheckRows != nil {
-			changed = append(changed, text("spec_check_rows", strings.Join(proj.SpecCheckRows, ",")))
-		}
-		if p.UIPassRows != nil {
-			changed = append(changed, text("ui_pass_rows", strings.Join(proj.UIPassRows, ",")))
-		}
-		if p.WorktreePattern != nil {
-			changed = append(changed, text("worktree_pattern", proj.WorktreePattern))
-		}
-		if p.BranchPattern != nil {
-			changed = append(changed, text("branch_pattern", proj.BranchPattern))
-		}
-		if p.CheckCommand != nil {
-			changed = append(changed, text("check_command", proj.CheckCommand))
-		}
-		if p.BuildCommand != nil {
-			changed = append(changed, text("build_command", proj.BuildCommand))
-		}
-		if p.RoundCheckCommand != nil {
-			changed = append(changed, text("round_check_command", proj.RoundCheckCommand))
-		}
-		if p.ContractProbe != nil {
-			changed = append(changed, text("contract_probe", proj.ContractProbe))
-		}
-		if p.CheckMinutes != nil {
-			changed = append(changed, number("check_minutes", proj.CheckMinutes))
-		}
-		if p.Cap != nil {
-			changed = append(changed, number("cap", proj.Cap))
-		}
-		if p.BudgetMinutes != nil {
-			changed = append(changed, number("budget_minutes", proj.Budgets.Minutes))
-		}
-		if p.BudgetTokens != nil {
-			changed = append(changed, number("budget_tokens", proj.Budgets.Tokens))
-		}
-		if p.EnvironmentLines != nil {
-			if len(proj.EnvironmentLines) == 0 {
-				changed = append(changed, "environment_lines=unset")
+		changed = append(changed, "permissions="+strings.Join(roles, "; "))
+	}
+	if len(p.VendorEnv) != 0 {
+		// Keys only: a value is never printed.
+		var vendors []string
+		for _, vendor := range slices.Sorted(maps.Keys(p.VendorEnv)) {
+			keys := slices.Sorted(maps.Keys(proj.VendorEnv[vendor]))
+			if len(keys) == 0 {
+				vendors = append(vendors, vendor+":unset")
 			} else {
-				changed = append(changed, "environment_lines="+count(len(proj.EnvironmentLines), "line"))
+				vendors = append(vendors, vendor+":"+strings.Join(keys, ","))
 			}
 		}
-		if len(p.Permissions) != 0 || p.Preset != nil || len(p.AllowAdd) != 0 {
-			touched := map[string]bool{}
-			for role := range p.Permissions {
-				touched[role] = true
-			}
-			for role := range p.AllowAdd {
-				touched[role] = true
-			}
-			if p.Preset != nil {
-				touched[engine.RoleImplementer] = true
-			}
-			var roles []string
-			for _, role := range slices.Sorted(maps.Keys(touched)) {
-				entry, has := proj.Permissions[role]
-				switch {
-				case !has:
-					roles = append(roles, role+":default")
-				case entry.Preset != "":
-					roles = append(roles, role+":"+entry.Preset)
-				case role == engine.RoleImplementer && p.Preset != nil:
-					roles = append(roles, role+":"+count(len(entry.Allow), "pattern")+" (preset "+*p.Preset+")")
-				default:
-					roles = append(roles, role+":"+count(len(entry.Allow), "pattern"))
-				}
-			}
-			changed = append(changed, "permissions="+strings.Join(roles, "; "))
-		}
-		if len(p.VendorEnv) != 0 {
-			// Keys only: a value is never printed.
-			var vendors []string
-			for _, vendor := range slices.Sorted(maps.Keys(p.VendorEnv)) {
-				keys := slices.Sorted(maps.Keys(proj.VendorEnv[vendor]))
-				if len(keys) == 0 {
-					vendors = append(vendors, vendor+":unset")
-				} else {
-					vendors = append(vendors, vendor+":"+strings.Join(keys, ","))
-				}
-			}
-			changed = append(changed, "vendor_env="+strings.Join(vendors, "; "))
-		}
-		verb := "updated"
-		if *dryRun {
-			verb = "would update"
-		}
-		fmt.Fprintf(o.stdout, "%s %s: %s\n", verb, proj.Name, strings.Join(changed, ", "))
-		return ExitOK
-	})
+		changed = append(changed, "vendor_env="+strings.Join(vendors, "; "))
+	}
+	verb := "updated"
+	if *dryRun {
+		verb = "would update"
+	}
+	fmt.Fprintf(o.stdout, "%s %s: %s\n", verb, proj.Name, strings.Join(changed, ", "))
+	return ExitOK
 }
 
 // count is "1 line" or "3 lines".

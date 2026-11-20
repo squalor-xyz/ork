@@ -163,7 +163,7 @@ func noSpecCheckRow(proj registry.Project, problem string, ruleNamesRow bool, ca
 	if len(candidates) > 0 {
 		pick = candidates[0]
 	}
-	fix := "ork projects set " + proj.Name + " --spec-check-rows " + pick
+	fix := "ork projects set " + engine.ShellWord(proj.Name) + " --spec-check-rows " + pick
 	lines := []string{problem}
 	switch n := len(proj.SpecCheckRows); {
 	case n == 0:
@@ -174,7 +174,7 @@ func noSpecCheckRow(proj registry.Project, problem string, ruleNamesRow bool, ca
 		lines = append(lines, "fix: change them with "+fix)
 	}
 	if len(proj.SpecCheckRows) > 0 && ruleNamesRow {
-		lines = append(lines, `or:  ork projects set `+proj.Name+` --spec-check-rows ""`)
+		lines = append(lines, `or:  ork projects set `+engine.ShellWord(proj.Name)+` --spec-check-rows ""`)
 	}
 	if len(candidates) > 0 {
 		lines = append(lines, "reviewer rows with an adapter: "+strings.Join(candidates, ", "))

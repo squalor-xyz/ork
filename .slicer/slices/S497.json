@@ -1,0 +1,39 @@
+{
+  "id": "S497",
+  "title": "allow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-015050-c27e, project ork, item S342:\n\nallow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied\n\nEvidence: compound command denied: \"The following parts require approval: echo \"slicer exit $?\", echo \"adj exit $?\"\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

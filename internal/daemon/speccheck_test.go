@@ -25,6 +25,19 @@ import (
 
 const u11 = "The spec check before a wave runs the Spec check row (r16): one read-only pass."
 
+func TestNoSpecCheckRowQuotesTheProjectName(t *testing.T) {
+	for _, rows := range [][]string{nil, {"r16"}} {
+		t.Run(fmt.Sprint(rows), func(t *testing.T) {
+			err := noSpecCheckRow(registry.Project{Name: "my proj", SpecCheckRows: rows}, "no row", true, []string{"r5"})
+			for _, line := range strings.Split(err.Error(), "\n") {
+				if strings.Contains(line, "ork projects set") && !strings.Contains(line, "ork projects set 'my proj' ") {
+					t.Errorf("unquoted fix: %s", line)
+				}
+			}
+		})
+	}
+}
+
 const overrideCheck = `{"project":"p","items":["S1"],"lineups":{"S1":{"implementer":[{"vendor":"claude-local","model":"qwen3.8-27b","effort":"low"}]}}}`
 
 func overrideSpecRig(t *testing.T) *specRig {
