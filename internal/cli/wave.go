@@ -376,6 +376,17 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 			fmt.Fprintln(o.stdout, line)
 		}
 	}
+	// With no terminal to confirm on and no --yes, the wave cannot start, so
+	// run no spec check (a model call) first (S337).
+	if !opts.yes && !opts.spec.active() && !a.terminal() {
+		if o.json {
+			if code := o.printJSON(map[string]any{"started": false, "held": []string{}, "no_spec": []string{}}); code != ExitOK {
+				return code
+			}
+		}
+		fmt.Fprintln(prompts, "not started: input is not a terminal to confirm on; rerun with --yes, or with --questions to see the spec questions")
+		return ExitUsage
+	}
 	// A saved wave with nothing startable has no item to check.
 	held, noSpec, code := []string{}, []string{}, ExitOK
 	if opts.spec.off {

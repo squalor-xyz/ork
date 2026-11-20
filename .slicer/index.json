@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 502,
+  "next_id": 504,
   "preamble": "",
   "passes": [
     {
@@ -19272,7 +19272,7 @@
       "id": "S337",
       "title": "wave start launches without --yes when stdin is not a terminal",
       "short_title": "wave start launches without --yes when stdin is not a terminal",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19282,6 +19282,20 @@
           "text": "**2026-11-11** — Correction 2026-11-11: the slices were NOT launched. The run in the ledger (run-20261111-170605-e94e) held only a spec-check step, which ended pass at 17:07:58; the CLI was killed by the 60 s timeout before any launch. So the observed problem is narrower: without --yes and with stdin from /dev/null, `ork wave start` starts and records a spec-check run (a model call) before any confirmation and prints nothing while it runs. Expected: print the plan first, and run nothing that costs a model call until confirmed, or say on stderr that a spec check is running.",
           "created_at": "2026-11-11T17:11:03Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "53dd9fa0-b512-4f09-af69-fec8819494f5",
+          "kind": "",
+          "text": "**2026-11-20** — `ork wave start` with no --yes, --questions or --answer on input that is not a terminal prints the plans and a `not started:` line, exits 2 and runs no spec check; the doc findings from review are fixed and the full suite, vet, gofmt and slicer check are green.",
+          "created_at": "2026-11-20T03:06:21Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19308,7 +19322,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -26732,6 +26746,62 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Duplicate of S481 (say in the reviewer brief which shell forms are denied).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S502",
+      "title": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff",
+      "short_title": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S337",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b241c892",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S503",
+      "title": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines",
+      "short_title": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S391",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-d140736f",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,

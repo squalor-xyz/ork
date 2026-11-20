@@ -5996,3 +5996,10 @@
 {"when": "2026-11-20T03:11:50Z", "item": "S391", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-20T03:23:47Z", "item": "S391", "action": "note", "from": "", "to": "", "note": "After two sibling roles hang or are lost, the pause names bo", "by": "Jon Robbins"}
 {"when": "2026-11-20T03:23:47Z", "item": "S391", "action": "status", "from": "started", "to": "done", "note": "After two sibling roles hang or are lost, the pause names both and a retry briefs both with \"Earlier process lost\"; every role-written report read in the engine and the claude, codex and grok adapters goes through `clirun.ReadRegularFile` and never blocks on a FIFO; a test pins two waiters re-picking a row.", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:55:28Z", "item": "S337", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T03:06:21Z", "item": "S337", "action": "note", "from": "", "to": "", "note": "`ork wave start` with no --yes, --questions or --answer on i", "by": "Jon Robbins"}
+{"when": "2026-11-20T03:06:21Z", "item": "S337", "action": "status", "from": "started", "to": "done", "note": "`ork wave start` with no --yes, --questions or --answer on input that is not a terminal prints the plans and a `not started:` line, exits 2 and runs no spec check; the doc findings from review are fixed and the full suite, vet, gofmt and slicer check are green.", "by": "Jon Robbins"}
+{"when": "2026-11-20T03:01:45Z", "item": "S502", "action": "add", "from": "", "to": "open", "note": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff"}
+{"when": "2026-11-20T03:01:46Z", "item": "S502", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T03:19:05Z", "item": "S503", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines"}
+{"when": "2026-11-20T03:19:05Z", "item": "S503", "action": "promote", "from": "", "to": "", "note": ""}
