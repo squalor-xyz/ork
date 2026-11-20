@@ -5975,3 +5975,10 @@
 {"when": "2026-11-20T02:27:53Z", "item": "S497", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "add", "from": "", "to": "open", "note": "let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied"}
 {"when": "2026-11-20T02:31:00Z", "item": "S498", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:42:14Z", "item": "S499", "action": "add", "from": "", "to": "open", "note": "let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card"}
+{"when": "2026-11-20T02:42:14Z", "item": "S499", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:42:46Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Scope widened 2026-11-20 (owner, adj 514 folded in): TestRen", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:42:46Z", "item": "S495", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S481 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:46Z", "item": "S496", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S479 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:46Z", "item": "S498", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S479 (tool feedback, 2026-11-20)."}
+{"when": "2026-11-20T02:42:46Z", "item": "S497", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S471 (tool feedback, 2026-11-20)."}
