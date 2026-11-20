@@ -87,6 +87,22 @@ func trackingPath(rel string) bool {
 	return strings.HasPrefix(rel, ".slicer/") && rel != ".slicer/config.json" && rel != ".slicer/relay-roles.json"
 }
 
+// otherItemTrackingPath identifies another item's slice JSON or render.
+// Shared tracking files keep the landing commit's existing rule (adj 483).
+func otherItemTrackingPath(rel, item string) bool {
+	for _, location := range []struct{ dir, ext string }{
+		{".slicer/slices/", ".json"},
+		{".slicer/slices/done/", ".json"},
+		{".slicer/render/slices/", ".md"},
+	} {
+		name, ok := strings.CutPrefix(rel, location.dir)
+		if ok && !strings.Contains(name, "/") && strings.HasSuffix(name, location.ext) {
+			return strings.TrimSuffix(name, location.ext) != item
+		}
+	}
+	return false
+}
+
 // splitTracking sorts paths as git reports them (relative to the repository
 // root) into the project's tracking files, returned relative to the project
 // directory, and everything else, returned as given. prefix is the project's
@@ -176,7 +192,8 @@ func (e *Engine) listedUntrackedSlices(ctx context.Context, P string, tracking [
 // checkMain looks at the main checkout P before the landing merges the base
 // branch in, and again before the fast-forward (S254). A non-empty reason
 // pauses the landing. Dirty files that the slice does not change are left
-// alone. When only the project's tracking files overlap and commit is true,
+// alone. Another item's overlapping slice file or render pauses (adj 483).
+// When only own or shared tracking files overlap and commit is true,
 // ork commits them on the base branch by name, so the merge-in takes them into
 // the slice branch with slicer's merge drivers, and returns committed true:
 // the base moved. Any other overlap stops the landing and ork commits nothing.
@@ -195,6 +212,15 @@ func (e *Engine) checkMain(ctx context.Context, P, base, B, item string, commit 
 	tracking, other := splitTracking(strings.TrimSpace(out), files)
 	if len(other) > 0 {
 		return false, dirtyReason(P, other)
+	}
+	var otherItems []string
+	for _, rel := range tracking {
+		if otherItemTrackingPath(rel, item) {
+			otherItems = append(otherItems, rel)
+		}
+	}
+	if len(otherItems) > 0 {
+		return false, oneLine(runrec.PlainText("landing stopped: uncommitted changes in " + P + " to another item's tracking files: " + nameList(otherItems) + "; commit them with ork tracking commit or discard them, then ork retry"))
 	}
 	if !commit {
 		return false, dirtyReason(P, files)

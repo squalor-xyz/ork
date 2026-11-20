@@ -1,0 +1,39 @@
+{
+  "id": "S492",
+  "title": "tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-001408-907b, project ork, item S353:\n\ntell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them\n\nEvidence: the implementer reported 322 failures from setsockopt and connect being denied; the same `go test ./...` passed in full in the reviewer session"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,39 @@
+{
+  "id": "S486",
+  "title": "allow read-only rg on test globs in the reviewer allowlist",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-232111-8171, project ork, item S351:\n\nallow read-only rg on test globs in the reviewer allowlist\n\nEvidence: `rg -n \"listedUntracked|Untracked\" internal/engine/*_test.go` was denied as needing approval; the Grep tool worked instead"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

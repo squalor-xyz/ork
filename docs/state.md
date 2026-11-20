@@ -14,7 +14,7 @@ The files ork owns. Everything else is read live from slicer, adj and git
 | UI preferences, free-form until v1 | `~/.config/ork/ui.json` |
 | Daemon socket and pidfile (the pidfile is locked while a daemon lives) | `~/.local/state/ork/ork.sock`, `ork.pid` |
 | One record per slice run | `~/.local/state/ork/runs/<run>/run.json` |
-| Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
+| Role reports; `roles[].report` keeps the name, read on demand by `run.report` (S176, *proposed*) and printed by `ork show RUN NAME` (S297, *proposed*); an implementer may print a report its slice names with this command, without reading the state directory directly (adj 488) | `~/.local/state/ork/runs/<run>/<role>-<round>.md` or `<role>-<round>-attempt-<attempt>.md` |
 | Check output per round (S04); `checks[].log` keeps the name, read on demand by `run.report` and printed by `ork show RUN NAME` (S297, *proposed*) | `~/.local/state/ork/runs/<run>/checks-<round>.log`, and `land-checks-<round>.log` for the landing re-check |
 | A role's run assets (S04), including the local system prompt and Codex Go cache | `~/.local/state/ork/runs/<run>/tmp/<role>-<round>/` |
 | A slice-run role's process `TMPDIR` (S437, adj 491), mode 0700, removed when retention removes the run | `~/.local/state/ork/t/<run-key>/<round-key>/` |

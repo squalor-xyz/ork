@@ -63,6 +63,7 @@ func TestDefaultImplementerAllowlistIsExactlyTheDecidedOne(t *testing.T) {
 		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
 		"Bash(git -C * ls-files*)", "Bash(git -C * mv*)", "Bash(git -C * rm *)",
 		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
+		"Bash(ork show*)",
 		"Bash(go test ./...*)",
 	}
 	if got := DefaultImplementerAllowlist("go test ./..."); !reflect.DeepEqual(got, want) {
@@ -140,6 +141,9 @@ func TestReadOnlyRolesGetReadOnlyMode(t *testing.T) {
 func TestImplementerPresetGoIsTheBuiltInDefault(t *testing.T) {
 	for _, check := range []string{"go test ./...", ""} {
 		got, err := ImplementerPreset("go", check)
+		if !slices.Contains(got, "Bash(ork show*)") {
+			t.Error("go preset missing Bash(ork show*)")
+		}
 		if err != nil || !reflect.DeepEqual(got, DefaultImplementerAllowlist(check)) {
 			t.Errorf("check %q: %q, %v", check, got, err)
 		}
@@ -155,6 +159,7 @@ func TestImplementerPresetPython(t *testing.T) {
 		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
 		"Bash(git -C * ls-files*)", "Bash(git -C * mv*)", "Bash(git -C * rm *)",
 		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
+		"Bash(ork show*)",
 		"Bash(python3 -m unittest*)", "Bash(python3 -m unittest discover -s tests -t tests*)",
 	}
 	got, err := ImplementerPreset("python", check)
@@ -170,6 +175,25 @@ func TestImplementerPresetPython(t *testing.T) {
 	got[0] = "Changed"
 	if again, _ := ImplementerPreset("python", ""); again[0] != "Read" {
 		t.Fatalf("callers share the preset: %q", again)
+	}
+}
+
+func TestImplementerPresetsAllowOrkShow(t *testing.T) {
+	for _, preset := range []string{"go", "python"} {
+		t.Run(preset, func(t *testing.T) {
+			list, err := ImplementerPreset(preset, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !slices.Contains(list, "Bash(ork show*)") {
+				t.Error("preset missing Bash(ork show*)")
+			}
+			for _, entry := range list {
+				if strings.HasPrefix(entry, "Bash(ork") && entry != "Bash(ork show*)" {
+					t.Errorf("unexpected ork permission: %s", entry)
+				}
+			}
+		})
 	}
 }
 

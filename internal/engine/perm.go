@@ -54,6 +54,7 @@ func ImplementerPreset(name, checkCommand string) ([]string, error) {
 		"Bash(git -C * status*)", "Bash(git -C * diff*)", "Bash(git -C * log*)",
 		"Bash(git -C * ls-files*)", "Bash(git -C * mv*)", "Bash(git -C * rm *)",
 		"Bash(adj check*)", "Bash(adj lint*)", "Bash(adj show*)", "Bash(adj inbox*)",
+		"Bash(ork show*)",
 	}
 	var list []string
 	switch name {
