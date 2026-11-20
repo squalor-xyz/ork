@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- UI pass (rule u10): `internal/cli` output changes."
+      "body": "Acceptance criteria:\n- ork status --summary prints Running, Waiting on you, Blocked and Next sections; Next follows slicer's order (adj 516); text rows wrap at 80 columns with a 4-space continuation indent (adj 518).\n- The slice changes internal/cli output, so it gets a UI pass (rule u10).\n\nCommands:\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",

@@ -6026,3 +6026,10 @@
 {"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-20T13:36:13Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-20T13:36:13Z", "item": "S449", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "add", "from": "", "to": "open", "note": "For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views"}
+{"when": "2026-11-20T13:38:02Z", "item": "S506", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:38:02Z", "item": "S507", "action": "add", "from": "", "to": "open", "note": "let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render"}
+{"when": "2026-11-20T13:38:03Z", "item": "S507", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:38:10Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-20T13:38:25Z", "item": "S508", "action": "add", "from": "", "to": "open", "note": "The plan flags a backticked Check entry that is not a runnable command"}
+{"when": "2026-11-20T13:38:26Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Implement"}
