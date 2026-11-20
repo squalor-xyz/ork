@@ -6004,3 +6004,21 @@
 {"when": "2026-11-20T03:19:05Z", "item": "S503", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines"}
 {"when": "2026-11-20T03:19:05Z", "item": "S503", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T12:30:00Z", "item": "S318", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-20T13:06:47Z", "item": "S504", "action": "add", "from": "", "to": "open", "note": "allow `python3 -I -c` reading stdin in read-only reviewer roles, or name `grep -o` as the way to pick fields out of slicer JSON"}
+{"when": "2026-11-20T13:06:47Z", "item": "S504", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T13:07:02Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Scope widened 2026-11-20 (owner, adj 515 and adj 517 folded ", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:07:30Z", "item": "S505", "action": "add", "from": "", "to": "open", "note": "Read-only roles: the brief names the denied forms, and a few plain read-only commands are allowed"}
+{"when": "2026-11-20T13:07:36Z", "item": "S505", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T13:07:37Z", "item": "S465", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S469", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S471", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S472", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S478", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S479", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:37Z", "item": "S481", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S485", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S486", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S488", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added)."}
+{"when": "2026-11-20T13:07:38Z", "item": "S505", "action": "note", "from": "", "to": "", "note": "Replaces S465, S469, S471, S472, S478, S479, S481, S485, S48", "by": "Jon Robbins"}
+{"when": "2026-11-20T13:07:46Z", "item": "S503", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519: the brief names the denied forms)."}
+{"when": "2026-11-20T13:07:46Z", "item": "S504", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S505 (adj 519: brief-first; python3 -c is not added)."}
