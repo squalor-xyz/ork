@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-503 items · — 52 · done 353 · retired 98
+503 items · — 51 · done 354 · retired 98
 
 ## v1.3
 
@@ -102,7 +102,7 @@ v1.2
 | 45 | [S315](slices/S315.md) | Self-host: restart the daemon on the current build after main moves | M | - |  |  | done |
 | 46 | [S316](slices/S316.md) | ork approve: mark every open human check as later in one step | S | - |  |  | done |
 | 47 | [S317](slices/S317.md) | Run the slice's own Check lines after each round, not only the project check command | M | - |  |  | done |
-| 48 | [S318](slices/S318.md) | ork status --summary: running, waiting on you, blocked, and next, in one view | M | - |  |  | — |
+| 48 | [S318](slices/S318.md) | ork status --summary: running, waiting on you, blocked, and next, in one view | M | - |  |  | done |
 | 49 | [S319](slices/S319.md) | Spec check report shape rejects a capitalised item id (S374 for s374) | S | 1 |  | Done by S309 (ee0eb888, 2026-11-08): ParseSpecCheck maps a section id to the batch id ignoring case (internal/engine/speccheck.go:530-534), tested at internal/engine/speccheck_test.go:498-507. The 2026-11-09 failure was on build 3d537be3 (2026-11-07), older than the fix; no run since records the shape error. | retired |
 | 50 | [S320](slices/S320.md) | Bubble up role Tool feedback: auto-file the safe items, queue the rest as owner decisions | M | 2 |  | Covered by S387 (safe tool feedback filed as a slice) and S388 (feature feedback asked in adj, filed when decided); its de-duplication part moves to S442 | retired |
 | 51 | S321 | TUI: a Waves item with no spec says waits on 0 spec questions | S | 1 |  | Found by the S283 UI pass 2026-11-09: after S283, an item with no spec shows 'waits on 0 spec questions' on the Waves screen (internal/tui/speccheck.go specNote and the held status). Adj 218 left the TUI out of S283; the owner chose a follow-up slice. Needed: a NoSpec branch in specNote and held status that says the item has no spec and shows the slicer promote hint, with a TUI test and golden update. · discovered from S283 | — |
