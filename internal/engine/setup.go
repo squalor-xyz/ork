@@ -89,7 +89,7 @@ func ShellWord(s string) string {
 // also the first setup warning, so the plan, ork doctor and the refusal word it
 // the same way.
 func NoCheckMessage(name string) string {
-	return fmt.Sprintf("no check command: ork refuses to start a run (fix: ork projects set %s --check CMD, or start with --allow-no-check)", ShellWord(name))
+	return fmt.Sprintf("no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set %s --check CMD, or start with --allow-no-check)", ShellWord(name))
 }
 
 // NoCheckAllowedNote is the plan's warning for a start that carries

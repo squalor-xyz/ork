@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -1389,6 +1390,167 @@ func TestRetryAtTheRoundPauseGrantsRounds(t *testing.T) {
 	requireRoundsPause(t, e, 6)
 	if !strings.Contains(h.runner.requests()[3].Brief, "continue") {
 		t.Fatal("retry note lost")
+	}
+}
+
+// S346 (*proposed*; adj 479): ork retry RUN --allow PATTERN grants a pattern
+// to one run's implementer.
+
+// grantBase is the implementer allowlist of the run a grant test builds.
+var grantBase = []string{"Read", "Edit", "Bash(go test*)"}
+
+// grantedRedLoop is a red loop at its rounds pause (round 3) whose project
+// gives the implementer grantBase, and an implementer that was denied git mv
+// in its last round.
+func grantedRedLoop(t *testing.T) (*harness, *Engine) {
+	t.Helper()
+	h := redLoop(t, true, true)
+	h.cfg.Project.Permissions = map[string]registry.Permission{RoleImplementer: {Allow: append([]string(nil), grantBase...)}}
+	h.proj = h.cfg.Project
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleImplementer && req.Round == 3 {
+			res := defaultResult(req)
+			res.Denials = []runrec.DeniedCommand{{Tool: "Bash", Command: "git mv a.go b.go"}}
+			return res, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	requireRoundsPause(t, e, 3)
+	return h, e
+}
+
+// implementerAllowlists is the allowlist of each implementer request, in order.
+func implementerAllowlists(h *harness) [][]string {
+	var out [][]string
+	for _, req := range h.runner.requests() {
+		if req.Role == RoleImplementer {
+			out = append(out, req.Allowlist)
+		}
+	}
+	return out
+}
+
+func TestRetryAllowGrantsThePatternToThisRunOnly(t *testing.T) {
+	h, e := grantedRedLoop(t)
+	const pattern = "Bash(git mv*)"
+	if err := e.RetryWith(context.Background(), RetryOptions{Rounds: 1, Allow: []string{pattern}}); err != nil {
+		t.Fatal(err)
+	}
+	requireRoundsPause(t, e, 4)
+	lists := implementerAllowlists(h)
+	if len(lists) != 4 {
+		t.Fatalf("implementer rounds %d, want 4", len(lists))
+	}
+	for i := 0; i < 3; i++ {
+		if !reflect.DeepEqual(lists[i], grantBase) {
+			t.Errorf("round %d allowlist %v, want the project's %v", i+1, lists[i], grantBase)
+		}
+	}
+	if want := append(append([]string(nil), grantBase...), pattern); !reflect.DeepEqual(lists[3], want) {
+		t.Errorf("round 4 allowlist %v, want %v", lists[3], want)
+	}
+	if got := e.Snapshot().Grants; !reflect.DeepEqual(got, []string{pattern}) {
+		t.Errorf("record grants %v, want [%s]", got, pattern)
+	}
+	saved, err := h.store.Open(e.Snapshot().ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := saved.Snapshot().Grants; !reflect.DeepEqual(got, []string{pattern}) {
+		t.Errorf("stored grants %v, want [%s]", got, pattern)
+	}
+	// The registry project is not written.
+	if got := h.cfg.Project.Permissions[RoleImplementer].Allow; !reflect.DeepEqual(got, grantBase) {
+		t.Errorf("project allowlist %v, want %v", got, grantBase)
+	}
+	// The grant lasts: a later retry without --allow keeps it.
+	if err := e.RetryWith(context.Background(), RetryOptions{Rounds: 1}); err != nil {
+		t.Fatal(err)
+	}
+	if lists = implementerAllowlists(h); len(lists) != 5 || !slices.Contains(lists[4], pattern) {
+		t.Errorf("a later round lost the grant: %v", lists)
+	}
+}
+
+func TestRetryAllowKeepsGrantsDeduplicatedInOrder(t *testing.T) {
+	h, e := grantedRedLoop(t)
+	if err := e.RetryWith(context.Background(), RetryOptions{Rounds: 1, Allow: []string{"Bash(git mv*)", "Bash(git rm*)", "Bash(git mv*)"}}); err != nil {
+		t.Fatal(err)
+	}
+	requireRoundsPause(t, e, 4)
+	if err := e.RetryWith(context.Background(), RetryOptions{Rounds: 1, Allow: []string{"Bash(git rm*)", "Bash(make*)"}}); err != nil {
+		t.Fatal(err)
+	}
+	requireRoundsPause(t, e, 5)
+	want := []string{"Bash(git mv*)", "Bash(git rm*)", "Bash(make*)"}
+	if got := e.Snapshot().Grants; !reflect.DeepEqual(got, want) {
+		t.Errorf("grants %v, want %v", got, want)
+	}
+	lists := implementerAllowlists(h)
+	if got, wantList := lists[len(lists)-1], append(append([]string(nil), grantBase...), want...); !reflect.DeepEqual(got, wantList) {
+		t.Errorf("last allowlist %v, want %v", got, wantList)
+	}
+}
+
+func TestRetryAllowIsNotGivenToReadOnlyRoles(t *testing.T) {
+	h, e := grantedRedLoop(t)
+	h.checks.reset(CheckOutput{OK: true, Output: "ok\n"})
+	if err := e.RetryWith(context.Background(), RetryOptions{Rounds: 1, Allow: []string{"Bash(git mv*)"}}); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	seen := map[string]bool{}
+	for _, req := range h.runner.requests() {
+		if req.Round != 4 {
+			continue
+		}
+		seen[req.Role] = true
+		switch req.Role {
+		case RoleReviewer, RoleGate:
+			if !req.ReadOnly || len(req.Allowlist) != 0 {
+				t.Errorf("%s round 4: read-only %v allowlist %v, want read-only and no list", req.Role, req.ReadOnly, req.Allowlist)
+			}
+		case RoleImplementer:
+			// The fix round the retry grants runs first, with the grant.
+			if !slices.Contains(req.Allowlist, "Bash(git mv*)") {
+				t.Errorf("implementer round 4 allowlist %v lacks the grant", req.Allowlist)
+			}
+		}
+	}
+	if !seen[RoleReviewer] || !seen[RoleGate] {
+		t.Fatalf("roles of round 4: %v", h.runner.roles())
+	}
+}
+
+func TestRetryAllowRefusalsStoreNothing(t *testing.T) {
+	for name, tc := range map[string]struct {
+		perm  registry.Permission
+		allow []string
+		want  string
+	}{
+		"a blank pattern":       {registry.Permission{Allow: grantBase}, []string{"Bash(git mv*)", " "}, "blank pattern"},
+		"a newline":             {registry.Permission{Allow: grantBase}, []string{"Bash(git mv*)\nRead"}, "newline"},
+		"a read-only implement": {registry.Permission{Preset: "read-only"}, []string{"Bash(git mv*)"}, "read-only"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			h := redLoop(t, true, true)
+			h.cfg.Project.Permissions = map[string]registry.Permission{RoleImplementer: tc.perm}
+			h.proj = h.cfg.Project
+			e := h.start()
+			limit := requireRoundsPause(t, e, 3).RoundLimit
+			err := e.RetryWith(context.Background(), RetryOptions{Rounds: 1, Allow: tc.allow})
+			if !IsRefusal(err) || !strings.Contains(err.Error(), tc.want) {
+				t.Fatalf("retry error %v, want a refusal naming %q", err, tc.want)
+			}
+			rec := requireRoundsPause(t, e, 3)
+			if len(rec.Grants) != 0 || rec.RoundLimit != limit {
+				t.Errorf("a refused retry changed the record: grants %v, round limit %d, was %d", rec.Grants, rec.RoundLimit, limit)
+			}
+			if len(h.runner.requests()) != 3 {
+				t.Errorf("a role ran after the refused retry: %v", h.runner.roles())
+			}
+		})
 	}
 }
 

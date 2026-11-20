@@ -372,6 +372,82 @@ func TestStatusWithNoProjects(t *testing.T) {
 
 // ---- projects ----
 
+func TestProjectsAddPrintsSetupLines(t *testing.T) {
+	testProjectsAddSetupText(t, "pyproject.toml", true)
+}
+
+func TestProjectsAddGoProjectPrintsNoPresetLine(t *testing.T) {
+	testProjectsAddSetupText(t, "go.mod", false)
+}
+
+func testProjectsAddSetupText(t *testing.T, marker string, python bool) {
+	t.Helper()
+	w := newWorld(t, stubSource{})
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, marker), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"config", "check_command", "--json", "--root", dir}, Stdout: `{"value":""}`})
+	w.app.Tools.Slicer = fake.Bin("slicer")
+	code, out, errs := run(t, w.app, "projects", "add", dir, "--name", "demo")
+	want := fmt.Sprintf("added demo %s\nsetup: %s\n", dir, engine.NoCheckMessage("demo"))
+	if python {
+		want += "setup: the implementer has the built-in Go allowlist, but demo has no go.mod (fix: ork projects set demo --preset python)\n"
+	}
+	if code != 0 || out != want {
+		t.Errorf("add: exit %d, stdout %q, stderr %q; want %q", code, out, errs, want)
+	}
+	saved, err := registry.Load(w.regPath)
+	wantProject := registry.Project{Name: "demo", Path: dir}
+	if err != nil || len(saved.Projects) != 1 || !reflect.DeepEqual(saved.Projects[0], wantProject) {
+		t.Errorf("add applied setup: registry %+v, error %v", saved, err)
+	}
+}
+
+func TestProjectsAddJSONCarriesSetupWarnings(t *testing.T) {
+	for _, tc := range []struct {
+		name, marker, check string
+		failed              bool
+	}{
+		{"python", "pyproject.toml", "", false},
+		{"effective python", "pyproject.toml", " python3 -m unittest ", false},
+		{"effective go", "go.mod", "go test ./...", false},
+		{"failed read", "go.mod", "", true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			w := newWorld(t, stubSource{})
+			dir := t.TempDir()
+			if err := os.WriteFile(filepath.Join(dir, tc.marker), nil, 0o644); err != nil {
+				t.Fatal(err)
+			}
+			route := clitest.Route{Tool: "slicer", Args: []string{"config", "check_command", "--json", "--root", dir}, Stdout: fmt.Sprintf(`{"value":%q}`, tc.check)}
+			if tc.failed {
+				route.Exit = 1
+			}
+			fake := clitest.Install(t, route)
+			w.app.Tools.Slicer = fake.Bin("slicer")
+			code, out, errs := run(t, w.app, "projects", "add", dir, "--name", "demo", "--json")
+			var got struct {
+				Project registry.Project
+				Setup   []string
+			}
+			mustJSON(t, out, &got)
+			p := registry.Project{Name: "demo", Path: dir}
+			if code != 0 || !reflect.DeepEqual(got.Project, p) {
+				t.Errorf("add: exit %d, project %+v, stderr %q", code, got.Project, errs)
+			}
+			p.CheckCommand = strings.TrimSpace(tc.check)
+			want := engine.SetupWarnings(p, func(name string) bool { return name == tc.marker })
+			if want == nil {
+				want = []string{}
+			}
+			if !reflect.DeepEqual(got.Setup, want) {
+				t.Errorf("setup = %#v; want %#v; output %s", got.Setup, want, out)
+			}
+		})
+	}
+}
+
 func TestProjectsAddListRemove(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "keep", Path: "/p/keep"})
 	withAdj := filepath.Join(w.dir, "with-adj")
@@ -382,7 +458,7 @@ func TestProjectsAddListRemove(t *testing.T) {
 	os.WriteFile(filepath.Join(withAdj, ".adjudicate.json"), []byte("{}"), 0o644)
 
 	code, stdout, stderr := run(t, w.app, "projects", "add", withAdj)
-	if code != 0 || stdout != fmt.Sprintf("added with-adj %s (adj)\n", withAdj) {
+	if code != 0 || stdout != fmt.Sprintf("added with-adj %s (adj)\nsetup: %s\nsetup: the implementer has the built-in Go allowlist, but with-adj has no go.mod (fix: ork projects set with-adj --preset go|python, or --allow implementer=PATTERN)\n", withAdj, engine.NoCheckMessage("with-adj")) {
 		t.Fatalf("add: exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
 	}
 	// --name may follow the path.
@@ -1102,7 +1178,7 @@ func TestDoctorProjectWithoutCheckCommandHasAFinding(t *testing.T) {
 	}
 	app, _ := doctorProjects(t, registry.Project{Name: "demo", Path: dir})
 	d := projectReport(t, app)
-	want := []string{"no check command: ork refuses to start a run (fix: ork projects set demo --check CMD, or start with --allow-no-check)"}
+	want := []string{"no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set demo --check CMD, or start with --allow-no-check)"}
 	if !reflect.DeepEqual(d.Projects[0].Findings, want) {
 		t.Fatalf("findings: %q, want %q", d.Projects[0].Findings, want)
 	}
@@ -2888,5 +2964,31 @@ func TestProjectsSetPresetFlag(t *testing.T) {
 	code, _, stderr = run(t, w.app, "projects", "set", "slicer", "--preset", "rust")
 	if code != 1 || !strings.Contains(stderr, `unknown preset "rust" (presets: go, python)`) {
 		t.Fatalf("unknown preset: exit %d: %q", code, stderr)
+	}
+}
+
+// S346 (*proposed*; adj 479): ork retry RUN --allow PATTERN.
+
+func TestRetryAllowSendsEachPattern(t *testing.T) {
+	calls, code, _, stderr := ownerCalls(t, "retry", "r1", "--allow", "Bash(git mv*)", "--allow", "Bash(git rm *)")
+	if want := `run.retry {"run":"r1","allow":["Bash(git mv*)","Bash(git rm *)"],"no_wait":true}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
+		t.Errorf("retry --allow: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
+	}
+	// Only retry takes it.
+	if calls, code, _, _ := ownerCalls(t, "answer", "r1", "text", "--allow", "Bash(git mv*)"); code != ExitUsage || len(calls) != 0 {
+		t.Errorf("answer --allow: code %d, calls %q, want a usage error", code, calls)
+	}
+}
+
+func TestRetryAllowRefusesABadPattern(t *testing.T) {
+	for name, pattern := range map[string]string{"empty": "", "blank": "  ", "newline": "Bash(git mv*)\nRead", "NUL": "Bash(git\x00 mv*)"} {
+		calls, code, _, stderr := ownerCalls(t, "retry", "r1", "--allow", pattern)
+		if code != ExitUsage || len(calls) != 0 || !strings.Contains(stderr, "--allow") {
+			t.Errorf("%s pattern: code %d, calls %q, stderr %q, want a usage error naming --allow and no call", name, code, calls, stderr)
+		}
+	}
+	// One bad pattern among good ones sends nothing.
+	if calls, code, _, _ := ownerCalls(t, "retry", "r1", "--allow", "Bash(git mv*)", "--allow", ""); code != ExitUsage || len(calls) != 0 {
+		t.Errorf("a bad pattern after a good one: code %d, calls %q", code, calls)
 	}
 }

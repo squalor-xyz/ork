@@ -1,0 +1,39 @@
+{
+  "id": "S487",
+  "title": "have the UI brief print the resolved -renders path and say whether it equals TMPDIR",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261119-234354-c0f6, project ork, item S475:\n\nhave the UI brief print the resolved -renders path and say whether it equals TMPDIR\n\nEvidence: brief.go:173 uses TempDir while brief.go:188 prints TMPDir as \"Your temp directory\"; in run ork-20261119-234354-c0f6 they differ."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

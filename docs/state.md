@@ -701,13 +701,22 @@ The version stays 1, as for `dismissed_at`: an older ork refuses a `run.json`
 with `cleaned_at` because `Store.Open` uses strict keys.
 The optional `resume` (S274, *proposed*; adj 177) is an answer or retry of a
 paused run that waits for a slot under the project cap or the global cap:
-`method` (`answer` or `retry`), `text`, `rounds`, `adj`, `by` and `at`. An answer
+`method` (`answer` or `retry`), `text`, `rounds`, `allow` (S346, *proposed*; the
+patterns of `ork retry --allow`), `adj`, `by` and `at`. An answer
 that is filed in adj is filed when it is asked for, so `adj` is then false and
 the start does not file it again. The run
 stays `paused` and holds no slot. A freed slot starts it, oldest `at` first and
 before any queued run, and the field leaves the record as it starts. A stop
 clears it; a daemon restart keeps it. Records without it still load; an older
 ork refuses one that has it, because `Store.Open` uses strict keys.
+The optional `grants` (S346, *proposed*; adj 479) lists the tool patterns the
+owner granted this run's implementer with `ork retry RUN --allow PATTERN`,
+deduplicated, in the order given. Every implementer round of the run (and of
+its lead and parts) adds them to the allowlist it resolves from the registry;
+the registry is not written, and no other run reads them. They are stored in
+the same update that resumes the run, and stay for the run's later rounds.
+Records without it still load; an older ork refuses one that has it, because
+`Store.Open` uses strict keys.
 `wait_started_at` (omitted when zero; S138) records entry into
 `awaiting-approval` or `paused`. Metadata updates, including human-check marks,
 keep it. Leaving either state clears it; entering another wait resets it to

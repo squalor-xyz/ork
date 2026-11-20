@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -351,6 +353,32 @@ func TestRetryRelandGetsOneFixRound(t *testing.T) {
 	}
 	if exec.Command("git", "-C", env.P, "merge-base", "--is-ancestor", item, "main").Run() == nil {
 		t.Error("the slice branch reached main")
+	}
+}
+
+// S346 (*proposed*): ork retry --allow on a run stopped at land reaches the
+// land fix round's implementer.
+func TestRetryAllowReachesTheLandFixRound(t *testing.T) {
+	env := newLandEnv(t, onAutoLand)
+	stopCommittedAtLand(t, env)
+	red := CheckOutput{Output: "FAIL TestGolden sidebar\n"}
+	env.setCheckOutputs(red, red, CheckOutput{OK: true, Output: "ok\n"}, red, red)
+	var allow []string
+	env.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleImplementer && strings.Contains(req.Brief, "## Landing blocked") {
+			allow = req.Allowlist
+			env.moveBase("later.txt", "main moves again\n")
+		}
+		return Result{}, nil
+	}
+	if err := env.e.RetryWith(context.Background(), RetryOptions{Allow: []string{"Bash(make test*)"}}); err != nil {
+		t.Fatalf("retry: %v", err)
+	}
+	if !slices.Contains(allow, "Bash(make test*)") {
+		t.Errorf("the land fix round's allowlist %v lacks the grant", allow)
+	}
+	if got := env.e.Snapshot().Grants; !reflect.DeepEqual(got, []string{"Bash(make test*)"}) {
+		t.Errorf("grants %v", got)
 	}
 }
 

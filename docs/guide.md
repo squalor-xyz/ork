@@ -140,6 +140,14 @@ Add it in either way:
   mode it offers the current directory (`internal/cli/daemoncmds.go:234-247`,
   `docs/design.md:2561-2568`).
 
+After adding a path, the CLI prints advisory `setup:` lines with fix commands
+for missing setup. A Python project with `pyproject.toml` and no `go.mod` gets
+a `--preset python` suggestion. A missing check command gets both
+`slicer config check_command CMD` and `ork projects set NAME --check CMD`
+as fixes. The check command is read from slicer first, with the registry as
+fallback. These warnings keep exit 0 and apply no settings. JSON output has
+the same lines in a `setup` array beside `project`, empty when none apply.
+
 To add every project in a folder such as `~/code`, press `+` in the TUI, type
 the folder and press Enter: when it holds projects below it, ork shows a
 checklist (space ticks, `a` all, `n` none, `y` adds; Enter does nothing there).
@@ -275,6 +283,20 @@ other call to the CLI's own allowlist: it asks no owner questions and applies
 no Read cap (`launch.cloud-hook-scope`, `launch.cloud-hook-passthrough`).
 Cloud Claude also receives conservative
 recursive rm deny rules; their runtime behavior is unprobed.
+
+*Proposed (S346; adj 479):* when a run's implementer was denied a call that you
+want to allow (`ork show RUN` names the denied calls), retry the run with the
+pattern: `ork retry RUN --allow "Bash(git mv*)"`. Repeat `--allow` to grant
+several. The grant goes to that run's implementer only (and the lead or parts of
+a split run, less the slicer writes for a part); the reviewer, the gate and the
+other read-only roles stay read-only, other runs of the project do not get it,
+and the registry is not written. It works on a paused run and on a stopped run
+you resume, also while other runs of the project are running. The run keeps the
+grant for its later rounds; `ork show RUN` lists it as `granted: ...`. A blank
+pattern, or one with a newline or a NUL byte, is refused before anything
+changes, and so is a project whose implementer is `read-only`. To change the
+default for every run, use `ork projects set --allow implementer=PATTERN`; it is
+refused while the project has an unfinished run, so set it once none is left.
 
 A role or a vendor key changes alone, so you do not retype the others. ork's
 text output and error messages name vendor variables and never print their
@@ -874,8 +896,14 @@ have uncommitted changes there to a file the slice also changes, the run
 pauses at once with one line that names the files; commit or stash them and
 press `t` (`ork retry`). If the only such files are the project's tracking
 files (`.slicer/`, except `config.json` and `relay-roles.json`), ork commits
-them on the base branch itself as `Tracking edits on main before landing ID`
-and goes on. Files the slice does not change are left alone (the `ID done`
+the item's own and shared files on the base branch itself as
+`Tracking edits on main before landing ID` and goes on. Another item's
+overlapping slice JSON (including under `slices/done/`) or slice render
+pauses the landing before any commit (adj 483, which narrows adj 193).
+The reason names at most five files and a count of the rest. Commit them
+with `ork tracking commit` or discard them, then `ork retry`. This also
+applies to edits made during the landing's re-check.
+Files the slice does not change are left alone (the `ID done`
 commit after `slicer land` still commits any `.slicer` change).
 
 From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,
@@ -1031,6 +1059,7 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork approve RUN [--later-checks]
     ork approve WAVE-ID
     ork retry RUN [TEXT] [--wait] [--rounds N] [--accept-shape | --again]
+              [--allow PATTERN ...]
     ork stop RUN|WAVE
     ork dismiss RUN
     ork file RUN N

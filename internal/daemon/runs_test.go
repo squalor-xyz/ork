@@ -2639,6 +2639,42 @@ func TestRetryOfAPausedRunWaitsForTheProjectSlot(t *testing.T) {
 	waitFor(t, "resume cleared", func() bool { return w.record(t, "s1").Resume == nil })
 }
 
+// S346 (*proposed*; adj 479): a retry with --allow that waits for a slot keeps
+// the patterns in its resume request and stores them as the run's grants when
+// it starts. A bad pattern does not wait.
+func TestRetryAllowWaitsForASlotAndIsStoredWhenItStarts(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", errorPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if _, err := w.d.ownerRunReply(ctx, MethodRunRetry, RunAction{Run: "s1", Allow: []string{"Bash(make test*)", " "}, NoWait: true}); err == nil || !strings.Contains(err.Error(), "blank pattern") {
+		t.Fatalf("a retry with a blank pattern: %v", err)
+	}
+	if got := w.record(t, "s1"); got.Resume != nil || len(got.Grants) != 0 {
+		t.Fatalf("a refused retry stored resume %+v grants %v", got.Resume, got.Grants)
+	}
+	reply, err := w.d.ownerRunReply(ctx, MethodRunRetry, RunAction{Run: "s1", Allow: []string{"Bash(make test*)"}, NoWait: true})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reply.Resume == nil || !reflect.DeepEqual(reply.Resume.Allow, []string{"Bash(make test*)"}) {
+		t.Fatalf("reply resume %+v, want the patterns kept", reply.Resume)
+	}
+	if got := w.record(t, "s1"); len(got.Grants) != 0 {
+		t.Errorf("the grant was stored before the run started: %v", got.Grants)
+	}
+	w.free <- struct{}{} // S2 ends
+	w.expectStart(t, "S1")
+	waitFor(t, "grant stored", func() bool {
+		return reflect.DeepEqual(w.record(t, "s1").Grants, []string{"Bash(make test*)"})
+	})
+}
+
 func TestAnswerOfAPausedRunWaitsForTheGlobalSlot(t *testing.T) {
 	w := newWaveRig(t, 1, 0)
 	q := w.p
@@ -3924,7 +3960,7 @@ func TestRunPlanCarriesSetupWarnings(t *testing.T) {
 	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "" })
 	plan := launchPlan(t, d, `{"project":"p","item":"S1"}`)
 	want := []string{
-		"no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)",
+		"no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)",
 		"the implementer has the built-in Go allowlist, but p has no go.mod (fix: ork projects set p --preset python)",
 	}
 	if !reflect.DeepEqual(plan.Warnings, want) {
@@ -4316,7 +4352,7 @@ func TestRunStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
 	editProject(t, d, func(p *registry.Project) { p.CheckCommand = "" })
 	_, err := d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1"}`))
 	re := ipc.ErrorOf(err)
-	want := "project p: no check command: ork refuses to start a run (fix: ork projects set p --check CMD, or start with --allow-no-check)"
+	want := "project p: no check command: ork refuses to start a run (fix: slicer config check_command CMD, ork projects set p --check CMD, or start with --allow-no-check)"
 	if err == nil || re.Code != CodeRefused || re.Message != want {
 		t.Fatalf("got %v, want %s: %s", err, CodeRefused, want)
 	}

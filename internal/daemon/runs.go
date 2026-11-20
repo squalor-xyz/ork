@@ -84,7 +84,10 @@ type RunAction struct {
 	// report's owner findings that have no options, or run the role once more.
 	AcceptShape bool `json:"accept_shape,omitempty"`
 	Again       bool `json:"again,omitempty"`
-	NoWait      bool `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
+	// run.retry (S346, *proposed*; adj 479): tool patterns granted to this run's
+	// implementer only. The registry is not written.
+	Allow  []string `json:"allow,omitempty"`
+	NoWait bool     `json:"no_wait,omitempty"` // proposed, run.answer and run.retry: return once the action is applied and the run has left its pause (S237)
 	// S316 (*proposed*; adj 233, 234): run.check with All marks every open check
 	// later (State must be "later"); run.approve with LaterChecks does the same
 	// and then approves.
@@ -2131,7 +2134,7 @@ func (d *Daemon) startResumesLocked(f *registry.File) {
 			continue
 		}
 		req := w.rec.Resume
-		d.launchRun(w.r, d.resumeJob(w.r, req.Method, RunAction{Run: w.rec.ID, Text: req.Text, Rounds: req.Rounds, AcceptShape: req.AcceptShape, Again: req.Again, Adj: req.Adj, By: req.By}, nil))
+		d.launchRun(w.r, d.resumeJob(w.r, req.Method, RunAction{Run: w.rec.ID, Text: req.Text, Rounds: req.Rounds, AcceptShape: req.AcceptShape, Again: req.Again, Allow: req.Allow, Adj: req.Adj, By: req.By}, nil))
 	}
 }
 
@@ -2181,7 +2184,7 @@ func (d *Daemon) resumeJob(r *managedRun, method string, p RunAction, message *s
 		}
 	}
 	return func(ctx context.Context) error {
-		return r.engine.RetryWith(ctx, engine.RetryOptions{Note: p.Text, Rounds: p.Rounds, AcceptShape: p.AcceptShape, Again: p.Again})
+		return r.engine.RetryWith(ctx, engine.RetryOptions{Note: p.Text, Rounds: p.Rounds, AcceptShape: p.AcceptShape, Again: p.Again, Allow: p.Allow})
 	}
 }
 
@@ -2394,7 +2397,7 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			return RunReply{}, fmt.Errorf("run %s waits for an answer; use ork answer %s TEXT or ork stop %s", p.Run, p.Run, p.Run)
 		}
 		fn = d.resumeJob(r, method, p, nil)
-		resume = &runrec.ResumeRequest{Method: runrec.ResumeRetry, Text: p.Text, Rounds: p.Rounds, AcceptShape: p.AcceptShape, Again: p.Again}
+		resume = &runrec.ResumeRequest{Method: runrec.ResumeRetry, Text: p.Text, Rounds: p.Rounds, AcceptShape: p.AcceptShape, Again: p.Again, Allow: p.Allow}
 	case MethodRunApprove:
 		fn = r.engine.Approve
 		if p.LaterChecks {
@@ -2650,6 +2653,10 @@ func (d *Daemon) handleRun(ctx context.Context, method string, params json.RawMe
 		return d.findingAction(ctx, p, true)
 	}
 	if method == MethodRunRetry {
+		// A bad pattern is refused before anything changes (S346).
+		if err := registry.ValidatePatterns("--allow", p.Allow); err != nil {
+			return nil, &ipc.Error{Code: CodeRefused, Message: err.Error()}
+		}
 		if err := d.prepareResume(ctx, p); err != nil {
 			return nil, err
 		}
@@ -2972,6 +2979,7 @@ type ShowReply struct {
 	Findings     []ShowFinding `json:"findings"`
 	LatestReport string        `json:"latest_report,omitempty"` // the pending role and round's newest report, else the newest report
 	Landed       bool          `json:"landed,omitempty"`        // proposed (S257): committed and landed on the base branch by ork
+	Grants       []string      `json:"grants,omitempty"`        // proposed (S346): the patterns ork retry --allow granted this run's implementer
 }
 
 // ShowCheck is one run of the project's checks, with the name of its log. It
@@ -3104,7 +3112,7 @@ func (d *Daemon) runShow(p RunAction) (ShowReply, error) {
 		return ShowReply{}, err
 	}
 	rec := run.Snapshot()
-	reply := ShowReply{ID: rec.ID, Item: rec.Item, State: rec.State, Reason: rec.Reason, Landed: !rec.LandedAt.IsZero() && rec.State == runrec.StateCommitted, Roles: []ShowRole{}, Checks: []ShowCheck{}, Findings: []ShowFinding{}}
+	reply := ShowReply{ID: rec.ID, Item: rec.Item, State: rec.State, Reason: rec.Reason, Landed: !rec.LandedAt.IsZero() && rec.State == runrec.StateCommitted, Grants: rec.Grants, Roles: []ShowRole{}, Checks: []ShowCheck{}, Findings: []ShowFinding{}}
 	var pendingRole string
 	pendingRound := 0
 	if rec.State == runrec.StatePaused && rec.Pending != nil {

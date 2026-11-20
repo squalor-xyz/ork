@@ -8,6 +8,8 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"reflect"
+	"slices"
 	"strings"
 	"sync"
 	"testing"
@@ -108,6 +110,86 @@ func TestRunRetryCarriesTheText(t *testing.T) {
 			t.Errorf("%s: owner note in the rerun brief %v, want %q:\n%s", tc.params, got, tc.note, briefs[0])
 		}
 		mu.Unlock()
+	}
+}
+
+// S346 (*proposed*; adj 479): run.retry carries allow, a grant for this run's
+// implementer, even while another run of the project is running, when
+// projects.set would refuse --allow.
+func TestRetryAllowWhileAnotherRunIsRunning(t *testing.T) {
+	var mu sync.Mutex
+	var lists [][]string
+	runner := func(ctx context.Context, r engine.Request) (engine.Result, error) {
+		if r.Role == engine.RoleImplementer {
+			mu.Lock()
+			lists = append(lists, r.Allowlist)
+			mu.Unlock()
+		}
+		return retryRunner(ctx, r)
+	}
+	pending := &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Role: engine.RoleImplementer, Round: 1, Reason: "denied: Bash: git mv a b"}
+	d, store, p := retryDaemonWith(t, runrec.StatePaused, pending, runner, nil)
+	other, err := store.Create(runrec.Record{ID: "r2", Project: p.Name, Item: "S2", State: runrec.StateImplement})
+	if err != nil {
+		t.Fatal(err)
+	}
+	d.runs.runs["r2"] = &managedRun{engine: engine.Load(d.runDeps(p), p, other), busy: true}
+	if _, err := d.handle(context.Background(), "projects.set", json.RawMessage(`{"name":"p","allow_add":{"implementer":["Bash(git mv*)"]}}`)); err == nil || !strings.Contains(err.Error(), "unfinished runs") {
+		t.Fatalf("projects.set with a run in flight: %v, want it refused as busy", err)
+	}
+	before, err := os.ReadFile(d.registryPath())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	b := request(t, d, "run.retry", `{"run":"r1","allow":["Bash(make test*)"]}`)
+	var rec runrec.Record
+	if err := json.Unmarshal(b, &rec); err != nil {
+		t.Fatal(err)
+	}
+	if rec.State != runrec.StateAwaitingApproval || !reflect.DeepEqual(rec.Grants, []string{"Bash(make test*)"}) {
+		t.Fatalf("state %s grants %v, want awaiting-approval with the grant: %s", rec.State, rec.Grants, b)
+	}
+	mu.Lock()
+	defer mu.Unlock()
+	if len(lists) != 1 || !slices.Contains(lists[0], "Bash(make test*)") || !slices.Contains(lists[0], "Read") {
+		t.Errorf("the rerun's allowlist %v, want the default list with the grant", lists)
+	}
+	after, err := os.ReadFile(d.registryPath())
+	if err != nil || string(after) != string(before) {
+		t.Errorf("the registry changed: %v\nbefore %s\nafter  %s", err, before, after)
+	}
+	if got := d.runs.runs["r2"].engine.Snapshot().Grants; len(got) != 0 {
+		t.Errorf("the other run got grants %v", got)
+	}
+}
+
+func TestRunShowNamesTheGrants(t *testing.T) {
+	pending := &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Role: engine.RoleImplementer, Round: 1, Reason: "x"}
+	d, _, _ := retryDaemonWith(t, runrec.StatePaused, pending, retryRunner, func(r *runrec.Record) { r.Grants = []string{"Bash(make test*)", "Bash(git mv*)"} })
+	var reply ShowReply
+	if err := json.Unmarshal(request(t, d, MethodRunShow, `{"run":"r1"}`), &reply); err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"Bash(make test*)", "Bash(git mv*)"}; !reflect.DeepEqual(reply.Grants, want) {
+		t.Errorf("run.show grants %v, want %v", reply.Grants, want)
+	}
+}
+
+// A refused pattern stops the retry before the run changes.
+func TestRetryAllowWithABadPatternChangesNothing(t *testing.T) {
+	pending := &runrec.Pending{Kind: runrec.PendingError, State: runrec.StateImplement, Role: engine.RoleImplementer, Round: 1, Reason: "x"}
+	d, store := retryDaemon(t, runrec.StatePaused, pending)
+	_, err := d.handle(context.Background(), "run.retry", json.RawMessage(`{"run":"r1","allow":["Read","  "]}`))
+	if err == nil || !strings.Contains(err.Error(), "blank pattern") {
+		t.Fatalf("retry with a blank pattern: %v", err)
+	}
+	r, err := store.Open("r1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rec := r.Snapshot(); rec.State != runrec.StatePaused || len(rec.Grants) != 0 || rec.Pending == nil {
+		t.Errorf("the refused retry changed the run: %+v", rec)
 	}
 }
 

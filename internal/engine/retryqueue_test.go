@@ -6,6 +6,7 @@ import (
 	"context"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -94,6 +95,39 @@ func TestRetryAsksTheQueuedQuestionFirst(t *testing.T) {
 	}
 	if rec.Pending.Retry == nil || rec.Pending.Retry.Kind != runrec.PendingShape {
 		t.Errorf("the retry context was dropped: %+v", rec.Pending.Retry)
+	}
+}
+
+// S346 (*proposed*): a retry with --allow that shows a queued question first
+// stores the grant at once, and a waiting resume refuses a bad pattern.
+func TestRetryAllowIsStoredWhenAQueuedQuestionComesFirst(t *testing.T) {
+	_, e, _ := retryWithQueuedQuestion(t)
+	if err := e.RetryWith(context.Background(), RetryOptions{Allow: []string{"Bash(make test*)"}}); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingQuestion {
+		t.Fatalf("pending %+v, want the queued question", rec.Pending)
+	}
+	if want := []string{"Bash(make test*)"}; !reflect.DeepEqual(rec.Grants, want) {
+		t.Errorf("grants %v, want %v", rec.Grants, want)
+	}
+}
+
+func TestSetResumeRefusesABadGrantAndStoresNothing(t *testing.T) {
+	_, e, _ := retryWithQueuedQuestion(t)
+	err := e.SetResume(runrec.ResumeRequest{Method: runrec.ResumeRetry, Allow: []string{"Bash(make test*)", ""}, At: time.Now()})
+	if !IsRefusal(err) || !strings.Contains(err.Error(), "blank pattern") {
+		t.Fatalf("SetResume with a blank pattern: %v", err)
+	}
+	if rec := e.Snapshot(); rec.Resume != nil || len(rec.Grants) != 0 {
+		t.Errorf("a refused resume changed the record: resume %+v grants %v", rec.Resume, rec.Grants)
+	}
+	if err := e.SetResume(runrec.ResumeRequest{Method: runrec.ResumeRetry, Allow: []string{"Bash(make test*)"}, At: time.Now()}); err != nil {
+		t.Fatal(err)
+	}
+	if rec := e.Snapshot(); rec.Resume == nil || !reflect.DeepEqual(rec.Resume.Allow, []string{"Bash(make test*)"}) || len(rec.Grants) != 0 {
+		t.Errorf("a waiting resume: resume %+v grants %v, want the patterns kept in the request only", rec.Resume, rec.Grants)
 	}
 }
 

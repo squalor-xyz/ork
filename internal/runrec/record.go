@@ -294,11 +294,14 @@ type ResumeRequest struct {
 	Rounds int    `json:"rounds,omitempty"`
 	// AcceptShape and Again are the flags of ork retry at a capped shape pause
 	// (S298, *proposed*).
-	AcceptShape bool      `json:"accept_shape,omitempty"`
-	Again       bool      `json:"again,omitempty"`
-	Adj         bool      `json:"adj,omitempty"`
-	By          string    `json:"by,omitempty"`
-	At          time.Time `json:"at"`
+	AcceptShape bool `json:"accept_shape,omitempty"`
+	Again       bool `json:"again,omitempty"`
+	// Allow is ork retry --allow (S346, *proposed*; adj 479): patterns for the
+	// run's implementer, stored in Record.Grants when the retry starts.
+	Allow []string  `json:"allow,omitempty"`
+	Adj   bool      `json:"adj,omitempty"`
+	By    string    `json:"by,omitempty"`
+	At    time.Time `json:"at"`
 }
 
 // Feedback names the file that holds what the next implementer round must
@@ -471,6 +474,7 @@ type Record struct {
 	Reason           string                   `json:"reason,omitempty"`
 	Pending          *Pending                 `json:"pending,omitempty"`
 	Resume           *ResumeRequest           `json:"resume,omitempty"`           // an answer or retry that waits for a slot (S274, proposed)
+	Grants           []string                 `json:"grants,omitempty"`           // tool patterns the owner granted this run's implementer with ork retry --allow, deduplicated, in order (S346, proposed; adj 479)
 	QueuedQuestions  []Pending                `json:"queued_questions,omitempty"` // sibling owner questions (S135, proposed)
 	Feedback         *Feedback                `json:"feedback,omitempty"`
 	Lineup           map[string][]LineupEntry `json:"lineup,omitempty"`

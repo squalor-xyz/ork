@@ -1,0 +1,39 @@
+{
+  "id": "S485",
+  "title": "run the full go test suite outside the implementer's sandbox, or tell the implementer in the brief that socket tests will fail there, so it does not report 212 failures that pass in the reviewer session",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-230703-0874, project ork, item S417:\n\nrun the full go test suite outside the implementer's sandbox, or tell the implementer in the brief that socket tests will fail there, so it does not report 212 failures that pass in the reviewer session\n\nEvidence: the implementer reported 4084 passed, 212 failed with \"connect: operation not permitted\"; in this reviewer session `go test ./...` passed for all 26 packages"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
