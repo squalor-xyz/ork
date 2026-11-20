@@ -5990,3 +5990,5 @@
 {"when": "2026-11-20T02:42:54Z", "item": "S500", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T02:49:55Z", "item": "S501", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it"}
 {"when": "2026-11-20T02:49:55Z", "item": "S501", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:53:36Z", "item": "S500", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 514)."}
+{"when": "2026-11-20T02:53:36Z", "item": "S501", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S481 (say in the reviewer brief which shell forms are denied)."}

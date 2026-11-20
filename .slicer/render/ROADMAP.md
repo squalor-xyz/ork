@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-501 items · — 54 · done 351 · retired 96
+501 items · — 52 · done 351 · retired 98
 
 ## v1.3
 
@@ -259,8 +259,8 @@ v1.2
 | 202 | [S497](slices/S497.md) | allow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied |  | - |  | Duplicate of S471 (tool feedback, 2026-11-20). · discovered from S342 | retired |
 | 203 | [S498](slices/S498.md) | let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied |  | - |  | Duplicate of S479 (tool feedback, 2026-11-20). · discovered from S307 | retired |
 | 204 | [S499](slices/S499.md) | let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card |  | - |  | discovered from S307 | — |
-| 205 | [S500](slices/S500.md) | TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test |  | - |  | discovered from S342 | — |
-| 206 | [S501](slices/S501.md) | say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it |  | - |  | discovered from S416 | — |
+| 205 | [S500](slices/S500.md) | TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test |  | - |  | Folded into S499 per the owner (adj 514). · discovered from S342 | retired |
+| 206 | [S501](slices/S501.md) | say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it |  | - |  | Duplicate of S481 (say in the reviewer brief which shell forms are denied). · discovered from S416 | retired |
 
 ---
 
