@@ -5947,3 +5947,6 @@
 {"when": "2026-11-20T01:47:39Z", "item": "S485", "action": "note", "from": "", "to": "", "note": "Merged S490, S492 and S493 (2026-11-20, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:49:20Z", "item": "S494", "action": "add", "from": "", "to": "open", "note": "A spec check that fails its report shape keeps the report and says what it found"}
 {"when": "2026-11-20T01:49:20Z", "item": "S494", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that shell variables are denied, so reviewers use literal absolute paths"}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T02:14:41Z", "item": "S495", "action": "note", "from": "", "to": "", "note": "possible duplicate of S481", "by": "Jon Robbins"}
