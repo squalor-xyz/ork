@@ -2323,7 +2323,7 @@ func TestProjectsSetEnvLinePermissionAndAllowFlags(t *testing.T) {
 
 	// One line reads in the singular, and --allow adds to the role's list.
 	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--env-line", "just one", "--allow", "implementer=Edit")
-	if code != 0 || stdout != "updated keep: environment_lines=1 line, permissions=implementer:3 patterns\n" {
+	if code != 0 || stdout != "updated keep: environment_lines=1 line, permissions=implementer: 1 pattern added, 0 already listed\n" {
 		t.Fatalf("singular: exit %d: %q %q", code, stdout, stderr)
 	}
 	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--env-line", "")
@@ -2963,12 +2963,12 @@ func TestProjectsSetAllowAdds(t *testing.T) {
 		return f.Projects[0].Permissions["implementer"].Allow
 	}
 	code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--allow", "implementer=Edit")
-	if code != 0 || stdout != "updated keep: permissions=implementer:3 patterns\n" || !reflect.DeepEqual(list(), []string{"Read", "Bash(go test*)", "Edit"}) {
+	if code != 0 || stdout != "updated keep: permissions=implementer: 1 pattern added, 0 already listed\n" || !reflect.DeepEqual(list(), []string{"Read", "Bash(go test*)", "Edit"}) {
 		t.Fatalf("add: exit %d: %q %q, list %q", code, stdout, stderr, list())
 	}
 	// The same call again adds nothing.
 	code, stdout, _ = run(t, w.app, "projects", "set", "keep", "--allow", "implementer=Edit")
-	if code != 0 || stdout != "updated keep: permissions=implementer:3 patterns\n" || len(list()) != 3 {
+	if code != 0 || stdout != "updated keep: permissions=implementer: 0 patterns added, 1 already listed\n" || len(list()) != 3 {
 		t.Fatalf("repeat: exit %d: %q, list %q", code, stdout, list())
 	}
 	code, stdout, stderr = run(t, w.app, "projects", "set", "keep", "--replace-allow", "--allow", "implementer=Edit")
@@ -2988,6 +2988,82 @@ func TestProjectsSetAllowAdds(t *testing.T) {
 	}
 }
 
+func TestProjectsSetAllowSaysAddedAndAlreadyListed(t *testing.T) {
+	keep := registry.Project{Name: "keep", Path: "/p/keep", Permissions: map[string]registry.Permission{"implementer": {Allow: []string{"B"}}}}
+	w := newWorld(t, stubSource{}, keep)
+	code, stdout, stderr := run(t, w.app, "projects", "set", "keep", "--allow", "implementer=A", "--allow", "implementer=B")
+	if code != 0 || !strings.Contains(stdout, "implementer: 1 pattern added, 1 already listed") {
+		t.Fatalf("summary: exit %d, %q %q", code, stdout, stderr)
+	}
+}
+
+func TestProjectsSetAllowSummaryAndJSON(t *testing.T) {
+	const reply = `{"project":{"name":"keep","path":"/p/keep","adj":false,"permissions":{"implementer":["B","A"]}},"added":{"implementer":["A"]},"already_listed":{"implementer":["B"]}}`
+	for _, jsonMode := range []bool{false, true} {
+		t.Run(fmt.Sprint(jsonMode), func(t *testing.T) {
+			a := &App{Call: func(ctx context.Context, method string, params, result any) error {
+				return json.Unmarshal([]byte(reply), result)
+			}}
+			args := []string{"projects", "set", "keep", "--allow", "implementer=A", "--allow", "implementer=B"}
+			if jsonMode {
+				args = append(args, "--json")
+			}
+			code, stdout, stderr := run(t, a, args...)
+			if code != 0 {
+				t.Fatalf("exit %d: %s", code, stderr)
+			}
+			if !jsonMode {
+				if stdout != "updated keep: permissions=implementer: 1 pattern added, 1 already listed\n" {
+					t.Fatalf("summary: %q", stdout)
+				}
+			} else {
+				var got, want any
+				mustJSON(t, stdout, &got)
+				mustJSON(t, reply, &want)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("JSON: %s", stdout)
+				}
+			}
+		})
+	}
+}
+
+func TestOnlyAnswerAndRetryWaitSetWaitQueued(t *testing.T) {
+	for _, command := range []string{"answer", "retry"} {
+		for _, wait := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/%v", command, wait), func(t *testing.T) {
+				a := &App{Call: func(ctx context.Context, method string, params, result any) error {
+					b, err := json.Marshal(params)
+					if err != nil {
+						return err
+					}
+					var got struct {
+						WaitQueued bool `json:"wait_queued"`
+						NoWait     bool `json:"no_wait"`
+					}
+					if err := json.Unmarshal(b, &got); err != nil {
+						return err
+					}
+					if got.WaitQueued != wait || got.NoWait == wait {
+						t.Errorf("%s wait=%v: %s", method, wait, b)
+					}
+					return nil
+				}}
+				args := []string{command, "r1"}
+				if command == "answer" {
+					args = append(args, "yes")
+				}
+				if wait {
+					args = append(args, "--wait")
+				}
+				if code, _, stderr := run(t, a, args...); code != 0 {
+					t.Fatalf("exit %d: %s", code, stderr)
+				}
+			})
+		}
+	}
+}
+
 func TestProjectsSetPresetFlag(t *testing.T) {
 	w := newWorld(t, stubSource{}, registry.Project{Name: "slicer", Path: "/p/slicer"})
 	const check = "python3 -m unittest discover -s tests -t tests"
@@ -3003,7 +3079,7 @@ func TestProjectsSetPresetFlag(t *testing.T) {
 	}
 	// --allow after the preset adds to it.
 	code, stdout, _ = run(t, w.app, "projects", "set", "slicer", "--preset", "python", "--allow", "implementer=Bash(make *)")
-	if code != 0 || stdout != "updated slicer: permissions=implementer:27 patterns (preset python)\n" {
+	if code != 0 || stdout != "updated slicer: permissions=implementer: 1 pattern added, 0 already listed (preset python)\n" {
 		t.Fatalf("preset and allow: exit %d: %q", code, stdout)
 	}
 	for _, args := range [][]string{

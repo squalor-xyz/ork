@@ -145,7 +145,7 @@ ork (TUI)  ork status --json (CLI)
   | `projects.show` (*proposed*, S247) | `{"name"}` | `{"project","global","slicer":{"config","matrix","errors"},"adj"}`, in that key order, every part present: `project` is the registry entry as `projects.list` returns it (`vendor_env` values included, until S192 decides the masking, owner 2026-11-16); `global` is the `settings.get` result; `slicer.config` is the object `slicer config --json` prints, unchanged; `slicer.matrix` is `{"rows":[...as roles.matrix...],"rules":[...],"revision"?}` from `slicer relay-roles show --json`, with `revision` copied when slicer prints one and omitted otherwise; a part slicer could not read is `null` and `slicer.errors` holds `{"part":"config"\|"matrix","code","message"}` with slicer's own code and message (a project without `.slicer/` has both null), and the call still succeeds; `adj` is `{"enabled","config_file"}`: `enabled` is the registry flag and `config_file` is true when `.adjudicate.json` is a regular file (a stat; ork does not read it); a blank name is `bad_params` and an unknown project `not_found`, with no slicer call; read-only, nothing is written and no lock is held beyond the registry read; slicer runs on each call |
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
-  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `ui_pass_rows` (a list, S344), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`), and `dry_run` (a boolean, S248, *proposed*), which the field check ignores | with `dry_run` the project as it would be saved, without saving it, every check of a real call running; otherwise the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`, `spec_check_rows` or `ui_pass_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
+  | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `ui_pass_rows` (a list, S344), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`), and `dry_run` (a boolean, S248, *proposed*), which the field check ignores | `SetProjectResult` (`{project,added?,already_listed?}`, S307, adj 512), with pattern lists grouped by role; with `dry_run` the project as it would be saved, without saving it, every check of a real call running; otherwise the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`, `spec_check_rows` or `ui_pass_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
   | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes","owner"?,"file_answers"}`; the first two are the stored values (0 is unset); from S314 (*proposed*) `owner` is the stored name (absent when unset) and `file_answers` is true unless the registry turns it off |
   | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?,"owner"?,"file_answers"?}`, at least one | the same shape as `settings.get`; 0 clears one, `""` clears `owner` and `true` clears `file_answers` (on is the default and is not written); `bad_params` for no field, a negative number or an owner that is not one line; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
@@ -3078,6 +3078,17 @@ left its pause, and the job goes on under the daemon; a failure of the job
 shows in `ork status` as the run's error. A refusal or a failure that comes
 first is the reply. Without it (the TUI), the reply waits until the run rests.
 A second owner action is refused as busy until the job ends.
+
+*Proposed (S307, adj 472, adj 511):* only CLI `answer --wait` and
+`retry --wait` set `wait_queued: true`. When a cap queues their resume, the
+reply waits for the stored resume to start and for its job to rest again.
+Clients that omit this field, including the TUI, still receive the slot-wait
+notice at once. Disconnecting the CLI does not discard a stored resume.
+A waiting answer's adj filing uses the manager's context, so a disconnected
+client cannot interrupt ask followed by decide. If an owner stop cancels an
+answer after its filing succeeded, the reply succeeds and says
+`run RUN was stopped; answer filed in adj as #N`.
+
 Plan returns `{project,item,worktree,branch,check_command,check_source?,round_check_command?,
 lineup,budgets,permissions,note?,warnings?}`; the project contains only its name and path.
 `check_command` is the effective command (S246): slicer's `check_command` key
@@ -3095,6 +3106,15 @@ The proposed optional `note` (S135) explains a failed `relay-roles show` read.
 The plan then treats UI and spec-check rules as absent; a failed recommendation
 still prevents planning. `ork run` and the TUI launch confirm show the note
 under the plan rows (S159, *proposed*).
+
+*Proposed (S307):* the matrix labels only reviewer rows as Spec check rows,
+and that label takes precedence over UI pass for a row in both lists, as the
+plan excludes spec check rows first. If excluding spec check rows empties the
+reviewer chain, planning refuses with code `refused`, names the excluded rows
+and `spec_check_rows`, and gives `ork projects set NAME --spec-check-rows ...`
+to keep a reviewer for review. Fix commands for a missing Spec check row quote
+the project name as a shell word, including names with spaces.
+
 The proposed optional `warnings` (S265) lists setup problems
 (`engine.SetupWarnings`), in this order: no check command; the built-in Go
 allowlist on a project with no `go.mod`; an implementer allowlist without
@@ -3817,12 +3837,22 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   adds the patterns to the role's list, from the built-in default when the role
   has no entry, and skips a pattern already there (the S174 decision made it
   replace the list; `--replace-allow` keeps that behavior). `--replace-allow`
-  without `--allow` is a usage error. `--preset go|python` (S265) sets the
-  implementer's list to the preset with the check command of the same call (or
+  without `--allow` is a usage error.
+
+  *Proposed (S307, adj 512):* `projects.set` returns `SetProjectResult`:
+  `{project,added?,already_listed?}`. The last two maps hold pattern lists
+  by role for this call's `allow_add`, after any preset is applied. They are
+  transient and are never stored in the registry. Dry runs return the same
+  result without saving. The CLI JSON prints this wrapper (and `dry_run: true`
+  for a dry run). Text for `--allow` says, for example,
+  `implementer: 1 pattern added, 1 already listed`, and names any applied preset.
+
+  `--preset go|python` (S265) sets the implementer's list to the preset with
+  the check command of the same call (or
   the saved one); `--allow implementer=...` after it adds, and `--preset` with
   `--permission implementer=...` or with `--replace-allow --allow
   implementer=...` is a usage error. The text line counts the roles changed
-  by `--preset` and `--allow` and names the preset applied
+  by `--preset` and names the preset applied
   (`implementer:26 patterns (preset python)`). `--vendor-env VENDOR:KEY=VALUE` sets one key (the
   first `:` ends the vendor and the first `=` ends the key) and
   `--unset-vendor-env VENDOR:KEY` removes one key, and the vendor once it is

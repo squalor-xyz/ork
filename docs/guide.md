@@ -820,6 +820,13 @@ or retry is refused while one waits; `ork stop RUN` ends the run and drops the
 request. Approve and stop do not wait for a slot. In the TUI the run leaves
 Needs you and the Questions view and shows under Running while it waits.
 
+*Proposed (S307, adj 472, adj 511):* `ork answer --wait` and
+`ork retry --wait` also wait for a queued resume to get a slot and rest again.
+Without `--wait`, and in the TUI, the slot-wait notice still returns at once.
+A waiting answer's adj filing finishes even if its client disconnects.
+Stopping an answer after its adj filing succeeds reports
+`run RUN was stopped; answer filed in adj as #N`.
+
 ## 10. Answer questions, approve and land
 
 ### Answer questions
@@ -1018,6 +1025,13 @@ Set it with `ork projects set NAME --bell on|off` (*proposed*, S224).
 
 Run `ork doctor` after you upgrade slicer or adj. The slicer contract must
 still be one ork accepts.
+
+Upgrade the CLI and TUI together with the daemon. An older client against a
+restarted newer daemon may see `plan changed; run the command again to confirm
+it` for a plan with warnings. Since S307 (adj 512), `projects.set` replies with
+a wrapper containing the project and per-role added and already-listed pattern
+lists; an older CLI cannot read this reply. `ork projects set --allow` now
+reports both counts, for example `implementer: 1 pattern added, 1 already listed`.
 
 ## 13. Keys at a glance
 

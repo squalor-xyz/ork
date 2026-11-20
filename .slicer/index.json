@@ -17773,7 +17773,7 @@
       "id": "S307",
       "title": "Later notes from S258 and S274: daemon and CLI",
       "short_title": "S258 and S274 later notes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -17832,6 +17832,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "97b035d6-477d-4f59-8615-6abbb9e498f3",
+          "kind": "",
+          "text": "**2026-11-20** — S307 daemon and CLI items A1-A5, B1-B3 and C1-C2 are implemented and verified (go vet, go test ./... on 26 packages, go test -race ./internal/daemon, gofmt, slicer check and adj lint all clean), and the slice's Git commit message no longer names the Waves no-check item that moved to S449.",
+          "created_at": "2026-11-20T02:31:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -17855,7 +17869,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

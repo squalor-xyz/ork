@@ -67,9 +67,9 @@ func (c *Client) RemoveProject(ctx context.Context, name string) error {
 }
 
 // SetProject changes the optional registry fields p sets and returns the
-// project as saved (S161, *proposed*).
-func (c *Client) SetProject(ctx context.Context, p SetProjectParams) (registry.Project, error) {
-	var out registry.Project
+// project and allow_add changes (S161, S307, *proposed*).
+func (c *Client) SetProject(ctx context.Context, p SetProjectParams) (SetProjectResult, error) {
+	var out SetProjectResult
 	err := c.c.Call(ctx, MethodProjectsSet, p, &out)
 	return out, err
 }

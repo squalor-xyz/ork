@@ -286,7 +286,7 @@ type Project struct {
 	// SpecCheckRows names the matrix rows the spec check runs on, in order
 	// (S258, *proposed*): the first row with an adapter runs and the next is
 	// its fallback. Every row listed stays out of the reviewer and gate
-	// chains. Unset means the row that the Spec check row rule names.
+	// chains. Unset means every row named by a Spec check row rule, in rule order.
 	SpecCheckRows []string `json:"spec_check_rows,omitempty"`
 
 	// UIPassRows selects UI pass rows in order; empty uses the rule defaults.

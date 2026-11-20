@@ -43,7 +43,7 @@ const (
 	MethodProjectsList   = "projects.list"   // no params, result ProjectsResult
 	MethodProjectsAdd    = "projects.add"    // params AddProjectParams, result registry.Project
 	MethodProjectsRm     = "projects.rm"     // params RemoveProjectParams, no result
-	MethodProjectsSet    = "projects.set"    // proposed (S161); params SetProjectParams, result registry.Project
+	MethodProjectsSet    = "projects.set"    // proposed (S161, S307); params SetProjectParams, result SetProjectResult
 	MethodProjectsShow   = "projects.show"   // proposed (S247); params ProjectsShowParams, result ProjectsShowResult
 	MethodSettingsGet    = "settings.get"    // proposed (S174); no params, result SettingsResult
 	MethodSettingsSet    = "settings.set"    // proposed (S174); params SetSettingsParams, result SettingsResult
@@ -337,6 +337,14 @@ type SetProjectParams struct {
 	VendorEnv         map[string]map[string]*string   `json:"vendor_env,omitempty"`
 	NoVerify          bool                            `json:"no_verify,omitempty"` // S295, *proposed*: store a check command that failed the static check; not a field
 	DryRun            bool                            `json:"dry_run,omitempty"`   // S248, *proposed*: run every check and return the result without saving; not a field
+}
+
+// SetProjectResult carries the saved (or dry-run) project and transient allow_add
+// changes. Pattern lists are grouped by role and never saved in the registry.
+type SetProjectResult struct {
+	Project       registry.Project    `json:"project"`
+	Added         map[string][]string `json:"added,omitempty"`
+	AlreadyListed map[string][]string `json:"already_listed,omitempty"`
 }
 
 // SetsNothing reports whether the call sets no field. The struct holds maps,

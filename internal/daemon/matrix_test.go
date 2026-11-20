@@ -78,6 +78,28 @@ func TestLocalMissingLauncherNotesAreStableAcrossPlans(t *testing.T) {
 
 const matrixText = "# Relay roles\n\n| ID | Role | Agent |\n| --- | --- | --- |\n| r1 | Implementer | Claude Code |\n"
 
+func TestMatrixLabelsOnlyReviewerRowsAsSpecCheckRows(t *testing.T) {
+	for _, role := range []string{engine.RoleImplementer, engine.RoleReviewer} {
+		t.Run(role, func(t *testing.T) {
+			got := matrixUse(slicercli.Row{ID: "r16", Role: role, Agent: "Claude Code"}, nil, []string{"r16"})
+			want := "used as claude"
+			if role == engine.RoleReviewer {
+				want = "Spec check row, " + want
+			}
+			if got != want {
+				t.Fatalf("matrix use %q, want %q", got, want)
+			}
+		})
+	}
+}
+
+func TestMatrixLabelsARowInBothListsAsTheSpecCheckRow(t *testing.T) {
+	got := matrixUse(slicercli.Row{ID: "r16", Role: engine.RoleReviewer, Agent: "Claude Code"}, []string{"r16"}, []string{"r16"})
+	if got != "Spec check row, used as claude" {
+		t.Fatalf("matrix use %q", got)
+	}
+}
+
 // matrixNote is the note of row r2 in matrixShow; the other rows have none.
 const matrixNote = "second opinion"
 

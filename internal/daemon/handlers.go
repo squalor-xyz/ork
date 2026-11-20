@@ -663,7 +663,14 @@ func (d *Daemon) removeProject(name string) error {
 // While the project has unfinished runs it refuses a call that sets a field a
 // running slice reads, and allows the cap, the budgets, the patterns and the
 // bell (S265, S224, *proposed*).
-func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.Project, error) {
+func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (SetProjectResult, error) {
+	var result SetProjectResult
+	proj, err := d.updateProject(ctx, p, &result)
+	result.Project = proj
+	return result, err
+}
+
+func (d *Daemon) updateProject(ctx context.Context, p SetProjectParams, result *SetProjectResult) (registry.Project, error) {
 	bad := func(format string, args ...any) error {
 		return &ipc.Error{Code: CodeBadParams, Message: fmt.Sprintf(format, args...)}
 	}
@@ -798,6 +805,29 @@ func (d *Daemon) setProject(ctx context.Context, p SetProjectParams) (registry.P
 	withExtras, err := withProjectExtras(base, p)
 	if err != nil {
 		return registry.Project{}, err
+	}
+	if len(p.AllowAdd) > 0 {
+		// Resolve the list before additions, including a preset in this call.
+		before, err := withProjectExtras(base, SetProjectParams{Preset: p.Preset})
+		if err != nil {
+			return registry.Project{}, err
+		}
+		result.Added, result.AlreadyListed = map[string][]string{}, map[string][]string{}
+		for role, patterns := range p.AllowAdd {
+			perm, err := engine.ResolvePermission(before, role)
+			if err != nil {
+				return registry.Project{}, err
+			}
+			listed := slices.Clone(perm.Allow)
+			for _, pattern := range patterns {
+				if slices.Contains(listed, pattern) {
+					result.AlreadyListed[role] = append(result.AlreadyListed[role], pattern)
+				} else {
+					result.Added[role] = append(result.Added[role], pattern)
+					listed = append(listed, pattern)
+				}
+			}
+		}
 	}
 	proj.EnvironmentLines, proj.Permissions, proj.VendorEnv = withExtras.EnvironmentLines, withExtras.Permissions, withExtras.VendorEnv
 	if p.Push != nil {

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-493 items · — 58 · done 347 · retired 88
+493 items · — 57 · done 348 · retired 88
 
 ## v1.3
 
@@ -91,7 +91,7 @@ v1.2
 | 34 | [S303](slices/S303.md) | Local launcher unreachable: fall back to the next row | S | 2 | daemon, agent | S301 | — |
 | 35 | [S304](slices/S304.md) | Evaluate local launchers per role | M | 2 | daemon | Trials done; results in notes. claude-local qwen3.8-27b failed every implementer trial (6 of 6, no product edit). | retired |
 | 36 | [S305](slices/S305.md) | Grok and grok-local accept write roles | M | 2 | agent, daemon |  | done |
-| 37 | [S307](slices/S307.md) | S258 and S274 later notes | M | 2 | daemon, tui, cli | S258 and S274 reviews and gates, 2026-11-07 · discovered from S274 | — |
+| 37 | [S307](slices/S307.md) | S258 and S274 later notes | M | 2 | daemon, tui, cli | S258 and S274 reviews and gates, 2026-11-07 · discovered from S274 | done |
 | 38 | [S308](slices/S308.md) | ork status lists stale manual relays | S | - |  |  | done |
 | 39 | [S309](slices/S309.md) | A slice Check line a role cannot run fails the gate | S | - |  |  | done |
 | 40 | [S310](slices/S310.md) | Rewrite stale macOS paths throughout slice specs | S | - |  |  | done |

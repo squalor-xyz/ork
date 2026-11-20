@@ -30,6 +30,214 @@ import (
 
 type roundRunner func(context.Context, engine.Request) (engine.Result, error)
 
+func TestPlanWhoseSpecCheckRowsTakeEveryReviewerRowIsRefused(t *testing.T) {
+	d, _, p := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "recommend"}, Prefix: true, Stdout: `{"roles":[{"role":"implementer","row":{"agent":"Claude Code","model":"sonnet"}},{"role":"reviewer","row":{"id":"r16","agent":"Claude Code","model":"opus"}}]}`})
+	p.SpecCheckRows = []string{"r16"}
+	if err := registry.Save(d.registryPath(), &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	_, err := d.planRun(context.Background(), RunParams{Project: "p", Item: "S1"})
+	var wire *ipc.Error
+	if !errors.As(err, &wire) {
+		t.Fatalf("plan error %T: %v, want ipc refusal", err, err)
+	}
+	if wire.Code != CodeRefused {
+		t.Errorf("code %q, want refused", wire.Code)
+	}
+	for _, want := range []string{"spec_check_rows", "r16", "ork projects set p --spec-check-rows"} {
+		if !strings.Contains(wire.Message, want) {
+			t.Errorf("refusal lacks %q: %s", want, wire.Message)
+		}
+	}
+}
+
+func TestAnswerWaitOnAQueuedResume(t *testing.T) {
+	for _, method := range []string{MethodRunAnswer, MethodRunRetry} {
+		t.Run(method, func(t *testing.T) {
+			w := newWaveRig(t, 0, 1)
+			pending := questionPause()
+			if method == MethodRunRetry {
+				pending = errorPause()
+			}
+			w.mkPaused(t, "s1", "S1", pending, nil)
+			if err := w.d.recoverRuns(context.Background()); err != nil {
+				t.Fatal(err)
+			}
+			w.start(t, "S2")
+			w.expectStart(t, "S2")
+			// Decode independently of the new Go field so the baseline compiles.
+			var action RunAction
+			if err := json.Unmarshal([]byte(`{"run":"s1","text":"use stdlib","wait_queued":true}`), &action); err != nil {
+				t.Fatal(err)
+			}
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			out := make(chan callResult, 1)
+			go func() {
+				rep, err := w.d.ownerRunReply(ctx, method, action)
+				out <- callResult{rep: ownerReply{Record: rep.Record, Message: rep.Message}, err: err}
+			}()
+			waitFor(t, "stored resume", func() bool { return w.record(t, "s1").Resume != nil })
+			select {
+			case res := <-out:
+				t.Fatalf("reply before a slot freed: %+v %v", res.rep, res.err)
+			case <-time.After(100 * time.Millisecond):
+			}
+			w.free <- struct{}{}
+			w.expectStart(t, "S1")
+			select {
+			case res := <-out:
+				t.Fatalf("reply before resumed role rested: %+v %v", res.rep, res.err)
+			case <-time.After(100 * time.Millisecond):
+			}
+			w.free <- struct{}{}
+			res := waitReply(t, out, "queued resume")
+			if res.err != nil || res.rep.State != runrec.StateStopped || res.rep.Resume != nil {
+				t.Fatalf("rest reply: %+v %v", res.rep, res.err)
+			}
+		})
+	}
+}
+
+func TestStopDuringAnAnsweredRoundKeepsTheFilingNotice(t *testing.T) {
+	gate := &roleGate{started: make(chan struct{}, 8), release: make(chan struct{})}
+	d, _, id := adjAnswerRunGated(t, gate, `{"result":"not found"}`, false)
+	t.Cleanup(gate.open)
+	b, _ := json.Marshal(RunAction{Run: id, Text: "use stdlib", Adj: true, By: "owner"})
+	out := startCall(d, MethodRunAnswer, string(b))
+	select {
+	case <-gate.started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("answered round did not start")
+	}
+	stop := waitReply(t, stopAsync(d, id), "stop")
+	if stop.err != nil {
+		t.Fatal(stop.err)
+	}
+	res := waitReply(t, out, "answer")
+	want := "run " + id + " was stopped; answer filed in adj as #42"
+	if res.err != nil || res.rep.Message != want {
+		t.Fatalf("answer reply: message %q, err %v; want %q", res.rep.Message, res.err, want)
+	}
+}
+
+func TestQueuedWaitEndsWhenTheManagerCloses(t *testing.T) {
+	w := newWaveRig(t, 0, 1)
+	w.mkPaused(t, "s1", "S1", questionPause(), nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	out := make(chan error, 1)
+	go func() {
+		_, err := w.d.ownerRunReply(ctx, MethodRunAnswer, RunAction{Run: "s1", Text: "yes", WaitQueued: true})
+		out <- err
+	}()
+	waitFor(t, "stored resume", func() bool { return w.record(t, "s1").Resume != nil })
+	w.d.closeRuns()
+	select {
+	case err := <-out:
+		if err == nil || err.Error() != "run manager is closed" {
+			t.Fatalf("close reply: %v", err)
+		}
+	case <-time.After(200 * time.Millisecond):
+		t.Fatal("manager close left the queued waiter blocked")
+	}
+}
+
+func TestStopDuringAQueuedAnsweredRoundKeepsTheFilingNotice(t *testing.T) {
+	w := newWaveRigRoutes(t, 0, 1,
+		clitest.Route{Tool: "adj", Args: []string{"check"}, Prefix: true, Stdout: `{"result":"not found"}`},
+		clitest.Route{Tool: "adj", Args: []string{"ask"}, Prefix: true, Stdout: "42\n"},
+		clitest.Route{Tool: "adj", Args: []string{"decide"}, Prefix: true, Stdout: "42\n"})
+	w.d.runs.deps.Adj = adjcli.Client{Bin: w.fake.Bin("adj")}
+	pending := questionPause()
+	pending.Key = "storage.engine"
+	w.mkPaused(t, "s1", "S1", pending, nil)
+	if err := w.d.recoverRuns(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	w.start(t, "S2")
+	w.expectStart(t, "S2")
+	out := startCall(w.d, MethodRunAnswer, `{"run":"s1","text":"use stdlib","adj":true,"by":"owner","wait_queued":true}`)
+	waitFor(t, "stored answer", func() bool { return w.record(t, "s1").Resume != nil })
+	w.free <- struct{}{}
+	w.expectStart(t, "S1")
+	if stop := waitReply(t, stopAsync(w.d, "s1"), "stop"); stop.err != nil {
+		t.Fatal(stop.err)
+	}
+	res := waitReply(t, out, "queued answer")
+	if res.err != nil || res.rep.Message != "run s1 was stopped; answer filed in adj as #42" {
+		t.Fatalf("queued answer reply: message %q, err %v", res.rep.Message, res.err)
+	}
+}
+
+func TestWaitingAnswerFilingOutlivesTheRequest(t *testing.T) {
+	d, store, id, _ := fullProjectRig(t)
+	started, open := gateAdj(t, d, store, id)
+	// Hold decide after ask succeeded: disconnecting must not leave an open key.
+	bin := d.runs.deps.Adj.Bin
+	dir := filepath.Dir(bin)
+	script := fmt.Sprintf("#!/bin/sh\nif [ \"$1\" = decide ]; then\n: > %q\nwhile [ ! -e %q ]; do sleep 0.01; done\nfi\nexec %q \"$@\"\n", filepath.Join(dir, "started"), filepath.Join(dir, "open"), lastFake.Bin("adj"))
+	if err := os.WriteFile(bin, []byte(script), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	out := make(chan callResult, 1)
+	go func() {
+		rep, err := d.ownerRunReply(ctx, MethodRunAnswer, RunAction{Run: id, Text: "use stdlib", Adj: true, By: "owner", NoWait: true})
+		out <- callResult{rep: ownerReply{Record: rep.Record, Message: rep.Message}, err: err}
+	}()
+	started()
+	cancel()
+	open()
+	res := waitReply(t, out, "filing")
+	if res.err != nil || !strings.Contains(res.rep.Message, "decided in adj as #42") {
+		t.Fatalf("filing after disconnect: %+v %v", res.rep, res.err)
+	}
+}
+
+func TestSetProjectReturnsAllowChanges(t *testing.T) {
+	d, _, p := runDaemon(t, nil)
+	p.Permissions = map[string]registry.Permission{"implementer": {Allow: []string{"B"}}}
+	if err := registry.Save(d.registryPath(), &registry.File{Version: registry.Version, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	for _, dry := range []bool{true, false} {
+		t.Run(fmt.Sprint(dry), func(t *testing.T) {
+			b := request(t, d, MethodProjectsSet, fmt.Sprintf(`{"name":"p","allow_add":{"implementer":["A","B"]},"dry_run":%v}`, dry))
+			var got struct {
+				Project       registry.Project    `json:"project"`
+				Added         map[string][]string `json:"added"`
+				AlreadyListed map[string][]string `json:"already_listed"`
+			}
+			if err := json.Unmarshal(b, &got); err != nil {
+				t.Fatal(err)
+			}
+			if got.Project.Name != "p" {
+				t.Errorf("reply lacks project wrapper: %s", b)
+			}
+			if !reflect.DeepEqual(got.Added["implementer"], []string{"A"}) {
+				t.Errorf("added: %s", b)
+			}
+			if !reflect.DeepEqual(got.AlreadyListed["implementer"], []string{"B"}) {
+				t.Errorf("already listed: %s", b)
+			}
+			saved, err := os.ReadFile(d.registryPath())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(string(saved), `"added"`) || strings.Contains(string(saved), `"already_listed"`) {
+				t.Errorf("saved transient changes: %s", saved)
+			}
+		})
+	}
+}
+
 func (f roundRunner) Run(c context.Context, r engine.Request) (engine.Result, error) { return f(c, r) }
 
 var lastFake *clitest.Fake // the fakes of the latest runDaemon

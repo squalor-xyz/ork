@@ -55,7 +55,7 @@ func TestRetryAcceptShapeFlag(t *testing.T) {
 		{[]string{"retry", "r1", "--accept-shape"}, `run.retry {"run":"r1","accept_shape":true,"no_wait":true}`},
 		{[]string{"retry", "--accept-shape", "r1"}, `run.retry {"run":"r1","accept_shape":true,"no_wait":true}`},
 		{[]string{"retry", "r1", "keep it", "--accept-shape"}, `run.retry {"run":"r1","text":"keep it","accept_shape":true,"no_wait":true}`},
-		{[]string{"retry", "r1", "--accept-shape", "--wait"}, `run.retry {"run":"r1","accept_shape":true}`},
+		{[]string{"retry", "r1", "--accept-shape", "--wait"}, `run.retry {"run":"r1","accept_shape":true,"wait_queued":true}`},
 	} {
 		calls, code, _, stderr := ownerCalls(t, tc.args...)
 		if code != ExitOK || len(calls) != 1 || calls[0] != tc.want {
@@ -119,10 +119,10 @@ func TestAnswerAndRetryWaitFlagOmitsNoWait(t *testing.T) {
 		args []string
 		want string
 	}{
-		{[]string{"answer", "r1", "text", "--wait"}, `run.answer {"run":"r1","text":"text"}`},
-		{[]string{"answer", "--wait", "r1", "text"}, `run.answer {"run":"r1","text":"text"}`},
-		{[]string{"retry", "r1", "--wait"}, `run.retry {"run":"r1"}`},
-		{[]string{"retry", "--wait", "r1"}, `run.retry {"run":"r1"}`},
+		{[]string{"answer", "r1", "text", "--wait"}, `run.answer {"run":"r1","text":"text","wait_queued":true}`},
+		{[]string{"answer", "--wait", "r1", "text"}, `run.answer {"run":"r1","text":"text","wait_queued":true}`},
+		{[]string{"retry", "r1", "--wait"}, `run.retry {"run":"r1","wait_queued":true}`},
+		{[]string{"retry", "--wait", "r1"}, `run.retry {"run":"r1","wait_queued":true}`},
 	} {
 		calls, code, _, stderr := ownerCalls(t, tc.args...)
 		if code != ExitOK || len(calls) != 1 || calls[0] != tc.want {
@@ -191,7 +191,7 @@ func TestRetryTakesAnOptionalNote(t *testing.T) {
 		t.Errorf("retry with a note: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
 	}
 	calls, code, _, stderr = ownerCalls(t, "retry", "r1", "re-read testdata", "--wait")
-	if want := `run.retry {"run":"r1","text":"re-read testdata"}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
+	if want := `run.retry {"run":"r1","text":"re-read testdata","wait_queued":true}`; code != ExitOK || len(calls) != 1 || calls[0] != want {
 		t.Errorf("retry with a note and --wait: code %d, stderr %q, calls %q, want %q", code, stderr, calls, want)
 	}
 	calls, code, _, stderr = ownerCalls(t, "retry", "r1")

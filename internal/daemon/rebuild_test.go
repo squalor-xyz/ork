@@ -30,8 +30,8 @@ func TestRebuildStatusAndSetting(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		if p.BuildCommand != command || f.Projects[0].BuildCommand != command {
-			t.Fatalf("saved build command: reply %q disk %q want %q", p.BuildCommand, f.Projects[0].BuildCommand, command)
+		if p.Project.BuildCommand != command || f.Projects[0].BuildCommand != command {
+			t.Fatalf("saved build command: reply %q disk %q want %q", p.Project.BuildCommand, f.Projects[0].BuildCommand, command)
 		}
 		status := projectStatus(f.Projects[0], source.Snapshot{}, time.Now())
 		status.SelfHost, status.BehindMain = true, true
