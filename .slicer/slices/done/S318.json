@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/cli/daemoncmds.go:26` (`ork status`)\n- `internal/daemon/handlers.go:403` (`ProjectStatus.Held` and needs-you counts)\n- `internal/daemon/wire.go:112`\n- `internal/source/source.go` (run snapshot)\n- `internal/slicercli` (a call to `slicer status --json`)\n- `docs/guide.md`\n- `docs/design.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/cli/daemoncmds.go:30` (`App.status`)\n- `internal/cli/status_summary.go:42` and `internal/cli/status_summary_test.go` (summary, review regressions, wrapping)\n- `internal/cli/cli.go:179` (status help)\n- `internal/cli/render_test.go` (CLI and long summary render fixtures)\n- `internal/cli/prompt.go:28` (`wrapLines`, reuse only)\n- `internal/cli/wave.go:832` (`plural`, reuse only)\n- `internal/daemon/handlers.go:508` (`projectStatus`, existing sources)\n- `internal/daemon/wire.go:114` (`ProjectStatus`)\n- `internal/daemon/runs.go:3005` (`engineRuns`)\n- `internal/daemon/approval_test.go` (human-check wire test)\n- `internal/source/source.go:406` (`EngineRun`)\n- `internal/slicercli` (status adapter and tests)\n- `docs/guide.md:632`\n- `docs/design.md:3654` (summary paragraph before output introduction)\n- `internal/cli/upgrade_test.go:587` and `internal/cli/upgrade_test.go:823` (existing width guards)\n- `landed-changed/S318.md` (via slicer changelog add)"
     },
     {
       "heading": "Failing tests",
-      "body": "- With one running run, one awaiting approval, one open spec question, one open adj question, one human check marked `later`, and a slicer item blocked by another, `ork status --summary` prints a Running section (item, state, role, round, time in state), a Needs you section (each with its command), a Blocked section (slicer dependency and owner-flag reasons, each named) and a Next section.\n- Sections are capped at 5 lines with \"+N more\".\n- An empty section prints `none`, not a blank.\n- `--json` prints the same data with stable keys.\n- Without a running daemon the command prints the error the other status commands print.\n- No dependency edges are computed in ork: the blocked list is slicer's output (a fake slicer returns it)."
+      "body": "- `internal/cli/status_summary_test.go`: retain populated, capped, empty, JSON parity and daemon-error checks.\n- Review regressions in `internal/cli/status_summary_test.go`: held deps items never enter Next; paused, error, shape and stopped needs-you runs point to show; only items/open source errors are fatal; question nouns agree with counts.\n- UI regressions in `internal/cli/status_summary_test.go`: long text rows fit 80 columns with two-space first and four-space continuation indents; unfolding text preserves whole JSON rows; help retains needs-you counts.\n- `internal/cli/render_test.go`: render the long summary fixture as a real CLI artifact.\n- `internal/slicercli/status_test.go`: preserve slicer status argv and blockers.\n- `internal/daemon/approval_test.go`: preserve human checks after approval.\n- `internal/cli/upgrade_test.go`: retain CLI/design usage width guards."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test ./...`, `go vet ./...`, `gofmt -l .`, `slicer check`, `adj lint`.\n- UI pass (rule u10): `internal/cli` output changes."
+      "body": "Acceptance criteria:\n- ork status --summary prints Running, Waiting on you, Blocked and Next sections; Next follows slicer's order (adj 516); text rows wrap at 80 columns with a 4-space continuation indent (adj 518).\n- The slice changes internal/cli output, so it gets a UI pass (rule u10).\n\nCommands:\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- `adj lint` exits 0."
     },
     {
       "heading": "Git",

@@ -1,0 +1,39 @@
+{
+  "id": "S509",
+  "title": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261120-133800-9941, project ork, item S505:\n\ntest every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match\n\nEvidence: Bash(slicer ai relay*) matches slicer ai relay --init-roles, which writes .slicer/relay-roles.json (slicer/src/slicer/cli_parser.py:269-276)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,39 @@
+{
+  "id": "S506",
+  "title": "For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #515 was decided to file it:\n\nProposal: For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views\nRole: ui\nRun: ork-20261120-025522-97bb\nProject: ork\nItem: S337\nEvidence: TestRenderCLIViews covers only status, show and help, so this view needed a hand-written overlay test calling runWaveNoTerminal"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

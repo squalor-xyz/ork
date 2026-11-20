@@ -2858,7 +2858,9 @@ own line, `usage: ork daemon run`.
 
 ```
 ork                         open the TUI (start the daemon if needed)
-ork status [--project P]    waves, slices, roles, needs-you
+ork status [--project P] [--summary]
+                            waves, slices, roles, needs-you;
+                            --summary shows one project
 ork stats [PROJECT] [--since DATE] [--json]
                             slicer's relay-run statistics (S123, proposed)
 ork wave suggest P          slicer's suggested waves, in order, with reasons
@@ -3660,6 +3662,26 @@ daemon, which the CLI starts on demand; with `--json` an error is
 on stderr.
 
 ### Output
+
+*Proposed (S318):* `status --summary [--project P]` is assembled in the CLI
+from the existing daemon status, `slicer status --json --lean` and
+`slicer deps --json --lean`. Without a project flag the deepest registered
+project containing the current folder is selected. Slicer's blocked reasons
+are kept verbatim; `needs-owner` items are added as owner blockers. Next is
+slicer's next item followed by its unblocked order, deduplicated by id and
+excluding held items, with existing spec-question counts. There is no ork score
+or dependency traversal.
+JSON has `project` plus `running`, `needs_you`, `blocked` and `next`, each
+`{"rows":["..."],"more":N}`. Each section has at most five logical rows,
+`+N more` for overflow and `none` when empty. Text rows wrap at 80 columns with
+two spaces on the first line and four on continuation lines. JSON keeps each
+row whole. Only status errors for `items` or `open`, and slicer errors, fail
+the command. Non-approval needs-you runs point to `ork show RUN`; approval
+rows point to `ork approve RUN`. The optional engine-run `human_checks` field
+carries the card's marks with original indexes even after approval; the approval card
+itself still appears only while awaiting approval. Summary lists checks marked
+`later`; on an approved run its command is `ork show RUN`, since `ork check`
+accepts marks only while awaiting approval.
 
 Text output is plain lines meant to be stable. `--json` output, indented:
 

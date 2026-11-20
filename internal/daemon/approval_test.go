@@ -34,6 +34,29 @@ func passRunner() roundRunner {
 
 const twoHumanChecks = `{"slice":{"sections":[{"heading":"Check","body":"- go test ./...\n- [HUMAN CHECK] Read the card at 80x24.\n- [HUMAN CHECK] Press F and send a note."},{"heading":"Git","body":"One commit: \"S1: test\"."}]}}`
 
+func TestStatusKeepsHumanChecksAfterApproval(t *testing.T) {
+	d, store, p := runDaemon(t, nil)
+	_, err := store.Create(runrec.Record{ID: "deferred", Project: p.Name, Item: "S1", State: runrec.StateCommitted, Card: &runrec.ApprovalCard{HumanChecks: []runrec.HumanCheck{{Text: "Already done", State: runrec.CheckTicked}, {Text: "Inspect screen", State: runrec.CheckLater}}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	b := request(t, d, "status", `{"project":"p"}`)
+	var reply struct {
+		Projects []struct {
+			EngineRuns []struct {
+				HumanChecks []runrec.HumanCheck `json:"human_checks"`
+			} `json:"engine_runs"`
+		} `json:"projects"`
+	}
+	if err := json.Unmarshal(b, &reply); err != nil {
+		t.Fatal(err)
+	}
+	checks := reply.Projects[0].EngineRuns[0].HumanChecks
+	if len(checks) != 2 || checks[1].Text != "Inspect screen" || checks[1].State != runrec.CheckLater {
+		t.Fatalf("status lost deferred checks: %s", b)
+	}
+}
+
 func TestRunStatusCarriesTheApprovalCardAndItsActions(t *testing.T) {
 	d, store, p := runDaemon(t, passRunner(),
 		clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: twoHumanChecks},

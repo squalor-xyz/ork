@@ -26,14 +26,20 @@ func TestRenderCLIViews(t *testing.T) {
 	show := showDouble(pausedShow(), map[string]string{"reviewer-3-attempt-3.md": "PENDING REPORT BODY\nline two"})
 	for _, view := range []struct {
 		name string
-		app  *App
+		app  func() *App
 		args []string
 	}{
-		{"status", &status, []string{"status"}},
-		{"show", &App{Call: show.call}, []string{"show", "r1"}},
-		{"help", &App{}, []string{"help"}},
+		{"status", func() *App { return &status }, []string{"status"}},
+		{"status-summary", func() *App {
+			return summaryApp(t, summaryFixture(), `{"next":{"id":"S7","title":"First"},"blocked":[{"id":"S8","waiting_on":["S6","S5"]}]}`, `[{"id":"S2","title":"Second"},{"id":"S7","title":"First"}]`)
+		}, []string{"status", "--summary"}},
+		{"status-summary-long", func() *App {
+			return summaryApp(t, summaryLongFixture(), `{"next":{"id":"S7","title":"Review the complete summary display and its detailed information before starting the next item in the current project"}}`, `[]`)
+		}, []string{"status", "--summary"}},
+		{"show", func() *App { return &App{Call: show.call} }, []string{"show", "r1"}},
+		{"help", func() *App { return &App{} }, []string{"help"}},
 	} {
-		code, out, errs := run(t, view.app, view.args...)
+		code, out, errs := run(t, view.app(), view.args...)
 		if code != ExitOK || errs != "" {
 			t.Fatalf("%s: exit %d, stderr %q", view.name, code, errs)
 		}
@@ -75,7 +81,7 @@ func TestRenderCLIViewsWritesFiles(t *testing.T) {
 			}
 			want := []string{}
 			if enabled {
-				want = []string{"help.txt", "show.txt", "status.txt"}
+				want = []string{"help.txt", "show.txt", "status-summary-long.txt", "status-summary.txt", "status.txt"}
 			}
 			if !reflect.DeepEqual(names, want) {
 				t.Fatalf("render files %q, want %q", names, want)
@@ -90,6 +96,12 @@ func TestRenderCLIViewsWritesFiles(t *testing.T) {
 				}
 				if strings.ContainsRune(string(text), '\x1b') {
 					t.Errorf("%s contains ANSI escapes", name)
+				}
+				if name == "status-summary.txt" && !strings.Contains(string(text), "  S7 First\n") {
+					t.Errorf("short summary used another fixture: %s", text)
+				}
+				if name == "status-summary-long.txt" && !strings.Contains(string(text), "  S7 Review the complete summary") {
+					t.Errorf("long summary used another fixture: %s", text)
 				}
 			}
 		})
