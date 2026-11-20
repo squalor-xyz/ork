@@ -1,0 +1,24 @@
+[1mork[m                │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+  Running        2 │[90m────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you      0 [m│[1;36mNeeds you 0[m
+[90m1[m ork             *│  [90mnothing needs you[m
+                   │
+                   │[1;36mRunning 2[m
+                   │[1;7;97;44m   ork  S10450  implement      [......]  !! heard 3h00m     [m
+                   │   ork  [1mS10449[m  [90mresume queued[m  [......]  [90mwait 5m[m
+                   │          [90mresume waits for a slot under project cap 1[m
+                   │
+                   │[1;36mRecent[m
+                   │  [90mnone[m
+                   │
+                   │[1;36mReady to land[m
+                   │  [90mnone[m
+                   │
+                   │
+                   │
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │  other  S10450  implement  3h00m  [......]  !! heard 3h00m
+                   │  implementer>reviewer>gate
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ enter [2mopen[m; x [2mstop[m; tab [2mviews[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
+                   │ 1 project | refreshed 16:42:00

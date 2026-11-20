@@ -22,6 +22,21 @@ import (
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
+func TestQueuedResumePaneHintKeepsXStopAt80x24(t *testing.T) {
+	for _, mono := range []bool{true, false} {
+		t.Run(fmt.Sprint(mono), func(t *testing.T) {
+			h := waitingHarness(t, "error")
+			h.m.cfg.Theme = NewTheme(mono)
+			h.deliver(press("enter"))
+			h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+			if hint := hintLine(plainView(h.m)); !strings.Contains(hint, "x stop") {
+				t.Errorf("queued-resume pane lost x stop: %q", hint)
+			}
+			checkGolden(t, fmt.Sprintf("resume-pane-80x24-mono-%t.txt", mono), h.m.View().Content)
+		})
+	}
+}
+
 func (l *actionLive) Answer(_ context.Context, run, text string) error {
 	if text != "use local storage" && text != "qa xtrsnpy?1/" && text != "use: local storage" {
 		return fmt.Errorf("wrong answer: %q", text)

@@ -230,6 +230,9 @@ func waitingSince(r slicercli.RelayRun) (time.Time, bool) {
 // no durable wait-start timestamp, so their last update stands in. It is zero
 // when the record has neither.
 func waitStart(r source.EngineRun) time.Time {
+	if r.ResumeWaiting && !r.ResumeQueuedAt.IsZero() {
+		return r.ResumeQueuedAt
+	}
 	if !r.WaitStartedAt.IsZero() {
 		return r.WaitStartedAt
 	}

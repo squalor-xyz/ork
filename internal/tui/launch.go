@@ -39,6 +39,8 @@ type launchState struct {
 	rechecked    bool // a replan's plan still carved, so its spec check ran again (S359)
 	stage        launchStage
 	cursor       int
+	confirmLine  int // the confirm body line its window starts at (S449)
+	confirmMax   int // the last such line the window can start at, set by the last screen
 	params       daemon.RunParams
 	plan         *daemon.RunPlan
 	request      uint64
@@ -539,7 +541,7 @@ func (m *Model) launchView(w int) overviewView {
 		// A chain of slivers (S62; S359 carves it for a local implementer): the
 		// owner approves all of them at once, so each one is named. They share one
 		// wrapped line, so a long chain does not push the roles and the warnings
-		// below the pane, which this body cannot scroll.
+		// below the pane before the owner scrolls it.
 		if len(p.Slivers) > 0 {
 			ids := make([]string, len(p.Slivers))
 			for i, sliver := range p.Slivers {
@@ -616,6 +618,7 @@ func (m *Model) launchView(w int) overviewView {
 		if p.Note != "" {
 			warn("note: " + p.Note)
 		}
+		out.scrolls, out.scrollTop = true, l.confirmLine
 	}
 	return out
 }

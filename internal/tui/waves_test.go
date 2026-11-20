@@ -14,6 +14,7 @@ import (
 	"charm.land/lipgloss/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/ipc"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
@@ -89,7 +90,7 @@ func (l *wavesLive) WaveOverlap(_ context.Context, p string, ids []string) (*sli
 }
 func (l *wavesLive) Plan(_ context.Context, p daemon.RunParams) (*daemon.RunPlan, error) {
 	l.plans = append(l.plans, p)
-	plan := &daemon.RunPlan{StopAfter: p.StopAfter, Item: p.Item, Lineup: map[string][]runrec.LineupEntry{
+	plan := &daemon.RunPlan{Project: registry.Project{Name: p.Project}, CheckCommand: "go test ./...", StopAfter: p.StopAfter, Item: p.Item, Lineup: map[string][]runrec.LineupEntry{
 		"implementer": {{Vendor: "claude", Model: "sonnet", Effort: "high"}},
 		"reviewer":    {{Vendor: "claude", Model: "opus", Effort: "medium"}},
 		"gate":        {{Vendor: "claude", Model: "opus", Effort: "medium"}},
@@ -139,6 +140,43 @@ func openWaves(t *testing.T, h *harness) {
 	h.deliver(press("tab"))
 	if h.m.view != 2 {
 		t.Fatalf("tab reached %d, want Waves", h.m.view)
+	}
+}
+
+func TestWavesLaunchShowsTheNoCheckRefusalBeforeTheSpecCheck(t *testing.T) {
+	for _, mono := range []bool{true, false} {
+		t.Run(fmt.Sprint(mono), func(t *testing.T) {
+			h, l := wavesHarness(t)
+			h.m.cfg.Theme = NewTheme(mono)
+			openWaves(t, h)
+			tickWave(t, h)
+			p := h.m.waves.picked["A"]
+			p.Expected.Project.Name = "ork"
+			p.Expected.CheckCommand = ""
+			h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+			h.deliver(press("l"))
+			if len(l.checks) != 0 {
+				t.Error("spec check started before the no-check refusal")
+			}
+			v := plainView(h.m)
+			for _, want := range []string{"check: none", "refused: ork has no check command", "fix: ork projects set ork --check CMD", "start anyway: ork run ork A --allow-no-check", "ork wave start: refused (n or esc closes)"} {
+				if !strings.Contains(v, want) {
+					t.Errorf("missing %q:\n%s", want, v)
+				}
+			}
+			if hint := hintLine(v); strings.Contains(hint, "y ") || !strings.Contains(hint, "n cancel") {
+				t.Errorf("refused confirm hint: %q", hint)
+			}
+			checkGolden(t, fmt.Sprintf("waves-nocheck-80x24-mono-%t.txt", mono), h.m.View().Content)
+			h.deliver(press("y"))
+			if h.m.confirm == nil || !strings.Contains(plainView(h.m), "Not started: no check command") || len(l.starts) != 0 {
+				t.Error("y did not keep the refused confirm open with its reason")
+			}
+			h.deliver(press("esc"))
+			if h.m.confirm != nil || !strings.Contains(plainView(h.m), "Cancelled") {
+				t.Error("esc did not close the refused confirm")
+			}
+		})
 	}
 }
 func tickWave(t *testing.T, h *harness) {

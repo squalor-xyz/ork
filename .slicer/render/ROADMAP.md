@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-505 items · — 42 · done 353 · retired 110
+505 items · — 41 · done 354 · retired 110
 
 ## v1.3
 
@@ -208,7 +208,7 @@ v1.2
 | 151 | [S446](slices/S446.md) | say in the reviewer brief whether the harness started the role in plan mode, since plan mode tells the role to write a plan file and call ExitPlanMode, which a read-only review cannot do |  | - |  | Duplicate of S418 (read-only roles and plan mode in the brief). · discovered from S444 | retired |
 | 152 | [S447](slices/S447.md) | name go test -overlay with a temp-dir test file as the sanctioned render path for read-only UI passes in the brief |  | - |  | Duplicate of S416 (UI pass render path; go test -overlay route, option a). · discovered from S393 | retired |
 | 153 | [S448](slices/S448.md) | say in the brief whether plan mode may wrap a gate session, so the plan-file and ExitPlanMode instructions do not compete with the gate report |  | - |  | Duplicate of S418 (plan mode in read-only and gate briefs). · discovered from S439 | retired |
-| 154 | [S449](slices/S449.md) | S307 TUI follow-ups | M | 2 |  | S258 and S274 reviews and gates, 2026-11-07; re-anchored 2026-11-18; split from S307 by the owner on 2026-11-18. | — |
+| 154 | [S449](slices/S449.md) | S307 TUI follow-ups | M | 2 |  | S258 and S274 reviews and gates, 2026-11-07; re-anchored 2026-11-18; split from S307 by the owner on 2026-11-18. | done |
 | 155 | [S450](slices/S450.md) | skip the UI pass or say "no TUI views changed" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files |  | - |  | discovered from S432 | — |
 | 156 | [S451](slices/S451.md) | tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode |  | - |  | Duplicate of S418 (plan mode in read-only briefs; adj 489 moves cloud Claude read-only roles off plan mode). · discovered from S432 | retired |
 | 157 | [S452](slices/S452.md) | Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored |  | - |  | Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418 | retired |

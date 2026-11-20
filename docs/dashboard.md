@@ -289,7 +289,7 @@ Neither Waves nor Launch asks well specified or split, so neither has an
 input hint (*proposed*, adj 189). The lineup editor and spec
 question sitting also show their current keys in this line. A confirmation
 names what `y` does and, at the Roadmap launch, `e`, since the prompt above
-it carries the rest: `y run; n cancel; e edit lineup; s split`, `y start; n cancel`, `y approve; n
+it carries the rest: `y run; n cancel; e edit lineup; s split; up/down scroll`, `y start; n cancel`, `y approve; n
 cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor and
 `s` turns split (a lead and parts, S61, *proposed*) on or off and plans again.
 The help screen shows `? or esc close help; q quit`.
@@ -1188,7 +1188,8 @@ The actions follow the state (`ui.answer-pane-scope`):
   without the closing `; next: ork stop RUN`; the selected row's detail line
   keeps the whole text. The pane has no
   Answer field and no `t retry` hint, and `t` or an answer says
-  `resume already waits for a slot; ork stop RUN cancels it`. `x` still stops it
+  `resume queued; x stops it`, a line that fits 80 columns with any run id
+  (S449). `x` still stops it
   and drops the waiting request. The status line after an answer keeps its
   notice (`answered; resume waits for a slot; it starts before queued runs`, with
   the adj filing notice before it when the answer was filed, since the filing
@@ -1196,6 +1197,12 @@ The actions follow the state (`ui.answer-pane-scope`):
   slot; it starts before queued runs`, not `done`. When a slot frees, the run
   starts ahead of queued runs and shows as running again. Overview auto-switch
   (`newest running`) does not pick a run that only waits for a slot.
+  *Proposed (S449):* the Running row's role cell reads `resume queued` in place of
+  `paused`, including when the row is unselected, and the heard cell keeps the
+  wait (`wait 5m`). The cue stays out of the heard cell, so it does not push the
+  state column out of any Running row at 80x24. The wait age counts from the stored resume's
+  queue time, falling back to the pause time for older snapshots. At 80x24 the
+  pane keeps `x stop` ahead of its scroll hints.
 - Stopped: show the full reason with no key actions. Stop is final; relaunch,
   or clear the row with `ork dismiss RUN`.
 
@@ -1654,7 +1661,14 @@ Two or more ticked items trigger an overlap read. Each shared path gets a
 warning; warnings permit launch (`wave.selection`). `l` launches the ticked
 items with one y/n confirmation showing `ork wave start PROJECT ID...`.
 Enter, n and esc cancel; y submits each item's answers and confirmed plan.
-`l` first runs the spec check (S116, adj 164) for every ticked item. *Proposed
+*Proposed (S449, adj 521):* before the spec check, a ticked plan with no check command
+opens the wave confirm in refused form. It shows the first such item's plan,
+including `check: none`, `refused:`, `fix:` and `start anyway:` lines as on the
+Roadmap launch. The bar reads `ork wave start: refused (n or esc closes)`;
+the hint drops `y`. Pressing `y` leaves it open and says
+`Not started: no check command (see the fix above)`. Enter, n and esc close it.
+No spec check or launch starts.
+Otherwise `l` first runs the spec check (S116, adj 164) for every ticked item. *Proposed
 (S264):* while it runs, the status line reads `spec check: N items, 1m12s; wait
 for the confirmation` (one item names its id instead of `N items`). The clock
 counts from `l` and moves with the poll tick: `59s`, then `1m00s`, then `1h02m`.
@@ -2056,6 +2070,11 @@ cancel as before. The TUI has no flag for starting anyway. The confirmation bar 
 `ork run PROJECT ITEM? [y/N] (Enter is No)`. The displayed command omits the
 two answers. `y` or `Y` calls `run.start` with those answers and the displayed
 plan as Expected, including any lineup, budget and stop-point overrides.
+*Proposed (S449):* up and down scroll the launch confirmation's plan, including warnings
+and the note clipped at 80x24. Each press moves the view by one line, from the
+top of the plan to the last full window, and the plan has no cursor line. The
+confirmation stays open while scrolling; `y` still starts a plan with a check
+command. The refused Waves confirmation does not scroll.
 
 The shared lineup editor has a `stop` row between the roles and budgets (*proposed*,
 S177). Left/right cycles `land` and `commit`; saving replans the item with

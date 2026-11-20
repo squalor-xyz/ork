@@ -4,7 +4,7 @@
 [1;7m1>slicer          *[m│  [2mnothing needs you[m
 [2m2[m adjudicate       │
 [2m3[m DataBall         │[1mRunning 1[m
-[2m4[m agents           │[1;7m  S42  paused  [......]  wait 20m                           [m
+[2m4[m agents           │[1;7m  S42  resume queued  [......]  wait 20m                    [m
                    │[7m    resume waits for a slot under project cap 1             [m
                    │
                    │[1mRecent[m

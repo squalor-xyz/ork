@@ -629,6 +629,11 @@ type overviewView struct {
 	body   []string
 	sel    int
 	detail []string
+	// scrolls is set by a body the owner scrolls a line at a time with up and
+	// down, as the launch confirm (S449): scrollTop is the body line its window
+	// starts at, and the screen clamps it to the last full window.
+	scrolls   bool
+	scrollTop int
 	// selEnd is the last body line of the selected row: its second line,
 	// commands, note or opened detail. The Overview and the Running entry set
 	// it; the open pane of a run that left the snapshot goes under it (S146).
@@ -1021,6 +1026,11 @@ func (m *Model) engineRunRow(s source.Snapshot, r source.EngineRun, ledger slice
 	rr.finishRow(ledger)
 	if r.ShapeRetry {
 		rr.role += " shape retry"
+	}
+	if r.ResumeWaiting {
+		// The cue takes the place of the "paused" it explains, beside the wait
+		// cell and not in it: the heard column is as wide as its widest cell (S449).
+		rr.role = "resume queued"
 	}
 	if r.VendorWait != "" {
 		// The run has not gone quiet: it waits for a vendor slot. The heard cell

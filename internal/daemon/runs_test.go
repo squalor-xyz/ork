@@ -3166,6 +3166,28 @@ func TestStatusNamesAWaitingResume(t *testing.T) {
 	}
 }
 
+func TestEngineRunCarriesResumeQueueTime(t *testing.T) {
+	d, store, _ := runDaemon(t, nil)
+	at := time.Date(2026, 11, 20, 12, 0, 0, 0, time.UTC)
+	if _, err := store.Create(runrec.Record{ID: "waiting", Project: "p", Item: "S1", State: runrec.StatePaused,
+		Resume: &runrec.ResumeRequest{Method: runrec.ResumeRetry, At: at}}); err != nil {
+		t.Fatal(err)
+	}
+	b, err := json.Marshal(d.engineRuns("p"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var rows []struct {
+		ResumeQueuedAt time.Time `json:"resume_queued_at"`
+	}
+	if err := json.Unmarshal(b, &rows); err != nil {
+		t.Fatal(err)
+	}
+	if len(rows) != 1 || !rows[0].ResumeQueuedAt.Equal(at) {
+		t.Errorf("resume queue time missing from engine snapshot: %s", b)
+	}
+}
+
 func TestEngineRunRolesWire(t *testing.T) {
 	d, store, _ := runDaemon(t, nil)
 	at := time.Date(2026, 10, 19, 16, 40, 0, 0, time.UTC)

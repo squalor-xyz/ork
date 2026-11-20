@@ -1,0 +1,24 @@
+[1mork[m                │ [1;36mOverview[m[90m │ [mQuestions[90m │ [mWaves[90m │ [mRoadmap[90m │ [mDecisions
+  Running        1 │[90m────────────────────────────────────────────────────────────[m
+[1;7;97;44m0>Needs you      0 [m│[1;36mNeeds you 0[m
+[90m1[m ork             *│  [90mnothing needs you[m
+                   │
+                   │[1;36mRunning 1[m
+                   │[1;7;97;44m   ork  S22  resume queued  [......]                        [m
+                   │[7;97;44m          resume waits for a slot under project cap 1       [m
+                   │    [1mRun engine[m
+                   │    resume waits for a slot under project cap 1
+                   │
+                   │    [90m[......][m
+                   │    [90mimplementer[m > [90mreviewer[m > [90mgate[m
+                   │
+                   │
+                   │[1;36mRecent[m
+                   │  [90mnone[m
+                   │
+                   │[1;36mReady to land[m
+                   │  [90mnone[m
+                   │
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ x [2mstop[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
+                   │ 1 project | refreshed 16:42:00

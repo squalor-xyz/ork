@@ -24933,10 +24933,39 @@
       "id": "S449",
       "title": "Queued-resume and Waves launch TUI follow-ups (split from S307)",
       "short_title": "S307 TUI follow-ups",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9d530e48-e0fb-4cc1-9cab-7caa0b544596",
+          "kind": "",
+          "text": "**2026-11-20** — Human checks at approval (S449):\n- later: The owner looks at the Waves launch with no check command and a queued-resume run in the TUI at 80x24.",
+          "created_at": "2026-11-20T14:57:15Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b0841f4f-ff36-404d-906b-4077b27fc474",
+          "kind": "",
+          "text": "**2026-11-20** — Waves refuses no-check plans before the spec check; the launch confirm scrolls one line per up/down press; queued resumes show their own wait age, `resume queued` in the role cell, `x stop` at 80x24 and a one-line refusal.",
+          "created_at": "2026-11-20T14:57:15Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -24954,7 +24983,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

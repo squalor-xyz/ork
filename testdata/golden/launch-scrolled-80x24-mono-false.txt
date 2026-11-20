@@ -1,0 +1,24 @@
+[1mork[m                │ Overview[90m │ [mQuestions[90m │ [mWaves[90m │ [m[1;36mRoadmap[m[90m │ [mDecisions
+[90m  Running        0 [m│[90m────────────────────────────────────────────────────────────[m
+[90m0[m Needs you      0 │[90m  +4 lines above[m
+[1;7;97;44m1>ork              [m│  check: go test ./...
+[90m2[m other            │  stop: after landing
+                   │  implementer: Codex gpt high
+                   │    allowlist: 
+                   │  reviewer: Claude opus medium
+                   │    permissions: read-only
+                   │  gate: Codex gpt low
+                   │    allowlist: 
+                   │  [33mwarning: warning number 1[m
+                   │  [33mwarning: warning number 2[m
+                   │  [33mwarning: warning number 3[m
+                   │  [33mwarning: warning number 4[m
+                   │  [33mwarning: warning number 5[m
+                   │  [33mwarning: warning number 6[m
+                   │  [33mwarning: warning number 7[m
+                   │  [33mwarning: warning number 8[m
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │  ork run ork S90? [y/N] (Enter is No)
+                   │[90m────────────────────────────────────────────────────────────[m
+                   │ y [2mrun[m; n [2mcancel[m; e [2medit lineup[m; s [2msplit[m; up/down [2mscroll[m
+                   │ 2 projects | refreshed 16:42:00

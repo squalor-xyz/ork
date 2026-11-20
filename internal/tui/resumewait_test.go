@@ -4,16 +4,61 @@ package tui
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
 
 	tea "charm.land/bubbletea/v2"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"github.com/squalor-xyz/ork/internal/slicercli"
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
 const waitText = "resume waits for a slot under project cap 1; next: ork stop engine"
+
+func TestHeardCellOfAQueuedResumeCountsFromTheResume(t *testing.T) {
+	h := waitingHarness(t, "error")
+	r := source.EngineRun{State: "paused", ResumeWaiting: true, WaitStartedAt: t0.Add(-50 * time.Minute)}
+	// Decode the wire field so this test also runs before EngineRun gains it.
+	if err := json.Unmarshal([]byte(fmt.Sprintf(`{"resume_queued_at":%q}`, t0.Add(-5*time.Minute).Format(time.RFC3339Nano))), &r); err != nil {
+		t.Fatal(err)
+	}
+	cell, _ := h.m.heardCell(engineLedger(slicercli.RelayRun{}, r))
+	if cell != "wait 5m" {
+		t.Errorf("heard cell %q, want wait 5m", cell)
+	}
+}
+
+func TestQueuedResumeRowHasACue(t *testing.T) {
+	for _, mono := range []bool{true, false} {
+		t.Run(fmt.Sprint(mono), func(t *testing.T) {
+			h := waitingHarness(t, "error")
+			h.m.cfg.Theme = NewTheme(mono)
+			s := h.src.Snapshot(context.Background(), proj("ork", false))
+			s.EngineRuns[0].Item = "S10449" // long ids, as the owner's runs have
+			s.EngineRuns[0].WaitStartedAt = t0.Add(-50 * time.Minute)
+			s.EngineRuns[0].ResumeQueuedAt = t0.Add(-5 * time.Minute)
+			s.EngineRuns = append([]source.EngineRun{{ID: "other", Item: "S10450", State: "implement", CreatedAt: t0.Add(-3 * time.Hour)}}, s.EngineRuns...)
+			h.src.set(s)
+			h.deliver(snapshotMsg{name: "ork", snap: s})
+			h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+			v := plainView(h.m)
+			// The cue is the row's role cell, in place of "paused", and the heard
+			// cell keeps only the wait (S449).
+			row := mainRow(v, "S10449", "resume queued")
+			if !strings.Contains(row, "wait 5m") || strings.Contains(row, "paused") || strings.Contains(row, "wait 5m  resume queued") {
+				t.Errorf("unselected queued-resume row: want resume queued in the role cell and wait 5m in the heard cell:\n%s", v)
+			}
+			// The cue costs the other rows nothing: the state column stays.
+			if other := mainRow(v, "S10450", "implement"); other == "" {
+				t.Errorf("the cue pushed the state column out of another Running row:\n%s", v)
+			}
+			checkGolden(t, fmt.Sprintf("resume-cue-80x24-mono-%t.txt", mono), h.m.View().Content)
+		})
+	}
+}
 
 // waitingHarness has one question run whose answer waits for a slot (S274,
 // adj 177): paused, with the resume stored, so it is not the owner's turn.
@@ -91,8 +136,36 @@ func TestAResumeWaitingPaneHasNoAnswerFieldAndNoRetryHint(t *testing.T) {
 	// Retry is refused with the reason, and asks nothing: the view already holds
 	// the wait text, so only the status line can tell the refusal from it.
 	h.deliver(press("t"))
-	if want := "resume already waits for a slot; ork stop engine cancels it"; h.m.actionStatus != want || h.m.confirm != nil {
+	if want := "resume queued; x stops it"; h.m.actionStatus != want || h.m.confirm != nil {
 		t.Errorf("retry status %q (confirm %v), want %q", h.m.actionStatus, h.m.confirm, want)
+	}
+}
+
+// At 80x24 the refusal sits on one line with a real run id: it names the x key
+// and not "ork stop RUN", so the id cannot wrap it (S449).
+func TestResumeWaitingRefusalFitsEightyColumns(t *testing.T) {
+	h := waitingHarness(t, "error")
+	s := h.src.Snapshot(context.Background(), proj("ork", false))
+	s.EngineRuns = append([]source.EngineRun(nil), s.EngineRuns...)
+	s.EngineRuns[0].ID = "ork-20261120-133801-8a30"
+	h.src.set(s)
+	h.deliver(snapshotMsg{name: "ork", snap: s})
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.deliver(press("enter"))
+	if h.m.pane == nil {
+		t.Fatal("the pane did not open")
+	}
+	h.deliver(press("t"))
+	lines := strings.Split(plainView(h.m), "\n")
+	n := 0
+	for _, line := range lines {
+		_, main, _ := strings.Cut(line, "│")
+		if strings.Contains(main, "resume queued; x stops it") {
+			n++
+		}
+	}
+	if n != 1 || h.m.actionStatus != "resume queued; x stops it" {
+		t.Errorf("refusal %q shows on %d whole line(s), want 1:\n%s", h.m.actionStatus, n, plainView(h.m))
 	}
 }
 
@@ -109,7 +182,7 @@ func TestAResumeWaitingRetryHintIsGoneOnTheOverview(t *testing.T) {
 		t.Errorf("the Overview offers retry for a run whose resume waits:\n%s", v)
 	}
 	h.deliver(press("t"))
-	if want := "resume already waits for a slot; ork stop engine cancels it"; h.m.actionStatus != want || h.m.confirm != nil {
+	if want := "resume queued; x stops it"; h.m.actionStatus != want || h.m.confirm != nil {
 		t.Errorf("retry status %q (confirm %v), want %q", h.m.actionStatus, h.m.confirm, want)
 	}
 }
