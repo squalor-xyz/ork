@@ -310,6 +310,12 @@ func (m *Model) confirmWave() tea.Cmd {
 		return nil
 	}
 	m.actionStatus = ""
+	for _, p := range m.waves.items() {
+		if p.Expected.CheckCommand == "" {
+			m.confirm = &runAction{verb: "wave", project: m.waves.project, items: m.waves.items(), plan: p.Expected}
+			return nil
+		}
+	}
 	return m.startSpecCheck(m.waves.items())
 }
 
@@ -496,6 +502,15 @@ func (m *Model) wavesBody(width int) overviewView {
 
 // wavesParts returns the scrolling body. Keys live in the common hint line.
 func (m *Model) wavesParts(width int) (overviewView, []string) {
+	if m.confirm != nil && m.confirm.verb == "wave" && m.confirm.noCheck() {
+		// Share the launch plan's refusal and fixes, before any spec role runs.
+		preview := *m
+		preview.launch = &launchState{stage: launchConfirm, plan: m.confirm.plan}
+		out := preview.launchView(width)
+		out.scrolls = false // up and down belong to the launch confirm only
+		out.body[0] = m.cfg.Theme.Heading.Render("Wave launch refused")
+		return out, nil
+	}
 	out := overviewView{sel: -1}
 	th := m.cfg.Theme
 	w := m.waves

@@ -336,7 +336,7 @@ func (m *Model) contextHints() []hintEntry {
 			l.add(dropPinned, short(k.Quit, "q", "quit"))
 		}
 	case m.confirm != nil:
-		if m.confirm.verb == "launch" && m.confirm.plan != nil && m.confirm.plan.CheckCommand == "" {
+		if m.confirm.noCheck() {
 			// The start would be refused (adj 191): the hint offers no y.
 			l.add(dropRow, short(k.No, "n", "cancel"))
 		} else {
@@ -344,6 +344,7 @@ func (m *Model) contextHints() []hintEntry {
 		}
 		if m.confirm.verb == "launch" {
 			l.add(dropRow, short(k.EditLineup, "e", "edit lineup"), short(k.Split, "s", "split"))
+			l.add(dropLine, key.NewBinding(key.WithKeys("up", "down"), key.WithHelp("up/down", "scroll")))
 		}
 	case spec != nil && spec.permissionSending:
 		l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))
@@ -649,6 +650,9 @@ func (l *hintList) rowActions(m *Model, r ovRow, ok, cleanup bool) {
 		return !refused
 	}
 	appr, stop := dropAppr, dropStop
+	if !cleanup && r.resumeWaiting {
+		stop = dropRow // the queued resume's remaining action outlasts scrolling
+	}
 	apprWave := dropApprWave
 	onCard := !cleanup && m.paneCard() != nil
 	if onCard {

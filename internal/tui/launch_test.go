@@ -102,6 +102,56 @@ func launchConfirmed(t *testing.T, h *harness) {
 		t.Fatalf("missing confirmation:\n%s", v)
 	}
 }
+
+func TestLaunchConfirmScrollsToClippedWarnings(t *testing.T) {
+	for _, mono := range []bool{true, false} {
+		t.Run(fmt.Sprint(mono), func(t *testing.T) {
+			h, l := launchHarness(t)
+			h.m.cfg.Theme = NewTheme(mono)
+			for i := 1; i <= 8; i++ {
+				l.plan.Warnings = append(l.plan.Warnings, fmt.Sprintf("warning number %d", i))
+			}
+			launchConfirmed(t, h)
+			h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+			before := plainView(h.m)
+			if strings.Contains(before, "warning number 8") {
+				t.Fatal("last warning was not clipped in the fixture")
+			}
+			// One press moves the view: the owner has no cursor to count (S449).
+			h.deliver(press("down"))
+			one := plainView(h.m)
+			if one == before {
+				t.Error("one down press left the view as it was")
+			}
+			for range 30 {
+				h.deliver(press("down"))
+			}
+			bottom := plainView(h.m)
+			if !strings.Contains(bottom, "warning number 8") {
+				t.Error("down did not reveal the clipped last warning")
+			}
+			checkGolden(t, fmt.Sprintf("launch-scrolled-80x24-mono-%t.txt", mono), h.m.View().Content)
+			h.deliver(press("up"))
+			if plainView(h.m) == bottom {
+				t.Error("one up press from the bottom left the view as it was")
+			}
+			h.deliver(press("down"))
+			if plainView(h.m) != bottom {
+				t.Error("down after up did not return to the bottom")
+			}
+			for range 30 {
+				h.deliver(press("up"))
+			}
+			if plainView(h.m) != before {
+				t.Error("up did not restore the top of the plan")
+			}
+			h.deliver(press("y"))
+			if !strings.Contains(plainView(h.m), "launched S90 as new-run") {
+				t.Error("y did not start after scrolling")
+			}
+		})
+	}
+}
 func TestLaunchListsOnlyReadySlices(t *testing.T) {
 	h, l := launchHarness(t)
 	h.m.Update(press("l"))

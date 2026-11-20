@@ -242,3 +242,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S353 (run ork-20261120-001408-907b, 2026-11-20)
 
 - [ ] [AFTER LAND] the owner sets the probe on the slicer project and runs ork doctor; it shows the contract line as ok.
+
+## S449 (run ork-20261120-133801-8a30, 2026-11-20)
+
+- [ ] The owner looks at the Waves launch with no check command and a queued-resume run in the TUI at 80x24.

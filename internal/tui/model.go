@@ -668,6 +668,17 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.confirm != nil {
 		switch msg.String() {
+		case "up", "down":
+			if m.confirm.verb == "launch" && m.launch != nil {
+				// confirmLine is the window's top line: a screen sets how far
+				// it can go, so each press moves the view by one line (S449).
+				m.screen()
+				delta := 1
+				if msg.String() == "up" {
+					delta = -1
+				}
+				m.launch.confirmLine = max(0, min(m.launch.confirmLine+delta, m.launch.confirmMax))
+			}
 		case "e":
 			if m.confirm.verb == "launch" {
 				return m.openLaunchLineup()
@@ -680,7 +691,7 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 			return tea.Quit
 		case "y", "Y":
 			a := *m.confirm
-			if a.verb == "launch" && a.plan != nil && a.plan.CheckCommand == "" {
+			if a.noCheck() {
 				// The daemon would refuse (adj 191); the confirm shows the fix.
 				m.actionStatus = "Not started: no check command (see the fix above)"
 				return nil
@@ -1633,6 +1644,10 @@ func (a runAction) command() string {
 	return cmd
 }
 
+func (a runAction) noCheck() bool {
+	return (a.verb == "launch" || a.verb == "wave") && a.plan != nil && a.plan.CheckCommand == ""
+}
+
 // prompt keeps the cleanup and approve questions separate from the command.
 func (a runAction) prompt() string {
 	if a.verb == "cleanup" {
@@ -1641,8 +1656,11 @@ func (a runAction) prompt() string {
 	if a.verb == "approve" || a.verb == "approve-wave" || a.verb == "file" || a.verb == "end" || a.verb == "decide" || a.verb == "relay-answer" {
 		return a.promptWidth(0)
 	}
-	if a.verb == "launch" && a.plan != nil && a.plan.CheckCommand == "" {
+	if a.noCheck() {
 		// The daemon would refuse the start (adj 191): offer no y.
+		if a.verb == "wave" {
+			return "ork wave start: refused (n or esc closes)"
+		}
 		return a.command() + ": refused (n or esc closes)"
 	}
 	prompt := a.command() + "? [y/N] (Enter is No)"
@@ -1827,8 +1845,10 @@ func (m *Model) actionRefusal(verb string, r ovRow, ok bool) (status string, ref
 		}
 	}
 	if r.resumeWaiting && (verb == "retry" || verb == "answer") {
-		// The owner has acted; the run starts when a slot frees (S274).
-		return "resume already waits for a slot; ork stop " + r.engineID + " cancels it", true
+		// The owner has acted; the run starts when a slot frees (S274). The text
+		// names the key and not "ork stop RUN", so it fits one line at 80 columns
+		// whatever the run id (S449; owner, 2026-11-20).
+		return "resume queued; x stops it", true
 	}
 	if verb == "retry" {
 		if r.state != "paused" {

@@ -80,6 +80,7 @@ func (m *Model) screen() string {
 	m.hits = mouseHits{sideW: sideW}
 	var rowStarts, rowEnds []int // the body line each row starts and ends on, for the page keys and clicks
 	selectedLine, selExtra := -1, 0
+	scrolls, scrollTop := false, 0 // the launch confirm's window top (S449)
 	overviewBody := false
 	collapse := false // a render on show takes the whole body (S121, *proposed*)
 	if m.showHelp {
@@ -130,7 +131,7 @@ func (m *Model) screen() string {
 		}
 		if m.confirm != nil {
 			status = m.confirm.promptWidth(max(mainW-len(indent), 1))
-			if m.confirm.verb == "launch" {
+			if m.confirm.verb == "launch" || m.confirm.noCheck() {
 				if m.confirm.lineup != nil || m.confirm.budgets != nil {
 					status += "  " + th.Dim.Render("lineup edited")
 				}
@@ -192,6 +193,7 @@ func (m *Model) screen() string {
 		}
 		body = rv.body
 		selectedLine = rv.sel
+		scrolls, scrollTop = rv.scrolls, rv.scrollTop
 		rowStarts, rowEnds = rv.rows, rv.ends
 	} else {
 		// Detail shares the height with its rule, the body and screen chrome.
@@ -332,6 +334,13 @@ func (m *Model) screen() string {
 				m.pageTop = pagerTop{}
 			}
 		}
+	}
+	if scrolls && m.launch != nil && bodyH > 0 {
+		// The confirm's window starts at its own line, so each up or down moves
+		// the view by a line; the last window ends flush with the body.
+		last := windowStart(len(body)-1, len(body), bodyH)
+		start = min(max(scrollTop, 0), last)
+		m.launch.confirmLine, m.launch.confirmMax = start, last
 	}
 	if bodyH > 0 {
 		hi, _, _ := span(len(body), start, bodyH)
