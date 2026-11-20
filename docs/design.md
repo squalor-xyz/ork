@@ -2981,7 +2981,9 @@ terminal (`App.terminal`), `run` and `wave start` read no answer from it: they
 print every open question with its answer address, then
 `held: ID: input is not a terminal; answer with --answer KEY=LABEL` for each
 item (`--answer ITEM:KEY=LABEL` for `wave start`, whose addresses carry the
-item), start nothing and exit 3, as an incomplete batch does. Complete batches use the existing `RecordSpecAnswers` path, so
+item), start nothing and exit 3, as an incomplete batch does. For `wave start`
+this applies with `--yes`; without `--yes` it stops earlier (see S337 below).
+Complete batches use the existing `RecordSpecAnswers` path, so
 the Owner decisions paragraph retains each decision key. Answers with no
 pending question are refused. With `--json`, batch results include
 `questions` (entries with `item`, `address` and the embedded
@@ -2990,6 +2992,14 @@ pending question are refused. With `--json`, batch results include
 (`{item,key,answer}`, where keyless questions use `#N`
 and answer is the recorded `Label: summary` or free text). No interactive
 prompt text changes.
+*Proposed (S337):* `wave start` with no `--yes`, `--questions` or `--answer`
+and input that is not a terminal (`App.terminal`) cannot confirm the start, so
+after it prints the plans and the pair rule it stops before `spec.check`
+(a model call). It prints
+`not started: input is not a terminal to confirm on; rerun with --yes, or with --questions to see the spec questions`
+and exits 2 (`ExitUsage`); with `--json` it first prints
+`{"started":false,"held":[],"no_spec":[]}` on stdout. `ork run` keeps its
+order for now.
 *Proposed (S313):* before showing keyed spec questions, ork runs `adj check`
 and considers only an exact key match. A decided option that still matches
 the question's `Label: summary` is reused silently. Ork appends it to the

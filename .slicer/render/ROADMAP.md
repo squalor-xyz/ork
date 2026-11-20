@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-501 items · — 52 · done 351 · retired 98
+501 items · — 51 · done 352 · retired 98
 
 ## v1.3
 
@@ -115,7 +115,7 @@ v1.2
 | 58 | [S334](slices/S334.md) | Deleted-by-us slice JSON at landing | S | 1 |  | 2026-11-11 S328 landing: merge-in stopped on '.slicer/slices/S328.json' DU (branch moved it to done/ via slicer done; main had spec-answer edits). Fixed by hand: merge main's change into done/S328.json, git rm the old path, ork retry. ork's retry does not stage a deleted path. S217 (2026-11-09) hit the same case. · discovered from S289 | done |
 | 59 | [S335](slices/S335.md) | Batched snapshot polling | M | 2 |  | Owner 2026-11-11 (feedback from another agent): slicer polling is too frequent and slow. Measured 2026-11-11: each slicer call costs about 100 ms, almost all in slicer's imports (python3 -c pass: 4 ms; import slicer.cli: 77 ms). ork runs slicer list, deps and relay-run list per project, every 5 s when visible, every 1 s for live runs and every 30 s for the other 11 projects. | done |
 | 60 | [S336](slices/S336.md) | Idle polling backoff | S | 1 |  | Owner 2026-11-11 (polling too frequent). The daemon's cache keeps reading every registered project every 30 s with no TUI attached; a visible live run is read every 1 s. | done |
-| 61 | [S337](slices/S337.md) | wave start launches without --yes when stdin is not a terminal | S | 1 |  |  | — |
+| 61 | [S337](slices/S337.md) | wave start launches without --yes when stdin is not a terminal | S | 1 |  |  | done |
 | 62 | [S338](slices/S338.md) | wave start: no way to skip the spec check the owner declined | S | 1 |  |  | done |
 | 63 | [S339](slices/S339.md) | projects add: a Python project gets the Go allowlist and no check command | S | 1 |  |  | done |
 | 64 | [S340](slices/S340.md) | wave start: spec-check questions can only be answered on a terminal, one at a time | M | 2 |  |  | done |

@@ -808,6 +808,91 @@ func TestWaveStartRefusesPipedSpecAnswers(t *testing.T) {
 	}
 }
 
+// runWaveNoTerminal runs `ork wave start p S1 S2` on empty input that is not a
+// terminal (S337).
+func runWaveNoTerminal(t *testing.T, stub *specStub, extra ...string) (code int, out, errs string) {
+	t.Helper()
+	var o, e bytes.Buffer
+	app := &App{Input: strings.NewReader(""), Terminal: func() bool { return false }, Call: stub.call}
+	args := append([]string{"wave", "start", "p", "S1", "S2", "--well-specified", "yes", "--split", "no"}, extra...)
+	code = app.Run(context.Background(), args, &o, &e)
+	return code, o.String(), e.String()
+}
+
+func (s *specStub) called(method string) bool {
+	for _, c := range s.calls {
+		if c == method {
+			return true
+		}
+	}
+	return false
+}
+
+// S337: with no terminal to confirm on and no --yes, a wave start prints the
+// plans and stops before the spec check, which is a model call.
+func TestWaveStartWithoutTerminalOrYesRunsNoSpecCheck(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`}
+	code, out, errs := runWaveNoTerminal(t, stub)
+	if code != ExitUsage {
+		t.Errorf("exit %d, want %d: %s %s", code, ExitUsage, out, errs)
+	}
+	if stub.called("spec.check") || stub.called("wave.start") {
+		t.Errorf("calls %v, want no spec.check and no wave.start", stub.calls)
+	}
+	for _, want := range []string{"/p/S1", "/p/S2"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("plan for %s not printed:\n%s", want, out)
+		}
+	}
+	const line = "not started: input is not a terminal to confirm on; rerun with --yes, or with --questions to see the spec questions\n"
+	if !strings.Contains(out+errs, line) {
+		t.Errorf("missing %q:\n%s\n%s", line, out, errs)
+	}
+}
+
+func TestWaveStartWithoutTerminalOrYesJSONPrintsNotStarted(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`}
+	code, out, errs := runWaveNoTerminal(t, stub, "--json")
+	if code != ExitUsage || stub.called("spec.check") {
+		t.Fatalf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
+	}
+	var got struct {
+		Started bool     `json:"started"`
+		Held    []string `json:"held"`
+		NoSpec  []string `json:"no_spec"`
+	}
+	if err := json.Unmarshal([]byte(out), &got); err != nil || got.Started || got.Held == nil || got.NoSpec == nil {
+		t.Errorf("stdout %q: %+v, %v", out, got, err)
+	}
+}
+
+func TestWaveStartWithoutTerminalWithYesStillChecksAndStarts(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`}
+	code, out, errs := runWaveNoTerminal(t, stub, "--yes")
+	if code != ExitOK || !stub.called("spec.check") || stub.waveStarts() != 1 {
+		t.Errorf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
+	}
+}
+
+func TestWaveStartWithoutTerminalQuestionsStillRuns(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	code, out, errs := runWaveNoTerminal(t, stub, "--questions")
+	if !stub.called("spec.check") || stub.waveStarts() != 0 {
+		t.Errorf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
+	}
+	if !strings.Contains(out, "Which store?") {
+		t.Errorf("questions not printed:\n%s", out)
+	}
+}
+
+func TestWaveStartWithoutTerminalAnswersStillRun(t *testing.T) {
+	stub := &specStub{t: t, check: specCheckTwoQuestions}
+	code, out, errs := runWaveNoTerminal(t, stub, "--answer", "S1:cache.store=1")
+	if !stub.called("spec.check") {
+		t.Errorf("exit %d calls %v: %s %s", code, stub.calls, out, errs)
+	}
+}
+
 func TestWaveStartLeavesOutAnItemWhoseQuestionsStayOpen(t *testing.T) {
 	stub := &specStub{t: t, check: specCheckTwoQuestions}
 	// An empty line skips S1; the wave starts with the ready S2.
@@ -1080,7 +1165,9 @@ func TestSpecCheckErrorHasAPrefixInTextMode(t *testing.T) {
 					}}
 					args := []string{"run", "p", "S1", "--well-specified", "y", "--split", "n"}
 					if wave {
-						args = append([]string{"wave", "start"}, args[1:]...)
+						// --yes: without it a wave start with no terminal stops
+						// before the spec check (S337).
+						args = append([]string{"wave", "start", "--yes"}, args[1:]...)
 					}
 					if jsonMode {
 						args = append(args, "--json")

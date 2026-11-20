@@ -781,9 +781,17 @@ with it.
 Like `ork run`, `wave start` asks the spec-check questions on standard input
 unless `--spec-check off` skips the check for this start (also for saved waves),
 and prints each plan before it asks to start (`docs/design.md:1958-1973`,
-`internal/cli/wave.go:418-421`). `ork stop` takes the `wave-` id it prints and
+`internal/cli/wave.go:445-449`). `ork stop` takes the `wave-` id it prints and
 stops every unfinished run in that wave, queued ones included
 (`docs/design.md:2045-2051`).
+
+*Proposed (S337):* a caller with no terminal (standard input from a pipe or
+`/dev/null`) cannot confirm the start. Without `--yes`, `--questions` or
+`--answer`, `wave start` prints the plans and
+`not started: input is not a terminal to confirm on; rerun with --yes, or with --questions to see the spec questions`,
+exits 2 and runs no spec check, so it makes no model call. Pass `--yes`, or
+run `--questions` and then `--answer`. With `--json` it first prints
+`{"started":false,"held":[],"no_spec":[]}` on stdout. `ork run` is unchanged.
 
 *Proposed (S241):* when a launch plans two or more items, it prints
 `pair rule: ok, no engine slice` or
