@@ -20013,7 +20013,7 @@
       "id": "S351",
       "title": "Landing commits the owner's uncommitted edits on main into its tracking commit",
       "short_title": "Landing commits the owner's uncommitted edits on main into its tracking commit",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -20023,6 +20023,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 483 landing.tracking-commit-scope = pause (narrows adj 193).",
           "created_at": "2026-11-18T22:23:33Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "88493a1e-9308-413c-9256-e11c9a97160b",
+          "kind": "",
+          "text": "**2026-11-20** — Landing pauses without committing another item's overlapping slice files or renders, names the files and recovery commands, and retains own/shared tracking commits.",
+          "created_at": "2026-11-20T00:07:16Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -20049,7 +20063,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

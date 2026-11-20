@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">481 items · — 56 · done 342 · retired 83</p>
+<p class="summary">481 items · — 55 · done 343 · retired 83</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -127,7 +127,7 @@
 <tr class="done"><td>72</td><td>S348</td><td>Warn before a run starts when the slicer merge drivers are not configured</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>73</td><td>S349</td><td>Retry of a stopped run skips the implementer and goes straight to checks and the gate</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="retired"><td>74</td><td>S350</td><td>Implementer has no way to remove a file it created by mistake</td><td>S</td><td>-</td><td></td><td>Merged into S440 (implementer may remove a file: one it created by mistake or one the slice moved code out of), 2026-11-18 duplicate sweep</td><td class="status">retired</td></tr>
-<tr class="open"><td>75</td><td>S351</td><td>Landing commits the owner&#x27;s uncommitted edits on main into its tracking commit</td><td>S</td><td>1</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>75</td><td>S351</td><td>Landing commits the owner&#x27;s uncommitted edits on main into its tracking commit</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="retired"><td>76</td><td>S352</td><td>Accept slicer relay v12 and read its tool_feedback line</td><td>M</td><td>-</td><td></td><td>Duplicate: S354 (landed 767295db, 2026-11-12) accepts relay v11 and v12 (adj 324, 326) and parses role tool feedback into the run record (adj 325); ork doctor reports the contract ok for every project. Carrying tool feedback into Needs you is S320.</td><td class="status">retired</td></tr>
 <tr class="open"><td>77</td><td>S353</td><td>A slicer contract bump on main breaks ork everywhere at once</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="done"><td>78</td><td>S354</td><td>Accept relay v12</td><td>M</td><td>2</td><td></td><td>2026-11-12: slicer 1.21.0 (s453) prints `Contract: relay v12`; `ork doctor` reports &quot;[FAIL] contract  ork accepts relay v10 or v11 and slicer prints v12&quot; for every project, and a new ork run refuses to start.</td><td class="status">done</td></tr>

@@ -966,7 +966,15 @@ slice.
     five names). ork commits nothing, and never stashes, checks out or resets
     in the main checkout. `ork retry` goes on after the owner commits or
     removes the files.
-  - If every overlapping path is a tracking file, ork commits them on the
+  - If an overlapping tracking path is another item's slice JSON
+    (`.slicer/slices/ID.json` or `.slicer/slices/done/ID.json`) or render
+    (`.slicer/render/slices/ID.md`), the landing pauses and commits nothing
+    (adj 483, `landing.tracking-commit-scope`, narrows adj 193). Its one-line
+    reason names at most five such files, then `+N more`, and says to commit
+    them with `ork tracking commit` or discard them, then `ork retry`.
+    The same rule applies to edits made during the re-check.
+  - If every overlapping path is the item's own or a shared tracking file,
+    ork commits them on the
     base branch as `Tracking edits on main before landing ID`, by name
     (`git add -A -- PATHS`, `git commit -m MSG -- PATHS`, never a pathspec of
     `.`, so staged files stay staged). *Proposed (S454):* when the commit

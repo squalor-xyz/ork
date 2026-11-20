@@ -888,8 +888,14 @@ have uncommitted changes there to a file the slice also changes, the run
 pauses at once with one line that names the files; commit or stash them and
 press `t` (`ork retry`). If the only such files are the project's tracking
 files (`.slicer/`, except `config.json` and `relay-roles.json`), ork commits
-them on the base branch itself as `Tracking edits on main before landing ID`
-and goes on. Files the slice does not change are left alone (the `ID done`
+the item's own and shared files on the base branch itself as
+`Tracking edits on main before landing ID` and goes on. Another item's
+overlapping slice JSON (including under `slices/done/`) or slice render
+pauses the landing before any commit (adj 483, which narrows adj 193).
+The reason names at most five files and a count of the rest. Commit them
+with `ork tracking commit` or discard them, then `ork retry`. This also
+applies to edits made during the landing's re-check.
+Files the slice does not change are left alone (the `ID done`
 commit after `slicer land` still commits any `.slicer` change).
 
 From the shell: `ork check RUN N [ticked|later|open]`, `ork fix RUN TEXT`,

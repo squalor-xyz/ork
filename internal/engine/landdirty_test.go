@@ -278,6 +278,69 @@ func trackingBase(t *testing.T, env *landEnv, dir string) {
 
 const trackingSubject = "Tracking edits on main before landing " + item
 
+func TestLandPausesOnAnotherItemsDirtySliceFiles(t *testing.T) {
+	for _, phase := range []string{"before merge", "during recheck"} {
+		t.Run(phase, func(t *testing.T) {
+			env := newLandEnv(t)
+			if err := env.run.Update(func(r *runrec.Record) { r.Item = "S5" }); err != nil {
+				t.Fatal(err)
+			}
+			path := ".slicer/render/slices/S9.md"
+			tip := env.moveBase(path, "base\n")
+			gitRun(t, env.W, "merge", "--ff-only", "main")
+			writeFile(t, filepath.Join(env.W, path), "slice\n")
+			dirty := func() {
+				writeFile(t, filepath.Join(env.P, path), "owner\n")
+				writeFile(t, filepath.Join(env.P, ".slicer/slices/S9.json"), "owner json\n")
+			}
+			if phase == "during recheck" {
+				tip = env.moveBase("base.txt", "base moved\n")
+				env.beforeCheck = dirty
+			} else {
+				dirty()
+			}
+			env.approve()
+			requireLandPause(t, env, "landing stopped: uncommitted changes in "+env.P+" to another item's tracking files: "+path+"; commit them with ork tracking commit or discard them, then ork retry")
+			if got := gitRun(t, env.P, "rev-parse", "main"); got != tip {
+				t.Errorf("main moved: %s, was %s", got, tip)
+			}
+		})
+	}
+}
+
+func TestLandCommitsTheItemsOwnAndSharedTrackingFiles(t *testing.T) {
+	env := newLandEnv(t)
+	paths := []string{".slicer/index.json", ".slicer/log.jsonl", ".slicer/render/ROADMAP.md", ".slicer/render/slices/S5.md", ".slicer/slices/S5.json", ".slicer/slices/done/S5.json"}
+	for _, path := range paths {
+		env.moveBase(path, "base\n")
+	}
+	gitRun(t, env.W, "merge", "--ff-only", "main")
+	for _, path := range paths {
+		writeFile(t, filepath.Join(env.W, path), "slice\n")
+		writeFile(t, filepath.Join(env.P, path), "owner\n")
+	}
+	gitRun(t, env.W, "add", ".slicer")
+	gitRun(t, env.W, "commit", "-qm", "slice tracking")
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", env.P}, Stdout: `[]`})
+	env.e.d.Slicer = slicercli.Client{Bin: fake.Bin("slicer")}
+	committed, reason := env.e.checkMain(context.Background(), env.P, "main", item, "S5", true)
+	got := gitRun(t, env.P, "show", "--format=", "--name-only", "HEAD")
+	if !committed || reason != "" || got != strings.Join(paths, "\n") {
+		t.Errorf("committed %v, reason %q; committed paths %q, want %q", committed, reason, got, paths)
+	}
+}
+
+func TestLandOtherItemPauseNamesAtMostFiveFiles(t *testing.T) {
+	env := newLandEnv(t)
+	paths := []string{".slicer/render/slices/S1.md", ".slicer/render/slices/S2.md", ".slicer/render/slices/S3.md", ".slicer/slices/S1.json", ".slicer/slices/S2.json", ".slicer/slices/done/S1.json", ".slicer/slices/done/S2.json"}
+	for _, path := range paths {
+		writeFile(t, filepath.Join(env.W, path), "slice\n")
+		writeFile(t, filepath.Join(env.P, path), "owner\n")
+	}
+	env.approve()
+	requireLandPause(t, env, "landing stopped: uncommitted changes in "+env.P+" to another item's tracking files: .slicer/render/slices/S1.md, .slicer/render/slices/S2.md, .slicer/render/slices/S3.md, .slicer/slices/S1.json, .slicer/slices/S2.json +2 more; commit them with ork tracking commit or discard them, then ork retry")
+}
+
 func trackingCommits(t *testing.T, env *landEnv) []string {
 	t.Helper()
 	out := gitRun(t, env.P, "log", "--format=%H", "--grep=^"+trackingSubject+"$", "main")

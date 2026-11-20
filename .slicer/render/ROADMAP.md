@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-481 items · — 56 · done 342 · retired 83
+481 items · — 55 · done 343 · retired 83
 
 ## v1.3
 
@@ -129,7 +129,7 @@ v1.2
 | 72 | [S348](slices/S348.md) | Warn before a run starts when the slicer merge drivers are not configured | S | 1 |  |  | done |
 | 73 | [S349](slices/S349.md) | Retry of a stopped run skips the implementer and goes straight to checks and the gate | S | 1 |  |  | done |
 | 74 | [S350](slices/S350.md) | Implementer has no way to remove a file it created by mistake | S | - |  | Merged into S440 (implementer may remove a file: one it created by mistake or one the slice moved code out of), 2026-11-18 duplicate sweep | retired |
-| 75 | [S351](slices/S351.md) | Landing commits the owner's uncommitted edits on main into its tracking commit | S | 1 |  |  | — |
+| 75 | [S351](slices/S351.md) | Landing commits the owner's uncommitted edits on main into its tracking commit | S | 1 |  |  | done |
 | 76 | [S352](slices/S352.md) | Accept slicer relay v12 and read its tool_feedback line | M | - |  | Duplicate: S354 (landed 767295db, 2026-11-12) accepts relay v11 and v12 (adj 324, 326) and parses role tool feedback into the run record (adj 325); ork doctor reports the contract ok for every project. Carrying tool feedback into Needs you is S320. | retired |
 | 77 | [S353](slices/S353.md) | A slicer contract bump on main breaks ork everywhere at once | M | 2 |  |  | — |
 | 78 | [S354](slices/S354.md) | Accept relay v12 | M | 2 |  | 2026-11-12: slicer 1.21.0 (s453) prints `Contract: relay v12`; `ork doctor` reports "[FAIL] contract ork accepts relay v10 or v11 and slicer prints v12" for every project, and a new ork run refuses to start. | done |
