@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-494 items · — 55 · done 347 · retired 92
+494 items · — 54 · done 348 · retired 92
 
 ## v1.3
 
@@ -120,7 +120,7 @@ v1.2
 | 63 | [S339](slices/S339.md) | projects add: a Python project gets the Go allowlist and no check command | S | 1 |  |  | done |
 | 64 | [S340](slices/S340.md) | wave start: spec-check questions can only be answered on a terminal, one at a time | M | 2 |  |  | done |
 | 65 | [S341](slices/S341.md) | Read-only role check blames the role for any change to the shared tree | S | 1 |  |  | done |
-| 66 | [S342](slices/S342.md) | wave start: an owner's landing-order answer does not order the wave | M | 2 |  |  | — |
+| 66 | [S342](slices/S342.md) | wave start: an owner's landing-order answer does not order the wave | M | 2 |  |  | done |
 | 67 | [S343](slices/S343.md) | Local roles fit the local server | M | 2 |  | S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer's Bash calls went through Claude Code's model-backed classifier (plan mode), which timed out three times. · discovered from S304 | done |
 | 68 | [S344](slices/S344.md) | Local spec check and UI pass rows | M | 2 |  | S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role. · discovered from S304 | done |
 | 69 | [S345](slices/S345.md) | Implementer presets allow moving and removing files (with S440) | S | 1 |  |  | done |

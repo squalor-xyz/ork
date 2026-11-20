@@ -19543,7 +19543,7 @@
       "id": "S342",
       "title": "wave start: an owner's landing-order answer does not order the wave",
       "short_title": "wave start: an owner's landing-order answer does not order the wave",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -19553,6 +19553,20 @@
           "text": "**2026-11-18** — Owner decision 2026-11-18: adj 477 wave.overlap-order = hold (a later member waits until the earlier overlapping one lands).",
           "created_at": "2026-11-18T22:21:02Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "440d8bdb-531d-459d-bf0a-10cc855aa700",
+          "kind": "",
+          "text": "**2026-11-20** — wave start holds a member whose Files share a path with an earlier member until that member's run has landed, including when the earlier member runs as a sliver chain (its last sliver stands for it); a stopped or failed earlier run keeps the member queued, `ork status` says what it waits on, `ork wave start` prints the order before the confirm, and members with no shared path start as before.",
+          "created_at": "2026-11-20T02:32:49Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -19579,7 +19593,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

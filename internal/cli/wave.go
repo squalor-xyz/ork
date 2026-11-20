@@ -415,6 +415,22 @@ func (a *App) startWave(ctx context.Context, o *output, reader *bufio.Reader, pr
 		fmt.Fprintln(prompts, "no item is ready to start")
 		return ExitFailure
 	}
+	// Members that share Files paths start in the typed order: a later one waits
+	// until the earlier one lands (S342, *proposed*; adj 477). --json carries
+	// the order as after on each run instead.
+	if !o.json && len(params.Items) > 1 {
+		ids := make([]string, 0, len(params.Items))
+		for _, item := range params.Items {
+			ids = append(ids, item.Item)
+		}
+		var overlap slicercli.Overlap
+		if code := a.call(ctx, o, daemon.MethodWaveOverlap, daemon.WaveOverlapParams{Project: project, Items: ids}, &overlap); code != ExitOK {
+			return code
+		}
+		if line := daemon.OrderLine(daemon.WaveOrder(ids, overlap.Overlap)); line != "" {
+			fmt.Fprintln(o.stdout, line)
+		}
+	}
 	if !opts.yes {
 		confirm, err := ask("Start this wave?", "y/N", "no")
 		if err != nil {

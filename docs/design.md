@@ -427,6 +427,28 @@ ork (TUI)  ork status --json (CLI)
    Several waves,
    each in one project, may run at once (`wave.scope`). An item over a cap
    waits as a queued run and starts, oldest first, as a slot frees.
+   *Proposed (S342; owner decision 2026-11-18, adj 477
+   `wave.overlap-order` = hold):* members whose Files share a path start in
+   the order the owner typed. At `wave.start`, for two or more distinct items,
+   the daemon reads `slicer deps --overlap ID... --json --lean` after the
+   dependency and engine-slice checks and before admitting any member. For each
+   pair that shares a path, the member later in the typed order is held behind
+   the earlier one: its run is admitted `queued` with the earlier item in its
+   record's `after` list (docs/state.md), even when a slot is free, and a freed
+   slot does not start it. `startQueuedLocked` starts it only when every item in
+   `after` has a run that has landed (committed with `landed_at` set, or
+   committed and marked cleaned by the cleanup key). A run that ended `stopped`
+   or failed does not release it; it stays queued until the owner retries the
+   earlier run or stops the held one. A member whose own start failed leaves no
+   run, so nothing waits on it. A held member does not resume a stopped run of
+   its item at start. `ork status` shows the run as `(wait: waits on s455
+   (stopped))`, naming each unlanded item and the state of its newest run. The
+   reply carries `held until s455 (snapshot.py) lands` as the member's
+   message, and `ork wave start` prints `order: s456 after s455 (snapshot.py);
+   s451 after s455 (snapshot.py)` before the confirm; with `--json` the order
+   is the `after` field of each run. Members with no shared path start as
+   before. ork does not read an adj answer for an order: the typed order and
+   slicer's overlap decide (adj 139 `wave.start-input`).
    Only a busy frontier run holds a frontier slot, so it holds none while
    paused and other frontier runs may start (adj 122). The owner's answer or
    retry of a paused frontier run then needs a slot under the project cap and the global cap

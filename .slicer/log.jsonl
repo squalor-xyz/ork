@@ -5947,3 +5947,9 @@
 {"when": "2026-11-20T01:47:39Z", "item": "S485", "action": "note", "from": "", "to": "", "note": "Merged S490, S492 and S493 (2026-11-20, tool feedback).", "by": "Jon Robbins"}
 {"when": "2026-11-20T01:49:20Z", "item": "S494", "action": "add", "from": "", "to": "open", "note": "A spec check that fails its report shape keeps the report and says what it found"}
 {"when": "2026-11-20T01:49:20Z", "item": "S494", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T02:07:29Z", "item": "S342", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:18:36Z", "item": "S342", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T02:18:41Z", "item": "S342", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T02:29:50Z", "item": "S342", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T02:32:49Z", "item": "S342", "action": "note", "from": "", "to": "", "note": "wave start holds a member whose Files share a path with an e", "by": "Jon Robbins"}
+{"when": "2026-11-20T02:32:49Z", "item": "S342", "action": "status", "from": "started", "to": "done", "note": "wave start holds a member whose Files share a path with an earlier member until that member's run has landed, including when the earlier member runs as a sliver chain (its last sliver stands for it); a stopped or failed earlier run keeps the member queued, `ork status` says what it waits on, `ork wave start` prints the order before the confirm, and members with no shared path start as before.", "by": "Jon Robbins"}

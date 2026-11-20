@@ -142,6 +142,8 @@ func TestWaveStartFlagsStillOverride(t *testing.T) {
 			*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item}
 		case daemon.MethodSpecCheck:
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
+		case daemon.MethodWaveOverlap:
+			return json.Unmarshal([]byte(`{"overlap":[]}`), result)
 		case daemon.MethodWaveStart:
 			return json.Unmarshal([]byte(`{"wave":"wave-1","items":[]}`), result)
 		default:

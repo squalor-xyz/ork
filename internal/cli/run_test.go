@@ -683,6 +683,8 @@ func TestLineupVendorIsCaseInsensitive(t *testing.T) {
 							*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Lineup: p.Lineup}
 						case daemon.MethodRunStart:
 							sent = append(sent, params.(daemon.RunParams))
+						case daemon.MethodWaveOverlap:
+							return json.Unmarshal([]byte(`{"overlap":[]}`), result)
 						case daemon.MethodWaveStart:
 							sent = append(sent, params.(daemon.WaveStartParams).Items...)
 						default:

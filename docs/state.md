@@ -557,6 +557,15 @@ an older ork refuses a `run.json` with `wave_name` because `Store.Open` uses
 strict keys, as for `dismissed_at`. The engine rows of `ork status --json` and
 the TUI carry `wave` (*proposed*, S222) and still omit `wave_name`.
 
+*Proposed (S342; adj 477 `wave.overlap-order` = hold):* `after` is a list of
+item ids of the same wave. `wave.start` sets it on a member whose Files share a
+path with an item earlier in the typed list (`slicer deps --overlap`). The run
+is admitted `queued` and does not start until each listed item's newest run has
+landed; a run that stopped or failed keeps it queued (docs/design.md, Wave
+lifecycle). It is omitted for every other run. The version stays 1; an older
+ork refuses a `run.json` with `after` because `Store.Open` uses strict keys, as
+for `wave_name`.
+
 `state` is one of `queued`, `setup`, `implement`, `checks`, `review`, `architect`, `gate`,
 `awaiting-approval`, `finish`, `commit`, `land`, `committed`, `paused` and `stopped`;
 `committed` and `stopped` are final. `queued` is not final: the run waits for

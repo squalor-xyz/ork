@@ -508,6 +508,8 @@ func (s *specStub) call(_ context.Context, method string, params, result any) er
 		p := params.(daemon.SpecAnswerParams)
 		s.answers = append(s.answers, p)
 		*(result.(*daemon.SpecAnswerResult)) = daemon.SpecAnswerResult{Item: p.Item, Ready: true}
+	case "wave.overlap":
+		return json.Unmarshal([]byte(`{"overlap":[]}`), result)
 	case "wave.start":
 		for _, item := range params.(daemon.WaveStartParams).Items {
 			s.started = append(s.started, item.Item)
@@ -548,6 +550,76 @@ func (s *specStub) waveStarts() (n int) {
 }
 
 const specCheckS2NoSpec = `{"items":[{"item":"S1","ready":true},{"item":"S2","ready":false,"no_spec":true}]}`
+
+// orderStub is specStub plus wave.overlap, which answers with overlap and
+// records the items it was asked about.
+func orderStub(t *testing.T, overlap string, asked *[]string) (*specStub, func(context.Context, string, any, any) error) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"s455","ready":true},{"item":"s450","ready":true},{"item":"s456","ready":true},{"item":"s451","ready":true}]}`}
+	return stub, func(ctx context.Context, method string, params, result any) error {
+		if method == daemon.MethodWaveOverlap {
+			p := params.(daemon.WaveOverlapParams)
+			if p.Project != "p" {
+				t.Errorf("overlap project %q", p.Project)
+			}
+			*asked = append(*asked, p.Items...)
+			return json.Unmarshal([]byte(overlap), result)
+		}
+		return stub.call(ctx, method, params, result)
+	}
+}
+
+const orderOverlap = `{"overlap":[{"a":"s455","b":"s456","shared":["snapshot.py"]},{"a":"s455","b":"s451","shared":["snapshot.py"]}]}`
+
+func TestWaveStartPrintsTheOrder(t *testing.T) {
+	const line = "order: s456 after s455 (snapshot.py); s451 after s455 (snapshot.py)"
+	for _, tc := range []struct {
+		name, input string
+		flags       []string
+	}{
+		{"confirm", "y\n", nil},
+		{"decline", "n\n", nil},
+		{"yes", "", []string{"--yes"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var asked []string
+			stub, call := orderStub(t, orderOverlap, &asked)
+			var o, e bytes.Buffer
+			app := &App{Input: strings.NewReader(tc.input), Call: call}
+			args := append([]string{"wave", "start", "p", "s455", "s450", "s456", "s451", "--well-specified", "yes", "--split", "no"}, tc.flags...)
+			if code := app.Run(context.Background(), args, &o, &e); code != ExitOK {
+				t.Fatalf("code %d: %s %s", code, &o, &e)
+			}
+			out := o.String()
+			at := strings.Index(out, line)
+			if at < 0 {
+				t.Fatalf("no order line in:\n%s", out)
+			}
+			if confirm := strings.Index(out, "Start this wave?"); tc.input != "" && (confirm < 0 || confirm < at) {
+				t.Errorf("order line at %d, confirm at %d:\n%s", at, confirm, out)
+			}
+			if pair := strings.Index(out, "pair rule:"); pair < 0 || pair > at {
+				t.Errorf("order line before the pair rule line:\n%s", out)
+			}
+			if !reflect.DeepEqual(asked, []string{"s455", "s450", "s456", "s451"}) {
+				t.Errorf("overlap asked about %q", asked)
+			}
+			if started := stub.waveStarts() == 1; started != (tc.name != "decline") {
+				t.Errorf("wave started: %t", started)
+			}
+		})
+	}
+}
+
+func TestWaveStartPrintsNoOrderLineWithoutOverlap(t *testing.T) {
+	var asked []string
+	_, call := orderStub(t, `{"overlap":[{"a":"s455","b":"s456"}]}`, &asked)
+	var o, e bytes.Buffer
+	app := &App{Input: strings.NewReader(""), Call: call}
+	args := []string{"wave", "start", "p", "s455", "s450", "s456", "s451", "--well-specified", "yes", "--split", "no", "--yes"}
+	if code := app.Run(context.Background(), args, &o, &e); code != ExitOK || strings.Contains(o.String(), "order:") {
+		t.Fatalf("code %d: %s %s", code, &o, &e)
+	}
+}
 
 func TestWaveStartSaysToWaitForTheSpecCheck(t *testing.T) {
 	stub := &specStub{t: t, check: specCheckTwoQuestions}
@@ -713,7 +785,7 @@ func TestWaveStartAsksTheSpecQuestionsInOneSittingThenStartsEveryItem(t *testing
 	if !reflect.DeepEqual(stub.started, []string{"S2", "S1"}) {
 		t.Errorf("started %v", stub.started)
 	}
-	want := []string{"run.plan", "projects.list", "item.show", "run.plan", "item.show", "spec.check", "projects.list", "spec.answer", "wave.start"}
+	want := []string{"run.plan", "projects.list", "item.show", "run.plan", "item.show", "spec.check", "projects.list", "spec.answer", "wave.overlap", "wave.start"}
 	if !reflect.DeepEqual(stub.calls, want) {
 		t.Errorf("calls %v, want %v", stub.calls, want)
 	}
@@ -920,6 +992,8 @@ func TestWaveStartLineupFlagsApplyToEveryItem(t *testing.T) {
 			*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Lineup: p.Lineup}
 		case "spec.check":
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
+		case daemon.MethodWaveOverlap:
+			return json.Unmarshal([]byte(`{"overlap":[]}`), result)
 		case daemon.MethodWaveStart:
 			started = params.(daemon.WaveStartParams)
 		default:
@@ -957,6 +1031,8 @@ func TestWaveStartStopAfterFlag(t *testing.T) {
 			*result.(*daemon.RunPlan) = daemon.RunPlan{CheckCommand: "go test ./...", Item: p.Item, Lineup: p.Lineup}
 		case "spec.check":
 			return json.Unmarshal([]byte(`{"items":[{"item":"S1","ready":true},{"item":"S2","ready":true}]}`), result)
+		case daemon.MethodWaveOverlap:
+			return json.Unmarshal([]byte(`{"overlap":[]}`), result)
 		case daemon.MethodWaveStart:
 			started = params.(daemon.WaveStartParams)
 		default:
@@ -1118,6 +1194,8 @@ func (s *savedStub) call(_ context.Context, method string, params, result any) e
 		*(result.(*daemon.SavedWave)) = daemon.SavedWave{Project: p.Project, Name: p.Name, Items: []string{"S1"}}
 	case daemon.MethodItemShow:
 		return json.Unmarshal([]byte(`{"detail":{"slice":{"sections":[]}}}`), result)
+	case daemon.MethodWaveOverlap:
+		return json.Unmarshal([]byte(`{"overlap":[]}`), result)
 	case daemon.MethodProjectsList:
 		return json.Unmarshal([]byte(`{"projects":[]}`), result)
 	case daemon.MethodRunPlan:

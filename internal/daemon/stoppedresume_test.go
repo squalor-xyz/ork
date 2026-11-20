@@ -538,6 +538,27 @@ func TestWaveStartResumesAndSaysSo(t *testing.T) {
 	waitIdle(t, rig.d, "r1")
 }
 
+// A member held behind another does not resume its stopped run: the resume
+// would start it before the earlier member has landed (S342, adj 477).
+func TestWaveStartHeldMemberDoesNotResumeItsStoppedRun(t *testing.T) {
+	rig := stoppedDaemon(t, retryRunner, false, stoppedDiff, nil, overlapRoute(`{"overlap":[{"a":"S0","b":"S1","shared":["x.go"]}]}`))
+	var result WaveResult
+	if err := json.Unmarshal(request(t, rig.d, "wave.start", `{"items":[{"project":"p","item":"S0"},{"project":"p","item":"S1"}]}`), &result); err != nil {
+		t.Fatal(err)
+	}
+	if len(result.Items) != 2 || result.Items[1].Run == nil {
+		t.Fatalf("wave result: %+v", result)
+	}
+	held := result.Items[1].Run
+	if held.ID == "r1" || held.State != runrec.StateQueued || len(held.After) != 1 || held.After[0] != "S0" {
+		t.Errorf("held member: run %s state %s after %q", held.ID, held.State, held.After)
+	}
+	if r1, err := rig.store.Open("r1"); err != nil || r1.Snapshot().State != runrec.StateStopped {
+		t.Errorf("the stopped run was touched: %v", err)
+	}
+	waitIdle(t, rig.d, result.Items[0].Run.ID)
+}
+
 func TestWaveStartStartsFreshAndSaysWhy(t *testing.T) {
 	rig := stoppedDaemon(t, retryRunner, false, stoppedDiff+"+more\n", nil)
 	b := request(t, rig.d, "wave.start", `{"items":[{"project":"p","item":"S1"}]}`)

@@ -115,6 +115,9 @@ type Config struct {
 	Wave      string
 	WaveName  string // proposed (S215): the saved wave's name; a label, not an id
 	Queued    bool   // create the run in state queued; Dequeue moves it to setup
+	// After lists the items whose runs must land before this queued run starts
+	// (S342, *proposed*; adj 477). The daemon holds the run; the engine only keeps it.
+	After []string
 	// Decisions is the "Owner decisions" paragraph that a spec check recorded
 	// in the main checkout's spec of the item (S116). The run keeps it and
 	// gives it to every role, because its worktree lacks the edit.
@@ -424,7 +427,7 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 		branch = branchName(cfg.Project, cfg.Item)
 	}
 	run, err := d.Store.Create(runrec.Record{
-		ID: id, StopAfter: cfg.StopAfter, Wave: cfg.Wave, WaveName: cfg.WaveName, Project: cfg.Project.Name, Item: cfg.Item,
+		ID: id, StopAfter: cfg.StopAfter, Wave: cfg.Wave, WaveName: cfg.WaveName, After: slices.Clone(cfg.After), Project: cfg.Project.Name, Item: cfg.Item,
 		Parent: cfg.Parent, Chain: cfg.Chain, SliverIndex: cfg.SliverIndex, SliverCount: cfg.SliverCount,
 		Worktree: worktree, Branch: branch,
 		Split: cfg.Split, Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,

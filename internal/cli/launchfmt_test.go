@@ -64,6 +64,8 @@ func launchApp(t *testing.T, hook func(string, any, any) (bool, error)) *App {
 				entries = append(entries, fmt.Sprintf(`{"item":%q,"ready":true}`, id))
 			}
 			return json.Unmarshal([]byte(`{"items":[`+strings.Join(entries, ",")+`]}`), result)
+		case daemon.MethodWaveOverlap:
+			return json.Unmarshal([]byte(`{"overlap":[]}`), result)
 		case daemon.MethodRunStart:
 			return json.Unmarshal([]byte(`{"id":"ork-1","state":"queued"}`), result)
 		case daemon.MethodWaveStart:

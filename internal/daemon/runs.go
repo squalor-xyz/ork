@@ -57,6 +57,7 @@ type RunParams struct {
 	chained       bool                            // daemon-assigned: this plan is one sliver of a chain, which is never carved (S359)
 	wave          string                          // daemon-assigned; never accepted from a run.start client
 	waveName      string                          // daemon-assigned from WaveStartParams.Name (S215, *proposed*)
+	after         []string                        // daemon-assigned: the wave members this run waits on until they land (S342, *proposed*; adj 477)
 	Project       string                          `json:"project"`
 	Item          string                          `json:"item"`
 	WellSpecified bool                            `json:"well_specified"`
@@ -1197,12 +1198,18 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	}
 	// current equals plan.project here, so the plan's effective project is
 	// current with the check command the run uses (S246).
-	message, resumed, err := d.autoResumeLocked(ctx, f, plan.effective, p.Item, plan.Worktree, wave, p.waveName, stored, probe)
-	if err != nil {
-		return runrec.Record{}, "", nil, err
-	}
-	if resumed != nil {
-		return resumed.m.engine.Snapshot(), message, resumed, nil
+	// A member held behind another does not resume a stopped run: the resume
+	// would start it now (S342, adj 477).
+	message := ""
+	if len(p.after) == 0 {
+		var resumed *resumeLaunch
+		message, resumed, err = d.autoResumeLocked(ctx, f, plan.effective, p.Item, plan.Worktree, wave, p.waveName, stored, probe)
+		if err != nil {
+			return runrec.Record{}, "", nil, err
+		}
+		if resumed != nil {
+			return resumed.m.engine.Snapshot(), message, resumed, nil
+		}
 	}
 	local := engine.IsLocalRun(plan.Lineup)
 	if local {
@@ -1212,10 +1219,11 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	// record. This avoids a check/claim race with spec checks and role slots.
 	// A sliver whose parent's worktree is already owned waits, even when a
 	// cap slot is free (S62).
-	queued := local || !d.hasRoomLocked(f, plan.project.Name) || behind
+	held := len(p.after) > 0
+	queued := local || !d.hasRoomLocked(f, plan.project.Name) || behind || held
 	// A spec check that the owner answered gave the item decisions that its
 	// worktree's spec lacks; the run carries them into every brief (S116).
-	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.effective, Item: p.Item, Lineup: plan.Lineup, Split: plan.Split, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions, Worktree: plan.Worktree, Branch: plan.Branch, Parent: plan.Parent}
+	cfg := engine.Config{StopAfter: plan.StopAfter, Project: plan.effective, Item: p.Item, Lineup: plan.Lineup, Split: plan.Split, Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, After: p.after, Queued: queued, Decisions: d.runs.specs[specKey(plan.project.Name, p.Item)].decisions, Worktree: plan.Worktree, Branch: plan.Branch, Parent: plan.Parent}
 	var orientation []byte
 	if local {
 		orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, p.Item), "orientation.md"))
@@ -1238,7 +1246,7 @@ func (d *Daemon) admitRun(ctx context.Context, plan *RunPlan, p RunParams, probe
 	}
 	delete(d.runs.specs, specKey(plan.project.Name, p.Item))
 	r := &managedRun{engine: e}
-	if local && e.TryReserveLocal() {
+	if local && !held && e.TryReserveLocal() {
 		if err := e.Dequeue(); err != nil {
 			e.ReleaseLocal()
 			return runrec.Record{}, "", nil, err
@@ -1270,7 +1278,8 @@ func (d *Daemon) admitChainLocked(ctx context.Context, plan *RunPlan, p RunParam
 		if local {
 			d.watchLocalSlots()
 		}
-		queued := behind || i > 0 || local || !room
+		held := len(p.after) > 0
+		queued := behind || i > 0 || local || !room || held
 		var orientation []byte
 		if local {
 			orientation, err = os.ReadFile(filepath.Join(d.specDir(plan.project.Name, sliver.Item), "orientation.md"))
@@ -1280,7 +1289,7 @@ func (d *Daemon) admitChainLocked(ctx context.Context, plan *RunPlan, p RunParam
 		}
 		cfg := engine.Config{
 			StopAfter: plan.StopAfter, Project: plan.effective, Item: sliver.Item, Lineup: sliver.Lineup,
-			Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, Queued: queued,
+			Budgets: plan.Budgets, Wave: wave, WaveName: p.waveName, After: p.after, Queued: queued,
 			Decisions: d.runs.specs[specKey(plan.project.Name, sliver.Item)].decisions,
 			Worktree:  plan.Worktree, Branch: plan.Branch, Parent: plan.Parent,
 			Chain: chain, SliverIndex: sliver.Index, SliverCount: sliver.Count,
@@ -1294,7 +1303,7 @@ func (d *Daemon) admitChainLocked(ctx context.Context, plan *RunPlan, p RunParam
 				return runrec.Record{}, "", nil, fmt.Errorf("copy orientation: %w", err)
 			}
 		}
-		if i == 0 && !behind && local && e.TryReserveLocal() {
+		if i == 0 && !behind && local && !held && e.TryReserveLocal() {
 			if err := e.Dequeue(); err != nil {
 				e.ReleaseLocal()
 				return runrec.Record{}, "", nil, err
@@ -1766,15 +1775,43 @@ func (d *Daemon) startWave(ctx context.Context, p WaveStartParams) (*WaveResult,
 			}
 		}
 	}
+	// Members that share Files paths start in the typed order: a later one waits
+	// until the earlier one lands (S342, *proposed*; adj 477 wave.overlap-order).
+	var holds []OrderHold
+	var distinct []string
+	for _, id := range ids {
+		if !slices.Contains(distinct, id) {
+			distinct = append(distinct, id)
+		}
+	}
+	if len(distinct) > 1 {
+		overlap, err := d.runs.deps.Slicer.DepsOverlap(ctx, proj.Path, distinct...)
+		if err != nil {
+			return nil, err
+		}
+		holds = WaveOrder(ids, overlap.Overlap)
+	}
+	// A member that did not start leaves no run to wait on.
+	failed := map[string]bool{}
 	result := &WaveResult{Wave: newWaveID(time.Now()), Name: p.Name, Items: []WaveItemResult{}}
 	for _, item := range p.Items {
 		item.wave = result.Wave
 		item.waveName = p.Name
+		behind := holdsOf(holds, item.Item, failed)
+		for _, h := range behind {
+			item.after = append(item.after, h.After)
+		}
 		if err := d.specGate(ctx, item.Project, item.Item); err != nil {
+			failed[item.Item] = true
 			result.Items = append(result.Items, waveItem(item.Item, runrec.Record{}, err))
 			continue
 		}
 		reply, err := d.startRunReply(ctx, item)
+		if err != nil {
+			failed[item.Item] = true
+		} else if len(behind) > 0 {
+			reply.Message = holdMessage(behind)
+		}
 		result.Items = append(result.Items, waveItem(item.Item, reply.Record, err, reply.Message))
 	}
 	return result, nil
@@ -2068,12 +2105,23 @@ func (d *Daemon) startQueuedLocked(f *registry.File) {
 		}
 		return a.ID < b.ID
 	})
+	var all []runrec.Record // read once, and only when a queued run is held
 	for _, w := range queue {
 		if _, ok := find(f, w.rec.Project); !ok {
 			if err := w.r.engine.StopQueued(d.runs.ctx, "project was removed"); err != nil {
 				fmt.Fprintf(os.Stderr, "stop queued run %s: %v\n", w.rec.ID, err)
 			}
 			continue
+		}
+		// A member held behind another stays queued until that one has landed.
+		// An earlier run that stopped or failed does not release it (S342, adj 477).
+		if len(w.rec.After) > 0 {
+			if all == nil {
+				all = d.runRecordsLocked()
+			}
+			if len(waitingOn(w.rec, all)) > 0 {
+				continue
+			}
 		}
 		if d.sliverBlockedLocked(w.rec) || d.worktreeOwnedLocked(w.rec) {
 			continue
@@ -2782,6 +2830,7 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 		fmt.Fprintf(os.Stderr, "run status: %v\n", err)
 	}
 	runs := []EngineRun{}
+	var heldAll []runrec.Record // read once, and only when a queued run is held
 	for _, r := range stored {
 		rec := r.Snapshot()
 		var byRole map[string]engine.Live
@@ -2835,6 +2884,15 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 				}
 			}
 			wait += "; next: ork stop " + rec.ID
+		}
+		if rec.State == runrec.StateQueued && len(rec.After) > 0 {
+			// A member held behind another says what it waits on (S342, adj 477).
+			if heldAll == nil {
+				heldAll = d.runRecordsLocked()
+			}
+			if on := waitingOn(rec, heldAll); len(on) > 0 {
+				wait = "waits on " + strings.Join(on, ", ")
+			}
 		}
 		if permission := d.firstPermissionLocked(rec.ID); permission != nil {
 			question = permission.question

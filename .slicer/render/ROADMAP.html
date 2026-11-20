@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">494 items · — 55 · done 347 · retired 92</p>
+<p class="summary">494 items · — 54 · done 348 · retired 92</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -118,7 +118,7 @@
 <tr class="done"><td>63</td><td>S339</td><td>projects add: a Python project gets the Go allowlist and no check command</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>64</td><td>S340</td><td>wave start: spec-check questions can only be answered on a terminal, one at a time</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>65</td><td>S341</td><td>Read-only role check blames the role for any change to the shared tree</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="open"><td>66</td><td>S342</td><td>wave start: an owner&#x27;s landing-order answer does not order the wave</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>66</td><td>S342</td><td>wave start: an owner&#x27;s landing-order answer does not order the wave</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>67</td><td>S343</td><td>Local roles fit the local server</td><td>M</td><td>2</td><td></td><td>S304 trial 1 (2026-11-11, S316): claude-local qwen3.8-27b timed out at 45 min as implementer and as reviewer. The implementer spent 27 of 45 min in two auto-compactions after whole-file reads; the reviewer&#x27;s Bash calls went through Claude Code&#x27;s model-backed classifier (plan mode), which timed out three times. · discovered from S304</td><td class="status">done</td></tr>
 <tr class="done"><td>68</td><td>S344</td><td>Local spec check and UI pass rows</td><td>M</td><td>2</td><td></td><td>S304 trial 1 (2026-11-11) could not run the spec check or the UI pass on claude-local: the matrix has no local row for either, the UI pass takes exactly one row, and `ork run` has no lineup override for either role. · discovered from S304</td><td class="status">done</td></tr>
 <tr class="done"><td>69</td><td>S345</td><td>Implementer presets allow moving and removing files (with S440)</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>

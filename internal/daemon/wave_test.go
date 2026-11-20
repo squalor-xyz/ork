@@ -9,6 +9,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -493,5 +494,241 @@ func TestWaveStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
 	_, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"S1","allow_no_check":true},{"project":"p","item":"S2","allow_no_check":true}]}`)
 	if len(runs) != 2 {
 		t.Fatalf("allow_no_check wave: %+v", runs)
+	}
+}
+
+// overlapRoute makes `slicer deps --overlap ...` answer with stdout.
+func overlapRoute(stdout string) clitest.Route {
+	return clitest.Route{Tool: "slicer", Args: []string{"deps", "--overlap"}, Prefix: true, Stdout: stdout}
+}
+
+// The pairs the slice names: s455 shares snapshot.py with s456 and with s451.
+const overlapTwoPairs = `{"overlap":[{"a":"s455","b":"s456","shared":["snapshot.py"]},{"a":"s455","b":"s451","shared":["snapshot.py"]}]}`
+
+const overlapWaveItems = `{"items":[{"project":"p","item":"s455"},{"project":"p","item":"s450"},{"project":"p","item":"s456"},{"project":"p","item":"s451"}]}`
+
+func TestWaveStartHoldsAnOverlappingMemberBehindTheEarlierOne(t *testing.T) {
+	// Three slots: after s455 and s450 start, one is free for a held member.
+	w := newWaveRigRoutes(t, 3, 0, overlapRoute(overlapTwoPairs))
+	_, runs := waveRecords(t, w.d, overlapWaveItems)
+	if len(runs) != 4 {
+		t.Fatalf("runs: %+v", runs)
+	}
+	w.expectStarts(t, "s455", "s450")
+	for i, wantAfter := range [][]string{nil, nil, {"s455"}, {"s455"}} {
+		disk := w.record(t, runs[i].ID)
+		if !slices.Equal(runs[i].After, wantAfter) || !slices.Equal(disk.After, wantAfter) {
+			t.Errorf("%s after: reply %q disk %q, want %q", runs[i].Item, runs[i].After, disk.After, wantAfter)
+		}
+		if held := wantAfter != nil; held != (disk.State == runrec.StateQueued) {
+			t.Errorf("%s state %s, held %t", runs[i].Item, disk.State, held)
+		}
+	}
+	w.expectNoStart(t) // a slot is free, and the held members do not take it
+	w.free <- struct{}{}
+	w.expectNoStart(t) // a role ended; the held members still wait
+	for _, i := range []int{2, 3} {
+		if state := w.record(t, runs[i].ID).State; state != runrec.StateQueued {
+			t.Errorf("%s state %s, want queued", runs[i].Item, state)
+		}
+	}
+}
+
+func TestWaveHeldMemberStartsAfterTheEarlierLands(t *testing.T) {
+	root := t.TempDir()
+	d, store, p := runDaemonIn(t, root, passRunner(), overlapRoute(overlapTwoPairs),
+		clitest.Route{Tool: "slicer", Args: []string{"note"}, Prefix: true, Stdout: `{"id":"s455","added":true}`})
+	if err := os.MkdirAll(p.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := registry.Save(d.cfg.RegistryPath, &registry.File{Version: registry.Version, GlobalCap: 8, Projects: []registry.Project{p}}); err != nil {
+		t.Fatal(err)
+	}
+	items := `{"items":[{"project":"p","item":"s455","well_specified":true},{"project":"p","item":"s450","well_specified":true},{"project":"p","item":"s456","well_specified":true},{"project":"p","item":"s451","well_specified":true}]}`
+	_, runs := waveRecords(t, d, items)
+	for _, i := range []int{0, 1} {
+		waitState(t, store, runs[i].ID, runrec.StateAwaitingApproval)
+		waitIdle(t, d, runs[i].ID)
+	}
+	// Both held members wait with every slot free: s455 has not landed.
+	time.Sleep(100 * time.Millisecond)
+	for _, i := range []int{2, 3} {
+		run, err := store.Open(runs[i].ID)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if rec := run.Snapshot(); rec.State != runrec.StateQueued || len(rec.Roles) != 0 {
+			t.Fatalf("%s state %s with %d roles before s455 landed", runs[i].Item, rec.State, len(rec.Roles))
+		}
+	}
+	request(t, d, "run.approve", fmt.Sprintf(`{"run":%q}`, runs[0].ID))
+	landed := waitState(t, store, runs[0].ID, runrec.StateCommitted)
+	if landed.LandedAt.IsZero() {
+		t.Fatalf("s455 committed without landing: %+v", landed)
+	}
+	// s451 overlaps s455 only, so it starts with s456 once s455 has landed.
+	for _, i := range []int{2, 3} {
+		rec := waitState(t, store, runs[i].ID, runrec.StateAwaitingApproval)
+		if len(rec.Roles) == 0 || rec.Roles[0].StartedAt.Before(landed.LandedAt) {
+			t.Errorf("%s started before s455 landed at %v: %+v", runs[i].Item, landed.LandedAt, rec.Roles)
+		}
+	}
+}
+
+func TestWaveHeldMemberStaysWhenTheEarlierStops(t *testing.T) {
+	w := newWaveRigRoutes(t, 4, 0, overlapRoute(`{"overlap":[{"a":"s455","b":"s456","shared":["snapshot.py"]}]}`))
+	_, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"s455"},{"project":"p","item":"s456"}]}`)
+	w.expectStart(t, "s455")
+	request(t, w.d, "run.stop", fmt.Sprintf(`{"run":%q}`, runs[0].ID))
+	waitState(t, w.store, runs[0].ID, runrec.StateStopped)
+	waitIdle(t, w.d, runs[0].ID)
+	w.expectNoStart(t)
+	if state := w.record(t, runs[1].ID).State; state != runrec.StateQueued {
+		t.Fatalf("s456 state %s, want queued", state)
+	}
+	var wait string
+	for _, row := range w.d.engineRuns("p") {
+		if row.Item == "s456" {
+			wait = row.Wait
+		}
+	}
+	if !strings.Contains(wait, "waits on s455 (stopped)") {
+		t.Errorf("s456 wait %q", wait)
+	}
+}
+
+func TestWaveStartSaysWhyAMemberIsHeld(t *testing.T) {
+	w := newWaveRigRoutes(t, 4, 0, overlapRoute(overlapTwoPairs))
+	var params WaveStartParams
+	if err := json.Unmarshal([]byte(overlapWaveItems), &params); err != nil {
+		t.Fatal(err)
+	}
+	result, err := w.d.startWave(context.Background(), params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, item := range result.Items {
+		got = append(got, item.Item+": "+item.Message)
+	}
+	want := []string{"s455: ", "s450: ", "s456: held until s455 (snapshot.py) lands", "s451: held until s455 (snapshot.py) lands"}
+	if !slices.Equal(got, want) {
+		t.Errorf("messages %q, want %q", got, want)
+	}
+}
+
+// An earlier member that was not admitted leaves no run to wait on.
+func TestWaveStartDoesNotHoldBehindAMemberThatDidNotStart(t *testing.T) {
+	w := newWaveRigRoutes(t, 4, 0, overlapRoute(`{"overlap":[{"a":"s455","b":"s456","shared":["snapshot.py"]}]}`))
+	var params WaveStartParams
+	if err := json.Unmarshal([]byte(`{"items":[{"project":"p","item":"s455"},{"project":"p","item":"s456"}]}`), &params); err != nil {
+		t.Fatal(err)
+	}
+	params.Items[0].Expected = &RunPlan{} // a stale confirmed plan: s455 is refused
+	result, err := w.d.startWave(context.Background(), params)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if result.Items[0].Error == nil || result.Items[1].Run == nil || len(result.Items[1].Run.After) != 0 || result.Items[1].Message != "" {
+		t.Fatalf("result: %+v", result)
+	}
+	w.expectStart(t, "s456")
+}
+
+func TestWaveOrderHoldsALaterMemberBehindEveryEarlierOverlap(t *testing.T) {
+	ids := []string{"s455", "s450", "s456", "s451"}
+	pairs := []slicercli.OverlapPair{
+		{A: "s451", B: "s456", Shared: []string{"b.py"}}, // slicer may name a pair in either order
+		{A: "s455", B: "s456", Shared: []string{"snapshot.py"}},
+		{A: "s455", B: "s451", Shared: []string{"snapshot.py", "a.py"}},
+		{A: "s450", B: "s451"},                           // shares nothing
+		{A: "s455", B: "s999", Shared: []string{"x.py"}}, // not in the wave
+	}
+	got := OrderLine(WaveOrder(ids, pairs))
+	want := "order: s456 after s455 (snapshot.py); s451 after s455 (snapshot.py, a.py); s451 after s456 (b.py)"
+	if got != want {
+		t.Errorf("order line %q, want %q", got, want)
+	}
+	if line := OrderLine(WaveOrder(ids, nil)); line != "" {
+		t.Errorf("order line without overlap: %q", line)
+	}
+}
+
+func TestWaitingOnNamesEachItemWhoseNewestRunHasNotLanded(t *testing.T) {
+	at := time.Date(2026, 11, 19, 9, 0, 0, 0, time.UTC)
+	rec := func(id, item, state string, age time.Duration, mod func(*runrec.Record)) runrec.Record {
+		r := runrec.Record{ID: id, Project: "p", Item: item, State: state, CreatedAt: at.Add(age)}
+		if mod != nil {
+			mod(&r)
+		}
+		return r
+	}
+	landed := func(r *runrec.Record) { r.LandedAt = at }
+	cleaned := func(r *runrec.Record) { r.CleanedAt = at }
+	notMerged := func(r *runrec.Record) { r.CleanedAt, r.CleanedReason = at, "branch gone, not merged" }
+	all := []runrec.Record{
+		rec("a", "s1", runrec.StateCommitted, 0, landed),
+		rec("b", "s2", runrec.StateCommitted, 0, nil), // committed at stop_after commit, not landed
+		rec("c", "s3", runrec.StateCommitted, 0, cleaned),
+		rec("d", "s4", runrec.StateCommitted, 0, notMerged),
+		rec("e", "s5", runrec.StateCommitted, 0, landed),
+		rec("f", "s5", runrec.StateStopped, time.Hour, nil), // a newer run of s5 decides
+		rec("g", "s6", runrec.StateStopped, 0, nil),
+		rec("h", "s7", runrec.StateImplement, 0, nil),
+		{ID: "i", Project: "other", Item: "s9", State: runrec.StateCommitted, LandedAt: at, CreatedAt: at}, // another project's s9
+	}
+	held := runrec.Record{Project: "p", After: []string{"s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8", "s9"}}
+	got := strings.Join(waitingOn(held, all), ", ")
+	want := "s2 (committed), s4 (committed), s5 (stopped), s6 (stopped), s7 (implement), s8 (no run), s9 (no run)"
+	if got != want {
+		t.Errorf("waiting on %q, want %q", got, want)
+	}
+}
+
+// An earlier member that runs as a sliver chain has runs named for its slivers,
+// with the member as their parent. The chain lands the parent through its last
+// sliver, so only that run says whether the member has landed.
+func TestWaitingOnCountsAChainOfSliversAsItsParent(t *testing.T) {
+	at := time.Date(2026, 11, 19, 9, 0, 0, 0, time.UTC)
+	sliver := func(id string, index int, state string, mod func(*runrec.Record)) runrec.Record {
+		r := runrec.Record{ID: id, Project: "p", Item: "s10-" + id, Parent: "s10", Chain: "chain-1", SliverIndex: index, SliverCount: 2, State: state, CreatedAt: at.Add(time.Duration(index) * time.Second)}
+		if mod != nil {
+			mod(&r)
+		}
+		return r
+	}
+	landed := func(r *runrec.Record) { r.LandedAt = at }
+	held := runrec.Record{Project: "p", After: []string{"s10"}}
+	for name, tc := range map[string]struct {
+		all  []runrec.Record
+		want string
+	}{
+		"the last sliver has not run":                                    {[]runrec.Record{sliver("a", 1, runrec.StateCommitted, nil), sliver("b", 2, runrec.StateQueued, nil)}, "s10 (queued)"},
+		"the last sliver is in progress":                                 {[]runrec.Record{sliver("a", 1, runrec.StateCommitted, nil), sliver("b", 2, runrec.StateImplement, nil)}, "s10 (implement)"},
+		"the last sliver landed":                                         {[]runrec.Record{sliver("a", 1, runrec.StateCommitted, nil), sliver("b", 2, runrec.StateCommitted, landed)}, ""},
+		"a sliver committed without a landing is not the parent landing": {[]runrec.Record{sliver("a", 1, runrec.StateCommitted, landed), sliver("b", 2, runrec.StateStopped, nil)}, "s10 (stopped)"},
+		// The slivers are created together; the last one decides, whatever the ids sort to.
+		"slivers made at one instant": {[]runrec.Record{
+			sliver("z", 1, runrec.StateCommitted, func(r *runrec.Record) { r.LandedAt, r.CreatedAt = at, at }),
+			sliver("a", 2, runrec.StateStopped, func(r *runrec.Record) { r.CreatedAt = at }),
+		}, "s10 (stopped)"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := strings.Join(waitingOn(held, tc.all), ", "); got != tc.want {
+				t.Errorf("waiting on %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestWaveStartWithoutOverlapIsUnchanged(t *testing.T) {
+	// slicer lists a pair that shares nothing without a shared array.
+	w := newWaveRigRoutes(t, 4, 0, overlapRoute(`{"overlap":[{"a":"s455","b":"s456"}]}`))
+	_, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"s455"},{"project":"p","item":"s456"}]}`)
+	w.expectStarts(t, "s455", "s456")
+	for _, run := range runs {
+		if len(run.After) != 0 || run.State == runrec.StateQueued {
+			t.Errorf("%s was held: %+v", run.Item, run)
+		}
 	}
 }

@@ -446,6 +446,7 @@ type Record struct {
 	ID               string                   `json:"id"`
 	Wave             string                   `json:"wave,omitempty"`
 	WaveName         string                   `json:"wave_name,omitempty"` // proposed (S215): the saved wave's name, a label and not an id
+	After            []string                 `json:"after,omitempty"`     // proposed (S342, adj 477): items of the same wave whose runs must land before this queued run starts
 	Split            bool                     `json:"split,omitempty"`     // a lead and parts implement the slice in one worktree (S61, *proposed*)
 	Parts            []Part                   `json:"parts,omitempty"`     // the lead's parts list, once the lead round has returned it (S61, *proposed*)
 	Decisions        string                   `json:"decisions,omitempty"` // the owner's spec check answers, for every brief (S116)
