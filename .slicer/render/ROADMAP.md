@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-494 items · — 55 · done 347 · retired 92
+494 items · — 54 · done 348 · retired 92
 
 ## v1.3
 
@@ -253,7 +253,7 @@ v1.2
 | 196 | [S491](slices/S491.md) | allow the UI pass to run `go run ./cmd/ork ... --help` (no pipe) so the CLI help can be rendered |  | - |  | Covered by S475 (landed 2026-11-20): UI passes render CLI views with the -renders test flag. · discovered from S353 | retired |
 | 197 | [S492](slices/S492.md) | tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them |  | - |  | Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S353 | retired |
 | 198 | [S493](slices/S493.md) | tell implementers in the brief that CLI socket tests may only fail in their sandbox and that ork's round check is the evidence |  | - |  | Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S353 | retired |
-| 199 | [S494](slices/S494.md) | Spec check shape failures keep the report | S | 2 |  | 2026-11-19 to 11-20: spec checks of S424, S384, S339, S342 and S416 failed twice with "report shape: ID: write Ready, or question blocks that start with Question:", and a later rerun or a spec edit passed. The failed report is not kept (`internal/engine/speccheck.go:336-460` removes or overwrites spec-check.md), so the orchestrator cannot see what the role wrote. The parser accepts only a body that is exactly "Ready" or starts with "Question:" (`internal/engine/speccheck.go:712-725`). | — |
+| 199 | [S494](slices/S494.md) | Spec check shape failures keep the report | S | 2 |  | 2026-11-19 to 11-20: spec checks of S424, S384, S339, S342 and S416 failed twice with "report shape: ID: write Ready, or question blocks that start with Question:", and a later rerun or a spec edit passed. The failed report is not kept (`internal/engine/speccheck.go:336-460` removes or overwrites spec-check.md), so the orchestrator cannot see what the role wrote. The parser accepts only a body that is exactly "Ready" or starts with "Question:" (`internal/engine/speccheck.go:712-725`). | done |
 
 ---
 

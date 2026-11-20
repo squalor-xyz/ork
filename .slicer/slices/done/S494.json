@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/speccheck.go:336-505` (keep the failed report beside the run's spec-check files; name it in the error)\n- `internal/engine/speccheck_test.go`\n- `docs/design.md` (spec check: what ork keeps on a shape failure)"
+      "body": "- `internal/engine/speccheck.go` (`runSpecCheckOnce` keeps the failed report beside the run's spec-check files; `keepFailedSpecReport`, `specShapeKept` name it in the error; `RunSpecCheck` clears old ones)\n- `internal/engine/speccheck_test.go`\n- `docs/design.md` (spec check: what ork keeps on a shape failure)"
     },
     {
       "heading": "Failing tests",

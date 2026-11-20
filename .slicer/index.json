@@ -26416,10 +26416,25 @@
       "id": "S494",
       "title": "A spec check that fails its report shape keeps the report and says what it found",
       "short_title": "Spec check shape failures keep the report",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d4be27b0-cec1-4b4d-85e9-00424ded5f01",
+          "kind": "",
+          "text": "**2026-11-20** — A spec check whose report fails its shape keeps it as spec-check-failed-N.md in the check's directory; the error names the file and quotes the first line of each offending section; a passing check or a new check clears old failed reports.",
+          "created_at": "2026-11-20T02:16:16Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -26437,7 +26452,7 @@
         "importance": 3,
         "urgency": 3,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
