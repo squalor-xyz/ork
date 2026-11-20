@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 502,
+  "next_id": 503,
   "preamble": "",
   "passes": [
     {
@@ -26731,6 +26731,34 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Duplicate of S481 (say in the reviewer brief which shell forms are denied).",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S502",
+      "title": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff",
+      "short_title": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S337",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b241c892",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,
