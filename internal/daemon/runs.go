@@ -906,6 +906,13 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		treeID = plan.Parent
 	}
 	plan.Worktree, plan.Branch = filledTree(proj, treeID)
+	if raw, err := d.runs.deps.Slicer.ShowRaw(ctx, proj.Path, p.Item); err == nil {
+		checkDir := plan.Worktree
+		if info, err := os.Stat(checkDir); err != nil || !info.IsDir() {
+			checkDir = proj.Path
+		}
+		plan.Warnings = append(plan.Warnings, engine.SliceCheckCommandWarnings(string(raw), checkDir)...)
+	}
 	return plan, nil
 }
 

@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -668,9 +670,57 @@ func checkCommandSections(in BriefInput) string {
 	return b.String()
 }
 
+var envAssignment = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)
+
 type sliceCheckCommand struct {
 	command string
 	empty   bool
+}
+
+// SliceCheckCommandWarnings flags Check entries whose first word cannot run.
+// The caller supplies the worktree, or the checkout before that tree exists.
+// These are advisory: command execution and classification stay unchanged.
+func SliceCheckCommandWarnings(raw, worktree string) []string {
+	var warnings []string
+	for _, entry := range sliceCheckCommands(raw) {
+		// Leading NAME=value words are environment, as plainCheckRow reads them.
+		word, end := scanWord(entry.command, 0)
+		for envAssignment.MatchString(word.text) && end < len(entry.command) {
+			start := end
+			for start < len(entry.command) && (entry.command[start] == ' ' || entry.command[start] == '\t') {
+				start++
+			}
+			next, nextEnd := scanWord(entry.command, start)
+			if nextEnd <= start {
+				break
+			}
+			word, end = next, nextEnd
+		}
+		if envAssignment.MatchString(word.text) {
+			warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
+			continue
+		}
+		if filepath.IsAbs(word.text) || !strings.ContainsRune(word.text, filepath.Separator) {
+			if _, err := exec.LookPath(word.text); err == nil {
+				continue
+			}
+		}
+		// os/exec finds a bare name only on PATH, never in the worktree.
+		if filepath.IsAbs(word.text) || strings.ContainsRune(word.text, filepath.Separator) {
+			path := word.text
+			if !filepath.IsAbs(path) {
+				path = filepath.Join(worktree, path)
+			}
+			rel, err := filepath.Rel(worktree, path)
+			if err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+				if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() && info.Mode().Perm()&0o111 != 0 {
+					continue
+				}
+			}
+		}
+		warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
+	}
+	return warnings
 }
 
 // sliceCheckCommands shares the backtick splitter with the role briefs.
@@ -830,7 +880,7 @@ func plainCheckRow(command sliceCheckCommand, worktree string) sliceCheck {
 		if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 			row.notRun = "not run by ork: orchestrator"
 		}
-		if len(row.argv) == 0 && regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`).MatchString(word.text) {
+		if len(row.argv) == 0 && envAssignment.MatchString(word.text) {
 			row.env = append(row.env, word.text)
 		} else {
 			row.argv = append(row.argv, word.text)

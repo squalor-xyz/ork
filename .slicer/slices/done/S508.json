@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/brief.go:640-710` (`sliceCheckCommands`: return each entry's first word)\n- `internal/daemon/runs.go` (plan warnings)\n- `internal/daemon/runs_test.go`\n- `docs/design.md` (slice checks)"
+      "body": "- `internal/engine/brief.go:677-731` (`SliceCheckCommandWarnings` and `sliceCheckCommands`: shared Check entry extraction and command warnings)\n- `internal/daemon/runs.go:841-918` (`planRun`: plan warnings and resolved worktree)\n- `internal/daemon/runs_test.go:4160-4208` (`TestPlanWarnsOnANonCommandCheckEntry`)\n- `docs/design.md:3179-3211` (plan warnings and slice checks)"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestPlanWarnsOnANonCommandCheckEntry` in `internal/daemon/runs_test.go`: a slice whose Check has \"- UI pass: `internal/cli` output changes.\" and \"- `slicer ai relay` prints `Contract: relay v13`.\" gets plan warnings naming `internal/cli` and `Contract:`; `go test ./...` and `gofmt -l .` get none. Red today."
+      "body": "- `TestPlanWarnsOnANonCommandCheckEntry` in `internal/daemon/runs_test.go` (beside `TestRunPlanCarriesSetupWarnings`): a slice whose Check has \"- UI pass: `internal/cli` output changes.\" and \"- `slicer ai relay` prints `Contract: relay v13`.\" gets plan warnings naming `internal/cli` and `Contract:`; `go test ./...` and `gofmt -l .` get none. Red today. Cover executable worktree paths, non-executable files and directories, and acceptance of a warned plan at start."
     },
     {
       "heading": "Implement",

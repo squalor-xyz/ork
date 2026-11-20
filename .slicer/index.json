@@ -26968,10 +26968,25 @@
       "id": "S508",
       "title": "The plan flags a backticked Check entry that is not a runnable command",
       "short_title": "Lint Check commands at plan time",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a0c7f95d-cb30-450e-a738-7e499d7e724c",
+          "kind": "",
+          "text": "**2026-11-20** — Plans warn about non-command Check entries without refusing start; env-prefixed commands get no false warning and a bare name that exists only in the worktree is warned, as os/exec cannot run it.",
+          "created_at": "2026-11-20T14:51:08Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -26989,7 +27004,7 @@
         "importance": 3,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],

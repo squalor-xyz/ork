@@ -6050,3 +6050,9 @@
 {"when": "2026-11-20T13:38:26Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-20T13:38:35Z", "item": "S506", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 515)."}
 {"when": "2026-11-20T13:38:35Z", "item": "S507", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 517)."}
+{"when": "2026-11-20T14:34:59Z", "item": "S508", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:35:12Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:35:12Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-20T14:37:28Z", "item": "S508", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T14:51:08Z", "item": "S508", "action": "note", "from": "", "to": "", "note": "Plans warn about non-command Check entries without refusing ", "by": "Jon Robbins"}
+{"when": "2026-11-20T14:51:08Z", "item": "S508", "action": "status", "from": "started", "to": "done", "note": "Plans warn about non-command Check entries without refusing start; env-prefixed commands get no false warning and a bare name that exists only in the worktree is warned, as os/exec cannot run it.", "by": "Jon Robbins"}
