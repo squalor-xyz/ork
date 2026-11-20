@@ -899,6 +899,30 @@ func checkBriefInstructionsOnlyForImplementer(t *testing.T) {
 	}
 }
 
+func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
+	for _, tc := range []struct {
+		name, tmpDir, want string
+	}{
+		{"TMPDir", "/state/process-temp", "/state/process-temp"},
+		{"TempDir fallback", "", "'/state/role scratch/ui-1'"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = RoleUI
+			in.TempDir = "/state/role scratch/ui-1"
+			in.TMPDir = tc.tmpDir
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			want := "go test ./internal/cli -run TestRenderCLIViews -renders " + tc.want
+			if !strings.Contains(got, want) {
+				t.Fatalf("UI brief lacks render command %q", want)
+			}
+		})
+	}
+}
+
 // The UI pass brief names the project's design doc from the registry field
 // ui_doc, or tells the pass to find the project's own UI docs (S136).
 func TestUIBriefNamesTheProjectDesignDoc(t *testing.T) {
