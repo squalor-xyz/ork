@@ -246,3 +246,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S449 (run ork-20261120-133801-8a30, 2026-11-20)
 
 - [ ] The owner looks at the Waves launch with no check command and a queued-resume run in the TUI at 80x24.
+
+## S389 (run ork-20261120-145742-cab5, 2026-11-20)
+
+- [ ] UI pass (r14): `ork show RUN` with three entries reads clearly at 80 columns.
