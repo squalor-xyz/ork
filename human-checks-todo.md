@@ -238,3 +238,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S437 (run ork-20261118-225522-3de5, 2026-11-19)
 
 - [ ] in the next ork run on this project, the implementer's report shows the daemon tests ran with no "no temp directory short enough for a socket" skip.
+
+## S353 (run ork-20261120-001408-907b, 2026-11-20)
+
+- [ ] [AFTER LAND] the owner sets the probe on the slicer project and runs ork doctor; it shows the contract line as ok.
