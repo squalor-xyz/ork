@@ -20325,7 +20325,7 @@
       "id": "S355",
       "title": "Run-question answers are filed in adj under the owner setting",
       "short_title": "Run answers use the owner setting",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -20335,6 +20335,20 @@
           "text": "**2026-11-20** — Owner decisions 2026-11-20: adj 524 owner.run-answers-scope = daemon-noadj (the daemon files run answers by default for every caller from the owner setting; a per-call no_adj field lets ctrl+a opt out); adj 525 owner.run-answers-off-switch = per-pane (ctrl+a turns filing off for that pane only; file-answers off also stops run-answer filing).",
           "created_at": "2026-11-20T15:22:27Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3067b67d-4a11-4f67-9a60-ff092a60381e",
+          "kind": "",
+          "text": "**2026-11-20** — run.answer files the answer in adj by default under the owner setting (caller by, else registry owner) when the question has a key, the project has adj and file_answers is on; no_adj and ctrl+a (per pane, now independent of owner findings) opt out, and a wanted filing that does not happen says why (no owner, file_answers off).",
+          "created_at": "2026-11-20T15:48:48Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -20361,7 +20375,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

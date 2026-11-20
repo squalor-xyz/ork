@@ -90,7 +90,8 @@ type runPane struct {
 	render                    int                    // the card's render on show, one-based; 0 shows the card (S121, proposed)
 	renderRound               int                    // the card round that render was opened on
 	fetched                   map[string]renderFetch // run.render answers, by card round and name
-	adj                       bool
+	adj                       bool                   // run question: file the answer in adj; starts on, ctrl+a flips it (S355)
+	findingAdj                bool                   // finding answer: the finding has a decision key; kept apart from adj so finding mode leaves ctrl+a's setting alone
 	ledger                    bool
 	input                     textField
 	offset                    int
@@ -100,7 +101,10 @@ type runPane struct {
 }
 
 func (m *Model) openPane(r ovRow) tea.Cmd {
-	m.pane = &runPane{run: r.engineID, project: r.name}
+	// Filing the answer in adj starts on: the daemon files it when an owner is
+	// known, and ctrl+a turns it off for this pane (S355, *proposed*; adj 524,
+	// adj 525).
+	m.pane = &runPane{run: r.engineID, project: r.name, adj: true}
 	if r.ledgerID != "" {
 		m.pane.run, m.pane.ledger = r.ledgerID, true
 	}
@@ -425,7 +429,7 @@ func (m *Model) paneKey(msg tea.KeyPressMsg) tea.Cmd {
 	if key.Matches(msg, m.keys.Owner) {
 		if f := m.paneOwner(); f != nil && m.cfg.Live != nil {
 			m.pane.finding = f.N
-			m.pane.adj = f.Key != ""
+			m.pane.findingAdj = f.Key != ""
 			m.pane.input = textField{}
 			m.pane.freeText = false
 		}
@@ -654,7 +658,10 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 			}
 		}
 		warningAt := len(toggle)
-		if on && strings.TrimSpace(os.Getenv("ADJ_DECIDED_BY")) == "" {
+		// A run question's owner may come from ork's settings, which the pane
+		// does not read; the daemon's notice says when none is known (S355). A
+		// finding answer still needs the caller's ADJ_DECIDED_BY.
+		if on && m.pane.finding > 0 && strings.TrimSpace(os.Getenv("ADJ_DECIDED_BY")) == "" {
 			toggle += "  ADJ_DECIDED_BY unset"
 			warningAt += 2
 		}

@@ -30,7 +30,7 @@ func (e *Engine) FileAnswer(ctx context.Context, text, by string) (string, error
 		return "", nil
 	}
 	if strings.TrimSpace(by) == "" {
-		return "", errors.New("ADJ_DECIDED_BY is unset; set it in the caller before filing an answer in adj")
+		return "", errors.New("ADJ_DECIDED_BY is unset and no owner is set; set it in the caller or run ork settings set --owner NAME before filing an answer in adj")
 	}
 	title := questionTitle(rec.Pending.Question)
 	if rec.Pending.Ask != nil {

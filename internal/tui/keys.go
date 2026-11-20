@@ -737,6 +737,11 @@ func (m *Model) paneHints() []hintEntry {
 		esc("back to card")
 	case m.paneQuestion():
 		_, noAdj := m.paneAdjKey()
+		// Filing starts on, so ctrl+a turns it off first (S355).
+		adjHint := "file in adj"
+		if m.pane.adj {
+			adjHint = "no adj"
+		}
 		ask := m.paneAsk()
 		switch {
 		case ask != nil && !m.pane.freeText:
@@ -744,7 +749,7 @@ func (m *Model) paneHints() []hintEntry {
 			if !m.panePermission() {
 				l.add(dropRow, short(k.FreeAnswer, "t", "free text"))
 			}
-			l.add(dropRow+1, offer(noAdj == "" && m.pane.finding == 0, k.FileAdj, "ctrl+a", "file in adj"))
+			l.add(dropRow+1, offer(noAdj == "" && m.pane.finding == 0, k.FileAdj, "ctrl+a", adjHint))
 			scroll()
 			if m.pane.finding > 0 {
 				esc("back to run")
@@ -753,7 +758,7 @@ func (m *Model) paneHints() []hintEntry {
 			}
 		default:
 			l.add(dropRow, offer(answers(), k.Answer, "enter", "submit"))
-			l.add(dropRow+1, offer(noAdj == "" && m.pane.finding == 0, k.FileAdj, "ctrl+a", "file in adj"))
+			l.add(dropRow+1, offer(noAdj == "" && m.pane.finding == 0, k.FileAdj, "ctrl+a", adjHint))
 			scroll()
 			if ask != nil && m.pane.freeText {
 				esc("back to options")
