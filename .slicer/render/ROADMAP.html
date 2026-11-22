@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">526 items · — 45 · done 362 · retired 119</p>
+<p class="summary">526 items · — 44 · done 363 · retired 119</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -78,7 +78,7 @@
 <tr class="done"><td>23</td><td>S246</td><td>Check command from slicer first</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>24</td><td>S247</td><td>ork projects show</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>25</td><td>S248</td><td>projects set --dry-run</td><td>S</td><td>1</td><td></td><td></td><td class="status">done</td></tr>
-<tr class="open"><td>26</td><td>S249</td><td>Project setup steps</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>26</td><td>S249</td><td>Project setup steps</td><td>M</td><td>2</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="open"><td>27</td><td>S250</td><td>Matrix change sets</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="open"><td>28</td><td>S251</td><td>Project settings pane</td><td>M</td><td>2</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="open"><td>29</td><td>S252</td><td>S238 and S190 later notes: pause reason wording, pane clamp, vendor-out timing, retry keeps vendor</td><td>S</td><td>2</td><td></td><td>**2026-11-02** — Later notes from pair wave 5 (S238 and S190, run by ork on the Claude fallback implementer and landed 2026-11-02). S238: (1) the conflict pause reason names ork retry RUN twice in ork status; (2) check how the TUI pane wraps a long conflict pause reason at 80x24, with (5) a pane view test for a five-file conflict reason at 80x24; (3) the pause reason does not say how to resolve a deletion and (4) that a file resolved by deletion needs git rm. S190: (1,4) the help j/k and g/G lines do not mention panes; (2,5) the Roadmap pane offset is clamped in the draw path (clamp it when the content or height changes); (3) hangWrap gives up the hang width for text with a newline. Friction not yet in a slice: F30 ork vendor shows nothing out until the first role of that vendor fails (the out-until time is only learned then); F35 an ork retry resumes the recorded vendor session, so a run that started on the Claude fallback stays on Claude after Codex is back and the owner must stop and rerun to change vendor. Log: .scratch/v11/wave4-friction.md. · discovered from S238</td><td class="status">—</td></tr>

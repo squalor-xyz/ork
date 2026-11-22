@@ -22,6 +22,18 @@ func TestMain(m *testing.M) {
 
 const root = "/projects/ork"
 
+func TestAdjInitArgv(t *testing.T) {
+	args := []string{"init", "--root", root}
+	fake := clitest.Install(t, clitest.Route{Tool: "adj", Args: args, Stdout: "initialized\n"})
+	c := Client{Bin: fake.Bin("adj")}
+	if err := c.Init(context.Background(), runrec.Writer{}, root); err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("adj"); len(calls) != 1 || strings.Join(calls[0].Args, "\x00") != strings.Join(args, "\x00") {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
 func recorded(name string) string {
 	return filepath.Join("..", "..", "testdata", "cli", "adj", name)
 }

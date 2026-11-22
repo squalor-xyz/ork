@@ -128,6 +128,18 @@ func yesNo(b bool) string {
 	return "no"
 }
 
+// Init runs slicer init without overwriting existing project state.
+func (c Client) Init(ctx context.Context, w runrec.Writer, root string) error {
+	_, err := c.write(ctx, w, root, "init", "--json")
+	return err
+}
+
+// RelayRolesInit asks slicer to create and render its example role matrix.
+func (c Client) RelayRolesInit(ctx context.Context, w runrec.Writer, root string) error {
+	_, err := c.write(ctx, w, root, "relay-roles", "init", "--render", "--json")
+	return err
+}
+
 // RecommendRoles runs `slicer relay-roles recommend ID --well-specified yes|no
 // --split yes|no --json --root ROOT`.
 func (c Client) RecommendRoles(ctx context.Context, root, id string, wellSpecified, split bool) (*Recommendation, error) {

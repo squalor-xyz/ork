@@ -204,6 +204,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               list the projects below DIR; add the tracked
                               ones after a yes, or at once with --yes
   ork projects rm NAME        unregister a project
+  ork projects setup NAME STEP [--dry-run] [--json]
+                              run slicer-init, relay-roles-init, adj-init or
+                              adj-off; --dry-run prints the command only
   ork projects pin NAME [--relay N] [--adj M]
                               pin slicer at N ({CONTRACTS}) through slicer.
                               Or adj at M ({ADJ}); at least one flag.

@@ -146,6 +146,7 @@ ork (TUI)  ork status --json (CLI)
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
   | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `ui_pass_rows` (a list, S344), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`), and `dry_run` (a boolean, S248, *proposed*), which the field check ignores | `SetProjectResult` (`{project,added?,already_listed?}`, S307, adj 512), with pattern lists grouped by role; with `dry_run` the project as it would be saved, without saving it, every check of a real call running; otherwise the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`, `spec_check_rows` or `ui_pass_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
+  | `project.setup` (*proposed*, S249) | `{"project","step","preview"?}` | `{"command","done","adj"?}`; steps `slicer-init`, `relay-roles-init`, `adj-init`, `adj-off`; previews run nothing; adj steps return the current registry flag and refuse writes while runs are unfinished (`project_busy`); tool errors retain their code and message |
   | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes","owner"?,"file_answers"}`; the first two are the stored values (0 is unset); from S314 (*proposed*) `owner` is the stored name (absent when unset) and `file_answers` is true unless the registry turns it off |
   | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?,"owner"?,"file_answers"?}`, at least one | the same shape as `settings.get`; 0 clears one, `""` clears `owner` and `true` clears `file_answers` (on is the default and is not written); `bad_params` for no field, a negative number or an owner that is not one line; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
@@ -2943,7 +2944,7 @@ ork daemon restart [--force] [--rebuild]
 ork roles print [ROLE]      print the embedded role prompts
 ork roles matrix P          show the role matrix as slicer prints it, then
                             which rows ork uses, skips or does not run (S168)
-ork projects add|list|rm|set|pin|unpin
+ork projects add|list|rm|set|setup|pin|unpin
                             manage the registry
 ork doctor [--upgrade]      check versions, CLIs, logins, contract, ork path,
                             projects; print upgrade commands (S178)
@@ -3883,6 +3884,19 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
+- *Proposed (S249):* `projects setup NAME STEP [--dry-run] [--json]` runs
+  one owning-tool command in the registered main checkout, leaving changes
+  uncommitted. Steps are `slicer-init` (`slicer init`), `relay-roles-init`
+  (`slicer relay-roles init --render`), `adj-init` (`adj init`, then enable
+  the registry's adj flag), and `adj-off` (disable the flag, no tool call).
+  No step passes `--force`. Dry runs print `would run: COMMAND`, run no
+  tools and leave the registry unchanged. Successful writes print
+  `ran: COMMAND`, with `(adj on)` or `(adj off)` for the adj steps.
+  JSON prints `{command, done, adj?}`; `adj` is the current registry flag
+  for adj steps, including previews. Adj writes lock the registry then
+  runs through the tool call and registry save, refusing unfinished runs
+  with `project_busy`. Slicer steps defer refusals to slicer. Successful
+  tool writes refresh the cache; a refresh failure does not undo the write.
 - `projects set NAME [--push on|off] [--bell on|off] [--auto-land on|off] [--ui-doc PATH]
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--ui-pass-rows rNN,rNN]
   [--worktree-pattern P]

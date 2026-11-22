@@ -19,6 +19,28 @@ import (
 
 const wt = "/projects/ork/.worktrees/S04"
 
+func TestSlicerInitArgv(t *testing.T) {
+	args := []string{"init", "--json", "--root", root}
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{}`})
+	if err := c.Init(context.Background(), runrec.Writer{}, root); err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, args) {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+func TestRelayRolesInitArgv(t *testing.T) {
+	args := []string{"relay-roles", "init", "--render", "--json", "--root", root}
+	c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: `{}`})
+	if err := c.RelayRolesInit(context.Background(), runrec.Writer{}, root); err != nil {
+		t.Fatal(err)
+	}
+	if calls := fake.CallsTo("slicer"); len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, args) {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
 type memSink struct{ writes []runrec.Write }
 
 func (m *memSink) AddWrite(w runrec.Write) error { m.writes = append(m.writes, w); return nil }

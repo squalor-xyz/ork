@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-526 items · — 45 · done 362 · retired 119
+526 items · — 44 · done 363 · retired 119
 
 ## v1.3
 
@@ -80,7 +80,7 @@ v1.2
 | 23 | [S246](slices/S246.md) | Check command from slicer first | S | 1 |  |  | done |
 | 24 | [S247](slices/S247.md) | ork projects show | M | 2 |  |  | done |
 | 25 | [S248](slices/S248.md) | projects set --dry-run | S | 1 |  |  | done |
-| 26 | [S249](slices/S249.md) | Project setup steps | M | 2 |  |  | — |
+| 26 | [S249](slices/S249.md) | Project setup steps | M | 2 |  |  | done |
 | 27 | [S250](slices/S250.md) | Matrix change sets | M | 2 |  |  | — |
 | 28 | [S251](slices/S251.md) | Project settings pane | M | 2 |  |  | — |
 | 29 | S252 | S238 and S190 later notes: pause reason wording, pane clamp, vendor-out timing, retry keeps vendor | S | 2 |  | **2026-11-02** — Later notes from pair wave 5 (S238 and S190, run by ork on the Claude fallback implementer and landed 2026-11-02). S238: (1) the conflict pause reason names ork retry RUN twice in ork status; (2) check how the TUI pane wraps a long conflict pause reason at 80x24, with (5) a pane view test for a five-file conflict reason at 80x24; (3) the pause reason does not say how to resolve a deletion and (4) that a file resolved by deletion needs git rm. S190: (1,4) the help j/k and g/G lines do not mention panes; (2,5) the Roadmap pane offset is clamped in the draw path (clamp it when the content or height changes); (3) hangWrap gives up the hang width for text with a newline. Friction not yet in a slice: F30 ork vendor shows nothing out until the first role of that vendor fails (the out-until time is only learned then); F35 an ork retry resumes the recorded vendor session, so a run that started on the Claude fallback stays on Claude after Codex is back and the owner must stop and rerun to change vendor. Log: .scratch/v11/wave4-friction.md. · discovered from S238 | — |

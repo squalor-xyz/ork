@@ -128,6 +128,12 @@ func (c Client) List(ctx context.Context, root, status string) ([]Record, error)
 	return c.records(ctx, args...)
 }
 
+// Init runs adj's repeatable project initialization command.
+func (c Client) Init(ctx context.Context, w runrec.Writer, root string) error {
+	_, err := c.write(ctx, w, root, "init")
+	return err
+}
+
 // write records every adj call made while filing an owner answer, including check.
 func (c Client) write(ctx context.Context, w runrec.Writer, root string, argv ...string) (clirun.Result, error) {
 	call := c.call()
