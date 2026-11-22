@@ -1,0 +1,39 @@
+{
+  "id": "S522",
+  "title": "name the golden files in the UI-pass brief when a slice adds CLI goldens, so the pass reads them instead of writing an overlay test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261122-025921-2e6a, project ork, item S434:\n\nname the golden files in the UI-pass brief when a slice adds CLI goldens, so the pass reads them instead of writing an overlay test\n\nEvidence: the brief named only TestRenderCLIViews (status, show, help), and doctor views needed an overlay test in the temp dir"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

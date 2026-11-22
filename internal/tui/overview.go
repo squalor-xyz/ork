@@ -74,7 +74,8 @@ type ovRow struct {
 	worktreeGone      bool // the worktree path no longer exists (S153)
 	branch, worktree  string
 	live              *liveRun   // a live run's board cells, for the Running entry
-	detailCells       []string   // a live run's detail line, wrapped between cells
+	detailCells       []string   // detail line cells, wrapped between cells
+	engineDetail      bool       // full engine detail, balanced to avoid a lone last cell
 	run               *runRow    // a Running run's two-line form (S145)
 	layout            *runLayout // the Running section's shared line-1 layout (S145)
 	staleN            int        // the Running list's trailing `stale: N` line: the number of stale relay ledgers behind it (S333)
@@ -441,6 +442,8 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 				item += "  " + label
 			}
 			row := ovRow{unavailable: r.Unavailable, failure: r.Error, engineID: r.ID, state: r.State, pending: r.Pending, resumeWaiting: r.ResumeWaiting, kind: "", style: th.Title, project: i, name: name, id: r.ID, rest: item + "  " + rest, text: r.ID + "  " + item + "  " + rest, runID: true}
+			row.detailCells = append([]string{r.ID, item}, parts...)
+			row.engineDetail = true
 			ledger, steps := engineBoard(r)
 			for _, linked := range boardLedgers(s) {
 				if r.RelayRun != "" && linked.ID == r.RelayRun {
@@ -477,6 +480,7 @@ func (m *Model) rowsIn(active int) (needs, running []ovRow) {
 				}
 				for _, part := range row.stepParts {
 					row.text += "  " + part.text
+					row.detailCells = append(row.detailCells, part.text)
 				}
 			}
 			if r.Section(s.EngineRuns) == source.SectionNeeds {
@@ -1317,6 +1321,9 @@ func detailLines(r ovRow, w int, separator string) []string {
 	}
 	if len(cells) > 0 {
 		lines := packCells(cells, max(w-len(indent), 1))
+		if r.engineDetail {
+			lines = packEngineCells(cells, max(w-len(indent), 1))
+		}
 		for i := range lines {
 			lines[i] = indent + lines[i]
 		}
@@ -1659,6 +1666,7 @@ func (m *Model) runningRowsIn(active int) []ovRow {
 		if rows[i].live != nil {
 			rows[i].text = strings.Join(m.liveDetail(rows[i]), "  ")
 			rows[i].detailCells = liveFacts(rows[i])
+			rows[i].engineDetail = false
 		}
 	}
 	if active == runningEntry {
@@ -1867,6 +1875,45 @@ func packCells(cells []string, n int) []string {
 	}
 	if line != "" {
 		lines = append(lines, wrapText(line, n)...)
+	}
+	return lines
+}
+
+// packEngineCells keeps the last two cells together when they fit, moving the
+// preceding cell down only if doing so does not empty its original line.
+func packEngineCells(cells []string, n int) []string {
+	var groups [][]string
+	var line []string
+	width := 0
+	for _, cell := range cells {
+		if cell == "" {
+			continue
+		}
+		cw := lipgloss.Width(cell)
+		if len(line) > 0 && width+2+cw > n {
+			groups = append(groups, line)
+			line, width = nil, 0
+		}
+		if len(line) > 0 {
+			width += 2
+		}
+		line = append(line, cell)
+		width += cw
+	}
+	if len(line) > 0 {
+		groups = append(groups, line)
+	}
+	if last := len(groups) - 1; last > 0 && len(groups[last]) == 1 && len(groups[last-1]) > 1 {
+		prev := groups[last-1]
+		cell := prev[len(prev)-1]
+		if lipgloss.Width(cell)+2+lipgloss.Width(groups[last][0]) <= n {
+			groups[last-1] = prev[:len(prev)-1]
+			groups[last] = append([]string{cell}, groups[last]...)
+		}
+	}
+	var lines []string
+	for _, group := range groups {
+		lines = append(lines, packCells(group, n)...)
 	}
 	return lines
 }

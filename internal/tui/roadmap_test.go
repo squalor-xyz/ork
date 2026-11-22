@@ -353,6 +353,24 @@ func (l *roadmapLive) AnswerAction(ctx context.Context, a daemon.RunAction) (str
 	return "", l.Answer(ctx, a.Run, a.Text)
 }
 
+func TestRoadmapHeaderCountsParked(t *testing.T) {
+	for _, openStarted := range []bool{false, true} {
+		t.Run(fmt.Sprint(openStarted), func(t *testing.T) {
+			h := roadmapHarness(t)
+			h.m.projects[0].snap.Items.Value[3].Status = "parked"
+			want := "Roadmap  1 ready of 4, 2 open, 1 parked, 1 other"
+			if openStarted {
+				h.m.projects[0].snap.Items.Value[2].Status = "open"
+				want = "Roadmap  2 ready of 4, 3 open, 1 parked"
+			}
+			body := stripANSI(strings.Join(h.m.roadmap(100).body, "\n"))
+			if !strings.Contains(body, want) {
+				t.Fatalf("heading missing %q:\n%s", want, body)
+			}
+		})
+	}
+}
+
 func TestRoadmapHeaderCarriesCounts(t *testing.T) {
 	h := roadmapHarness(t)
 	body := strings.Join(h.m.roadmap(80).body, "\n")

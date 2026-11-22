@@ -21,4 +21,4 @@
                    │  slicer tui?
                    │[2m────────────────────────────────────────────────────────────[m
                    │ enter [2mgo to project[m; tab [2mviews[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
-                   │ daemon build differs: ork daemon restart | 4 projects
+                   │ restart daemon | 4 projects | refreshed 16:42:07

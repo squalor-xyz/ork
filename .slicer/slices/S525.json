@@ -1,0 +1,41 @@
+{
+  "id": "S525",
+  "title": "\"finds nothing\" and \"matches nothing\" mark a Check line as an empty-output check",
+  "lead": [
+    "A Check line worded \"finds nothing\", \"matches nothing\" or \"returns nothing\" is judged like \"prints nothing\" (adj 468): empty output with exit 0, or exit 1 from rg, grep or git grep, passes."
+  ],
+  "depends_note": null,
+  "findings_note": "2026-11-22, S240 (run ork-20261120-152559-6a31): the Check line \"`rg -n \"does not show ages\" docs/` finds nothing.\" went red on exit 1 with no output, because only \"prints nothing\" and \"must print nothing\" mark a row as empty-output (S419, adj 468). The slice was correct; the orchestrator reworded the line by hand.",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Spec writers use several wordings for the same intent. S419 recognised two; the others turn a correct no-match into a red check and a stopped round."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/brief.go:640-710` (`sliceCheckCommands`: the empty-output wordings)\n- `internal/engine/slicechecks_test.go`\n- `docs/guide.md` (writing Check lines)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestEmptyOutputWordings` in `internal/engine/slicechecks_test.go`: \"finds nothing\", \"matches nothing\" and \"returns nothing\" mark the row empty-output, as \"prints nothing\" does; \"finds the exception\" does not. Red today for the three new wordings."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Write the failing test and see it red.\n2. Extend the empty-output match in `sliceCheckCommands` to the three wordings, case-insensitive.\n3. Docs: `docs/guide.md` lists the accepted wordings. Changelog entry with `slicer changelog add S525 --text \"...\"`."
+    },
+    {
+      "heading": "Check",
+      "body": "Acceptance criteria:\n- A Check line worded finds nothing, matches nothing or returns nothing passes on an rg no-match, as prints nothing does.\n\nCommands:\n- `go test ./internal/engine -run TestEmptyOutputWordings -v`\n- `go vet ./...`\n- `go test ./...`\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": "One commit on the slice branch, message \"More wordings mark a Check line as empty-output\"."
+    }
+  ],
+  "notes": []
+}

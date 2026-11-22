@@ -5,7 +5,7 @@
 [90m2[m other                    │  C01 Visible progress
                            │  Across projects
                            │
-                           │[1;36mRoadmap  0 ready of 3, 2 open, 1 other[m
+                           │[1;36mRoadmap  0 ready of 3, 2 open, 1 parked[m
                            │  [90mNo pass (3)[m
                            │  [90m [m S11  Eleven                                                       --
                            │[1;7;97;44m    S12  Twelve                                                       --[m

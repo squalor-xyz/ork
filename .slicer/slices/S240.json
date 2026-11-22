@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`.\n- `go -C WORKTREE run ./cmd/ork help` shows the new status line within 80 columns.\n- `rg -n \"does not show ages\" docs/` finds nothing.\n- [HUMAN CHECK] After landing and a rebuild, with a paused run that has a multi-line question and a run in `checks`, the owner runs `ork status --project ork` in an 80-column terminal and reads: the ids, the times, the question, the counts."
+      "body": "- `go test -race -count=1 ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`.\n- `go run ./cmd/ork help` shows the new status line within 80 columns.\n- `rg -n \"does not show ages\" docs/` prints nothing.\n- [HUMAN CHECK] After landing and a rebuild, with a paused run that has a multi-line question and a run in `checks`, the owner runs `ork status --project ork` in an 80-column terminal and reads: the ids, the times, the question, the counts."
     },
     {
       "heading": "Git",

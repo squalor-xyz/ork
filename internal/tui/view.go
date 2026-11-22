@@ -730,7 +730,7 @@ func (m *Model) statusLine(w int) string {
 	} else if (m.cfg.BuildID != "" || m.cfg.DaemonBuild != "") && daemon.StaleBuild(m.cfg.BuildID, daemonBuild) {
 		// Empty builds are the seam for runs with no daemon info (tests).
 		// The behind notice replaces the stale marker while it is shown.
-		fields = append([]string{m.cfg.Theme.Warn.Render("daemon build differs: ork daemon restart")}, fields...)
+		fields = append([]string{m.cfg.Theme.Warn.Render("restart daemon")}, fields...)
 		notices = 1
 	}
 	// A vendor that the daemon remembers as out comes next after the daemon

@@ -333,10 +333,13 @@ func (m *Model) roadmap(w int) overviewView {
 		}
 	}
 	out.body = append(out.body, "")
-	ready, open := 0, 0
+	ready, open, parked := 0, 0, 0
 	for _, it := range s.Items.Value {
 		if it.Status == "open" {
 			open++
+		}
+		if it.Status == "parked" {
+			parked++
 		}
 		if readySlice(s, it) {
 			ready++
@@ -344,7 +347,14 @@ func (m *Model) roadmap(w int) overviewView {
 	}
 	summary := "all open"
 	if open != len(s.Items.Value) {
-		summary = fmt.Sprintf("%d open, %d other", open, len(s.Items.Value)-open)
+		counts := []string{fmt.Sprintf("%d open", open)}
+		if parked > 0 {
+			counts = append(counts, fmt.Sprintf("%d parked", parked))
+		}
+		if other := len(s.Items.Value) - open - parked; other > 0 {
+			counts = append(counts, fmt.Sprintf("%d other", other))
+		}
+		summary = strings.Join(counts, ", ")
 	}
 	if s.Items.Err != nil {
 		heading("Roadmap")

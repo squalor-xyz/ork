@@ -23,8 +23,8 @@
                            │
                            │
                            │[90m────────────────────────────────────────────────────────────────────────[m
-                           │  engine  S55  queued  12m  [......]  queued 12m
-                           │  implementer>reviewer>gate
+                           │  engine  S55  queued  12m  [......]
+                           │  queued 12m  implementer>reviewer>gate
                            │[90m────────────────────────────────────────────────────────────────────────[m
                            │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed 16:42:00

@@ -1,0 +1,39 @@
+{
+  "id": "S520",
+  "title": "give TestRenderCLIViews a status fixture with engine runs, a multi-line wait, findings and a relay row, so the status render shows the run rows",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #528 was decided to file it:\n\nProposal: give TestRenderCLIViews a status fixture with engine runs, a multi-line wait, findings and a relay row, so the status render shows the run rows\nRole: ui\nRun: ork-20261120-152559-6a31\nProject: ork\nItem: S240\nEvidence: the status.txt from `go test ./internal/cli -run TestRenderCLIViews -renders DIR` holds only three project headers and rebuild lines (render_test.go:25 uses statusRebuildFixture)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
