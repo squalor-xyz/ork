@@ -100,7 +100,7 @@ func TestVendorFieldsOnlyWhenAVendorIsOutAndTheTailOtherwise(t *testing.T) {
 	}
 	// The daemon notice stays in front of the vendor fields.
 	m.cfg.BuildID, m.cfg.DaemonBuild = "new", "old"
-	if line := stripANSI(m.statusLine(200)); !strings.HasPrefix(line, " daemon build differs: ork daemon restart | claude out until back") {
+	if line := stripANSI(m.statusLine(200)); !strings.HasPrefix(line, " restart daemon | claude out until back") {
 		t.Fatalf("the daemon notice must lead the line: %q", line)
 	}
 	m.cfg.BuildID, m.cfg.DaemonBuild = "", ""
@@ -111,6 +111,21 @@ func TestVendorFieldsOnlyWhenAVendorIsOutAndTheTailOtherwise(t *testing.T) {
 	m.Update(snapshotMsg{name: other.Project.Name, snap: other})
 	if line := stripANSI(m.statusLine(200)); strings.Count(line, "claude out until back") != 1 {
 		t.Fatalf("the vendor field repeats per project: %q", line)
+	}
+}
+
+// The stale-build notice is short, so both vendor fields stay on an 80-column
+// status line (S394, adj 429).
+func TestStaleNoticeLeavesRoomForTwoVendorsAt80(t *testing.T) {
+	both := []source.VendorOut{
+		{Vendor: "codex", Since: vendorOutAt, Until: vendorOutAt.Add(time.Hour)},
+		{Vendor: "claude", Since: vendorOutAt.Add(5 * time.Minute)}, // an owner mark
+	}
+	m := vendorModel(plainTheme(), 100, 30, both, "")
+	m.cfg.BuildID, m.cfg.DaemonBuild = "new", "old"
+	const want = " restart daemon | claude out until back | codex out until 17:02"
+	if line := stripANSI(m.statusLine(80)); !strings.HasPrefix(line, want) {
+		t.Fatalf("status line at 80 = %q, want it to start %q", line, want)
 	}
 }
 

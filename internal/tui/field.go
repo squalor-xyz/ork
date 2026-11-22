@@ -59,15 +59,28 @@ func (f textField) view(width int, th Theme) string {
 // parts splits the visible text at the cursor: what comes before it, the cursor
 // character (a space at the end) and what comes after, which the caller cuts to
 // the room that is left. The text before scrolls so the cursor stays in width.
+// Once its start has scrolled off, from 6 columns up, it begins with "..." so
+// the field says it has more (S394, *proposed*, adj 444).
 func (f textField) parts(width int) (before, cursor, after string) {
 	cursor, end := " ", f.cursor
 	if end < len(f.text) {
 		cursor = string(f.text[end])
 		end++
 	}
-	start := 0
-	for start < f.cursor && lipgloss.Width(string(f.text[start:f.cursor]))+lipgloss.Width(cursor) > width {
-		start++
+	fit := func(room int) int {
+		start := 0
+		for start < f.cursor && lipgloss.Width(string(f.text[start:f.cursor]))+lipgloss.Width(cursor) > room {
+			start++
+		}
+		return start
+	}
+	start := fit(width)
+	if start > 0 && width >= startCueWidth {
+		const mark = "..."
+		return mark + string(f.text[fit(width-len(mark)):f.cursor]), cursor, string(f.text[end:])
 	}
 	return string(f.text[start:f.cursor]), cursor, string(f.text[end:])
 }
+
+// startCueWidth is the narrowest field that shows the "..." start cue.
+const startCueWidth = 6

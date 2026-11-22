@@ -335,10 +335,13 @@ first. The header does not carry a `?help` cue: the hint line names `? help`
 right of the status line when it fits after the existing text.
 
 A stale or unknown daemon build puts
-`daemon build differs: ork daemon restart` first in the status line before
-the project and refresh fields, unless the behind notice is shown (see
-Self-hosting). The behind notice replaces the stale-build marker. At narrow
-widths, trailing fields are dropped first so the behind notice keeps priority.
+`restart daemon` first in the status line before the project and refresh
+fields, unless the behind notice is shown (see Self-hosting). *Proposed (S394,
+adj 429):* the notice is short, so two `V out until T` vendor fields still fit
+on an 80-column status line (80x24 with the sidebar hidden, or 100 columns and
+wider with it). The behind notice keeps its own text and its short form; it
+replaces the stale-build marker. At narrow widths, trailing fields are dropped
+first so the behind notice keeps priority.
 *Proposed (S103):* each non-empty snapshot `daemon_build` refreshes the build
 used for this marker. After `ork daemon restart` the marker clears on the next
 snapshot when the builds match, without reopening the TUI. An empty field
@@ -523,6 +526,15 @@ Decisions, the lineup, and text fields such as an answer). Outside those they
 do nothing but set the status line to `[ and ] switch projects` (S144; no
 layout cost). The help names `]` and `[` as next and previous "project or
 entry", since they also land on Running and Needs you.
+
+*Proposed (S394, adj 444):* a text field whose start has scrolled off begins
+with `...`, so the owner can tell that the field holds more than it shows. This
+holds for every one-line field: the answer and fix fields, the note and compose
+fields, the matrix edit field, the saved-wave name, the welcome path, the
+spec-check answer and the lineup budgets. A field that fits shows no `...`. A
+field narrower than 6 columns has no room for the mark and shows the plain
+tail.
+
 `1`-`9` select the first nine projects in the order the sidebar draws them,
 and the sidebar shows those numbers dimmed. `0` selects "Needs you"; the
 Running entry has no number. A number with no project does nothing. `tab` and
@@ -749,8 +761,11 @@ the text column, falling back to a shorter indent when needed to fit.
    For an engine run that has a ledger run, ork's heartbeat
    (`relay-run step --phase start`, every 10 minutes while a role runs) refreshes
    it, so a hung role's row does not reach `!!`; it can show an amber `!`
-   between two ticks. For an engine run with no ledger run, `!!` shows 30
-   minutes after the role started. The engine's watchdog (S182, *proposed*, `docs/design.md`)
+   between two ticks. For an engine run with no ledger run, *proposed (S394,
+   adj 427):* the cue counts from the role's last output (the `last_output` of
+   the run's working step), or from the role's start before its first output,
+   so `!!` shows 30 minutes after that. A role that wrote output 2 minutes ago
+   reads `heard 2m` with no cue, however long ago it started. The engine's watchdog (S182, *proposed*, `docs/design.md`)
    kills a role that sends nothing for 30 minutes (time the machine slept is
    not counted, S235, *proposed*) and pauses the run, so a hung
    engine run reaches Needs you as a paused run instead of waiting for the

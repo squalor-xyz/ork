@@ -22474,10 +22474,39 @@
       "id": "S394",
       "title": "TUI: text field start cue, short build notice, heard cue from last output",
       "short_title": "Field cue, build notice, heard cue",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ea3a17be-716c-4c9f-a46b-75e518669f8b",
+          "kind": "",
+          "text": "**2026-11-22** — Human checks at approval (S394):\n- later: At 80x24 and 100x30: `4` (Roadmap), press `N` and type past the field's width: the field starts with `...`. With a scratch daemon on an older build and `ork vendor out codex`, `ork vendor out claude` (scratch daemon only), the status line reads `restart daemon | claude out until back | codex out until ...` at 100x30, or at 80x24 with the sidebar hidden (`s`); at 80x24 with the sidebar showing the status line has 60 columns and drops the codex field.",
+          "created_at": "2026-11-22T03:05:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ab290b6f-a733-4ced-a133-9985a48e20cf",
+          "kind": "",
+          "text": "**2026-11-22** — S394 done: every text field whose start has scrolled off begins with `...`, the stale-build status notice reads `restart daemon` (both vendor fields fit on an 80-column status line), and an engine run with no ledger run counts its heard cue from the role's last output; fix round 1 corrected the docs and the slice's Check wording.",
+          "created_at": "2026-11-22T03:05:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -22495,7 +22524,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
