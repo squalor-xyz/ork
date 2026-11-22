@@ -111,6 +111,49 @@ func TestEngineJoinUsesRelayLink(t *testing.T) {
 	}
 }
 
+func TestEngineDetailWrapsBetweenCells(t *testing.T) {
+	for _, width := range []int{70, 58} {
+		t.Run(fmt.Sprint(width), func(t *testing.T) {
+			h := newHarness(t, proj("ork", false))
+			h.start()
+			s := engineSnapshot(t, "stopped", "ledger")
+			s.EngineRuns[0].ID = "ork-20261019-164000-abcd"
+			s.EngineRuns[0].UpdatedAt = h.now.Add(-48 * time.Hour)
+			h.m.apply(snapshotMsg{name: "ork", snap: s})
+			for _, row := range h.m.cursorRows() {
+				if row.engineID != s.EngineRuns[0].ID {
+					continue
+				}
+				got := strings.Join(detailLines(row, width+len(indent), "·"), "\n")
+				want := indent + "ork-20261019-164000-abcd  S22  stopped  owner action\n" + indent + "2 of 6 steps  2d ago"
+				if got != want {
+					t.Fatalf("detail at width %d: got %q, want %q", width, got, want)
+				}
+				return
+			}
+			t.Fatal("stopped engine row missing")
+		})
+	}
+}
+
+func TestPackCellsLeavesNoLoneLastCell(t *testing.T) {
+	for _, tc := range []struct {
+		name  string
+		cells []string
+		width int
+		want  string
+	}{
+		{"rebalance", []string{"aaaa", "bbbb", "cccc"}, 10, "aaaa\nbbbb  cccc"},
+		{"cannot-join", []string{"a", "b", "ccccccccc"}, 10, "a  b\nccccccccc"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := strings.Join(packEngineCells(tc.cells, tc.width), "\n"); got != tc.want {
+				t.Fatalf("packed cells: got %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestGoldenEngineRuns(t *testing.T) {
 	for _, state := range []string{"setup", "implement", "checks", "review", "gate", "awaiting-approval", "commit", "finish", "committed", "paused", "stopped"} {
 		for _, size := range []struct{ w, h int }{{80, 24}, {100, 30}} {
