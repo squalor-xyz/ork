@@ -1,0 +1,39 @@
+{
+  "id": "S527",
+  "title": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261122-035954-42fc, project ork, item S249:\n\nallow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output\n\nEvidence: go -C WORKTREE doc ./internal/adjcli Client.Init was denied with \"This command requires approval\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

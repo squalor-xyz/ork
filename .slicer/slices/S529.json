@@ -1,0 +1,39 @@
+{
+  "id": "S529",
+  "title": "tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261122-043418-2637, project ork, item S399:\n\ntell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures\n\nEvidence: the implementer reported 323 failures (setsockopt operation not permitted), but go test ./... passes in this reviewer run"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

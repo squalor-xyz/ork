@@ -1,0 +1,39 @@
+{
+  "id": "S530",
+  "title": "say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261122-043418-2637, project ork, item S399:\n\nsay in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite\n\nEvidence: implementer-1 reported \"Tests: 8461 passed, 323 failed\" from setsockopt errors, while ork's round check and the reviewer's run were all ok"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

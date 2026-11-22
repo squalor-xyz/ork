@@ -6187,3 +6187,11 @@
 {"when": "2026-11-22T05:12:18Z", "item": "S399", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S399):", "by": "Jon Robbins"}
 {"when": "2026-11-22T05:12:18Z", "item": "S399", "action": "note", "from": "", "to": "", "note": "O leads the Roadmap hint; help and refusal share project ava", "by": "Jon Robbins"}
 {"when": "2026-11-22T05:12:19Z", "item": "S399", "action": "status", "from": "started", "to": "done", "note": "O leads the Roadmap hint; help and refusal share project availability, and cursor restoration skips pre-exit reads, requests a fresh daemon refresh, and cancels on item-list errors or owner cursor movement.", "by": "Jon Robbins"}
+{"when": "2026-11-22T04:41:36Z", "item": "S527", "action": "add", "from": "", "to": "open", "note": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output"}
+{"when": "2026-11-22T04:41:36Z", "item": "S527", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T04:58:40Z", "item": "S528", "action": "add", "from": "", "to": "open", "note": "allow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated"}
+{"when": "2026-11-22T04:58:40Z", "item": "S528", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T05:10:43Z", "item": "S529", "action": "add", "from": "", "to": "open", "note": "tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures"}
+{"when": "2026-11-22T05:10:43Z", "item": "S529", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T05:12:17Z", "item": "S530", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite"}
+{"when": "2026-11-22T05:12:17Z", "item": "S530", "action": "promote", "from": "", "to": "", "note": ""}
