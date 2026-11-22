@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-525 items · — 45 · done 361 · retired 119
+525 items · — 44 · done 362 · retired 119
 
 ## v1.3
 
@@ -284,7 +284,7 @@ v1.2
 | 227 | [S522](slices/S522.md) | name the golden files in the UI-pass brief when a slice adds CLI goldens, so the pass reads them instead of writing an overlay test |  | - |  | Folded into S499 (render test fixtures; the brief names the render command). · discovered from S434 | retired |
 | 228 | [S523](slices/S523.md) | Give the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule |  | - |  | discovered from S400 | — |
 | 229 | [S524](slices/S524.md) | Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator |  | - |  | discovered from S400 | — |
-| 230 | [S525](slices/S525.md) | More prints-nothing wordings | S | 1 |  | 2026-11-22, S240 (run ork-20261120-152559-6a31): the Check line "`rg -n "does not show ages" docs/` finds nothing." went red on exit 1 with no output, because only "prints nothing" and "must print nothing" mark a row as empty-output (S419, adj 468). The slice was correct; the orchestrator reworded the line by hand. | — |
+| 230 | [S525](slices/S525.md) | More prints-nothing wordings | S | 1 |  | 2026-11-22, S240 (run ork-20261120-152559-6a31): the Check line "`rg -n "does not show ages" docs/` finds nothing." went red on exit 1 with no output, because only "prints nothing" and "must print nothing" mark a row as empty-output (S419, adj 468). The slice was correct; the orchestrator reworded the line by hand. | done |
 
 ---
 

@@ -18,11 +18,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/brief.go:640-710` (`sliceCheckCommands`: the empty-output wordings)\n- `internal/engine/slicechecks_test.go`\n- `docs/guide.md` (writing Check lines)"
+      "body": "- `internal/engine/brief.go:734-750` (`sliceCheckCommands`: the empty-output wordings)\n- `internal/engine/slicechecks_test.go:377-410` (`TestEmptyOutputWordings` and `TestEmptyOutputWordingsRgNoMatch`)\n- `docs/guide.md:574-583` (writing Check lines)"
     },
     {
       "heading": "Failing tests",
-      "body": "- `TestEmptyOutputWordings` in `internal/engine/slicechecks_test.go`: \"finds nothing\", \"matches nothing\" and \"returns nothing\" mark the row empty-output, as \"prints nothing\" does; \"finds the exception\" does not. Red today for the three new wordings."
+      "body": "- `TestEmptyOutputWordings` in `internal/engine/slicechecks_test.go`, beside `TestPrintsNothingWordingIsMarked`: \"finds nothing\", \"matches nothing\" and \"returns nothing\" mark the row empty-output, including mixed case, as \"prints nothing\" does; \"finds the exception\" does not. Red today for the three new wordings.\n- `TestEmptyOutputWordingsRgNoMatch` in the same file: each new wording passes on an empty rg exit 1 using `printsNothingRow`."
     },
     {
       "heading": "Implement",

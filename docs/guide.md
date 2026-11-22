@@ -574,7 +574,8 @@ The roles run in this order (`docs/design.md:391-631`):
 **Writing Check lines.** Before the gate, ork runs each backticked plain
 command in the slice's Check section (`docs/design.md`, slice checks). *Proposed
 (S419, `checks.prints-nothing-exit`, adj 468):* word a line that finds nothing
-as "prints nothing" (or "must print nothing"). Such a line passes when its
+as "prints nothing", "must print nothing", "finds nothing", "matches nothing"
+or "returns nothing" (case-insensitive; S525). Such a line passes when its
 output is empty and its exit is 0, or 1 from `rg`, `grep` or `git grep` (their
 no-match code). Output, exit 2 or more, or exit 1 from any other command
 fails it. ork does not run a piped line; the orchestrator runs it and judges it

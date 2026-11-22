@@ -740,10 +740,10 @@ func sliceCheckCommands(raw string) []sliceCheckCommand {
 		parts := strings.Split(entry, "`")
 		for i := 1; i+1 < len(parts); i += 2 {
 			if command := strings.TrimSpace(parts[i]); command != "" {
-				// "prints nothing" and "must print nothing" are both empty-output
-				// checks (S419, adj 468).
+				// These wordings share the empty-output rule (S419, S525, adj 468).
 				lower := strings.ToLower(entry)
-				empty := strings.Contains(lower, "prints nothing") || strings.Contains(lower, "must print nothing")
+				empty := strings.Contains(lower, "prints nothing") || strings.Contains(lower, "must print nothing") ||
+					strings.Contains(lower, "finds nothing") || strings.Contains(lower, "matches nothing") || strings.Contains(lower, "returns nothing")
 				commands = append(commands, sliceCheckCommand{command: command, empty: empty})
 			}
 		}

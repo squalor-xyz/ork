@@ -6152,3 +6152,9 @@
 {"when": "2026-11-22T03:39:35Z", "item": "S522", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 (render test fixtures; the brief names the render command)."}
 {"when": "2026-11-22T03:39:35Z", "item": "S519", "action": "retire", "from": "open", "to": "retired", "note": "Not adopted (adj 519 brief-first); CLI renders come from S475's -renders flag."}
 {"when": "2026-11-22T03:39:35Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Merged S520 and S522 (2026-11-22).", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:58:42Z", "item": "S525", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:59:01Z", "item": "S525", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T03:59:01Z", "item": "S525", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T04:00:49Z", "item": "S525", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T04:16:03Z", "item": "S525", "action": "note", "from": "", "to": "", "note": "finds nothing, matches nothing and returns nothing now mark ", "by": "Jon Robbins"}
+{"when": "2026-11-22T04:16:03Z", "item": "S525", "action": "status", "from": "started", "to": "done", "note": "finds nothing, matches nothing and returns nothing now mark Check lines as empty-output checks, including passing an empty rg exit 1.", "by": "Jon Robbins"}
