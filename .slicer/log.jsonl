@@ -6119,3 +6119,7 @@
 {"when": "2026-11-22T02:58:36Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Scope widened 2026-11-22 (owner, adj 528 folded in): a statu", "by": "Jon Robbins"}
 {"when": "2026-11-22T02:58:36Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-22: adj 530 ui.status-finding-file-li", "by": "Jon Robbins"}
 {"when": "2026-11-22T02:58:42Z", "item": "S517", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S516 (create the renders directory before the UI role starts)."}
+{"when": "2026-11-22T02:59:21Z", "item": "S520", "action": "add", "from": "", "to": "open", "note": "give TestRenderCLIViews a status fixture with engine runs, a multi-line wait, findings and a relay row, so the status render shows the run rows"}
+{"when": "2026-11-22T02:59:21Z", "item": "S520", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:05:00Z", "item": "S521", "action": "add", "from": "", "to": "open", "note": "let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed"}
+{"when": "2026-11-22T03:05:00Z", "item": "S521", "action": "promote", "from": "", "to": "", "note": ""}
