@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-519 items · — 45 · done 359 · retired 115
+519 items · — 44 · done 359 · retired 116
 
 ## v1.3
 
@@ -276,7 +276,7 @@ v1.2
 | 219 | [S514](slices/S514.md) | Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section |  | - |  | Folded into S499 (render test fixtures, adj 513/514/515/517). · discovered from S389 | retired |
 | 220 | [S515](slices/S515.md) | flag when a pane field that one mode overwrites is read as a default by another mode |  | - |  | discovered from S355 | — |
 | 221 | [S516](slices/S516.md) | create the renders directory before starting the UI role, or say in the prompt that the role must create it |  | - |  | discovered from S355 | — |
-| 222 | [S517](slices/S517.md) | create the renders directory before the UI role starts |  | - |  | discovered from S394 | — |
+| 222 | [S517](slices/S517.md) | create the renders directory before the UI role starts |  | - |  | Duplicate of S516 (create the renders directory before the UI role starts). · discovered from S394 | retired |
 | 223 | [S518](slices/S518.md) | flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph |  | - |  | discovered from S394 | — |
 | 224 | [S519](slices/S519.md) | allow go -C WORKTREE run ./cmd/ork help in the reviewer allowlist so the slice's Check line can be run as written |  | - |  | discovered from S240 | — |
 
