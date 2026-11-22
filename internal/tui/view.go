@@ -965,7 +965,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			if h == m.keys.Launch.Help() && m.view == roadmapView {
 				text := "l launch a ready slice (Roadmap)"
-				slicerTui := m.itemPane == nil && m.active >= 0 && m.projects[m.active].loaded && !m.projects[m.active].snap.Unavailable && !m.projects[m.active].setup()
+				slicerTui := m.itemPane == nil && m.slicerTuiProjectReady()
 				if m.itemPane == nil {
 					text += "; m matrix"
 				}
