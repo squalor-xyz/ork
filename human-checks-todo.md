@@ -250,3 +250,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S389 (run ork-20261120-145742-cab5, 2026-11-20)
 
 - [ ] UI pass (r14): `ork show RUN` with three entries reads clearly at 80 columns.
+
+## S394 (run ork-20261120-152522-c419, 2026-11-22)
+
+- [ ] At 80x24 and 100x30: `4` (Roadmap), press `N` and type past the field's width: the field starts with `...`. With a scratch daemon on an older build and `ork vendor out codex`, `ork vendor out claude` (scratch daemon only), the status line reads `restart daemon | claude out until back | codex out until ...` at 100x30, or at 80x24 with the sidebar hidden (`s`); at 80x24 with the sidebar showing the status line has 60 columns and drops the codex field.
