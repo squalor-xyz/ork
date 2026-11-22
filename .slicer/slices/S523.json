@@ -1,0 +1,39 @@
+{
+  "id": "S523",
+  "title": "Give the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261122-031627-c98e, project ork, item S400:\n\nGive the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule\n\nEvidence: the Check command `go test ./internal/tui -run 'FixRoundReal|EngineDetail|PackCells|RoadmapHeader' -v` cannot be run as written; an unquoted `|` in `-run` is denied as multiple operations"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
