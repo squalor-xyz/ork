@@ -6195,3 +6195,5 @@
 {"when": "2026-11-22T05:10:43Z", "item": "S529", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-22T05:12:17Z", "item": "S530", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite"}
 {"when": "2026-11-22T05:12:17Z", "item": "S530", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T08:18:55Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-22T08:18:55Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Check"}
