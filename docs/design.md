@@ -1501,7 +1501,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   `Decision key: area.topic` anywhere in the section. The key must be lowercase
   and dotted; a malformed or repeated key is a `role.report-shape` error.
   The full section and its optional key are stored with the question. A key
-  enables optional adj filing of the owner's answer in the TUI.
+  lets the daemon file the owner's answer in adj (S355, below).
 - **Tool feedback** (relay v12, `relay.tool-feedback`, adj 325). Any role may
   end its report with up to 3 lines `tool feedback: N. ROLE | tool: slicer|ork|NAME
   | kind: friction|feature|deterministic-check | proposal: TEXT | evidence: TEXT`.
@@ -1643,9 +1643,25 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   `question`) and is recorded in `questions[]`. `Answer` resumes the same
   role with the question and the answer. The pending answer stays in the
   run record until the resumed role ends, so recovery can put it in the
-  next brief after a crash. Optional answer filing is S28; when it
+  next brief after a crash. Answer filing is S28; when it
   files, `adj ask` runs in the project's main checkout (`Engine.AdjRoot`),
-  never in a worktree.
+  never in a worktree. *Proposed (S355; owner decisions owner.run-answers-scope
+  = daemon-noadj, adj 524, and owner.run-answers-off-switch = per-pane, adj
+  525; builds on adj 327):* `run.answer` files the answer in adj by default for
+  every caller (`ork answer`, the TUI). It files when the pending question has a
+  decision key, the project has adj, the registry's `file_answers` is not off
+  and an owner resolves with `engine.ResolveOwner`: the caller's `by`, else the
+  registry's `owner`. The TUI sends its `ADJ_DECIDED_BY` as `by`; `ork answer`
+  sends no name, so for it only the owner setting applies. The wire field
+  `no_adj` opts one call out; the run pane's ctrl+a sets it for that pane only.
+  A caller that sends `adj` explicitly is still refused when no owner is known;
+  a default call with no owner files nothing and its reply says `no owner set;
+  run ork settings set --owner NAME (answer not filed in adj)`. With
+  `file_answers` off, a call that would have been filed (not `no_adj`, a key,
+  a project with adj) files nothing and says `file_answers is off; answer not
+  filed in adj (ork settings set --file-answers on)`. Ledger answers
+  (`relay.answer`) and finding answers are unchanged and still need
+  `ADJ_DECIDED_BY`.
 - **Stops.** `rate_limited` and `error` exits fall back while a next row
   remains (adj 156); otherwise they stop with the reason. Auth and
   unclassified exits, unsuccessful rounds with permission denials, and a
@@ -3672,8 +3688,9 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   are filed in adj`, `[ok] owner  NAME (SOURCE); spec answers not filed
   (file_answers off)` and `[--] owner  not set; spec answers not filed: ork
   settings set --owner NAME`. SOURCE is `ADJ_DECIDED_BY` when the variable is
-  set, else `setting`. The line speaks of spec answers only: run answers and
-  ledger answers still need `ADJ_DECIDED_BY`. JSON has `owner` (empty when
+  set, else `setting`. The line speaks of spec answers only (*proposed, S355:*
+  run answers also use the setting and `file_answers`, but the line does not
+  say so); ledger answers still need `ADJ_DECIDED_BY`. JSON has `owner` (empty when
   unset), `owner_source` (`environment`, `setting` or empty) and
   `file_answers` (the registry's value, true when the key is absent; false
   when the registry could not be read). The line does not change `ok` or the

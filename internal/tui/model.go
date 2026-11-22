@@ -1530,6 +1530,7 @@ type runAction struct {
 	check                    int    // check: the one-based human check
 	state                    string // check: ticked, later or "" for open
 	adj                      bool
+	noAdj                    bool // answer: ctrl+a turned adj filing off for this pane (S355)
 	by                       string
 	cleanupCommand           string
 	worktreeGone             bool // cleanup: the daemon skips git worktree remove, so the confirm omits it (S153)
@@ -1896,10 +1897,15 @@ func (m *Model) requestAction(verb string) tea.Cmd {
 			a.findingTitle = f.Title
 		}
 		_, reason := m.paneAdjKey()
-		a.adj = m.pane.adj && reason == ""
-		if a.adj || a.finding > 0 {
-			a.by = os.Getenv("ADJ_DECIDED_BY")
+		// A run question asks the daemon for no filing flag: it files by default
+		// when an owner is known, and ctrl+a sends no_adj (S355, adj 524, adj 525).
+		// A finding answer still asks for its filing.
+		if a.finding > 0 {
+			a.adj = m.pane.findingAdj && reason == ""
+		} else {
+			a.noAdj = !m.pane.adj && reason == ""
 		}
+		a.by = os.Getenv("ADJ_DECIDED_BY")
 	}
 	if verb == "approve" {
 		// The prompt and the status line name the slice the approval lands.
@@ -2032,7 +2038,7 @@ func (m *Model) callAction(a runAction) tea.Cmd {
 				err = errors.New("this daemon connection cannot file slices")
 			}
 		case "answer":
-			message, err = live.AnswerAction(context.Background(), daemon.RunAction{Run: a.run, Text: a.text, Adj: a.adj, By: a.by, Finding: a.finding})
+			message, err = live.AnswerAction(context.Background(), daemon.RunAction{Run: a.run, Text: a.text, Adj: a.adj, NoAdj: a.noAdj, By: a.by, Finding: a.finding})
 		}
 		return actionMsg{action: a, err: err, message: message}
 	}

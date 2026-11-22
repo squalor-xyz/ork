@@ -18,7 +18,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/daemon/runs.go`\n- `internal/tui/pane.go`\n- `internal/engine/answer_adj.go`\n- `docs/design.md`\n- `docs/dashboard.md`\n- `CHANGELOG.md`"
+      "body": "- `internal/daemon/runs.go`\n- `internal/daemon/answer_adj_test.go`\n- `internal/tui/pane.go`\n- `internal/tui/model.go`\n- `internal/tui/keys.go`\n- `internal/tui/pane_test.go`\n- `internal/tui/follow_test.go`\n- `testdata/golden/pane-question-adj-narrow-on-unset.txt`\n- `testdata/golden/pane-question-adj-on-mono-true.txt`\n- `testdata/golden/pane-question-adj-on-mono-false.txt`\n- `internal/engine/answer_adj.go`\n- `docs/design.md`\n- `docs/dashboard.md`\n- `docs/guide.md`\n- `docs/state.md`\n- `landed-changed/S355.md`"
     },
     {
       "heading": "Failing tests",

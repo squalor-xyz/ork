@@ -26,5 +26,5 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │ enter [2msubmit[m; ctrl+a [2mfile in adj[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
+                           │ enter [2msubmit[m; ctrl+a [2mno adj[m; pgup/pgdown [2mline[m; esc [2mclose pane[m
                            │ 1 project | refreshed 16:42:00

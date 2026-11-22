@@ -100,9 +100,10 @@ Notes on the fields:
   owner.name-source, owner.filing-default, owner.setting-store; adj 228, 229)
   are new in version 3. `owner` is the owner's name for adj: the daemon files
   the answers to spec questions under it when `ADJ_DECIDED_BY` is not set in
-  the caller's environment (the variable wins). It is one line; absent means
+  the caller's environment (the variable wins). *Proposed (S355):* the answers
+  to run questions are filed under it too. It is one line; absent means
   unset. `file_answers` is a boolean: absent means on, and ork writes it only
-  as `false`, which turns that filing off. `ork settings set --owner NAME` and
+  as `false`, which turns that filing off, for run answers as well. `ork settings set --owner NAME` and
   `--file-answers on|off` write them. An ork without S314 refuses a version 3
   file with a version error.
 - `check_command` is a fallback. ork prefers slicer's config key

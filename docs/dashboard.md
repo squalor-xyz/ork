@@ -1166,13 +1166,25 @@ The actions follow the state (`ui.answer-pane-scope`):
   previous rune, ctrl-u clears the field, and left/right move the cursor.
   Terminal paste inserts at the cursor and strips CR and LF, keeping one
   answer line; paste never submits (`ui.text-field`).
-  Ctrl+a toggles optional filing in adj, off whenever the pane opens. The footer
-  shows `[ ] file answer in adj as KEY`; when on, `[x]` is
-  highlighted. A dim, inert line names why filing is disabled: `adj filing off:
+  *Proposed (S355; owner decisions adj 524, adj 525):* filing the answer in adj
+  is on whenever the pane opens, and Ctrl+a turns it off for this pane only
+  (a new pane, or the next run the pane follows, starts on again). The footer
+  shows `[x] file answer in adj as KEY` (highlighted) when on and
+  `[ ] file answer in adj as KEY` when off. A dim, inert line names why filing is disabled: `adj filing off:
   no adj in this project` or `adj filing off: question has no decision key`.
-  Filing requires the caller's `ADJ_DECIDED_BY`. When on with that value unset,
-  the toggle also warns `ADJ_DECIDED_BY unset`. Submitting refuses the answer
-  before launching an action, making an adj call or setting a run error.
+  The pane sends no filing flag of its own: the daemon files the answer when
+  the question has a key, the project has adj, `file_answers` is not off and an
+  owner is known (the TUI's `ADJ_DECIDED_BY`, else the owner setting from
+  `ork settings set --owner NAME`). After Ctrl+a the request carries `no_adj`
+  and the daemon files nothing. The pane does not read the owner setting, so it
+  cannot warn about a missing owner: with none known the daemon files nothing
+  and its notice `no owner set; run ork settings set --owner NAME (answer not
+  filed in adj)` shows in the status. With `file_answers` off the toggle still
+  shows `[x]`, and the status says `file_answers is off; answer not filed in
+  adj (ork settings set --file-answers on)`. The hint for the key reads `ctrl+a
+  no adj` while filing is on and `ctrl+a file in adj` while it is off. Owner
+  findings keep their own filing flag: answering or leaving one does not change
+  what ctrl+a set for run questions.
   ork checks the exact key, asks if missing or closed, and decides the open
   record with the typed answer. Success shows `decided in adj as #N`.
   An existing decision resumes the role and shows `KEY already decided as #N;
@@ -1180,7 +1192,9 @@ The actions follow the state (`ui.answer-pane-scope`):
   an ask left open by a failed decide. Short panes keep the Answer field,
   status, enabled toggle, off/disabled toggle and command preview
   in that priority order, dropping the lowest priority lines first.
-  This toggle is available only in the TUI; `ork answer` does not file in adj.
+  *Proposed (S355):* `ork answer` has no toggle; it files by the same daemon
+  default, so an answer to a keyed question is filed whenever an owner is
+  known.
 - Paused with `pending: budget`: show the reason; the hint lists `t retry`
   when available. Retry grants exactly one
   role round, then the budget check applies again (`run.budget-resume`).

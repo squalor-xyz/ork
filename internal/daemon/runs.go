@@ -95,6 +95,10 @@ type RunAction struct {
 	// and then approves.
 	All         bool `json:"all,omitempty"`
 	LaterChecks bool `json:"later_checks,omitempty"`
+	// S355 (*proposed*; adj 524, adj 525): run.answer files the answer in adj by
+	// default when an owner is known (the caller's By, else the registry's owner);
+	// NoAdj opts this call out.
+	NoAdj bool `json:"no_adj,omitempty"`
 }
 
 // RunPlan is checkpoint 1 (run.launch-wire).
@@ -2232,6 +2236,48 @@ func (d *Daemon) fileWaitingAnswerLocked(ctx context.Context, r *managedRun, p R
 	return notice, nil
 }
 
+// runAnswerFilingLocked says whether a run.answer is filed in adj and under
+// whose name (S355, *proposed*; adj 524, adj 525). The owner is the caller's By,
+// else the registry's owner. The daemon files by default when the question has
+// a decision key, the project uses adj and an owner is known; NoAdj opts the
+// call out, and the registry's file_answers off stops it for every caller. An
+// explicit Adj files without the project check and is refused later when no
+// owner is known. The notice says why a wanted filing did not happen (no
+// owner, or file_answers off in a project that has adj). The
+// caller holds the manager lock and has checked that a question is pending.
+func (d *Daemon) runAnswerFilingLocked(rec runrec.Record, p RunAction) (adj bool, by, notice string) {
+	by = strings.TrimSpace(p.By)
+	f, err := d.loadRunRegistryLocked()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "answer %s: %v\n", p.Run, err)
+	}
+	if f == nil {
+		return p.Adj && !p.NoAdj, by, ""
+	}
+	by = engine.ResolveOwner(p.By, f.Owner)
+	if p.NoAdj || rec.Pending.Key == "" {
+		return false, by, ""
+	}
+	proj, _ := find(f, rec.Project)
+	if !f.FileAnswersOn() {
+		// An answer that would have been filed says why it was not.
+		if p.Adj || proj.Adj {
+			return false, by, "file_answers is off; answer not filed in adj (ork settings set --file-answers on)"
+		}
+		return false, by, ""
+	}
+	if p.Adj {
+		return true, by, ""
+	}
+	if !proj.Adj {
+		return false, by, ""
+	}
+	if by == "" {
+		return false, by, "no owner set; run ork settings set --owner NAME (answer not filed in adj)"
+	}
+	return true, by, ""
+}
+
 // resumeJob is the job of an answer or a retry of a paused run. Both the owner
 // action and a waiting resume that starts later run it. A filed adj notice
 // goes to message when it is not nil.
@@ -2443,10 +2489,13 @@ func (d *Daemon) ownerRunReply(ctx context.Context, method string, p RunAction) 
 			d.runs.mu.Unlock()
 			return RunReply{}, errors.New("run needs a pending question and a non-empty answer")
 		}
+		var notFiled string
+		p.Adj, p.By, notFiled = d.runAnswerFilingLocked(rec, p)
 		if p.Adj && rec.Pending.Key != "" && strings.TrimSpace(p.By) == "" {
 			d.runs.mu.Unlock()
-			return RunReply{}, errors.New("ADJ_DECIDED_BY is unset; set it in the caller before filing an answer in adj")
+			return RunReply{}, errors.New("ADJ_DECIDED_BY is unset and no owner is set; set it in the caller or run ork settings set --owner NAME before filing an answer in adj")
 		}
+		message = notFiled
 		fn = d.resumeJob(r, method, p, &message)
 		resume = &runrec.ResumeRequest{Method: runrec.ResumeAnswer, Text: p.Text, Adj: p.Adj, By: p.By}
 	case MethodRunRetry:

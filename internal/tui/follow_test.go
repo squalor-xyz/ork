@@ -231,11 +231,12 @@ func TestPaneSwitchStaysInTheSameProject(t *testing.T) {
 func TestPaneSwitchResetsScrollOffsetAndAnswerState(t *testing.T) {
 	h := followHarness(t)
 	h.m.pane.offset = 4
-	h.m.pane.answered, h.m.pane.answerState, h.m.pane.adj = true, "paused", true
+	h.m.pane.answered, h.m.pane.answerState, h.m.pane.adj = true, "paused", false
 	h.m.actionStatus = "answered"
 	h.applyRuns([]source.EngineRun{followRun("A", "S27", "committed", 10*time.Minute), followRun("B", "S28", "review", time.Minute)})
 	p := h.m.pane
-	if p.run != "B" || p.offset != 0 || p.answered || p.adj || p.answerState != "" || h.m.actionStatus != "" {
+	// A fresh pane files in adj again: ctrl+a is per pane (adj 525).
+	if p.run != "B" || p.offset != 0 || p.answered || !p.adj || p.answerState != "" || h.m.actionStatus != "" {
 		t.Fatalf("the switch must start a fresh pane: %+v status %q", p, h.m.actionStatus)
 	}
 }

@@ -1,0 +1,39 @@
+{
+  "id": "S516",
+  "title": "create the renders directory before starting the UI role, or say in the prompt that the role must create it",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261120-152521-6bf4, project ork, item S355:\n\ncreate the renders directory before starting the UI role, or say in the prompt that the role must create it\n\nEvidence: the first overlay run failed with \"open .../tmp/ui-1/renders/pane-question-adj-on-80x24.txt: no such file or directory\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
