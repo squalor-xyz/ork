@@ -30,6 +30,7 @@ type Call struct {
 	Args    []string      // arguments after the binary
 	Dir     string        // working directory; empty keeps the caller's
 	Env     []string      // full environment; nil inherits the caller's
+	Stdin   []byte        // optional input; nil supplies no stdin
 	Timeout time.Duration // deadline; zero means DefaultTimeout
 }
 
@@ -133,6 +134,9 @@ func Run(ctx context.Context, c Call) (Result, error) {
 	cmd := exec.CommandContext(tctx, c.Bin, c.Args...)
 	cmd.Dir = c.Dir
 	cmd.Env = c.Env
+	if c.Stdin != nil {
+		cmd.Stdin = bytes.NewReader(c.Stdin)
+	}
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 	cmd.WaitDelay = waitDelay

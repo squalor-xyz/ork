@@ -4,15 +4,85 @@ package daemon
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"slices"
 	"strings"
 
+	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
+
+// MatrixApplyParams passes slicer's change set through without interpreting
+// its operations. Slicer owns validation and the atomic write.
+type MatrixApplyParams struct {
+	Project string          `json:"project"`
+	Set     json.RawMessage `json:"set"`
+	DryRun  bool            `json:"dry_run,omitempty"`
+}
+
+// MatrixApplyResult preserves slicer's result and adds adapter warnings.
+type MatrixApplyResult struct {
+	Slicer   json.RawMessage `json:"slicer"`
+	Warnings []string        `json:"warnings"`
+}
+
+func (d *Daemon) matrixApply(ctx context.Context, p MatrixApplyParams) (*MatrixApplyResult, error) {
+	if p.Project == "" {
+		return nil, badParams(errors.New("matrix.apply needs a project"))
+	}
+	var set map[string]json.RawMessage
+	if err := json.Unmarshal(p.Set, &set); err != nil || set == nil {
+		return nil, badParams(errors.New("matrix.apply set must be a JSON object"))
+	}
+	_, ops := set["ops"]
+	_, replace := set["replace"]
+	if ops == replace {
+		return nil, badParams(errors.New("matrix.apply set needs exactly one of ops and replace"))
+	}
+	project, err := d.registered(p.Project)
+	if err != nil {
+		return nil, err
+	}
+	raw, err := d.runDeps(project).Slicer.RelayRolesApply(ctx, runrec.Writer{}, project.Path, p.Set, p.DryRun)
+	if err != nil {
+		var exit *clirun.ExitError
+		if errors.As(err, &exit) && exit.Tool == nil && exit.Result.ExitCode == 2 &&
+			strings.Contains(string(exit.Result.Stderr), "invalid choice: 'apply'") {
+			return nil, &ipc.Error{Code: "slicer_too_old", Message: "slicer relay-roles apply is not available in this slicer; upgrade slicer (ork doctor --upgrade)"}
+		}
+		return nil, err
+	}
+	var result struct {
+		Rows  []slicercli.Row `json:"rows"`
+		Steps []struct {
+			Op      string `json:"op"`
+			ID      string `json:"id"`
+			Changed bool   `json:"changed"`
+		} `json:"steps"`
+	}
+	if err := json.Unmarshal(raw, &result); err != nil {
+		return nil, err
+	}
+	changed := map[string]bool{}
+	for _, step := range result.Steps {
+		if (step.Op == "add" || step.Op == "set") && step.Changed {
+			changed[step.ID] = true
+		}
+	}
+	out := &MatrixApplyResult{Slicer: raw, Warnings: []string{}}
+	for _, row := range result.Rows {
+		if changed[row.ID] && matrixAdapters[strings.ToLower(row.Agent)] == "" {
+			out.Warnings = append(out.Warnings, fmt.Sprintf("%s: agent %q has no ork adapter: a plan skips this row", row.ID, row.Agent))
+		}
+	}
+	return out, nil
+}
 
 // RolesMatrixParams selects the project whose role matrix roles.matrix reads.
 type RolesMatrixParams struct {

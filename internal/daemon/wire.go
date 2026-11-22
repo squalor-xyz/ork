@@ -29,6 +29,7 @@ const (
 	MethodWaveList       = "wave.list"       // proposed wire (S215); params WaveListParams, result WaveListResult
 	MethodWaveRm         = "wave.rm"         // proposed wire (S215); params WaveRmParams, result SavedWave (the one removed)
 	MethodRolesMatrix    = "roles.matrix"    // proposed (S168); params RolesMatrixParams, result RolesMatrixResult
+	MethodMatrixApply    = "matrix.apply"    // proposed (S250); params MatrixApplyParams, result MatrixApplyResult
 	MethodMatrixEdit     = "matrix.edit"     // proposed (S173); params MatrixEditParams, result MatrixEditResult
 	MethodDaemonInfo     = "daemon.info"     // no params, result DaemonInfoResult
 	MethodDaemonStop     = "daemon.stop"     // params StopParams, result StopResult

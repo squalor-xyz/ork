@@ -290,6 +290,15 @@ func (c *Client) WaveOverlap(ctx context.Context, project string, items []string
 	return &out, nil
 }
 
+// MatrixApply validates or applies a slicer matrix change set.
+func (c *Client) MatrixApply(ctx context.Context, p MatrixApplyParams) (*MatrixApplyResult, error) {
+	var out MatrixApplyResult
+	if err := c.Call(ctx, MethodMatrixApply, p, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // RolesMatrix reads the registered project's role matrix with ork's reading
 // of each row.
 func (c *Client) RolesMatrix(ctx context.Context, project string) (*RolesMatrixResult, error) {

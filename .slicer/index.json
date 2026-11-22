@@ -14290,10 +14290,25 @@
       "id": "S250",
       "title": "Apply a matrix change set through slicer relay-roles apply",
       "short_title": "Matrix change sets",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "4cec1cda-66a8-4744-aa97-d14ec2378104",
+          "kind": "",
+          "text": "**2026-11-22** — Implemented matrix.apply and roles matrix apply with stdin forwarding, slicer dry-run validation, preserved results and adapter warnings. Text output now marks dry runs and empty results.",
+          "created_at": "2026-11-22T08:26:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14311,7 +14326,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

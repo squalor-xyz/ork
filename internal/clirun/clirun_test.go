@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -29,6 +30,8 @@ func TestMain(m *testing.M) {
 
 func helperMain(args []string) {
 	switch args[0] {
+	case "stdin":
+		io.Copy(os.Stdout, os.Stdin)
 	case "emit": // emit STDOUT STDERR CODE
 		os.Stdout.WriteString(args[1])
 		os.Stderr.WriteString(args[2])
@@ -73,6 +76,15 @@ func helperMain(args []string) {
 		fmt.Fprintf(os.Stdout, "%d\n", child.Process.Pid)
 	case "block":
 		time.Sleep(30 * time.Second) // bounded, so a failing test leaves no long-lived orphan
+	}
+}
+
+func TestRunPassesStdin(t *testing.T) {
+	c := helper(t, 5*time.Second, "stdin")
+	c.Stdin = []byte("a\x00b\n")
+	got, err := Run(context.Background(), c)
+	if err != nil || string(got.Stdout) != string(c.Stdin) {
+		t.Fatalf("stdin round trip: %q, %v", got.Stdout, err)
 	}
 }
 
