@@ -17,8 +17,8 @@
                    │
                    │
                    │[2m────────────────────────────────────────────────────────────[m
-                   │  other  S10450  implement  3h00m  [......]  !! heard 3h00m
-                   │  implementer>reviewer>gate
+                   │  other  S10450  implement  3h00m  [......]
+                   │  !! heard 3h00m  implementer>reviewer>gate
                    │[2m────────────────────────────────────────────────────────────[m
                    │ enter [2mopen[m; x [2mstop[m; tab [2mviews[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
                    │ 1 project | refreshed 16:42:00

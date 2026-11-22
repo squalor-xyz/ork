@@ -6093,6 +6093,19 @@
 {"when": "2026-11-20T15:06:53Z", "item": "S514", "action": "add", "from": "", "to": "open", "note": "Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section"}
 {"when": "2026-11-20T15:06:53Z", "item": "S514", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-20T15:22:27Z", "item": "S355", "action": "note", "from": "", "to": "", "note": "Owner decisions 2026-11-20: adj 524 owner.run-answers-scope ", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:25:28Z", "item": "S394", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:33:40Z", "item": "S394", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T15:33:45Z", "item": "S394", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T02:59:00Z", "item": "S394", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-22T02:59:08Z", "item": "S394", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T03:05:01Z", "item": "S394", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S394):", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:05:01Z", "item": "S394", "action": "note", "from": "", "to": "", "note": "S394 done: every text field whose start has scrolled off beg", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:05:01Z", "item": "S394", "action": "status", "from": "started", "to": "done", "note": "S394 done: every text field whose start has scrolled off begins with `...`, the stale-build status notice reads `restart daemon` (both vendor fields fit on an 80-column status line), and an engine run with no ledger run counts its heard cue from the role's last output; fix round 1 corrected the docs and the slice's Check wording.", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:25:29Z", "item": "S355", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:31:39Z", "item": "S355", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T15:46:21Z", "item": "S355", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-20T15:48:48Z", "item": "S355", "action": "note", "from": "", "to": "", "note": "run.answer files the answer in adj by default under the owne", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:48:48Z", "item": "S355", "action": "status", "from": "started", "to": "done", "note": "run.answer files the answer in adj by default under the owner setting (caller by, else registry owner) when the question has a key, the project has adj and file_answers is on; no_adj and ctrl+a (per pane, now independent of owner findings) opt out, and a wanted filing that does not happen says why (no owner, file_answers off).", "by": "Jon Robbins"}
 {"when": "2026-11-20T15:25:51Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-20: adj 526 ui.status-text-layout = c", "by": "Jon Robbins"}
 {"when": "2026-11-20T15:26:03Z", "item": "S240", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-20T15:32:27Z", "item": "S240", "action": "edit", "from": "", "to": "", "note": "Files"}
@@ -6105,3 +6118,59 @@
 {"when": "2026-11-22T04:04:31Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S240):", "by": "Jon Robbins"}
 {"when": "2026-11-22T04:04:32Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "S240’s obsolete-wording check now passes when the docs conta", "by": "Jon Robbins"}
 {"when": "2026-11-22T04:04:32Z", "item": "S240", "action": "status", "from": "started", "to": "done", "note": "S240’s obsolete-wording check now passes when the docs contain no stale age disclaimer; targeted status, finding, relay-id hint and help regressions pass.", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:25:58Z", "item": "S240", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-20T15:38:04Z", "item": "S515", "action": "add", "from": "", "to": "open", "note": "flag when a pane field that one mode overwrites is read as a default by another mode"}
+{"when": "2026-11-20T15:38:04Z", "item": "S515", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:38:09Z", "item": "S516", "action": "add", "from": "", "to": "open", "note": "create the renders directory before starting the UI role, or say in the prompt that the role must create it"}
+{"when": "2026-11-20T15:38:10Z", "item": "S516", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:38:45Z", "item": "S512", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S510 (reviewer may write its own temp dir)."}
+{"when": "2026-11-20T15:38:45Z", "item": "S513", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S509 (test read-only allowlist entries against write commands)."}
+{"when": "2026-11-20T15:38:45Z", "item": "S509", "action": "note", "from": "", "to": "", "note": "Merged S513 (2026-11-20): prefer Claude Code's real permissi", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:38:45Z", "item": "S514", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 (render test fixtures, adj 513/514/515/517)."}
+{"when": "2026-11-20T15:38:45Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Merged S514 (2026-11-20): the pausedShow fixture includes a ", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:39:02Z", "item": "S517", "action": "add", "from": "", "to": "open", "note": "create the renders directory before the UI role starts"}
+{"when": "2026-11-20T15:39:02Z", "item": "S517", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:39:02Z", "item": "S517", "action": "note", "from": "", "to": "", "note": "possible duplicate of S516", "by": "Jon Robbins"}
+{"when": "2026-11-20T15:43:15Z", "item": "S518", "action": "add", "from": "", "to": "open", "note": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph"}
+{"when": "2026-11-20T15:43:15Z", "item": "S518", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-20T15:47:16Z", "item": "S519", "action": "add", "from": "", "to": "open", "note": "allow go -C WORKTREE run ./cmd/ork help in the reviewer allowlist so the slice's Check line can be run as written"}
+{"when": "2026-11-20T15:47:16Z", "item": "S519", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T02:58:36Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Scope widened 2026-11-22 (owner, adj 528 folded in): a statu", "by": "Jon Robbins"}
+{"when": "2026-11-22T02:58:36Z", "item": "S240", "action": "note", "from": "", "to": "", "note": "Owner decision 2026-11-22: adj 530 ui.status-finding-file-li", "by": "Jon Robbins"}
+{"when": "2026-11-22T02:58:42Z", "item": "S517", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S516 (create the renders directory before the UI role starts)."}
+{"when": "2026-11-22T02:59:37Z", "item": "S434", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-22T02:59:59Z", "item": "S434", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T02:59:59Z", "item": "S434", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T03:04:01Z", "item": "S434", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T03:04:01Z", "item": "S434", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T03:32:20Z", "item": "S434", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T03:32:20Z", "item": "S434", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T03:42:58Z", "item": "S434", "action": "note", "from": "", "to": "", "note": "Doctor golden documentation now distinguishes test substitut", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:42:58Z", "item": "S434", "action": "status", "from": "started", "to": "done", "note": "Doctor golden documentation now distinguishes test substitutions from doctor’s own placeholders, and focused doctor tests pass.", "by": "Jon Robbins"}
+{"when": "2026-11-22T02:59:21Z", "item": "S520", "action": "add", "from": "", "to": "open", "note": "give TestRenderCLIViews a status fixture with engine runs, a multi-line wait, findings and a relay row, so the status render shows the run rows"}
+{"when": "2026-11-22T02:59:21Z", "item": "S520", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:05:00Z", "item": "S521", "action": "add", "from": "", "to": "open", "note": "let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed"}
+{"when": "2026-11-22T03:05:00Z", "item": "S521", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:17:18Z", "item": "S400", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T03:17:18Z", "item": "S400", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T03:17:18Z", "item": "S400", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:23:23Z", "item": "S400", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T03:23:23Z", "item": "S400", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T03:36:47Z", "item": "S400", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S400):", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:36:47Z", "item": "S400", "action": "note", "from": "", "to": "", "note": "S400 adds realistic fix-round goldens, balances full engine ", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:36:47Z", "item": "S400", "action": "status", "from": "started", "to": "done", "note": "S400 adds realistic fix-round goldens, balances full engine detail cells, and counts parked Roadmap items separately; focused tests and mutation checks verify the behavior.", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:17:31Z", "item": "S522", "action": "add", "from": "", "to": "open", "note": "name the golden files in the UI-pass brief when a slice adds CLI goldens, so the pass reads them instead of writing an overlay test"}
+{"when": "2026-11-22T03:17:31Z", "item": "S522", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:34:26Z", "item": "S523", "action": "add", "from": "", "to": "open", "note": "Give the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule"}
+{"when": "2026-11-22T03:34:26Z", "item": "S523", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:36:46Z", "item": "S524", "action": "add", "from": "", "to": "open", "note": "Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator"}
+{"when": "2026-11-22T03:36:46Z", "item": "S524", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:39:06Z", "item": "S240", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-22T03:39:17Z", "item": "S525", "action": "add", "from": "", "to": "open", "note": "\"finds nothing\" and \"matches nothing\" mark a Check line as an empty-output check"}
+{"when": "2026-11-22T03:39:22Z", "item": "S525", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-22T03:39:35Z", "item": "S520", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 per the owner (adj 528)."}
+{"when": "2026-11-22T03:39:35Z", "item": "S522", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 (render test fixtures; the brief names the render command)."}
+{"when": "2026-11-22T03:39:35Z", "item": "S519", "action": "retire", "from": "open", "to": "retired", "note": "Not adopted (adj 519 brief-first); CLI renders come from S475's -renders flag."}
+{"when": "2026-11-22T03:39:35Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Merged S520 and S522 (2026-11-22).", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:42:57Z", "item": "S526", "action": "add", "from": "", "to": "open", "note": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written"}
+{"when": "2026-11-22T03:42:57Z", "item": "S526", "action": "promote", "from": "", "to": "", "note": ""}

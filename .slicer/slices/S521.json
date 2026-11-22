@@ -1,0 +1,39 @@
+{
+  "id": "S521",
+  "title": "let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261120-152522-c419, project ork, item S394:\n\nlet the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed\n\nEvidence: the gate is told not to run the suite but must still print Tests: N passed, M failed with the counts of its own run"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

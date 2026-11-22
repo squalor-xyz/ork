@@ -1,0 +1,39 @@
+{
+  "id": "S519",
+  "title": "allow go -C WORKTREE run ./cmd/ork help in the reviewer allowlist so the slice's Check line can be run as written",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-152559-6a31, project ork, item S240:\n\nallow go -C WORKTREE run ./cmd/ork help in the reviewer allowlist so the slice's Check line can be run as written\n\nEvidence: go -C .../S240 run ./cmd/ork help status was denied with no approval surface; the Check section lists that exact command"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

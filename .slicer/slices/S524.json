@@ -1,0 +1,39 @@
+{
+  "id": "S524",
+  "title": "Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261122-031627-c98e, project ork, item S400:\n\nMark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator\n\nEvidence: `ls testdata/golden | rg 'runtree-fix-round-real'` came through as \"not run by ork: orchestrator\", though one plain ls of the four paths answers it"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

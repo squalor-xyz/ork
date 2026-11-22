@@ -182,6 +182,160 @@ func TestAnswerAlreadyDecidedResumesWithNotice(t *testing.T) {
 	}
 }
 
+// setAnswerRegistry gives the test project adj, the owner setting and the
+// file_answers switch (S355, *proposed*).
+func setAnswerRegistry(t *testing.T, d *Daemon, adj bool, owner string, fileAnswers *bool) {
+	t.Helper()
+	f, err := registry.Load(d.cfg.RegistryPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	f.Projects[0].Adj = adj
+	f.Owner, f.FileAnswers = owner, fileAnswers
+	if err := registry.Save(d.cfg.RegistryPath, f); err != nil {
+		t.Fatal(err)
+	}
+}
+
+// answerPlain sends run.answer the way `ork answer` does: no adj flag and no
+// caller name, so only the daemon's settings decide (adj 524).
+func answerPlain(t *testing.T, d *Daemon, a RunAction) RunReply {
+	t.Helper()
+	b, _ := json.Marshal(a)
+	v, err := d.handle(context.Background(), MethodRunAnswer, b)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := json.Marshal(v)
+	var rep RunReply
+	if err := json.Unmarshal(raw, &rep); err != nil {
+		t.Fatal(err)
+	}
+	return rep
+}
+
+// With the owner setting and no caller name, the daemon files the answer as
+// the owner by default (S355, *proposed*; adj 524).
+func TestRunAnswerFilesUnderTheOwnerSettingWithNoCallerName(t *testing.T) {
+	d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false)
+	setAnswerRegistry(t, d, true, "Jon", nil)
+	rep := answerPlain(t, d, RunAction{Run: id, Text: "use stdlib"})
+	if !strings.Contains(rep.Message, "decided in adj as #42") {
+		t.Errorf("notice: %q", rep.Message)
+	}
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+	calls := lastFake.CallsTo("adj")
+	if len(calls) != 3 || calls[1].Args[0] != "ask" || calls[2].Args[0] != "decide" {
+		t.Fatalf("calls: %+v", calls)
+	}
+	for _, c := range calls[1:] {
+		if !strings.Contains(strings.Join(c.Args, "\x00"), "--by\x00Jon\x00") {
+			t.Errorf("call not filed by Jon: %q", c.Args)
+		}
+	}
+}
+
+// The caller's name wins over the setting.
+func TestRunAnswerPrefersTheCallersNameOverTheOwnerSetting(t *testing.T) {
+	d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false)
+	setAnswerRegistry(t, d, true, "Jon", nil)
+	answerPlain(t, d, RunAction{Run: id, Text: "use stdlib", By: "Env Jon"})
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+	calls := lastFake.CallsTo("adj")
+	if len(calls) != 3 || !strings.Contains(strings.Join(calls[2].Args, "\x00"), "--by\x00Env Jon\x00") {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+// With no owner anywhere the daemon files nothing, as before, and says why.
+func TestRunAnswerWithNoOwnerFilesNothingAndSaysHowToSetOne(t *testing.T) {
+	d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false)
+	setAnswerRegistry(t, d, true, "", nil)
+	rep := answerPlain(t, d, RunAction{Run: id, Text: "use stdlib"})
+	if !strings.Contains(rep.Message, "no owner set; run ork settings set --owner NAME") {
+		t.Errorf("notice: %q", rep.Message)
+	}
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+	if calls := lastFake.CallsTo("adj"); len(calls) != 0 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+// no_adj opts one call out of the default (adj 524, adj 525).
+func TestRunAnswerNoAdjFilesNothingEvenWithAnOwner(t *testing.T) {
+	d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false)
+	setAnswerRegistry(t, d, true, "Jon", nil)
+	rep := answerPlain(t, d, RunAction{Run: id, Text: "use stdlib", NoAdj: true})
+	if rep.Message != "" {
+		t.Errorf("notice: %q", rep.Message)
+	}
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+	if calls := lastFake.CallsTo("adj"); len(calls) != 0 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
+// file_answers off stops run-answer filing too, whoever asks (adj 525).
+func TestRunAnswerFileAnswersOffFilesNothing(t *testing.T) {
+	for _, explicit := range []bool{false, true} {
+		t.Run(fmt.Sprint("explicit-", explicit), func(t *testing.T) {
+			d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false)
+			off := false
+			setAnswerRegistry(t, d, true, "Jon", &off)
+			rep := answerPlain(t, d, RunAction{Run: id, Text: "use stdlib", Adj: explicit, By: "Env Jon"})
+			if !strings.Contains(rep.Message, "file_answers is off; answer not filed in adj (ork settings set --file-answers on)") {
+				t.Errorf("notice: %q", rep.Message)
+			}
+			waitState(t, store, id, runrec.StateAwaitingApproval)
+			waitIdle(t, d, id)
+			if calls := lastFake.CallsTo("adj"); len(calls) != 0 {
+				t.Fatalf("calls: %+v", calls)
+			}
+		})
+	}
+}
+
+// no_adj with file_answers off says nothing: the owner already asked for no
+// filing. Neither does a question without a key or a project without adj.
+func TestRunAnswerFileAnswersOffIsSilentWhenNothingWouldBeFiled(t *testing.T) {
+	off := false
+	for _, tc := range []struct {
+		name string
+		adj  bool
+		a    RunAction
+	}{
+		{"no_adj", true, RunAction{NoAdj: true}},
+		{"no adj in the project", false, RunAction{}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false)
+			setAnswerRegistry(t, d, tc.adj, "Jon", &off)
+			tc.a.Run, tc.a.Text = id, "use stdlib"
+			if rep := answerPlain(t, d, tc.a); rep.Message != "" {
+				t.Errorf("notice: %q", rep.Message)
+			}
+			waitState(t, store, id, runrec.StateAwaitingApproval)
+			waitIdle(t, d, id)
+		})
+	}
+}
+
+// A project without adj has nowhere to file; the default does nothing there.
+func TestRunAnswerDefaultFilesNothingInAProjectWithoutAdj(t *testing.T) {
+	d, store, id := adjAnswerRun(t, `{"result":"not found"}`, false)
+	setAnswerRegistry(t, d, false, "Jon", nil)
+	answerPlain(t, d, RunAction{Run: id, Text: "use stdlib"})
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+	if calls := lastFake.CallsTo("adj"); len(calls) != 0 {
+		t.Fatalf("calls: %+v", calls)
+	}
+}
+
 func TestAnswerWithToggleOffRecordsNothingInAdj(t *testing.T) {
 	d, store, id := adjAnswerRun(t, `{}`, false)
 	if _, err := answerAdj(t, d, id, false, ""); err != nil {

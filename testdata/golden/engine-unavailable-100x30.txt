@@ -21,10 +21,10 @@
                            │
                            │
                            │[2m────────────────────────────────────────────────────────────────────────[m
-                           │  ork-20261019-164000-abcd  S35  implement  No actions: project
-                           │  "removed" is not registered. Re-add it with ork projects add PATH
-                           │  --name removed, then run ork daemon restart.  error: project "removed"
-                           │  is not registered
+                           │  ork-20261019-164000-abcd  S35  implement
+                           │  No actions: project "removed" is not registered. Re-add it with ork
+                           │  projects add PATH --name removed, then run ork daemon restart.
+                           │  error: project "removed" is not registered
                            │[2m────────────────────────────────────────────────────────────────────────[m
                            │ enter [2mopen[m; tab [2mviews[m; + [2madd project[m; M [2mmouse[m; q [2mquit[m; ? [2mhelp[m
                            │ 1 project | refreshed 16:42:00

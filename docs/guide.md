@@ -873,11 +873,15 @@ A run pauses when a role says it needs you. Questions from every project
 appear in the **Questions** view and under **Needs you** on the Overview.
 
 - In the TUI: `enter` opens the run. A digit `1`-`4` loads that option and `y`
-  sends it; `t` types a free answer and `enter` sends it. `ctrl+a` toggles filing the answer in adj. Filing
-  needs `ADJ_DECIDED_BY` set in the environment of the TUI
-  (`internal/tui/keys.go:139`, `internal/tui/pane.go:362-368,615-618`).
-- On the command line: `ork answer RUN TEXT`. The CLI sends the text only; it
-  does not file in adj (`internal/cli/run.go:322,339-346`). *Proposed (S237):* the
+  sends it; `t` types a free answer and `enter` sends it. *Proposed (S355):*
+  the daemon files the answer in adj when the question has a decision key, the
+  project has adj and your name is known (the TUI's `ADJ_DECIDED_BY`, else
+  `ork settings set --owner NAME`); `ctrl+a` turns that off for the pane you
+  have open.
+- On the command line: `ork answer RUN TEXT`. *Proposed (S355):* the daemon
+  files the answer in adj by the same default, under the owner setting (the CLI
+  sends no name; `ork settings set --file-answers off` stops it, and the CLI has
+  no flag to opt out). *Proposed (S237):* the
   command returns as soon as the run has resumed and prints its new state
   (for example `r1 implement`); `ork status` shows the role at work. Add
   `--wait` to wait until the run rests again. `ork retry RUN` works the same
@@ -1087,7 +1091,7 @@ them all (`internal/tui/keys.go:82-157`).
 | Overview, run pane | `a`, `x`, `t`, `c` | approve, stop, retry, clean up a merged worktree |
 | Overview, run pane (*proposed*, S222) | `A` | approve every waiting run of the selected run's wave, in start order (asks first) |
 | Run pane | `1`-`9`, `F`, `v`, `f`, `o` | mark check, fix note, renders, file slice, answer owner finding |
-| Question | `1`-`4` then `y`; `t` then `enter`; `ctrl+a` | load an option and send it; type a free answer and send it; file in adj |
+| Question | `1`-`4` then `y`; `t` then `enter`; `ctrl+a` | load an option and send it; type a free answer and send it; turn adj filing off or on for this pane |
 | Running entry | `space`, `E` | expand a run, expand all |
 | Roadmap | `l`, `m` | launch a ready slice, show the role matrix (read-only; `esc` closes) |
 | Waves | `space`, `e`, `l`, `A` | tick, edit lineup, launch, show all waves |

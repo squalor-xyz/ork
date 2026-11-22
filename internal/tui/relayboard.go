@@ -537,6 +537,13 @@ func engineBoard(r source.EngineRun) (slicercli.RelayRun, []runTreeStep) {
 			updated = role.EndedAt
 		}
 	}
+	// A role that writes output is heard from, so its last output counts like a
+	// role time (S394, *proposed*, adj 427).
+	for _, w := range r.Working {
+		if w.LastOutput.After(updated) {
+			updated = w.LastOutput
+		}
+	}
 	stamp := ""
 	if !updated.IsZero() {
 		stamp = updated.Format(time.RFC3339Nano)

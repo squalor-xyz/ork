@@ -808,6 +808,50 @@ func TestRunTreeFixRoundGoldens(t *testing.T) {
 	}
 }
 
+func fixRoundRealHarness(t *testing.T) *harness {
+	t.Helper()
+	runs := treeFixture(t, "relay-run-tree.json")[:1]
+	runs[0].Steps = []slicercli.Step{
+		{ID: "o", Role: "orchestrator", Phase: "start", BeganAt: "2026-10-19T16:36:00Z", UpdatedAt: "2026-10-19T16:42:00Z"},
+		{ID: "i1", Parent: "o", Role: "implementer", Phase: "done", Task: "Build the feature", Vendor: "claude", Model: "sonnet", Reasoning: "high", BeganAt: "2026-10-19T16:36:00Z", UpdatedAt: "2026-10-19T16:38:00Z"},
+		{ID: "r", Parent: "o", Role: "reviewer", Phase: "done", Task: "Review the feature", Vendor: "codex", Model: "gpt-6.2-sol", Reasoning: "medium", BeganAt: "2026-10-19T16:38:00Z", UpdatedAt: "2026-10-19T16:39:00Z"},
+		{ID: "g", Parent: "o", Role: "gate", Phase: "fail", Task: "Fix the rollback test", BeganAt: "2026-10-19T16:39:00Z", UpdatedAt: "2026-10-19T16:40:00Z"},
+		{ID: "i2", Parent: "o", Role: "implementer", Phase: "start", Task: "Repair the rollback test", Vendor: "claude", Model: "sonnet", Reasoning: "high", BeganAt: "2026-10-19T16:40:00Z", UpdatedAt: "2026-10-19T16:42:00Z"},
+	}
+	raw := fmt.Sprintf(`{"id":"engine","item":"S55","state":"implement","relay_run":%q,"roles":[
+		{"role":"implementer","round":1,"step":"i1","vendor":"claude","model":"sonnet","effort":"high","started_at":"2026-10-19T16:36:00Z","ended_at":"2026-10-19T16:38:00Z","tokens":23800,"exit":"ok"},
+		{"role":"reviewer","round":1,"step":"r","vendor":"codex","model":"gpt-6.2-sol","effort":"medium","started_at":"2026-10-19T16:38:00Z","ended_at":"2026-10-19T16:39:00Z","tokens":9100,"exit":"ok"},
+		{"role":"gate","round":1,"step":"g","started_at":"2026-10-19T16:39:00Z","ended_at":"2026-10-19T16:40:00Z","exit":"error"},
+		{"role":"implementer","round":2,"step":"i2","vendor":"claude","model":"sonnet","effort":"high","started_at":"2026-10-19T16:40:00Z"}]}`, runs[0].ID)
+	return treeHarness(t, runs, raw)
+}
+
+func TestRunTreeFixRoundRealGoldens(t *testing.T) {
+	for _, tc := range []struct {
+		w, h        int
+		mono, ascii bool
+		suffix      string
+	}{{80, 24, true, false, "mono-true"}, {100, 30, true, false, "mono-true"}, {100, 30, false, false, "mono-false"}, {100, 30, true, true, "ascii"}} {
+		t.Run(fmt.Sprintf("%dx%d-%s", tc.w, tc.h, tc.suffix), func(t *testing.T) {
+			h := fixRoundRealHarness(t)
+			h.m.cfg.Theme, h.m.cfg.ASCII = NewTheme(tc.mono), tc.ascii
+			h.m.Update(tea.WindowSizeMsg{Width: tc.w, Height: tc.h})
+			view := h.m.View().Content
+			found := false
+			for _, line := range strings.Split(stripANSI(view), "\n") {
+				if strings.Contains(line, "#1") && strings.Contains(line, "23.8k") {
+					found = true
+				}
+			}
+			// Finished usage drops first in the narrow 80-column pane.
+			if tc.w == 100 && !found {
+				t.Fatalf("#1 and 23.8k must share a line:\n%s", stripANSI(view))
+			}
+			checkGolden(t, fmt.Sprintf("runtree-fix-round-real-%dx%d-%s.txt", tc.w, tc.h, tc.suffix), view)
+		})
+	}
+}
+
 func TestRunTreeShowsShapeRetry(t *testing.T) {
 	raw := strings.Replace(treeEngine, `"role":"reviewer"`, `"role":"reviewer","shape_retry":true`, 1)
 	h := treeHarness(t, nil, raw)

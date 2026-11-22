@@ -585,22 +585,151 @@ func TestPaneAdjToggle(t *testing.T) {
 			h.m.byName["ork"].reg.Adj = tc.adj
 			h.m.byName["ork"].snap.EngineRuns[0].Key = tc.key
 			typeAnswer(h, "a")
+			// Filing starts on (S355, adj 524); ctrl+a turns it off and on again,
+			// and only where filing is available.
+			available := tc.adj && tc.key != ""
+			if !h.m.pane.adj {
+				t.Fatalf("a new pane starts with filing off: %+v", h.m.pane)
+			}
 			ctrlA := tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl}
 			h.deliver(ctrlA)
-			if h.m.pane.adj != (tc.adj && tc.key != "") || h.m.pane.input.Value() != "a" {
+			if h.m.pane.adj == available || h.m.pane.input.Value() != "a" {
 				t.Fatalf("pane: %+v", h.m.pane)
 			}
 			h.deliver(ctrlA)
-			if h.m.pane.adj || h.m.pane.input.Value() != "a" {
+			if !h.m.pane.adj || h.m.pane.input.Value() != "a" {
 				t.Fatalf("pane: %+v", h.m.pane)
-			}
-			h.deliver(ctrlA)
-			h.deliver(press("esc"))
-			h.deliver(press("enter"))
-			if h.m.pane.adj {
-				t.Fatal("toggle persisted")
 			}
 		})
+	}
+}
+
+// ctrl+a turns filing off for this pane (adj 525); the answer then carries
+// no_adj so the daemon files nothing. Without it the request asks for no
+// filing flag at all: the daemon's default decides (S355, adj 524).
+func TestPaneAnswerSendsNoAdjOnlyAfterCtrlA(t *testing.T) {
+	for _, off := range []bool{false, true} {
+		t.Run(fmt.Sprint("off-", off), func(t *testing.T) {
+			h := paneHarness(t, "paused", "question")
+			h.m.byName["ork"].reg.Adj = true
+			h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
+			t.Setenv("ADJ_DECIDED_BY", "caller")
+			typeAnswer(h, "use local storage")
+			if off {
+				h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
+			}
+			h.deliver(press("enter"))
+			live := h.m.cfg.Live.(*actionLive)
+			want := daemon.RunAction{Run: "engine", Text: "use local storage", By: "caller", NoAdj: off}
+			if !reflect.DeepEqual(live.answerRequest, want) {
+				t.Fatalf("request: %+v, want %+v", live.answerRequest, want)
+			}
+		})
+	}
+}
+
+// runAnswerRecorder keeps fileLive's finding answers and records the request of
+// a run-question answer.
+type runAnswerRecorder struct {
+	*fileLive
+	runRequest, findingRequest daemon.RunAction
+}
+
+func (l *runAnswerRecorder) AnswerAction(ctx context.Context, a daemon.RunAction) (string, error) {
+	if a.Finding > 0 {
+		l.findingRequest = a
+		return l.fileLive.AnswerAction(ctx, a)
+	}
+	l.runRequest = a
+	return "", nil
+}
+
+// Answering or leaving an owner finding must not change ctrl+a's setting for
+// the run question that follows: the finding keeps its own filing flag (S355).
+func TestFindingModeLeavesTheRunQuestionFilingAlone(t *testing.T) {
+	keyed := ownerNote
+	keyed.Key = "cache.shared"
+	for _, tc := range []struct {
+		name    string
+		finding source.EngineFinding
+		off     bool // ctrl+a had turned filing off before the finding
+		answer  bool // answer the finding instead of leaving it with esc
+	}{
+		{"keyless finding left with esc", ownerNote, false, false},
+		{"keyless finding answered", ownerNote, false, true},
+		{"keyed finding left with esc after ctrl+a", keyed, true, false},
+		{"keyed finding answered after ctrl+a", keyed, true, true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := findingsHarness(t, "awaiting-approval", tc.finding)
+			live := &runAnswerRecorder{fileLive: h.m.cfg.Live.(*fileLive)}
+			h.m.cfg.Live = live
+			t.Setenv("ADJ_DECIDED_BY", "owner")
+			h.m.byName["ork"].reg.Adj = true
+			h.m.pane.adj = !tc.off // what ctrl+a left on a run question
+			h.deliver(press("o"))
+			if h.m.pane.finding != tc.finding.N {
+				t.Fatalf("Owner key did not open the finding: %+v", h.m.pane)
+			}
+			if tc.answer {
+				h.deliver(press("1"))
+				h.deliver(press("y"))
+			} else {
+				h.deliver(press("esc"))
+			}
+			if h.m.pane.finding != 0 {
+				t.Fatalf("still in finding mode: %+v", h.m.pane)
+			}
+			// A finding answer still asks for filing when the finding has a key,
+			// whatever ctrl+a left for run questions.
+			if got := live.findingRequest; tc.answer && (got.Finding != tc.finding.N || got.Adj != (tc.finding.Key != "")) {
+				t.Fatalf("finding request: %+v", got)
+			}
+			if h.m.pane.adj == tc.off {
+				t.Fatalf("finding mode changed the run question setting: adj %v after off=%v", h.m.pane.adj, tc.off)
+			}
+			run := &h.m.byName["ork"].snap.EngineRuns[0]
+			run.State, run.Pending, run.Key = "paused", "question", "storage.engine"
+			typeAnswer(h, "use local storage")
+			h.deliver(press("enter"))
+			if got := live.runRequest; got.Finding != 0 || got.NoAdj != tc.off || got.Text != "use local storage" {
+				t.Fatalf("run question request: %+v, want no_adj %v", got, tc.off)
+			}
+		})
+	}
+}
+
+// The ctrl+a hint names what the key does now: with filing on it turns it off,
+// and with filing off it turns it on (S355).
+func TestPaneCtrlAHintFollowsTheFilingState(t *testing.T) {
+	for _, on := range []bool{true, false} {
+		t.Run(fmt.Sprint("on-", on), func(t *testing.T) {
+			h := paneHarness(t, "paused", "question")
+			h.m.byName["ork"].reg.Adj = true
+			h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
+			h.m.pane.adj = on
+			hint := sgr.ReplaceAllString(h.m.hintLine(200), "")
+			want, other := "ctrl+a no adj", "ctrl+a file in adj"
+			if !on {
+				want, other = other, want
+			}
+			if !strings.Contains(hint, want) || strings.Contains(hint, other) {
+				t.Fatalf("hint %q, want %q only", hint, want)
+			}
+		})
+	}
+}
+
+// Where filing is unavailable (no adj, no key) there is nothing to turn off, so
+// the request carries no no_adj.
+func TestPaneAnswerSendsNoNoAdjWhereFilingIsUnavailable(t *testing.T) {
+	h := paneHarness(t, "paused", "question")
+	h.m.byName["ork"].reg.Adj = false
+	typeAnswer(h, "use local storage")
+	h.m.pane.adj = false // ctrl+a does nothing here, so set the state it would leave
+	h.deliver(press("enter"))
+	if got := h.m.cfg.Live.(*actionLive).answerRequest; got.NoAdj || got.Adj {
+		t.Fatalf("request: %+v", got)
 	}
 }
 
@@ -618,11 +747,10 @@ func TestAnswerAdjErrorKeepsTextAndDoesNotResume(t *testing.T) {
 	h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
 	t.Setenv("ADJ_DECIDED_BY", "caller")
 	typeAnswer(h, "use local storage")
-	h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
 	live := h.m.cfg.Live.(*actionLive)
 	live.err = &ipc.Error{Code: "io", Message: "disk full verbatim"}
 	h.deliver(press("enter"))
-	if !reflect.DeepEqual(live.answerRequest, daemon.RunAction{Run: "engine", Text: "use local storage", Adj: true, By: "caller"}) {
+	if !reflect.DeepEqual(live.answerRequest, daemon.RunAction{Run: "engine", Text: "use local storage", By: "caller"}) {
 		t.Fatalf("request: %+v", live.answerRequest)
 	}
 	if h.m.pane.input.Value() != "use local storage" || !strings.Contains(h.m.actionStatus, "io: disk full verbatim") {
@@ -667,7 +795,8 @@ func TestPaneAdjGoldens(t *testing.T) {
 				if mode != "no-key" {
 					h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
 				}
-				if mode == "on" {
+				// Filing starts on; ctrl+a turns it off (S355).
+				if mode == "off" {
 					h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
 				}
 				typeAnswer(h, "use local storage")
@@ -683,9 +812,12 @@ func TestQuestionsEngineAdjToggle(t *testing.T) {
 	h.m.byName["ork"].reg.Adj = true
 	h.m.byName["ork"].snap.EngineRuns[0].Key = "storage.engine"
 	h.deliver(press("enter"))
-	h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
 	if h.m.pane == nil || !h.m.pane.adj {
-		t.Fatal("Questions did not use the adj answer pane")
+		t.Fatal("Questions did not open the adj answer pane with filing on")
+	}
+	h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
+	if h.m.pane.adj {
+		t.Fatal("ctrl+a did not turn filing off in the Questions answer pane")
 	}
 }
 
@@ -739,7 +871,10 @@ func TestPaneShortTerminalKeepsOnToggle(t *testing.T) {
 	}
 }
 
-func TestPaneAdjMissingAttributionWarning(t *testing.T) {
+// A run question's owner may come from ork's settings, so the pane no longer
+// warns about an unset ADJ_DECIDED_BY there (S355); the daemon says so when no
+// owner is known at all.
+func TestPaneAdjRunQuestionHasNoEnvironmentWarning(t *testing.T) {
 	h := paneHarness(t, "paused", "question")
 	t.Setenv("ADJ_DECIDED_BY", "")
 	h.m.cfg.Theme = NewTheme(false)
@@ -747,8 +882,8 @@ func TestPaneAdjMissingAttributionWarning(t *testing.T) {
 	h.m.byName["ork"].snap.EngineRuns[0].Key = "a.b"
 	h.m.pane.adj = true
 	got := strings.Join(h.m.paneLines(120, 20, ""), "\n")
-	if !strings.Contains(got, h.m.cfg.Theme.Warn.Render("ADJ_DECIDED_BY unset")) {
-		t.Fatalf("missing styled warning: %q", got)
+	if strings.Contains(got, "ADJ_DECIDED_BY unset") || !strings.Contains(got, "[x] file answer in adj as a.b") {
+		t.Fatalf("run question toggle: %q", got)
 	}
 }
 
@@ -1020,16 +1155,15 @@ func TestQuestionOptionsGoldens(t *testing.T) {
 	}
 }
 
-func TestAdjToggleFilesTheOptionAsTheDecisionText(t *testing.T) {
+func TestAdjFilingFilesTheOptionAsTheDecisionText(t *testing.T) {
 	h := optionsHarness(t)
 	h.m.byName["ork"].reg.Adj = true
 	t.Setenv("ADJ_DECIDED_BY", "owner")
-	h.deliver(tea.KeyPressMsg{Code: 'a', Mod: tea.ModCtrl})
 	h.deliver(press("1"))
 	h.deliver(press("y"))
 	h.deliver(press("y"))
 	live := h.m.cfg.Live.(*actionLive)
-	if !reflect.DeepEqual(live.answerRequest, daemon.RunAction{Run: "engine", Text: "use: local storage", Adj: true, By: "owner"}) {
+	if !reflect.DeepEqual(live.answerRequest, daemon.RunAction{Run: "engine", Text: "use: local storage", By: "owner"}) {
 		t.Fatalf("answer: %+v", live.answerRequest)
 	}
 	if h.m.byName["ork"].snap.EngineRuns[0].State != "implement" {

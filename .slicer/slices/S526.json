@@ -1,0 +1,39 @@
+{
+  "id": "S526",
+  "title": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261122-025921-2e6a, project ork, item S434:\n\nquote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written\n\nEvidence: in the reviewer round the unquoted pattern DoctorGolden|TestDoctorUpgradeFlagPrintsEveryTool was denied as multiple operations"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

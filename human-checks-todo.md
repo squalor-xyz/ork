@@ -250,3 +250,13 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S389 (run ork-20261120-145742-cab5, 2026-11-20)
 
 - [ ] UI pass (r14): `ork show RUN` with three entries reads clearly at 80 columns.
+
+## S394 (run ork-20261120-152522-c419, 2026-11-22)
+
+- [ ] At 80x24 and 100x30: `4` (Roadmap), press `N` and type past the field's width: the field starts with `...`. With a scratch daemon on an older build and `ork vendor out codex`, `ork vendor out claude` (scratch daemon only), the status line reads `restart daemon | claude out until back | codex out until ...` at 100x30, or at 80x24 with the sidebar hidden (`s`); at 80x24 with the sidebar showing the status line has 60 columns and drops the codex field.
+
+## S400 (run ork-20261122-031627-c98e, 2026-11-22)
+
+- [ ] In a 100x30 terminal, open the Overview with a stopped engine run selected: the detail under the rows shows two lines, the second `N of M steps  AGE`. Resize to 80x24: still two lines, nothing cut.
+- [ ] In a 100x30 terminal, park an item on the Roadmap with `P`: the heading changes to `... open, 1 parked` without `other` when no other status is present.
+- [ ] In a colour terminal at 100x30, open the run pane of a run in its second implementer round: the times, vendor, `#1` and token count line up readably; then start ork with `LC_ALL=C` (ASCII, `internal/brand/mark.go:60-68`) and the gate verdict uses `x`.

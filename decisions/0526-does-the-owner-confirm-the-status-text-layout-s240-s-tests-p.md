@@ -25,6 +25,12 @@
   },
   "decision": "confirm",
   "rationale": "Owner chose 'Confirm as pinned (Recommended)' in an interactive question, relay session 8d711f67, 2026-11-20.",
+  "narrowed_by": [
+    {
+      "id": 530,
+      "scope": "a later finding's file command goes on its own indented line, not inline"
+    }
+  ],
   "refs": [
     "S240"
   ],
@@ -36,6 +42,11 @@
     {
       "date": "2026-11-20",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-21",
+      "event": "narrow",
+      "note": "by 530: a later finding's file command goes on its own indented line, not inline"
     }
   ]
 }

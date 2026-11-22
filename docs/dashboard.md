@@ -335,10 +335,13 @@ first. The header does not carry a `?help` cue: the hint line names `? help`
 right of the status line when it fits after the existing text.
 
 A stale or unknown daemon build puts
-`daemon build differs: ork daemon restart` first in the status line before
-the project and refresh fields, unless the behind notice is shown (see
-Self-hosting). The behind notice replaces the stale-build marker. At narrow
-widths, trailing fields are dropped first so the behind notice keeps priority.
+`restart daemon` first in the status line before the project and refresh
+fields, unless the behind notice is shown (see Self-hosting). *Proposed (S394,
+adj 429):* the notice is short, so two `V out until T` vendor fields still fit
+on an 80-column status line (80x24 with the sidebar hidden, or 100 columns and
+wider with it). The behind notice keeps its own text and its short form; it
+replaces the stale-build marker. At narrow widths, trailing fields are dropped
+first so the behind notice keeps priority.
 *Proposed (S103):* each non-empty snapshot `daemon_build` refreshes the build
 used for this marker. After `ork daemon restart` the marker clears on the next
 snapshot when the builds match, without reopening the TUI. An empty field
@@ -523,6 +526,15 @@ Decisions, the lineup, and text fields such as an answer). Outside those they
 do nothing but set the status line to `[ and ] switch projects` (S144; no
 layout cost). The help names `]` and `[` as next and previous "project or
 entry", since they also land on Running and Needs you.
+
+*Proposed (S394, adj 444):* a text field whose start has scrolled off begins
+with `...`, so the owner can tell that the field holds more than it shows. This
+holds for every one-line field: the answer and fix fields, the note and compose
+fields, the matrix edit field, the saved-wave name, the welcome path, the
+spec-check answer and the lineup budgets. A field that fits shows no `...`. A
+field narrower than 6 columns has no room for the mark and shows the plain
+tail.
+
 `1`-`9` select the first nine projects in the order the sidebar draws them,
 and the sidebar shows those numbers dimmed. `0` selects "Needs you"; the
 Running entry has no number. A number with no project does nothing. `tab` and
@@ -749,8 +761,11 @@ the text column, falling back to a shorter indent when needed to fit.
    For an engine run that has a ledger run, ork's heartbeat
    (`relay-run step --phase start`, every 10 minutes while a role runs) refreshes
    it, so a hung role's row does not reach `!!`; it can show an amber `!`
-   between two ticks. For an engine run with no ledger run, `!!` shows 30
-   minutes after the role started. The engine's watchdog (S182, *proposed*, `docs/design.md`)
+   between two ticks. For an engine run with no ledger run, *proposed (S394,
+   adj 427):* the cue counts from the role's last output (the `last_output` of
+   the run's working step), or from the role's start before its first output,
+   so `!!` shows 30 minutes after that. A role that wrote output 2 minutes ago
+   reads `heard 2m` with no cue, however long ago it started. The engine's watchdog (S182, *proposed*, `docs/design.md`)
    kills a role that sends nothing for 30 minutes (time the machine slept is
    not counted, S235, *proposed*) and pauses the run, so a hung
    engine run reaches Needs you as a paused run instead of waiting for the
@@ -870,7 +885,9 @@ the text column, falling back to a shorter indent when needed to fit.
 
 The Overview reads engine runs in the daemon snapshot, using the same builder
 as `ork status` (`ui.engine-runs-read`). An engine row leads with the ork run
-id, then slice, engine state and wait. A sliver row also names its parent and,
+id, then slice, engine state and wait. The engine detail wraps between cells.
+When the last cell would sit alone, the preceding cell moves down with it if
+the pair fits and leaves the preceding line nonempty. A sliver row also names its parent and,
 in a chain, its position (`parent S1 2 of 4`, *proposed*, S62), in the Overview
 row and in the item cell of the Running row. A committed sliver that is not the
 last of its chain is not listed under Ready to land: the last sliver lands the
@@ -1164,13 +1181,25 @@ The actions follow the state (`ui.answer-pane-scope`):
   previous rune, ctrl-u clears the field, and left/right move the cursor.
   Terminal paste inserts at the cursor and strips CR and LF, keeping one
   answer line; paste never submits (`ui.text-field`).
-  Ctrl+a toggles optional filing in adj, off whenever the pane opens. The footer
-  shows `[ ] file answer in adj as KEY`; when on, `[x]` is
-  highlighted. A dim, inert line names why filing is disabled: `adj filing off:
+  *Proposed (S355; owner decisions adj 524, adj 525):* filing the answer in adj
+  is on whenever the pane opens, and Ctrl+a turns it off for this pane only
+  (a new pane, or the next run the pane follows, starts on again). The footer
+  shows `[x] file answer in adj as KEY` (highlighted) when on and
+  `[ ] file answer in adj as KEY` when off. A dim, inert line names why filing is disabled: `adj filing off:
   no adj in this project` or `adj filing off: question has no decision key`.
-  Filing requires the caller's `ADJ_DECIDED_BY`. When on with that value unset,
-  the toggle also warns `ADJ_DECIDED_BY unset`. Submitting refuses the answer
-  before launching an action, making an adj call or setting a run error.
+  The pane sends no filing flag of its own: the daemon files the answer when
+  the question has a key, the project has adj, `file_answers` is not off and an
+  owner is known (the TUI's `ADJ_DECIDED_BY`, else the owner setting from
+  `ork settings set --owner NAME`). After Ctrl+a the request carries `no_adj`
+  and the daemon files nothing. The pane does not read the owner setting, so it
+  cannot warn about a missing owner: with none known the daemon files nothing
+  and its notice `no owner set; run ork settings set --owner NAME (answer not
+  filed in adj)` shows in the status. With `file_answers` off the toggle still
+  shows `[x]`, and the status says `file_answers is off; answer not filed in
+  adj (ork settings set --file-answers on)`. The hint for the key reads `ctrl+a
+  no adj` while filing is on and `ctrl+a file in adj` while it is off. Owner
+  findings keep their own filing flag: answering or leaving one does not change
+  what ctrl+a set for run questions.
   ork checks the exact key, asks if missing or closed, and decides the open
   record with the typed answer. Success shows `decided in adj as #N`.
   An existing decision resumes the role and shows `KEY already decided as #N;
@@ -1178,7 +1207,9 @@ The actions follow the state (`ui.answer-pane-scope`):
   an ask left open by a failed decide. Short panes keep the Answer field,
   status, enabled toggle, off/disabled toggle and command preview
   in that priority order, dropping the lowest priority lines first.
-  This toggle is available only in the TUI; `ork answer` does not file in adj.
+  *Proposed (S355):* `ork answer` has no toggle; it files by the same daemon
+  default, so an answer to a keyed question is filed whenever an owner is
+  known.
 - Paused with `pending: budget`: show the reason; the hint lists `t retry`
   when available. Retry grants exactly one
   role round, then the budget check applies again (`run.budget-resume`).
@@ -1988,7 +2019,8 @@ in a right-aligned column. A dim `·` marks ready items (`*` in ASCII mode). On 
 marker shares the row's uninterrupted reverse style. Missing size and
 effort show as `--`. The heading carries the counts, for example
 `Roadmap  33 ready of 41, all open`; mixed statuses replace `all open` with
-`N open, M other`. The selected slice opens in a detail pane. Readiness
+`N open, M parked, K other`, omitting parked and other when their counts are zero.
+The selected slice opens in a detail pane. Readiness
 comes from status and dependencies only. An item is ready when `slicer deps` includes it, its status
 is open and it has a slice. No claim is shown (record 140, `roadmap.readiness`,
 decided 2026-10-21). The data comes from

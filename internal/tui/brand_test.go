@@ -36,10 +36,10 @@ func TestStaleDaemonWarningInStatusLine(t *testing.T) {
 		m.cfg.BuildID = tc.own
 		m.cfg.DaemonBuild = tc.theirs
 		line := stripANSI(m.statusLine(60))
-		if strings.Contains(line, "daemon build differs: ork daemon restart") != tc.warn {
+		if strings.Contains(line, "restart daemon") != tc.warn {
 			t.Fatalf("%+v: %q", tc, line)
 		}
-		if tc.warn && !strings.HasPrefix(line, " daemon build differs: ork daemon restart") {
+		if tc.warn && !strings.HasPrefix(line, " restart daemon") {
 			t.Fatal(line)
 		}
 		if lipgloss.Width(line) > 60 {
@@ -69,7 +69,7 @@ func TestStaleMarkerClearsAfterTheDaemonRestarts(t *testing.T) {
 				m.apply(snapshotMsg{name: s.Project.Name, snap: s})
 			}
 			line := stripANSI(m.statusLine(100))
-			if strings.Contains(line, "daemon build differs: ork daemon restart") != tc.warn {
+			if strings.Contains(line, "restart daemon") != tc.warn {
 				t.Fatalf("stale marker: %q, want warning %v", line, tc.warn)
 			}
 		})
@@ -159,8 +159,10 @@ func TestStaleStatusDropsWholeFieldsAt80x24(t *testing.T) {
 		m := goldenModel(NewTheme(mono), 80, 24)
 		m.cfg.BuildID = "new"
 		m.cfg.DaemonBuild = "old"
-		got := stripANSI(m.statusLine(60))
-		want := " daemon build differs: ork daemon restart | 4 projects"
+		// The short notice leaves room for more fields than 60 columns once did, so the
+		// width is the one that holds the notice and the project count and no more.
+		got := stripANSI(m.statusLine(40))
+		want := " restart daemon | 4 projects"
 		if got != want {
 			t.Fatalf("status = %q, want %q", got, want)
 		}
@@ -182,7 +184,7 @@ func TestStatusLineUsesSuppliedWidth(t *testing.T) {
 	}
 	m.cfg.BuildID = "new"
 	m.cfg.DaemonBuild = "old"
-	if got := stripANSI(m.statusLine(20)); got != " daemon build differ" {
+	if got := stripANSI(m.statusLine(20)); got != " restart daemon" {
 		t.Fatalf("clipped warning: %q", got)
 	}
 	m.sidebarHidden = true
@@ -205,7 +207,7 @@ func TestBehindNoticeOnlyWhenIdle(t *testing.T) {
 			if strings.Contains(line, daemon.BehindNotice) != !active {
 				t.Fatalf("active=%v: %s", active, line)
 			}
-			if strings.Contains(line, "daemon build differs") != active {
+			if strings.Contains(line, "restart daemon") != active {
 				t.Fatalf("stale marker must show alone, and hide behind the idle notice: %s", line)
 			}
 			if active {
@@ -219,7 +221,7 @@ func TestBehindNoticeOnlyWhenIdle(t *testing.T) {
 			if strings.Contains(line, daemon.BehindNotice) {
 				t.Fatal("notice survived main catching up")
 			}
-			if !strings.Contains(line, "daemon build differs") {
+			if !strings.Contains(line, "restart daemon") {
 				t.Fatal("stale marker missing without behind notice", line)
 			}
 		})

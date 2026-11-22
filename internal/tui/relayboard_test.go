@@ -291,6 +291,39 @@ func TestStaleRunFreezesAtLastEvent(t *testing.T) {
 	}
 }
 
+// An engine run with no ledger run counts its quiet time from the role's last
+// output, not from the role's start (S394, adj 427). With no output yet it
+// counts from the start.
+func TestEngineRunHeardFollowsTheLastOutput(t *testing.T) {
+	h := newHarness(t, proj("ork", false))
+	h.start()
+	th := NewTheme(false)
+	h.m.cfg.Theme = th
+	for _, tc := range []struct {
+		name       string
+		lastOutput time.Time
+		want       string
+		dim        bool
+	}{
+		{"wrote 2m ago", t0.Add(-2 * time.Minute), "heard 2m", true},
+		{"no output yet", time.Time{}, "!! heard 45m", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			r := source.EngineRun{ID: "e", Item: "S1", State: "implementing", CreatedAt: t0.Add(-46 * time.Minute),
+				Roles:   []source.EngineRole{roleRun("implementer", 45*time.Minute, 0)},
+				Working: []source.EngineWork{{What: "implementer round 1", Since: t0.Add(-45 * time.Minute), LastOutput: tc.lastOutput}}}
+			ledger, _ := engineBoard(r)
+			text, style := h.m.lastHeard(engineLedger(ledger, r))
+			if text != tc.want {
+				t.Fatalf("heard = %q, want %q", text, tc.want)
+			}
+			if tc.dim && style.Render(text) != th.Dim.Render(text) {
+				t.Errorf("the cell is not dim: %q", style.Render(text))
+			}
+		})
+	}
+}
+
 func TestRelayBoardGoldens(t *testing.T) {
 	for _, mono := range []bool{false, true} {
 		for _, size := range [][2]int{{100, 30}, {80, 24}, {120, 40}} {
