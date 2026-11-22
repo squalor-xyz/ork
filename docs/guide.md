@@ -626,7 +626,15 @@ slept 1h03m)` (S235, *proposed*): how long the step has run, how long ago the
 role last sent output, and how long the machine slept meanwhile.
 *Proposed (S285):* under a run with a check row, it first prints `last check:
 CMD (ok|red, round N)`, the command of the newest check, so you can tell the
-round command from the full one. Add `--json` to any command for scripts (`internal/cli/cli.go:54`,
+round command from the full one. *Proposed (S240, adj 526):* the first line
+reads `NAME: needs you N, in progress M, active relays K`. A run's row starts
+with its `ork-` id, the `RUN` that `ork approve`, `ork answer`, `ork retry` and
+the other commands take; a row that starts with `relay` is slicer's, and its
+`run-` id is not a `RUN` (a command given one says so). Each run row says when its
+state began, as `waiting since 00:55 (2h10m)` or `updated 02:41 (4m ago)`. A
+question with several lines prints one line per line, then `next: COMMAND`.
+Every open finding that `needs you` counts has a `finding RUN N ...` line.
+Add `--json` to any command for scripts (`internal/cli/cli.go:54`,
 `internal/cli/cli.go:212`).
 
 *Proposed (S318):* `ork status --summary [--project P]` shows one project's

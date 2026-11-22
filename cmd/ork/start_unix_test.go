@@ -111,7 +111,7 @@ func TestTwoCommandsStartTheDaemonAtOnceAndItOutlivesThem(t *testing.T) {
 	wg.Wait()
 
 	// The fixtures give alpha two open records and three relay runs.
-	const head = "alpha: needs you 2, active relays 3\n"
+	const head = "alpha: needs you 2, in progress 0, active relays 3\n"
 	for i, r := range results {
 		if r.err != nil || !strings.HasPrefix(r.out, head) {
 			t.Errorf("command %d: stdout %q, err %v; want it to start with %q", i, r.out, r.err, head)

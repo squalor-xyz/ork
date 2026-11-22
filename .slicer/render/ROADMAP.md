@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-514 items · — 44 · done 358 · retired 112
+514 items · — 43 · done 359 · retired 112
 
 ## v1.3
 
@@ -74,7 +74,7 @@ v1.2
 | 17 | S232 | S67 and S188 later notes: park race, dash ids, role text wrapping, doctor reason wording | S | 1 |  | Verified at f48a6154 on 2026-11-17; owner answers adj 436-443. Kept items specced as S396-S402; dropped and retired items with evidence in .scratch/spec-S230-S232-dropped.md. · discovered from S67 | retired |
 | 18 | [S233](slices/S233.md) | ork ai guide and skill | M | 2 |  |  | — |
 | 19 | S234 | S100 and S207 later notes: muted-bell cue, bell baseline, doctor wording, acceptedList hook | S | 2 |  | **2026-11-02** — Later notes from pair wave 4 (S100 and S207, run and landed by ork itself 2026-11-02), from the reviewers and the UI passes: S100: (1) show a muted-bell cue on the project's sidebar row or in help (a project with bell false rings nothing and nothing on screen says so); (2) the bell baseline for engine run ends should be taken only after a successful run-store read, so a failed first read does not make every old run ring once. S207: (1) doctor's project next step reads "with v10 or v11, or ork projects unpin p": make the sentence read cleanly; (2) use one quote style for command hints in CLI messages; (3) acceptedList no longer follows the acceptedContracts test hook, so its test checks nothing; (4) make acceptedList follow the hook again (3 and 4 are one fix). Friction: the 29 points of the first ork-run dogfood wave are in .scratch/v11/wave4-friction.md and are filed as separate slices (sleep and wake awareness, landing merge-in, check failures, answer and retry return, status and CLI clarity, ork ai guide S233). S211 was retired after S207 landed (owner, 2026-11-01: items 3 and 4 dropped). · discovered from S207 | — |
-| 20 | [S240](slices/S240.md) | Status text clarity | M | 2 |  |  | — |
+| 20 | [S240](slices/S240.md) | Status text clarity | M | 2 |  |  | done |
 | 21 | [S241](slices/S241.md) | Plan and launch output | M | 2 |  |  | done |
 | 22 | [S242](slices/S242.md) | Daemon status and stale rule | M | 2 |  |  | done |
 | 23 | [S246](slices/S246.md) | Check command from slicer first | S | 1 |  |  | done |

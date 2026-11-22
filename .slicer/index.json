@@ -13689,7 +13689,7 @@
       "id": "S240",
       "title": "ork status text: label the ids, show when a state began, print the whole question and list what needs-you counts",
       "short_title": "Status text clarity",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S222"
@@ -13722,6 +13722,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "20a81f9c-ced1-479e-b1b1-ac0a6c47e03b",
+          "kind": "",
+          "text": "**2026-11-22** — Human checks at approval (S240):\n- later: After landing and a rebuild, with a paused run that has a multi-line question and a run in `checks`, the owner runs `ork status --project ork` in an 80-column terminal and reads: the ids, the times, the question, the counts.",
+          "created_at": "2026-11-22T04:04:31Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "eece6661-628c-45c5-a9fb-8ca2b8946616",
+          "kind": "",
+          "text": "**2026-11-22** — S240’s obsolete-wording check now passes when the docs contain no stale age disclaimer; targeted status, finding, relay-id hint and help regressions pass.",
+          "created_at": "2026-11-22T04:04:32Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13741,7 +13769,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
