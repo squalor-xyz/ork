@@ -6139,3 +6139,9 @@
 {"when": "2026-11-22T03:36:47Z", "item": "S400", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S400):", "by": "Jon Robbins"}
 {"when": "2026-11-22T03:36:47Z", "item": "S400", "action": "note", "from": "", "to": "", "note": "S400 adds realistic fix-round goldens, balances full engine ", "by": "Jon Robbins"}
 {"when": "2026-11-22T03:36:47Z", "item": "S400", "action": "status", "from": "started", "to": "done", "note": "S400 adds realistic fix-round goldens, balances full engine detail cells, and counts parked Roadmap items separately; focused tests and mutation checks verify the behavior.", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:17:31Z", "item": "S522", "action": "add", "from": "", "to": "open", "note": "name the golden files in the UI-pass brief when a slice adds CLI goldens, so the pass reads them instead of writing an overlay test"}
+{"when": "2026-11-22T03:17:31Z", "item": "S522", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:34:26Z", "item": "S523", "action": "add", "from": "", "to": "open", "note": "Give the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule"}
+{"when": "2026-11-22T03:34:26Z", "item": "S523", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T03:36:46Z", "item": "S524", "action": "add", "from": "", "to": "open", "note": "Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator"}
+{"when": "2026-11-22T03:36:46Z", "item": "S524", "action": "promote", "from": "", "to": "", "note": ""}
