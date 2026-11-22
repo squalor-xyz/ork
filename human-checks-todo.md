@@ -260,3 +260,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 - [ ] In a 100x30 terminal, open the Overview with a stopped engine run selected: the detail under the rows shows two lines, the second `N of M steps  AGE`. Resize to 80x24: still two lines, nothing cut.
 - [ ] In a 100x30 terminal, park an item on the Roadmap with `P`: the heading changes to `... open, 1 parked` without `other` when no other status is present.
 - [ ] In a colour terminal at 100x30, open the run pane of a run in its second implementer round: the times, vendor, `#1` and token count line up readably; then start ork with `LC_ALL=C` (ASCII, `internal/brand/mark.go:60-68`) and the gate verdict uses `x`.
+
+## S240 (run ork-20261120-152559-6a31, 2026-11-22)
+
+- [ ] After landing and a rebuild, with a paused run that has a multi-line question and a run in `checks`, the owner runs `ork status --project ork` in an 80-column terminal and reads: the ids, the times, the question, the counts.
