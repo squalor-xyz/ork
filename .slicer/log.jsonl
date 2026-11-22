@@ -6152,3 +6152,5 @@
 {"when": "2026-11-22T03:39:35Z", "item": "S522", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 (render test fixtures; the brief names the render command)."}
 {"when": "2026-11-22T03:39:35Z", "item": "S519", "action": "retire", "from": "open", "to": "retired", "note": "Not adopted (adj 519 brief-first); CLI renders come from S475's -renders flag."}
 {"when": "2026-11-22T03:39:35Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Merged S520 and S522 (2026-11-22).", "by": "Jon Robbins"}
+{"when": "2026-11-22T03:42:57Z", "item": "S526", "action": "add", "from": "", "to": "open", "note": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written"}
+{"when": "2026-11-22T03:42:57Z", "item": "S526", "action": "promote", "from": "", "to": "", "note": ""}
