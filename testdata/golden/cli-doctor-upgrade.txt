@@ -1,0 +1,31 @@
+    ▄▀▀▄    
+    █▄▄█    
+     ██     
+ ▄▄▄▄██▄▄▄▄ 
+ ▀▄  ▀▀  ▄▀ 
+ ██  ██  ██ 
+[ok] ork  ORK_BIN
+[--] daemon  not running; the next command starts it
+[ok] slicer  slicer 1.15.0
+[ok] adj  v0.1.0
+[ok] claude  2.1.303 (Claude Code)
+[ok] codex  codex-cli 0.163.0
+[ok] grok  grok 1.0.62 (fake)
+[--] claude-local  not found (optional)
+[--] codex-local  not found (optional)
+[--] grok-local  not found (optional)
+[ok] contract  accepts v12 or v13, slicer prints "Contract: relay v12"
+[upgrade] slicer  requested with --upgrade (installed: 1.15.0)
+  git -C SLICER_CHECKOUT pull --ff-only
+  SLICER_CHECKOUT/.venv/bin/pip install -e SLICER_CHECKOUT
+[upgrade] adj  requested with --upgrade (installed: v0.1.0)
+  note: ADJ_CHECKOUT = your checkout; see adjudicate/README.md#build-from-source
+  git -C ADJ_CHECKOUT pull --ff-only
+  go -C ADJ_CHECKOUT build -o ADJ_BIN ./cmd/adj
+[upgrade] ork  requested with --upgrade
+  note: ORK_CHECKOUT = your checkout
+  git -C ORK_CHECKOUT pull --ff-only
+  go -C ORK_CHECKOUT build -o ORK_BIN ./cmd/ork
+  ORK_BIN daemon restart
+[--] owner  not set; spec answers not filed: ork settings set --owner NAME
+[--] projects  none registered: run ork projects add PATH

@@ -97,6 +97,8 @@ and the owner's words. Anything the owner did not decide stays an open ask.
   only, since S11).
 - Rewrite TUI golden views after an intended layout change:
   `go test ./internal/tui -update`, then review the diff in `testdata/golden/`.
+- Rewrite CLI text goldens after an intended output change:
+  `go test ./internal/cli -update`, then review the diff in `testdata/golden/`.
 - Render TUI views outside the tree (the UI pass; adj 507, S416). Write two
   files in the role's temp dir with the Write tool. The first is a test file
   in `package tui` that builds the view with `launchHarness` and the other

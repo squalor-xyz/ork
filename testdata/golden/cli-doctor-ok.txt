@@ -1,0 +1,19 @@
+    ▄▀▀▄    
+    █▄▄█    
+     ██     
+ ▄▄▄▄██▄▄▄▄ 
+ ▀▄  ▀▀  ▄▀ 
+ ██  ██  ██ 
+[ok] ork  ORK_BIN
+[--] daemon  not running; the next command starts it
+[ok] slicer  slicer 1.15.0
+[ok] adj  v0.1.0
+[ok] claude  2.1.303 (Claude Code)
+[ok] codex  codex-cli 0.163.0
+[ok] grok  grok 1.0.62 (fake)
+[--] claude-local  not found (optional)
+[--] codex-local  not found (optional)
+[--] grok-local  not found (optional)
+[ok] contract  accepts v12 or v13, slicer prints "Contract: relay v12"
+[--] owner  not set; spec answers not filed: ork settings set --owner NAME
+[--] projects  none registered: run ork projects add PATH

@@ -3696,6 +3696,15 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   when the registry could not be read). The line does not change `ok` or the
   exit code.
 
+Text output fixtures are `testdata/golden/cli-doctor-ok.txt`,
+`cli-doctor-upgrade.txt` and `cli-doctor-upgrade-unknown.txt` in the same
+directory. They cover plain output and `--upgrade` with known and unknown
+sources. Tests replace temporary paths with `SLICER_CHECKOUT`, `ADJ_BIN` and
+`ORK_BIN`; `ADJ_CHECKOUT` and `ORK_CHECKOUT` are doctor's own placeholders.
+Tests also fix vendor, locale and owner inputs. A UI pass can read these
+files without running the binary or adding a test file. Rewrite them with
+`go test ./internal/cli -update` and review the diff.
+
 Doctor exits 1 when slicer, adj or the contract check fails. Advisory project
 findings do not change `ok` or the exit code. A failed `--fix` sets `ok` to false
 and exits 1. `roles print`
