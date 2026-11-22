@@ -977,6 +977,19 @@ record as `  #ID KEY  TITLE` and each held item as
 `  SID  TITLE  (needs-owner)` before relay and engine rows. Its engine list
 uses the same Needs, Running and Hidden classification as the Overview, so
 the needs list matches the count (`ui.status-list`, adj #125).
+*Proposed (S240, adj 526 `ui.status-text-layout`):* the text also lists every
+open finding the count includes, one line each after the engine rows, as
+`  finding RUN N later: TITLE` followed by the line `    file it: ork file RUN N`
+(its own line, so a long run id does not wrap inside the command) or
+`  finding RUN N owner: TITLE (answer it in the TUI run pane)`, including the
+findings of a hidden (committed, not landed) run. The project line reads
+`NAME: needs you N, in progress M, active relays K`. A relay row starts with
+`relay`; an engine row starts with the `ork-` id that the owner commands take.
+A row says when its state began (`, waiting since HH:MM (AGE)` or
+`, updated HH:MM (AGE ago)`, local time, nothing for a zero time), prints a
+multi-line wait one line per line (the first on the row, the rest indented six
+spaces) with the `; next:` command as `    next: COMMAND`, and prints
+`    wave: ID` when the run has a wave. The TUI does not change.
 `ork status --json` includes hidden engine runs still in the snapshot and
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 526,
+  "next_id": 527,
   "preamble": "",
   "passes": [
     {
@@ -13689,7 +13689,7 @@
       "id": "S240",
       "title": "ork status text: label the ids, show when a state began, print the whole question and list what needs-you counts",
       "short_title": "Status text clarity",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S222"
@@ -13736,6 +13736,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "20a81f9c-ced1-479e-b1b1-ac0a6c47e03b",
+          "kind": "",
+          "text": "**2026-11-22** — Human checks at approval (S240):\n- later: After landing and a rebuild, with a paused run that has a multi-line question and a run in `checks`, the owner runs `ork status --project ork` in an 80-column terminal and reads: the ids, the times, the question, the counts.",
+          "created_at": "2026-11-22T04:04:31Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "eece6661-628c-45c5-a9fb-8ca2b8946616",
+          "kind": "",
+          "text": "**2026-11-22** — S240’s obsolete-wording check now passes when the docs contain no stale age disclaimer; targeted status, finding, relay-id hint and help regressions pass.",
+          "created_at": "2026-11-22T04:04:32Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -13755,7 +13783,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -24483,10 +24511,25 @@
       "id": "S434",
       "title": "give doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file",
       "short_title": "give doctor text output a golden test, so a UI pass can render the `[upgrade]` lines from a fixture without running the real binary or adding a test file",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "66c6d054-3faa-4383-8c6b-33f24b2e0605",
+          "kind": "",
+          "text": "**2026-11-22** — Doctor golden documentation now distinguishes test substitutions from doctor’s own placeholders, and focused doctor tests pass.",
+          "created_at": "2026-11-22T03:42:58Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -24504,7 +24547,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -27755,6 +27798,34 @@
         "urgency": 2,
         "effort": 1,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S526",
+      "title": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written",
+      "short_title": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S434",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0e168812",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
       }
     }
   ],

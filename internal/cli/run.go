@@ -14,6 +14,7 @@ import (
 
 	"github.com/squalor-xyz/ork/internal/daemon"
 	"github.com/squalor-xyz/ork/internal/engine"
+	"github.com/squalor-xyz/ork/internal/ipc"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
@@ -23,6 +24,32 @@ func (a *App) call(ctx context.Context, o *output, method string, params, result
 }
 
 func (a *App) callWith(ctx context.Context, o *output, prefix, method string, params, result any) int {
+	return a.callRewriting(ctx, o, prefix, nil, method, params, result)
+}
+
+// callRunAction is a call that names one run. A not-found error for an id that
+// starts with run- says that the id is a slicer relay run, and which id the
+// command takes (S240, proposed; ui.status-text-layout). The error is the
+// same in text and in --json. No id is looked up or matched by prefix.
+func (a *App) callRunAction(ctx context.Context, o *output, run, method string, params, result any) int {
+	return a.callRewriting(ctx, o, "", func(err error) error {
+		e := ipc.ErrorOf(err)
+		if e.Code != daemon.CodeNotFound || !strings.HasPrefix(run, "run-") {
+			return err
+		}
+		return &ipc.Error{Code: e.Code, Message: fmt.Sprintf("%s (%s is a slicer relay run; use the ork- id that starts the run's row in ork status)", e.Message, run)}
+	}, method, params, result)
+}
+
+// callRewriting is callWith where rewrite, when it is not nil, may change a
+// call's error before it is printed.
+func (a *App) callRewriting(ctx context.Context, o *output, prefix string, rewrite func(error) error, method string, params, result any) int {
+	fail := func(err error) int {
+		if rewrite != nil {
+			err = rewrite(err)
+		}
+		return o.failErrWith(prefix, err)
+	}
 	finish := func() int {
 		if method == daemon.MethodStatus {
 			if status, ok := result.(*daemon.StatusResult); ok {
@@ -38,13 +65,13 @@ func (a *App) callWith(ctx context.Context, o *output, prefix, method string, pa
 	}
 	if a.Call != nil {
 		if err := a.Call(ctx, method, params, result); err != nil {
-			return o.failErrWith(prefix, err)
+			return fail(err)
 		}
 		return finish()
 	}
 	return a.withDaemon(ctx, o, func(c *daemon.Client) int {
 		if err := c.Call(ctx, method, params, result); err != nil {
-			return o.failErrWith(prefix, err)
+			return fail(err)
 		}
 		return finish()
 	})
@@ -434,7 +461,7 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 		}
 		p.Finding = n
 		var reply daemon.RunReply
-		if code := a.call(ctx, o, daemon.MethodRunFile, p, &reply); code != 0 {
+		if code := a.callRunAction(ctx, o, p.Run, daemon.MethodRunFile, p, &reply); code != 0 {
 			return code
 		}
 		if o.json {
@@ -452,13 +479,13 @@ func (a *App) ownerCommand(ctx context.Context, o *output, command string, args 
 	if command == "approve" {
 		p.LaterChecks = laterChecks
 		var reply daemon.RunReply
-		if code := a.call(ctx, o, "run."+command, p, &reply); code != ExitOK {
+		if code := a.callRunAction(ctx, o, p.Run, "run."+command, p, &reply); code != ExitOK {
 			return code
 		}
 		return printDeferred(o, reply)
 	}
 	var rec runrec.Record
-	if code := a.call(ctx, o, "run."+command, p, &rec); code != 0 {
+	if code := a.callRunAction(ctx, o, p.Run, "run."+command, p, &rec); code != 0 {
 		return code
 	}
 	return printRun(o, rec)
@@ -506,7 +533,7 @@ func (a *App) cardCommand(ctx context.Context, o *output, command string, args [
 			}
 			p.Run, p.State, p.All = pos[0], runrec.CheckLater, true
 			var reply daemon.RunReply
-			if code := a.call(ctx, o, "run.check", p, &reply); code != ExitOK {
+			if code := a.callRunAction(ctx, o, p.Run, "run.check", p, &reply); code != ExitOK {
 				return code
 			}
 			return printDeferred(o, reply)
@@ -531,7 +558,7 @@ func (a *App) cardCommand(ctx context.Context, o *output, command string, args [
 		}
 	}
 	var rec runrec.Record
-	if code := a.call(ctx, o, "run."+command, p, &rec); code != ExitOK {
+	if code := a.callRunAction(ctx, o, p.Run, "run."+command, p, &rec); code != ExitOK {
 		return code
 	}
 	return printRun(o, rec)

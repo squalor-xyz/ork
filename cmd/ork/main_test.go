@@ -211,7 +211,7 @@ func TestStatusReachesTheCommandLineThroughTheDaemon(t *testing.T) {
 		t.Error("the TUI started for status")
 		return nil
 	}))
-	if want := "mine: needs you 0, active relays 0\n"; code != 0 || out.String() != want {
+	if want := "mine: needs you 0, in progress 0, active relays 0\n"; code != 0 || out.String() != want {
 		t.Fatalf("code %d, stdout %q (want %q), stderr %q", code, out.String(), want, errOut.String())
 	}
 }

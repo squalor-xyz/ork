@@ -549,16 +549,24 @@ func RemovedProjectHelp(name string) string {
 	return fmt.Sprintf("No actions: project %q is not registered. Re-add it with ork projects add PATH --name %s, then run ork daemon restart.", name, name)
 }
 
-// FindingNeeds counts unresolved findings that the owner can act on.
-func (r EngineRun) FindingNeeds(runs ...EngineRun) int {
+// OpenFindings lists the unresolved findings that the owner can act on: an
+// unfiled later finding and an unanswered owner finding of a run that is not
+// unavailable, landed, dismissed or superseded. ork status prints each one, so
+// the list matches the count (S240, proposed).
+func (r EngineRun) OpenFindings(runs ...EngineRun) []EngineFinding {
 	if r.Unavailable || r.Landed || r.Dismissed || r.Superseded(runs) {
-		return 0
+		return nil
 	}
-	n := 0
+	var open []EngineFinding
 	for _, f := range r.Findings {
 		if (f.Kind == runrec.FindingLater && f.Filed == "") || (f.Kind == runrec.FindingOwner && f.Answer == "") {
-			n++
+			open = append(open, f)
 		}
 	}
-	return n
+	return open
+}
+
+// FindingNeeds counts unresolved findings that the owner can act on.
+func (r EngineRun) FindingNeeds(runs ...EngineRun) int {
+	return len(r.OpenFindings(runs...))
 }

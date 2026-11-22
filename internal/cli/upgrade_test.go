@@ -464,6 +464,45 @@ func TestDoctorPrintsNoHintWhenNothingIsBehind(t *testing.T) {
 	}
 }
 
+func TestDoctorGoldenOk(t *testing.T) {
+	env := setupUpgrade(t, upOpts{slicer: "checkout", behind: "0\t0"})
+	prepareDoctorGolden(t, env)
+	_, stdout, _ := run(t, env.app, "doctor")
+	golden(t, "cli-doctor-ok.txt", normalizeDoctor(t, env, stdout))
+}
+
+func TestDoctorGoldenUpgrade(t *testing.T) {
+	env := setupUpgrade(t, upOpts{slicer: "checkout", behind: "0\t0", adj: "build"})
+	prepareDoctorGolden(t, env)
+	_, stdout, _ := run(t, env.app, "doctor", "--upgrade")
+	golden(t, "cli-doctor-upgrade.txt", normalizeDoctor(t, env, stdout))
+}
+
+func TestDoctorGoldenUpgradeUnknown(t *testing.T) {
+	env := setupUpgrade(t, upOpts{slicer: "unknown", adj: "unreadable"})
+	prepareDoctorGolden(t, env)
+	_, stdout, _ := run(t, env.app, "doctor", "--upgrade")
+	golden(t, "cli-doctor-upgrade-unknown.txt", normalizeDoctor(t, env, stdout))
+}
+
+func TestDoctorGoldenHasNoTempPath(t *testing.T) {
+	for _, name := range []string{"cli-doctor-ok.txt", "cli-doctor-upgrade.txt", "cli-doctor-upgrade-unknown.txt"} {
+		t.Run(name, func(t *testing.T) {
+			data, err := os.ReadFile(filepath.Join("..", "..", "testdata", "golden", name))
+			if err != nil {
+				t.Fatal(err)
+			}
+			prefix, err := filepath.EvalSymlinks(os.TempDir())
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(string(data), prefix) {
+				t.Errorf("%s contains temporary directory prefix %q", name, prefix)
+			}
+		})
+	}
+}
+
 func TestDoctorUpgradeFlagPrintsEveryTool(t *testing.T) {
 	t.Run("recognized sources", func(t *testing.T) {
 		env := setupUpgrade(t, upOpts{slicer: "checkout", behind: "0\t0", adj: "build"})

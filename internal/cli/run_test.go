@@ -397,7 +397,7 @@ func TestStatusPrintsOpenSpecQuestions(t *testing.T) {
 	const reply = `{"projects":[{"name":"P","needs_you":3,"held":[{"id":"S32","title":"Owner answer"}],"spec_questions":[{"item":"S1","keys":["a.b","c.d"],"list":"ork wave start P S1 --questions"},{"item":"S2","keys":["e.f"],"list":"ork wave start P S2 --questions"}]}]}`
 	app := &App{Call: func(_ context.Context, _ string, _, result any) error { return json.Unmarshal([]byte(reply), result) }}
 	code, stdout, stderr := run(t, app, "status")
-	want := "P: needs you 3, active relays 0\n  S32  Owner answer  (needs-owner)\n  S1  2 open spec questions: a.b, c.d (answer: ork wave start P S1 --questions)\n  S2  1 open spec question: e.f (answer: ork wave start P S2 --questions)\n"
+	want := "P: needs you 3, in progress 0, active relays 0\n  S32  Owner answer  (needs-owner)\n  S1  2 open spec questions: a.b, c.d (answer: ork wave start P S1 --questions)\n  S2  1 open spec question: e.f (answer: ork wave start P S2 --questions)\n"
 	if code != 0 || stdout != want {
 		t.Fatalf("status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
 	}
@@ -405,9 +405,10 @@ func TestStatusPrintsOpenSpecQuestions(t *testing.T) {
 
 func TestStatusSectionsAndNeedsRows(t *testing.T) {
 	const reply = `{"projects":[{"name":"p","needs_you":5,"open":[{"id":125,"key":"ui.status-list","title":"Status list"}],"held":[{"id":"S32","title":"Owner answer"}],"active_relays":[{"id":"ledger","items":["S1"],"state":"active"}],"engine_runs":[{"id":"old","item":"S1","state":"stopped","created_at":"2026-10-23T12:00:00Z"},{"id":"current","item":"S1","state":"implement","created_at":"2026-10-23T12:01:00Z"},{"id":"done","item":"S2","state":"committed"},{"id":"approval","item":"S3","state":"awaiting-approval"},{"id":"paused","item":"S4","state":"paused","wait":"Question?","denials":["Write"]},{"id":"stopped","item":"S5","state":"stopped","updated_at":"2026-10-23T12:00:00Z"}]}]}`
-	app := &App{Call: func(_ context.Context, _ string, _, result any) error { return json.Unmarshal([]byte(reply), result) }}
+	localZone(t)
+	app := &App{Now: func() time.Time { return time.Date(2026, 10, 23, 12, 30, 0, 0, time.UTC) }, Call: func(_ context.Context, _ string, _, result any) error { return json.Unmarshal([]byte(reply), result) }}
 	code, stdout, stderr := run(t, app, "status")
-	want := "p: needs you 5, active relays 1\n  #125 ui.status-list  Status list\n  S32  Owner answer  (needs-owner)\n  ledger S1 active (0 steps, 0 running)\n  approval S3 awaiting-approval\n  paused S4 paused (wait: Question?) (denied: 1 command, first: Write)\n  stopped S5 stopped\n  current S1 implement\n"
+	want := "p: needs you 5, in progress 1, active relays 1\n  #125 ui.status-list  Status list\n  S32  Owner answer  (needs-owner)\n  relay ledger S1 active (0 steps, 0 running)\n  approval S3 awaiting-approval\n  paused S4 paused (wait: Question?) (denied: 1 command, first: Write)\n  stopped S5 stopped, updated 14:00 (30m ago)\n  current S1 implement\n"
 	if code != 0 || stdout != want {
 		t.Fatalf("status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
 	}

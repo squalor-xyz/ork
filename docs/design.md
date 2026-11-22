@@ -2892,7 +2892,9 @@ own line, `usage: ork daemon run`.
 ```
 ork                         open the TUI (start the daemon if needed)
 ork status [--project P] [--summary]
-                            waves, slices, roles, needs-you;
+                            needs-you, runs in progress, active relays
+                            (S240, proposed: each run row starts with the
+                            RUN id and shows when its state began);
                             --summary shows one project
 ork stats [PROJECT] [--since DATE] [--json]
                             slicer's relay-run statistics (S123, proposed)
@@ -3696,6 +3698,15 @@ fails (`adj.answer`, `adj.ask`, `item.new`, `item.park`, `item.unpark`,
   when the registry could not be read). The line does not change `ok` or the
   exit code.
 
+Text output fixtures are `testdata/golden/cli-doctor-ok.txt`,
+`cli-doctor-upgrade.txt` and `cli-doctor-upgrade-unknown.txt` in the same
+directory. They cover plain output and `--upgrade` with known and unknown
+sources. Tests replace temporary paths with `SLICER_CHECKOUT`, `ADJ_BIN` and
+`ORK_BIN`; `ADJ_CHECKOUT` and `ORK_CHECKOUT` are doctor's own placeholders.
+Tests also fix vendor, locale and owner inputs. A UI pass can read these
+files without running the binary or adding a test file. Rewrite them with
+`go test ./internal/cli -update` and review the diff.
+
 Doctor exits 1 when slicer, adj or the contract check fails. Advisory project
 findings do not change `ok` or the exit code. A failed `--fix` sets `ok` to false
 and exits 1. `roles print`
@@ -3775,7 +3786,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `options:[{label,summary}]`, one-based `recommend` and `reason` for a paused
   structured question. Older snapshots without it still load. *Proposed (S308):*
   `active_relays` holds slicer's active relay runs plus stale manual relays from
-  the board read. Both count in the text's `active relays M` line.
+  the board read. Both count in the text's `active relays K` count.
   The *proposed* optional `error` is a daemon-memory job or recovery error.
   The *proposed* optional `unavailable` marks a row without an engine.
   Removed-project groups are display-only and have `unavailable: true`.
@@ -3784,10 +3795,30 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   `errors` lists failed parts (`items`, `goals`, `runs`, `open`, `decided`)
   with the tool's own code. `parts` gives each part's age in ms (0 for a part never read) and `stale`
   when the part keeps an older value; the error is the one that failed. Text: one line `NAME: needs
-  you N, active relays M`, then one line per relay, engine run (with state,
+  you N, in progress M, active relays K`, then one line per relay, engine run (with state,
   wait reason and the `denied:` line), and error. The denied line shows at
-  most three texts, then `and N more` for the remaining texts. The text
-  does not show ages yet.
+  most three texts, then `and N more` for the remaining texts.
+  *Proposed (S240, adj 526 `ui.status-text-layout`):* M in the project line
+  counts the engine rows in the Running section. A relay row starts with `relay`, because
+  its id is slicer's `run-` id and no owner command takes it; an engine row
+  starts with its `ork-` id, which is the `RUN` of the commands. An owner
+  command given a `run-` id gets the daemon's not-found message and, after it,
+  `(ID is a slicer relay run; use the ork- id that starts the run's row in ork
+  status)`, in text and in `--json`; ork looks no id up and matches no prefix.
+  A row shows when its state began, in the local zone: `, waiting since HH:MM
+  (AGE)` for a paused or awaiting-approval run (from `wait_started_at`) and
+  `, updated HH:MM (AGE ago)` for any other state (from `updated_at`, which
+  for a run in `checks` is when the step began); a time on another local day
+  reads `MM-DD HH:MM`; a zero time prints nothing. AGE is `45s`, `4m`, `2h10m`
+  or `1d03h`. The wait prints its first line on the row, as `(wait: LINE)`, each
+  later line on its own line with a six-space indent, and the `; next: ` suffix
+  the daemon adds as `    next: COMMAND`; terminal controls are removed. A run
+  with a `wave` prints `    wave: ID` before the question lines. After the
+  engine rows, `  finding RUN N later: TITLE` followed by `    file it: ork file
+  RUN N` on its own line, or one line `  finding RUN N owner: TITLE (answer it in
+  the TUI run pane)`, lists each open finding that `needs you` counts, in a
+  hidden run too. `--json` is
+  the daemon's result and has none of these.
   With no projects, text `status` prints
   `no projects: run ork projects add PATH (or run ork to add one in the TUI)`
   and exits 0. Project commands (`run`, `wave suggest`, `wave start`, and
