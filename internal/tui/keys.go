@@ -519,6 +519,8 @@ func (m *Model) contextHints() []hintEntry {
 		}
 		global()
 	case m.view == roadmapView:
+		_, slicerTuiRefused := m.slicerTuiRefusal()
+		l.add(dropSlicerTui, offer(!slicerTuiRefused, k.OpenSlicerTui, "O", "slicer tui"))
 		_, newRefused := m.composeRefusal(composeNew)
 		l.add(dropNew, offer(!newRefused, k.New, "n", "new slice"))
 		_, noteRefused := m.composeRefusal("note")
@@ -559,8 +561,6 @@ func (m *Model) contextHints() []hintEntry {
 		}
 		l.add(parkDrop, offer(!parkRefused, k.Park, "P", park))
 		l.add(moveDrop, offer(!moveRefused, k.MoveDown, "J/K", "move"))
-		_, slicerTuiRefused := m.slicerTuiRefusal()
-		l.add(dropSlicerTui, offer(!slicerTuiRefused, k.OpenSlicerTui, "O", "slicer tui"))
 		l.add(matrixDrop, offer(!matrixRefused, k.Matrix, "m", "matrix"))
 		global()
 	case m.view == wavesView:

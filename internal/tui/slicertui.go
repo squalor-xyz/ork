@@ -19,6 +19,12 @@ type slicerTuiDoneMsg struct {
 type slicerTuiSelection struct {
 	project, item string
 	row           int
+	atReturn      int
+	skipOne       bool
+}
+
+func (m *Model) slicerTuiProjectReady() bool {
+	return m.active >= 0 && m.projects[m.active].loaded && !m.projects[m.active].snap.Unavailable && !m.projects[m.active].setup()
 }
 
 // slicerTuiRefusal is shared by the action and its hint. Availability comes
@@ -31,7 +37,7 @@ func (m *Model) slicerTuiRefusal() (string, bool) {
 		return "Select a project to open slicer tui", true
 	case m.showHelp:
 		return "Close help to open slicer tui", true
-	case !m.projects[m.active].loaded || m.projects[m.active].snap.Unavailable || m.projects[m.active].setup():
+	case !m.slicerTuiProjectReady():
 		return "Project unavailable; cannot open slicer tui", true
 	case m.matrixPaneOpen():
 		return "", true
@@ -69,14 +75,18 @@ func (m *Model) openSlicerTui() tea.Cmd {
 }
 
 // restoreSlicerTuiCursor runs only after apply has stored the new snapshot.
-// A coalesced fetch leaves the restore pending for the in-flight read's reply.
+// A coalesced fetch skips the old reply and waits for a read started after exit.
 func (m *Model) restoreSlicerTuiCursor(project string) {
 	selection := m.slicerTuiRestore
-	if selection == nil || selection.project != project || m.byName[project].snap.Items.Err != nil {
+	if selection == nil || selection.project != project {
+		return
+	}
+	if selection.skipOne {
+		selection.skipOne = false
 		return
 	}
 	m.slicerTuiRestore = nil
-	if m.active < 0 || m.projects[m.active].reg.Name != project || m.view != roadmapView {
+	if m.byName[project].snap.Items.Err != nil || m.active < 0 || m.projects[m.active].reg.Name != project || m.view != roadmapView || m.roadmapCursor != selection.atReturn {
 		return
 	}
 	items := m.roadmapItems()

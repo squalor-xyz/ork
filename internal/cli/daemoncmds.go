@@ -66,7 +66,13 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 		if p.Unavailable {
 			name += " (removed)"
 		}
-		fmt.Fprintf(o.stdout, "%s: needs you %d, active relays %d\n", name, p.NeedsYou, len(p.ActiveRelays))
+		inProgress := 0
+		for _, r := range p.EngineRuns {
+			if r.Section(p.EngineRuns) == source.SectionRunning {
+				inProgress++
+			}
+		}
+		fmt.Fprintf(o.stdout, "%s: needs you %d, in progress %d, active relays %d\n", name, p.NeedsYou, inProgress, len(p.ActiveRelays))
 		// The daemon's own rebuild: the drain that holds role starts, or the failure (S431).
 		if p.Rebuild != nil {
 			fmt.Fprintf(o.stdout, "  %s\n", p.Rebuild.Message)
@@ -92,7 +98,7 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 			if items == "" {
 				items = "-"
 			}
-			fmt.Fprintf(o.stdout, "  %s %s %s (%d steps, %d running)\n", r.ID, items, r.State, r.Steps, r.Running)
+			fmt.Fprintf(o.stdout, "  relay %s %s %s (%d steps, %d running)\n", r.ID, items, r.State, r.Steps, r.Running)
 			if step := r.RunningStep; step != nil {
 				// Say what the Running row says: no "<id> <role>" label (S150).
 				running := *step
@@ -108,22 +114,34 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 				if r.Section(p.EngineRuns) != section {
 					continue
 				}
-				fmt.Fprintf(o.stdout, "  %s %s %s", r.ID, r.Item, r.State)
+				fmt.Fprintf(o.stdout, "  %s %s %s%s", r.ID, r.Item, r.State, stateTime(r, now))
 				if r.ShapeRetry {
 					fmt.Fprint(o.stdout, " (shape retry)")
 				}
-				if r.Wait != "" {
+				// The first line of a question is on the row; the other lines and
+				// the command to run next follow, one to a line (S240, proposed).
+				waitLines, next := splitWait(r.Wait)
+				if len(waitLines) > 0 {
 					again := ""
 					if r.State == "awaiting-approval" && r.LandFixes > 0 {
 						// A red landing re-check had its fix round: this is the second approval (S238).
 						again = ", again: the landing was blocked and its fix round is done"
 					}
-					fmt.Fprintf(o.stdout, " (wait: %s%s)", r.Wait, again)
+					fmt.Fprintf(o.stdout, " (wait: %s%s)", waitLines[0], again)
 				}
 				if len(r.Denials) > 0 {
 					fmt.Fprint(o.stdout, " "+statusDenialsText(r.Denials))
 				}
 				fmt.Fprintln(o.stdout)
+				if r.Wave != "" {
+					fmt.Fprintf(o.stdout, "    wave: %s\n", plainLine(r.Wave))
+				}
+				for _, line := range waitLines[min(1, len(waitLines)):] {
+					fmt.Fprintf(o.stdout, "      %s\n", line)
+				}
+				if next != "" {
+					fmt.Fprintf(o.stdout, "    next: %s\n", next)
+				}
 				if c := r.LastCheck; c != nil {
 					fmt.Fprintf(o.stdout, "    %s\n", lastCheckLine(*c))
 				}
@@ -134,6 +152,9 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					fmt.Fprintf(o.stdout, "    error: %s\n", strings.NewReplacer("\r\n", " ", "\n", " ", "\r", " ").Replace(r.Error))
 				}
 			}
+		}
+		for _, line := range findingLines(p.EngineRuns) {
+			fmt.Fprintf(o.stdout, "  %s\n", line)
 		}
 		for _, e := range p.Errors {
 			fmt.Fprintf(o.stdout, "  error %s: %s (%s)\n", e.Part, e.Message, e.Code)

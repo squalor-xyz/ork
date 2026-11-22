@@ -521,6 +521,50 @@ func TestDenialsText(t *testing.T) {
 	}
 }
 
+// The findings status lists are the findings the needs-you count includes.
+func TestOpenFindingsMatchesFindingNeeds(t *testing.T) {
+	f := []EngineFinding{
+		{N: 1, Kind: runrec.FindingLater, Title: "Later"},
+		{N: 2, Kind: runrec.FindingOwner, Title: "Owner"},
+		{N: 3, Kind: runrec.FindingLater, Title: "Filed", Filed: "S9"},
+		{N: 4, Kind: runrec.FindingOwner, Title: "Answered", Answer: "yes"},
+		{N: 5, Kind: "other", Title: "Neither"},
+	}
+	now := time.Now()
+	for _, tc := range []struct {
+		name  string
+		run   EngineRun
+		newer bool
+		want  []int
+	}{
+		{"unlanded committed", EngineRun{ID: "old", Item: "S1", State: runrec.StateCommitted, Findings: f}, false, []int{1, 2}},
+		{"awaiting approval", EngineRun{ID: "old", Item: "S1", State: runrec.StateAwaitingApproval, Findings: f}, false, []int{1, 2}},
+		{"landed", EngineRun{ID: "old", Item: "S1", State: runrec.StateCommitted, Landed: true, Findings: f}, false, nil},
+		{"dismissed", EngineRun{ID: "old", Item: "S1", State: runrec.StateStopped, Dismissed: true, Findings: f}, false, nil},
+		{"unavailable", EngineRun{ID: "old", Item: "S1", State: runrec.StateImplement, Unavailable: true, Findings: f}, false, nil},
+		{"superseded", EngineRun{ID: "old", Item: "S1", State: runrec.StateStopped, CreatedAt: now, Findings: f}, true, nil},
+		{"no findings", EngineRun{ID: "old", Item: "S1", State: runrec.StateImplement}, false, nil},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			runs := []EngineRun{tc.run}
+			if tc.newer {
+				runs = append(runs, EngineRun{ID: "new", Item: "S1", State: runrec.StateImplement, CreatedAt: now.Add(time.Second)})
+			}
+			got := tc.run.OpenFindings(runs...)
+			if len(got) != tc.run.FindingNeeds(runs...) {
+				t.Errorf("OpenFindings has %d, FindingNeeds counts %d", len(got), tc.run.FindingNeeds(runs...))
+			}
+			var ns []int
+			for _, g := range got {
+				ns = append(ns, g.N)
+			}
+			if !reflect.DeepEqual(ns, tc.want) {
+				t.Errorf("open findings %v, want %v", ns, tc.want)
+			}
+		})
+	}
+}
+
 func TestBudgetPauseIsNeedsYou(t *testing.T) {
 	var r EngineRun
 	if err := json.Unmarshal([]byte(`{"id":"budget","state":"paused","pending":"budget","wait":"token budget 9000 reached (9100 used)"}`), &r); err != nil {

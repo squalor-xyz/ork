@@ -374,6 +374,41 @@ func TestPrintsNothingWordingIsMarked(t *testing.T) {
 	}
 }
 
+func TestEmptyOutputWordings(t *testing.T) {
+	for _, tc := range []struct {
+		wording string
+		want    bool
+	}{
+		{"prints nothing", true},
+		{"must print nothing", true},
+		{"finds nothing", true},
+		{"matches nothing", true},
+		{"returns nothing", true},
+		{"FiNdS NoThInG", true},
+		{"MaTcHeS NoThInG", true},
+		{"ReTuRnS NoThInG", true},
+		{"finds the exception", false},
+	} {
+		t.Run(tc.wording, func(t *testing.T) {
+			got := sliceCheckCommands(checksSpec("- `rg -n A f` " + tc.wording + "."))
+			if len(got) != 1 || got[0].empty != tc.want {
+				t.Errorf("commands = %+v, want empty = %v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestEmptyOutputWordingsRgNoMatch(t *testing.T) {
+	for _, wording := range []string{"finds nothing", "matches nothing", "returns nothing"} {
+		t.Run(wording, func(t *testing.T) {
+			row, log := printsNothingRow(t, "- `rg -n ZZZ docs` "+wording+".", "rg", "exit 1")
+			if !row.OK || row.Exit != 1 || row.NotRun != "" {
+				t.Errorf("row = %+v, want OK on the no-match exit 1\n%s", row, log)
+			}
+		})
+	}
+}
+
 // S241: an owner's "tighten" left a backticked `--yes` in the Check. It is not
 // a command: ork records and names it, does not run it, and does not pause.
 func TestSliceChecksSkipAFlagOnlyEntry(t *testing.T) {

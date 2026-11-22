@@ -977,6 +977,19 @@ record as `  #ID KEY  TITLE` and each held item as
 `  SID  TITLE  (needs-owner)` before relay and engine rows. Its engine list
 uses the same Needs, Running and Hidden classification as the Overview, so
 the needs list matches the count (`ui.status-list`, adj #125).
+*Proposed (S240, adj 526 `ui.status-text-layout`):* the text also lists every
+open finding the count includes, one line each after the engine rows, as
+`  finding RUN N later: TITLE` followed by the line `    file it: ork file RUN N`
+(its own line, so a long run id does not wrap inside the command) or
+`  finding RUN N owner: TITLE (answer it in the TUI run pane)`, including the
+findings of a hidden (committed, not landed) run. The project line reads
+`NAME: needs you N, in progress M, active relays K`. A relay row starts with
+`relay`; an engine row starts with the `ork-` id that the owner commands take.
+A row says when its state began (`, waiting since HH:MM (AGE)` or
+`, updated HH:MM (AGE ago)`, local time, nothing for a zero time), prints a
+multi-line wait one line per line (the first on the row, the rest indented six
+spaces) with the `; next:` command as `    next: COMMAND`, and prints
+`    wave: ID` when the run has a wave. The TUI does not change.
 `ork status --json` includes hidden engine runs still in the snapshot and
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
@@ -2253,7 +2266,12 @@ ork re-reads that project, requesting a daemon refresh first when connected,
 so the Roadmap, counts and readiness show the edits. After the refreshed
 project arrives, the cursor follows the item selected when `O` was pressed.
 If that item is gone, ork keeps the old row index clamped to the new list.
-When a project read is already in flight, restoration waits for its reply.
+Restoration waits for a project read started after slicer's TUI exits. If a
+read was already in flight, ork skips its reply for restoration and follows
+it with a new read, requesting a daemon refresh when connected. An item-list
+error drops the restore. Moving the cursor before the refreshed list arrives
+also drops it, leaving the owner's selection alone. Returning while another
+project is active leaves that project's cursor alone.
 A failed exit shows `slicer tui: ERROR` on the status line and still
 re-reads the project.
 
@@ -2264,12 +2282,13 @@ The matrix pane blocks it silently. An open item pane says
 binary shows `slicer tui: slicer not found on PATH` on the status line
 without leaving ork (using the configured binary name). Other lookup errors
 keep their original text. The hint offers `O slicer tui` only when the action
-can run. It follows the row actions (`enter open`, `l launch`) and precedes
-`m matrix`, so ork's edits lead and slicer's TUI reads as "for the rest".
+can run. It leads the Roadmap hint, before filing, notes and the row actions
+(`enter open`, `l launch`), as decided in adj 440. The other entries keep
+their order.
 When notes and filing are unavailable, the 80x24 empty-list hint is
-`l launch; O slicer tui; m matrix; tab views; q quit; ? help`.
+`O slicer tui; l launch; m matrix; tab views; q quit; ? help`.
 Without a daemon, the 100x30 Roadmap hint is
-`enter open; O slicer tui; tab views; + add project; q quit; ? help`.
+`O slicer tui; enter open; tab views; + add project; q quit; ? help`.
 `O slicer tui` drops with `+ add project` and `n new slice`, before `N note`.
 At 100x30 Roadmap help groups `O slicer tui` with
 `P park/unpark; J/K move item down/up` on one line. At 80x24 `O slicer tui`
@@ -2279,6 +2298,14 @@ Roadmap help keeps `e edit lineup (Waves, launch)`, since `e` edits the
 lineup on the launch confirmation. It omits the Running-only space keys.
 The help fits at 100x30; at 80x24 the edit keys and the way out remain
 visible above and below the clipped help body.
+
+Human checks for terminal handover (S399): at 200x40 the Roadmap hint starts
+`O slicer tui;`; at 100x30 and 80x24 the unchanged drop tier hides it when
+the line is full. From 100x30, select the third item, press `O`, resize to
+80x24 inside slicer's TUI, then quit normally: ork should redraw at 80x24
+on the same item without stale lines. Separately quit slicer's TUI with
+ctrl+c: record any `slicer tui: exit status N` status and its N, and check
+that ork remains responsive.
 
 Adding an item to the wave composer comes in a later slice.
 v1.0 includes filing a slice (S170), adding notes (S171), and answering or

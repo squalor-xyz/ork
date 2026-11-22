@@ -177,9 +177,12 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               show slicer's relay-run statistics; all-time
                               by default, current directory without PROJECT
   ork status [--project P] [--summary]
-                              projects, needs-you counts and active relays;
-                              --summary shows running, needs you, blocked
-                              and next for one project
+                              projects, needs-you counts, runs in progress
+                              and active relays; a run row starts with its
+                              ork- id and shows when its state began; a row
+                              that says relay is slicer's, and its id is not
+                              a RUN; --summary shows running, needs you,
+                              blocked and next for one project
   ork show RUN [NAME]         print why a run is paused, its reports, checks
                               and findings; NAME prints one report or log
   ork wait [RUN...] [--until STATE,...] [--timeout D] [--project P] [--stage]
@@ -299,6 +302,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               (slicer, adj and ork with --upgrade), and run
                               none of them
 
+RUN is the ork- id that starts a run's row in ork status. The run- id of a
+relay row is slicer's, and the commands refuse it.
 Every command takes --json. Exit codes: 0 ok, 1 failure, 2 usage; ork wait
 also returns 3, 4, 5 and 6 (see above).
 `

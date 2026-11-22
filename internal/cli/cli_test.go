@@ -373,11 +373,11 @@ func TestStatusFromTheDaemonsSourceSnapshot(t *testing.T) {
 
 	// Text output: one line per project, then its relays and errors.
 	code, stdout, _ = run(t, w.app, "status", "--project", "ork")
-	want := "ork: needs you 2, active relays 2\n" +
+	want := "ork: needs you 2, in progress 0, active relays 2\n" +
 		"  #11 ui.slicer-tui  Does ork reimplement slicer's roadmap editor or reuse slicer tui?\n" +
 		"  #51 vendor.codex-ratelimit  Does codex count as rate-limit-capable in v1?\n" +
-		"  run-A S03 active (5 steps, 2 running)\n" +
-		"  run-B S04,S05 active (1 steps, 1 running)\n"
+		"  relay run-A S03 active (5 steps, 2 running)\n" +
+		"  relay run-B S04,S05 active (1 steps, 1 running)\n"
 	if code != 0 || stdout != want {
 		t.Fatalf("text status, exit %d:\n%s\nwant:\n%s", code, stdout, want)
 	}
@@ -387,8 +387,8 @@ func TestStatusErrorsAreListedInText(t *testing.T) {
 	w := newWorld(t, stubSource{"a": {Items: source.Result[[]slicercli.Item]{Err: fmt.Errorf("slicer is gone")}}},
 		registry.Project{Name: "a", Path: "/p/a"}, registry.Project{Name: "b", Path: "/p/b"})
 	_, stdout, _ := run(t, w.app, "status")
-	want := "a: needs you 0, active relays 0\n  error items: slicer is gone (internal)\n" +
-		"b: needs you 0, active relays 0\n"
+	want := "a: needs you 0, in progress 0, active relays 0\n  error items: slicer is gone (internal)\n" +
+		"b: needs you 0, in progress 0, active relays 0\n"
 	if stdout != want {
 		t.Fatalf("status:\n%s\nwant:\n%s", stdout, want)
 	}
@@ -402,9 +402,9 @@ func TestStatusPrintsTheDaemonRebuild(t *testing.T) {
 	if code := a.Run(context.Background(), []string{"status"}, &out, &errout); code != 0 {
 		t.Fatalf("exit %d: %s", code, &errout)
 	}
-	want := "a: needs you 0, active relays 0\n  rebuild pending: waiting for 2 roles\n" +
-		"b: needs you 0, active relays 0\n  daemon not rebuilt: build failed (exit 1)\n    x.go:1: undefined: y\n    make: *** Error 1\n" +
-		"c: needs you 0, active relays 0\n"
+	want := "a: needs you 0, in progress 0, active relays 0\n  rebuild pending: waiting for 2 roles\n" +
+		"b: needs you 0, in progress 0, active relays 0\n  daemon not rebuilt: build failed (exit 1)\n    x.go:1: undefined: y\n    make: *** Error 1\n" +
+		"c: needs you 0, in progress 0, active relays 0\n"
 	if out.String() != want {
 		t.Fatalf("status:\n%s\nwant:\n%s", out.String(), want)
 	}
@@ -1660,12 +1660,12 @@ func TestStatusStaleRelays(t *testing.T) {
 				{ID: "stale-ledger", Items: []string{"S308"}, State: "stale", Counts: slicercli.Counts{Steps: 3}},
 				{ID: "ended-ledger", State: "ended"},
 			}}}
-			want := "ork: needs you 0, active relays 1\n"
+			want := "ork: needs you 0, in progress 0, active relays 1\n"
 			if mixed {
 				snap.Runs.Value = []slicercli.RelayRun{{ID: "active-ledger", Items: []string{"S30"}, State: "active", Counts: slicercli.Counts{Steps: 1, Running: 1}, Steps: []slicercli.Step{{Role: "implementer", Vendor: "codex", Model: "gpt-6.1", Phase: "start", Task: "Implement S30"}}}}
-				want = "ork: needs you 0, active relays 2\n  active-ledger S30 active (1 steps, 1 running)\n    running: implementer codex/gpt-6.1: Implement S30\n"
+				want = "ork: needs you 0, in progress 0, active relays 2\n  relay active-ledger S30 active (1 steps, 1 running)\n    running: implementer codex/gpt-6.1: Implement S30\n"
 			}
-			want += "  stale-ledger S308 stale (3 steps, 0 running)\n"
+			want += "  relay stale-ledger S308 stale (3 steps, 0 running)\n"
 			w := newWorld(t, statusBoardSource{stubSource{"ork": snap}}, registry.Project{Name: "ork", Path: "/projects/ork"})
 			code, stdout, stderr := run(t, w.app, "status")
 			if code != 0 || stdout != want {
@@ -1687,7 +1687,7 @@ func TestStatusRelaySteps(t *testing.T) {
 		{ID: "ledger", Items: []string{"S30"}, State: "active", Counts: slicercli.Counts{Steps: 5, Running: 2}, Steps: steps},
 	}}}}, registry.Project{Name: "ork", Path: "/projects/ork"})
 	code, stdout, stderr := run(t, w.app, "status")
-	want := "ork: needs you 0, active relays 1\n  ledger S30 active (5 steps, 2 running)\n    running: implementer codex/gpt-6.1: Implement S30\n    failed: reviewer: Review S30\n"
+	want := "ork: needs you 0, in progress 0, active relays 1\n  relay ledger S30 active (5 steps, 2 running)\n    running: implementer codex/gpt-6.1: Implement S30\n    failed: reviewer: Review S30\n"
 	if code != 0 || stdout != want {
 		t.Fatalf("step status exit %d: %s\ngot:\n%swant:\n%s", code, stderr, stdout, want)
 	}
@@ -1725,7 +1725,7 @@ func TestStatusRunningTextCutsTheTaskLabel(t *testing.T) {
 				}},
 			}}}}, registry.Project{Name: "ork", Path: "/projects/ork"})
 			code, stdout, stderr := run(t, w.app, "status")
-			want := "ork: needs you 0, active relays 1\n  ledger S30 active (0 steps, 0 running)\n    " + tc.running + "\n    failed: reviewer: s30 reviewer\n"
+			want := "ork: needs you 0, in progress 0, active relays 1\n  relay ledger S30 active (0 steps, 0 running)\n    " + tc.running + "\n    failed: reviewer: s30 reviewer\n"
 			if code != 0 || stdout != want {
 				t.Fatalf("exit %d: %s\ngot %q\nwant %q", code, stderr, stdout, want)
 			}
@@ -1755,7 +1755,7 @@ func TestStatusRelayOptionalFields(t *testing.T) {
 				}},
 			}}}}, registry.Project{Name: "ork", Path: "/projects/ork"})
 			code, stdout, stderr := run(t, w.app, "status")
-			want := "ork: needs you 0, active relays 1\n  ledger S30 active (0 steps, 0 running)\n    " + tc.running + "\n    " + tc.failed + "\n"
+			want := "ork: needs you 0, in progress 0, active relays 1\n  relay ledger S30 active (0 steps, 0 running)\n    " + tc.running + "\n    " + tc.failed + "\n"
 			if code != 0 || stdout != want {
 				t.Fatalf("optional fields exit %d: %s\ngot %q\nwant %q", code, stderr, stdout, want)
 			}
@@ -1786,7 +1786,7 @@ func statusDenialsApp(t *testing.T, denials []string) *App {
 func TestStatusCountsDeniedCommands(t *testing.T) {
 	denials := []string{"Bash: " + strings.Repeat("x", 114), "second", "third", "fourth", "fifth"}
 	code, out, errout := run(t, statusDenialsApp(t, denials), "status")
-	want := "p: needs you 0, active relays 0\n  r1 S243 implement (denied: 5 commands, first: Bash: " + strings.Repeat("x", 31) + "...)\n"
+	want := "p: needs you 0, in progress 1, active relays 0\n  r1 S243 implement (denied: 5 commands, first: Bash: " + strings.Repeat("x", 31) + "...)\n"
 	if code != 0 || out != want {
 		t.Fatalf("status %d: got %q, want %q; %s", code, out, want, errout)
 	}
@@ -1794,7 +1794,7 @@ func TestStatusCountsDeniedCommands(t *testing.T) {
 
 func TestStatusDeniedOneCommandIsSingular(t *testing.T) {
 	code, out, errout := run(t, statusDenialsApp(t, []string{"Write: /x.txt"}), "status")
-	want := "p: needs you 0, active relays 0\n  r1 S243 implement (denied: 1 command, first: Write: /x.txt)\n"
+	want := "p: needs you 0, in progress 1, active relays 0\n  r1 S243 implement (denied: 1 command, first: Write: /x.txt)\n"
 	if code != 0 || out != want {
 		t.Fatalf("status %d: got %q, want %q; %s", code, out, want, errout)
 	}
@@ -1802,7 +1802,7 @@ func TestStatusDeniedOneCommandIsSingular(t *testing.T) {
 
 func TestStatusDeniedCutsOnRunesNotBytes(t *testing.T) {
 	code, out, errout := run(t, statusDenialsApp(t, []string{"Bash: " + strings.Repeat("界", 50)}), "status")
-	want := "p: needs you 0, active relays 0\n  r1 S243 implement (denied: 1 command, first: Bash: " + strings.Repeat("界", 31) + "...)\n"
+	want := "p: needs you 0, in progress 1, active relays 0\n  r1 S243 implement (denied: 1 command, first: Bash:" + " " + strings.Repeat("界", 31) + "...)\n"
 	if code != 0 || out != want || !utf8.ValidString(out) {
 		t.Fatalf("status %d: got %q, want %q; %s", code, out, want, errout)
 	}
