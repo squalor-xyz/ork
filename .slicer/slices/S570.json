@@ -1,0 +1,39 @@
+{
+  "id": "S570",
+  "title": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-163843-3fc2, project ork, item S566:\n\nflag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded\n\nEvidence: brief.go:42 calls e.d.Adj.Check unguarded; decisionpaths.go:49 and later.go:193 guard on e.proj.Adj"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

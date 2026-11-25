@@ -39,6 +39,8 @@ the brief and this prompt disagree, the brief wins; say so in your report.
    decisions already recorded in its sections. A decision the owner recorded is
    settled; do not reopen it. Check decisions with `adj check KEY` when a section
    cites a key.
+   Before inventing a decision key, use `adj check TEXT` to look up decisions by topic and reuse an existing key for the same topic.
+   Never use `adj find`.
 2. You may draft every section from the title alone. When the slice has no text, read
    the code, the project's docs and its decided records, and propose the whole spec.
    When it has text, keep what is right and change only what you can improve by

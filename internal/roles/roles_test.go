@@ -784,7 +784,8 @@ func TestSpecCheckPrompt(t *testing.T) {
 		"the whole batch in one pass",
 		"Put a blank line between the blocks of one slice",
 		"A decision the owner recorded is settled",
-		"Before inventing a decision key, use `adj find` over decided records and reuse an existing key for the same topic.",
+		"Before inventing a decision key, use `adj check TEXT` to look up decisions by topic and reuse an existing key for the same topic.",
+		"Never use `adj find`.",
 		"A gap you can close by reading the code is not a question",
 	} {
 		if !has(p, want) {
@@ -898,6 +899,8 @@ func TestSpecDraftPrompt(t *testing.T) {
 		"Every path under `Files` must exist in the checkout, or the line says `(new)`",
 		"Use no level-two heading inside a section",
 		"ork writes nothing until the owner approves each section",
+		"Before inventing a decision key, use `adj check TEXT` to look up decisions by topic and reuse an existing key for the same topic.",
+		"Never use `adj find`.",
 	} {
 		if !has(p, want) {
 			t.Errorf("spec-draft does not say %q", want)

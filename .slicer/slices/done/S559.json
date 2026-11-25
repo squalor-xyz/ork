@@ -1,0 +1,39 @@
+{
+  "id": "S559",
+  "title": "Spec-check brief: look up existing decisions by topic with adj check TEXT",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The spec-check reported this as tool feedback (friction) on adj in spec check of S558, project ork, item S558:\n\nadd an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic\n\nEvidence: `adj find \"matrix.copy\"` returned `adj: unknown command \"find\"`"
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/roles/prompts/spec-check.md:76` decision-topic lookup.\n- `internal/roles/prompts/spec-draft.md:42` decision-topic lookup guidance.\n- `internal/roles/roles_test.go:777` TestSpecCheckPrompt and `internal/roles/roles_test.go:888` TestSpecDraftPrompt.\n- `docs/state.md:699` recheck_slice one-shot retry wording.\n- `docs/design.md:3121` spec-check lookup sentence (said adj find).\n- `landed-changed/S559.md` (new), via slicer changelog add."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestSpecCheckPrompt`: requires adj check TEXT to find and reuse an existing decision key by topic, and rejects adj find.\n- `TestSpecDraftPrompt`: requires the same topic lookup and reuse guidance, and rejects adj find.\n- Both tests must fail against the old prompts before implementing the wording changes."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. Update TestSpecCheckPrompt and TestSpecDraftPrompt test-first for topic lookup with adj check TEXT and rejection of adj find.\n2. Tell both spec roles to use adj check TEXT before inventing a decision key, reuse an existing key for the same topic, and never use adj find.\n3. Correct docs/state.md: the first slice check after a retry reruns a red batch once; green batches remain cached. No runtime change.\n4. Add the S559 changelog entry through slicer changelog add.\nNot in this slice: adj features, runtime retry changes, or other role behavior."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./internal/roles ./internal/daemon ./internal/engine` exits 0.\n- `go test ./...` exits 0 (ork also runs outside the sandbox).\n- `go vet ./...` exits 0 (ork also runs outside the sandbox)."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
