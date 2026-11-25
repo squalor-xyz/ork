@@ -6790,3 +6790,7 @@
 {"when": "2026-11-25T21:36:37Z", "item": "S593", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S593):", "by": "Jon Robbins"}
 {"when": "2026-11-25T21:36:37Z", "item": "S593", "action": "note", "from": "", "to": "", "note": "Base overlays now vet each generated overlay and replace non", "by": "Jon Robbins"}
 {"when": "2026-11-25T21:36:37Z", "item": "S593", "action": "status", "from": "started", "to": "done", "note": "Base overlays now vet each generated overlay and replace non-zero exits with bounded diagnostics and git-show pointers, preserving test commands when vet cannot run.", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:34:46Z", "item": "S598", "action": "add", "from": "", "to": "open", "note": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice"}
+{"when": "2026-11-25T21:34:46Z", "item": "S598", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T21:36:36Z", "item": "S599", "action": "add", "from": "", "to": "open", "note": "build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice"}
+{"when": "2026-11-25T21:36:36Z", "item": "S599", "action": "promote", "from": "", "to": "", "note": ""}
