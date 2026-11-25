@@ -1,0 +1,39 @@
+{
+  "id": "S562",
+  "title": "put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #560 was decided to file it:\n\nProposal: put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree\nRole: reviewer\nRun: ork-20261125-145554-ed21\nProject: ork\nItem: S543\nEvidence: I built overlay.json by hand to add a package-internal probe test for the in-place edit case"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

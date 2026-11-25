@@ -6451,3 +6451,10 @@
 {"when": "2026-11-25T15:09:34Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Reported again from S545's reviewer (adj 559, dropped as cov", "by": "Jon Robbins"}
 {"when": "2026-11-25T15:09:45Z", "item": "S561", "action": "add", "from": "", "to": "open", "note": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test"}
 {"when": "2026-11-25T15:09:46Z", "item": "S561", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:22:55Z", "item": "S561", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S547 (adj 558, owner 2026-11-25)"}
+{"when": "2026-11-25T15:30:41Z", "item": "S547", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T15:30:42Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded adj 560 in: put the go test -overlay", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:30:46Z", "item": "S562", "action": "add", "from": "", "to": "open", "note": "put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree"}
+{"when": "2026-11-25T15:30:47Z", "item": "S562", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:35:20Z", "item": "S559", "action": "set", "from": "", "to": "", "note": "title adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic→Spec-check brief: look up existing decisions by topic with adj check TEXT; short_title adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic→Spec-check brief: look up existing decisions by topic with adj check TEXT"}
+{"when": "2026-11-25T15:35:21Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: adj already searches by topic: adj check T", "by": "Jon Robbins"}
