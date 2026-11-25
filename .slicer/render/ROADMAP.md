@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-554 items · — 55 · done 376 · retired 123
+554 items · — 54 · done 377 · retired 123
 
 ## v1.3
 
@@ -311,7 +311,7 @@ v1.2
 | 254 | [S549](slices/S549.md) | allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures |  | - |  | discovered from S499 | — |
 | 255 | [S550](slices/S550.md) | name -render-fixture and the fixture list in the UI pass brief's CLI text renders section |  | - |  | discovered from S499 | — |
 | 256 | [S551](slices/S551.md) | allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert |  | - |  | discovered from S548 | — |
-| 257 | [S552](slices/S552.md) | UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files |  | 1 |  | discovered from S499 | — |
+| 257 | [S552](slices/S552.md) | UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files |  | 1 |  | discovered from S499 | done |
 | 258 | [S553](slices/S553.md) | In ork status, print the wave line after the multi-line wait's options |  | 1 |  | discovered from S499 | — |
 | 259 | [S554](slices/S554.md) | give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file |  | - |  | discovered from S544 | — |
 

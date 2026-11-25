@@ -185,7 +185,7 @@ func BuildBrief(in BriefInput) (string, error) {
 		fmt.Fprintf(&b, "The UI renders directory `%s` is also an exception to the workspace limit. Keep renders there, separately from TMPDIR.\n\n", filepath.Join(in.TempDir, "renders"))
 		b.WriteString("## CLI text renders\n\nFor ork CLI views, run this from the worktree with the test flag:\n\n")
 		fmt.Fprintf(&b, "`go test ./internal/cli -run TestRenderCLIViews -renders %s`\n\n", ShellWord(processTemp))
-		b.WriteString("This writes status.txt, show.txt and help.txt into your temp directory (named under Your files), exactly as printed, without changing the tree. Copy the views you want on the approval card into the renders directory under the VIEW-80x24.txt names required by your prompt.\n\n")
+		b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory (named under Your files), exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup and fake-reply. Copy the views you want on the approval card into the renders directory under the VIEW-80x24.txt names required by your prompt.\n\n")
 		if (in.Vendor == "claude" || in.Vendor == "claude-local") && len(in.UIPassSkills) > 0 {
 			fmt.Fprintf(&b, "## Skills\n\nLoad these skills for the UI pass: %s. If one is not available, say so in your report and go on.\n\n", strings.Join(in.UIPassSkills, ", "))
 		}

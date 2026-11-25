@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/brief.go:187-188`\n- `internal/engine/brief_test.go:976-1022`\n- `docs/guide.md:993-1009` and `docs/design.md:805-815` already state the five files and -render-fixture (landed by S499); no edit needed"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestUIPassBriefNamesRenderFixtures` in `internal/engine/brief_test.go`"
     },
     {
       "heading": "Implement",
