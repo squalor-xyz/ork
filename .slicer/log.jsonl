@@ -6762,3 +6762,9 @@
 {"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
 {"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "note", "from": "", "to": "", "note": "Owner decision: pin go -C read-only entries at launch the sa", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:05:01Z", "item": "S596", "action": "add", "from": "", "to": "open", "note": "when two changed files depend on each other's new fields, write a base overlay that reverts both together"}
+{"when": "2026-11-25T21:05:01Z", "item": "S596", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T21:05:40Z", "item": "S597", "action": "add", "from": "", "to": "open", "note": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24"}
+{"when": "2026-11-25T21:05:41Z", "item": "S597", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T21:05:49Z", "item": "S587", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 583): both. Skip selector calls on a *te", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:05:49Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 584): add test-only fixtures so each pan", "by": "Jon Robbins"}

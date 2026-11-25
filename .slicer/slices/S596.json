@@ -1,0 +1,39 @@
+{
+  "id": "S596",
+  "title": "when two changed files depend on each other's new fields, write a base overlay that reverts both together",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-204703-eec0, project ork, item S580:\n\nwhen two changed files depend on each other's new fields, write a base overlay that reverts both together\n\nEvidence: overlay-1.json fails with view.go:341 m.roadmapLift undefined, overlay-2.json fails with model.go:1208 d.total undefined"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

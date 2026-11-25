@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 596,
+  "next_id": 598,
   "preamble": "",
   "passes": [
     {
@@ -30995,6 +30995,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "720c5df2-3ace-4c4c-ba27-31f734d8f8ed",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 583): both. Skip selector calls on a *testing.T receiver, and add a collisions line for names it cannot disambiguate. Compute branchChange once per reviewer round in round.go and pass it to both sections. Jon chose 'Both', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T21:05:49Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31030,6 +31044,20 @@
           "kind": "",
           "text": "**2026-11-25** — Covers S531 run findings 1 and 2: extend TestScrollSweep to decisions detail, questions detail, waves item pane and settings, or record each as out of scope. Jon chose 'File it', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T19:50:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "8a6c5b36-e20f-420a-8b6e-e08c0c5f68a7",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 584): add test-only fixtures so each pane joins the TestScrollSweep table; list any pane that still cannot be reached in the Left out comment with the reason. Jon chose 'Extend, then record', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T21:05:49Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -31298,6 +31326,62 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S596",
+      "title": "when two changed files depend on each other's new fields, write a base overlay that reverts both together",
+      "short_title": "when two changed files depend on each other's new fields, write a base overlay that reverts both together",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S580",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-87bd47c9",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S597",
+      "title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
+      "short_title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S580",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-c9c5dae5",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
