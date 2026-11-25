@@ -29295,6 +29295,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "bc4cd907-42ef-4ab0-b58b-ab548804d723",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check proposed (tighten).",
+          "created_at": "2026-11-25T16:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1117768c-d459-423f-930e-7510f48f98db",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 chose both: ork code writes the base file (git show BASE:path) and an overlay.json into the reviewer's temp dir and puts a ready command in the reviewer brief for each changed Go file; the reviewer prompt also carries the go test -overlay probe recipe for hand-written probe tests.",
+          "created_at": "2026-11-25T16:38:38Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29537,6 +29565,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "7a580f03-17c6-4954-b99a-e82cbbc7f7c5",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S545's later finding in: docs/state.md says the retry mark is 'cleared by the next slice check that sees it', which is not exact; make it say the first slice check after a retry reruns a red batch (adj on checks.red-evidence-retry, one-shot).",
+          "created_at": "2026-11-25T16:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ddc41716-1af2-495c-b72d-2c3847d624c9",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check proposed (tighten).",
+          "created_at": "2026-11-25T16:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29764,7 +29820,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7229acdf-e150-44be-a971-7e72f8214a66",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check proposed (tighten).",
+          "created_at": "2026-11-25T16:38:38Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",

@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): How should S559's empty Files, Failing tests, Implement and Check sections be filled? -> tighten: fill the sections from the code as proposed below, and the implementer runs `go test ./internal/roles ./internal/daemon ./internal/engine`, which should exit 0.."
     },
     {
       "heading": "Check",
