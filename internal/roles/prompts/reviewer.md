@@ -124,6 +124,30 @@ Accepted (the reason moved into the title line):
   Recommend: 2 - isolation is simpler
 ```
 
+## Probe tests
+
+Use this recipe only when the brief says you may write your temp directory. It runs
+a test of your own against the tree without changing the tree. For a revert check,
+read `## Base overlays` in the brief first: it holds ready commands that run a
+package's tests with one changed Go file reverted to the base.
+
+1. Write a probe test file with Write in {{temp_dir}}, in the package you probe
+   (`{{temp_dir}}/probe_test.go`).
+2. Write an overlay JSON with Write, `{{temp_dir}}/overlay.json`, that maps a new
+   test file name in the package directory to the probe test file:
+
+```text
+{"Replace": {"{{worktree}}/PKGDIR/probe_test.go": "{{temp_dir}}/probe_test.go"} }
+```
+
+3. Run one plain command:
+
+```text
+go -C {{worktree}} test -overlay {{temp_dir}}/overlay.json -run TestProbe ./PKGDIR
+```
+
+The tree gets no file. Name any probe result in your report as yours.
+
 ## Gate mode
 
 When the brief says "gate" and lists the criteria (a small fix round is reviewed and

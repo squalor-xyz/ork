@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/baseoverlay.go` (new)\n- `internal/engine/baseoverlay_test.go` (new)\n- `internal/engine/brief.go:559-590`\n- `internal/engine/round.go:603-607`\n- `internal/roles/prompts/reviewer.md`\n- `internal/roles/roles_test.go:603`\n- `internal/daemon/runner.go:41-46`\n- `internal/daemon/runner_test.go:281-304`\n- `internal/daemon/runner_test.go:690-745`\n- `docs/design.md:2013-2024`\n- `docs/design.md:2591-2601`"
+      "body": "- `internal/engine/baseoverlay.go` (new)\n- `internal/engine/baseoverlay_test.go` (new)\n- `internal/engine/brief.go:559-590`\n- `internal/engine/round.go:603-607`\n- `internal/engine/engine_test.go:918-948`\n- `internal/roles/prompts/reviewer.md`\n- `internal/roles/roles_test.go:603`\n- `internal/daemon/runner.go:41-46`\n- `internal/daemon/runner_test.go:281-304`\n- `internal/daemon/runner_test.go:690-745`\n- `docs/design.md:2013-2024`\n- `docs/design.md:2591-2601`"
     },
     {
       "heading": "Failing tests",
