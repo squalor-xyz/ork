@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/daemon/matrixcopy.go`\n- `internal/daemon/matrixcopy_test.go`\n- `internal/cli/roles.go`\n- `internal/cli/roles_matrix_test.go`\n- `docs/design.md`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestMatrixCopyRefusesAProjectWhoseSourceRowsChangedSinceThePreview` (daemon): a source row's model is edited between preview and write with the steps unchanged; the bound project is refused with CodeStalePreview, nothing is written to it, and the unbound project goes on.\n- `TestMatrixCopyWritesAProjectWhoseSourceRowsAreTheOnesPreviewed` (daemon): an unchanged source passes.\n- `TestRolesMatrixCopyWriteSendsEachConfirmedProjectsPreviewDigest` (cli): the confirmed write sends the preview's digest, for the confirmed projects only."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- `go test ./...` exits 0 with the new tests passing\n- `go vet ./...`\n- `gofmt -l .` prints nothing"
     },
     {
       "heading": "Git",

@@ -133,14 +133,16 @@ func (a *App) status(ctx context.Context, o *output, args []string) int {
 					fmt.Fprint(o.stdout, " "+statusDenialsText(r.Denials))
 				}
 				fmt.Fprintln(o.stdout)
-				if r.Wave != "" {
-					fmt.Fprintf(o.stdout, "    wave: %s\n", plainLine(r.Wave))
-				}
 				for _, line := range waitLines[min(1, len(waitLines)):] {
 					fmt.Fprintf(o.stdout, "      %s\n", line)
 				}
 				if next != "" {
 					fmt.Fprintf(o.stdout, "    next: %s\n", next)
+				}
+				// The wave comes after the question, its options and the next:
+				// command, so they stay together (S553, ui.status-wave-line-order).
+				if r.Wave != "" {
+					fmt.Fprintf(o.stdout, "    wave: %s\n", plainLine(r.Wave))
 				}
 				if c := r.LastCheck; c != nil {
 					fmt.Fprintf(o.stdout, "    %s\n", lastCheckLine(*c))

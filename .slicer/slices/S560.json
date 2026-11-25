@@ -1,0 +1,39 @@
+{
+  "id": "S560",
+  "title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-144738-d085, project ork, item S558:\n\nbefore review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not\n\nEvidence: the owner decision names landed-changed/S548.md, but the diff touches only landed-changed/S558.md"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
