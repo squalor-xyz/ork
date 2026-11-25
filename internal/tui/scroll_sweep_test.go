@@ -11,6 +11,7 @@ import (
 
 	tea "charm.land/bubbletea/v2"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/brand"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
@@ -208,10 +209,23 @@ var (
 // its end and back at heights 10, 16, 24 and 40, and fails when a line of the
 // view never appears (S531, adj 570). A page-up that skips a line at 80x16
 // passed the 80x24 tests until the UI pass found it by hand (S401).
+// Decisions detail, Questions detail and Settings run at height 40 through
+// test-only fixtures. TestSweepPaneFixturesScroll also reaches the Waves item
+// pane and checks that all four fixtures scroll at height 10.
 //
 // The first sweep found a real paging defect in the Roadmap item pane and in
 // the Roadmap row list at height 10 (adj 570, adj 575). Both are fixed (S579,
-// S580), so every view runs at every height.
+// S580).
+//
+// Left out: decisions-detail with pgdown/pgup at heights 10, 16 and 24 skips
+// lines because decisions.go:scrollDecision does not reserve the scroll marker
+// budget (S601). questions-detail with pgdown/pgup at heights 10, 16 and 24
+// shares that cause in decisions.go:scrollDecision (S602).
+// Left out: waves-item with pgdown/pgup at heights 10, 16, 24 and 40 skips
+// lines because waves.go:waveItemKey does not reserve the scroll marker budget
+// (S603). settings with pgdown/pgup at heights 10, 16 and 24 skips lines because
+// settings.go:settingsKey advances by the full room while settings.go:settingsBody
+// also spends lines on scroll markers and a pinned block heading (S604).
 func TestScrollSweep(t *testing.T) {
 	cases := []sweepCase{
 		{name: "help-running", heights: sweepAll, setup: sweepHelp(0), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
@@ -238,6 +252,9 @@ func TestScrollSweep(t *testing.T) {
 		// unique stays unset: the reference repeats lines, such as the pane's
 		// own heading.
 		{name: "roadmap-item", heights: sweepAll, setup: openLongItemPane, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		{name: "decisions-detail", heights: []int{40}, unique: true, setup: sweepDecisionsDetail, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		{name: "questions-detail", heights: []int{40}, unique: true, setup: sweepQuestionsDetail, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		{name: "settings", heights: []int{40}, unique: true, setup: sweepSettings, pageDown: sweepPgDown, pageUp: sweepPgUp},
 		{name: "launch-confirm", heights: sweepAll, setup: func(t *testing.T) *harness {
 			h, l := launchHarness(t)
 			for i := 1; i <= 8; i++ {
@@ -260,4 +277,86 @@ func sweepHelp(view int) func(*testing.T) *harness {
 		h.deliver(press("?"))
 		return h
 	}
+}
+
+func TestSweepPaneFixturesScroll(t *testing.T) {
+	for _, c := range []struct {
+		name  string
+		setup func(*testing.T) *harness
+	}{
+		{"decisions-detail", sweepDecisionsDetail},
+		{"questions-detail", sweepQuestionsDetail},
+		{"waves-item", sweepWavesItem},
+		{"settings", sweepSettings},
+	} {
+		t.Run(c.name, func(t *testing.T) {
+			h := c.setup(t)
+			h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 10})
+			lines := sweepLines(h)
+			if !slices.ContainsFunc(lines, func(line string) bool {
+				return sweepMarker.MatchString(line) && strings.HasSuffix(line, "more lines")
+			}) {
+				t.Error("fixture has no more lines marker at height 10")
+			}
+			first := strings.Join(lines, "\n")
+			h.deliver(sweepPgDown)
+			if got := strings.Join(sweepLines(h), "\n"); got == first {
+				t.Error("pgdown did not change the fixture frame")
+			}
+		})
+	}
+}
+
+func sweepDecisionsDetail(t *testing.T) *harness {
+	t.Helper()
+	h := decisionsHarness(t)
+	for i := range 40 {
+		h.m.projects[0].snap.Open.Value[0].History = append(h.m.projects[0].snap.Open.Value[0].History,
+			adjcli.Event{Date: "2026-10-24", Event: fmt.Sprintf("decision event number %02d", i)})
+	}
+	h.deliver(press("enter"))
+	if h.m.decisionPane == nil {
+		t.Fatal("decisions detail did not open")
+	}
+	return h
+}
+
+func sweepQuestionsDetail(t *testing.T) *harness {
+	t.Helper()
+	h := questionsHarness(t)
+	for i := range 40 {
+		h.m.projects[0].snap.Open.Value[0].History = append(h.m.projects[0].snap.Open.Value[0].History,
+			adjcli.Event{Date: "2026-10-24", Event: fmt.Sprintf("question event number %02d", i)})
+	}
+	h.deliver(press("down")) // The first row is the engine question.
+	h.deliver(press("enter"))
+	if h.m.decisionPane == nil || h.m.pane != nil {
+		t.Fatal("adj question detail did not open")
+	}
+	return h
+}
+
+func sweepWavesItem(t *testing.T) *harness {
+	t.Helper()
+	h, l := wavesHarness(t)
+	spec := &slicercli.Spec{Title: "Wave sweep item", Size: "M"}
+	for i := range 60 {
+		spec.Sections = append(spec.Sections, slicercli.Section{
+			Heading: fmt.Sprintf("Wave section %03d", i), Body: fmt.Sprintf("body of wave section %03d", i),
+		})
+	}
+	l.details = map[string]*slicercli.Detail{"A": {Item: slicercli.Item{ID: "A"}, Slice: spec}}
+	openWaves(t, h)
+	h.deliver(press("enter"))
+	if h.m.waves.pane == nil {
+		t.Fatal("waves item pane did not open")
+	}
+	return h
+}
+
+func sweepSettings(t *testing.T) *harness {
+	t.Helper()
+	// The existing settings body already needs multiple pages at height 24.
+	h, _ := settingsHarness(t)
+	return h
 }

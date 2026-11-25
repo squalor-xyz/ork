@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 601,
+  "next_id": 606,
   "preamble": "",
   "passes": [
     {
@@ -31077,7 +31077,7 @@
       "id": "S588",
       "title": "Sweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings",
       "short_title": "Sweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31108,6 +31108,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "efba3d0b-35ff-42b9-9032-f3081291bb1d",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S588):\n- later: Open the doc comment of TestScrollSweep in internal/tui/scroll_sweep_test.go. Each of decisions detail, questions detail, waves item pane and settings should be either a table row or a named Left out entry with a reason and a follow-up slice ID. No pane should be missing from both.",
+          "created_at": "2026-11-25T22:48:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e7658372-fdde-45f6-98f4-7e4774c25cfb",
+          "kind": "",
+          "text": "**2026-11-25** — Added four reachable scrolling fixtures, retained three passing height-40 sweep cases, and documented paging gaps with follow-up slices S601-S604.",
+          "created_at": "2026-11-25T22:48:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31127,7 +31155,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31653,6 +31681,146 @@
         "urgency": 1,
         "effort": 2,
         "attempts": 1
+      }
+    },
+    {
+      "id": "S601",
+      "title": "Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget)",
+      "short_title": "Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S588",
+        "parent": "",
+        "cites": [],
+        "key": "S588-decisions-detail-paging",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S602",
+      "title": "Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget)",
+      "short_title": "Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S588",
+        "parent": "",
+        "cites": [],
+        "key": "S588-questions-detail-paging",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S603",
+      "title": "Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget)",
+      "short_title": "Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S588",
+        "parent": "",
+        "cites": [],
+        "key": "S588-waves-item-paging",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S604",
+      "title": "Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget)",
+      "short_title": "Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S588",
+        "parent": "",
+        "cites": [],
+        "key": "S588-settings-paging",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S605",
+      "title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
+      "short_title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S600",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ea964bdc",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
       }
     }
   ],
