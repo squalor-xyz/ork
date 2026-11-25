@@ -6460,3 +6460,8 @@
 {"when": "2026-11-25T15:35:21Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: adj already searches by topic: adj check T", "by": "Jon Robbins"}
 {"when": "2026-11-25T15:35:27Z", "item": "S562", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S554 (adj 560, owner 2026-11-25)"}
 {"when": "2026-11-25T15:35:33Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T15:39:08Z", "item": "S557", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T15:39:14Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T15:39:23Z", "item": "S563", "action": "add", "from": "", "to": "open", "note": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run"}
+{"when": "2026-11-25T15:39:23Z", "item": "S563", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:39:23Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Why"}

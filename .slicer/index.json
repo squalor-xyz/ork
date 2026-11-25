@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 563,
+  "next_id": 564,
   "preamble": "",
   "passes": [
     {
@@ -29595,6 +29595,34 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Folded into S554 (adj 560, owner 2026-11-25)",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S563",
+      "title": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run",
+      "short_title": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,
