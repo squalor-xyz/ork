@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-544 items · — 49 · done 372 · retired 123
+544 items · — 48 · done 373 · retired 123
 
 ## v1.3
 
@@ -258,7 +258,7 @@ v1.2
 | 201 | [S496](slices/S496.md) | allow shell variables or give reviewers a grep of a fixed file path without a var |  | - |  | Duplicate of S479 (tool feedback, 2026-11-20). · discovered from S307 | retired |
 | 202 | [S497](slices/S497.md) | allow `; echo exit=$?` after slicer check and adj lint for read-only roles, or say in the brief that compound commands are denied |  | - |  | Duplicate of S471 (tool feedback, 2026-11-20). · discovered from S342 | retired |
 | 203 | [S498](slices/S498.md) | let read-only roles use a shell variable for the worktree path, or say in the brief that such commands are denied |  | - |  | Duplicate of S479 (tool feedback, 2026-11-20). · discovered from S307 | retired |
-| 204 | [S499](slices/S499.md) | let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card |  | - |  | discovered from S307 | — |
+| 204 | [S499](slices/S499.md) | let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card |  | - |  | discovered from S307 | done |
 | 205 | [S500](slices/S500.md) | TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test |  | - |  | Folded into S499 per the owner (adj 514). · discovered from S342 | retired |
 | 206 | [S501](slices/S501.md) | say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it |  | - |  | Duplicate of S481 (say in the reviewer brief which shell forms are denied). · discovered from S416 | retired |
 | 207 | [S502](slices/S502.md) | flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff |  | - |  | Superseded by S385: adj 409 cites code by symbol, so no line cites remain to watch (owner 2026-11-24) · discovered from S337 | retired |
