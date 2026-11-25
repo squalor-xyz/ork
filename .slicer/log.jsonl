@@ -6214,3 +6214,17 @@
 {"when": "2026-11-22T05:12:17Z", "item": "S530", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-22T08:18:55Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-22T08:18:55Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-22T08:42:13Z", "item": "S531", "action": "add", "from": "", "to": "open", "note": "give the UI pass a scroll-sweep check that pages to the end and back at several heights and asserts every line appears"}
+{"when": "2026-11-22T08:42:14Z", "item": "S531", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T08:43:22Z", "item": "S532", "action": "add", "from": "", "to": "open", "note": "let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run"}
+{"when": "2026-11-22T08:43:22Z", "item": "S532", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T08:43:22Z", "item": "S532", "action": "note", "from": "", "to": "", "note": "possible duplicate of S510", "by": "Jon Robbins"}
+{"when": "2026-11-25T01:44:01Z", "item": "S395", "action": "set", "from": "", "to": "", "note": "pass_key v1.2→v1.3"}
+{"when": "2026-11-25T01:44:06Z", "item": "S533", "action": "add", "from": "", "to": "open", "note": "add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test"}
+{"when": "2026-11-25T01:44:06Z", "item": "S533", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T01:44:06Z", "item": "S534", "action": "add", "from": "", "to": "open", "note": "let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test"}
+{"when": "2026-11-25T01:44:07Z", "item": "S534", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T01:44:23Z", "item": "S533", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S534 (adj 531, owner 2026-11-25)"}
+{"when": "2026-11-25T01:44:23Z", "item": "S534", "action": "note", "from": "", "to": "", "note": "Covers adj 531 too: include a projects-setup view (from S249", "by": "Jon Robbins"}
+{"when": "2026-11-25T01:52:06Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Owner decision (adj ui.settings-pane-key, 2026-11-25): capit", "by": "Jon Robbins"}
+{"when": "2026-11-25T01:53:55Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Implement"}

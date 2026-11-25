@@ -1,0 +1,39 @@
+{
+  "id": "S531",
+  "title": "give the UI pass a scroll-sweep check that pages to the end and back at several heights and asserts every line appears",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (deterministic-check) on ork in ork run ork-20261122-081958-ba4a, project ork, item S401:\n\ngive the UI pass a scroll-sweep check that pages to the end and back at several heights and asserts every line appears\n\nEvidence: page up from the last page skips a line at 80x16; 80x24 has only two pages, so the slice tests miss it"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

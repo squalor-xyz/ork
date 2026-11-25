@@ -26,7 +26,7 @@
     },
     {
       "heading": "Implement",
-      "body": "1. Do not start before `projects-show` and `project-setup` have landed.\n2. Write the failing tests; see each fail for the reason given.\n3. Pane state and drawing on the item pane's pattern (`internal/tui/roadmap.go:20-27`); daemon calls in `tea.Cmd`s, never in `Update`.\n4. Key routing, hint line (the new field drops before `esc close`, `q quit` and `? help` at 80 columns), help.\n5. `go test ./internal/tui -update`, then review the new goldens; no existing golden may change except hint lines, if any.\n6. Docs; CHANGELOG last.\n7. Do not touch `internal/daemon`, `internal/cli`, `internal/slicercli`, or the matrix pane's drawing.\n\nUI slice: UI pass (r14)."
+      "body": "1. Do not start before `projects-show` and `project-setup` have landed.\n2. Write the failing tests; see each fail for the reason given.\n3. Pane state and drawing on the item pane's pattern (`internal/tui/roadmap.go:20-27`); daemon calls in `tea.Cmd`s, never in `Update`.\n4. Key routing, hint line (the new field drops before `esc close`, `q quit` and `? help` at 80 columns), help.\n5. `go test ./internal/tui -update`, then review the new goldens; no existing golden may change except hint lines, if any.\n6. Docs; CHANGELOG last.\n7. Do not touch `internal/daemon`, `internal/cli`, `internal/slicercli`, or the matrix pane's drawing.\n\nUI slice: UI pass (r14).\n\nOwner decisions (2026-11-25): Which key opens the project settings pane? -> S: capital `S`, as the spec proposes. I found no binding for `S` or `shift+s` in `internal/tui/keys.go`. Lower-case `s` is bound (Split at `:106`, Sidebar at `:139`). [ui.settings-pane-key]."
     },
     {
       "heading": "Check",
