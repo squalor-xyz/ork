@@ -6434,3 +6434,5 @@
 {"when": "2026-11-25T14:55:53Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T14:57:32Z", "item": "S560", "action": "add", "from": "", "to": "open", "note": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not"}
 {"when": "2026-11-25T14:57:32Z", "item": "S560", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:09:34Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded in: (a) S558's later finding: extend", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:09:34Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Reported again from S545's reviewer (adj 559, dropped as cov", "by": "Jon Robbins"}
