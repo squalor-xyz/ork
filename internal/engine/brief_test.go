@@ -1106,7 +1106,19 @@ func TestUIPassBriefNamesRunPatternRule(t *testing.T) {
 	pat := strings.Index(got, "## Test run patterns")
 	doc := strings.Index(got, "## UI design doc")
 	if cli < 0 || pat < 0 || doc < 0 || !(cli < pat && pat < doc) {
-		t.Errorf("heading order wrong: CLI text renders %d, Test run patterns %d, UI design doc %d", cli, pat, doc)
+		t.Fatalf("heading order wrong: CLI text renders %d, Test run patterns %d, UI design doc %d", cli, pat, doc)
+	}
+	section := got[pat:doc]
+	if want := "`go -C " + in.Worktree + " test -run NAME PKG`"; !strings.Contains(section, want) {
+		t.Errorf("Test run patterns section lacks %q:\n%s", want, section)
+	}
+	if strings.Contains(section, "common name prefix") {
+		t.Errorf("Test run patterns section still allows a shared prefix:\n%s", section)
+	}
+	for _, line := range strings.Split(section, "\n") {
+		if strings.Contains(line, "-run") && strings.Contains(line, "|") {
+			t.Errorf("Test run patterns has a -run line with a pipe: %s", line)
+		}
 	}
 	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate} {
 		in.Role = role

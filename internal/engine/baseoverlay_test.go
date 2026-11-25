@@ -122,9 +122,19 @@ func TestBaseOverlaySectionForChangedGoFile(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(req.TMPDir, "overlay-2.json")); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("overlay-2.json: %v, want it absent", err)
 	}
-	for _, line := range []string{"only that file reverted", "-run NAME"} {
+	for _, line := range []string{"only that file reverted", "-run NAME", "one test per command", "never join test names in one `-run` pattern"} {
 		if !strings.Contains(body, line) {
 			t.Errorf("section lacks %q:\n%s", line, body)
+		}
+	}
+	for _, line := range strings.Split(body, "\n") {
+		if strings.Contains(line, "-run") && strings.Contains(line, "|") {
+			t.Errorf("section has a -run line with a pipe: %s", line)
+		}
+	}
+	for _, entry := range entries {
+		if strings.Contains(entry, "|") {
+			t.Errorf("entry holds a pipe: %s", entry)
 		}
 	}
 }

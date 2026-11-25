@@ -72,7 +72,7 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 
 	var body strings.Builder
 	if len(entries) > 0 {
-		body.WriteString("Each command runs one package's tests with only that file reverted to the base version (the merge base with the main checkout's branch). ork wrote the base copies and the overlay files under your temp directory. A test this slice added for that file should fail with the file reverted. Add `-run NAME` to run one test. A command changes nothing in the tree.\n\n")
+		body.WriteString("Each command runs one package's tests with only that file reverted to the base version (the merge base with the main checkout's branch). ork wrote the base copies and the overlay files under your temp directory. A test this slice added for that file should fail with the file reverted. To run one test, add `-run NAME` before the package in a command. Run one test per command and never join test names in one `-run` pattern: a pipe makes the command compound and it is denied as multiple operations. A command changes nothing in the tree.\n\n")
 		body.WriteString(strings.Join(entries, "\n"))
 		body.WriteString("\n")
 	}

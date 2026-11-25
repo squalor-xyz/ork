@@ -1903,6 +1903,10 @@ the whole command (S409). Spec-check raises no finding and asks no question
 for an implementer-runnable or ork-run line, and lists the orchestrator-run
 lines in its report without a question; it raises a finding for one only when
 the command looks wrong or risky.
+The brief and the gate and spec-draft prompts tell the roles to write one
+`go -C DIR test -run NAME PKG` command per test, never a `-run` pattern that
+joins names (S571); the classifier text above describes what runs, not what
+ork writes.
 Only backtick spans identify commands; prose bullets without backticks are
 absent from the command lists.
 The gate names ork-run commands from ork's recorded rows, and names the
@@ -2042,7 +2046,9 @@ separately.
     that does not exist; no base copy is written. The section names, for each
     file, one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
     ./DIR` command, so a read-only reviewer can run the package's tests with
-    only that file reverted and see a test the slice added fail. It says how
+    only that file reverted and see a test the slice added fail. It tells the
+    reviewer to run one test per command with `-run NAME` and never to join
+    test names in one `-run` pattern (S571). It says how
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git

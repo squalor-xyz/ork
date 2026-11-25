@@ -419,6 +419,32 @@ func TestGateCriteria(t *testing.T) {
 	}
 }
 
+// runLinesHoldNoPipe reports each line of text that holds -run and a pipe.
+func runLinesHoldNoPipe(t *testing.T, name, text string) {
+	t.Helper()
+	for _, line := range strings.Split(text, "\n") {
+		if strings.Contains(line, "-run") && strings.Contains(line, "|") {
+			t.Errorf("%s has a -run line with a pipe: %s", name, line)
+		}
+	}
+}
+
+// S571: the gate runs a focused test as one command per test, because a pipe in
+// a -run pattern makes a compound command that the read-only allowlist denies.
+func TestGatePromptSaysOneTestPerCommand(t *testing.T) {
+	g := prompts(t)["gate"]
+	for _, want := range []string{
+		"one test per command",
+		"-run NAME PKG",
+		"a pipe makes a compound command that the read-only allowlist denies",
+	} {
+		if !has(g, want) {
+			t.Errorf("gate does not say %q", want)
+		}
+	}
+	runLinesHoldNoPipe(t, "gate prompt", g)
+}
+
 // v11: every `fix` finding fails the gate, with no severity scale, and a minor
 // item is tagged `later`.
 func TestGateHasNoSeverityScale(t *testing.T) {
@@ -948,6 +974,24 @@ func TestSpecDraftPrompt(t *testing.T) {
 			t.Errorf("spec-draft prompt mentions %q", bad)
 		}
 	}
+	if !ascii(p) {
+		t.Error("spec-draft prompt holds a non-ASCII character")
+	}
+}
+
+// S571: the spec draft writes each focused test command in Check as one
+// command per test, never a -run pattern that joins names.
+func TestSpecDraftPromptSaysOneTestPerCommand(t *testing.T) {
+	p := prompts(t)["spec-draft"]
+	for _, want := range []string{
+		"Write each focused test command in **Check** as `go -C DIR test -run NAME PKG`, one command for each test",
+		"Never write a `-run` pattern that joins names",
+	} {
+		if !has(p, want) {
+			t.Errorf("spec-draft does not say %q", want)
+		}
+	}
+	runLinesHoldNoPipe(t, "spec-draft prompt", p)
 	if !ascii(p) {
 		t.Error("spec-draft prompt holds a non-ASCII character")
 	}
