@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "\n- Acceptance: (a) pgup from the pgdown offset returns to offset 0 in one press; (b) the 60x16 help hint contains the scroll keys and the close hint and drops \"q quit\"; (c) a wheel-down raises helpOffset by one line while showHelp is true and mouse is on.\n- `go test ./internal/tui`\n- `go test ./...`\n- `go vet ./...`\n- `gofmt -l .` prints nothing."
     },
     {
       "heading": "Git",
