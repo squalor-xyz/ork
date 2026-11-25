@@ -29817,7 +29817,7 @@
       "id": "S566",
       "title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
       "short_title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29827,6 +29827,20 @@
           "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check proposed (tighten).",
           "created_at": "2026-11-25T16:38:38Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d7cada42-0f29-46c6-b74a-885f90c95cd6",
+          "kind": "",
+          "text": "**2026-11-25** — Owner-decision keys without adj ids are checked with adj in the role briefs only when the project has adj on; missing keys are annotated, an unreadable check adds a soft line, and no check pauses the run.",
+          "created_at": "2026-11-25T17:39:05Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -29853,7 +29867,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

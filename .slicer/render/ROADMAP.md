@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-567 items · — 55 · done 386 · retired 126
+567 items · — 54 · done 387 · retired 126
 
 ## v1.3
 
@@ -325,7 +325,7 @@ v1.2
 | 268 | [S563](slices/S563.md) | Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run | S | - |  |  | — |
 | 269 | [S564](slices/S564.md) | flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route |  | - |  | discovered from S547 | — |
 | 270 | [S565](slices/S565.md) | say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed |  | - |  | discovered from S547 | — |
-| 271 | [S566](slices/S566.md) | when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found |  | - |  | discovered from S557 | — |
+| 271 | [S566](slices/S566.md) | when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found |  | - |  | discovered from S557 | done |
 | 272 | [S567](slices/S567.md) | adj: allow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records |  | - |  | discovered from S560 | — |
 
 ---

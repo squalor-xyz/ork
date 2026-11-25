@@ -370,7 +370,14 @@ ork (TUI)  ork status --json (CLI)
    ork settings set --owner NAME`. A filed answer says `filed in adj: KEY (adj
    N)` and its `--why` names the date and the slice. The paragraph is also stored in the item's
    run record and added to every role's brief, because the run's worktree does
-   not have the main checkout's edit. *Proposed (S368):* the implementer's
+   not have the main checkout's edit. *Proposed (S566; owner answer
+   `brief.decision-key-check`):* for `[key]` markers in that Owner
+   decisions paragraph, ork runs `adj check KEY` before building the brief,
+   only when the project has adj turned on. Missing keys add `adj check KEY:
+   not found` to its Owner decisions section; found keys add no line. A check
+   that fails to run adds `adj check KEY: could not be read` and the round
+   goes on. Markers with an adj id (`[key, adj N]`) are not checked.
+   *Proposed (S368):* the implementer's
    brief also has an "Apply the owner's spec answers first" section after
    it: as its first step the implementer edits the slice's own text (a Check
    line, a test name) to match any decision that changes it, with `slicer edit`,

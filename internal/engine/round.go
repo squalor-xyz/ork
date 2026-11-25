@@ -664,7 +664,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	if rec.Decisions != "" {
 		// The worktree's spec lacks the owner's spec check answers (S116).
-		first := []BriefSection{{Title: "Owner decisions", Body: rec.Decisions}}
+		first := []BriefSection{{Title: "Owner decisions", Body: e.ownerDecisionBody(ctx, rec.Decisions)}}
 		if s := specAnswersSection(r.role, rec.Item, r.finish); s != nil {
 			first = append(first, *s)
 		}

@@ -23,6 +23,38 @@ import (
 // BriefSection is one headed part of a brief that is specific to the round.
 type BriefSection struct{ Title, Body string }
 
+// ownerDecisionBody checks only markers in RecordSpecAnswers' paragraphs.
+// An adj id already identifies a record; other keys may never have been filed.
+// A project without adj is not checked, and a failed check adds a soft line:
+// it never fails the round.
+func (e *Engine) ownerDecisionBody(ctx context.Context, text string) string {
+	body := text
+	if !e.proj.Adj {
+		return body
+	}
+	marker := regexp.MustCompile(`\[([a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+)(, adj [0-9]+)?\]`)
+	seen := map[string]bool{}
+	for _, paragraph := range strings.Split(text, "\n\n") {
+		if !strings.HasPrefix(strings.TrimSpace(paragraph), "Owner decisions (") {
+			continue
+		}
+		for _, match := range marker.FindAllStringSubmatch(paragraph, -1) {
+			key := match[1]
+			if match[2] != "" || seen[key] {
+				continue
+			}
+			seen[key] = true
+			state, _, err := e.d.Adj.Check(ctx, e.wr, e.AdjRoot(), key)
+			if err != nil {
+				body += "\nadj check " + key + ": could not be read"
+			} else if state == "not found" {
+				body += "\nadj check " + key + ": not found"
+			}
+		}
+	}
+	return body
+}
+
 // EarlierReport is a report of an earlier round, given to a role that is not
 // resumed.
 type EarlierReport struct{ Name, Text string }

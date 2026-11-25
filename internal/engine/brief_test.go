@@ -14,6 +14,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/adjcli"
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/roles"
@@ -1575,6 +1576,105 @@ func TestARunWithoutDecisionsHasNoApplyAnswersSection(t *testing.T) {
 	for _, r := range h.runner.requests() {
 		if strings.Contains(r.Brief, "spec answers") {
 			t.Errorf("%s brief names spec answers", r.Role)
+		}
+	}
+}
+
+func TestOwnerDecisionKeyChecksReachBriefs(t *testing.T) {
+	for _, state := range []string{"not found", "decided", "open", "closed"} {
+		t.Run(state, func(t *testing.T) {
+			h := newHarness(t, func(o *harnessOpts) {
+				o.project = func(p *registry.Project) { p.Adj = true }
+				o.routesFor = func(p, w string) []clitest.Route {
+					found := `{}`
+					if state != "not found" {
+						found = fmt.Sprintf(`{%q:[{"id":42,"key":"brief.target"}]}`, state)
+					}
+					return []clitest.Route{
+						{Tool: "adj", Args: []string{"contract", "--json", "--root", p}, Stdout: `{"contract":"adj-json v1","version":1}`},
+						{Tool: "adj", Args: []string{"check", "brief.target", "--json", "--root", p}, Stdout: found},
+						{Tool: "adj", Args: []string{"check"}, Prefix: true, Stdout: `{}`},
+					}
+				}
+			})
+			h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
+			h.cfg.Decisions = "Unrelated [brief.outside].\n\nOwner decisions (2026-11-25): Always missing [brief.missing]. Target [brief.target]. Reused [brief.reused, adj 7].\n\nOther paragraph [brief.after]."
+			h.start()
+			for _, r := range h.runner.requests() {
+				_, body, ok := strings.Cut(r.Brief, "## Owner decisions\n\n")
+				if !ok {
+					t.Fatal("brief lacks owner decisions section")
+				}
+				body, _, _ = strings.Cut(body, "\n\n## ")
+				if !strings.Contains(body, "adj check brief.missing: not found") {
+					t.Fatal("brief lacks missing-key annotation")
+				}
+				if got := strings.Contains(body, "adj check brief.target: not found"); got != (state == "not found") {
+					t.Fatalf("target annotation = %t for %s", got, state)
+				}
+				for _, key := range []string{"brief.outside", "brief.reused", "brief.after"} {
+					if strings.Contains(body, "adj check "+key+":") {
+						t.Fatalf("unexpected annotation for %s", key)
+					}
+				}
+			}
+			for _, call := range h.fake.CallsTo("adj") {
+				if len(call.Args) > 0 && call.Args[0] == "contract" {
+					continue
+				}
+				if len(call.Args) < 2 || (call.Args[1] != "brief.missing" && call.Args[1] != "brief.target") {
+					t.Fatalf("unexpected adj call: %v", call.Args)
+				}
+			}
+		})
+	}
+}
+
+const ownerDecisionKeyText = "Owner decisions (2026-11-25): Which store? -> memory: rebuilt [brief.target]."
+
+func TestOwnerDecisionKeysAreNotCheckedWhenAdjIsOff(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.Adj = false }
+		o.routes = []clitest.Route{{Tool: "adj", Args: []string{"check"}, Prefix: true, Exit: 1}}
+	})
+	h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
+	h.cfg.Decisions = ownerDecisionKeyText
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if n := len(h.fake.CallsTo("adj")); n != 0 {
+		t.Fatalf("%d adj calls with adj off", n)
+	}
+	for _, r := range h.runner.requests() {
+		if strings.Contains(r.Brief, "adj check brief.target") {
+			t.Errorf("%s brief names an adj check", r.Role)
+		}
+	}
+}
+
+func TestAFailedOwnerDecisionKeyCheckAddsASoftLine(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.project = func(p *registry.Project) { p.Adj = true }
+		o.routesFor = func(p, w string) []clitest.Route {
+			return []clitest.Route{
+				{Tool: "adj", Args: []string{"contract", "--json", "--root", p}, Stdout: `{"contract":"adj-json v1","version":1}`},
+				{Tool: "adj", Args: []string{"check"}, Prefix: true, Exit: 1},
+			}
+		}
+	})
+	h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
+	h.cfg.Decisions = ownerDecisionKeyText
+	e := h.start()
+	requireState(t, e, runrec.StateAwaitingApproval)
+	reqs := h.runner.requests()
+	if len(reqs) == 0 {
+		t.Fatal("no role ran")
+	}
+	for _, r := range reqs {
+		if !strings.Contains(r.Brief, "adj check brief.target: could not be read") {
+			t.Errorf("%s brief lacks the soft line", r.Role)
+		}
+		if strings.Contains(r.Brief, "adj check brief.target: not found") {
+			t.Errorf("%s brief says not found for an unreadable check", r.Role)
 		}
 	}
 }

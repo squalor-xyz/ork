@@ -1,0 +1,39 @@
+{
+  "id": "S566",
+  "title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-153910-3562, project ork, item S557:\n\nwhen the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found\n\nEvidence: feedback.direction-duplicates is cited as an owner decision but adj check returns not found, per the implementer report"
+    },
+    {
+      "heading": "Files",
+      "body": "`internal/engine/brief.go` (owner-decision annotation), `internal/engine/round.go` (owner-decision section assembly), `internal/engine/brief_test.go` (brief integration tests), `docs/design.md` (brief behavior), and `landed-changed/S566.md` via slicer."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "`internal/engine/brief_test.go`: TestOwnerDecisionKeyChecksReachBriefs asserts missing keys are annotated in actual role briefs; decided, open and closed keys add no line. Markers outside the Owner decisions paragraph and keys carrying an adj id are not checked."
+    },
+    {
+      "heading": "Implement",
+      "body": "In the Owner decisions paragraph written by RecordSpecAnswers (`internal/engine/speccheck.go:833-847`), recognize only `[key]` and `[key, adj N]` markers. When adding the Owner decisions brief section in runRound (`internal/engine/round.go:663-675`), run adj check for keys without an adj id. Append \"adj check KEY: not found\" for missing keys; found keys add no line. Do not re-check keys carrying adj N. Use the existing adj client. Document this behavior and add the slice changelog entry. Owner answer: owner-decisions, 2026-11-25, brief.decision-key-check; tighten the Files, Failing tests, Implement and Check sections."
+    },
+    {
+      "heading": "Check",
+      "body": "`go test ./internal/engine` passes."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
