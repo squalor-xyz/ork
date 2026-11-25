@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): S544's cause is unverified and may be in the cache, not the test. Where should the fix go? -> cache ordering: in `internal/cache/cache.go`, call `onChange` before `close(f.done)`, so the notice for a read is sent before `Get` or `Snapshot` returns. The test then needs no wait. This changes production code and may affect other cache tests.."
     },
     {
       "heading": "Check",

@@ -6238,6 +6238,15 @@
 {"when": "2026-11-25T01:44:07Z", "item": "S534", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T01:44:23Z", "item": "S533", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S534 (adj 531, owner 2026-11-25)"}
 {"when": "2026-11-25T01:44:23Z", "item": "S534", "action": "note", "from": "", "to": "", "note": "Covers adj 531 too: include a projects-setup view (from S249", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:08:54Z", "item": "S233", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:10:15Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T02:10:16Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T02:10:55Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T02:10:55Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T03:20:21Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T03:25:30Z", "item": "S233", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S233):", "by": "Jon Robbins"}
+{"when": "2026-11-25T03:25:30Z", "item": "S233", "action": "note", "from": "", "to": "", "note": "Added `ork ai instructions` and `ork ai skill [--output|--in", "by": "Jon Robbins"}
+{"when": "2026-11-25T03:25:30Z", "item": "S233", "action": "status", "from": "started", "to": "done", "note": "Added `ork ai instructions` and `ork ai skill [--output|--install|--force]` with an embedded guide that matches current CLI, tests, docs and changelog; the UI pass found no defects, and race tests, vet, gofmt, slicer check and adj lint are green.", "by": "Jon Robbins"}
 {"when": "2026-11-25T01:52:06Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Owner decision (adj ui.settings-pane-key, 2026-11-25): capit", "by": "Jon Robbins"}
 {"when": "2026-11-25T02:12:00Z", "item": "S251", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-25T02:12:40Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Files"}
@@ -6302,6 +6311,8 @@
 {"when": "2026-11-25T03:20:39Z", "item": "S543", "action": "add", "from": "", "to": "open", "note": "Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice"}
 {"when": "2026-11-25T03:20:44Z", "item": "S543", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T03:20:44Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T13:11:07Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T13:21:57Z", "item": "S233", "action": "note", "from": "", "to": "", "note": "Added `ork ai instructions` and `ork ai skill [--output|--in", "by": "Jon Robbins"}
 {"when": "2026-11-25T07:21:09Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-25T07:22:14Z", "item": "S509", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-25T07:29:18Z", "item": "S509", "action": "note", "from": "", "to": "", "note": "TestReadOnlyAllowlistMatchesNoTrackingWrite now runs a fixed", "by": "Jon Robbins"}
@@ -6316,3 +6327,32 @@
 {"when": "2026-11-25T13:21:45Z", "item": "S499", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-25T13:25:33Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Added the -render-fixture test flag and eight named CLI rend", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:25:34Z", "item": "S499", "action": "status", "from": "started", "to": "done", "note": "Added the -render-fixture test flag and eight named CLI render fixtures to internal/cli/render_test.go with a named literal-line test each; fix round: the \"$ ork ARGS\" header now shell-quotes arguments, and docs/guide.md and docs/design.md name -render-fixture; go vet and go test ./... pass.", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:10:35Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 confirmed the fixture list: projects-set, p", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:10:37Z", "item": "S499", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T13:11:06Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "add", "from": "", "to": "open", "note": "A red slice check from a flake stays cached across retries until the product or Check text changes"}
+{"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T13:11:56Z", "item": "S546", "action": "add", "from": "", "to": "open", "note": "Keep the block heading visible when the settings pane scrolls"}
+{"when": "2026-11-25T13:11:56Z", "item": "S546", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:56Z", "item": "S546", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-25T13:11:56Z", "item": "S547", "action": "add", "from": "", "to": "open", "note": "matrix copy: ask each project's question right after that project's preview"}
+{"when": "2026-11-25T13:11:57Z", "item": "S547", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:57Z", "item": "S548", "action": "add", "from": "", "to": "open", "note": "Bind the CLI write to the preview the owner confirmed"}
+{"when": "2026-11-25T13:11:57Z", "item": "S548", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:57Z", "item": "S548", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-25T13:12:06Z", "item": "S546", "action": "set", "from": "", "to": "", "note": "title Keep the block heading visible when the settings pane scrolls→Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns; short_title Keep the block heading visible when the settings pane scrolls→Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns"}
+{"when": "2026-11-25T13:12:06Z", "item": "S546", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S251's later finding 2 in: align the", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:12:06Z", "item": "S547", "action": "set", "from": "", "to": "", "note": "title matrix copy: ask each project's question right after that project's preview→matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields; short_title matrix copy: ask each project's question right after that project's preview→matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields"}
+{"when": "2026-11-25T13:12:06Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later findings 2-4 in. (2) Af", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:12:06Z", "item": "S548", "action": "set", "from": "", "to": "", "note": "title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs; short_title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs"}
+{"when": "2026-11-25T13:12:07Z", "item": "S548", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later finding 5 in: the add i", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:18:18Z", "item": "S544", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fix the cache ordering. In internal/cache/", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:18:19Z", "item": "S544", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T13:18:23Z", "item": "S548", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T13:18:35Z", "item": "S535", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:18:35Z", "item": "S546", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:20:21Z", "item": "S549", "action": "add", "from": "", "to": "open", "note": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures"}
+{"when": "2026-11-25T13:20:22Z", "item": "S549", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:21:14Z", "item": "S550", "action": "add", "from": "", "to": "open", "note": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section"}
+{"when": "2026-11-25T13:21:14Z", "item": "S550", "action": "promote", "from": "", "to": "", "note": ""}
