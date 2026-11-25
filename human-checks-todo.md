@@ -274,3 +274,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S401 (run ork-20261122-081958-ba4a, 2026-11-25)
 
 - [ ] In an 80x24 terminal, on the Roadmap press `?`, then `down` 3 times, `pgdown` until the end, `pgup` to the top, and `?` again: the text moves smoothly, the markers count right, nothing is cut mid-word, and the second `?` closes help. Repeat on the Overview and Waves views.
+
+## S251 (run ork-20261125-015357-ca10, 2026-11-25)
+
+- [ ] At 100x30 and 80x24, with a scratch project registered (no `.slicer/`, no `.adjudicate.json`), open the pane, run `slicer-init`, `relay-roles-init` and `adj-init` from it, and see each block fill in. Not against this repository.
