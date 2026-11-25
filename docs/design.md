@@ -370,7 +370,14 @@ ork (TUI)  ork status --json (CLI)
    ork settings set --owner NAME`. A filed answer says `filed in adj: KEY (adj
    N)` and its `--why` names the date and the slice. The paragraph is also stored in the item's
    run record and added to every role's brief, because the run's worktree does
-   not have the main checkout's edit. *Proposed (S368):* the implementer's
+   not have the main checkout's edit. *Proposed (S566; owner answer
+   `brief.decision-key-check`):* for `[key]` markers in that Owner
+   decisions paragraph, ork runs `adj check KEY` before building the brief,
+   only when the project has adj turned on. Missing keys add `adj check KEY:
+   not found` to its Owner decisions section; found keys add no line. A check
+   that fails to run adds `adj check KEY: could not be read` and the round
+   goes on. Markers with an adj id (`[key, adj N]`) are not checked.
+   *Proposed (S368):* the implementer's
    brief also has an "Apply the owner's spec answers first" section after
    it: as its first step the implementer edits the slice's own text (a Check
    line, a test name) to match any decision that changes it, with `slicer edit`,
@@ -2003,6 +2010,18 @@ separately.
     itself; the run does not pause. The prompts tell the role to read the
     section and to run `slicer show ID --json --lean` for an item that needs
     detail. The gate and the implementer get no such section;
+  - before the reviewer starts, a `## Decision changelog paths` section when
+    an owner decision names a `landed-changed/<ID>.md` path absent from the
+    branch diff against the base (`relay.landed-changed-path-check`, S560).
+    Ork scans the run's spec answers, answered run questions, owner decision
+    paragraphs in the slice, and decided adj records cited by number
+    (`adj N` or `decision N`) or a key in brackets or backticks. Adj records
+    are read through the CLI in the project's main checkout; only their
+    decision and rationale are scanned, not unchosen options. The path
+    comparison uses the same merge-base diff and untracked paths as Direction.
+    Each missing path appears once as a flagged finding for the reviewer.
+    Failed reads add an incomplete-check notice. The check is advisory and
+    never blocks the run;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,
@@ -3106,9 +3125,9 @@ normally; a failed lookup also shows one notice line explaining why.
 An open record holds the item in the daemon, CLI and TUI without asking it
 again. The spec note says `waits on adj N`. The next check rereads the open
 record without rerunning the role. Other questions for the held item wait
-until its adj records are resolved. The spec-check role searches decided
-records with `adj find` before inventing a decision key. The local Claude
-spec-check allowlist includes that read-only query.
+until its adj records are resolved. The spec-check and spec-draft roles look
+up decisions by topic with `adj check TEXT` before inventing a decision key,
+reuse an existing key for the same topic, and never use `adj find`.
 
 The Roadmap launch uses the same sitting after its plan and before its
 confirmation (S184). Skipping leaves the slice held and closes the launch;

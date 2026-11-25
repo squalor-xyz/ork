@@ -1,6 +1,6 @@
 {
-  "id": "S559",
-  "title": "Spec-check brief: look up existing decisions by topic with adj check TEXT",
+  "id": "S568",
+  "title": "name the decided adj key for each owner note in the brief so the reviewer does not look it up",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
@@ -12,7 +12,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The spec-check reported this as tool feedback (friction) on adj in spec check of S558, project ork, item S558:\n\nadd an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic\n\nEvidence: `adj find \"matrix.copy\"` returned `adj: unknown command \"find\"`"
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-163301-8662, project ork, item S563:\n\nname the decided adj key for each owner note in the brief so the reviewer does not look it up\n\nEvidence: the slice note cites spec.check-command-finding by wording only; I had to run adj check to find adj 564"
     },
     {
       "heading": "Files",

@@ -6479,6 +6479,17 @@
 {"when": "2026-11-25T15:35:21Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: adj already searches by topic: adj check T", "by": "Jon Robbins"}
 {"when": "2026-11-25T15:35:27Z", "item": "S562", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S554 (adj 560, owner 2026-11-25)"}
 {"when": "2026-11-25T15:35:33Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T16:10:05Z", "item": "S560", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:11:54Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T16:11:55Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T16:17:37Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T16:17:37Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T16:18:09Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T16:20:47Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T16:23:27Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T16:28:54Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T16:34:12Z", "item": "S560", "action": "note", "from": "", "to": "", "note": "S560 now records explicit acceptance criteria and a passing ", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:34:12Z", "item": "S560", "action": "status", "from": "started", "to": "done", "note": "S560 now records explicit acceptance criteria and a passing focused Check command for the advisory decision-path scan.", "by": "Jon Robbins"}
 {"when": "2026-11-25T15:49:55Z", "item": "S557", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-25T15:49:55Z", "item": "S557", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T15:49:56Z", "item": "S557", "action": "edit", "from": "", "to": "", "note": "Check"}
@@ -6516,3 +6527,41 @@
 {"when": "2026-11-25T17:27:20Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-25T17:39:20Z", "item": "S563", "action": "note", "from": "", "to": "", "note": "Non-command Check entries now refuse run and wave admission,", "by": "Jon Robbins"}
 {"when": "2026-11-25T17:39:20Z", "item": "S563", "action": "status", "from": "started", "to": "done", "note": "Non-command Check entries now refuse run and wave admission, hold spec checks with deterministic findings, and block drafted Check sections; the launch status for a finding says to edit Check before retrying; Files-listed command paths remain exempt.", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:06:01Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:06:02Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T17:06:02Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T17:06:02Z", "item": "S566", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:07:13Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:07:13Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T17:07:13Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T17:07:47Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T17:09:30Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:12:28Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:35:56Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:39:05Z", "item": "S566", "action": "note", "from": "", "to": "", "note": "Owner-decision keys without adj ids are checked with adj in ", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:39:05Z", "item": "S566", "action": "status", "from": "started", "to": "done", "note": "Owner-decision keys without adj ids are checked with adj in the role briefs only when the project has adj on; missing keys are annotated, an unreadable check adds a soft line, and no check pauses the run.", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:53:36Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T16:53:36Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T16:53:36Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T16:53:36Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T16:53:37Z", "item": "S559", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:55:18Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T16:55:55Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:33:33Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:37:00Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Both spec roles use adj check TEXT for decision-topic lookup", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:37:00Z", "item": "S559", "action": "status", "from": "started", "to": "done", "note": "Both spec roles use adj check TEXT for decision-topic lookup, docs/design.md and docs/state.md now match, and the one-shot retry wording is corrected; focused tests pass.", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:38:37Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S545's later finding in: docs/state.", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:38:37Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:38:37Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:38:38Z", "item": "S566", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:38:38Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 chose both: ork code writes the base file (", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:38:39Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T16:38:42Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T16:55:29Z", "item": "S568", "action": "add", "from": "", "to": "open", "note": "name the decided adj key for each owner note in the brief so the reviewer does not look it up"}
+{"when": "2026-11-25T16:55:29Z", "item": "S568", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:08:41Z", "item": "S569", "action": "add", "from": "", "to": "open", "note": "when a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief"}
+{"when": "2026-11-25T17:08:41Z", "item": "S569", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:26:41Z", "item": "S570", "action": "add", "from": "", "to": "open", "note": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded"}
+{"when": "2026-11-25T17:26:41Z", "item": "S570", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:37:33Z", "item": "S571", "action": "add", "from": "", "to": "open", "note": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies"}
+{"when": "2026-11-25T17:37:33Z", "item": "S571", "action": "promote", "from": "", "to": "", "note": ""}

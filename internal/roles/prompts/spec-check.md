@@ -73,7 +73,8 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    in the report, with its slice id, in a `## Orchestrator-run Check commands` section
    after the slice sections and before `## Owner needed`, and ask nothing about it. Raise
    a finding for an orchestrator-run line only when its command looks wrong or risky.
-4. Before inventing a decision key, use `adj find` over decided records and reuse an existing key for the same topic.
+4. Before inventing a decision key, use `adj check TEXT` to look up decisions by topic and reuse an existing key for the same topic.
+   Never use `adj find`.
    Ask the least. One question for each real open decision. Do not ask a question
    about the same decision twice across slices; ask it under the first slice that
    needs it and say in the others' questions that they share it.

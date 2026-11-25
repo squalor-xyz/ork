@@ -600,6 +600,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Lead:         r.lead,
 		Sections:     append(append(lostSection(rec, r, pend), pendingSection(pend)...), r.sections...),
 	}
+	if r.role == RoleReviewer {
+		if section := e.decisionPathsSection(ctx, rec, sliceJSON); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
+	}
 	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
 		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
 		if err != nil && !errors.Is(err, os.ErrNotExist) {
@@ -659,7 +664,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	if rec.Decisions != "" {
 		// The worktree's spec lacks the owner's spec check answers (S116).
-		first := []BriefSection{{Title: "Owner decisions", Body: rec.Decisions}}
+		first := []BriefSection{{Title: "Owner decisions", Body: e.ownerDecisionBody(ctx, rec.Decisions)}}
 		if s := specAnswersSection(r.role, rec.Item, r.finish); s != nil {
 			first = append(first, *s)
 		}

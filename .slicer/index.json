@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 568,
+  "next_id": 572,
   "preamble": "",
   "passes": [
     {
@@ -29295,6 +29295,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "bc4cd907-42ef-4ab0-b58b-ab548804d723",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check proposed (tighten).",
+          "created_at": "2026-11-25T16:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1117768c-d459-423f-930e-7510f48f98db",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 chose both: ork code writes the base file (git show BASE:path) and an overlay.json into the reviewer's temp dir and puts a ready command in the reviewer brief for each changed Go file; the reviewer prompt also carries the go test -overlay probe recipe for hand-written probe tests.",
+          "created_at": "2026-11-25T16:38:38Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29520,7 +29548,7 @@
       "id": "S559",
       "title": "Spec-check brief: look up existing decisions by topic with adj check TEXT",
       "short_title": "Spec-check brief: look up existing decisions by topic with adj check TEXT",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29530,6 +29558,48 @@
           "text": "**2026-11-25** — Owner 2026-11-25: adj already searches by topic: adj check TEXT matches titles, keys, tags and refs (adj check \"matrix.copy\" returned adj 535 and related records). Not an adj feature. Change ork's spec-check (and spec-draft) brief to tell the role to use adj check TEXT to find an existing decision key, never adj find.",
           "created_at": "2026-11-25T15:35:21Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7a580f03-17c6-4954-b99a-e82cbbc7f7c5",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S545's later finding in: docs/state.md says the retry mark is 'cleared by the next slice check that sees it', which is not exact; make it say the first slice check after a retry reruns a red batch (adj on checks.red-evidence-retry, one-shot).",
+          "created_at": "2026-11-25T16:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ddc41716-1af2-495c-b72d-2c3847d624c9",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check proposed (tighten).",
+          "created_at": "2026-11-25T16:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "79b2b7e4-ba02-4b21-b9d6-e2adecdcd763",
+          "kind": "",
+          "text": "**2026-11-25** — Both spec roles use adj check TEXT for decision-topic lookup, docs/design.md and docs/state.md now match, and the one-shot retry wording is corrected; focused tests pass.",
+          "created_at": "2026-11-25T17:37:00Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -29556,17 +29626,32 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S560",
       "title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
       "short_title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7a0f89f8-b915-4e90-9349-49279533f293",
+          "kind": "",
+          "text": "**2026-11-25** — S560 now records explicit acceptance criteria and a passing focused Check command for the advisory decision-path scan.",
+          "created_at": "2026-11-25T16:34:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29584,7 +29669,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -29760,10 +29845,39 @@
       "id": "S566",
       "title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
       "short_title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7229acdf-e150-44be-a971-7e72f8214a66",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check proposed (tighten).",
+          "created_at": "2026-11-25T16:38:38Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d7cada42-0f29-46c6-b74a-885f90c95cd6",
+          "kind": "",
+          "text": "**2026-11-25** — Owner-decision keys without adj ids are checked with adj in the role briefs only when the project has adj on; missing keys are annotated, an unreadable check adds a soft line, and no check pauses the run.",
+          "created_at": "2026-11-25T17:39:05Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29781,7 +29895,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -29803,6 +29917,118 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-adj-6e9959f8",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S568",
+      "title": "name the decided adj key for each owner note in the brief so the reviewer does not look it up",
+      "short_title": "name the decided adj key for each owner note in the brief so the reviewer does not look it up",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S563",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b2edd699",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S569",
+      "title": "when a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief",
+      "short_title": "when a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S559",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-9e987383",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S570",
+      "title": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded",
+      "short_title": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S566",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-8b543bb8",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S571",
+      "title": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies",
+      "short_title": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S563",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-8e4d911e",
         "pass": "v1.2",
         "group": "",
         "reason": "",
