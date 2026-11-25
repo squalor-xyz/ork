@@ -29264,7 +29264,7 @@
       "id": "S554",
       "title": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file",
       "short_title": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29337,6 +29337,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "e009ff46-ea94-478f-b4ef-54f5c2771f64",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S554):\n- later: In the next real reviewer round, open the reviewer's brief under the run's role files. You should see a `## Base overlays` section with one `go -C WORKTREE test -overlay ... ./DIR` command for each changed non-test Go file. Run one of them from your shell. It should fail (red) for the test the slice added, and `git -C WORKTREE status --porcelain` should be unchanged.",
+          "created_at": "2026-11-25T18:12:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3eb27caa-d51c-497f-aa96-ef93426edbbe",
+          "kind": "",
+          "text": "**2026-11-25** — S554 done: the reviewer brief now carries a `## Base overlays` section (base copy plus overlay JSON per changed non-test Go file, written by ork into the reviewer's temp dir, with a ready `go -C WORKTREE test -overlay ... ./DIR` command), the reviewer prompt carries the probe recipe, and the dead `Bash(adj find*)` spec-check grant is gone; go test ./..., go vet ./..., gofmt -l and slicer check are green.",
+          "created_at": "2026-11-25T18:12:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29356,7 +29384,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

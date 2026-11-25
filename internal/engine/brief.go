@@ -560,25 +560,32 @@ func (e *Engine) directionDigest(ctx context.Context, rec runrec.Record) (string
 // tracked changes since the merge base, which include the worktree's own, and
 // the untracked files. The base is the main checkout's branch, as for a landing.
 func (e *Engine) branchPaths(ctx context.Context, rec runrec.Record) ([]string, error) {
+	_, paths, err := e.branchChange(ctx, rec)
+	return paths, err
+}
+
+// branchChange is branchPaths with the merge base the paths are measured from.
+func (e *Engine) branchChange(ctx context.Context, rec runrec.Record) (string, []string, error) {
 	base, err := e.gitRead(ctx, e.proj.Path, "symbolic-ref", "--short", "HEAD")
 	if err != nil {
-		return nil, fmt.Errorf("git symbolic-ref: %w", err)
+		return "", nil, fmt.Errorf("git symbolic-ref: %w", err)
 	}
 	base = strings.TrimSpace(base)
 	if base == "" {
-		return nil, errors.New("the main checkout is not on a branch")
+		return "", nil, errors.New("the main checkout is not on a branch")
 	}
 	mergeBase, err := e.gitRead(ctx, rec.Worktree, "merge-base", base, "HEAD")
 	if err != nil {
-		return nil, fmt.Errorf("git merge-base: %w", err)
+		return "", nil, fmt.Errorf("git merge-base: %w", err)
 	}
-	changed, err := e.gitRead(ctx, rec.Worktree, "diff", "--name-only", "-z", "--no-renames", "--no-relative", strings.TrimSpace(mergeBase))
+	mergeBase = strings.TrimSpace(mergeBase)
+	changed, err := e.gitRead(ctx, rec.Worktree, "diff", "--name-only", "-z", "--no-renames", "--no-relative", mergeBase)
 	if err != nil {
-		return nil, fmt.Errorf("git diff: %w", err)
+		return "", nil, fmt.Errorf("git diff: %w", err)
 	}
 	untracked, err := e.gitRead(ctx, rec.Worktree, "ls-files", "--others", "--exclude-standard", "-z", "--full-name")
 	if err != nil {
-		return nil, fmt.Errorf("git ls-files: %w", err)
+		return "", nil, fmt.Errorf("git ls-files: %w", err)
 	}
 	var paths []string
 	for _, p := range strings.Split(changed+untracked, "\x00") {
@@ -586,7 +593,7 @@ func (e *Engine) branchPaths(ctx context.Context, rec runrec.Record) ([]string, 
 			paths = append(paths, p)
 		}
 	}
-	return paths, nil
+	return mergeBase, paths, nil
 }
 
 // touchesPaths reports whether a path of files equals a changed path or is a

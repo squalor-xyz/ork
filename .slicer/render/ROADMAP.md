@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-573 items · — 57 · done 389 · retired 127
+573 items · — 56 · done 390 · retired 127
 
 ## v1.3
 
@@ -313,7 +313,7 @@ v1.2
 | 256 | [S551](slices/S551.md) | allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert |  | - |  | discovered from S548 | — |
 | 257 | [S552](slices/S552.md) | UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files |  | 1 |  | discovered from S499 | done |
 | 258 | [S553](slices/S553.md) | In ork status, print the wave line after the multi-line wait's options |  | 1 |  | discovered from S499 | done |
-| 259 | [S554](slices/S554.md) | give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file |  | - |  | discovered from S544 | — |
+| 259 | [S554](slices/S554.md) | give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file |  | - |  | discovered from S544 | done |
 | 260 | [S555](slices/S555.md) | the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll |  | - |  | Duplicate of S556 (UI pass hint-width sweep that flags a dropped scroll key) · discovered from S535 | retired |
 | 261 | [S556](slices/S556.md) | give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows |  | - |  | discovered from S535 | — |
 | 262 | [S557](slices/S557.md) | when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section |  | - |  | discovered from S552 | done |

@@ -282,9 +282,6 @@ func TestReadOnlyRoleOnCloudClaudeGetsTheReadOnlyList(t *testing.T) {
 	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleSpecDraft} {
 		t.Run(role, func(t *testing.T) {
 			want := localReadOnlyTools
-			if role == engine.RoleSpecCheck {
-				want += ",Bash(adj find*)"
-			}
 			r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
 				if strings.Join(s.Allowlist, ",") != want || s.WriteDir != "" {
 					t.Errorf("read-only spec: allowlist %q, WriteDir %q; want %q and no write directory", s.Allowlist, s.WriteDir, want)
@@ -710,11 +707,7 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 						}
 						want = append(want, "--system-prompt-file", filepath.Join(temp, "local-system.md"), "--tools", tools)
 						want = append(want, slash...)
-						allowed := localReadOnlyTools
-						if role == engine.RoleSpecCheck {
-							allowed += ",Bash(adj find*)"
-						}
-						want = append(want, "--allowedTools", allowed, "--permission-prompts", "none")
+						want = append(want, "--allowedTools", localReadOnlyTools, "--permission-prompts", "none")
 						want = append(want, "--permission-mode", "manual", "--settings", claude.HookSettings(""))
 					} else if role == engine.RoleUI {
 						// A cloud UI pass has no plan mode: a read-only allowlist plus
@@ -723,11 +716,7 @@ func TestClaudeReadOnlyRoleArguments(t *testing.T) {
 							"--allowedTools", localReadOnlyTools+",Skill,Edit(/"+temp+"/**),Write(/"+temp+"/**)",
 							"--permission-prompts", "none")
 					} else {
-						allowed := localReadOnlyTools
-						if role == engine.RoleSpecCheck {
-							allowed += ",Bash(adj find*)"
-						}
-						want = append(want, "--allowedTools", allowed, "--permission-prompts", "none")
+						want = append(want, "--allowedTools", localReadOnlyTools, "--permission-prompts", "none")
 					}
 					want = append(want, "review")
 					if !reflect.DeepEqual(got, want) {

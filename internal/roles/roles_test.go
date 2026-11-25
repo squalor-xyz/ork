@@ -604,6 +604,43 @@ func TestReviewerPromptNamesTheDigest(t *testing.T) { requirePromptNamesTheDiges
 
 func TestArchitectPromptNamesTheDigest(t *testing.T) { requirePromptNamesTheDigest(t, "architect") }
 
+// S554 (adj 560): a reviewer that may write its temp directory (S510) can run a
+// probe test through go test -overlay without touching the tree.
+func TestReviewerPromptCarriesTheProbeRecipe(t *testing.T) {
+	p := prompts(t)["reviewer"]
+	for _, want := range []string{
+		"## Probe tests",
+		"-overlay",
+		"probe test file",
+		// The closing braces are spaced: TestPlaceholders counts "}}" as a placeholder end.
+		`{"Replace": {"{{worktree}}/PKGDIR/probe_test.go": "{{temp_dir}}/probe_test.go"} }`,
+		"only when the brief says you may write your temp directory",
+		"## Base overlays",
+	} {
+		if !has(p, want) {
+			t.Errorf("reviewer prompt lacks %q", want)
+		}
+	}
+	command := "go -C {{worktree}} test -overlay {{temp_dir}}/overlay.json -run TestProbe ./PKGDIR"
+	if n := strings.Count(p, command); n != 1 {
+		t.Errorf("reviewer prompt holds the plain overlay command %d times, want 1", n)
+	}
+	for i, r := range p {
+		if r > 127 {
+			t.Fatalf("reviewer prompt holds a non-ASCII character at %d", i)
+		}
+	}
+	known := map[string]bool{}
+	for _, k := range knownPlaceholders {
+		known[k] = true
+	}
+	for _, m := range regexp.MustCompile(`\{\{([^{}]*)\}\}`).FindAllStringSubmatch(p, -1) {
+		if !known[m[1]] {
+			t.Errorf("reviewer prompt holds unknown placeholder %s", m[0])
+		}
+	}
+}
+
 func TestImplementerPromptSelfCheck(t *testing.T) {
 	p := prompts(t)["implementer"]
 	selfCheck, report := strings.Index(p, "\n## Self-check\n"), strings.Index(p, "\n## Report\n")
