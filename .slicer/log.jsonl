@@ -6740,3 +6740,6 @@
 {"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T20:46:05Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-25T20:46:40Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "add", "from": "", "to": "open", "note": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds"}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "note", "from": "", "to": "", "note": "possible duplicate of S591", "by": "Jon Robbins"}

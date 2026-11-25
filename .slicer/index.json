@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 594,
+  "next_id": 595,
   "preamble": "",
   "passes": [
     {
@@ -31107,6 +31107,49 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-e1d22f61",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S594",
+      "title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
+      "short_title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "294d767c-81da-4184-880b-427d1ab0bbf1",
+          "kind": "",
+          "text": "**2026-11-25** — possible duplicate of S591",
+          "created_at": "2026-11-25T20:47:42Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S579",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-34bf9623",
         "pass": "v1.2",
         "group": "",
         "reason": "",
