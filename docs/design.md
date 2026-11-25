@@ -806,8 +806,13 @@ slice.
     `go test ./internal/cli -run TestRenderCLIViews -renders DIR`, with
     the brief's temp directory (`TMPDir`, or `TempDir` when unset) as DIR
     (adj 505, superseding adj 487; adj 508).
-    The test flag writes `status.txt`, `show.txt` and `help.txt` using existing
-    CLI fixtures, without editing the tree. With no flag it writes nothing.
+    The test flag writes `status.txt`, `status-summary.txt`,
+    `status-summary-long.txt`, `show.txt` and `help.txt` using existing
+    CLI fixtures, without editing the tree. `-render-fixture NAME[,NAME...]`
+    writes only `NAME.txt` for each name: those five and `projects-set`,
+    `projects-set-refusals`, `wave-start`, `status-queued-held`,
+    `status-engine`, `summary-real`, `projects-setup` and `fake-reply`
+    (adj 542). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). These are scratch files in the role's temp directory named
     in the brief under Your files. The pass
