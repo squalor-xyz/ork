@@ -570,6 +570,10 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if err := os.RemoveAll(filepath.Join(tempDir, rendersDir)); err != nil {
 			return fail("old renders", err)
 		}
+		// The role writes into the directory without making it (S581).
+		if err := os.MkdirAll(filepath.Join(tempDir, rendersDir), 0o700); err != nil {
+			return fail("renders directory", err)
+		}
 	}
 	if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 		return fail("old report", err)

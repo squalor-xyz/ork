@@ -6698,3 +6698,52 @@
 {"when": "2026-11-25T20:47:43Z", "item": "S579", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S579):", "by": "Jon Robbins"}
 {"when": "2026-11-25T20:47:43Z", "item": "S579", "action": "note", "from": "", "to": "", "note": "The Roadmap item, role matrix and spec-draft panes now page ", "by": "Jon Robbins"}
 {"when": "2026-11-25T20:47:43Z", "item": "S579", "action": "status", "from": "started", "to": "done", "note": "The Roadmap item, role matrix and spec-draft panes now page by their lines minus the \"+N more lines\" marker line (new itemPane.page), so no line is skipped; the roadmap-item case joins TestScrollSweep and passes at heights 10, 16, 24 and 40.", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:53:25Z", "item": "S581", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:00:54Z", "item": "S581", "action": "note", "from": "", "to": "", "note": "ork now makes the UI pass's empty `tmp/ui-N/renders/` direct", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:00:54Z", "item": "S581", "action": "status", "from": "started", "to": "done", "note": "ork now makes the UI pass's empty `tmp/ui-N/renders/` directory before each UI pass starts (including reruns), so the pass no longer needs `os.MkdirAll`; full suite and `slicer check` pass.", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:50:43Z", "item": "S589", "action": "add", "from": "", "to": "open", "note": "put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe"}
+{"when": "2026-11-25T19:50:43Z", "item": "S589", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:51:26Z", "item": "S582", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T19:51:26Z", "item": "S583", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T19:51:26Z", "item": "S571", "action": "note", "from": "", "to": "", "note": "Also covers S582 (Base overlays section says which tests the", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:51:27Z", "item": "S585", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S586; Jon chose 'Fold into S586', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T19:51:27Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Also covers S585: in the permission tests, check every git -", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:53:17Z", "item": "S579", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:53:17Z", "item": "S580", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:00:37Z", "item": "S590", "action": "add", "from": "", "to": "open", "note": "give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe"}
+{"when": "2026-11-25T20:00:37Z", "item": "S590", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:22:00Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 577 if numbered so; key launch.read-only", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:00Z", "item": "S571", "action": "note", "from": "", "to": "", "note": "Owner decision: text only. Rework the brief's Test run patte", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:00Z", "item": "S579", "action": "note", "from": "", "to": "", "note": "Owner decision: page step. The page keys move pane.offset by", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:01Z", "item": "S580", "action": "note", "from": "", "to": "", "note": "Owner decision (key ui.roadmap-list-goals-scroll): with the ", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:01Z", "item": "S578", "action": "retire", "from": "open", "to": "retired", "note": "Already fixed: withoutAcceptanceCriteria (internal/engine/brief.go:886, S407) drops criteria bullets before the backtick split, tested by TestCheckSectionsSkipAcceptanceCriteria. Jon chose 'Retire as fixed', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:31:34Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:31:34Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:31:35Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:31:35Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:31:35Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:31:36Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:45:20Z", "item": "S591", "action": "add", "from": "", "to": "open", "note": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds"}
+{"when": "2026-11-25T20:45:20Z", "item": "S591", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:45:35Z", "item": "S592", "action": "add", "from": "", "to": "open", "note": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version"}
+{"when": "2026-11-25T20:45:35Z", "item": "S592", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:45:47Z", "item": "S593", "action": "add", "from": "", "to": "open", "note": "when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check"}
+{"when": "2026-11-25T20:45:47Z", "item": "S593", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:46:05Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:46:40Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "add", "from": "", "to": "open", "note": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds"}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "note", "from": "", "to": "", "note": "possible duplicate of S591", "by": "Jon Robbins"}

@@ -67,6 +67,8 @@ code of its own. Do not add a render path to the tree.
   Go, run it with `go -C {{worktree}} test -overlay FILE -run NAME ./PKG`, and let the
   test write each render into {{temp_dir}}/renders/ by an absolute path.
 
+ork has already made `{{renders_dir}}/`, empty. Write into it; do not make or remove it.
+
 For each view the diff adds or changes, write plain text files in `{{renders_dir}}/`:
 
 - `VIEW-80x24.txt`: the view at 80 columns by 24 rows.

@@ -1,0 +1,39 @@
+{
+  "id": "S592",
+  "title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-203303-45c3, project ork, item S571:\n\nallow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version\n\nEvidence: git -C WORKTREE grep -n ... HEAD -- internal/roles/prompts was denied as needing approval; the base overlays cover only Go files"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
