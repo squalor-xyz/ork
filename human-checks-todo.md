@@ -286,3 +286,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S554 (run ork-20261125-175814-f2ae, 2026-11-25)
 
 - [ ] In the next real reviewer round, open the reviewer's brief under the run's role files. You should see a `## Base overlays` section with one `go -C WORKTREE test -overlay ... ./DIR` command for each changed non-test Go file. Run one of them from your shell. It should fail (red) for the test the slice added, and `git -C WORKTREE status --porcelain` should be unchanged.
+
+## S565 (run ork-20261125-182244-1153, 2026-11-25)
+
+- [ ] Read the rendered UI brief. It should show `## Test run patterns` after `## CLI text renders`, with the one-test-per-command example. The implementer, reviewer and gate briefs should not show it.
