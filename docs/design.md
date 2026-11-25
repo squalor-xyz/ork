@@ -2544,7 +2544,7 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   share a fixed read-only allowlist instead of plan mode. Cloud Claude uses
   `--permission-prompts none` and no permission mode flag; Grok read-only
   roles keep plan mode. The list allows `Read`, `Grep`,
-  `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
+  `Glob`, `git diff`, `git log`, `git status`, `git show` and `git merge-base` (also with `git -C`; adj 574),
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
   `slicer check` (adj 504, including `slicer check --root DIR`), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including

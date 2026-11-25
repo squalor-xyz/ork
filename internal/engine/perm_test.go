@@ -109,7 +109,13 @@ func TestReadOnlyAllowlistBatch(t *testing.T) {
 	for _, forbidden := range []string{"rg", "$", ";", "&&", "="} {
 		t.Run("excludes_"+forbidden, func(t *testing.T) {
 			for _, entry := range list {
-				if strings.Contains(entry, forbidden) {
+				// rg is banned as a command (adj 520, adj 457), not as a
+				// substring: merge-base contains the letters rg.
+				bad := strings.Contains(entry, forbidden)
+				if forbidden == "rg" {
+					bad = strings.HasPrefix(entry, "Bash(rg")
+				}
+				if bad {
 					t.Errorf("read-only allowlist contains forbidden %q in %s", forbidden, entry)
 				}
 			}
@@ -156,6 +162,39 @@ func TestReadOnlyAllowlistIncludesAdjLint(t *testing.T) {
 func TestReadOnlyAllowlistIncludesSlicerCheck(t *testing.T) {
 	if !slices.Contains(LocalReadOnlyAllowlist(), "Bash(slicer check*)") {
 		t.Fatal("read-only allowlist missing Bash(slicer check*)")
+	}
+}
+
+// S575 (adj 574): read-only roles may run git merge-base, plain and with
+// git -C, and no other git subcommand is newly allowed.
+func TestReadOnlyAllowlistIncludesMergeBase(t *testing.T) {
+	entries := []string{"Bash(git merge-base*)", "Bash(git -C * merge-base*)"}
+	for name, list := range map[string][]string{"read-only": LocalReadOnlyAllowlist(), "cloud-ui": CloudUIAllowlist()} {
+		for _, entry := range entries {
+			if !slices.Contains(list, entry) {
+				t.Errorf("%s allowlist missing %s", name, entry)
+			}
+		}
+		for _, command := range []string{
+			"git merge-base main HEAD",
+			"git -C /w merge-base main HEAD",
+			"git -C /w merge-base --is-ancestor main HEAD",
+		} {
+			ok := false
+			for _, entry := range entries {
+				ok = ok || allowlistMatches(entry, command)
+			}
+			if !ok {
+				t.Errorf("%s allowlist entries do not match %q", name, command)
+			}
+		}
+		for _, command := range []string{"git -C /w merge main", "git merge main", "git -C /w push origin main"} {
+			for _, entry := range list {
+				if allowlistMatches(entry, command) {
+					t.Errorf("%s allowlist entry %s matches %q", name, entry, command)
+				}
+			}
+		}
 	}
 }
 

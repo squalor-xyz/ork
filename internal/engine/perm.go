@@ -29,6 +29,7 @@ func LocalReadOnlyAllowlist() []string {
 		"Bash(git ls-files*)", "Bash(git -C * ls-files*)",
 		"Bash(git diff*)", "Bash(git log*)", "Bash(git status*)", "Bash(git show*)",
 		"Bash(git -C * diff*)", "Bash(git -C * log*)", "Bash(git -C * status*)", "Bash(git -C * show*)",
+		"Bash(git merge-base*)", "Bash(git -C * merge-base*)",
 		"Bash(slicer show*)", "Bash(slicer goals*)", "Bash(slicer list*)", "Bash(slicer deps*)", "Bash(slicer find*)", "Bash(slicer check*)",
 		"Bash(adj show*)", "Bash(adj check*)", "Bash(adj lint*)",
 		"Bash(go test*)", "Bash(go vet*)", "Bash(go -C * test*)", "Bash(go -C * vet*)",

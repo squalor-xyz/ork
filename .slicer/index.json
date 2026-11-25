@@ -30313,7 +30313,7 @@
       "id": "S575",
       "title": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from",
       "short_title": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30344,6 +30344,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "a2ab1d23-bb16-41cd-839a-a972e899c6d8",
+          "kind": "",
+          "text": "**2026-11-25** — Read-only roles (reviewer, gate, architect, spec-check, spec-draft, cloud UI pass) may run `git merge-base` and `git -C DIR merge-base` without a prompt; `go vet`, `gofmt -l` and `go test ./...` are clean.",
+          "created_at": "2026-11-25T19:09:14Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30363,7 +30377,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

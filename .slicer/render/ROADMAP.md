@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-578 items · — 58 · done 393 · retired 127
+578 items · — 57 · done 394 · retired 127
 
 ## v1.3
 
@@ -334,7 +334,7 @@ v1.2
 | 277 | [S572](slices/S572.md) | Narrow the Files-path exemption to files that run |  | 1 |  | discovered from S563 | done |
 | 278 | [S573](slices/S573.md) | Spec-answer question text can flag paths the owner did not choose |  | 1 |  | discovered from S560 | done |
 | 279 | [S574](slices/S574.md) | add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test |  | - |  | discovered from S563 | — |
-| 280 | [S575](slices/S575.md) | allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from |  | - |  | discovered from S554 | — |
+| 280 | [S575](slices/S575.md) | allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from |  | - |  | discovered from S554 | done |
 | 281 | [S576](slices/S576.md) | spec draft: keep the role's raw report when the report shape check fails, and name its path in the error | S | - |  |  | — |
 | 282 | [S577](slices/S577.md) | When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay |  | - |  | discovered from S572 | — |
 | 283 | [S578](slices/S578.md) | Do not split a Check criterion phrase starting with a dash flag into a runnable Check row |  | - |  | discovered from S572 | — |
