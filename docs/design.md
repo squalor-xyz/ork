@@ -1869,7 +1869,9 @@ or a spent round. A command that cannot start, or returns an unexpected
 execution error, pauses at the current state instead of becoming a red row.
 A later fix reruns rows after a change outside `docs/` and `.slicer/`;
 product Markdown and `decisions/` changes count. Unchanged red evidence remains
-red. The cache also includes the Check section so changed commands are checked. The landing
+red until `ork retry` (*proposed*, S545, `checks.red-evidence-retry`): a retry
+reruns a red batch once, so a flake cannot pin a run, and a green batch stays
+cached. The cache also includes the Check section so changed commands are checked. The landing
 re-check runs the same rows after merging the moved base. The gate receives
 every row's command, result and log alongside the project check evidence.
 The run pane does not add a list of check rows.

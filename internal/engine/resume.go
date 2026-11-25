@@ -185,6 +185,7 @@ func (e *Engine) resumeStopped(ctx context.Context, rec runrec.Record, note stri
 		r.QueuedQuestions = nil
 		r.Resume = nil
 		r.Grants = mergeGrants(r.Grants, allow)
+		r.RecheckSlice = true // S545: a retry reruns a red slice check
 		r.Round = round
 		r.RoundLimit = limit
 		r.Fails = 0
