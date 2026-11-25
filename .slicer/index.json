@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 535,
+  "next_id": 536,
   "preamble": "",
   "passes": [
     {
@@ -28182,6 +28182,49 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S535",
+      "title": "Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help",
+      "short_title": "Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "f22b0150-1c34-4485-827a-afadf6e4ae53",
+          "kind": "",
+          "text": "**2026-11-25** — Owner (2026-11-24) folded S401's later findings 2-5 into this slice. Also cover: (2) below 80 columns the help hint drops the scroll keys while the help still overflows (60x16 shows '? or esc close help; q quit' with '+34 more lines'; internal/tui/keys.go:309-310 adds the scroll hint at dropPage, so it drops before the close hint); (3) the mouse wheel does not scroll the help (internal/tui/model.go mouse handler ignores all input while m.showHelp). Source: ork show ork-20261122-081958-ba4a.",
+          "created_at": "2026-11-25T02:15:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S401",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261122-081958-ba4a-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

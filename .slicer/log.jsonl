@@ -6241,3 +6241,8 @@
 {"when": "2026-11-25T01:52:06Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Owner decision (adj ui.settings-pane-key, 2026-11-25): capit", "by": "Jon Robbins"}
 {"when": "2026-11-25T01:53:55Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T02:11:05Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T02:15:10Z", "item": "S535", "action": "add", "from": "", "to": "open", "note": "Make pgup the exact inverse of pgdown in help"}
+{"when": "2026-11-25T02:15:11Z", "item": "S535", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T02:15:11Z", "item": "S535", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
+{"when": "2026-11-25T02:15:15Z", "item": "S535", "action": "set", "from": "", "to": "", "note": "title Make pgup the exact inverse of pgdown in help→Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help; short_title Make pgup the exact inverse of pgdown in help→Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help"}
+{"when": "2026-11-25T02:15:15Z", "item": "S535", "action": "note", "from": "", "to": "", "note": "Owner (2026-11-24) folded S401's later findings 2-5 into thi", "by": "Jon Robbins"}
