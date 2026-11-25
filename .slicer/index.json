@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 590,
+  "next_id": 591,
   "preamble": "",
   "passes": [
     {
@@ -30216,6 +30216,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "8a2c7057-cd41-4970-aa58-ab561c91921a",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: text only. Rework the brief's Test run patterns section (internal/engine/brief.go:234), the Base overlays body text (internal/engine/baseoverlay.go:75) and the gate and spec-writing role prompts so each says one go -C DIR test -run NAME PKG command per test; tests assert no | appears in any -run text ork writes. Jon chose 'Text only', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:22:00Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30525,7 +30539,7 @@
       "id": "S578",
       "title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
       "short_title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -30542,7 +30556,7 @@
         "key": "tool-feedback-ork-f27058a6",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Already fixed: withoutAcceptanceCriteria (internal/engine/brief.go:886, S407) drops criteria bullets before the backtick split, tested by TestCheckSectionsSkipAcceptanceCriteria. Jon chose 'Retire as fixed', session 8d711f67, 2026-11-25.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -30554,9 +30568,24 @@
       "title": "Roadmap item pane page keys skip the line under the more-lines marker",
       "short_title": "Roadmap item pane page keys skip the line under the more-lines marker",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "840a73f5-e4cc-462f-a21f-5673f99e8d84",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: page step. The page keys move pane.offset by the room minus the lines the draw spends on the more-lines marker, so no line is skipped; this also fixes the spec-draft pane, which shares scrollRoadmapPane (internal/tui/roadmap.go). Re-enable the S579 case in internal/tui/scroll_sweep_test.go:208-211. Jon chose 'Page step', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:22:00Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30582,9 +30611,24 @@
       "title": "Roadmap list at height 10 cannot scroll up to the Goals block above the first row",
       "short_title": "Roadmap list at height 10 cannot scroll up to the Goals block above the first row",
       "status": "open",
-      "has_slice": false,
+      "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d08ce9de-a2b4-44ed-9349-3da9174a1f0b",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (key ui.roadmap-list-goals-scroll): with the cursor on the first row, pgup, up and home scroll the hidden Goals lines into view; re-enable the S580 case in the scroll sweep. Jon chose 'pgup at top', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:22:00Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30810,6 +30854,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9329ef0c-d27a-4224-8c9a-74dfcb518a28",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 577 if numbered so; key launch.read-only-git-c-form): pin-path-all. Probe the real matcher, and if * spans the subcommand, LocalReadOnlyAllowlist and the implementer preset (internal/engine/perm.go:66-67: status, diff, log, ls-files, mv, rm) take the role's worktree path and emit Bash(git -C PATH SUBCMD*). Jon chose 'Pin path, all git -C', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:22:00Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30937,6 +30995,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-51410ea9",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S590",
+      "title": "give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe",
+      "short_title": "give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S581",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-47212cda",
         "pass": "v1.2",
         "group": "",
         "reason": "",
