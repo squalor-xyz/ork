@@ -31432,7 +31432,7 @@
       "id": "S596",
       "title": "when two changed files depend on each other's new fields, write a base overlay that reverts both together",
       "short_title": "when two changed files depend on each other's new fields, write a base overlay that reverts both together",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31442,6 +31442,34 @@
           "text": "**2026-11-25** — Also covers adj 588: when every single-file base overlay fails to build (a shared signature change), offer one overlay that reverts all changed product files together, alongside the per-file ones. Jon chose 'Two slices', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T22:17:28Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4a27a447-5ec8-44f7-b4c2-c34639454c89",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S596):\n- later: In the next reviewer round for a slice where two changed Go files depend on each other's new fields, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... for each single file. It should end with an All changed Go files at once entry holding one go -C ... test -overlay .../overlay-all.json ./PKG ... command. Run it from your shell. It should build, and git -C WORKTREE status --porcelain should be unchanged.",
+          "created_at": "2026-11-25T23:30:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e2c2d636-6b79-4637-9508-c0ce9d7fc3b9",
+          "kind": "",
+          "text": "**2026-11-25** — Added a combined base overlay when at least two written Go-file overlays all fail their per-file vet checks, preserving the per-file entries and reporting the combined build result.",
+          "created_at": "2026-11-25T23:30:13Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31468,7 +31496,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

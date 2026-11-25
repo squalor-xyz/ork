@@ -2058,7 +2058,11 @@ separately.
     only that file reverted and see a test the slice added fail. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
     test names in one `-run` pattern (S571). This command guidance appears only
-    when at least one test command remains (S593). It says how
+    when at least one single-file test command remains (S593). When at least
+    two overlays were written and every one fails vet, ork writes
+    `TMPDIR/overlay-all.json` reverting all those files, vets it over their
+    packages, and lists it as a final entry with a test command (or
+    `does not build: ERROR`) (S596, adj 588). It says how
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git

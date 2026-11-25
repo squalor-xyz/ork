@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-600 items · — 61 · done 405 · retired 134
+600 items · — 60 · done 406 · retired 134
 
 ## v1.3
 
@@ -355,7 +355,7 @@ v1.2
 | 298 | [S593](slices/S593.md) | when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check |  | - |  | discovered from S586 | done |
 | 299 | [S594](slices/S594.md) | when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds |  | - |  | discovered from S579 | — |
 | 300 | [S595](slices/S595.md) | `go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem |  | 1 |  | discovered from S586 | done |
-| 301 | [S596](slices/S596.md) | when two changed files depend on each other's new fields, write a base overlay that reverts both together |  | - |  | discovered from S580 | — |
+| 301 | [S596](slices/S596.md) | when two changed files depend on each other's new fields, write a base overlay that reverts both together |  | - |  | discovered from S580 | done |
 | 302 | [S597](slices/S597.md) | name a preset fixture height in the render brief when the changed behavior only shows below 80x24 |  | - |  | discovered from S580 | — |
 | 303 | [S598](slices/S598.md) | build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice |  | - |  | discovered from S593 | — |
 | 304 | [S599](slices/S599.md) | build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice |  | - |  | Duplicate of S598; Jon chose 'Two slices', session 8d711f67, 2026-11-25. · discovered from S593 | retired |
