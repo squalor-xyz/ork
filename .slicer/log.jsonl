@@ -6309,3 +6309,9 @@
 {"when": "2026-11-25T07:22:19Z", "item": "S544", "action": "add", "from": "", "to": "open", "note": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load"}
 {"when": "2026-11-25T07:22:19Z", "item": "S544", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T07:22:19Z", "item": "S544", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T13:10:35Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 confirmed the fixture list: projects-set, p", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:10:37Z", "item": "S499", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T13:11:06Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "add", "from": "", "to": "open", "note": "A red slice check from a flake stays cached across retries until the product or Check text changes"}
+{"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Why"}

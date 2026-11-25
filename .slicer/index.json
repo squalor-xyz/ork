@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 545,
+  "next_id": 546,
   "preamble": "",
   "passes": [
     {
@@ -28597,6 +28597,34 @@
       "id": "S544",
       "title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
       "short_title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S545",
+      "title": "A red slice check from a flake stays cached across retries until the product or Check text changes",
+      "short_title": "A red slice check from a flake stays cached across retries until the product or Check text changes",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
