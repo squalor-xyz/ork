@@ -859,6 +859,36 @@ func TestGatePromptUsesOrkEvidence(t *testing.T) {
 	}
 }
 
+func TestGateBriefClassifiesCheckCommandsAgainstThePinnedImplementerList(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(p, w string) []clitest.Route {
+			raw, err := json.Marshal([]any{map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{
+				{"heading": "Check", "body": "- `go -C " + w + " test ./...`\n- `go -C " + w + "/sub test ./...`"},
+			}}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			return []clitest.Route{{Tool: "slicer", Args: []string{"show", "S04", "--json", "--lean", "--root", w}, Stdout: string(raw)}}
+		}
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleGate {
+			continue
+		}
+		_, section, found := strings.Cut(req.Brief, "## Implementer-runnable Check commands\n\n")
+		section, _, _ = strings.Cut(section, "\n## ")
+		if !found || !strings.Contains(section, "- go -C "+h.W+" test ./...\n") {
+			t.Errorf("gate runnable section lacks worktree test command: %s", section)
+		}
+		if strings.Contains(section, "go -C "+h.W+"/sub test ./...") {
+			t.Errorf("gate classifies subdirectory test as implementer-runnable: %s", section)
+		}
+		return
+	}
+	t.Fatal("no gate request")
+}
+
 func TestGateReceivesRoundCheckEvidence(t *testing.T) {
 	h := newHarness(t)
 	requireState(t, h.start(), runrec.StateAwaitingApproval)

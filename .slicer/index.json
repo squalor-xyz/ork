@@ -31290,7 +31290,7 @@
       "id": "S595",
       "title": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem",
       "short_title": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31300,6 +31300,20 @@
           "text": "**2026-11-25** — Owner decision: pin go -C read-only entries at launch the same way as git -C (adj 579, 580). Also fold S586 finding 1: the gate brief's allowed forms come from ResolvePermission (round.go:634-638), not rolePermission, so it shows the unpinned git -C * template; show the pinned list. Jon chose 'File: pin go -C too' and 'Fold into the go -C slice', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T20:55:43Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d0e0530f-75a8-471d-aacd-28623079c786",
+          "kind": "",
+          "text": "**2026-11-25** — Pinned go -C permissions to role worktrees and gate Check classification to the pinned implementer list; focused regressions and static checks pass, while full-suite verification remains sandbox-limited.",
+          "created_at": "2026-11-25T21:50:54Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31326,7 +31340,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

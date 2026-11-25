@@ -186,6 +186,11 @@ func TestRetryAllowReachesAResumedStoppedRun(t *testing.T) {
 	if !slices.Contains(base, "Bash(git -C "+h.W+" status*)") {
 		t.Fatalf("PinGitC left the template in place: %q", base)
 	}
+	for _, entry := range base {
+		if strings.Contains(entry, "go -C *") {
+			t.Fatalf("PinGitC left the Go template in place: %q", base)
+		}
+	}
 	lists := implementerAllowlists(h)
 	if len(lists) != 5 {
 		t.Fatalf("implementer rounds %d, want the 3 before the stop and fix rounds 5 and 6", len(lists))

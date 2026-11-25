@@ -276,21 +276,21 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 	}
 }
 
-// localReadOnlyTemplate is the read-only list with its git -C entries as a
+// localReadOnlyTemplate is the read-only list with its git -C and go -C entries as a
 // template, `*` in place of the worktree (S586, adj 577).
 const localReadOnlyTemplate = "Read,Grep,Glob,Bash(slicer * --help),Bash(slicer ai relay),Bash(ls*),Bash(git ls-files*),Bash(git -C * ls-files*),Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(git merge-base*),Bash(git -C * merge-base*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(slicer check*),Bash(adj show*),Bash(adj check*),Bash(adj lint*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
 
 // localReadOnlyToolsFor is the list a request with this worktree gets: each
-// git -C entry names the worktree. An empty worktree cannot be pinned, so the
-// git -C entries are dropped (adj 580).
+// git -C and go -C entry names the worktree. An empty worktree cannot be pinned,
+// so these entries are dropped (adj 580).
 func localReadOnlyToolsFor(worktree string) string {
 	var out []string
 	for _, entry := range strings.Split(localReadOnlyTemplate, ",") {
 		switch {
-		case !strings.HasPrefix(entry, "Bash(git -C * "):
+		case !strings.HasPrefix(entry, "Bash(git -C * ") && !strings.HasPrefix(entry, "Bash(go -C * "):
 			out = append(out, entry)
 		case worktree != "":
-			out = append(out, strings.Replace(entry, "git -C * ", "git -C "+worktree+" ", 1))
+			out = append(out, strings.Replace(entry, "-C * ", "-C "+worktree+" ", 1))
 		}
 	}
 	return strings.Join(out, ",")
@@ -337,8 +337,11 @@ func TestClaudeRunnerPinsReadOnlyGitCToTheWorktree(t *testing.T) {
 			if !slices.Contains(got.Allowlist, "Bash(git -C /work status*)") {
 				t.Errorf("allowlist lacks Bash(git -C /work status*): %q", got.Allowlist)
 			}
+			if !slices.Contains(got.Allowlist, "Bash(go -C /work test*)") {
+				t.Errorf("allowlist lacks Bash(go -C /work test*): %q", got.Allowlist)
+			}
 			for _, entry := range got.Allowlist {
-				if strings.Contains(entry, "git -C *") {
+				if strings.Contains(entry, "git -C *") || strings.Contains(entry, "go -C *") {
 					t.Errorf("unpinned entry %s", entry)
 				}
 			}

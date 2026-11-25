@@ -639,7 +639,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if err != nil {
 			return fail("implementer permissions", err)
 		}
-		in.Allow = implementerPerm.Allow
+		in.Allow = PinGitC(implementerPerm.Allow, rec.Worktree)
 		body := "No round check result is available. Do not claim tests green without evidence."
 		if len(rec.Checks) > 0 {
 			check := rec.Checks[len(rec.Checks)-1]

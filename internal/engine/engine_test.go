@@ -327,6 +327,14 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 	if !slices.Contains(impl.Allowlist, "Bash(git -C "+h.W+" status*)") || slices.Contains(impl.Allowlist, "Bash(git -C * status*)") {
 		t.Errorf("implementer allowlist is not pinned to %s: %q", h.W, impl.Allowlist)
 	}
+	if !slices.Contains(impl.Allowlist, "Bash(go -C "+h.W+" test*)") {
+		t.Errorf("implementer Go allowlist is not pinned to %s: %q", h.W, impl.Allowlist)
+	}
+	for _, entry := range impl.Allowlist {
+		if strings.Contains(entry, "go -C *") {
+			t.Errorf("unpinned Go entry %s", entry)
+		}
+	}
 	if rev.Resume != "" || !rev.ReadOnly || len(rev.Allowlist) != 0 {
 		t.Errorf("reviewer request: %+v", rev)
 	}
