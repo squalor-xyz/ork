@@ -306,3 +306,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S586 (run ork-20261125-203302-a88e, 2026-11-25)
 
 - [ ] Probe the real Claude Code matcher (not run by this draft). In a scratch git repo, start Claude Code with the allow rule Bash(git -C * show*) and ask it to run git -C /scratch commit --allow-empty -m show. If it runs without a prompt, the CLI's * spans the subcommand like ork's hook does. Then repeat with Bash(git -C /scratch show*): the commit command should prompt or be denied, and git -C /scratch show HEAD should run. Record the result on S586.
+
+## S571 (run ork-20261125-203303-45c3, 2026-11-25)
+
+- [ ] Read the rendered UI brief and the reviewer brief's ## Base overlays section. Each should say one test per command with go -C DIR test -run NAME PKG, with no | character in the -run text. Read internal/roles/prompts/gate.md and internal/roles/prompts/spec-draft.md; each should carry the same rule.
