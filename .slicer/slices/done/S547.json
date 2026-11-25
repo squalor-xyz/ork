@@ -1,0 +1,39 @@
+{
+  "id": "S547",
+  "title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the ui in round 1 of ork run ork-20261125-021106-86c7 for S261 (discovered from S261):\n\nmatrix copy: ask each project's question right after that project's preview\n- `roles.go:164-186` prints every project's preview first and asks all the questions afterwards. With `--all` and a real 26-row source, each project can have dozens of step lines, so a project's steps and warnings scroll out of view before its `[y/N]` question. The `copy-ask` render (lines 2-22) shows the gap even with two projects of 8 steps each.\n- Change: print a project's block, then ask its question. The single write call stays the same. `docs/design.md:4172-4175` and the test at `roles_matrix_test.go:200` would need updating.\n- Importance: 2\n- Urgency: 1\n- Effort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": "`internal/cli/roles.go:110` rolesMatrixCopy; `internal/cli/roles.go:249` printMatrixCopy; `internal/cli/roles_matrix_test.go:203` confirmation/output tests; `internal/cli/render_test.go:41` renderViews and `internal/cli/render_test.go:390` TestRenderCLIViewsWritesFiles; `internal/daemon/matrixcopy.go:71` MatrixCopyStep, `internal/daemon/matrixcopy.go:407` copyPlan.set, `internal/daemon/matrixcopy.go:593` rowsDigest, `internal/daemon/matrixcopy.go:616` setStepFields and `internal/daemon/matrixcopy.go:664` checkCopy; `internal/daemon/matrixcopy_test.go:757` mismatch and preview-binding tests; `docs/design.md:4186` matrix-copy behavior; `landed-changed/S547.md` via slicer changelog add."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "TestRolesMatrixCopyAsksPerProjectAndEnterIsNo (`internal/cli/roles_matrix_test.go:203`), TestRolesMatrixCopyYesSkipsTheQuestion and TestRolesMatrixCopyAllExitsOneOnAFailure verify preview/question ordering and labelled status-only results. TestMatrixCopyWrappedFailure (`internal/cli/roles_matrix_test.go:466`) and TestMatrixCopyPrintsSetFieldsInOrder (`internal/cli/roles_matrix_test.go:476`) verify wrapping and ordered fields. TestMatrixCopyAddIDsThatDifferBetweenTheDryRunsFailTheProject (`internal/daemon/matrixcopy_test.go:757`) verifies named refusal and recovery guidance. TestMatrixCopyRefusesChangedCopiedRuleText (`internal/daemon/matrixcopy_test.go:916`, using copyThenWrite at line 848) verifies rule-content binding. TestMatrixCopySetFieldsDescribeOnlyChangedValues (`internal/daemon/matrixcopy_test.go:934`) varies one field at a time. TestRenderCLIViewsWritesFiles (`internal/cli/render_test.go:390`) verifies selectable matrix-copy fixtures."
+    },
+    {
+      "heading": "Implement",
+      "body": "Print each project preview immediately before its question, retaining one write call. Label the write result with written: and omit repeated steps and warnings for changed projects. Wrap failure and skipped status lines at 80 columns with a two-space hang; omit the redundant project name in no_spec_check_row. Add MatrixCopyStep fields derived from ork plan.set(): only values different from the current target row, printed as key=value in order role, when, agent, vendor, model, reasoning, note (owner decision 2026-11-25, ui.matrix-copy-step-fields). Give differing add ids a named refusal code, comma-separated ids, no-write statement and preview-again hint. Include planned rule text in the per-project digest. Add selectable matrix-copy preview, question and stale-preview CLI render fixtures. Update docs and the slice changelog entry."
+    },
+    {
+      "heading": "Check",
+      "body": "`go vet ./...` and `go test ./...`; `gofmt -l .`. Socket-bound failures may be sandbox-limited; ork reruns the full checks outside the role sandbox. Mutation-check each new assertion and verify that overlays leave the source unchanged."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

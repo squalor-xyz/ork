@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-561 items · — 55 · done 382 · retired 124
+561 items · — 53 · done 383 · retired 125
 
 ## v1.3
 
@@ -306,7 +306,7 @@ v1.2
 | 249 | [S544](slices/S544.md) | Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load | S | - |  |  | done |
 | 250 | [S545](slices/S545.md) | A red slice check from a flake stays cached across retries until the product or Check text changes | S | - |  |  | — |
 | 251 | [S546](slices/S546.md) | Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns |  | 2 |  | discovered from S251 | done |
-| 252 | [S547](slices/S547.md) | matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields |  | - |  | discovered from S261 | — |
+| 252 | [S547](slices/S547.md) | matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields |  | - |  | discovered from S261 | done |
 | 253 | [S548](slices/S548.md) | matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs |  | 2 |  | discovered from S261 | done |
 | 254 | [S549](slices/S549.md) | allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures |  | - |  | discovered from S499 | — |
 | 255 | [S550](slices/S550.md) | name -render-fixture and the fixture list in the UI pass brief's CLI text renders section |  | - |  | discovered from S499 | — |
@@ -320,7 +320,7 @@ v1.2
 | 263 | [S558](slices/S558.md) | matrix copy: bind the confirmed write to source row content, not only steps |  | 2 |  | discovered from S548 | done |
 | 264 | [S559](slices/S559.md) | adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic |  | - |  | discovered from S558 | — |
 | 265 | [S560](slices/S560.md) | before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not |  | - |  | discovered from S558 | — |
-| 266 | [S561](slices/S561.md) | add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test |  | - |  | discovered from S558 | — |
+| 266 | [S561](slices/S561.md) | add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test |  | - |  | Folded into S547 (adj 558, owner 2026-11-25) · discovered from S558 | retired |
 
 ---
 

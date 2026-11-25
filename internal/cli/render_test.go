@@ -60,6 +60,9 @@ func renderViews() []renderView {
 		{name: "projects-set", text: renderProjectsSet},
 		{name: "projects-set-refusals", text: renderProjectsSetRefusals},
 		{name: "wave-start", text: renderWaveStart},
+		{name: "matrix-copy-preview", text: func(t *testing.T) string { return renderMatrixCopy(t, true, false) }},
+		{name: "matrix-copy-ask", text: func(t *testing.T) string { return renderMatrixCopy(t, false, false) }},
+		{name: "matrix-copy-stale-preview", text: func(t *testing.T) string { return renderMatrixCopy(t, false, true) }},
 		{name: "status-queued-held", text: func(t *testing.T) string {
 			return renderOK(t, renderStatusApp(t, renderStatusQueuedHeldReply), "status")
 		}},
@@ -297,6 +300,41 @@ func renderOK(t *testing.T, app *App, args ...string) string {
 	return out
 }
 
+func renderMatrixCopy(t *testing.T, dry, stale bool) string {
+	t.Helper()
+	a, b := wouldChange("adjudicate"), wouldChange("slicer")
+	a.Warnings = []string{noAdapterWarn}
+	preview := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{a, b}}
+	written := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{
+		{Project: a.Project, Status: daemon.CopyChanged, Steps: a.Steps},
+		{Project: b.Project, Status: daemon.CopyChanged, Steps: b.Steps},
+	}}
+	if stale {
+		written.Partial = true
+		written.Projects[0] = daemon.MatrixCopyProject{Project: a.Project, Status: daemon.CopyFailed, Error: &ipc.Error{Code: daemon.CodeStalePreview, Message: "the rows or rules the copy to adjudicate would write differ from the ones the preview showed: preview again, then copy"}}
+	}
+	var calls []daemon.MatrixCopyParams
+	// Closed input shows each question on its own line, as readLine prints the
+	// missing terminal newline on EOF. The refusal fixture writes with --yes.
+	app := copyApp(t, &calls, preview, written, "")
+	args := []string{"roles", "matrix", "copy", "ork", "--all"}
+	if dry {
+		args = append(args, "--dry-run")
+	}
+	if stale {
+		args = append(args, "--yes")
+	}
+	code, out, errs := run(t, app, args...)
+	want := ExitOK
+	if stale {
+		want = ExitFailure
+	}
+	if code != want || errs != "" {
+		t.Fatalf("matrix copy render: exit %d, stderr %q", code, errs)
+	}
+	return out
+}
+
 // renderViewText returns the text of the named fixture.
 func renderViewText(t *testing.T, name string) string {
 	t.Helper()
@@ -347,7 +385,7 @@ func TestRenderCLIViews(t *testing.T) {
 
 // renderFixtureNames are the fixtures that -render-fixture adds beside the five
 // default files (adj 542, owner 2026-11-25).
-var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave-start", "status-queued-held", "status-engine", "summary-real", "projects-setup", "fake-reply"}
+var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave-start", "status-queued-held", "status-engine", "summary-real", "projects-setup", "fake-reply", "matrix-copy-preview", "matrix-copy-ask", "matrix-copy-stale-preview"}
 
 func TestRenderCLIViewsWritesFiles(t *testing.T) {
 	if flag.Lookup("renders") == nil {
