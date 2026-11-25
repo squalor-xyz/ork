@@ -6579,3 +6579,16 @@
 {"when": "2026-11-25T18:12:52Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S554):", "by": "Jon Robbins"}
 {"when": "2026-11-25T18:12:53Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "S554 done: the reviewer brief now carries a `## Base overlay", "by": "Jon Robbins"}
 {"when": "2026-11-25T18:12:53Z", "item": "S554", "action": "status", "from": "started", "to": "done", "note": "S554 done: the reviewer brief now carries a `## Base overlays` section (base copy plus overlay JSON per changed non-test Go file, written by ork into the reviewer's temp dir, with a ready `go -C WORKTREE test -overlay ... ./DIR` command), the reviewer prompt carries the probe recipe, and the dead `Bash(adj find*)` spec-check grant is gone; go test ./..., go vet ./..., gofmt -l and slicer check are green.", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:57:43Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T17:57:43Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:57:44Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T17:57:44Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T17:57:44Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T17:57:51Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T18:08:18Z", "item": "S574", "action": "add", "from": "", "to": "open", "note": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test"}
+{"when": "2026-11-25T18:08:18Z", "item": "S574", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T18:10:14Z", "item": "S572", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 568, cli.questions-check-finding-exit): ", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:10:14Z", "item": "S573", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 569, spec.owner-decisions-format): one-l", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:10:14Z", "item": "S531", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 570, ui.scroll-sweep-home): in-tree-test", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:11:29Z", "item": "S575", "action": "add", "from": "", "to": "open", "note": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from"}
+{"when": "2026-11-25T18:11:29Z", "item": "S575", "action": "promote", "from": "", "to": "", "note": ""}

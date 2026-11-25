@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 574,
+  "next_id": 576,
   "preamble": "",
   "passes": [
     {
@@ -28248,7 +28248,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "11d20ccc-a7c6-4685-b08e-3de9a2825bb1",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 570, ui.scroll-sweep-home): in-tree-test. A permanent internal/tui test (e.g. TestScrollSweep) pages down to the end and back at heights 10, 16, 24 and 40 (width 80) over every scrollable view reachable from launchHarness, and fails if any content line never appears. Jon chose 'In-tree test', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:10:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30101,6 +30116,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9332b557-290b-44a9-bee8-1da52e4fe2c6",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 568, cli.questions-check-finding-exit): skip. ork run --questions returns ExitOK for an item held only by a Check finding and prints the held line; ExitWaitQuestion stays for items with real owner questions. Jon chose 'Skip: exit OK', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:10:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30130,7 +30159,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "25e2fecf-c684-461a-9777-c045d2400ef8",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 569, spec.owner-decisions-format): one-line-each. RecordSpecAnswers (internal/engine/speccheck.go) writes each 'title -> answer [key].' on its own line, and the decision-paths check scans only the text after '->' on each line. Text with no '->' is still scanned whole. Update TestRecordSpecAnswers and the paragraph splitters (ownerDecisionBody, internal/engine/brief.go) to match. Jon chose 'One line each', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:10:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30148,6 +30192,62 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S574",
+      "title": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test",
+      "short_title": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S563",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-bcbdf896",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S575",
+      "title": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from",
+      "short_title": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S554",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-3337cca2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
