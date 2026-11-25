@@ -6574,3 +6574,16 @@
 {"when": "2026-11-25T17:55:32Z", "item": "S567", "action": "retire", "from": "open", "to": "retired", "note": "Covered: plain adj check TEXT already prints one line per record (id, status, title, refs, decision) without options or history; Jon chose 'Retire as covered', session 8d711f67, 2026-11-25."}
 {"when": "2026-11-25T17:55:32Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Also remove the dead Bash(adj find*) grant from the local sp", "by": "Jon Robbins"}
 {"when": "2026-11-25T17:55:35Z", "item": "S572", "action": "note", "from": "", "to": "", "note": "Also covers: (b) --questions exits with the wait-question co", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:57:43Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T17:57:43Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:57:44Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T17:57:44Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T17:57:44Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T17:57:51Z", "item": "S554", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T18:08:18Z", "item": "S574", "action": "add", "from": "", "to": "open", "note": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test"}
+{"when": "2026-11-25T18:08:18Z", "item": "S574", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T18:10:14Z", "item": "S572", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 568, cli.questions-check-finding-exit): ", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:10:14Z", "item": "S573", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 569, spec.owner-decisions-format): one-l", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:10:14Z", "item": "S531", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 570, ui.scroll-sweep-home): in-tree-test", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:11:29Z", "item": "S575", "action": "add", "from": "", "to": "open", "note": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from"}
+{"when": "2026-11-25T18:11:29Z", "item": "S575", "action": "promote", "from": "", "to": "", "note": ""}
