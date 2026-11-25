@@ -140,6 +140,12 @@ func BuildBrief(in BriefInput) (string, error) {
 		return "", fmt.Errorf("brief for %s: prompt keeps a placeholder near %q", in.Role, prompt[i:min(len(prompt), i+24)])
 	}
 
+	// A reviewer may write its own process temp dir (S510,
+	// roles.read-only-temp-write, *proposed*); the daemon's claude runner
+	// grants it under the same condition. Codex and Grok reviewers get no
+	// write grant, so their brief must not say they may write.
+	reviewerWritesTMP := in.ReadOnly && in.Role == RoleReviewer && in.TMPDir != "" && (in.Vendor == "claude" || in.Vendor == "claude-local")
+
 	var b strings.Builder
 	b.WriteString(strings.TrimRight(prompt, "\n"))
 	b.WriteString("\n\n# Brief\n\n")
@@ -155,7 +161,11 @@ func BuildBrief(in BriefInput) (string, error) {
 		fmt.Fprintf(&b, "## Workspace limit\n\nWork only in %s and stay inside the workspace: do not read or write outside it, except your temp directory and your report path.\n\n", in.Worktree)
 	}
 	if in.ProgressFile != "" && in.Vendor == "claude-local" && !localImplementer {
-		fmt.Fprintf(&b, "## Local progress note\n\nThe sole exception to the read-only and workspace rules above is `%s`. After each step, replace this short note with what is done, what is next, and any open problems. Update the note with Edit or Write. For a read-only role, this note is the only file it may change. ork may end this session when its context passes 70,000 tokens and start a fresh session with the same brief and this note. Keep the note current.\n\n", in.ProgressFile)
+		exception, only := "The sole exception", "this note is the only file it may change"
+		if reviewerWritesTMP {
+			exception, only = "Besides your temp directory, the sole exception", "this note and the files in its temp directory are the only files it may change"
+		}
+		fmt.Fprintf(&b, "## Local progress note\n\n%s to the read-only and workspace rules above is `%s`. After each step, replace this short note with what is done, what is next, and any open problems. Update the note with Edit or Write. For a read-only role, %s. ork may end this session when its context passes 70,000 tokens and start a fresh session with the same brief and this note. Keep the note current.\n\n", exception, in.ProgressFile, only)
 	}
 	if IsLocalVendor(in.Vendor) {
 		if in.Role == RoleImplementer {
@@ -190,6 +200,9 @@ func BuildBrief(in BriefInput) (string, error) {
 		// A read-only role cannot write the report path; ork saves its final
 		// message there (adj 27, role.report-io; S256, *proposed*).
 		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s (ork saves your final message there; you cannot write it)\nGive your whole report as your final message, as plain text. Do not wrap it or any part of it in a code fence.\n\n", processTemp, in.ReportPath)
+		if reviewerWritesTMP {
+			b.WriteString("You may create and change files under your temp directory with Edit or Write (for example a probe test). That is the only place you may write; the tree stays unchanged.\n\n")
+		}
 	} else {
 		fmt.Fprintf(&b, "## Your files\n\nYour temp directory: %s\nYour report path: %s\n\n", processTemp, in.ReportPath)
 	}

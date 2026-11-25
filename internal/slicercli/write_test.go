@@ -5,7 +5,9 @@ package slicercli
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
@@ -16,6 +18,39 @@ import (
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestRelayRolesApplyArgvAndStdin(t *testing.T) {
+	for _, dry := range []bool{false, true} {
+		t.Run(fmt.Sprint(dry), func(t *testing.T) {
+			args := []string{"relay-roles", "apply", "--stdin"}
+			if dry {
+				args = append(args, "--dry-run")
+			} else {
+				args = append(args, "--render")
+			}
+			args = append(args, "--json", "--root", root)
+			c, fake := client(t, clitest.Route{Tool: "slicer", Args: args, Stdout: "{ \"changed\": true }\n"})
+			bin := filepath.Join(t.TempDir(), "capture")
+			script := fmt.Sprintf("#!/bin/sh\ncat > \"$0.stdin\"\nexec %q \"$@\"\n", fake.Bin("slicer"))
+			if err := os.WriteFile(bin, []byte(script), 0700); err != nil {
+				t.Fatal(err)
+			}
+			c.Bin = bin
+			set := []byte("{ \"expect\": \"abc\", \"ops\": [] }\n")
+			got, err := c.RelayRolesApply(context.Background(), runrec.Writer{}, root, set, dry)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if string(got) != "{ \"changed\": true }\n" {
+				t.Fatalf("stdout %q", got)
+			}
+			input, err := os.ReadFile(bin + ".stdin")
+			if err != nil || string(input) != string(set) {
+				t.Fatalf("stdin %q, %v; want %q", input, err, set)
+			}
+		})
+	}
+}
 
 const wt = "/projects/ork/.worktrees/S04"
 

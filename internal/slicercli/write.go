@@ -303,6 +303,31 @@ type Matrix struct {
 	Revision string `json:"revision,omitempty"`
 }
 
+// RelayRolesApply passes a change set unchanged to slicer. A dry run validates
+// without rendering or saving; the result is slicer's stdout as printed.
+func (c Client) RelayRolesApply(ctx context.Context, w runrec.Writer, root string, set json.RawMessage, dryRun bool) (json.RawMessage, error) {
+	argv := []string{"relay-roles", "apply", "--stdin"}
+	if dryRun {
+		argv = append(argv, "--dry-run")
+	} else {
+		argv = append(argv, "--render")
+	}
+	argv = append(argv, "--json")
+	call := c.longCall()
+	res, err := w.Run(ctx, runrec.Cmd{
+		Tool: "slicer", Bin: call.Bin, Root: root, Argv: argv,
+		Args:  append(append([]string{}, argv...), "--root", root),
+		Stdin: set, Timeout: call.Timeout,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !json.Valid(res.Stdout) {
+		return nil, errors.New("slicer relay-roles apply: invalid JSON output")
+	}
+	return json.RawMessage(res.Stdout), nil
+}
+
 // RelayMatrix runs `slicer relay-roles show --json --root ROOT`.
 func (c Client) RelayMatrix(ctx context.Context, root string) (*Matrix, error) {
 	var out Matrix

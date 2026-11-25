@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"charm.land/bubbles/v2/key"
+	tea "charm.land/bubbletea/v2"
 
 	"github.com/squalor-xyz/ork/internal/adjcli"
 )
@@ -343,9 +344,7 @@ func TestHelpSaysProjectsAndEntries(t *testing.T) {
 	}
 }
 
-// The full help fits the standard terminal (100x30; h.view always renders
-// that size) without a "more lines" marker (S144). A real 80x24 is shorter and
-// cuts the help; there the way out stays visible.
+// Full labels wrap at the standard size; scrolling reaches the last key (S401).
 func TestFullHelpGoldenFits(t *testing.T) {
 	for _, view := range []int{0, 1, 3} { // Waves and Decisions add lines of their own
 		t.Run(viewNames[view], func(t *testing.T) {
@@ -354,6 +353,8 @@ func TestFullHelpGoldenFits(t *testing.T) {
 			h.m.view = view
 			h.send(press("?"))
 			v := h.view()
+			h.deliver(tea.KeyPressMsg{Code: tea.KeyPgDown})
+			v = h.view()
 			if strings.Contains(v, "more lines") {
 				t.Errorf("the help is cut:\n%s", v)
 			}

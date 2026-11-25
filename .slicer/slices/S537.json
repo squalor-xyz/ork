@@ -1,0 +1,39 @@
+{
+  "id": "S537",
+  "title": "include the slice notes, or the owner answers recorded in them, in the reviewer brief so an owner-accepted deviation can be checked",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-015129-4c21, project ork, item S233:\n\ninclude the slice notes, or the owner answers recorded in them, in the reviewer brief so an owner-accepted deviation can be checked\n\nEvidence: the S233 Implement text says sleeping counts as time; the implementer cites an owner answer of 2026-11-24 that `slicer show --json --lean` does not show"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
