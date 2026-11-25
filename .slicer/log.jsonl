@@ -6652,3 +6652,7 @@
 {"when": "2026-11-25T18:54:38Z", "item": "S575", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-25T18:55:48Z", "item": "S575", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T18:55:56Z", "item": "S575", "action": "note", "from": "", "to": "", "note": "Owner decision: in internal/engine/perm_test.go, narrow the ", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:57:53Z", "item": "S581", "action": "add", "from": "", "to": "open", "note": "create the renders directory before the UI pass starts"}
+{"when": "2026-11-25T18:57:53Z", "item": "S581", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:03:48Z", "item": "S582", "action": "add", "from": "", "to": "open", "note": "in the Base overlays section, say which tests the brief's focused -run pattern covers, as separate commands without a pipe"}
+{"when": "2026-11-25T19:03:48Z", "item": "S582", "action": "promote", "from": "", "to": "", "note": ""}
