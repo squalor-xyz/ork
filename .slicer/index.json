@@ -31137,7 +31137,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9808b538-b579-4a41-8664-6751d84ada67",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 590, roles.probe-import-paths): the reviewer brief reads the worktree's go.mod and lists its require paths, only when the role has a Go worktree. Jon chose 'go.mod in the brief', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T22:20:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -31505,6 +31520,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "91e80b8e-1577-436f-ba36-475192068ca3",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 591, review.base-overlays-stale-binary): when the running ork binary is behind the slice's code (the daemon behind-main signal), the Base overlays section opens with one line saying the list was made by an older binary and may offer commands that do not build. Jon chose 'Note in brief', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T22:20:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31562,7 +31591,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8090f80d-1a02-4598-a2dc-cf7ac975988b",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 589, ui.goals-lift-enter-cue): cursor cue. While the Goals are lifted, the lift marker shows the selected row (for example cursor: S90); enter keeps opening that row. Jon chose 'Cursor cue', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T22:20:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",

@@ -6824,3 +6824,6 @@
 {"when": "2026-11-25T22:17:28Z", "item": "S596", "action": "note", "from": "", "to": "", "note": "Also covers adj 588: when every single-file base overlay fai", "by": "Jon Robbins"}
 {"when": "2026-11-25T22:17:28Z", "item": "S599", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S598; Jon chose 'Two slices', session 8d711f67, 2026-11-25."}
 {"when": "2026-11-25T22:17:29Z", "item": "S598", "action": "note", "from": "", "to": "", "note": "Also covers S599 (same report from another run). Jon chose '", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:20:11Z", "item": "S600", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 589, ui.goals-lift-enter-cue): cursor cu", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:20:11Z", "item": "S589", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 590, roles.probe-import-paths): the revi", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:20:11Z", "item": "S598", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 591, review.base-overlays-stale-binary):", "by": "Jon Robbins"}
