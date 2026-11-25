@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 577,
+  "next_id": 578,
   "preamble": "",
   "passes": [
     {
@@ -29451,6 +29451,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "26d5bb2b-083c-40b5-a2d0-388c64419f14",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decisions (adj 571, 572): the sweep asserts pgup/pgdown in the help hint wherever the keys-only form fits beside the close hint, and below that width the close hint alone with no q quit (floor). It is a permanent Go test in internal/tui/help_test.go sweeping widths 30-130 at heights 16, 24 and 40. Jon chose 'Floor' and 'Go test', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:31:51Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29849,7 +29863,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "3cf5515f-e475-4cd6-a909-1e6626c456b4",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 573, review.untested-call-site-check): ork-code-warn. A deterministic Go step using go/parser and go/ast on the slice diff lists new non-test functions whose product call sites sit in no function a test reaches (only direct unit calls in tests), and shows them in the reviewer brief as an advisory section, like the decision-paths section. It never blocks or pauses a run. Jon chose 'ork code, warn in brief', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:31:51Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30230,7 +30259,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9e5be2a1-7a29-4316-8171-7e8174578ad2",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 574, launch.read-only-merge-base): add both Bash(git merge-base*) and Bash(git -C * merge-base*) to LocalReadOnlyAllowlist in internal/engine/perm.go, after the git show entries. Jon chose 'Add both forms', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:31:52Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30270,6 +30314,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S577",
+      "title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
+      "short_title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S572",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-397a3274",
         "pass": "v1.2",
         "group": "",
         "reason": "",
