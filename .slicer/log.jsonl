@@ -6488,3 +6488,5 @@
 {"when": "2026-11-25T15:52:09Z", "item": "S564", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T15:52:38Z", "item": "S565", "action": "add", "from": "", "to": "open", "note": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed"}
 {"when": "2026-11-25T15:52:38Z", "item": "S565", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T16:11:39Z", "item": "S566", "action": "add", "from": "", "to": "open", "note": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found"}
+{"when": "2026-11-25T16:11:39Z", "item": "S566", "action": "promote", "from": "", "to": "", "note": ""}

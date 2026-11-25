@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 566,
+  "next_id": 567,
   "preamble": "",
   "passes": [
     {
@@ -29704,6 +29704,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-72b887b3",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S566",
+      "title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
+      "short_title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S557",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-21c33cdd",
         "pass": "v1.2",
         "group": "",
         "reason": "",
