@@ -27064,6 +27064,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "a95e3431-8890-4d57-b8bc-de29bc118681",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-24: S534 folded in. Add fixtures for the projects setup view (S249, adj 531) and fake-reply command views for new subcommands (adj 532), so a new subcommand's text renders without an overlay test. Failing tests and Check: named tests in internal/cli/render_test.go, each with what it asserts (TestRenderCLIViewsWritesFiles extended to assert the file set for each fixture name, no ANSI escapes, non-empty text; one named test per new fixture asserting a literal line from its view); Check: go test ./internal/cli exits 0.",
+          "created_at": "2026-11-25T02:19:03Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27146,7 +27160,7 @@
       "id": "S502",
       "title": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff",
       "short_title": "flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -27163,7 +27177,7 @@
         "key": "tool-feedback-ork-b241c892",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Superseded by S385: adj 409 cites code by symbol, so no line cites remain to watch (owner 2026-11-24)",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -27432,7 +27446,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5d77398a-bedf-4055-89d9-da004feeb7cd",
+          "kind": "",
+          "text": "**2026-11-25** — S532 (retired as duplicate) reported the same denial from S401's reviewer: Write to the role temp dir probe_test.go denied, 'Path is outside allowed working directories'.",
+          "created_at": "2026-11-25T02:17:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -28075,7 +28104,7 @@
       "id": "S532",
       "title": "let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run",
       "short_title": "let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28107,7 +28136,7 @@
         "key": "tool-feedback-ork-bb1c5856",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Duplicate of S510 (reviewer write to its role temp dir); same evidence from S401's reviewer",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -28146,7 +28175,7 @@
       "id": "S534",
       "title": "let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test",
       "short_title": "let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28178,7 +28207,7 @@
         "key": "tool-feedback-ork-9c04f088",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Folded into S499 (owner 2026-11-24): its views join S499's fixture list",
         "importance": 2,
         "urgency": 2,
         "effort": null,
