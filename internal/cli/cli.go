@@ -291,6 +291,10 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               which rows ork uses, skips or does not run
   ork roles matrix apply P (--file PATH | --stdin) [--dry-run] [--json]
                               apply a slicer matrix change set
+  ork roles matrix copy FROM (TO... | --all) [--dry-run] [--yes] [--json]
+                              copy FROM's role matrix to other projects; each
+                              keeps its own Spec check and UI pass rows; asks
+                              per project unless --yes
   ork daemon run              serve the daemon in the foreground
   ork daemon status           show daemon build, state and running roles
   ork daemon stop [--force]   stop the daemon

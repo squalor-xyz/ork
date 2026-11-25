@@ -1,0 +1,39 @@
+{
+  "id": "S547",
+  "title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the ui in round 1 of ork run ork-20261125-021106-86c7 for S261 (discovered from S261):\n\nmatrix copy: ask each project's question right after that project's preview\n- `roles.go:164-186` prints every project's preview first and asks all the questions afterwards. With `--all` and a real 26-row source, each project can have dozens of step lines, so a project's steps and warnings scroll out of view before its `[y/N]` question. The `copy-ask` render (lines 2-22) shows the gap even with two projects of 8 steps each.\n- Change: print a project's block, then ask its question. The single write call stays the same. `docs/design.md:4172-4175` and the test at `roles_matrix_test.go:200` would need updating.\n- Importance: 2\n- Urgency: 1\n- Effort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

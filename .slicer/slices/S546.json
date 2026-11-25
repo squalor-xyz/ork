@@ -1,0 +1,39 @@
+{
+  "id": "S546",
+  "title": "Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the ui in round 1 of ork run ork-20261125-015357-ca10 for S251 (discovered from S251):\n\nKeep the block heading visible when the settings pane scrolls\nThis is unchanged since the last round and I re-checked it. With a full matrix scrolled to the end at 80x24, the `slicer config` heading is above the window. Its orphan `check_command  go test ./...` row then reads like ork's `check_command` (scratch renders/scratch-matrix-80x24.txt:4-6; `internal/tui/settings.go:373-376`).\nImportance: 2\nUrgency: 1\nEffort: 2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

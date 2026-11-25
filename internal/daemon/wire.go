@@ -31,6 +31,7 @@ const (
 	MethodRolesMatrix    = "roles.matrix"    // proposed (S168); params RolesMatrixParams, result RolesMatrixResult
 	MethodMatrixApply    = "matrix.apply"    // proposed (S250); params MatrixApplyParams, result MatrixApplyResult
 	MethodMatrixEdit     = "matrix.edit"     // proposed (S173); params MatrixEditParams, result MatrixEditResult
+	MethodMatrixCopy     = "matrix.copy"     // proposed (S261); params MatrixCopyParams, result MatrixCopyResult
 	MethodDaemonInfo     = "daemon.info"     // no params, result DaemonInfoResult
 	MethodDaemonStop     = "daemon.stop"     // params StopParams, result StopResult
 	MethodStatus         = "status"          // params StatusParams, result StatusResult
@@ -79,6 +80,11 @@ const (
 	// CodeNoSpecCheckRow is a spec check that has no row to run on (S258,
 	// *proposed*, owner decision 2026-11-07). The message gives the fix.
 	CodeNoSpecCheckRow = "no_spec_check_row"
+
+	// CodeCopyConflict is a matrix copy that cannot keep a copied rule true: the
+	// rule names a source row that the copy does not copy (S261, *proposed*,
+	// owner decision 2026-11-25, matrix.copy-keep).
+	CodeCopyConflict = "copy_conflict"
 )
 
 // StatusParams selects the projects of a status call. An empty Project means

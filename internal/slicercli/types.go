@@ -329,15 +329,18 @@ type CheckResult struct {
 	Output       string            `json:"-"`
 }
 
-// Row is one row of the relay roles matrix.
+// Row is one row of the relay roles matrix. When is the row's condition object
+// (size, effort, importance, urgency, well_specified, split, sliver) kept as
+// slicer prints it (S261, *proposed*); only a matrix copy reads it.
 type Row struct {
-	ID        string `json:"id"`
-	Role      string `json:"role"`
-	Agent     string `json:"agent"`
-	Vendor    string `json:"vendor"`
-	Model     string `json:"model"`
-	Reasoning string `json:"reasoning"`
-	Note      string `json:"note"`
+	ID        string          `json:"id"`
+	Role      string          `json:"role"`
+	When      json.RawMessage `json:"when,omitempty"`
+	Agent     string          `json:"agent"`
+	Vendor    string          `json:"vendor"`
+	Model     string          `json:"model"`
+	Reasoning string          `json:"reasoning"`
+	Note      string          `json:"note"`
 }
 
 // RoleChoice is the matrix row `relay-roles recommend` resolved for a role.

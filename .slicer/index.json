@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 544,
+  "next_id": 551,
   "preamble": "",
   "passes": [
     {
@@ -14391,7 +14391,7 @@
       "id": "S251",
       "title": "Project settings pane in the TUI: every setting by owner, and the setup steps",
       "short_title": "Project settings pane",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S247",
@@ -14404,6 +14404,34 @@
           "text": "**2026-11-25** — Owner decision (adj ui.settings-pane-key, 2026-11-25): capital S opens the settings pane.",
           "created_at": "2026-11-25T01:52:06Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "6a6bdf34-c6a5-4826-a216-96c136b905bf",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S251):\n- later: At 100x30 and 80x24, with a scratch project registered (no `.slicer/`, no `.adjudicate.json`), open the pane, run `slicer-init`, `relay-roles-init` and `adj-init` from it, and see each block fill in. Not against this repository.",
+          "created_at": "2026-11-25T03:07:32Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d592074e-49aa-4e15-ba82-3c309a0f53df",
+          "kind": "",
+          "text": "**2026-11-25** — Project settings pane in the TUI: `S` opens it for the active project (every setting by owner from `projects.show`), `i` runs a setup step after a `[y/N]` that shows the command, `m` opens the matrix pane from any view; `S settings` now outlasts `M mouse` on the hint line, and the full suite, vet, gofmt, `slicer check` and `adj lint` are clean.",
+          "created_at": "2026-11-25T03:07:32Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -14430,7 +14458,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -14990,7 +15018,7 @@
       "id": "S261",
       "title": "Shared role matrix: apply ork's matrix to one project or to every registered project",
       "short_title": "Shared role matrix: apply ork's matrix to one project or to every registered project",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S250"
@@ -15002,6 +15030,20 @@
           "text": "**2026-11-10** — Owner 2026-11-10: moved to v1.2 and depends on S250 (slicer relay-roles apply); its 8 open questions are asked when it is scheduled [process.s261-pass].",
           "created_at": "2026-11-10T00:51:31Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "33e2b75f-76ef-4abb-9232-c4d22b28ea22",
+          "kind": "",
+          "text": "**2026-11-25** — `ork roles matrix copy` and `matrix.copy` now keep, in each target, every row of its spec check and UI pass sets (rule-named rows, `spec_check_rows` and `ui_pass_rows` settings rows, Local trial rows) and the rules that name them, and do not copy the source's same sets; verified by 4536 passing tests with `-race`, mutations that went red, a clean vet/gofmt/slicer check, and the slice text and docs updated to match.",
+          "created_at": "2026-11-25T07:30:40Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -15028,7 +15070,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -27135,6 +27177,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "56437a50-eb71-44d8-97ce-db9ac761032e",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 confirmed the fixture list: projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply; each writes NAME.txt via -render-fixture; each gets one named test in internal/cli/render_test.go asserting a literal line from its view, which the implementer picks from the rendered view.",
+          "created_at": "2026-11-25T13:10:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27457,7 +27513,7 @@
       "id": "S509",
       "title": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match",
       "short_title": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -27488,6 +27544,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "4c78b583-2a4c-4d2b-aa15-d911ef68de0e",
+          "kind": "",
+          "text": "**2026-11-25** — TestReadOnlyAllowlistMatchesNoTrackingWrite now runs a fixed list of tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) over LocalReadOnlyAllowlist() and CloudUIAllowlist() and fails on any matching entry; go vet, gofmt and go test ./... are green.",
+          "created_at": "2026-11-25T07:29:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27507,7 +27577,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28320,6 +28390,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6d22adf5-c557-4676-ad3e-39288ab83031",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten): named failing tests per behaviour; Check go test ./internal/tui, go test ./..., go vet ./..., gofmt -l . (must print nothing); goldens rewritten with -update and reviewed.",
+          "created_at": "2026-11-25T13:18:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28557,6 +28641,276 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S544",
+      "title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
+      "short_title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "18fdcea7-2d8a-4abf-a8b7-c55640cba7a6",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fix the cache ordering. In internal/cache/cache.go call onChange before close(f.done), so a read's notice is sent before Get or Snapshot returns; the test then needs no wait. Check that other cache tests still pass.",
+          "created_at": "2026-11-25T13:18:18Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S545",
+      "title": "A red slice check from a flake stays cached across retries until the product or Check text changes",
+      "short_title": "A red slice check from a flake stays cached across retries until the product or Check text changes",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S546",
+      "title": "Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns",
+      "short_title": "Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "f277a0e1-02f5-423c-a998-e0f7c36d9f99",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S251's later finding 2 in: align the relay role rows in columns; the use text starts at a different column on each row (internal/tui/settings.go:526-533). Source: ork show ork-20261125-015357-ca10.",
+          "created_at": "2026-11-25T13:12:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1395eb49-5bd0-4ee1-bc5c-362b7bb8d40f",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten): named failing tests per behaviour; Check go test ./internal/tui, go test ./..., go vet ./..., gofmt -l . (must print nothing); goldens rewritten with -update and reviewed.",
+          "created_at": "2026-11-25T13:18:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S251",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-015357-ca10-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S547",
+      "title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
+      "short_title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "30a5f763-94e1-4de6-b200-a6badffa300f",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S261's later findings 2-4 in. (2) After a write each project's steps print again under 'changed (N steps)' with no heading; print a 'written:' line and only the status line for changed projects already shown. (3) printMatrixCopy (internal/cli/roles.go:236-242) prints error messages unwrapped; wrap with wrapLines (prompt.go:28) and a two-space hang, and drop the leading project name from the no_spec_check_row message (matrixcopy.go:155). (4) A step line is only OP ID (roles.go:225-229); when slicer's step carries field data, print it after the id. Source: ork show ork-20261125-021106-86c7.",
+          "created_at": "2026-11-25T13:12:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S261",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-021106-86c7-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S548",
+      "title": "matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs",
+      "short_title": "matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "3addc278-04d8-44b0-a2f2-f9c7ae3f184c",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S261's later finding 5 in: the add ids are mapped from the first dry run and never compared with the second (internal/daemon/matrixcopy.go:526-552); nothing tests the len(adds) mismatch error at matrixcopy.go:540-541. Source: ork show ork-20261125-021106-86c7.",
+          "created_at": "2026-11-25T13:12:07Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S261",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-021106-86c7-later-6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S549",
+      "title": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures",
+      "short_title": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-3c534959",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S550",
+      "title": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section",
+      "short_title": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-db3fef09",
         "pass": "v1.2",
         "group": "",
         "reason": "",

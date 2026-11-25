@@ -308,6 +308,17 @@ func (c *Client) MatrixApply(ctx context.Context, p MatrixApplyParams) (*MatrixA
 	return &out, nil
 }
 
+// MatrixCopy previews (p.DryRun) or runs a copy of one registered project's
+// role matrix to others (S261, *proposed*). A project's refusal is in the
+// result; a bad request or an unreadable source is the error.
+func (c *Client) MatrixCopy(ctx context.Context, p MatrixCopyParams) (*MatrixCopyResult, error) {
+	var out MatrixCopyResult
+	if err := c.Call(ctx, MethodMatrixCopy, p, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // RolesMatrix reads the registered project's role matrix with ork's reading
 // of each row.
 func (c *Client) RolesMatrix(ctx context.Context, project string) (*RolesMatrixResult, error) {

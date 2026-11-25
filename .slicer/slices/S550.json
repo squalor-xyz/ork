@@ -1,0 +1,39 @@
+{
+  "id": "S550",
+  "title": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261125-131038-69e9, project ork, item S499:\n\nname -render-fixture and the fixture list in the UI pass brief's CLI text renders section\n\nEvidence: internal/engine/brief.go:187-188 names only -renders and says it writes status.txt, show.txt and help.txt; the eight S499 fixtures need -render-fixture"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

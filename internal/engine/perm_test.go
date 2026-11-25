@@ -30,31 +30,70 @@ func allowlistMatches(entry, command string) bool {
 // The slicer entries must be plain read-only: no form that writes tracking
 // may match (S505 fix round 2, adj 519).
 func TestReadOnlyAllowlistMatchesNoTrackingWrite(t *testing.T) {
-	list := LocalReadOnlyAllowlist()
-	for _, command := range []string{
+	// The fixed list of known tracking-write commands (S509, adj 543): slicer
+	// note, done, set, ai relay --init-roles and changelog add, each bare and
+	// with a trailing --root, plus the --help look-alikes of S505.
+	writes := []string{
+		`slicer note S505 --text "x"`,
+		`slicer note S505 --text "x" --root /w`,
+		`slicer note S505 --text " --help"`,
+		`slicer note S505 --text "x --help"`,
+		`slicer done S505 --note "x"`,
+		`slicer done S505 --note "x" --render --check`,
+		`slicer done S505 --note "x" --root /w`,
+		`slicer set S505 --field status=done`,
+		`slicer set S505 --field status=done --root /w`,
 		"slicer ai relay --init-roles",
 		"slicer ai relay --init-roles --force",
 		"slicer ai relay --init-roles --force --root /w",
-		`slicer note S505 --text " --help"`,
-		`slicer note S505 --text "x --help"`,
-	} {
-		t.Run(command, func(t *testing.T) {
-			for _, entry := range list {
-				if allowlistMatches(entry, command) {
-					t.Errorf("entry %s matches %q", entry, command)
-				}
-			}
-		})
+		`slicer changelog add S505 --text "x"`,
+		`slicer changelog add S505 --text "x" --replace`,
+		`slicer changelog add S505 --text "x" --root /w`,
 	}
-	for _, command := range []string{"slicer ai relay", "slicer ai relay --help", "slicer show --help"} {
-		t.Run("allows "+command, func(t *testing.T) {
-			for _, entry := range list {
-				if allowlistMatches(entry, command) {
-					return
+	lists := map[string][]string{
+		"local":   LocalReadOnlyAllowlist(),
+		"cloudui": CloudUIAllowlist(),
+	}
+	for name, list := range lists {
+		for _, command := range writes {
+			t.Run(name+"/"+command, func(t *testing.T) {
+				for _, entry := range list {
+					if allowlistMatches(entry, command) {
+						t.Errorf("entry %s matches %q", entry, command)
+					}
 				}
-			}
-			t.Errorf("no entry matches %q", command)
-		})
+			})
+		}
+		for _, command := range []string{"slicer ai relay", "slicer ai relay --help", "slicer show --help"} {
+			t.Run(name+"/allows "+command, func(t *testing.T) {
+				for _, entry := range list {
+					if allowlistMatches(entry, command) {
+						return
+					}
+				}
+				t.Errorf("no entry matches %q", command)
+			})
+		}
+	}
+}
+
+// The model must match as the real rule does: a non-Bash entry and a malformed
+// entry match no command, and `*` spans any text.
+func TestAllowlistMatchesModel(t *testing.T) {
+	for _, tc := range []struct {
+		entry, command string
+		want           bool
+	}{
+		{"Bash(slicer note*)", `slicer note S1 --text "x"`, true},
+		{"Bash(slicer * --help)", "slicer note S1 --help", true},
+		{"Bash(slicer * --help)", `slicer note S1 --text "x --help"`, false},
+		{"Bash(slicer ai relay)", "slicer ai relay --init-roles", false},
+		{"Skill", "Skill", false},
+		{"Bash(slicer note*", "slicer note S1", false},
+	} {
+		if got := allowlistMatches(tc.entry, tc.command); got != tc.want {
+			t.Errorf("allowlistMatches(%q, %q) = %v, want %v", tc.entry, tc.command, got, tc.want)
+		}
 	}
 }
 
