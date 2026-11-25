@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-562 items · — 54 · done 382 · retired 126
+562 items · — 53 · done 383 · retired 126
 
 ## v1.3
 
@@ -319,7 +319,7 @@ v1.2
 | 262 | [S557](slices/S557.md) | when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section |  | - |  | discovered from S552 | — |
 | 263 | [S558](slices/S558.md) | matrix copy: bind the confirmed write to source row content, not only steps |  | 2 |  | discovered from S548 | done |
 | 264 | [S559](slices/S559.md) | Spec-check brief: look up existing decisions by topic with adj check TEXT |  | - |  | discovered from S558 | — |
-| 265 | [S560](slices/S560.md) | before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not |  | - |  | discovered from S558 | — |
+| 265 | [S560](slices/S560.md) | before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not |  | - |  | discovered from S558 | done |
 | 266 | [S561](slices/S561.md) | add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test |  | - |  | Folded into S547 (adj 558, owner 2026-11-25) · discovered from S558 | retired |
 | 267 | [S562](slices/S562.md) | put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree |  | - |  | Folded into S554 (adj 560, owner 2026-11-25) · discovered from S543 | retired |
 

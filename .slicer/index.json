@@ -29521,10 +29521,25 @@
       "id": "S560",
       "title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
       "short_title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7a0f89f8-b915-4e90-9349-49279533f293",
+          "kind": "",
+          "text": "**2026-11-25** — S560 now records explicit acceptance criteria and a passing focused Check command for the advisory decision-path scan.",
+          "created_at": "2026-11-25T16:34:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29542,7 +29557,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

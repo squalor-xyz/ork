@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "`internal/engine/decisionpaths.go:25`: decisionPathsSection scans decisions and builds the advisory reviewer section.\n`internal/engine/decisionpaths_test.go:16`: TestDecisionPathsReviewerBrief exercises decision sources and engine wiring.\n`internal/engine/round.go:604`: reviewer brief wiring reuses the loaded slice JSON.\n`internal/engine/brief.go:516`: reuse branchPaths for the diff against the base; no code change.\n`docs/design.md:1996`: reviewer brief behaviour.\n`landed-changed/S560.md`: changelog entry."
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "`TestDecisionPathsReviewerBrief`: a reviewer brief flags missing changelog paths from spec answers, run answers, slice owner-decision paragraphs and cited adj records. Modifying the named path removes the warning; an unrelated change does not. Multiple paths are sorted and listed once. Failed reads produce advisory notices. The check never blocks the run."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria: the reviewer brief flags missing changelog paths named in spec answers, run answers, slice owner-decision paragraphs and cited adj records. Modifying the named path removes the warning; an unrelated change does not. Multiple paths are sorted and listed once. Failed reads produce advisory notices. The check never blocks the run.\n\n`go -C /home/jon/code/squalor-xyz/ork/.worktrees/S560 test -count=1 -run TestDecisionPathsReviewerBrief ./internal/engine`"
     },
     {
       "heading": "Git",

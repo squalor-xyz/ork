@@ -600,6 +600,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Lead:         r.lead,
 		Sections:     append(append(lostSection(rec, r, pend), pendingSection(pend)...), r.sections...),
 	}
+	if r.role == RoleReviewer {
+		if section := e.decisionPathsSection(ctx, rec, sliceJSON); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
+	}
 	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
 		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
 		if err != nil && !errors.Is(err, os.ErrNotExist) {

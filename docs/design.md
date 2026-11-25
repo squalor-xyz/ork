@@ -1993,6 +1993,18 @@ separately.
     itself; the run does not pause. The prompts tell the role to read the
     section and to run `slicer show ID --json --lean` for an item that needs
     detail. The gate and the implementer get no such section;
+  - before the reviewer starts, a `## Decision changelog paths` section when
+    an owner decision names a `landed-changed/<ID>.md` path absent from the
+    branch diff against the base (`relay.landed-changed-path-check`, S560).
+    Ork scans the run's spec answers, answered run questions, owner decision
+    paragraphs in the slice, and decided adj records cited by number
+    (`adj N` or `decision N`) or a key in brackets or backticks. Adj records
+    are read through the CLI in the project's main checkout; only their
+    decision and rationale are scanned, not unchosen options. The path
+    comparison uses the same merge-base diff and untracked paths as Direction.
+    Each missing path appears once as a flagged finding for the reviewer.
+    Failed reads add an incomplete-check notice. The check is advisory and
+    never blocks the run;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,
