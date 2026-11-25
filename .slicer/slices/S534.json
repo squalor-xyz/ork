@@ -1,0 +1,39 @@
+{
+  "id": "S534",
+  "title": "let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #532 was decided to file it:\n\nProposal: let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test\nRole: ui\nRun: ork-20261122-041409-eedc\nProject: ork\nItem: S250\nEvidence: TestRenderCLIViews writes only status, show and help; the apply views needed render_overlay_test.go through -overlay"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

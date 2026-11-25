@@ -1,0 +1,39 @@
+{
+  "id": "S533",
+  "title": "add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #531 was decided to file it:\n\nProposal: add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test\nRole: ui\nRun: ork-20261122-035954-42fc\nProject: ork\nItem: S249\nEvidence: internal/cli/render_test.go:27-41 renders only status, status-summary, show and help, so I needed an overlay test for the new setup output"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
