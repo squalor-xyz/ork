@@ -1,0 +1,39 @@
+{
+  "id": "S548",
+  "title": "matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-021106-86c7 for S261 (discovered from S261):\n\nBind the CLI write to the preview the owner confirmed\nThe CLI previews in one call and writes in a second (`internal/cli/roles.go:126-196`). The second call runs a fresh dry run, so what gets written can differ from what the owner said yes to. The spec asked for this two-call shape (Implement step 7).\nImportance: 2\nUrgency: 1\nEffort: 2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

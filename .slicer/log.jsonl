@@ -6315,3 +6315,17 @@
 {"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "add", "from": "", "to": "open", "note": "A red slice check from a flake stays cached across retries until the product or Check text changes"}
 {"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T13:11:15Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T13:11:56Z", "item": "S546", "action": "add", "from": "", "to": "open", "note": "Keep the block heading visible when the settings pane scrolls"}
+{"when": "2026-11-25T13:11:56Z", "item": "S546", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:56Z", "item": "S546", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-25T13:11:56Z", "item": "S547", "action": "add", "from": "", "to": "open", "note": "matrix copy: ask each project's question right after that project's preview"}
+{"when": "2026-11-25T13:11:57Z", "item": "S547", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:57Z", "item": "S548", "action": "add", "from": "", "to": "open", "note": "Bind the CLI write to the preview the owner confirmed"}
+{"when": "2026-11-25T13:11:57Z", "item": "S548", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:11:57Z", "item": "S548", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-25T13:12:06Z", "item": "S546", "action": "set", "from": "", "to": "", "note": "title Keep the block heading visible when the settings pane scrolls→Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns; short_title Keep the block heading visible when the settings pane scrolls→Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns"}
+{"when": "2026-11-25T13:12:06Z", "item": "S546", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S251's later finding 2 in: align the", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:12:06Z", "item": "S547", "action": "set", "from": "", "to": "", "note": "title matrix copy: ask each project's question right after that project's preview→matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields; short_title matrix copy: ask each project's question right after that project's preview→matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields"}
+{"when": "2026-11-25T13:12:06Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later findings 2-4 in. (2) Af", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:12:06Z", "item": "S548", "action": "set", "from": "", "to": "", "note": "title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs; short_title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs"}
+{"when": "2026-11-25T13:12:07Z", "item": "S548", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later finding 5 in: the add i", "by": "Jon Robbins"}

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 546,
+  "next_id": 549,
   "preamble": "",
   "passes": [
     {
@@ -28646,6 +28646,135 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S546",
+      "title": "Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns",
+      "short_title": "Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "f277a0e1-02f5-423c-a998-e0f7c36d9f99",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S251's later finding 2 in: align the relay role rows in columns; the use text starts at a different column on each row (internal/tui/settings.go:526-533). Source: ork show ork-20261125-015357-ca10.",
+          "created_at": "2026-11-25T13:12:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S251",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-015357-ca10-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S547",
+      "title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
+      "short_title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "30a5f763-94e1-4de6-b200-a6badffa300f",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S261's later findings 2-4 in. (2) After a write each project's steps print again under 'changed (N steps)' with no heading; print a 'written:' line and only the status line for changed projects already shown. (3) printMatrixCopy (internal/cli/roles.go:236-242) prints error messages unwrapped; wrap with wrapLines (prompt.go:28) and a two-space hang, and drop the leading project name from the no_spec_check_row message (matrixcopy.go:155). (4) A step line is only OP ID (roles.go:225-229); when slicer's step carries field data, print it after the id. Source: ork show ork-20261125-021106-86c7.",
+          "created_at": "2026-11-25T13:12:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S261",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-021106-86c7-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S548",
+      "title": "matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs",
+      "short_title": "matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "3addc278-04d8-44b0-a2f2-f9c7ae3f184c",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S261's later finding 5 in: the add ids are mapped from the first dry run and never compared with the second (internal/daemon/matrixcopy.go:526-552); nothing tests the len(adds) mismatch error at matrixcopy.go:540-541. Source: ork show ork-20261125-021106-86c7.",
+          "created_at": "2026-11-25T13:12:07Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S261",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-021106-86c7-later-6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     }
