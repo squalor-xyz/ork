@@ -3837,7 +3837,8 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   or `1d03h`. The wait prints its first line on the row, as `(wait: LINE)`, each
   later line on its own line with a six-space indent, and the `; next: ` suffix
   the daemon adds as `    next: COMMAND`; terminal controls are removed. A run
-  with a `wave` prints `    wave: ID` before the question lines. After the
+  with a `wave` prints `    wave: ID` after the question lines and the `next:`
+  line (S553, adj `ui.status-wave-line-order`). After the
   engine rows, `  finding RUN N later: TITLE` followed by `    file it: ork file
   RUN N` on its own line, or one line `  finding RUN N owner: TITLE (answer it in
   the TUI run pane)`, lists each open finding that `needs you` counts, in a

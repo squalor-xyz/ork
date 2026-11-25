@@ -227,7 +227,8 @@ func TestStatusShowsTheWaveOfARow(t *testing.T) {
 {"id":"ork-1","item":"S1","state":"paused","wave":"wave-20261120-ab","wait":"Which scope?\n1. a\n2. b; next: ork answer ork-1 TEXT"},
 {"id":"ork-2","item":"S2","state":"implement"}]}]}`
 	out := statusOut(t, raw, now)
-	want := "  ork-1 S1 paused (wait: Which scope?)\n    wave: wave-20261120-ab\n      1. a\n      2. b\n    next: ork answer ork-1 TEXT\n  ork-2 S2 implement\n"
+	// The wave comes last of the wait block: after the options and the next: line.
+	want := "  ork-1 S1 paused (wait: Which scope?)\n      1. a\n      2. b\n    next: ork answer ork-1 TEXT\n    wave: wave-20261120-ab\n  ork-2 S2 implement\n"
 	if !strings.Contains(out, want) {
 		t.Fatalf("got:\n%swant:\n%s", out, want)
 	}

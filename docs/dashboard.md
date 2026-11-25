@@ -993,7 +993,8 @@ A row says when its state began (`, waiting since HH:MM (AGE)` or
 `, updated HH:MM (AGE ago)`, local time, nothing for a zero time), prints a
 multi-line wait one line per line (the first on the row, the rest indented six
 spaces) with the `; next:` command as `    next: COMMAND`, and prints
-`    wave: ID` when the run has a wave. The TUI does not change.
+`    wave: ID` when the run has a wave, after the wait's options and the `next:`
+line (S553, `ui.status-wave-line-order`). The TUI does not change.
 `ork status --json` includes hidden engine runs still in the snapshot and
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
