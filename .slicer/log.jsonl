@@ -6254,3 +6254,17 @@
 {"when": "2026-11-25T02:19:10Z", "item": "S510", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T02:19:21Z", "item": "S509", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-24 (adj 543, tests.allowlist-write-commands = ", "by": "Jon Robbins"}
 {"when": "2026-11-25T02:19:21Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-24 (adj 542, ui.render-fixture-select = fixtur", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:32:14Z", "item": "S536", "action": "add", "from": "", "to": "open", "note": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too"}
+{"when": "2026-11-25T02:32:14Z", "item": "S536", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T02:35:21Z", "item": "S537", "action": "add", "from": "", "to": "open", "note": "include the slice notes, or the owner answers recorded in them, in the reviewer brief so an owner-accepted deviation can be checked"}
+{"when": "2026-11-25T02:35:21Z", "item": "S537", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T02:36:24Z", "item": "S538", "action": "add", "from": "", "to": "open", "note": "give the UI pass a ready render harness for TUI panes so each role does not write its own overlay test"}
+{"when": "2026-11-25T02:36:24Z", "item": "S538", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T02:42:37Z", "item": "S539", "action": "add", "from": "", "to": "open", "note": "flag a slice whose spec text still says a key or choice is open after an owner decision on that key was recorded in its notes"}
+{"when": "2026-11-25T02:42:37Z", "item": "S539", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T02:58:12Z", "item": "S540", "action": "add", "from": "", "to": "open", "note": "For CLI-only slices, say in the UI pass brief that the 80x24, 120x40 and ascii renders are identical and allow one file per view"}
+{"when": "2026-11-25T02:58:12Z", "item": "S540", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T03:06:44Z", "item": "S541", "action": "add", "from": "", "to": "open", "note": "allow read-only slicer relay-roles show for reviewer roles so a matrix-related finding can be checked against the real matrix"}
+{"when": "2026-11-25T03:06:44Z", "item": "S541", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T03:07:31Z", "item": "S542", "action": "add", "from": "", "to": "open", "note": "before the gate, check that every adj key cited as an owner decision in the diff resolves with adj check, and list the ones that do not in the brief"}
+{"when": "2026-11-25T03:07:31Z", "item": "S542", "action": "promote", "from": "", "to": "", "note": ""}

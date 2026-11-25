@@ -1,0 +1,39 @@
+{
+  "id": "S540",
+  "title": "For CLI-only slices, say in the UI pass brief that the 80x24, 120x40 and ascii renders are identical and allow one file per view",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261125-021106-86c7, project ork, item S261:\n\nFor CLI-only slices, say in the UI pass brief that the 80x24, 120x40 and ascii renders are identical and allow one file per view\n\nEvidence: S261 changes only CLI text, which does not depend on width; 5 views needed 15 identical files."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

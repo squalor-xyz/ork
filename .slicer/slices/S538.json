@@ -1,0 +1,39 @@
+{
+  "id": "S538",
+  "title": "give the UI pass a ready render harness for TUI panes so each role does not write its own overlay test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261125-015357-ca10, project ork, item S251:\n\ngive the UI pass a ready render harness for TUI panes so each role does not write its own overlay test\n\nEvidence: I wrote render_overlay_test.go and overlay.json by hand, as the AGENTS.md UI-pass recipe says, to render 6 views at 5 sizes"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

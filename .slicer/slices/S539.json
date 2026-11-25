@@ -1,0 +1,39 @@
+{
+  "id": "S539",
+  "title": "flag a slice whose spec text still says a key or choice is open after an owner decision on that key was recorded in its notes",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-015357-ca10, project ork, item S251:\n\nflag a slice whose spec text still says a key or choice is open after an owner decision on that key was recorded in its notes\n\nEvidence: S251's Why section still says \"the key is open ... confirm the key before the slice starts\" after adj ui.settings-pane-key was decided"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
