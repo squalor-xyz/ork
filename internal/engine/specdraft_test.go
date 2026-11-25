@@ -113,6 +113,88 @@ func TestSpecDraftTreeChangeNamesThePaths(t *testing.T) {
 	}
 }
 
+func TestSpecDraftShapeFailureKeepsTheReport(t *testing.T) {
+	h := specHarness(t)
+	malformed := strings.ReplaceAll(draftReport, "## Section ", "## ")
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if err := os.WriteFile(req.ReportPath, []byte(malformed), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return Result{Exit: ExitOK, Session: "sess"}, nil
+	}
+	dir := t.TempDir()
+	_, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: dir, Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+	var shape *ShapeError
+	if !errors.As(err, &shape) {
+		t.Errorf("want ShapeError, got %v", err)
+	}
+	if err == nil || !strings.HasSuffix(err.Error(), "[report kept in "+filepath.Join(dir, "spec-draft-failed-2.md")+"]") {
+		t.Errorf("error does not name second kept report: %v", err)
+	}
+	for _, name := range []string{"spec-draft-failed-1.md", "spec-draft-failed-2.md"} {
+		got, err := os.ReadFile(filepath.Join(dir, name))
+		if err != nil || string(got) != malformed {
+			t.Errorf("%s: report %q, error %v; want %q", name, got, err, malformed)
+		}
+	}
+}
+
+func TestSpecDraftShapeSuccessKeepsNoFailedReport(t *testing.T) {
+	h := specHarness(t)
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, "spec-draft-failed-1.md"), []byte("stale"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	h.runner.script = func(Request, int) (Result, error) {
+		return Result{Exit: ExitOK, Report: draftReport}, nil
+	}
+	_, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: dir, Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if files, err := filepath.Glob(filepath.Join(dir, "spec-draft-failed-*.md")); err != nil || len(files) != 0 {
+		t.Fatalf("failed reports %v, error %v; want none", files, err)
+	}
+}
+
+func TestSpecDraftShapeRetryThatPassesKeepsNoFailedReport(t *testing.T) {
+	h := specHarness(t)
+	dir := t.TempDir()
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		report := strings.ReplaceAll(draftReport, "## Section ", "## ")
+		if req.Resume != "" {
+			report = draftReport
+		}
+		return Result{Exit: ExitOK, Session: "sess", Report: report}, nil
+	}
+	_, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: dir, Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if files, err := filepath.Glob(filepath.Join(dir, "spec-draft-failed-*.md")); err != nil || len(files) != 0 {
+		t.Fatalf("failed reports %v, error %v; want none", files, err)
+	}
+}
+
+func TestSpecDraftShapeFailureDropsFailedReportsOfAnOldDraft(t *testing.T) {
+	h := specHarness(t)
+	dir := t.TempDir()
+	stale := filepath.Join(dir, "spec-draft-failed-3.md")
+	if err := os.WriteFile(stale, []byte("stale"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	h.runner.script = func(Request, int) (Result, error) {
+		return Result{Exit: ExitOK, Session: "sess", Report: strings.ReplaceAll(draftReport, "## Section ", "## ")}, nil
+	}
+	_, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: dir, Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+	if err == nil {
+		t.Error("want shape failure")
+	}
+	if _, err := os.Stat(stale); !errors.Is(err, os.ErrNotExist) {
+		t.Fatalf("stale report remains: %v", err)
+	}
+}
+
 func TestSpecDraftRefusesACheckEntryThatIsNotACommand(t *testing.T) {
 	for _, tc := range []struct {
 		name, check, files string
