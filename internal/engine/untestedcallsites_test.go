@@ -21,7 +21,89 @@ const (
 )
 
 func ucsFind(base, tree map[string]string, changed ...string) ([]untestedFinding, []string) {
+	findings, _, bad := ucsFindAll(base, tree, changed...)
+	return findings, bad
+}
+
+func ucsFindAll(base, tree map[string]string, changed ...string) ([]untestedFinding, []untestedCollision, []string) {
 	return untestedCallSites(base, tree, changed)
+}
+
+func TestUntestedCallSitesReportsCollisions(t *testing.T) {
+	tree := map[string]string{"x.go": ucsHelperSrc, "y.go": ucsRunSrc,
+		"z.go": "package x; func (s S) Run() {}", "x_test.go": ucsTestSrc + "\nfunc TestRun() { h.Run() }"}
+	findings, collisions, bad := ucsFindAll(nil, tree, "x.go")
+	want := []untestedCollision{{Name: "Run", Decls: []untestedSite{{File: "y.go", Func: "Run"}, {File: "z.go", Func: "S.Run"}}}}
+	if len(findings) != 0 || len(bad) != 0 || !reflect.DeepEqual(collisions, want) {
+		t.Fatalf("findings = %+v, collisions = %+v, unparsed = %v; want collisions %+v only", findings, collisions, bad, want)
+	}
+}
+
+func TestUntestedCallSitesCollisionNeedsAHiddenFinding(t *testing.T) {
+	for _, reached := range []bool{true, false} {
+		name := "declared once"
+		tree := map[string]string{"x.go": ucsHelperSrc, "y.go": ucsRunSrc, "x_test.go": ucsTestSrc}
+		var want []untestedFinding
+		if reached {
+			tree["x_test.go"] += "\nfunc TestRun(t *testing.T) { Run() }"
+		} else {
+			name = "site not reached"
+			tree["z.go"] = "package x; func (s S) Run() {}"
+			want = []untestedFinding{{Key: "Helper", File: "x.go", Sites: []untestedSite{{File: "y.go", Func: "Run"}}, Tests: []string{"x_test.go"}}}
+		}
+		t.Run(name, func(t *testing.T) {
+			findings, collisions, bad := ucsFindAll(nil, tree, "x.go")
+			if !reflect.DeepEqual(findings, want) || len(collisions) != 0 || len(bad) != 0 {
+				t.Fatalf("findings = %+v, collisions = %+v, unparsed = %v; want findings %+v only", findings, collisions, bad, want)
+			}
+		})
+	}
+}
+
+func TestUntestedCallSitesIgnoresTestingTReceiver(t *testing.T) {
+	for _, src := range []string{
+		`package x; func TestHelper(t *testing.T) { Helper(); t.Run("a", func(t *testing.T) { t.Run("b", nil) }) }`,
+		`package x; func TestHelper(t *testing.T) { Helper(); t.Run("a", nil) }`,
+		`package x; func TestHelper(t *testing.T) { Helper(); f := func(inner *testing.T) { inner.Run("b", nil) }; f(t) }`,
+	} {
+		t.Run(src, func(t *testing.T) {
+			findings, bad := ucsFind(nil, map[string]string{"x.go": ucsHelperSrc, "y.go": ucsRunSrc, "x_test.go": src}, "x.go")
+			want := []untestedFinding{{Key: "Helper", File: "x.go", Sites: []untestedSite{{File: "y.go", Func: "Run"}}, Tests: []string{"x_test.go"}}}
+			if !reflect.DeepEqual(findings, want) || len(bad) != 0 {
+				t.Fatalf("findings = %+v, unparsed = %v; want %+v", findings, bad, want)
+			}
+		})
+	}
+}
+
+func TestUntestedCallSitesCountsOtherSelectorCalls(t *testing.T) {
+	for _, src := range []string{
+		`package x; func TestHelper(t *testing.T) { Helper(); h.Run() }`,
+		`package x; func TestHelper(t *testing.T) { Helper() }; func TestB(t T) { t.Run() }`,
+	} {
+		t.Run(src, func(t *testing.T) {
+			findings, bad := ucsFind(nil, map[string]string{"x.go": ucsHelperSrc, "y.go": ucsRunSrc, "x_test.go": src}, "x.go")
+			ucsRequireNone(t, findings, bad)
+		})
+	}
+}
+
+func TestUntestedCallSitesCollisionsLine(t *testing.T) {
+	files := map[string]string{
+		"internal/x/x.go": ucsHelperSrc, "internal/x/y.go": ucsRunSrc,
+		"internal/x/z.go":      "package x; func (s S) Run() {}",
+		"internal/x/x_test.go": ucsTestSrc + "\nfunc TestRun() { h.Run() }",
+	}
+	h := ucsReviewerHarness(t, files, "internal/x/x.go\x00", ucsXRoutes)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	body, found := ucsBody(baseOverlayReviewer(t, h).Brief)
+	if !found {
+		t.Fatal("reviewer brief lacks the Untested call sites section")
+	}
+	want := "Names the check cannot tell apart: `Run`: `internal/x/y.go` in `Run`, `internal/x/z.go` in `S.Run`."
+	if strings.TrimSpace(body) != want {
+		t.Fatalf("section = %q, want %q", body, want)
+	}
 }
 
 func ucsRequireNone(t *testing.T, findings []untestedFinding, unparsed []string) {

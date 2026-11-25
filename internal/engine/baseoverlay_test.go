@@ -26,6 +26,33 @@ func baseOverlayRoutes(W, changed, untracked string, extra ...clitest.Route) []c
 	}, extra...)
 }
 
+func TestBaseOverlayAndUntestedCallSitesShareOneBranchRead(t *testing.T) {
+	h := ucsReviewerHarness(t, ucsReviewerFiles, "internal/x/x.go\x00", ucsXRoutes)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	reviewers := 0
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleReviewer {
+			continue
+		}
+		reviewers++
+		base, hasBase := baseOverlayBody(req.Brief)
+		ucs, hasUCS := ucsBody(req.Brief)
+		if !hasBase || !strings.Contains(base, "overlay-1.json") || !hasUCS || !strings.Contains(ucs, "- `Helper`") {
+			t.Errorf("reviewer sections missing: base = %q, call sites = %q", base, ucs)
+		}
+	}
+	for _, args := range [][]string{
+		{"-C", h.P, "symbolic-ref", "--short", "HEAD"},
+		{"-C", h.W, "merge-base", "main", "HEAD"},
+		{"-C", h.W, "diff", "--name-only"},
+		{"-C", h.W, "ls-files", "--others", "--exclude-standard", "-z", "--full-name"},
+	} {
+		if reads := h.calls("git", args...); len(reads) != reviewers {
+			t.Errorf("git %v: %d reads for %d reviewer rounds, want one each", args, len(reads), reviewers)
+		}
+	}
+}
+
 func baseOverlayShow(W, path, stdout string) clitest.Route {
 	return clitest.Route{Tool: "git", Args: []string{"-C", W, "show", "base:" + path}, Stdout: stdout}
 }

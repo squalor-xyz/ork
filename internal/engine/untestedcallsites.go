@@ -29,6 +29,12 @@ type untestedSite struct {
 	Func string
 }
 
+// untestedCollision names reached call-site functions the check cannot distinguish.
+type untestedCollision struct {
+	Name  string
+	Decls []untestedSite
+}
+
 // untestedFinding is a new function that tests call directly while no test
 // reaches the function around any of its product call sites.
 type untestedFinding struct {
@@ -68,6 +74,26 @@ func ucsParse(file, src string) ([]ucsFunc, bool) {
 			}
 		}
 		if fd.Body != nil {
+			testingT := map[string]bool{}
+			gather := func(params *ast.FieldList) {
+				if params == nil {
+					return
+				}
+				for _, field := range params.List {
+					if ucsIsTestingT(field.Type) {
+						for _, name := range field.Names {
+							testingT[name.Name] = true
+						}
+					}
+				}
+			}
+			gather(fd.Type.Params)
+			ast.Inspect(fd.Body, func(n ast.Node) bool {
+				if lit, ok := n.(*ast.FuncLit); ok {
+					gather(lit.Type.Params)
+				}
+				return true
+			})
 			ast.Inspect(fd.Body, func(n ast.Node) bool {
 				call, ok := n.(*ast.CallExpr)
 				if !ok {
@@ -77,6 +103,9 @@ func ucsParse(file, src string) ([]ucsFunc, bool) {
 				case *ast.Ident:
 					fn.calls[fun.Name] = true
 				case *ast.SelectorExpr:
+					if recv, ok := fun.X.(*ast.Ident); ok && testingT[recv.Name] {
+						break
+					}
 					fn.calls[fun.Sel.Name] = true
 				}
 				return true
@@ -85,6 +114,19 @@ func ucsParse(file, src string) ([]ucsFunc, bool) {
 		funcs = append(funcs, fn)
 	}
 	return funcs, true
+}
+
+func ucsIsTestingT(expr ast.Expr) bool {
+	ptr, ok := expr.(*ast.StarExpr)
+	if !ok {
+		return false
+	}
+	sel, ok := ptr.X.(*ast.SelectorExpr)
+	if !ok || sel.Sel.Name != "T" {
+		return false
+	}
+	pkg, ok := sel.X.(*ast.Ident)
+	return ok && pkg.Name == "testing"
 }
 
 // ucsReceiver is the base type name of a receiver type expression.
@@ -112,9 +154,10 @@ func ucsReceiver(expr ast.Expr) string {
 // (S564). base maps each changed non-test Go path to its merge-base source, new
 // files absent; tree maps every Go path of the worktree to its source. It goes
 // by names, with no type information, and measures reach per function. It
-// returns the findings, sorted by file then key, and the paths it could not
-// parse.
-func untestedCallSites(base, tree map[string]string, changed []string) ([]untestedFinding, []string) {
+// returns findings sorted by file then key, collisions sorted by name, and
+// the paths it could not parse. Selector calls on *testing.T parameters do
+// not count as calls.
+func untestedCallSites(base, tree map[string]string, changed []string) ([]untestedFinding, []untestedCollision, []string) {
 	unparsed := map[string]bool{}
 	var funcs []ucsFunc
 	for p, src := range tree {
@@ -126,6 +169,10 @@ func untestedCallSites(base, tree map[string]string, changed []string) ([]untest
 		funcs = append(funcs, fns...)
 	}
 
+	decls := map[string][]untestedSite{}
+	for _, fn := range funcs {
+		decls[fn.name] = append(decls[fn.name], untestedSite{File: fn.file, Func: fn.key})
+	}
 	baseKeys := map[string]bool{}
 	for p, src := range base {
 		fns, ok := ucsParse(p, src)
@@ -170,6 +217,7 @@ func untestedCallSites(base, tree map[string]string, changed []string) ([]untest
 		}
 	}
 	var findings []untestedFinding
+	collisionNames := map[string]bool{}
 	for _, fn := range funcs {
 		if fn.test || !changedSet[fn.file] || unparsed[fn.file] {
 			continue
@@ -180,6 +228,7 @@ func untestedCallSites(base, tree map[string]string, changed []string) ([]untest
 		var sites []untestedSite
 		var tests []string
 		callSiteReached := false
+		var ambiguous []string
 		for _, other := range funcs {
 			if !other.calls[fn.name] {
 				continue
@@ -194,6 +243,14 @@ func untestedCallSites(base, tree map[string]string, changed []string) ([]untest
 			sites = append(sites, untestedSite{File: other.file, Func: other.key})
 			if reached[other.name] {
 				callSiteReached = true
+				if len(decls[other.name]) > 1 {
+					ambiguous = append(ambiguous, other.name)
+				}
+			}
+		}
+		if len(tests) > 0 {
+			for _, name := range ambiguous {
+				collisionNames[name] = true
 			}
 		}
 		if len(tests) == 0 || len(sites) == 0 || callSiteReached {
@@ -222,17 +279,29 @@ func untestedCallSites(base, tree map[string]string, changed []string) ([]untest
 		bad = append(bad, p)
 	}
 	slices.Sort(bad)
-	return findings, bad
+	var collisions []untestedCollision
+	for name := range collisionNames {
+		sites := decls[name]
+		slices.SortFunc(sites, func(a, b untestedSite) int {
+			if c := strings.Compare(a.File, b.File); c != 0 {
+				return c
+			}
+			return strings.Compare(a.Func, b.Func)
+		})
+		collisions = append(collisions, untestedCollision{Name: name, Decls: sites})
+	}
+	slices.SortFunc(collisions, func(a, b untestedCollision) int { return strings.Compare(a.Name, b.Name) })
+	return findings, collisions, bad
 }
 
 // untestedCallSitesSection tells the reviewer which new functions tests call
 // only directly while no test reaches the function around their product call
 // sites (S564, adj 573). Like the decision paths check, a failure is advisory:
 // the section says the check is incomplete and never pauses the run. It returns
-// nil when nothing is flagged and nothing is incomplete.
-func (e *Engine) untestedCallSitesSection(ctx context.Context, rec runrec.Record) *BriefSection {
+// nil when there are no findings, collisions or incomplete checks.
+func (e *Engine) untestedCallSitesSection(ctx context.Context, rec runrec.Record, change branchChangeResult) *BriefSection {
 	const title = "Untested call sites"
-	mergeBase, changed, err := e.branchChange(ctx, rec)
+	mergeBase, changed, err := change.MergeBase, change.Paths, change.Err
 	if err == nil && mergeBase == "" {
 		err = errors.New("the merge base is empty")
 	}
@@ -306,8 +375,8 @@ func (e *Engine) untestedCallSitesSection(ctx context.Context, rec runrec.Record
 		return &BriefSection{Title: title, Body: "Check incomplete: the worktree's Go files could not be read. Trace the call sites of each new function yourself; this does not block the run."}
 	}
 
-	findings, unparsed := untestedCallSites(base, tree, readable)
-	if len(findings) == 0 && len(unparsed) == 0 && len(unread) == 0 {
+	findings, collisions, unparsed := untestedCallSites(base, tree, readable)
+	if len(findings) == 0 && len(collisions) == 0 && len(unparsed) == 0 && len(unread) == 0 {
 		return nil
 	}
 
@@ -337,6 +406,20 @@ func (e *Engine) untestedCallSitesSection(ctx context.Context, rec runrec.Record
 			}
 			fmt.Fprintf(&body, "\n%d more %s left out (ork lists at most %d). Trace the rest yourself.\n", leftOut, noun, untestedCallSitesLimit)
 		}
+	}
+	if len(collisions) > 0 {
+		var names []string
+		for _, collision := range collisions {
+			var decls []string
+			for _, decl := range collision.Decls {
+				decls = append(decls, "`"+decl.File+"` in `"+decl.Func+"`")
+			}
+			names = append(names, "`"+collision.Name+"`: "+strings.Join(decls, ", "))
+		}
+		if body.Len() > 0 {
+			body.WriteString("\n")
+		}
+		body.WriteString("Names the check cannot tell apart: " + strings.Join(names, "; ") + ".\n")
 	}
 	var incomplete []string
 	if len(unread) > 0 {

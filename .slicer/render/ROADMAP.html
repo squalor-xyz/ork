@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">597 items · — 63 · done 401 · retired 133</p>
+<p class="summary">597 items · — 62 · done 402 · retired 133</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -344,7 +344,7 @@
 <tr class="open"><td>289</td><td>S584</td><td>When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected</td><td></td><td>-</td><td></td><td>discovered from S531</td><td class="status">—</td></tr>
 <tr class="retired"><td>290</td><td>S585</td><td>in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X</td><td></td><td>-</td><td></td><td>Folded into S586; Jon chose &#x27;Fold into S586&#x27;, session 8d711f67, 2026-11-25. · discovered from S575</td><td class="status">retired</td></tr>
 <tr class="done"><td>291</td><td>S586</td><td>Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name</td><td></td><td>2</td><td></td><td>discovered from S575</td><td class="status">done</td></tr>
-<tr class="open"><td>292</td><td>S587</td><td>Untested call sites: very common names make every call site in a function of that name count as reached.</td><td></td><td>2</td><td></td><td>discovered from S564</td><td class="status">—</td></tr>
+<tr class="done"><td>292</td><td>S587</td><td>Untested call sites: very common names make every call site in a function of that name count as reached.</td><td></td><td>2</td><td></td><td>discovered from S564</td><td class="status">done</td></tr>
 <tr class="open"><td>293</td><td>S588</td><td>Sweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings</td><td></td><td>2</td><td></td><td>discovered from S531</td><td class="status">—</td></tr>
 <tr class="open"><td>294</td><td>S589</td><td>put the module&#x27;s import paths for the Charm libraries in the reviewer brief&#x27;s probe-test recipe</td><td></td><td>-</td><td></td><td>discovered from S556</td><td class="status">—</td></tr>
 <tr class="open"><td>295</td><td>S590</td><td>give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe</td><td></td><td>-</td><td></td><td>discovered from S581</td><td class="status">—</td></tr>

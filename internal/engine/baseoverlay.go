@@ -28,9 +28,9 @@ const baseOverlayLimit = 20
 // reviewer's process temp directory. Like the decision paths check, a failure
 // is advisory: the section says the check is incomplete and never pauses the
 // run. It returns nil when no Go file changed.
-func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpDir string) *BriefSection {
+func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpDir string, change branchChangeResult) *BriefSection {
 	const title = "Base overlays"
-	mergeBase, changed, err := e.branchChange(ctx, rec)
+	mergeBase, changed, err := change.MergeBase, change.Paths, change.Err
 	if err == nil && mergeBase == "" {
 		err = errors.New("the merge base is empty")
 	}

@@ -6783,3 +6783,9 @@
 {"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T21:47:54Z", "item": "S587", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:48:35Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T21:50:40Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T21:53:38Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:07:31Z", "item": "S587", "action": "note", "from": "", "to": "", "note": "Untested call sites ignores *testing.T selector calls and re", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:07:32Z", "item": "S587", "action": "status", "from": "started", "to": "done", "note": "Untested call sites ignores *testing.T selector calls and reports ambiguous reached names; reviewer sections share one branch diff read, with acceptance tests and mutation checks passing.", "by": "Jon Robbins"}

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-597 items · — 63 · done 401 · retired 133
+597 items · — 62 · done 402 · retired 133
 
 ## v1.3
 
@@ -346,7 +346,7 @@ v1.2
 | 289 | [S584](slices/S584.md) | When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected |  | - |  | discovered from S531 | — |
 | 290 | [S585](slices/S585.md) | in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X |  | - |  | Folded into S586; Jon chose 'Fold into S586', session 8d711f67, 2026-11-25. · discovered from S575 | retired |
 | 291 | [S586](slices/S586.md) | Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name |  | 2 |  | discovered from S575 | done |
-| 292 | [S587](slices/S587.md) | Untested call sites: very common names make every call site in a function of that name count as reached. |  | 2 |  | discovered from S564 | — |
+| 292 | [S587](slices/S587.md) | Untested call sites: very common names make every call site in a function of that name count as reached. |  | 2 |  | discovered from S564 | done |
 | 293 | [S588](slices/S588.md) | Sweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings |  | 2 |  | discovered from S531 | — |
 | 294 | [S589](slices/S589.md) | put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe |  | - |  | discovered from S556 | — |
 | 295 | [S590](slices/S590.md) | give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe |  | - |  | discovered from S581 | — |

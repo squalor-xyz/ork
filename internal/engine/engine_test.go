@@ -945,8 +945,8 @@ func TestAProblemWithNoItemOrAStaleRenderStaysRed(t *testing.T) {
 			if rec.Checks[0].OK || len(rec.Checks[0].Deferred) != 0 {
 				t.Errorf("checks[0]: %+v", rec.Checks[0])
 			}
-			// The reviewer round reads the base once for its Base overlays
-			// section (S554) and once for its Untested call sites section (S564); the
+			// The reviewer round shares one base read between its Base overlays
+			// section (S554) and its Untested call sites section (S564); the
 			// report's own deferral reads nothing.
 			reviewers := 0
 			for _, req := range h.runner.requests() {
@@ -954,8 +954,8 @@ func TestAProblemWithNoItemOrAStaleRenderStaysRed(t *testing.T) {
 					reviewers++
 				}
 			}
-			if reads := h.calls("git", "-C", h.P, "symbolic-ref"); len(reads) != 2*reviewers {
-				t.Errorf("git is read only when the report could defer or a reviewer starts: %d reads for %d reviewer rounds, want two each: %v", len(reads), reviewers, reads)
+			if reads := h.calls("git", "-C", h.P, "symbolic-ref"); len(reads) != reviewers {
+				t.Errorf("git is read only when the report could defer or a reviewer starts: %d reads for %d reviewer rounds, want one each: %v", len(reads), reviewers, reads)
 			}
 		})
 	}

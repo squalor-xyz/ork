@@ -2072,7 +2072,15 @@ separately.
     The section names the function, each call site with its enclosing
     function, and the test files that call it directly. It lists at most 20,
     sorted by path then name, and says how many it left out. The check goes by
-    function names with no type information, and it measures reach per
+    names, but selector calls on a `*testing.T` parameter (including parameters
+    of function literals) do not count as calls. Shadowing is ignored. When a
+    reached product call-site name is declared more than once in the worktree
+    and hides a finding for a new directly tested function, the section adds
+    a "Names the check cannot tell apart" paragraph, even if no function is
+    flagged. It lists each name and all its declarations, tests included,
+    sorted by file then key; names are sorted alphabetically. Base overlays
+    and Untested call sites share one branch diff read per reviewer round.
+    The check uses no other type information and measures reach per
     function, so it misses a call site in a reached function on a branch no
     test takes. A failed diff read or `git show` (other than path not in
     base), an unreadable file or an unparseable file adds an incomplete-check

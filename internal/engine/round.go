@@ -608,10 +608,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if section := e.decisionPathsSection(ctx, rec, sliceJSON); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
-		if section := e.baseOverlaySection(ctx, rec, tmpDir); section != nil {
+		mergeBase, paths, err := e.branchChange(ctx, rec)
+		change := branchChangeResult{MergeBase: mergeBase, Paths: paths, Err: err}
+		if section := e.baseOverlaySection(ctx, rec, tmpDir, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
-		if section := e.untestedCallSitesSection(ctx, rec); section != nil {
+		if section := e.untestedCallSitesSection(ctx, rec, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
 	}

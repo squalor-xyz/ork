@@ -578,6 +578,13 @@ func (e *Engine) branchPaths(ctx context.Context, rec runrec.Record) ([]string, 
 	return paths, err
 }
 
+// branchChangeResult shares one branch read between reviewer sections.
+type branchChangeResult struct {
+	MergeBase string
+	Paths     []string
+	Err       error
+}
+
 // branchChange is branchPaths with the merge base the paths are measured from.
 func (e *Engine) branchChange(ctx context.Context, rec runrec.Record) (string, []string, error) {
 	base, err := e.gitRead(ctx, e.proj.Path, "symbolic-ref", "--short", "HEAD")
