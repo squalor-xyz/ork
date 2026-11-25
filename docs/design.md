@@ -2547,6 +2547,17 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   redirects and other argument forms retain the role allowlist rules.
   Reads of another run's directory remain denied by the hard path boundary,
   even when a Bash allowlist entry matches the command.
+  *Proposed (S510, `roles.read-only-temp-write`):* a reviewer on cloud
+  Claude or claude-local, and only a reviewer, may write its own process
+  TMPDIR (the temp directory its brief names). A Codex or Grok reviewer gets
+  no such grant. On cloud Claude the arguments add `--add-dir TMPDIR` and
+  `Edit(//TMPDIR/**)` and `Write(//TMPDIR/**)` rules; on claude-local the
+  `--tools` list keeps Edit and Write and the approval hook gets the same
+  rules, and allows an Edit or Write whose path, symlinks resolved, is under
+  that directory. A path outside the permitted directories is still denied.
+  The brief of a claude or claude-local reviewer tells it that it may write
+  there, and nowhere else; the brief of a Codex or Grok reviewer does not. Gate,
+  architect, spec check and spec draft get no such grant.
   Other calls block on an owner permission question. `ork answer RUN allow`
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.

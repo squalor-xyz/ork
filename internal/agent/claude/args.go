@@ -16,7 +16,7 @@ import (
 // skills, so it keeps Skill.
 func (s Spec) localTools() []string {
 	tools := []string{"Read", "Grep", "Glob"}
-	if !s.ReadOnly || s.AddDir != "" {
+	if !s.ReadOnly || s.AddDir != "" || s.writesTMP() {
 		tools = append(tools, "Edit", "Write")
 	}
 	tools = append(tools, "Bash")
@@ -29,9 +29,14 @@ func (s Spec) localTools() []string {
 // patternEscape makes a path literal in a rule pattern (gitignore syntax).
 var patternEscape = strings.NewReplacer(`\`, `\\`, "*", `\*`, "?", `\?`, "[", `\[`, "]", `\]`, "!", `\!`)
 
-// editRules are the Edit and Write allow rules for everything under an
-// absolute directory. The leading // makes the path absolute in a rule.
-func editRules(dir string) []string {
+// writesTMP reports whether a read-only role holds the temp-dir write grant
+// (S510): WriteTMP with a TMPDir to apply it to.
+func (s Spec) writesTMP() bool { return s.WriteTMP && s.TMPDir != "" }
+
+// EditRules are the Edit and Write allow rules for everything under an
+// absolute directory. The leading // makes the path absolute in a rule. The
+// daemon gives the same rules to the approval hook of a claude-local role.
+func EditRules(dir string) []string {
 	path := "//" + patternEscape.Replace(strings.TrimPrefix(filepath.ToSlash(dir), "/")) + "/**"
 	return []string{"Edit(" + path + ")", "Write(" + path + ")"}
 }
@@ -49,7 +54,8 @@ func editRules(dir string) []string {
 //
 // Every role needs an allowlist. Cloud read-only roles use the fixed read-only
 // list with no mode flag (adj 489); a UI pass also gets its WriteDir rules
-// (adj 372). claude-local uses manual mode and ork's PreToolUse hook
+// (adj 372), and a reviewer (WriteTMP) gets rules for its TMPDIR (S510).
+// claude-local uses manual mode and ork's PreToolUse hook
 // with a read-only allowlist for read-only roles (adj 307, 328-331).
 // `--include-partial-messages` gives the
 // text deltas for the output tail. `--effort <level>` is listed by
@@ -101,7 +107,7 @@ func (s Spec) Args() ([]string, error) {
 		}
 	}
 	cloudReadOnly := s.ReadOnly && s.Bin != "claude-local"
-	if s.TMPDir != "" && (!s.ReadOnly || s.WriteDir != "") {
+	if s.TMPDir != "" && (!s.ReadOnly || s.WriteDir != "" || s.WriteTMP) {
 		if !filepath.IsAbs(s.TMPDir) || filepath.Clean(s.TMPDir) != s.TMPDir {
 			return nil, errors.New("claude: TMPDIR is not an absolute clean path")
 		}
@@ -122,12 +128,16 @@ func (s Spec) Args() ([]string, error) {
 			return nil, errors.New("claude: write directory is not an absolute clean path")
 		}
 		args = append(args, "--add-dir", s.WriteDir)
-		allow = append(slices.Clone(allow), editRules(s.WriteDir)...)
+		allow = append(slices.Clone(allow), EditRules(s.WriteDir)...)
 		if s.TMPDir != "" {
-			allow = append(allow, editRules(s.TMPDir)...)
+			allow = append(allow, EditRules(s.TMPDir)...)
 		}
 	} else if len(allow) == 0 {
 		return nil, errors.New("claude: a role needs an allowlist")
+	} else if s.ReadOnly && s.writesTMP() {
+		// A reviewer may write its own process temp dir (S510,
+		// roles.read-only-temp-write, *proposed*), nothing else.
+		allow = append(slices.Clone(allow), EditRules(s.TMPDir)...)
 	}
 	for _, tool := range allow {
 		if strings.TrimSpace(tool) == "" {

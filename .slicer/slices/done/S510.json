@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/agent/claude/args.go`\n- `internal/agent/claude/pretool.go`\n- `internal/agent/claude/types.go`\n- `internal/daemon/runner.go`\n- `internal/engine/brief.go` (the reviewer's brief wording)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `internal/agent/claude/args_test.go`: a new test asserting the reviewer's args hold `--add-dir TMPDIR`, `Edit(//TMPDIR/**)` and `Write(//TMPDIR/**)` (cloud Claude and claude-local).\n- `internal/agent/claude/pretool_test.go`: a case that allows a Write under the role temp dir and denies one outside it."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- `go test ./internal/agent/claude` exits 0."
     },
     {
       "heading": "Git",

@@ -30,7 +30,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -race -count=1 ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`.\n- Run \"ork ai instructions\" and \"ork ai skill\" from a source build in the worktree and read both outputs; run \"ork ai skill --output\" into `.scratch/` only.\n- Confirm by hand that every command line in the guide runs or is accepted by \"ork help\" text.\n- [HUMAN CHECK] After landing and a rebuild, the owner reads \"ork ai instructions\" once and says whether it matches how an agent should drive ork, and decides whether to install the skill in a project."
+      "body": "\n- `go test -race -count=1 ./...`; `go vet ./...`; `gofmt -l .`; `slicer check`; `adj lint`.\n- Run \"ork ai instructions\" and \"ork ai skill\" from a source build in the worktree and read both outputs; run \"ork ai skill --output\" into .scratch/ only.\n- Confirm by hand that every command line in the guide runs or is accepted by \"ork help\" text.\n- [HUMAN CHECK] After landing and a rebuild, the owner reads \"ork ai instructions\" once and says whether it matches how an agent should drive ork, and decides whether to install the skill in a project."
     },
     {
       "heading": "Git",
