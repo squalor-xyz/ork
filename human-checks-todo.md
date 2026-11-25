@@ -302,3 +302,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S579 (run ork-20261125-203305-0dc5, 2026-11-25)
 
 - [ ] Open a long item on the Roadmap at 80x24 and press pgdown until the end. Each page should start with the line that sat under the "+N more lines" marker on the page before. Press pgup back up the same way. Open the spec draft pane on a long draft and page it; it should behave the same.
+
+## S586 (run ork-20261125-203302-a88e, 2026-11-25)
+
+- [ ] Probe the real Claude Code matcher (not run by this draft). In a scratch git repo, start Claude Code with the allow rule Bash(git -C * show*) and ask it to run git -C /scratch commit --allow-empty -m show. If it runs without a prompt, the CLI's * spans the subcommand like ork's hook does. Then repeat with Bash(git -C /scratch show*): the commit command should prompt or be denied, and git -C /scratch show HEAD should run. Record the result on S586.
