@@ -187,8 +187,8 @@ func TestBaseOverlayBuildFailureReplacesCommand(t *testing.T) {
 func TestBaseOverlayNoIntroWhenNothingBuilds(t *testing.T) {
 	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{Exit: 1, Stderr: "undefined helper"})
 	_, body, entries := overlayVetResult(t, h)
-	if len(entries) != 2 || strings.Count(body, "does not build: undefined helper") != 2 {
-		t.Errorf("want two build failures: %s", body)
+	if len(entries) != 2 || strings.Count(body, "does not build: undefined helper") != 3 {
+		t.Errorf("want three build failures: %s", body)
 	}
 	for _, gone := range []string{"go -C", "-run NAME", "Each command runs"} {
 		if strings.Contains(body, gone) {
@@ -221,6 +221,146 @@ func TestBaseOverlayNewFileBuildFailureKeepsNote(t *testing.T) {
 	want := "- `internal/x/new.go` (new in this slice; the overlay hides it): does not build: undefined helper. Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/new.go") + "` instead."
 	if len(entries) != 1 || entries[0] != want {
 		t.Errorf("new-file failure = %q, want %q", entries, want)
+	}
+}
+
+func baseOverlayAllEntry(body string) string {
+	for _, line := range strings.Split(body, "\n") {
+		if strings.HasPrefix(line, "- All changed Go files at once") {
+			return line
+		}
+	}
+	return ""
+}
+
+func TestBaseOverlayAllTogetherWhenEverySingleFileFails(t *testing.T) {
+	fail := clitest.Reply{Exit: 1, Stderr: "undefined helper"}
+	h := overlayVetHarness(t, "internal/y/b.go\x00internal/x/a.go\x00", false, fail, fail, clitest.Reply{})
+	req, body, entries := overlayVetResult(t, h)
+	overlay := filepath.Join(req.TMPDir, "overlay-all.json")
+	calls := h.fake.CallsTo("go")
+	if len(calls) != 3 {
+		t.Fatalf("vet calls = %d, want three", len(calls))
+	}
+	wantArgs := []string{"-C", h.W, "vet", "-overlay", overlay, "./internal/x", "./internal/y"}
+	if !reflect.DeepEqual(calls[2].Args, wantArgs) {
+		t.Errorf("combined vet args = %q, want %q", calls[2].Args, wantArgs)
+	}
+	wantReplace := map[string]string{}
+	for _, p := range []string{"internal/x/a.go", "internal/y/b.go"} {
+		wantReplace[filepath.Join(h.W, p)] = filepath.Join(req.TMPDir, "base", p)
+	}
+	if got := baseOverlayReplace(t, overlay); !reflect.DeepEqual(got, wantReplace) {
+		t.Errorf("combined Replace = %v, want %v", got, wantReplace)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("per-file entries = %q, want two", entries)
+	}
+	for _, entry := range entries {
+		if !strings.Contains(entry, "does not build: undefined helper") || strings.Contains(entry, " test -overlay ") {
+			t.Errorf("per-file failure = %s", entry)
+		}
+	}
+	entry := baseOverlayAllEntry(body)
+	command := "go -C " + ShellWord(h.W) + " test -overlay " + ShellWord(overlay) + " ./internal/x ./internal/y"
+	for _, want := range []string{"(2 files)", command, "no single-file overlay builds", "reverts every file listed above together", "-run NAME", "before the package list", "one test per command", "never join test names"} {
+		if !strings.Contains(entry, want) {
+			t.Errorf("combined entry lacks %q: %s", want, entry)
+		}
+	}
+	if strings.Contains(body, "|") || strings.Contains(body, "only that file reverted") {
+		t.Errorf("combined-only guidance contains pipe or single-file intro: %s", body)
+	}
+	if strings.TrimSpace(body) != strings.Join(append(entries, entry), "\n") {
+		t.Errorf("combined entry is not last: %s", body)
+	}
+}
+
+func TestBaseOverlayAllTogetherNotOfferedWhenOneFileBuilds(t *testing.T) {
+	for _, builds := range []bool{false, true} {
+		t.Run(fmt.Sprintf("builds=%v", builds), func(t *testing.T) {
+			fail := clitest.Reply{Exit: 1, Stderr: "undefined helper"}
+			second := fail
+			if builds {
+				second = clitest.Reply{}
+			}
+			h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, fail, second, clitest.Reply{})
+			req, body, _ := overlayVetResult(t, h)
+			wantCalls := 3
+			if builds {
+				wantCalls = 2
+			}
+			if got := len(h.fake.CallsTo("go")); got != wantCalls {
+				t.Errorf("vet calls = %d, want %d", got, wantCalls)
+			}
+			_, err := os.Stat(filepath.Join(req.TMPDir, "overlay-all.json"))
+			if builds && !errors.Is(err, os.ErrNotExist) || !builds && err != nil {
+				t.Errorf("combined overlay stat = %v, builds = %v", err, builds)
+			}
+			if got := baseOverlayAllEntry(body) != ""; got == builds {
+				t.Errorf("combined entry present = %v, builds = %v", got, builds)
+			}
+		})
+	}
+}
+
+func TestBaseOverlayAllTogetherNeedsTwoFiles(t *testing.T) {
+	for _, two := range []bool{true, false} {
+		t.Run(fmt.Sprintf("two=%v", two), func(t *testing.T) {
+			changed := "internal/x/a.go\x00"
+			wantCalls := 1
+			if two {
+				changed += "internal/x/b.go\x00"
+				wantCalls = 3
+			}
+			h := overlayVetHarness(t, changed, false, clitest.Reply{Exit: 1, Stderr: "undefined helper"})
+			req, body, _ := overlayVetResult(t, h)
+			if got := len(h.fake.CallsTo("go")); got != wantCalls {
+				t.Errorf("vet calls = %d, want %d", got, wantCalls)
+			}
+			_, err := os.Stat(filepath.Join(req.TMPDir, "overlay-all.json"))
+			if !two && !errors.Is(err, os.ErrNotExist) || two && err != nil {
+				t.Errorf("combined overlay stat = %v, two = %v", err, two)
+			}
+			if got := baseOverlayAllEntry(body) != ""; got != two {
+				t.Errorf("combined entry present = %v, two = %v", got, two)
+			}
+		})
+	}
+}
+
+func TestBaseOverlayAllTogetherThatDoesNotBuildIsReported(t *testing.T) {
+	diagnostic := strings.Repeat("x", 210) + "|tail\nsecond|line\nthird\nfourth"
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{Exit: 1, Stderr: diagnostic})
+	req, body, _ := overlayVetResult(t, h)
+	want := "- All changed Go files at once (2 files): does not build: " + strings.Repeat("x", 200) + "; second/line; third. Trace the base versions with `git show` instead."
+	if got := baseOverlayAllEntry(body); got != want {
+		t.Errorf("combined failure = %q, want %q", got, want)
+	}
+	baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-all.json"))
+}
+
+func TestBaseOverlayAllTogetherMapsNewFileToEmpty(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			fail := clitest.Reply{Exit: 1, Stderr: "undefined helper"}
+			return baseOverlayRoutes(W, "internal/x/a.go\x00internal/x/new.go\x00", "",
+				clitest.Route{Tool: "go", Args: []string{"-C", W, "vet"}, Prefix: true, Seq: []clitest.Reply{fail, fail, {}}},
+				baseOverlayShow(W, "internal/x/a.go", "package x\n"), baseOverlayNotInBase(W, "internal/x/new.go"))
+		}
+	})
+	req, body, _ := overlayVetResult(t, h)
+	want := map[string]string{filepath.Join(h.W, "internal/x/a.go"): filepath.Join(req.TMPDir, "base/internal/x/a.go"), filepath.Join(h.W, "internal/x/new.go"): ""}
+	if got := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-all.json")); !reflect.DeepEqual(got, want) {
+		t.Errorf("mixed Replace = %v, want %v", got, want)
+	}
+	if _, err := os.Stat(filepath.Join(req.TMPDir, "base/internal/x/new.go")); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("new base copy stat = %v, want absent", err)
+	}
+	entry := baseOverlayAllEntry(body)
+	wantCommand := "go -C " + ShellWord(h.W) + " test -overlay " + ShellWord(filepath.Join(req.TMPDir, "overlay-all.json")) + " ./internal/x"
+	if !strings.Contains(entry, "`"+wantCommand+"`") {
+		t.Errorf("mixed entry lacks deduplicated command: %s", entry)
 	}
 }
 

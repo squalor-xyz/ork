@@ -887,7 +887,7 @@ func (m *Model) paneLinesAs(w, h int, status string, inline bool) []string {
 	if room == 0 {
 		lines = nil
 	} else if len(lines) > room {
-		lines = window(lines, m.pane.offset, room, m.cfg.Theme)
+		lines = window(lines, m.pane.offset, room, m.cfg.Theme, "")
 	}
 	out := append(header, lines...)
 	if len(out)+len(footer) < h {

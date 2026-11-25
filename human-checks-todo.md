@@ -318,3 +318,15 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S580 (run ork-20261125-204703-eec0, 2026-11-25)
 
 - [ ] Run ork in a terminal of 80x10, open a project's Roadmap with several goals and press pgup on the first row. The Goals lines should scroll into view and +N lines above should count down to the Goals heading. Then press down: the cursor should reach the second row and its row should be on screen.
+
+## S588 (run ork-20261125-222934-1f3d, 2026-11-25)
+
+- [ ] Open the doc comment of TestScrollSweep in internal/tui/scroll_sweep_test.go. Each of decisions detail, questions detail, waves item pane and settings should be either a table row or a named Left out entry with a reason and a follow-up slice ID. No pane should be missing from both.
+
+## S600 (run ork-20261125-222936-fc21, 2026-11-25)
+
+- [ ] Run ork in a terminal of 80x10 and open a Roadmap with several goals. Press home twice: the Goals show, and the dim line under them reads +N more lines, cursor: S90 (the first row's ID). Press enter: that item opens. Press esc, then down: the cue is gone.
+
+## S596 (run ork-20261125-222937-c7ce, 2026-11-25)
+
+- [ ] In the next reviewer round for a slice where two changed Go files depend on each other's new fields, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... for each single file. It should end with an All changed Go files at once entry holding one go -C ... test -overlay .../overlay-all.json ./PKG ... command. Run it from your shell. It should build, and git -C WORKTREE status --porcelain should be unchanged.
