@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-578 items · — 58 · done 393 · retired 127
+578 items · — 57 · done 394 · retired 127
 
 ## v1.3
 
@@ -323,7 +323,7 @@ v1.2
 | 266 | [S561](slices/S561.md) | add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test |  | - |  | Folded into S547 (adj 558, owner 2026-11-25) · discovered from S558 | retired |
 | 267 | [S562](slices/S562.md) | put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree |  | - |  | Folded into S554 (adj 560, owner 2026-11-25) · discovered from S543 | retired |
 | 268 | [S563](slices/S563.md) | Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run | S | - |  |  | done |
-| 269 | [S564](slices/S564.md) | flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route |  | - |  | discovered from S547 | — |
+| 269 | [S564](slices/S564.md) | flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route |  | - |  | discovered from S547 | done |
 | 270 | [S565](slices/S565.md) | say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed |  | - |  | discovered from S547 | done |
 | 271 | [S566](slices/S566.md) | when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found |  | - |  | discovered from S557 | done |
 | 272 | [S567](slices/S567.md) | adj: allow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records |  | - |  | Covered: plain adj check TEXT already prints one line per record (id, status, title, refs, decision) without options or history; Jon chose 'Retire as covered', session 8d711f67, 2026-11-25. · discovered from S560 | retired |

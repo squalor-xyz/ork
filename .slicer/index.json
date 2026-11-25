@@ -29860,7 +29860,7 @@
       "id": "S564",
       "title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
       "short_title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29870,6 +29870,34 @@
           "text": "**2026-11-25** — Owner decision (adj 573, review.untested-call-site-check): ork-code-warn. A deterministic Go step using go/parser and go/ast on the slice diff lists new non-test functions whose product call sites sit in no function a test reaches (only direct unit calls in tests), and shows them in the reviewer brief as an advisory section, like the decision-paths section. It never blocks or pauses a run. Jon chose 'ork code, warn in brief', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T18:31:51Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9a19e436-2500-41cd-9a8f-32bf0499b3f4",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S564):\n- later: In the next real reviewer round for a slice that adds a function tests call only directly, open the reviewer's brief under the run's role files. You should see a `## Untested call sites` section naming the function and its unreached call site. The run should not have paused for it.",
+          "created_at": "2026-11-25T19:06:08Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c2a3b457-271f-434c-acbe-1e2b814b98fc",
+          "kind": "",
+          "text": "**2026-11-25** — The reviewer brief now carries an advisory `## Untested call sites` section naming new functions that tests call only directly while no test reaches the function around any product call site; go test ./..., go vet and gofmt are clean.",
+          "created_at": "2026-11-25T19:06:09Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -29896,7 +29924,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

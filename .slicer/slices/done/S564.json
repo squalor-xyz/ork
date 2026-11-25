@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/untestedcallsites.go` (new)\n- `internal/engine/untestedcallsites_test.go` (new)\n- `internal/engine/round.go:603-610`\n- `internal/engine/baseoverlay.go:31-96`\n- `internal/engine/brief.go:576-611`\n- `docs/design.md:2019-2051`\n- `landed-changed/S564.md` (new)"
+      "body": "- `internal/engine/untestedcallsites.go` (new)\n- `internal/engine/untestedcallsites_test.go` (new)\n- `internal/engine/engine_test.go` (the git-read count in TestAProblemWithNoItemOrAStaleRenderStaysRed, now two per reviewer round)\n- `internal/engine/round.go:603-613`\n- `internal/engine/baseoverlay.go:31-96`\n- `internal/engine/brief.go:576-611`\n- `docs/design.md:2019-2073`\n- `landed-changed/S564.md` (new)"
     },
     {
       "heading": "Failing tests",
