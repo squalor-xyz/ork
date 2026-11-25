@@ -6728,3 +6728,14 @@
 {"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T20:31:36Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:45:20Z", "item": "S591", "action": "add", "from": "", "to": "open", "note": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds"}
+{"when": "2026-11-25T20:45:20Z", "item": "S591", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:45:35Z", "item": "S592", "action": "add", "from": "", "to": "open", "note": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version"}
+{"when": "2026-11-25T20:45:35Z", "item": "S592", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:45:47Z", "item": "S593", "action": "add", "from": "", "to": "open", "note": "when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check"}
+{"when": "2026-11-25T20:45:47Z", "item": "S593", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:46:04Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:46:05Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Check"}
