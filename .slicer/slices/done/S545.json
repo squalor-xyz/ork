@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/states.go`: `runSliceChecks` reruns a red batch when the run record carries the retry mark.\n- `internal/engine/engine.go`: `RetryWith` sets the mark.\n- `internal/engine/resume.go`: `resumeStopped` sets the mark.\n- `internal/runrec/record.go`: the `recheck_slice` field.\n- `internal/engine/slicechecks_test.go`: the new tests.\n- `docs/design.md`, `docs/state.md`: the cache rule and the field."
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestSliceChecksRetryRerunsARedBatch`, `TestSliceChecksRetryKeepsAGreenBatchCached`, `TestSliceChecksRedBatchReusedUntilARetry` and `TestSliceChecksResumeStoppedSetsTheRetryMark` in `internal/engine/slicechecks_test.go`: an unchanged red batch is reused without a retry and rerun after `RetryWith` (paused and stopped runs); a green batch stays cached after a retry."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "\n- `go test -race -count=1 ./internal/engine` (exits 0; the new test TestSliceChecksRetryRerunsARedBatch passes)"
     },
     {
       "heading": "Git",

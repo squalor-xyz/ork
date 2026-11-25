@@ -469,6 +469,7 @@ type Record struct {
 	Fails            int                      `json:"fails,omitempty"`
 	LandFixes        int                      `json:"land_fixes,omitempty"`     // fix rounds that a blocked landing has had (S119)
 	LandedAt         time.Time                `json:"landed_at,omitzero"`       // when ork landed the slice on the base branch (S119)
+	RecheckSlice     bool                     `json:"recheck_slice,omitempty"`  // proposed (S545, adj checks.red-evidence-retry): ork retry set it; the next slice check reruns a red batch of unchanged product, then clears it
 	LandRecheck      bool                     `json:"land_recheck,omitempty"`   // the base branch is merged into the slice branch and no green re-check has followed (S119)
 	CleanedAt        time.Time                `json:"cleaned_at,omitzero"`      // when the worktree and branch were removed (S95)
 	CleanedReason    string                   `json:"cleaned_reason,omitempty"` // why the daemon marked a run cleaned that ork did not clean up: its branch is gone and not merged (S263)
