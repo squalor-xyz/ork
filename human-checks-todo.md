@@ -318,3 +318,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S580 (run ork-20261125-204703-eec0, 2026-11-25)
 
 - [ ] Run ork in a terminal of 80x10, open a project's Roadmap with several goals and press pgup on the first row. The Goals lines should scroll into view and +N lines above should count down to the Goals heading. Then press down: the cursor should reach the second row and its row should be on screen.
+
+## S588 (run ork-20261125-222934-1f3d, 2026-11-25)
+
+- [ ] Open the doc comment of TestScrollSweep in internal/tui/scroll_sweep_test.go. Each of decisions detail, questions detail, waves item pane and settings should be either a table row or a named Left out entry with a reason and a follow-up slice ID. No pane should be missing from both.
