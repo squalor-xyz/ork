@@ -3118,9 +3118,9 @@ normally; a failed lookup also shows one notice line explaining why.
 An open record holds the item in the daemon, CLI and TUI without asking it
 again. The spec note says `waits on adj N`. The next check rereads the open
 record without rerunning the role. Other questions for the held item wait
-until its adj records are resolved. The spec-check role searches decided
-records with `adj find` before inventing a decision key. The local Claude
-spec-check allowlist includes that read-only query.
+until its adj records are resolved. The spec-check and spec-draft roles look
+up decisions by topic with `adj check TEXT` before inventing a decision key,
+reuse an existing key for the same topic, and never use `adj find`.
 
 The Roadmap launch uses the same sitting after its plan and before its
 confirmation (S184). Skipping leaves the slice held and closes the launch;
