@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-550 items · — 54 · done 373 · retired 123
+550 items · — 53 · done 374 · retired 123
 
 ## v1.3
 
@@ -294,7 +294,7 @@ v1.2
 | 237 | [S532](slices/S532.md) | let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run |  | - |  | Duplicate of S510 (reviewer write to its role temp dir); same evidence from S401's reviewer · discovered from S401 | retired |
 | 238 | [S533](slices/S533.md) | add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test |  | - |  | Folded into S534 (adj 531, owner 2026-11-25) · discovered from S249 | retired |
 | 239 | [S534](slices/S534.md) | let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test |  | - |  | Folded into S499 (owner 2026-11-24): its views join S499's fixture list · discovered from S250 | retired |
-| 240 | [S535](slices/S535.md) | Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help |  | 1 |  | discovered from S401 | — |
+| 240 | [S535](slices/S535.md) | Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help |  | 1 |  | discovered from S401 | done |
 | 241 | [S536](slices/S536.md) | flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too |  | - |  | discovered from S510 | — |
 | 242 | [S537](slices/S537.md) | include the slice notes, or the owner answers recorded in them, in the reviewer brief so an owner-accepted deviation can be checked |  | - |  | discovered from S233 | — |
 | 243 | [S538](slices/S538.md) | give the UI pass a ready render harness for TUI panes so each role does not write its own overlay test |  | - |  | discovered from S251 | — |
