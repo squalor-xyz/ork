@@ -6616,3 +6616,5 @@
 {"when": "2026-11-25T18:31:52Z", "item": "S575", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 574, launch.read-only-merge-base): add b", "by": "Jon Robbins"}
 {"when": "2026-11-25T18:32:42Z", "item": "S577", "action": "add", "from": "", "to": "open", "note": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay"}
 {"when": "2026-11-25T18:32:42Z", "item": "S577", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T18:34:46Z", "item": "S578", "action": "add", "from": "", "to": "open", "note": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row"}
+{"when": "2026-11-25T18:34:47Z", "item": "S578", "action": "promote", "from": "", "to": "", "note": ""}

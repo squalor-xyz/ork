@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 578,
+  "next_id": 579,
   "preamble": "",
   "passes": [
     {
@@ -30342,6 +30342,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-397a3274",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S578",
+      "title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
+      "short_title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S572",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f27058a6",
         "pass": "v1.2",
         "group": "",
         "reason": "",
