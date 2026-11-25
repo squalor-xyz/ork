@@ -351,6 +351,51 @@ func TestClaudeRunnerGivesOnlyTheCloudUIPassAWriteDir(t *testing.T) {
 	}
 }
 
+// Only a reviewer may write its process temp dir (S510). On claude-local the
+// approval hook gets the same rules, because the hook decides there.
+func TestClaudeRunnerGivesOnlyTheReviewerATMPDirWriteGrant(t *testing.T) {
+	const tmp = "/state/t/run/role-1"
+	rules := claude.EditRules(tmp)
+	for _, tc := range []struct {
+		name, vendor, role, tmp string
+		readOnly, want          bool
+	}{
+		{"cloud reviewer", "claude", engine.RoleReviewer, tmp, true, true},
+		{"local reviewer", "claude-local", engine.RoleReviewer, tmp, true, true},
+		{"reviewer without a process temp dir", "claude", engine.RoleReviewer, "", true, false},
+		{"gate", "claude", engine.RoleGate, tmp, true, false},
+		{"architect", "claude-local", engine.RoleArchitect, tmp, true, false},
+		{"spec check", "claude", engine.RoleSpecCheck, tmp, true, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var spec claude.Spec
+			var hook []string
+			r := claudeRunner{
+				approval: func(_ context.Context, _ engine.Request, allow []string, _ string) (string, func() []runrec.DeniedCommand, error) {
+					hook = slices.Clone(allow)
+					return "hook", func() []runrec.DeniedCommand { return nil }, nil
+				},
+				round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+					spec = s
+					return claude.Round{Class: claude.ClassOK}, nil
+				},
+			}
+			if _, err := r.Run(context.Background(), engine.Request{Vendor: tc.vendor, Role: tc.role, ReadOnly: tc.readOnly, Worktree: "/work/tree", TempDir: t.TempDir(), TMPDir: tc.tmp, Brief: "brief"}); err != nil {
+				t.Fatal(err)
+			}
+			if spec.WriteTMP != tc.want {
+				t.Fatalf("WriteTMP = %v, want %v", spec.WriteTMP, tc.want)
+			}
+			if slices.Contains(spec.Allowlist, rules[0]) {
+				t.Fatalf("the Spec allowlist holds the grant, which Args adds: %q", spec.Allowlist)
+			}
+			if got := slices.Contains(hook, rules[0]) && slices.Contains(hook, rules[1]); got != (tc.want && tc.vendor == "claude-local") {
+				t.Fatalf("hook allowlist grant = %v for %s: %q", got, tc.vendor, hook)
+			}
+		})
+	}
+}
+
 // cloudLauncher installs a fake cloud claude that records its argv, waits for
 // the release file when one is named, then prints one result. It uses shell
 // builtins only, because PATH holds nothing but its directory.

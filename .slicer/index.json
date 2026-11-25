@@ -27443,7 +27443,7 @@
       "id": "S510",
       "title": "allow the reviewer to write to its own role temp dir, as the prompt says it may",
       "short_title": "allow the reviewer to write to its own role temp dir, as the prompt says it may",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -27453,6 +27453,20 @@
           "text": "**2026-11-25** — S532 (retired as duplicate) reported the same denial from S401's reviewer: Write to the role temp dir probe_test.go denied, 'Path is outside allowed working directories'.",
           "created_at": "2026-11-25T02:17:21Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "8f67db2d-b74b-4599-9045-eaf60d271260",
+          "kind": "",
+          "text": "**2026-11-25** — A claude or claude-local reviewer, and only that reviewer, may write under its own process TMPDIR (args rules, hook grant, runner wiring, brief wording); Codex and Grok reviewer briefs no longer say they may write, verified by new brief cases and a green full suite.",
+          "created_at": "2026-11-25T02:37:35Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -27479,7 +27493,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

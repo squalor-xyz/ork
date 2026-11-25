@@ -179,7 +179,13 @@ type Spec struct {
 	// Allowlist and gets no write rules. Both cloud forms use
 	// --permission-prompts none and no mode flag (adj 489). claude-local
 	// ignores it (AddDir).
-	WriteDir   string
+	WriteDir string
+	// WriteTMP lets a read-only role write its own TMPDir (S510,
+	// roles.read-only-temp-write, *proposed*): the reviewer. Set with a
+	// TMPDir, Args adds --add-dir for it and Edit and Write rules for
+	// everything under it, on cloud Claude and on claude-local. Unset, a
+	// read-only role gets no write rule for TMPDir.
+	WriteTMP   bool
 	KeepSkills bool // claude-local: keep the Skill tool and slash commands (a UI pass loads skills)
 	// SystemPromptFile is the absolute path of the system prompt that replaces
 	// Claude Code's default one (claude-local only; S364, *proposed*).

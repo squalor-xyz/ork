@@ -221,6 +221,12 @@ func (p ApprovalPolicy) evaluate(call ToolCall) Approval {
 			if in.FilePath == progressPath(rule) {
 				return Approval{"allow", "exact progress file"}
 			}
+			// A directory grant (S510, EditRules): a file under it. The path
+			// is resolved like contains does, so a symlink or .. cannot leave
+			// the directory.
+			if dir := grantDir(rule); dir != "" && within(dir, in.FilePath) {
+				return Approval{"allow", "role temp directory"}
+			}
 		}
 	}
 	return Approval{"ask", "call is not covered by the role allowlist"}
@@ -337,6 +343,25 @@ func progressPath(rule string) string {
 	}
 	path := strings.TrimPrefix(rule[5:len(rule)-1], "/")
 	return strings.NewReplacer(`\\`, `\`, `\*`, "*", `\?`, "?", `\[`, "[", `\]`, "]", `\!`, "!").Replace(path)
+}
+
+// grantDir decodes a directory grant from EditRules: Edit(//DIR/**) names DIR.
+// Any other rule, including the exact progress file, gives "".
+func grantDir(rule string) string {
+	if !strings.HasSuffix(rule, "/**)") {
+		return ""
+	}
+	return progressPath(strings.TrimSuffix(rule, "/**)") + ")")
+}
+
+// within reports whether path (relative paths are not accepted) is under dir
+// after both resolve their symlinked ancestors.
+func within(dir, path string) bool {
+	if !filepath.IsAbs(path) {
+		return false
+	}
+	rel, err := filepath.Rel(resolveAncestor(dir), resolveAncestor(path))
+	return err == nil && rel != "." && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator))
 }
 
 var ownReadTokens = regexp.MustCompile(`"[^"\n\r]*"|'[^'\n\r]*'|[^\s"']+`)

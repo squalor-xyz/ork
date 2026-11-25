@@ -404,6 +404,57 @@ func TestPretoolOwnFileReads(t *testing.T) {
 	}
 }
 
+// A reviewer's temp-dir grant (S510) is an Edit(//DIR/**) rule. The hook allows
+// Edit and Write under that directory and nowhere else: a path outside every
+// permitted directory is denied, and a permitted directory without the grant
+// still asks.
+func TestPretoolTempDirGrantAllowsWritesUnderItOnly(t *testing.T) {
+	root := t.TempDir()
+	tmp := filepath.Join(root, "t", "run", "reviewer-1")
+	if err := os.MkdirAll(tmp, 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(root, filepath.Join(tmp, "escape")); err != nil {
+		t.Fatal(err)
+	}
+	// A link inside the grant that leads to another permitted directory (the
+	// worktree): the path passes the boundary check but is not under the grant.
+	if err := os.MkdirAll(filepath.Join(root, "work"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Symlink(filepath.Join(root, "work"), filepath.Join(tmp, "to-worktree")); err != nil {
+		t.Fatal(err)
+	}
+	grant := "Edit(/" + filepath.ToSlash(tmp) + "/**)"
+	p := ApprovalPolicy{Worktree: filepath.Join(root, "work"), TempDir: filepath.Join(root, "runs", "run", "tmp", "reviewer-1"), TMPDir: tmp, Allowlist: []string{"Read", grant, "Write(/" + filepath.ToSlash(tmp) + "/**)"}}
+	for _, tool := range []string{"Write", "Edit"} {
+		for _, tc := range []struct{ name, path, want string }{
+			{"file under", filepath.Join(tmp, "probe_test.go"), "allow"},
+			{"new nested file", filepath.Join(tmp, "a", "b", "probe_test.go"), "allow"},
+			{"outside", filepath.Join(root, "elsewhere", "probe_test.go"), "deny"},
+			{"sibling prefix", tmp + "-other/probe_test.go", "deny"},
+			{"parent", filepath.Join(filepath.Dir(tmp), "probe_test.go"), "deny"},
+			{"dotdot", filepath.Join(tmp, "..", "probe_test.go"), "deny"},
+			{"symlink escape", filepath.Join(tmp, "escape", "probe_test.go"), "deny"},
+			{"link to worktree", filepath.Join(tmp, "to-worktree", "probe_test.go"), "ask"},
+			{"worktree", filepath.Join(p.Worktree, "probe_test.go"), "ask"},
+			{"assets dir", filepath.Join(p.TempDir, "probe_test.go"), "ask"},
+		} {
+			t.Run(tool+"/"+tc.name, func(t *testing.T) {
+				got := p.Evaluate(ToolCall{ToolName: tool, ToolInput: json.RawMessage(`{"file_path":` + strconvQuote(tc.path) + `}`)})
+				if got.Decision != tc.want {
+					t.Fatalf("%s %s = %+v, want %s", tool, tc.path, got, tc.want)
+				}
+			})
+		}
+	}
+	// Without the grant the same Write only asks.
+	p.Allowlist = []string{"Read"}
+	if got := p.Evaluate(ToolCall{ToolName: "Write", ToolInput: json.RawMessage(`{"file_path":` + strconvQuote(filepath.Join(tmp, "probe_test.go")) + `}`)}); got.Decision != "ask" {
+		t.Fatalf("Write without the grant = %+v, want ask", got)
+	}
+}
+
 func TestPretoolOwnFileReadQuotedPath(t *testing.T) {
 	root := t.TempDir()
 	p := ApprovalPolicy{Worktree: filepath.Join(root, "work"), TempDir: filepath.Join(root, "temp space")}

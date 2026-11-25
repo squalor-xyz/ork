@@ -366,6 +366,42 @@ func TestReadOnlyProgressBriefException(t *testing.T) {
 	}
 }
 
+// Only a reviewer with a process temp dir is told it may write there (S510);
+// the runner grants the write under the same condition.
+func TestReviewerBriefSaysItMayWriteItsTempDir(t *testing.T) {
+	const grant = "You may create and change files under your temp directory with Edit or Write"
+	for _, tc := range []struct {
+		name, vendor, role, tmp string
+		want                    bool
+	}{
+		{"cloud reviewer", "claude", RoleReviewer, "/state/t/r1/reviewer-1", true},
+		{"local reviewer", "claude-local", RoleReviewer, "/state/t/r1/reviewer-1", true},
+		{"reviewer without a process temp dir", "claude", RoleReviewer, "", false},
+		{"codex reviewer", "codex", RoleReviewer, "/state/t/r1/reviewer-1", false},
+		{"grok reviewer", "grok", RoleReviewer, "/state/t/r1/reviewer-1", false},
+		{"codex-local reviewer", "codex-local", RoleReviewer, "/state/t/r1/reviewer-1", false},
+		{"grok-local reviewer", "grok-local", RoleReviewer, "/state/t/r1/reviewer-1", false},
+		{"gate", "claude", RoleGate, "/state/t/r1/gate-1", false},
+		{"architect", "claude", RoleArchitect, "/state/t/r1/architect-1", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			in := baseBrief()
+			in.Vendor, in.Role, in.ReadOnly, in.TMPDir = tc.vendor, tc.role, true, tc.tmp
+			in.ProgressFile = "/state/runs/r1/tmp/progress-reviewer.md"
+			got, err := BuildBrief(in)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if strings.Contains(got, grant) != tc.want {
+				t.Fatalf("grant sentence present = %v, want %v", !tc.want, tc.want)
+			}
+			if tc.vendor == "claude-local" && tc.want != strings.Contains(got, "this note and the files in its temp directory are the only files it may change") {
+				t.Fatalf("local progress note wording does not match the grant (%v)", tc.want)
+			}
+		})
+	}
+}
+
 func TestLocalBriefHasTargetedReads(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local", "claude", "codex", "grok"} {
 		for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate, RoleArchitect, RoleSpecCheck, RoleUI} {
