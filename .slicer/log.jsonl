@@ -6228,3 +6228,4 @@
 {"when": "2026-11-25T01:44:23Z", "item": "S534", "action": "note", "from": "", "to": "", "note": "Covers adj 531 too: include a projects-setup view (from S249", "by": "Jon Robbins"}
 {"when": "2026-11-25T01:52:06Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Owner decision (adj ui.settings-pane-key, 2026-11-25): capit", "by": "Jon Robbins"}
 {"when": "2026-11-25T01:53:55Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T02:11:05Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "Implement"}
