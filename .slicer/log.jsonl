@@ -6239,6 +6239,15 @@
 {"when": "2026-11-25T01:44:23Z", "item": "S533", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S534 (adj 531, owner 2026-11-25)"}
 {"when": "2026-11-25T01:44:23Z", "item": "S534", "action": "note", "from": "", "to": "", "note": "Covers adj 531 too: include a projects-setup view (from S249", "by": "Jon Robbins"}
 {"when": "2026-11-25T01:52:06Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Owner decision (adj ui.settings-pane-key, 2026-11-25): capit", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:12:00Z", "item": "S251", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:12:40Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T02:23:33Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T02:23:37Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T02:54:17Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T02:55:24Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T03:07:32Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S251):", "by": "Jon Robbins"}
+{"when": "2026-11-25T03:07:32Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Project settings pane in the TUI: `S` opens it for the activ", "by": "Jon Robbins"}
+{"when": "2026-11-25T03:07:33Z", "item": "S251", "action": "status", "from": "started", "to": "done", "note": "Project settings pane in the TUI: `S` opens it for the active project (every setting by owner from `projects.show`), `i` runs a setup step after a `[y/N]` that shows the command, `m` opens the matrix pane from any view; `S settings` now outlasts `M mouse` on the hint line, and the full suite, vet, gofmt, `slicer check` and `adj lint` are clean.", "by": "Jon Robbins"}
 {"when": "2026-11-25T01:53:55Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T02:11:05Z", "item": "S261", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T02:15:10Z", "item": "S535", "action": "add", "from": "", "to": "open", "note": "Make pgup the exact inverse of pgdown in help"}
@@ -6282,3 +6291,6 @@
 {"when": "2026-11-25T07:22:14Z", "item": "S509", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-25T07:29:18Z", "item": "S509", "action": "note", "from": "", "to": "", "note": "TestReadOnlyAllowlistMatchesNoTrackingWrite now runs a fixed", "by": "Jon Robbins"}
 {"when": "2026-11-25T07:29:18Z", "item": "S509", "action": "status", "from": "started", "to": "done", "note": "TestReadOnlyAllowlistMatchesNoTrackingWrite now runs a fixed list of tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) over LocalReadOnlyAllowlist() and CloudUIAllowlist() and fails on any matching entry; go vet, gofmt and go test ./... are green.", "by": "Jon Robbins"}
+{"when": "2026-11-25T07:22:19Z", "item": "S544", "action": "add", "from": "", "to": "open", "note": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load"}
+{"when": "2026-11-25T07:22:19Z", "item": "S544", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T07:22:19Z", "item": "S544", "action": "edit", "from": "", "to": "", "note": "Why"}

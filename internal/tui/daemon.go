@@ -199,6 +199,26 @@ func (d *Daemon) RolesMatrix(ctx context.Context, project string) (*daemon.Roles
 	return c.RolesMatrix(ctx, project)
 }
 
+// ProjectsShow reads every setting of one project, by owner (S251).
+func (d *Daemon) ProjectsShow(ctx context.Context, project string) (*daemon.ProjectsShowResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.ProjectsShow(ctx, project)
+}
+
+// ProjectSetup previews or runs one setup step of the project (S251).
+func (d *Daemon) ProjectSetup(ctx context.Context, p daemon.ProjectSetupParams) (*daemon.ProjectSetupResult, error) {
+	c, err := d.Connect(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer c.Close()
+	return c.ProjectSetup(ctx, p)
+}
+
 // MatrixEdit previews or runs one edit of the project's role matrix (S226).
 func (d *Daemon) MatrixEdit(ctx context.Context, p daemon.MatrixEditParams) (*daemon.MatrixEditResult, error) {
 	c, err := d.Connect(ctx)

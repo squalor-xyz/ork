@@ -32,7 +32,12 @@ type keyMap struct {
 	SaveWave   key.Binding
 	SavedWaves key.Binding
 	Matrix     key.Binding
-	Approve    key.Binding
+	// Settings opens the project settings pane (S251, owner decision
+	// 2026-11-25, ui.settings-pane-key: S), and SettingsSetup opens its setup
+	// step chooser.
+	Settings      key.Binding
+	SettingsSetup key.Binding
+	Approve       key.Binding
 	// ApproveWave approves every waiting run of the selected run's wave, in
 	// start order (S222, *proposed*; owner decision 2026-11-07, AW-Q4: A). It is
 	// the same key as AllProjects, which acts only on Decisions and Waves.
@@ -117,6 +122,9 @@ func newKeyMap() keyMap {
 		SavedWaves: key.NewBinding(key.WithKeys("L", "shift+l"), key.WithHelp("L", "list saved waves; enter loads one (Waves)")),
 		Matrix:     key.NewBinding(key.WithKeys("m"), key.WithHelp("m", "matrix")),
 
+		Settings:      key.NewBinding(key.WithKeys("S", "shift+s"), key.WithHelp("S", "project settings")),
+		SettingsSetup: key.NewBinding(key.WithKeys("i"), key.WithHelp("i", "run a setup step (settings pane)")),
+
 		SpecDraft: key.NewBinding(key.WithKeys("D", "shift+d"), key.WithHelp("D", "draft the item's spec (Roadmap item pane)")),
 
 		MatrixEdit:   key.NewBinding(key.WithKeys("e"), key.WithHelp("e", "edit a matrix row (matrix pane)")),
@@ -174,7 +182,7 @@ func (k keyMap) ShortHelp() []key.Binding { return []key.Binding{k.Refresh, k.He
 
 // FullHelp implements help.KeyMap.
 func (k keyMap) FullHelp() [][]key.Binding {
-	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove, k.Mouse}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Park, k.MoveDown, k.MoveUp, k.Matrix, k.MatrixEdit, k.MatrixAdd, k.MatrixRemove, k.MatrixMove, k.MatrixRule, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
+	return [][]key.Binding{{k.NextView, k.PrevView, k.AllProjects}, {k.Next, k.Prev, k.Jump}, {k.RowNext, k.PageDown, k.ScrollDown, k.NextGroup, k.Select}, {k.Filter, k.Sidebar, k.Add, k.Remove, k.Mouse, k.Settings}, {k.Expand, k.ExpandAll, k.Tick, k.EditLineup, k.Launch, k.New, k.Note, k.Park, k.MoveDown, k.MoveUp, k.Matrix, k.MatrixEdit, k.MatrixAdd, k.MatrixRemove, k.MatrixMove, k.MatrixRule, k.OpenSlicerTui}, {k.Approve, k.Fix, k.Stop, k.Retry, k.Renders, k.Report, k.FileSlice, k.Owner, k.Answer, k.PickOption, k.FreeAnswer, k.FileAdj, k.Cleanup}, {k.Refresh, k.Help, k.Close, k.Quit}}
 }
 
 // short is b with a short label and words for the hint line. It answers to the
@@ -200,6 +208,7 @@ type hintEntry struct {
 // second form and the global tab. Finding actions stay with row keys.
 const (
 	dropMouse      = 21 // M mouse is the first hint to go: it is a toggle, not a row key (S66)
+	dropSettings   = 20 // S settings outlasts M mouse and ties with - remove project, which it stands right of, so it goes first of the two (S251; owner 2026-11-24, ui.settings-pane-hint); the help lists it
 	dropMove       = 12 // wide Roadmap edits outlast project edits, notes and tab views
 	dropPark       = 11
 	dropMatrixWide = 10 // at 100 columns matrix outlasts tab views, alongside the edit keys
@@ -300,6 +309,8 @@ func (m *Model) contextHints() []hintEntry {
 		l.add(dropAdd, short(k.Add, "+", "add project"))
 		l.add(dropRemove, offer(m.active >= 0 && !m.projects[m.active].snap.Unavailable, k.Remove, "-", "remove project"))
 		l.add(dropMouse, short(k.Mouse, "M", "mouse"))
+		_, settingsRefused := m.settingsRefusal()
+		l.add(dropSettings, offer(!settingsRefused, k.Settings, "S", "settings"))
 		l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Help, "?", "help"))
 	}
 	switch {
@@ -311,6 +322,8 @@ func (m *Model) contextHints() []hintEntry {
 		}
 		l.add(dropPinned, short(k.Help, "? or esc", "close help"))
 		l.add(dropQuit, short(k.Quit, "q", "quit"))
+	case m.settings != nil:
+		m.settingsHints(&l)
 	case m.removing.name != "":
 		if m.removing.pending {
 			l.add(dropPinned, short(k.Quit, "ctrl+c", "quit"))

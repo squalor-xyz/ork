@@ -1,0 +1,24 @@
+[1mork[m                │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
+[2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
+[2m0[m Needs you      0 │[1mProject settings: ork  (esc closes)[m
+[1;7m1>ork              [m│[1mork (projects.json)[m
+[2m2[m other            │  name                 ork
+                   │  path                 /projects/ork
+                   │  adj                  off
+                   │  push                 off
+                   │  bell                 on
+                   │  auto_land            on
+                   │  cap                  unset
+                   │  check_command        unset
+                   │  round_check_command  unset
+                   │  build_command        unset
+                   │  contract_probe       unset
+                   │  no_verify_check      off
+                   │  check_minutes        unset
+                   │[2m  +31 more lines[m
+                   │  Run: adj init
+                   │  [y/N] (Enter is No)
+                   │  [2mEdit a field with: ork projects set NAME --FIELD VALUE[m
+                   │[2m────────────────────────────────────────────────────────────[m
+                   │ y [2mrun[m; n [2mcancel[m
+                   │ 2 projects | refreshed 16:42:00
