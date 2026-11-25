@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 544,
+  "next_id": 545,
   "preamble": "",
   "passes": [
     {
@@ -28499,6 +28499,34 @@
       "id": "S543",
       "title": "Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice",
       "short_title": "Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S544",
+      "title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
+      "short_title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
