@@ -1,0 +1,39 @@
+{
+  "id": "S558",
+  "title": "matrix copy: bind the confirmed write to source row content, not only steps",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-131825-4682 for S548 (discovered from S548):\n\nBinding by steps alone misses a change in the content of a source row\n`MatrixCopyStep` has only `op`, `id` and `changed` (`internal/daemon/matrixcopy.go:55-59`). Suppose the source row's model is edited between the preview and the write. The target's steps stay the same (`add rNN changed`), so the write passes the check with content the owner never saw. This is how the owner-chosen expect-steps design works, but the changelog says \"writes exactly what the owner confirmed\" (`landed-changed/S548.md:1`). PLAUSIBLE, from reading the code; not run.\nImportance: 1\nUrgency: 1\nEffort: 2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

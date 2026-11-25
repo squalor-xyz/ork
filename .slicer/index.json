@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 558,
+  "next_id": 559,
   "preamble": "",
   "passes": [
     {
@@ -28841,6 +28841,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ac9e0367-c5ec-4848-939c-ae0c2fe315e0",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S548's later findings 1 and 3 in: the add-id mismatch error (internal/daemon/matrixcopy.go:610) is a plain fmt.Errorf, so it gets code internal and prints ids as [r30 r31]. Give it a named code, comma-separated ids, say nothing was written to that project, and add the 'preview again, then copy' hint like stale_preview. Source: ork show ork-20261125-131825-4682.",
+          "created_at": "2026-11-25T13:54:09Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29198,6 +29212,49 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S558",
+      "title": "matrix copy: bind the confirmed write to source row content, not only steps",
+      "short_title": "matrix copy: bind the confirmed write to source row content, not only steps",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "7b29c4e6-eac7-4fab-86d5-c6f76aa5b78f",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 chose: add each source row's content (or a hash of it) to the expected steps the CLI sends; the daemon refuses a project whose content changed since the preview, as with stale_preview. Also make landed-changed text accurate. Source: ork show ork-20261125-131825-4682 finding 2 (internal/daemon/matrixcopy.go:55-59).",
+          "created_at": "2026-11-25T13:54:09Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S548",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-131825-4682-later-2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     }

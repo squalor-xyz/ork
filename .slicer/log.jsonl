@@ -6395,3 +6395,9 @@
 {"when": "2026-11-25T13:46:16Z", "item": "S556", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T13:50:34Z", "item": "S557", "action": "add", "from": "", "to": "open", "note": "when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section"}
 {"when": "2026-11-25T13:50:34Z", "item": "S557", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:54:08Z", "item": "S558", "action": "add", "from": "", "to": "open", "note": "Binding by steps alone misses a change in the content of a source row"}
+{"when": "2026-11-25T13:54:08Z", "item": "S558", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:54:08Z", "item": "S558", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-25T13:54:09Z", "item": "S558", "action": "set", "from": "", "to": "", "note": "title Binding by steps alone misses a change in the content of a source row→matrix copy: bind the confirmed write to source row content, not only steps; short_title Binding by steps alone misses a change in the content of a source row→matrix copy: bind the confirmed write to source row content, not only steps"}
+{"when": "2026-11-25T13:54:09Z", "item": "S558", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 chose: add each source row's content (or a ", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:54:09Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S548's later findings 1 and 3 in: th", "by": "Jon Robbins"}
