@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 561,
+  "next_id": 562,
   "preamble": "",
   "passes": [
     {
@@ -28927,6 +28927,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "766fe924-834d-4870-8f68-02a6d46898a6",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded in: (a) S558's later finding: extend the per-project digest (rowsDigest, internal/daemon/matrixcopy.go:585) to cover the copied rule text too, so a rule text edit between preview and write is refused as stale_preview; (b) adj 558: add a -render-fixture for matrix copy (preview, per-project prompts, stale_preview refusal) to TestRenderCLIViews.",
+          "created_at": "2026-11-25T15:09:34Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29211,7 +29225,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "89c6dd27-42e9-42d8-abe9-cffbda346eef",
+          "kind": "",
+          "text": "**2026-11-25** — Reported again from S545's reviewer (adj 559, dropped as covered here): could not run the revert mutations under read-only rules and relied on the implementer's table.",
+          "created_at": "2026-11-25T15:09:34Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29464,6 +29493,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-803b8cb7",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S561",
+      "title": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test",
+      "short_title": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S558",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1f3ba451",
         "pass": "v1.2",
         "group": "",
         "reason": "",
