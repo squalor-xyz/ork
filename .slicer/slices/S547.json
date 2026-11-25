@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): Which fields does a set step's line print after its id? -> changed: print only the fields of the row in plan.set() that differ from the target's current row, as key=value in the fixed order role, when, agent, vendor, model, reasoning, note [ui.matrix-copy-step-fields]."
     },
     {
       "heading": "Check",
