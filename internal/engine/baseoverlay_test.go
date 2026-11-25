@@ -85,6 +85,138 @@ func baseOverlayCommand(W, tmp string, n int, dir string) string {
 	return fmt.Sprintf("go -C %s test -overlay %s ./%s", ShellWord(W), ShellWord(filepath.Join(tmp, fmt.Sprintf("overlay-%d.json", n))), dir)
 }
 
+func overlayVetHarness(t *testing.T, changed string, isNew bool, replies ...clitest.Reply) *harness {
+	t.Helper()
+	return newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			extra := []clitest.Route{{Tool: "go", Args: []string{"-C", W, "vet"}, Prefix: true, Seq: replies}}
+			for _, p := range strings.Split(strings.TrimRight(changed, "\x00"), "\x00") {
+				if isNew {
+					extra = append(extra, baseOverlayNotInBase(W, p))
+				} else {
+					extra = append(extra, baseOverlayShow(W, p, "package x\n"))
+				}
+			}
+			return baseOverlayRoutes(W, changed, "", extra...)
+		}
+	})
+}
+
+func overlayVetResult(t *testing.T, h *harness) (Request, string, []string) {
+	t.Helper()
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	req := baseOverlayReviewer(t, h)
+	body, found := baseOverlayBody(req.Brief)
+	if !found {
+		t.Fatal("missing Base overlays section")
+	}
+	return req, body, baseOverlayEntries(body)
+}
+
+func TestBaseOverlayVetsEachOverlayFirst(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/b.go\x00internal/x/a.go\x00", false, clitest.Reply{}, clitest.Reply{})
+	req, _, entries := overlayVetResult(t, h)
+	calls := h.fake.CallsTo("go")
+	if len(calls) != 2 {
+		t.Fatalf("go calls = %v, want exactly two vet calls", calls)
+	}
+	if len(entries) != 2 {
+		t.Fatalf("entries = %q, want two", entries)
+	}
+	for i, p := range []string{"a.go", "b.go"} {
+		want := []string{"-C", h.W, "vet", "-overlay", filepath.Join(req.TMPDir, fmt.Sprintf("overlay-%d.json", i+1)), "./internal/x"}
+		if !reflect.DeepEqual(calls[i].Args, want) {
+			t.Errorf("vet args = %q, want %q", calls[i].Args, want)
+		}
+		if !strings.Contains(entries[i], "internal/x/"+p) || !strings.Contains(entries[i], baseOverlayCommand(h.W, req.TMPDir, i+1, "internal/x")) {
+			t.Errorf("sorted command entry = %q", entries[i])
+		}
+	}
+}
+
+func TestBaseOverlayBuildFailureReplacesCommand(t *testing.T) {
+	const diagnostic = "internal/x/b.go:12:5: not enough arguments in call to engine.LocalReadOnlyAllowlist"
+	h := overlayVetHarness(t, "internal/x/b.go\x00internal/x/a.go\x00", false, clitest.Reply{}, clitest.Reply{Exit: 1, Stderr: "# pkg\n" + diagnostic})
+	req, body, entries := overlayVetResult(t, h)
+	if len(entries) != 2 {
+		t.Fatalf("entries = %q, want two", entries)
+	}
+	want := "- `internal/x/b.go`: does not build: # pkg; " + diagnostic + ". Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/b.go") + "` instead."
+	if entries[1] != want {
+		t.Errorf("failed entry = %q, want %q", entries[1], want)
+	}
+	if !strings.Contains(entries[0], baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x")) {
+		t.Errorf("first entry lost command: %s", entries[0])
+	}
+	for _, want := range []string{"only that file reverted", "-run NAME", "one test per command"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("intro lacks %q: %s", want, body)
+		}
+	}
+	// Even a rejected overlay remains available for inspection.
+	baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-2.json"))
+}
+
+func TestBaseOverlayNoIntroWhenNothingBuilds(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{Exit: 1, Stderr: "undefined helper"})
+	_, body, entries := overlayVetResult(t, h)
+	if len(entries) != 2 || strings.Count(body, "does not build: undefined helper") != 2 {
+		t.Errorf("want two build failures: %s", body)
+	}
+	for _, gone := range []string{"go -C", "-run NAME", "Each command runs"} {
+		if strings.Contains(body, gone) {
+			t.Errorf("failed-only section contains %q: %s", gone, body)
+		}
+	}
+}
+
+func TestBaseOverlayBuildErrorIsOneShortLine(t *testing.T) {
+	var lines []string
+	var wantLines []string
+	for i := range 10 {
+		line := fmt.Sprintf("line%d|", i) + strings.Repeat("x", 310)
+		lines = append(lines, line)
+		if i < 3 {
+			wantLines = append(wantLines, strings.ReplaceAll(line, "|", "/")[:200])
+		}
+	}
+	h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{Exit: 1, Stderr: "\n" + strings.Join(lines, "\n\n")})
+	_, body, entries := overlayVetResult(t, h)
+	want := "- `internal/x/a.go`: does not build: " + strings.Join(wantLines, "; ") + ". Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/a.go") + "` instead."
+	if len(entries) != 1 || strings.TrimSpace(body) != want {
+		t.Errorf("short one-line section = %q, want %q", body, want)
+	}
+}
+
+func TestBaseOverlayNewFileBuildFailureKeepsNote(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/new.go\x00", true, clitest.Reply{Exit: 1, Stderr: "undefined helper"})
+	_, _, entries := overlayVetResult(t, h)
+	want := "- `internal/x/new.go` (new in this slice; the overlay hides it): does not build: undefined helper. Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/new.go") + "` instead."
+	if len(entries) != 1 || entries[0] != want {
+		t.Errorf("new-file failure = %q, want %q", entries, want)
+	}
+}
+
+func TestBaseOverlayVetCannotRunKeepsCommand(t *testing.T) {
+	// The control proves vet is wired before checking that an unavailable tool
+	// is advisory. Only the GoBin path differs between the two cases.
+	for _, unavailable := range []bool{false, true} {
+		t.Run(fmt.Sprintf("unavailable=%v", unavailable), func(t *testing.T) {
+			h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{Exit: 1, Stderr: "undefined helper"})
+			if unavailable {
+				h.deps.GoBin = filepath.Join(h.W, "missing-go")
+			}
+			req, body, _ := overlayVetResult(t, h)
+			if got := strings.Contains(body, baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x")); got != unavailable {
+				t.Errorf("test command present = %v, want %v: %s", got, unavailable, body)
+			}
+			if got := strings.Contains(body, "does not build:"); got == unavailable {
+				t.Errorf("build diagnostic present = %v, unavailable = %v: %s", got, unavailable, body)
+			}
+		})
+	}
+}
+
 func TestBaseOverlaySectionForChangedGoFile(t *testing.T) {
 	const source = "package x\n\nfunc Old() int { return 1 }\n"
 	h := newHarness(t, func(o *harnessOpts) {

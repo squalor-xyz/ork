@@ -337,6 +337,13 @@ func (m *Model) screen() string {
 			}
 		}
 	}
+	if m.view == roadmapView && m.itemPane == nil && m.launch == nil {
+		if m.roadmapLift.cursor != clampCursor(m.roadmapCursor, len(m.roadmapItems())) {
+			m.roadmapLift = struct{ cursor, lines int }{}
+		}
+		m.roadmapLift.lines = min(m.roadmapLift.lines, start)
+		start -= m.roadmapLift.lines
+	}
 	if m.showHelp {
 		start = min(max(m.helpOffset, 0), windowStart(len(body)-1, len(body), bodyH))
 	}
@@ -349,7 +356,7 @@ func (m *Model) screen() string {
 	}
 	if bodyH > 0 {
 		hi, _, _ := span(len(body), start, bodyH)
-		m.drawn = drawnRows{lo: start, hi: hi, sel: rowLine, rows: rowStarts}
+		m.drawn = drawnRows{lo: start, hi: hi, sel: rowLine, rows: rowStarts, total: len(body), n: bodyH}
 		m.recordRowHits(rowStarts, rowEnds, start, hi, len(body), bodyH)
 		body = window(body, start, bodyH, th)
 	}
@@ -398,6 +405,7 @@ func (m *Model) screen() string {
 // hi, and the body line of the row under the cursor (-1 when none is drawn).
 type drawnRows struct {
 	lo, hi, sel int
+	total, n    int   // body's total line count and window height, including markers
 	rows        []int // the body line each row starts on; nil when the screen has no row list
 }
 
