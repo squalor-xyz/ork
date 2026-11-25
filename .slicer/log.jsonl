@@ -6368,3 +6368,5 @@
 {"when": "2026-11-25T13:32:23Z", "item": "S553", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
 {"when": "2026-11-25T13:32:23Z", "item": "S552", "action": "set", "from": "", "to": "", "note": "title Tell the UI pass brief about -render-fixture→UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files; short_title Tell the UI pass brief about -render-fixture→UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files"}
 {"when": "2026-11-25T13:32:23Z", "item": "S552", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S499's later findings 1, 2 and 5 in.", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:35:52Z", "item": "S554", "action": "add", "from": "", "to": "open", "note": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file"}
+{"when": "2026-11-25T13:35:52Z", "item": "S554", "action": "promote", "from": "", "to": "", "note": ""}
