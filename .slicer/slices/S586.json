@@ -1,0 +1,39 @@
+{
+  "id": "S586",
+  "title": "Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-185558-0ab6 for S575 (discovered from S575):\n\nMid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name\nMy probe ran `allowlistMatches` against the current list. `Bash(git -C * merge-base*)` matches `git -C /w commit -m merge-base`, and the existing `Bash(git -C * show*)` matches `git -C /w commit -m show`. This is PLAUSIBLE for the real Claude Code matcher; CONFIRMED only for the test model at `perm_test.go:18-28`. The weakness already existed for diff, log, status, show and ls-files, and the owner chose this exact entry form in adj 574, so it is not a fix in this slice. It does strain the Check's \"No write form of git is newly allowed\". A follow-up could add negative cases such as `git -C /w commit -m merge-base` to the batch test, and pick a tighter form if the real matcher behaves the same way.\nImportance: 2\nUrgency: 1\nEffort: 2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

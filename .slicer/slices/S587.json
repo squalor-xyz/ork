@@ -1,0 +1,39 @@
+{
+  "id": "S587",
+  "title": "Untested call sites: very common names make every call site in a function of that name count as reached.",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-184829-ca71 for S564 (discovered from S564):\n\nUntested call sites: very common names make every call site in a function of that name count as reached.\nThe check matches on `Sel.Name` (`untestedcallsites.go:80`). Every test that calls `t.Run(...)` therefore marks the name `Run` as reached, and the same happens for test-harness methods such as `h.start()`. A product function with one of those names then never counts as an unreached call site. The spec's own fixture names its enclosing function `Run`, and it passes only because its test file never calls `t.Run`. This is part of the documented \"by names\" limit that the owner accepted. A follow-up could ignore selector calls whose receiver is a parameter of type `*testing.T`, or list the common-name collisions in the section.\nImportance: 1\nUrgency: 1\nEffort: 2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

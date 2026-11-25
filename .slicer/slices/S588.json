@@ -1,0 +1,39 @@
+{
+  "id": "S588",
+  "title": "Sweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the ui in round 1 of ork run ork-20261125-185405-f675 for S531 (discovered from S531):\n\nSweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings\n  Each has its own scroll state: decisions.go:95 and decisions.go:109 (`decisionScroll`), questions.go:88, waves.go:918-926 (`paneOffset`), and settings.go:377 (the `+N lines above` marker). The `TestScrollSweep` table (scroll_sweep_test.go:201-230) covers none of them, and its comment does not name them as left out. The owner decision says \"every scrollable view reachable from launchHarness\". Whether each pane can be reached from `launchHarness` with enough content is PLAUSIBLE, not traced. This is the gap the slice's [HUMAN CHECK] asks about.\nImportance: 2\nUrgency: 1\nEffort: 2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

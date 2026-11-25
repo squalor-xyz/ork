@@ -6682,3 +6682,15 @@
 {"when": "2026-11-25T19:07:12Z", "item": "S584", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T19:07:21Z", "item": "S585", "action": "add", "from": "", "to": "open", "note": "in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X"}
 {"when": "2026-11-25T19:07:21Z", "item": "S585", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:50:33Z", "item": "S586", "action": "add", "from": "", "to": "open", "note": "Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name"}
+{"when": "2026-11-25T19:50:33Z", "item": "S586", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:50:33Z", "item": "S586", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-25T19:50:34Z", "item": "S587", "action": "add", "from": "", "to": "open", "note": "Untested call sites: very common names make every call site in a function of that name count as reached."}
+{"when": "2026-11-25T19:50:34Z", "item": "S587", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:50:34Z", "item": "S587", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-25T19:50:34Z", "item": "S588", "action": "add", "from": "", "to": "open", "note": "Sweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings"}
+{"when": "2026-11-25T19:50:34Z", "item": "S588", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:50:35Z", "item": "S588", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-25T19:50:35Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Owner direction: add negative cases (git -C /w commit -m sho", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:50:35Z", "item": "S587", "action": "note", "from": "", "to": "", "note": "Also covers: run branchChange once per reviewer round and sh", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:50:35Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Covers S531 run findings 1 and 2: extend TestScrollSweep to ", "by": "Jon Robbins"}
