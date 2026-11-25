@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 565,
+  "next_id": 566,
   "preamble": "",
   "passes": [
     {
@@ -29662,6 +29662,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-431843f5",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S565",
+      "title": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed",
+      "short_title": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S547",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-72b887b3",
         "pass": "v1.2",
         "group": "",
         "reason": "",
