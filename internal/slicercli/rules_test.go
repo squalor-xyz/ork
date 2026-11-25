@@ -4,6 +4,7 @@ package slicercli
 
 import (
 	"context"
+	"encoding/json"
 	"reflect"
 	"strings"
 	"testing"
@@ -40,7 +41,9 @@ func TestRelayMatrixReadsShowJSON(t *testing.T) {
 	want := &Matrix{
 		Markdown: "# Relay roles\n\n| ID | Role |\n",
 		Rows: []Row{
-			{ID: "r3", Role: "implementer", Agent: "Claude Code", Vendor: "Claude", Model: "sonnet", Reasoning: "high", Note: "stand-in"},
+			// The row's conditions are kept as slicer printed them (S261); a row
+			// with none has no When.
+			{ID: "r3", Role: "implementer", When: json.RawMessage(`{"size":[],"sliver":null}`), Agent: "Claude Code", Vendor: "Claude", Model: "sonnet", Reasoning: "high", Note: "stand-in"},
 			{ID: "r6", Role: "gate", Agent: "Codex", Vendor: "OpenAI", Model: "gpt", Reasoning: "medium"},
 		},
 		Rules: []Rule{{ID: "u1", Text: "A reviewer never wrote code."}},

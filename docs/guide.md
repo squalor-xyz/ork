@@ -365,6 +365,29 @@ slicer:
     slicer relay-roles show --root DIR
     slicer relay-roles add|set|remove|move|rule-add|rule-edit|rule-remove
 
+To make other projects' matrices the same as one project's (*proposed*,
+S261), copy it:
+
+    ork roles matrix copy ork adjudicate --dry-run
+    ork roles matrix copy ork adjudicate
+    ork roles matrix copy ork --all
+
+The first shows what would change and writes nothing. The second shows it,
+then asks `Copy ork's matrix to adjudicate? [y/N]` (Enter is no); `--yes`
+skips the question for a script. `--all` copies to every other registered
+project, checks all of them before it writes any, and asks per project.
+Each project keeps its own spec check and UI pass rows: the rows its
+`Spec check row (rNN)` and `UI pass row (rNN)` rules name, the rows in its
+`spec_check_rows` and `ui_pass_rows` settings and its Local trial rows, and
+the rules that name them. A project with no `Spec check row (rNN)` rule is
+refused: add one with `slicer relay-roles rule-add` first. The source's own
+such rows and rules are not copied. Everything else is replaced, so
+rules that describe only the source (ork's, for example, name `internal/tui`)
+land in the other projects. Row ids in copied rules are rewritten to the
+project's own. The change is left uncommitted in each project; a project
+with no matrix is skipped, with the `ork projects setup NAME relay-roles-init`
+command to run. It needs a slicer that has `relay-roles apply`.
+
 `ork projects set PROJECT --ui-pass-rows r36,r14` selects the UI pass rows
 in order: the first usable row runs and later rows are fallbacks. The list
 uses matrix row IDs, trims spaces and refuses duplicates and invalid IDs.
@@ -1189,7 +1212,8 @@ usage and exit 0; `ork projects --help` prints every `ork projects` form
 The owner still does these outside ork today. The list and a proposed slice
 for each is in [orchestrator-parity.md](orchestrator-parity.md).
 
-- Edit the role matrix (`slicer relay-roles ...`); ork only shows it.
+- Edit the role matrix (`slicer relay-roles ...`); ork shows it and can copy
+  one project's matrix to others (`ork roles matrix copy`).
 - Write or fill in slice specs, and add or promote roadmap items by hand.
 - Decide in adj: ork can file an answer you give, but you make decisions
   with `adj` (`AGENTS.md`, Decisions).

@@ -5,6 +5,7 @@ package cli
 import (
 	"context"
 	"encoding/json"
+	"io"
 	"reflect"
 	"strings"
 	"testing"
@@ -118,6 +119,286 @@ func TestRolesPrintStillNeedsNoDaemon(t *testing.T) {
 	for _, args := range [][]string{{"roles", "print"}, {"roles", "print", "gate"}, {"roles", "print", "--json"}} {
 		if code, stdout, stderr := run(t, app, args...); code != ExitOK || stdout == "" {
 			t.Errorf("%v: exit %d\nstdout: %q\nstderr: %q", args, code, stdout, stderr)
+		}
+	}
+}
+
+// ---- roles matrix copy (S261) ----
+
+// copyApp answers matrix.copy with the result for the call: dry for a dry run,
+// written otherwise. It records every call's params and fails the test on any
+// other method.
+func copyApp(t *testing.T, calls *[]daemon.MatrixCopyParams, dry, written daemon.MatrixCopyResult, input string) *App {
+	t.Helper()
+	return &App{Input: strings.NewReader(input), Call: func(_ context.Context, method string, params, result any) error {
+		if method != daemon.MethodMatrixCopy {
+			t.Errorf("unexpected method %s", method)
+		}
+		p, ok := params.(daemon.MatrixCopyParams)
+		if !ok {
+			t.Fatalf("params %T", params)
+		}
+		*calls = append(*calls, p)
+		res := written
+		if p.DryRun {
+			res = dry
+		}
+		b, err := json.Marshal(res)
+		if err != nil {
+			return err
+		}
+		return json.Unmarshal(b, result)
+	}}
+}
+
+var (
+	copyStepsRemove = []daemon.MatrixCopyStep{{Op: "remove", ID: "r9", Changed: true}, {Op: "add", ID: "r21", Changed: true}, {Op: "rule-add", ID: "u10", Changed: true}}
+	noAdapterWarn   = `agent "Acme" has no ork adapter: a plan skips this row`
+)
+
+func wouldChange(project string) daemon.MatrixCopyProject {
+	return daemon.MatrixCopyProject{Project: project, Status: daemon.CopyWouldChange, Steps: copyStepsRemove}
+}
+
+func TestRolesMatrixCopyDryRunPrintsEachProject(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	p := wouldChange("adjudicate")
+	p.Warnings = []string{noAdapterWarn}
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{p}}
+	app := copyApp(t, &calls, dry, daemon.MatrixCopyResult{}, "")
+	code, stdout, stderr := run(t, app, "roles", "matrix", "copy", "ork", "adjudicate", "--dry-run")
+	if code != ExitOK || stderr != "" {
+		t.Fatalf("exit %d\nstderr: %s", code, stderr)
+	}
+	if want := []daemon.MatrixCopyParams{{From: "ork", To: []string{"adjudicate"}, DryRun: true}}; !reflect.DeepEqual(calls, want) {
+		t.Fatalf("calls %+v, want only a dry run: %+v", calls, want)
+	}
+	want := "adjudicate: would change (3 steps)\n  remove r9\n  add r21\n  rule-add u10\n  warning: " + noAdapterWarn + "\n"
+	if stdout != want {
+		t.Fatalf("stdout\n got %q\nwant %q", stdout, want)
+	}
+}
+
+func TestRolesMatrixCopyPrintsEveryStatusOnOneLine(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{
+		{Project: "a", Status: daemon.CopyUnchanged},
+		{Project: "b", Status: daemon.CopyWouldChange, Steps: []daemon.MatrixCopyStep{{Op: "set", ID: "r1", Changed: true}, {Op: "move", ID: "r2"}}},
+		{Project: "c", Status: daemon.CopySkipped, Error: &ipc.Error{Code: "no_relay_roles", Message: "no matrix; run ork projects setup c relay-roles-init"}},
+	}}
+	app := copyApp(t, &calls, dry, daemon.MatrixCopyResult{}, "")
+	code, stdout, _ := run(t, app, "roles", "matrix", "copy", "ork", "--all", "--dry-run")
+	want := "a: unchanged\nb: would change (2 steps)\n  set r1\n  move r2: unchanged\nc: skipped: no matrix; run ork projects setup c relay-roles-init\n"
+	if code != ExitOK || stdout != want {
+		t.Fatalf("exit %d\n got %q\nwant %q", code, stdout, want)
+	}
+	if want := []daemon.MatrixCopyParams{{From: "ork", All: true, DryRun: true}}; !reflect.DeepEqual(calls, want) {
+		t.Fatalf("calls %+v", calls)
+	}
+}
+
+func TestRolesMatrixCopyAsksPerProjectAndEnterIsNo(t *testing.T) {
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{wouldChange("a"), wouldChange("b")}}
+	written := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{{Project: "b", Status: daemon.CopyChanged, Steps: copyStepsRemove}}}
+	for _, tc := range []struct {
+		name, input string
+		writes      []string // the targets of the write call, or nil for no write
+	}{
+		{"enter and n", "\nn\n", nil},
+		{"closed input", "", nil},
+		{"y then Enter", "y\n\n", []string{"a"}},
+		{"n then y", "n\ny\n", []string{"b"}},
+		{"upper case", "Y\nYES\n", []string{"a", "b"}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var calls []daemon.MatrixCopyParams
+			app := copyApp(t, &calls, dry, written, tc.input)
+			code, stdout, stderr := run(t, app, "roles", "matrix", "copy", "ork", "a", "b")
+			if code != ExitOK {
+				t.Fatalf("exit %d\nstderr: %s", code, stderr)
+			}
+			for _, q := range []string{"Copy ork's matrix to a? [y/N] ", "Copy ork's matrix to b? [y/N] "} {
+				if !strings.Contains(stdout, q) {
+					t.Errorf("no question %q in\n%s", q, stdout)
+				}
+			}
+			wantCalls := []daemon.MatrixCopyParams{{From: "ork", To: []string{"a", "b"}, DryRun: true}}
+			if tc.writes == nil && !strings.HasSuffix(stdout, "nothing copied\n") {
+				t.Errorf("no word that nothing was copied:\n%s", stdout)
+			}
+			if tc.writes != nil {
+				wantCalls = append(wantCalls, daemon.MatrixCopyParams{From: "ork", To: tc.writes})
+			}
+			if !reflect.DeepEqual(calls, wantCalls) {
+				t.Fatalf("calls\n got %+v\nwant %+v", calls, wantCalls)
+			}
+		})
+	}
+}
+
+func TestRolesMatrixCopyYesSkipsTheQuestion(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{wouldChange("adjudicate")}}
+	written := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{{Project: "adjudicate", Status: daemon.CopyChanged, Steps: copyStepsRemove}}}
+	app := copyApp(t, &calls, dry, written, "")
+	app.Input = failReader{t}
+	code, stdout, stderr := run(t, app, "roles", "matrix", "copy", "ork", "adjudicate", "--yes")
+	if code != ExitOK || stderr != "" || strings.Contains(stdout, "[y/N]") {
+		t.Fatalf("exit %d\nstdout: %s\nstderr: %s", code, stdout, stderr)
+	}
+	want := []daemon.MatrixCopyParams{{From: "ork", To: []string{"adjudicate"}, DryRun: true}, {From: "ork", To: []string{"adjudicate"}}}
+	if !reflect.DeepEqual(calls, want) {
+		t.Fatalf("calls\n got %+v\nwant %+v", calls, want)
+	}
+	if !strings.HasSuffix(stdout, "adjudicate: changed (3 steps)\n  remove r9\n  add r21\n  rule-add u10\n") {
+		t.Fatalf("the written result is not the last output:\n%s", stdout)
+	}
+}
+
+// failReader fails the test when anything reads it.
+type failReader struct{ t *testing.T }
+
+func (r failReader) Read([]byte) (int, error) {
+	r.t.Error("the command read its input")
+	return 0, io.EOF
+}
+
+func TestRolesMatrixCopyAllExitsOneOnAFailure(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{wouldChange("a"), wouldChange("b"), wouldChange("c")}}
+	written := daemon.MatrixCopyResult{From: "ork", Partial: true, Projects: []daemon.MatrixCopyProject{
+		{Project: "a", Status: daemon.CopyChanged, Steps: copyStepsRemove[:1]},
+		{Project: "b", Status: daemon.CopyFailed, Error: &ipc.Error{Code: "stale_revision", Message: "the matrix changed"}},
+		{Project: "c", Status: daemon.CopyChanged, Steps: copyStepsRemove[:2]},
+	}}
+	app := copyApp(t, &calls, dry, written, "")
+	code, stdout, _ := run(t, app, "roles", "matrix", "copy", "ork", "--all", "--yes")
+	if code != ExitFailure {
+		t.Fatalf("exit %d, want %d\n%s", code, ExitFailure, stdout)
+	}
+	want := "a: changed (1 step)\n  remove r9\nb: failed: the matrix changed (stale_revision)\nc: changed (2 steps)\n  remove r9\n  add r21\n"
+	if !strings.HasSuffix(stdout, want) {
+		t.Fatalf("stdout\n got %q\nwant it to end with %q", stdout, want)
+	}
+}
+
+// A failed check stops the copy: nothing is asked and nothing is written.
+func TestRolesMatrixCopyAFailedPreviewWritesNothing(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{
+		wouldChange("a"),
+		{Project: "b", Status: daemon.CopyFailed, Error: &ipc.Error{Code: "no_spec_check_row", Message: "b has no Spec check row rule"}},
+	}}
+	app := copyApp(t, &calls, dry, daemon.MatrixCopyResult{}, "y\ny\n")
+	code, stdout, _ := run(t, app, "roles", "matrix", "copy", "ork", "--all", "--yes")
+	if code != ExitFailure || len(calls) != 1 || !calls[0].DryRun || strings.Contains(stdout, "[y/N]") {
+		t.Fatalf("exit %d, calls %+v\n%s", code, calls, stdout)
+	}
+	if !strings.Contains(stdout, "b: failed: b has no Spec check row rule (no_spec_check_row)\n") || !strings.Contains(stdout, "nothing written") {
+		t.Fatalf("stdout:\n%s", stdout)
+	}
+}
+
+func TestRolesMatrixCopyNothingToCopyAsksNothing(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{{Project: "a", Status: daemon.CopyUnchanged}}}
+	app := copyApp(t, &calls, dry, daemon.MatrixCopyResult{}, "")
+	app.Input = failReader{t}
+	code, stdout, _ := run(t, app, "roles", "matrix", "copy", "ork", "a")
+	if code != ExitOK || len(calls) != 1 || strings.Contains(stdout, "[y/N]") || !strings.HasPrefix(stdout, "a: unchanged\n") {
+		t.Fatalf("exit %d, calls %+v\n%s", code, calls, stdout)
+	}
+}
+
+func TestRolesMatrixCopyJSONIsTheWireResult(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	p := wouldChange("a")
+	p.Warnings = []string{noAdapterWarn}
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{p}}
+	written := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{{Project: "a", Status: daemon.CopyChanged, Steps: copyStepsRemove}}}
+	for _, tc := range []struct {
+		name string
+		args []string
+		want daemon.MatrixCopyResult
+	}{
+		{"dry run", []string{"--dry-run"}, dry},
+		{"yes", []string{"--yes"}, written},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			calls = nil
+			app := copyApp(t, &calls, dry, written, "")
+			app.Input = failReader{t}
+			code, stdout, stderr := run(t, app, append([]string{"roles", "matrix", "copy", "ork", "a", "--json"}, tc.args...)...)
+			if code != ExitOK || stderr != "" {
+				t.Fatalf("exit %d\nstderr: %s", code, stderr)
+			}
+			var got daemon.MatrixCopyResult
+			dec := json.NewDecoder(strings.NewReader(stdout))
+			if err := dec.Decode(&got); err != nil || dec.More() {
+				t.Fatalf("output is not one JSON value: %v\n%s", err, stdout)
+			}
+			if !reflect.DeepEqual(got, tc.want) {
+				t.Fatalf("got %+v, want the daemon's result %+v", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestRolesMatrixCopyJSONExitsOneOnAFailure(t *testing.T) {
+	var calls []daemon.MatrixCopyParams
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{
+		{Project: "b", Status: daemon.CopyFailed, Error: &ipc.Error{Code: "bad_role_field", Message: "no"}},
+	}}
+	app := copyApp(t, &calls, dry, daemon.MatrixCopyResult{}, "")
+	code, stdout, _ := run(t, app, "roles", "matrix", "copy", "ork", "b", "--dry-run", "--json")
+	var got daemon.MatrixCopyResult
+	mustJSON(t, stdout, &got)
+	if code != ExitFailure || got.Projects[0].Status != daemon.CopyFailed {
+		t.Fatalf("exit %d\n%s", code, stdout)
+	}
+}
+
+func TestRolesMatrixCopyUsage(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		args []string
+		want string
+	}{
+		{"no from", []string{"roles", "matrix", "copy"}, "FROM"},
+		{"only flags", []string{"roles", "matrix", "copy", "--all"}, "FROM"},
+		{"neither to nor all", []string{"roles", "matrix", "copy", "ork"}, "TO"},
+		{"both to and all", []string{"roles", "matrix", "copy", "ork", "a", "--all"}, "not both"},
+		{"unknown flag", []string{"roles", "matrix", "copy", "ork", "a", "--force"}, "-force"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var calls []daemon.MatrixCopyParams
+			app := copyApp(t, &calls, daemon.MatrixCopyResult{}, daemon.MatrixCopyResult{}, "")
+			code, stdout, stderr := run(t, app, tc.args...)
+			if code != ExitUsage || stdout != "" || !strings.Contains(stderr, tc.want) || len(calls) != 0 {
+				t.Fatalf("exit %d, calls %+v\nstdout: %q\nstderr: %q", code, calls, stdout, stderr)
+			}
+		})
+	}
+}
+
+func TestRolesMatrixCopyShowsTheDaemonsError(t *testing.T) {
+	app := &App{Call: func(_ context.Context, _ string, _, _ any) error {
+		return &ipc.Error{Code: daemon.CodeNotFound, Message: `no project named "nope"`}
+	}}
+	code, stdout, stderr := run(t, app, "roles", "matrix", "copy", "nope", "a", "--dry-run")
+	if code != ExitFailure || stdout != "" || !strings.Contains(stderr, `no project named "nope"`) {
+		t.Fatalf("exit %d\nstdout: %q\nstderr: %q", code, stdout, stderr)
+	}
+}
+
+func TestUsageNamesRolesMatrixCopy(t *testing.T) {
+	_, stdout, _ := run(t, noDaemon(t), "help")
+	if !strings.Contains(stdout, "ork roles matrix copy FROM (TO... | --all) [--dry-run] [--yes]") {
+		t.Fatalf("usage does not name roles matrix copy:\n%s", stdout)
+	}
+	for _, line := range strings.Split(stdout, "\n") {
+		if len(line) > 80 {
+			t.Errorf("usage line over 80 columns: %q", line)
 		}
 	}
 }
