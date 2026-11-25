@@ -6821,3 +6821,6 @@
 {"when": "2026-11-25T22:04:07Z", "item": "S600", "action": "add", "from": "", "to": "open", "note": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen."}
 {"when": "2026-11-25T22:04:08Z", "item": "S600", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T22:04:08Z", "item": "S600", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}
+{"when": "2026-11-25T22:17:28Z", "item": "S596", "action": "note", "from": "", "to": "", "note": "Also covers adj 588: when every single-file base overlay fai", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:17:28Z", "item": "S599", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S598; Jon chose 'Two slices', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T22:17:29Z", "item": "S598", "action": "note", "from": "", "to": "", "note": "Also covers S599 (same report from another run). Jon chose '", "by": "Jon Robbins"}

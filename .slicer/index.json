@@ -31420,7 +31420,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "06c82837-a4d0-4b8e-9566-04f0749d37b2",
+          "kind": "",
+          "text": "**2026-11-25** — Also covers adj 588: when every single-file base overlay fails to build (a shared signature change), offer one overlay that reverts all changed product files together, alongside the per-file ones. Jon chose 'Two slices', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T22:17:28Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -31476,7 +31491,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "92b947a8-bbbd-4058-9f92-11eeac23278b",
+          "kind": "",
+          "text": "**2026-11-25** — Also covers S599 (same report from another run). Jon chose 'Two slices', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T22:17:29Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -31501,7 +31531,7 @@
       "id": "S599",
       "title": "build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice",
       "short_title": "build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -31518,7 +31548,7 @@
         "key": "tool-feedback-ork-6707a360",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Duplicate of S598; Jon chose 'Two slices', session 8d711f67, 2026-11-25.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
