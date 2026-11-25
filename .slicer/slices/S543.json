@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): Which tracking files does the start commit add when it commits `.slicer/index.json` and the index change comes from a retire move? -> moves and renders: also commit each slice-file move (the deleted `.slicer/slices/ID.json` and the new `.slicer/slices/retired/ID.json`, or `done/`) and each affected `.slicer/render/slices/ID.md`. Leave other dirty tracking files alone, as the code does today. [run.start-commit-tracking-moves]."
     },
     {
       "heading": "Check",
