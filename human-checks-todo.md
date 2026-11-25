@@ -294,3 +294,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S564 (run ork-20261125-184829-ca71, 2026-11-25)
 
 - [ ] In the next real reviewer round for a slice that adds a function tests call only directly, open the reviewer's brief under the run's role files. You should see a `## Untested call sites` section naming the function and its unreached call site. The run should not have paused for it.
+
+## S531 (run ork-20261125-185405-f675, 2026-11-25)
+
+- [ ] Read the TestScrollSweep table in internal/tui/scroll_sweep_test.go. It should name the help overlay on each tab view, the Roadmap row list, the launch confirm and the Roadmap item pane, and no scrollable view you know of in the launch harness is left out.
