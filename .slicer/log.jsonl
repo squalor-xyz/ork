@@ -6909,3 +6909,8 @@
 {"when": "2026-11-25T22:48:19Z", "item": "S588", "action": "status", "from": "started", "to": "done", "note": "Added four reachable scrolling fixtures, retained three passing height-40 sweep cases, and documented paging gaps with follow-up slices S601-S604.", "by": "Jon Robbins"}
 {"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "add", "from": "", "to": "open", "note": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24"}
 {"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T23:26:45Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "Owner decision: brief section. ork code finds command names ", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S568", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 592): key from answer. ork answer keeps ", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S570", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 593): a go/parser test in internal/engin", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S592", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 594): no allowlist change (git grep -O c", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S597", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 595): the rule goes in the Renders secti", "by": "Jon Robbins"}
