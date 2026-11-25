@@ -839,6 +839,77 @@ func TestMatrixCopyWritesOnlyProjectsWhoseStepsMatchThePreview(t *testing.T) {
 	}
 }
 
+// copyThenWrite previews the copy to a and c, then writes it with the preview's
+// steps for both and its digest for a only (c is not bound by content). The
+// source's matrix is read once per call: srcShows are its replies, in order.
+func copyThenWrite(t *testing.T, srcShows ...string) (preview, written MatrixCopyResult) {
+	t.Helper()
+	var seq []clitest.Reply
+	for _, s := range srcShows {
+		seq = append(seq, clitest.Reply{Stdout: s})
+	}
+	changed := clitest.Reply{Stdout: `{"changed":true,"revision":"z","steps":[{"op":"add","id":"r10","changed":true}]}`}
+	routes := []clitest.Route{
+		{Tool: "slicer", Args: []string{"relay-roles", "show", "--json", "--root", "/p/src"}, Seq: seq},
+		showRoute("a", showBody(t, "rev-a", tgtRows, tgtRules)),
+		showRoute("c", showBody(t, "rev-c", tgtRows, tgtRules)),
+		dryRoute("a", dryReply("rev-a", true, "add r10")),
+		dryRoute("c", dryReply("rev-c", true, "add r10")),
+		writeRoute("a", changed),
+		writeRoute("c", changed),
+	}
+	h := newCopyHarness(t, []string{"src", "a", "c"}, routes...)
+	preview = h.copy(t, `{"from":"src","to":["a","c"],"dry_run":true}`)
+	digest := preview.Projects[0].Digest
+	if digest == "" {
+		t.Fatalf("the preview of a carries no digest: %+v", preview.Projects[0])
+	}
+	step := `[{"op":"add","id":"r10","changed":true}]`
+	written = h.copy(t, `{"from":"src","to":["a","c"],"expect_steps":{"a":`+step+`,"c":`+step+`},"expect_rows":{"a":"`+digest+`"}}`)
+	return preview, written
+}
+
+// A source row edited between the preview and the write leaves the steps as they
+// were, so only its content tells (S558).
+func TestMatrixCopyRefusesAProjectWhoseSourceRowsChangedSinceThePreview(t *testing.T) {
+	edited := slices.Clone(srcRows)
+	edited[0].Model = "gpt-edited"
+	_, got := copyThenWrite(t,
+		showBody(t, "rev-src", srcRows, srcRules),
+		showBody(t, "rev-src2", edited, srcRules))
+	a := got.Projects[0]
+	if a.Status != CopyFailed || a.Error == nil || a.Error.Code != CodeStalePreview {
+		t.Fatalf("a %+v, want failed with %s", a, CodeStalePreview)
+	}
+	if c := got.Projects[1]; c.Status != CopyChanged {
+		t.Fatalf("c %+v, want changed: a refused project does not stop the others", c)
+	}
+	if !got.Partial {
+		t.Fatal("one project changed and one was refused: partial")
+	}
+	var written []string
+	for _, args := range callArgs(t) {
+		if isWrite(args) {
+			written = append(written, args[len(args)-1])
+		}
+	}
+	if want := []string{"/p/c"}; !reflect.DeepEqual(written, want) {
+		t.Fatalf("written %v, want %v: a refused project is not written", written, want)
+	}
+}
+
+func TestMatrixCopyWritesAProjectWhoseSourceRowsAreTheOnesPreviewed(t *testing.T) {
+	_, got := copyThenWrite(t, showBody(t, "rev-src", srcRows, srcRules))
+	for _, p := range got.Projects {
+		if p.Status != CopyChanged || p.Error != nil {
+			t.Fatalf("project %+v, want changed", p)
+		}
+	}
+	if got.Partial {
+		t.Fatal("every project was written: not partial")
+	}
+}
+
 func TestMatrixCopyWithoutExpectedStepsWritesWhateverTheDryRunSays(t *testing.T) {
 	routes := append(srcTarget(t, "a"),
 		dryRoute("a", dryReply("rev-a", true, "add r10", "add r11")),

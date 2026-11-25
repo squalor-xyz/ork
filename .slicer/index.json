@@ -29277,7 +29277,7 @@
       "id": "S558",
       "title": "matrix copy: bind the confirmed write to source row content, not only steps",
       "short_title": "matrix copy: bind the confirmed write to source row content, not only steps",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29308,6 +29308,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "3a919efe-b7b2-472b-a4d3-e0839eb9f33b",
+          "kind": "",
+          "text": "**2026-11-25** — matrix copy now binds the confirmed write to source row content: the preview carries a per-project SHA-256 digest of the planned rows, the CLI sends it back as expect_rows, and the daemon refuses a changed project with stale_preview, writing nothing to it and going on to the others; the S548 changelog entry no longer claims more than it checked, the IPC table in docs/design.md lists expect_rows and digest, and the full suite, vet and gofmt pass.",
+          "created_at": "2026-11-25T15:05:03Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29327,7 +29341,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
