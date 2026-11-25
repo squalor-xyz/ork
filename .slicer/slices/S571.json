@@ -1,0 +1,39 @@
+{
+  "id": "S571",
+  "title": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261125-163301-8662, project ork, item S563:\n\ngive the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies\n\nEvidence: go test -run A|B was denied as multiple operations"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
