@@ -6751,3 +6751,10 @@
 {"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "add", "from": "", "to": "open", "note": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds"}
 {"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "note", "from": "", "to": "", "note": "possible duplicate of S591", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:55:42Z", "item": "S577", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T20:55:42Z", "item": "S591", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T20:55:42Z", "item": "S593", "action": "note", "from": "", "to": "", "note": "Owner decision: merged S577 and S591 here. ork runs go vet w", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:55:42Z", "item": "S595", "action": "add", "from": "", "to": "open", "note": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem"}
+{"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
+{"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "note", "from": "", "to": "", "note": "Owner decision: pin go -C read-only entries at launch the sa", "by": "Jon Robbins"}

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 595,
+  "next_id": 596,
   "preamble": "",
   "passes": [
     {
@@ -30511,7 +30511,7 @@
       "id": "S577",
       "title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
       "short_title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -30528,7 +30528,7 @@
         "key": "tool-feedback-ork-397a3274",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -31092,7 +31092,7 @@
       "id": "S591",
       "title": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds",
       "short_title": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -31109,7 +31109,7 @@
         "key": "tool-feedback-ork-798481a0",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -31151,7 +31151,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "eb2f969e-2614-4897-b0c9-cb70d3019d92",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: merged S577 and S591 here. ork runs go vet with each base overlay first; an overlay that fails to build is shown in the Base overlays section as 'does not build: ERROR' instead of a revert command. Covers a reverted helper used elsewhere (S577: undefined heldNote), tests reading a new struct field (S591: pane.page undefined) and signature changes (S593). Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:55:42Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -31212,6 +31227,49 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S595",
+      "title": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem",
+      "short_title": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "bd0053fa-5322-4ae7-ad89-2c3048419956",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: pin go -C read-only entries at launch the same way as git -C (adj 579, 580). Also fold S586 finding 1: the gate brief's allowed forms come from ResolvePermission (round.go:634-638), not rolePermission, so it shows the unpinned git -C * template; show the pinned list. Jon chose 'File: pin go -C too' and 'Fold into the go -C slice', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:55:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S586",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-203302-a88e-later-2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }
