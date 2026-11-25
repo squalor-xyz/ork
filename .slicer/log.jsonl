@@ -6532,3 +6532,5 @@
 {"when": "2026-11-25T17:08:41Z", "item": "S569", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T17:26:41Z", "item": "S570", "action": "add", "from": "", "to": "open", "note": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded"}
 {"when": "2026-11-25T17:26:41Z", "item": "S570", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:37:33Z", "item": "S571", "action": "add", "from": "", "to": "open", "note": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies"}
+{"when": "2026-11-25T17:37:33Z", "item": "S571", "action": "promote", "from": "", "to": "", "note": ""}

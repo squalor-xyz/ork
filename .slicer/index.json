@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 571,
+  "next_id": 572,
   "preamble": "",
   "passes": [
     {
@@ -29959,6 +29959,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-8b543bb8",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S571",
+      "title": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies",
+      "short_title": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S563",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-8e4d911e",
         "pass": "v1.2",
         "group": "",
         "reason": "",
