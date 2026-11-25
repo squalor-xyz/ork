@@ -1,0 +1,39 @@
+{
+  "id": "S579",
+  "title": "Roadmap item pane page keys skip the line under the more-lines marker",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The Roadmap item pane, the role matrix pane and the spec-draft pane all page with `scrollRoadmapPane` (`internal/tui/roadmap.go:102`). Each page key moves `pane.offset` by `pane.room`. `scrollItemPane` sets `pane.room` to the whole scrolling part (`internal/tui/roadmap.go:162-168`). The draw then windows the heading plus the lines from the offset with `window` (`internal/tui/view.go:350-354`). Whenever more lines remain, `window` spends one line of the window on the \"+N more lines\" marker (`internal/tui/view.go:1161-1176`). So a page shows `room-1` body lines and moves by `room`. The line under the marker is skipped on every page-down. Page-up skips it the same way, so the sweep fails at every height.\n\n`TestScrollSweep` left this out on purpose (adj 570, adj 575; `internal/tui/scroll_sweep_test.go:208-211`). The owner chose the page step on 2026-11-25 (session 8d711f67): the page keys move the offset by the room minus the lines the draw spends on the marker. This slice makes that change and puts the Roadmap item pane back in the sweep. The fix lives in the shared function, so the matrix pane and the spec-draft pane (`internal/tui/specdraft.go:192`) change with it."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/roadmap.go:25-35` (`itemPane` gets a page-step field)\n- `internal/tui/roadmap.go:98-121` (`scrollRoadmapPane` page cases)\n- `internal/tui/roadmap.go:159-168` (`scrollItemPane` sets the page step)\n- `internal/tui/scroll_sweep_test.go:200-251` (new `roadmap-item` case; the S579 bullet in the \"Left out\" comment goes)\n- `internal/tui/roadmap_test.go:627-630` (`TestRoadmapItemPaneScrollsByLinePageAndEnds` page expectation)\n- `internal/tui/matrix_test.go:201-204` (`TestMatrixPaneScrollsLikeTheItemPane` page expectation)\n- `docs/dashboard.md:576-580` (the sentence on how the page keys scroll these panes)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestScrollSweep, new case `roadmap-item` (`openLongItemPane` setup, heights 10, 16, 24 and 40, `pgdown` and `pgup`): paging to the end and back must show every line of the pane's content at each height. It fails now at every height, because each page skips the line under the \"+N more lines\" marker.\n- TestRoadmapItemPaneScrollsByLinePageAndEnds (changed): `pgdown` from the top must leave `offset` at `room-1`, the lines the draw shows above the marker, and `pgup` must return it to 0. It asserts `room` today, so it fails against the fixed code until its expectation changes.\n- TestMatrixPaneScrollsLikeTheItemPane (changed): the same `room-1` expectation for `pgdown` and `pgup` on the matrix pane, which shares `scrollRoadmapPane`. It fails for the same reason."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. In `internal/tui/roadmap.go`, add `page int` to `itemPane`, commented as the offset step of a page key: the lines of the scrolling part that the last draw showed above the \"+N more lines\" marker.\n2. In `scrollItemPane`, set `pane.page` next to `pane.room`:\n   - Let `total` be the `visible` from `decisionPage` before `head` is subtracted. That is the window height `n` that `window` gets.\n   - The draw starts the window at line 0, so no \"+N lines above\" marker is spent. The marker line is spent only when `span` allows markers, which needs `n >= 3`.\n   - Set `pane.page = max(visible-1, 1)` when `total >= 3`, otherwise `max(visible, 1)`.\n   - Leave `pane.room` as it is. `scrollHalf` still uses it (`internal/tui/model.go:1162`).\n3. In `scrollRoadmapPane`, use `max(pane.page, 1)` as the step for `PageDown` and `PageUp` in place of `max(pane.room, 1)`. The draw's clamp in `scrollItemPane` keeps an offset past the end in range, so the last page ends flush with the body, as before.\n4. In `internal/tui/roadmap_test.go` and `internal/tui/matrix_test.go`, read `pane.page` after the first draw. Change the `pgdown` expectation to `offset(page, \"pgdown\")` and keep the `pgup` expectation at 0.\n5. In `internal/tui/scroll_sweep_test.go`, add a case to `TestScrollSweep`:\n   - `{name: \"roadmap-item\", heights: sweepAll, setup: openLongItemPane, pageDown: sweepPgDown, pageUp: sweepPgUp}`.\n   - Leave `unique` unset: the reference holds repeated heading lines, such as the pane's own heading.\n   - Remove the S579 bullet from the \"Left out\" comment above `TestScrollSweep` and keep the S580 bullet.\n6. In `docs/dashboard.md` near line 576, add one sentence: a page key in a Roadmap item, matrix or spec-draft pane moves by the pane's lines minus the \"+N more lines\" marker line, so no line is skipped. Keep it short, ASCII, and without a slice cite that is not tracked.\n7. Run `go test ./internal/tui -run 'TestScrollSweep|TestRoadmapItemPane|TestMatrixPane|TestSpecDraft'`, then `go test ./...`, `go vet ./...` and `gofmt -l .`. If a golden view changes, review it before `-update`; none is expected."
+    },
+    {
+      "heading": "Check",
+      "body": "- Acceptance: at heights 10, 16, 24 and 40 (width 80), paging a long Roadmap item pane down to its end and back up never skips a line, and the sweep names none as missing. Run go test ./internal/tui -run TestScrollSweep -v and expect roadmap-item/h10, h16, h24 and h40 to be listed as PASS, with the help-*, roadmap-list and launch-confirm cases still passing.\n- Acceptance: pgdown from the top of a long item pane or matrix pane moves offset by room-1, and pgup returns it to 0. Run go test ./internal/tui -run 'TestRoadmapItemPaneScrollsByLinePageAndEnds|TestMatrixPaneScrollsLikeTheItemPane' and expect ok.\n- Acceptance: line, end and half-page keys behave as before. The same two tests must still pass their j, k, g, G, home, end and ctrl+d steps, and a short pane stays at offset 0.\n- `go test ./...` passes.\n- `go vet ./...` prints nothing.\n- `gofmt -l .` prints nothing.\n- `slicer check` reports no tracking errors.\n- [HUMAN CHECK] Open a long item on the Roadmap at 80x24 and press pgdown until the end. Each page should start with the line that sat under the \"+N more lines\" marker on the page before. Press pgup back up the same way. Open the spec draft pane on a long draft and page it; it should behave the same."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

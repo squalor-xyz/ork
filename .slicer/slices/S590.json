@@ -1,0 +1,39 @@
+{
+  "id": "S590",
+  "title": "give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-195317-44e4, project ork, item S581:\n\ngive the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe\n\nEvidence: `-run TestUIPassStartsWithAnEmptyRendersDirectory|TestRendersIgnoreASymlinkedDirectory` was denied as multiple operations"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
