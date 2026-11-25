@@ -27414,7 +27414,7 @@
       "id": "S509",
       "title": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match",
       "short_title": "test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -27445,6 +27445,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "4c78b583-2a4c-4d2b-aa15-d911ef68de0e",
+          "kind": "",
+          "text": "**2026-11-25** — TestReadOnlyAllowlistMatchesNoTrackingWrite now runs a fixed list of tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) over LocalReadOnlyAllowlist() and CloudUIAllowlist() and fails on any matching entry; go vet, gofmt and go test ./... are green.",
+          "created_at": "2026-11-25T07:29:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27464,7 +27478,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

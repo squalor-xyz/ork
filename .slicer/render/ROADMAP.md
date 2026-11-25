@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-543 items · — 51 · done 369 · retired 123
+543 items · — 50 · done 370 · retired 123
 
 ## v1.3
 
@@ -268,7 +268,7 @@ v1.2
 | 211 | [S506](slices/S506.md) | For CLI views that only a single command's test helper produces, name in the brief the helper to call from an overlay test, as AGENTS.md does for TUI views |  | - |  | Folded into S499 per the owner (adj 515). · discovered from S337 | retired |
 | 212 | [S507](slices/S507.md) | let the CLI render test take a fixture with real-length ids, titles and paths so width problems show in the default render |  | - |  | Folded into S499 per the owner (adj 517). · discovered from S318 | retired |
 | 213 | [S508](slices/S508.md) | Lint Check commands at plan time | S | 1 |  | 2026-11-18 to 11-20: three runs stopped at slice checks because a Check section had backticked text that is not a command: S392 (a test name in prose ran the race test), S384 ("Contract: relay v13": exec "Contract:" not found), S318 ("internal/cli": fork/exec permission denied). Each cost a stop and a hand fix in the worktree. | done |
-| 214 | [S509](slices/S509.md) | test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match |  | - |  | discovered from S505 | — |
+| 214 | [S509](slices/S509.md) | test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match |  | - |  | discovered from S505 | done |
 | 215 | [S510](slices/S510.md) | allow the reviewer to write to its own role temp dir, as the prompt says it may |  | - |  | discovered from S449 | done |
 | 216 | [S511](slices/S511.md) | say in the UI-pass prompt that Owner needed takes one question block and one Decision key |  | - |  | discovered from S449 | — |
 | 217 | [S512](slices/S512.md) | allow the reviewer's own TMPDIR as a Write target in the reviewer's permission settings |  | - |  | Duplicate of S510 (reviewer may write its own temp dir). · discovered from S508 | retired |
