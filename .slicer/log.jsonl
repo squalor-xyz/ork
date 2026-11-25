@@ -6467,3 +6467,5 @@
 {"when": "2026-11-25T15:39:23Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-25T15:52:08Z", "item": "S564", "action": "add", "from": "", "to": "open", "note": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route"}
 {"when": "2026-11-25T15:52:09Z", "item": "S564", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:52:38Z", "item": "S565", "action": "add", "from": "", "to": "open", "note": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed"}
+{"when": "2026-11-25T15:52:38Z", "item": "S565", "action": "promote", "from": "", "to": "", "note": ""}
