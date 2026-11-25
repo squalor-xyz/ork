@@ -41,6 +41,152 @@ func roadmapHarness(t *testing.T) *harness {
 	return h
 }
 
+func roadmapGoalsHarness(t *testing.T) *harness {
+	t.Helper()
+	h := roadmapHarness(t)
+	g := h.m.projects[0].snap.Goals.Value
+	for i := 2; i <= 6; i++ {
+		g.Records.Goal = append(g.Records.Goal, slicercli.GoalRecord{
+			ID: fmt.Sprintf("C%02d", i), Title: fmt.Sprintf("Extra goal %d", i),
+		})
+	}
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 10})
+	return h
+}
+
+func roadmapLinesAbove(t *testing.T, v string) int {
+	t.Helper()
+	end := strings.Index(v, " lines above")
+	if end < 0 {
+		return 0
+	}
+	start := strings.LastIndex(v[:end], "+")
+	var n int
+	if start < 0 {
+		t.Fatalf("missing marker number:\n%s", v)
+	}
+	if _, err := fmt.Sscanf(v[start:end], "+%d", &n); err != nil {
+		t.Fatal(err)
+	}
+	return n
+}
+
+func TestRoadmapPageUpAtTopScrollsGoalsIntoView(t *testing.T) {
+	h := roadmapGoalsHarness(t)
+	v := plainView(h.m)
+	if roadmapLinesAbove(t, v) == 0 || strings.Contains(v, "Visible progress") {
+		t.Fatalf("fixture must hide the first goal:\n%s", v)
+	}
+	for _, page := range []struct {
+		above int
+		goal  string
+	}{{7, "Extra goal 5"}, {4, "Extra goal 2"}, {0, "Visible progress"}} {
+		h.send(press("pgup"))
+		v = plainView(h.m)
+		if got := roadmapLinesAbove(t, v); got != page.above || !strings.Contains(v, page.goal) || h.m.roadmapCursor != 0 {
+			t.Fatalf("pgup did not reveal earlier Goals with cursor 0: above %d, want %d with %s, cursor %d\n%s", got, page.above, page.goal, h.m.roadmapCursor, v)
+		}
+	}
+	if !strings.Contains(v, "Goals") || !strings.Contains(v, "Visible progress") {
+		t.Fatalf("pgup did not reach the Goals heading and first goal:\n%s", v)
+	}
+	h.send(press("pgup"))
+	if got := plainView(h.m); got != v {
+		t.Fatalf("pgup moved past the top:\n%s", got)
+	}
+}
+
+func TestRoadmapUpAtTopScrollsOneLine(t *testing.T) {
+	h := roadmapGoalsHarness(t)
+	v := plainView(h.m)
+	for above := roadmapLinesAbove(t, v); above > 0; above = roadmapLinesAbove(t, v) {
+		h.send(press("up"))
+		v = plainView(h.m)
+		if got := roadmapLinesAbove(t, v); got != above-1 || h.m.roadmapCursor != 0 {
+			t.Fatalf("up must reveal one line with cursor 0: above %d -> %d, cursor %d\n%s", above, got, h.m.roadmapCursor, v)
+		}
+	}
+	h.send(press("up"))
+	if got := plainView(h.m); got != v {
+		t.Fatalf("up moved past the top:\n%s", got)
+	}
+}
+
+func TestRoadmapHomeScrollsToGoalsOnlyFromTheFirstRow(t *testing.T) {
+	h := roadmapGoalsHarness(t)
+	first := plainView(h.m)
+	h.m.roadmapCursor = 3
+	h.send(press("home"))
+	if got := plainView(h.m); got != first || h.m.roadmapCursor != 0 {
+		t.Fatalf("home from a later row must only select row 0:\n%s", got)
+	}
+	h.send(press("home"))
+	v := plainView(h.m)
+	if roadmapLinesAbove(t, v) != 0 || !strings.Contains(v, "Goals") || h.m.roadmapCursor != 0 {
+		t.Fatalf("home on row 0 must show the Goals heading:\n%s", v)
+	}
+}
+
+func TestRoadmapGoalsLiftDropsWhenTheCursorMoves(t *testing.T) {
+	for _, k := range []string{"down", "pgdown", "G", "{", "}"} {
+		t.Run(k, func(t *testing.T) {
+			h := roadmapGoalsHarness(t)
+			// Compare the same cursor key with and without a lift.
+			h.send(press(k))
+			want, cursor := plainView(h.m), h.m.roadmapCursor
+			h.m.roadmapCursor = 0
+			h.send(press("home"))
+			if !strings.Contains(plainView(h.m), "Goals") {
+				t.Fatal("home did not lift to Goals")
+			}
+			h.send(press(k))
+			if got := plainView(h.m); got != want || h.m.roadmapCursor != cursor {
+				t.Fatalf("%s did not end the lift and follow cursor %d:\n%s\nwant:\n%s", k, cursor, got, want)
+			}
+			if k == "G" && !strings.Contains(want, "S04") {
+				t.Fatalf("G must show the last row:\n%s", want)
+			}
+			if cursor != 0 {
+				h.send(press("home"))
+			}
+			before := roadmapLinesAbove(t, plainView(h.m))
+			h.send(press("pgup"))
+			if got := plainView(h.m); roadmapLinesAbove(t, got) >= before || h.m.roadmapCursor != 0 {
+				t.Fatalf("pgup could not lift again from row 0:\n%s", got)
+			}
+		})
+	}
+}
+
+func TestRoadmapGoalsLiftDropsWhenSwitching(t *testing.T) {
+	for _, tc := range []struct {
+		name       string
+		switchBack func(*Model)
+	}{
+		{"view", func(m *Model) {
+			m.showView(decisionsView)
+			m.showView(roadmapView)
+		}},
+		{"project", func(m *Model) {
+			m.switchTo(1)
+			m.switchTo(0)
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := roadmapGoalsHarness(t)
+			want := plainView(h.m)
+			h.send(press("home"))
+			if got := plainView(h.m); got == want {
+				t.Fatal("home must lift before switching")
+			}
+			tc.switchBack(h.m)
+			if got := plainView(h.m); got != want {
+				t.Fatalf("%s switch retained the Goals lift:\n%s\nwant:\n%s", tc.name, got, want)
+			}
+		})
+	}
+}
+
 func TestRoadmapListsItemsInSlicerOrder(t *testing.T) {
 	h := roadmapHarness(t)
 	v := h.view()

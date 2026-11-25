@@ -159,6 +159,7 @@ type Model struct {
 	decisionScroll  int
 
 	roadmapCursor    int
+	roadmapLift      struct{ cursor, lines int }
 	slicerTuiRestore *slicerTuiSelection
 	itemPane         *itemPane
 	itemRequest      uint64
@@ -1038,6 +1039,10 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		if m.view == roadmapView {
 			if m.itemPane == nil {
 				n := len(m.roadmapItems())
+				if m.launch == nil && n > 0 && clampCursor(m.roadmapCursor, n) == 0 {
+					m.liftRoadmap(1)
+					return nil
+				}
 				m.roadmapCursor = clampCursor(clampCursor(m.roadmapCursor, n)-1, n)
 			}
 		} else {
@@ -1168,7 +1173,8 @@ func (m *Model) scrollHalf(back bool) {
 }
 
 // moveRows handles the first, last, page and group keys. They move the row
-// cursor of the view. With a decision open on Questions or Decisions the page
+// cursor of the view. On the first Roadmap row, first and page-up reveal the
+// Goals above it. With a decision open on Questions or Decisions the page
 // keys scroll it, and the others do nothing. With the help open they do
 // nothing: the cursor is hidden under it.
 func (m *Model) moveRows(msg tea.KeyPressMsg) {
@@ -1192,6 +1198,25 @@ func (m *Model) moveRows(msg tea.KeyPressMsg) {
 	if at < 0 {
 		return
 	}
+	if m.view == roadmapView && m.itemPane == nil && m.launch == nil && at == 0 {
+		m.screen()
+		d := m.drawn
+		switch {
+		case key.Matches(msg, m.keys.PageUp):
+			// Size the preceding window with its own scroll markers.
+			for from := 0; from < d.lo; from++ {
+				if end, _, _ := span(d.total, from, d.n); end >= d.lo {
+					m.liftRoadmap(d.lo - from)
+					break
+				}
+			}
+			return
+		case key.Matches(msg, m.keys.First):
+			m.liftRoadmap(d.lo)
+			return
+		}
+	}
+	m.roadmapLift = struct{ cursor, lines int }{}
 	next := at
 	switch {
 	case key.Matches(msg, m.keys.First):
@@ -1220,6 +1245,13 @@ func (m *Model) moveRows(msg tea.KeyPressMsg) {
 		m.actionStatus = ""
 	}
 	*cur = next
+}
+
+// liftRoadmap reveals body lines above the first row without moving its cursor.
+func (m *Model) liftRoadmap(step int) {
+	m.screen()
+	m.roadmapLift.cursor = 0
+	m.roadmapLift.lines += min(step, m.drawn.lo)
 }
 
 // pagerTop holds the window of a page down: the body line it starts at, kept
@@ -1285,6 +1317,7 @@ func (m *Model) switchTo(i int) tea.Cmd {
 		m.view = 0 // the Running entry has no Waves, Roadmap or Decisions (S262)
 	}
 	m.roadmapCursor = 0
+	m.roadmapLift = struct{ cursor, lines int }{}
 	m.decisionsCursor = 0
 	m.questionsCursor = 0
 	m.decisionPane = nil
@@ -1514,6 +1547,7 @@ func (m *Model) showView(i int) tea.Cmd {
 	m.specDraft = nil
 	m.view = i
 	m.roadmapCursor = 0
+	m.roadmapLift = struct{ cursor, lines int }{}
 	m.decisionsCursor = 0
 	m.questionsCursor = 0
 	m.pane = nil

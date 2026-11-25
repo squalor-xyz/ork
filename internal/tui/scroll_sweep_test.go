@@ -177,7 +177,11 @@ func (c sweepCase) sweep(t *testing.T) {
 				}
 			}
 			limit := 3*len(reference) + 5
-			down := sweepPass(t, h, c.pageDown, limit)
+			// A row list may initially follow its cursor below the Goals.
+			// Keep the frames reaching the true top: pgdown ends that lift
+			// and resumes paging from the cursor (S580, adj 582).
+			top := sweepPass(t, h, c.pageUp, limit)
+			down := append(top, sweepPass(t, h, c.pageDown, limit)...)
 			up := sweepPass(t, h, c.pageUp, limit)
 			for _, pass := range []struct {
 				direction string
@@ -209,10 +213,6 @@ var (
 //     page moves the offset by the whole room, but the draw spends one line of
 //     it on the "+N more lines" marker, so each page skips the line under the
 //     marker (roadmap.go scrollRoadmapPane). Follow-up: S579.
-//   - Roadmap row list at height 10: the Goals block above the first row is
-//     marked as "+5 lines above" and no key reaches it, because the page keys
-//     move the row cursor and the first row is already on screen. Follow-up:
-//     S580.
 func TestScrollSweep(t *testing.T) {
 	cases := []sweepCase{
 		{name: "help-running", heights: sweepAll, setup: sweepHelp(0), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
@@ -220,7 +220,7 @@ func TestScrollSweep(t *testing.T) {
 		{name: "help-roadmap", heights: sweepAll, setup: sweepHelp(roadmapView), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
 		{name: "help-decisions", heights: sweepAll, setup: sweepHelp(decisionsView), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
 		{name: "help-questions", heights: sweepAll, setup: sweepHelp(questionsView), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
-		{name: "roadmap-list", heights: []int{16, 24, 40}, unique: true, setup: func(t *testing.T) *harness {
+		{name: "roadmap-list", heights: sweepAll, unique: true, setup: func(t *testing.T) *harness {
 			h, _ := launchHarness(t)
 			h.m.view = roadmapView
 			// The four fixture rows fit the window from height 16, so add

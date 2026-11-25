@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-593 items · — 64 · done 398 · retired 131
+593 items · — 63 · done 399 · retired 131
 
 ## v1.3
 
@@ -339,7 +339,7 @@ v1.2
 | 282 | [S577](slices/S577.md) | When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay |  | - |  | discovered from S572 | — |
 | 283 | [S578](slices/S578.md) | Do not split a Check criterion phrase starting with a dash flag into a runnable Check row |  | - |  | Already fixed: withoutAcceptanceCriteria (internal/engine/brief.go:886, S407) drops criteria bullets before the backtick split, tested by TestCheckSectionsSkipAcceptanceCriteria. Jon chose 'Retire as fixed', session 8d711f67, 2026-11-25. · discovered from S572 | retired |
 | 284 | [S579](slices/S579.md) | Roadmap item pane page keys skip the line under the more-lines marker |  | - |  | discovered from S531 | — |
-| 285 | [S580](slices/S580.md) | Roadmap list at height 10 cannot scroll up to the Goals block above the first row |  | - |  | discovered from S531 | — |
+| 285 | [S580](slices/S580.md) | Roadmap list at height 10 cannot scroll up to the Goals block above the first row |  | - |  | discovered from S531 | done |
 | 286 | [S581](slices/S581.md) | create the renders directory before the UI pass starts |  | - |  | discovered from S556 | done |
 | 287 | [S582](slices/S582.md) | in the Base overlays section, say which tests the brief's focused -run pattern covers, as separate commands without a pipe |  | - |  | Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25. · discovered from S564 | retired |
 | 288 | [S583](slices/S583.md) | give the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation |  | - |  | Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25. · discovered from S531 | retired |

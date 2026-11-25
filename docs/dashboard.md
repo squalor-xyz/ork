@@ -2038,6 +2038,9 @@ decided 2026-10-21). The data comes from
 A Goals error keeps the list. A Deps error makes readiness unknown (`?`).
 `enter` loads the selected item's spec and shows pending until it arrives.
 The detail wraps and clips to the pane. `esc` returns to the list.
+On the first row, `pgup` and `up`/`k` scroll hidden Goals into view by a page
+and by a line; `home`/`g` scrolls to the top. `down`/`j`, `pgdown`, `G`/`end`,
+`{` and `}` move the cursor as usual and return the window to it (adj 578, 582).
 Each run of items with the same pass sits under a dim heading line with the
 pass and the run's size, for example `v1.0 (24)` (S162, owner decision
 2026-10-27). Items with no pass fall under `No pass (N)`. Slicer lists a pass
