@@ -6500,3 +6500,6 @@
 {"when": "2026-11-25T15:52:38Z", "item": "S565", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T16:11:39Z", "item": "S566", "action": "add", "from": "", "to": "open", "note": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found"}
 {"when": "2026-11-25T16:11:39Z", "item": "S566", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T16:18:52Z", "item": "S563", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: (1) code gate everywhere: run.start and wa", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:28:18Z", "item": "S567", "action": "add", "from": "", "to": "open", "note": "adj: allow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records"}
+{"when": "2026-11-25T16:28:18Z", "item": "S567", "action": "promote", "from": "", "to": "", "note": ""}
