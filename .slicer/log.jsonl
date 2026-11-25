@@ -6436,3 +6436,5 @@
 {"when": "2026-11-25T14:57:32Z", "item": "S560", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T15:09:34Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded in: (a) S558's later finding: extend", "by": "Jon Robbins"}
 {"when": "2026-11-25T15:09:34Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Reported again from S545's reviewer (adj 559, dropped as cov", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:09:45Z", "item": "S561", "action": "add", "from": "", "to": "open", "note": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test"}
+{"when": "2026-11-25T15:09:46Z", "item": "S561", "action": "promote", "from": "", "to": "", "note": ""}

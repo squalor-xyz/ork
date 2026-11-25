@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 561,
+  "next_id": 562,
   "preamble": "",
   "passes": [
     {
@@ -29479,6 +29479,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-803b8cb7",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S561",
+      "title": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test",
+      "short_title": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S558",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1f3ba451",
         "pass": "v1.2",
         "group": "",
         "reason": "",
