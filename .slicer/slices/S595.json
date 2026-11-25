@@ -1,0 +1,39 @@
+{
+  "id": "S595",
+  "title": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-203302-a88e for S586 (discovered from S586):\n\n`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem\nIn the matcher model (`*` becomes `.*`), `Bash(go -C * test*)` matches `go -C /w get example.com/m test` and `go -C /w mod edit -droprequire=x test`. Both write go.mod from a read-only role. S586 deliberately left `go -C` alone (TestPinGitC keeps `Bash(go -C * test*)`). The fix would be to pin `go -C` the same way, or to add a negative test listing go write commands that end in `test` or `vet`. PLAUSIBLE: I traced this against the `.*` model but did not run it.\nImportance: 2\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

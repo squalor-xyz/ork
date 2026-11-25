@@ -248,7 +248,7 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 				t.Fatal(err)
 			}
 			want := map[string][]string{
-				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--system-prompt-file", filepath.Join(dir, "local-system.md"), "--tools", "Read,Grep,Glob,Bash", "--disable-slash-commands", "--allowedTools", localReadOnlyTools, "--permission-prompts", "none", "brief"},
+				"claude-local": {"-p", "--resume", "prior", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--model", model, "--effort", "medium", "--system-prompt-file", filepath.Join(dir, "local-system.md"), "--tools", "Read,Grep,Glob,Bash", "--disable-slash-commands", "--allowedTools", localReadOnlyToolsFor(dir), "--permission-prompts", "none", "brief"},
 				"codex-local":  {"exec", "resume", "prior", "-m", model, "--json", "-c", "model_reasoning_effort=medium", "-c", `sandbox_mode="read-only"`, "brief"},
 				"grok-local":   {"-p", "brief", "--output-format", "streaming-messages-json", "--include-partial-messages", "--reasoning-effort", "medium", "--resume", "prior", "--permission-mode", "plan", "--cwd", dir},
 			}[vendor]
@@ -276,12 +276,33 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 	}
 }
 
-const localReadOnlyTools = "Read,Grep,Glob,Bash(slicer * --help),Bash(slicer ai relay),Bash(ls*),Bash(git ls-files*),Bash(git -C * ls-files*),Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(git merge-base*),Bash(git -C * merge-base*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(slicer check*),Bash(adj show*),Bash(adj check*),Bash(adj lint*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
+// localReadOnlyTemplate is the read-only list with its git -C entries as a
+// template, `*` in place of the worktree (S586, adj 577).
+const localReadOnlyTemplate = "Read,Grep,Glob,Bash(slicer * --help),Bash(slicer ai relay),Bash(ls*),Bash(git ls-files*),Bash(git -C * ls-files*),Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(git merge-base*),Bash(git -C * merge-base*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(slicer check*),Bash(adj show*),Bash(adj check*),Bash(adj lint*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
+
+// localReadOnlyToolsFor is the list a request with this worktree gets: each
+// git -C entry names the worktree. An empty worktree cannot be pinned, so the
+// git -C entries are dropped (adj 580).
+func localReadOnlyToolsFor(worktree string) string {
+	var out []string
+	for _, entry := range strings.Split(localReadOnlyTemplate, ",") {
+		switch {
+		case !strings.HasPrefix(entry, "Bash(git -C * "):
+			out = append(out, entry)
+		case worktree != "":
+			out = append(out, strings.Replace(entry, "git -C * ", "git -C "+worktree+" ", 1))
+		}
+	}
+	return strings.Join(out, ",")
+}
+
+// localReadOnlyTools is the list for a request with no worktree.
+var localReadOnlyTools = localReadOnlyToolsFor("")
 
 func TestReadOnlyRoleOnCloudClaudeGetsTheReadOnlyList(t *testing.T) {
 	for _, role := range []string{engine.RoleReviewer, engine.RoleGate, engine.RoleArchitect, engine.RoleSpecCheck, engine.RoleSpecDraft} {
 		t.Run(role, func(t *testing.T) {
-			want := localReadOnlyTools
+			want := localReadOnlyToolsFor("/work/tree")
 			r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
 				if strings.Join(s.Allowlist, ",") != want || s.WriteDir != "" {
 					t.Errorf("read-only spec: allowlist %q, WriteDir %q; want %q and no write directory", s.Allowlist, s.WriteDir, want)
@@ -293,8 +314,33 @@ func TestReadOnlyRoleOnCloudClaudeGetsTheReadOnlyList(t *testing.T) {
 				}
 				return claude.Round{Class: claude.ClassOK}, nil
 			}}
-			if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: role, ReadOnly: true, TempDir: "/run/tmp/review", Brief: "brief"}); err != nil {
+			if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: role, ReadOnly: true, Worktree: "/work/tree", TempDir: "/run/tmp/review", Brief: "brief"}); err != nil {
 				t.Fatal(err)
+			}
+		})
+	}
+}
+
+// S586 (adj 577, adj 579): the runner pins a read-only role's git -C entries to
+// the request's worktree. No entry keeps the `git -C *` wildcard.
+func TestClaudeRunnerPinsReadOnlyGitCToTheWorktree(t *testing.T) {
+	for _, vendor := range []string{"claude", "claude-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			var got claude.Spec
+			r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+				got = s
+				return claude.Round{Class: claude.ClassOK}, nil
+			}}
+			if _, err := r.Run(context.Background(), engine.Request{Vendor: vendor, Role: engine.RoleReviewer, ReadOnly: true, Worktree: "/work", TempDir: t.TempDir(), Brief: "brief"}); err != nil {
+				t.Fatal(err)
+			}
+			if !slices.Contains(got.Allowlist, "Bash(git -C /work status*)") {
+				t.Errorf("allowlist lacks Bash(git -C /work status*): %q", got.Allowlist)
+			}
+			for _, entry := range got.Allowlist {
+				if strings.Contains(entry, "git -C *") {
+					t.Errorf("unpinned entry %s", entry)
+				}
 			}
 		})
 	}
@@ -304,13 +350,13 @@ func TestUIPassStillGetsItsWriteRule(t *testing.T) {
 	r := claudeRunner{round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
 		args, err := s.Args()
 		want := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages", "--add-dir", "/run/tmp/ui",
-			"--allowedTools", localReadOnlyTools + ",Skill,Edit(//run/tmp/ui/**),Write(//run/tmp/ui/**)", "--permission-prompts", "none", "brief"}
+			"--allowedTools", localReadOnlyToolsFor("/work/tree") + ",Skill,Edit(//run/tmp/ui/**),Write(//run/tmp/ui/**)", "--permission-prompts", "none", "brief"}
 		if err != nil || !reflect.DeepEqual(args, want) {
 			t.Errorf("UI argv %q, err %v; want %q", args, err, want)
 		}
 		return claude.Round{Class: claude.ClassOK}, nil
 	}}
-	if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: engine.RoleUI, ReadOnly: true, TempDir: "/run/tmp/ui", Brief: "brief"}); err != nil {
+	if _, err := r.Run(context.Background(), engine.Request{Vendor: "claude", Role: engine.RoleUI, ReadOnly: true, Worktree: "/work/tree", TempDir: "/run/tmp/ui", Brief: "brief"}); err != nil {
 		t.Fatal(err)
 	}
 }
@@ -341,7 +387,7 @@ func TestClaudeRunnerGivesOnlyTheCloudUIPassAWriteDir(t *testing.T) {
 			if got.WriteDir != tc.want {
 				t.Fatalf("WriteDir = %q, want %q", got.WriteDir, tc.want)
 			}
-			if tc.want != "" && strings.Join(got.Allowlist, ",") != localReadOnlyTools+",Skill" {
+			if tc.want != "" && strings.Join(got.Allowlist, ",") != localReadOnlyToolsFor("/work/tree")+",Skill" {
 				t.Fatalf("UI pass allowlist = %q", got.Allowlist)
 			}
 		})

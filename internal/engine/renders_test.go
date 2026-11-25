@@ -230,6 +230,53 @@ func TestRendersAreKeptAsPlainBoundedText(t *testing.T) {
 	}
 }
 
+// ork makes the renders directory before the UI pass starts, so the role writes
+// into it with no MkdirAll (S581). On a rerun the directory is there again, with
+// none of the earlier attempt's files.
+func TestUIPassStartsWithAnEmptyRendersDirectory(t *testing.T) {
+	h := uiHarness(t, tuiFiles)
+	var mu sync.Mutex
+	runs := 0
+	var problems []string
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		if req.Role != RoleUI {
+			return Result{}, nil
+		}
+		mu.Lock()
+		defer mu.Unlock()
+		runs++
+		dir := filepath.Join(req.TempDir, "renders")
+		info, err := os.Lstat(dir)
+		switch {
+		case err != nil:
+			problems = append(problems, "UI run "+string(rune('0'+runs))+": "+err.Error())
+		case !info.IsDir():
+			problems = append(problems, "UI run "+string(rune('0'+runs))+": renders is not a directory")
+		default:
+			if ents, err := os.ReadDir(dir); err != nil || len(ents) != 0 {
+				problems = append(problems, "UI run "+string(rune('0'+runs))+": renders is not empty")
+			}
+		}
+		if runs <= 2 {
+			writeRenders(t, req, map[string]string{"old-80x24.txt": "old"})
+			return Result{Exit: ExitOK, Report: noSections}, nil
+		}
+		return Result{}, nil
+	}
+	e := h.start()
+	requireState(t, e, runrec.StatePaused)
+	if err := e.Retry(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if runs < 3 {
+		t.Fatalf("the UI pass ran %d times, want a rerun", runs)
+	}
+	for _, p := range problems {
+		t.Error(p)
+	}
+}
+
 // A symlink in the renders directory is not followed: the role could point it
 // at any file the daemon can read.
 func TestRendersIgnoreSymlinks(t *testing.T) {
@@ -266,7 +313,11 @@ func TestRendersIgnoreASymlinkedDirectory(t *testing.T) {
 	}
 	h.runner.script = func(req Request, _ int) (Result, error) {
 		if req.Role == RoleUI {
-			if err := os.Symlink(secrets, filepath.Join(req.TempDir, "renders")); err != nil {
+			dir := filepath.Join(req.TempDir, "renders")
+			if err := os.Remove(dir); err != nil { // ork made it empty (S581)
+				t.Error(err)
+			}
+			if err := os.Symlink(secrets, dir); err != nil {
 				t.Error(err)
 			}
 		}

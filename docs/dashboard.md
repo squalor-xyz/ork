@@ -576,8 +576,10 @@ pane open, no row key moves the cursor;
 `pgdown` and `pgup` scroll a run, decision, Roadmap item, matrix or Waves item
 pane, and `j`, `k`, `g` and `G` (or `down`, `up`, `home` and `end`) scroll a
 Roadmap item or matrix pane by a line or to its ends (S190, *proposed*; the
-Roadmap help says `pgdown/pgup page rows or scroll a pane`),
-and in a run, decision, Roadmap item or Waves item pane
+Roadmap help says `pgdown/pgup page rows or scroll a pane`). A page key in a
+Roadmap item, matrix or spec-draft pane moves by the pane's lines minus the
+"+N more lines" marker line, so no line is skipped.
+In a run, decision, Roadmap item or Waves item pane
 `ctrl+d` and `ctrl+u` scroll it by half the pane's scrolling part (S149, S152,
 *proposed*). `ctrl+u` in an answer or fix-note field still clears the field, so
 there the hint shows only `ctrl+d`. The help says so on the scroll keys' line:

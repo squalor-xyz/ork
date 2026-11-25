@@ -198,8 +198,12 @@ func TestMatrixPaneScrollsLikeTheItemPane(t *testing.T) {
 	h.deliver(press("k"))
 	h.deliver(press("k"))
 	offset(0, "k at the top")
+	page := pane.page
+	if page != room-1 {
+		t.Fatalf("the page step is %d, want the room %d less the marker line", page, room)
+	}
 	h.deliver(press("pgdown"))
-	offset(room, "pgdown")
+	offset(page, "pgdown")
 	h.deliver(press("pgup"))
 	offset(0, "pgup")
 	h.deliver(press("ctrl+d"))

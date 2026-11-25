@@ -350,7 +350,7 @@ func doneWhen(in BriefInput) string {
 		if in.Role == RoleUI && in.Vendor == "claude" {
 			// S416: a cloud UI pass runs on an allowlist, not plan mode (adj 372),
 			// so it is told the forms it may run. Same list the runner sends.
-			items = append(items, "Allowed forms, verbatim: "+strings.Join(CloudUIAllowlist(), "; ")+"; Edit and Write under "+in.TempDir+"; any other command is denied; run one plain command per shell call.")
+			items = append(items, "Allowed forms, verbatim: "+strings.Join(CloudUIAllowlist(in.Worktree), "; ")+"; Edit and Write under "+in.TempDir+"; any other command is denied; run one plain command per shell call.")
 		}
 		if isGrok {
 			add("Grok plan mode: the fixtures show git status --short, git diff -- PATH and git diff --check -- PATH running, plus the built-in file tools read_file, grep and list_dir. rg, slicer and test commands remain unverified.")

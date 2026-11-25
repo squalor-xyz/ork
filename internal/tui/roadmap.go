@@ -32,6 +32,7 @@ type itemPane struct {
 	err         error
 	offset      int // the first line shown below the heading (Roadmap item pane)
 	room        int // the lines of the scrolling part the last draw had
+	page        int // the offset step of a page key: the lines of the scrolling part the last draw showed above the "+N more lines" marker
 }
 
 type itemShowMsg struct {
@@ -114,9 +115,9 @@ func (m *Model) scrollRoadmapPane(msg tea.KeyPressMsg) {
 	case key.Matches(msg, m.keys.RowPrev):
 		pane.offset = max(pane.offset-1, 0)
 	case key.Matches(msg, m.keys.PageDown):
-		pane.offset += max(pane.room, 1)
+		pane.offset += max(pane.page, 1)
 	case key.Matches(msg, m.keys.PageUp):
-		pane.offset = max(pane.offset-max(pane.room, 1), 0)
+		pane.offset = max(pane.offset-max(pane.page, 1), 0)
 	}
 }
 
@@ -160,9 +161,13 @@ func (m *Model) openItem() tea.Cmd {
 // the pane's offset, as the Waves item pane does. It notes how many lines the
 // scrolling part has for ctrl+d and ctrl+u (S152).
 func (m *Model) scrollItemPane(pane *itemPane, out *overviewView, head int) {
-	_, visible := m.decisionPage()
-	visible = max(visible-head, 1)
+	_, total := m.decisionPage()
+	visible := max(total-head, 1)
 	pane.room = visible
+	// The window starts at line 0, so only the "+N more lines" marker takes a
+	// line. span draws no marker below 3 lines, but the heading is at least a
+	// line, so then visible is 1 and the step is 1 either way.
+	pane.page = max(visible-1, 1)
 	pane.offset = min(pane.offset, max(len(out.body)-head-visible, 0))
 	out.body = append(out.body[:head:head], out.body[head+pane.offset:]...)
 }

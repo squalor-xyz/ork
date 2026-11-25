@@ -1,0 +1,39 @@
+{
+  "id": "S591",
+  "title": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-203305-0dc5, project ork, item S579:\n\nwhen a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds\n\nEvidence: overlay-1.json reverts only roadmap.go; build failed with \"pane.page undefined\" at matrix_test.go:201 and roadmap_test.go:629"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

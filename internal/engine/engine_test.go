@@ -319,8 +319,13 @@ func TestHappyPathReachesAwaitingApproval(t *testing.T) {
 	}
 	reqs := h.runner.requests()
 	impl, rev, gate := reqs[0], reqs[1], reqs[2]
-	if impl.Resume != "" || impl.ReadOnly || !reflect.DeepEqual(impl.Allowlist, DefaultImplementerAllowlist("go test ./...")) {
+	if impl.Resume != "" || impl.ReadOnly || !reflect.DeepEqual(impl.Allowlist, PinGitC(DefaultImplementerAllowlist("go test ./..."), h.W)) {
 		t.Errorf("implementer request: %+v", impl)
+	}
+	// S586 (adj 579): the launch pins the implementer's git -C entries to the
+	// run's worktree.
+	if !slices.Contains(impl.Allowlist, "Bash(git -C "+h.W+" status*)") || slices.Contains(impl.Allowlist, "Bash(git -C * status*)") {
+		t.Errorf("implementer allowlist is not pinned to %s: %q", h.W, impl.Allowlist)
 	}
 	if rev.Resume != "" || !rev.ReadOnly || len(rev.Allowlist) != 0 {
 		t.Errorf("reviewer request: %+v", rev)
@@ -2047,8 +2052,9 @@ func TestFixBriefKeepsTheAssertionWhenTheOutputIsLong(t *testing.T) {
 			t.Errorf("the brief lost %q:\n%.1500s", want, brief)
 		}
 	}
-	// S417 adds named-report guidance to the implementer prompt.
-	if n := len(brief); n > 30000+8200+8000 {
+	// S417 adds named-report guidance to the implementer prompt. S586 adds the
+	// worktree path to six git -C entries in the Allowed forms item.
+	if n := len(brief); n > 30000+8200+8000+1500 {
 		t.Errorf("the brief grew to %d bytes", n)
 	}
 }

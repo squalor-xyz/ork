@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 591,
+  "next_id": 596,
   "preamble": "",
   "passes": [
     {
@@ -30539,7 +30539,7 @@
       "id": "S577",
       "title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
       "short_title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -30556,7 +30556,7 @@
         "key": "tool-feedback-ork-397a3274",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -30595,7 +30595,7 @@
       "id": "S579",
       "title": "Roadmap item pane page keys skip the line under the more-lines marker",
       "short_title": "Roadmap item pane page keys skip the line under the more-lines marker",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30605,6 +30605,34 @@
           "text": "**2026-11-25** — Owner decision: page step. The page keys move pane.offset by the room minus the lines the draw spends on the more-lines marker, so no line is skipped; this also fixes the spec-draft pane, which shares scrollRoadmapPane (internal/tui/roadmap.go). Re-enable the S579 case in internal/tui/scroll_sweep_test.go:208-211. Jon chose 'Page step', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T20:22:00Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4caea531-327a-4f54-9359-f9d62001c9b7",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S579):\n- later: Open a long item on the Roadmap at 80x24 and press pgdown until the end. Each page should start with the line that sat under the \"+N more lines\" marker on the page before. Press pgup back up the same way. Open the spec draft pane on a long draft and page it; it should behave the same.",
+          "created_at": "2026-11-25T20:47:43Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b09e7f9f-8177-4450-b049-0e33c9c16f2e",
+          "kind": "",
+          "text": "**2026-11-25** — The Roadmap item, role matrix and spec-draft panes now page by their lines minus the \"+N more lines\" marker line (new itemPane.page), so no line is skipped; the roadmap-item case joins TestScrollSweep and passes at heights 10, 16, 24 and 40.",
+          "created_at": "2026-11-25T20:47:43Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30631,7 +30659,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30681,10 +30709,25 @@
       "id": "S581",
       "title": "create the renders directory before the UI pass starts",
       "short_title": "create the renders directory before the UI pass starts",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "732c1633-e9ed-4922-99a6-59d3b335791f",
+          "kind": "",
+          "text": "**2026-11-25** — ork now makes the UI pass's empty `tmp/ui-N/renders/` directory before each UI pass starts (including reruns), so the pass no longer needs `os.MkdirAll`; full suite and `slicer check` pass.",
+          "created_at": "2026-11-25T20:00:54Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30702,7 +30745,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30836,7 +30879,7 @@
       "id": "S586",
       "title": "Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name",
       "short_title": "Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30881,6 +30924,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9d02e925-ed38-4111-b0f5-31d362bc3c32",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S586):\n- later: Probe the real Claude Code matcher (not run by this draft). In a scratch git repo, start Claude Code with the allow rule Bash(git -C * show*) and ask it to run git -C /scratch commit --allow-empty -m show. If it runs without a prompt, the CLI's * spans the subcommand like ork's hook does. Then repeat with Bash(git -C /scratch show*): the commit command should prompt or be denied, and git -C /scratch show HEAD should run. Record the result on S586.",
+          "created_at": "2026-11-25T20:47:49Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "df5615dc-ac18-4893-9582-c2586b403205",
+          "kind": "",
+          "text": "**2026-11-25** — S586 pins every read-only and implementer `git -C` allowlist entry to the role's worktree (`Bash(git -C PATH SUBCMD*)`) at launch, so no git write ending in a subcommand name matches; full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-25T20:47:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30900,7 +30971,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31042,6 +31113,191 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S591",
+      "title": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds",
+      "short_title": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S579",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-798481a0",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S592",
+      "title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
+      "short_title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S571",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-02a8ba18",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S593",
+      "title": "when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check",
+      "short_title": "when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "eb2f969e-2614-4897-b0c9-cb70d3019d92",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: merged S577 and S591 here. ork runs go vet with each base overlay first; an overlay that fails to build is shown in the Base overlays section as 'does not build: ERROR' instead of a revert command. Covers a reverted helper used elsewhere (S577: undefined heldNote), tests reading a new struct field (S591: pane.page undefined) and signature changes (S593). Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:55:42Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S586",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-e1d22f61",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S594",
+      "title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
+      "short_title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "294d767c-81da-4184-880b-427d1ab0bbf1",
+          "kind": "",
+          "text": "**2026-11-25** — possible duplicate of S591",
+          "created_at": "2026-11-25T20:47:42Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S579",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-34bf9623",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S595",
+      "title": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem",
+      "short_title": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "bd0053fa-5322-4ae7-ad89-2c3048419956",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: pin go -C read-only entries at launch the same way as git -C (adj 579, 580). Also fold S586 finding 1: the gate brief's allowed forms come from ResolvePermission (round.go:634-638), not rolePermission, so it shows the unpinned git -C * template; show the pinned list. Jon chose 'File: pin go -C too' and 'Fold into the go -C slice', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T20:55:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S586",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-203302-a88e-later-2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }
