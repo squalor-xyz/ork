@@ -1,0 +1,39 @@
+{
+  "id": "S569",
+  "title": "when a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-163840-c68e, project ork, item S559:\n\nwhen a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief\n\nEvidence: docs/design.md:3122 still says adj find after spec-check.md:76-77 changed to adj check TEXT"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
