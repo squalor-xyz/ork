@@ -574,6 +574,10 @@ be read. A failed file read does not block launch. A started run prints
 `stop it: ork stop RUNID`. JSON results keep their existing shape.
 The run is now in the daemon. Closing the TUI or the shell does not stop it.
 
+An agent that drives these commands can read `ork ai instructions` for the
+`RUN` id rule, the steering commands and the owner-only steps (*proposed*,
+S233; section 14).
+
 The roles run in this order (`docs/design.md:391-631`):
 
 1. **setup**: git worktree and branch, and a slicer ledger run.
@@ -991,8 +995,14 @@ directory named under Your files in its brief in place of DIR:
 
     go test ./internal/cli -run TestRenderCLIViews -renders DIR
 
-It writes `status.txt`, `show.txt` and `help.txt` from the CLI test fixtures
-to that existing directory, without changing the tree. The files contain
+It writes `status.txt`, `status-summary.txt`, `status-summary-long.txt`,
+`show.txt` and `help.txt` from the CLI test fixtures to that existing
+directory, without changing the tree. Add `-render-fixture NAME[,NAME...]` to
+write only `NAME.txt` for each name. The names are the five above (without
+`.txt`) and `projects-set`, `projects-set-refusals`, `wave-start`,
+`status-queued-held`, `status-engine`, `summary-real`, `projects-setup` and
+`fake-reply`. A view of several commands puts a `$ ork ARGS` line, with the
+arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`
 the render test writes nothing. The pass copies selected scratch files into
 its `renders/` directory with the prompt's `VIEW-80x24.txt` names so they
@@ -1186,6 +1196,21 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork daemon status
     ork daemon run | stop [--force] | restart [--force] [--rebuild]
     ork doctor
+    ork ai instructions
+    ork ai skill [--output PATH | --install] [--force]
+
+*Proposed (S233):* `ork ai instructions` prints a short guide for an agent that
+drives ork from the command line, and `ork ai skill` prints a `SKILL.md` built
+from the same text (front matter `name: ork`, then the guide). Both read the
+text embedded in the binary, so it follows the CLI, and neither needs the
+daemon. `--output PATH` writes the skill to one file, creating parent
+directories. `--install` writes `.claude/skills/ork/SKILL.md`,
+`.agents/skills/ork/SKILL.md` and `.grok/skills/ork/SKILL.md` under the current
+directory. A file that holds other text is kept and the command exits 1 naming
+it, with nothing written, unless you add `--force`; a file that already holds
+the text is left alone. With `--json`, `ai instructions` prints `{"text": ...}`
+and a write prints `{"written": [PATH, ...]}`, plus `unchanged` when a file
+needed no write. Checking a skill into a project is the owner's call.
 
 *Proposed (S405; adj 462 for the ranges):* `ork tracking commit P` commits the tracking files that
 filing slices, spec answers and owner decisions leave uncommitted on the base

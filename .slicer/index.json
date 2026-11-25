@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 549,
+  "next_id": 555,
   "preamble": "",
   "passes": [
     {
@@ -13358,14 +13358,57 @@
       "id": "S233",
       "title": "ork ai: print the agent guide and install the ork skill for Claude, Codex and Grok",
       "short_title": "ork ai guide and skill",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S240",
         "S241",
         "S242"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6f91bd3f-3b2d-4548-8051-48f40e5042ea",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S233):\n- later: After landing and a rebuild, the owner reads \"ork ai instructions\" once and says whether it matches how an agent should drive ork, and decides whether to install the skill in a project.",
+          "created_at": "2026-11-25T03:25:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0781af2d-fcd3-4719-9543-b3fc1def7fb0",
+          "kind": "",
+          "text": "**2026-11-25** — Added `ork ai instructions` and `ork ai skill [--output|--install|--force]` with an embedded guide that matches current CLI, tests, docs and changelog; the UI pass found no defects, and race tests, vet, gofmt, slicer check and adj lint are green.",
+          "created_at": "2026-11-25T03:25:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "8d1f9654-fb52-414a-860d-3fb5f8465698",
+          "kind": "",
+          "text": "**2026-11-25** — Added `ork ai instructions` and `ork ai skill [--output|--install|--force]` with an embedded guide; the unchanged tree passes the full race suite, vet, gofmt and slicer check, and the earlier daemon failure was the flake S544, outside this slice.",
+          "created_at": "2026-11-25T13:21:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13383,7 +13426,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -27033,7 +27076,7 @@
       "id": "S499",
       "title": "let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card",
       "short_title": "let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -27148,6 +27191,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9801d7a3-66c0-4928-b377-6edb96e2c953",
+          "kind": "",
+          "text": "**2026-11-25** — Added the -render-fixture test flag and eight named CLI render fixtures to internal/cli/render_test.go with a named literal-line test each; fix round: the \"$ ork ARGS\" header now shell-quotes arguments, and docs/guide.md and docs/design.md name -render-fixture; go vet and go test ./... pass.",
+          "created_at": "2026-11-25T13:25:33Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27167,7 +27224,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28347,6 +28404,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6d22adf5-c557-4676-ad3e-39288ab83031",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten): named failing tests per behaviour; Check go test ./internal/tui, go test ./..., go vet ./..., gofmt -l . (must print nothing); goldens rewritten with -update and reviewed.",
+          "created_at": "2026-11-25T13:18:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28699,6 +28770,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1395eb49-5bd0-4ee1-bc5c-362b7bb8d40f",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten): named failing tests per behaviour; Check go test ./internal/tui, go test ./..., go vet ./..., gofmt -l . (must print nothing); goldens rewritten with -update and reviewed.",
+          "created_at": "2026-11-25T13:18:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28804,6 +28889,189 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S549",
+      "title": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures",
+      "short_title": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-3c534959",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S550",
+      "title": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section",
+      "short_title": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-db3fef09",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S551",
+      "title": "allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert",
+      "short_title": "allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S548",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1f61cd0b",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S552",
+      "title": "UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files",
+      "short_title": "UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "5de0dbee-82ca-4ac6-9e5b-d1f9c754ee06",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S499's later findings 1, 2 and 5 in. Also update docs/guide.md:992-997 and docs/design.md:805-810: -renders alone writes five files (status, status-summary, status-summary-long, show, help), and -render-fixture NAME[,NAME...] writes the eight fixtures. internal/engine/brief_test.go:992 asserts the current brief text. Source: ork show ork-20261125-131038-69e9.",
+          "created_at": "2026-11-25T13:32:23Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-131038-69e9-later-3",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S553",
+      "title": "In ork status, print the wave line after the multi-line wait's options",
+      "short_title": "In ork status, print the wave line after the multi-line wait's options",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-131038-69e9-later-4",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S554",
+      "title": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file",
+      "short_title": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S544",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f3dd36f6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

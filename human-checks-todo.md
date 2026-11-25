@@ -278,3 +278,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S251 (run ork-20261125-015357-ca10, 2026-11-25)
 
 - [ ] At 100x30 and 80x24, with a scratch project registered (no `.slicer/`, no `.adjudicate.json`), open the pane, run `slicer-init`, `relay-roles-init` and `adj-init` from it, and see each block fill in. Not against this repository.
+
+## S233 (run ork-20261125-015129-4c21, 2026-11-25)
+
+- [ ] After landing and a rebuild, the owner reads "ork ai instructions" once and says whether it matches how an agent should drive ork, and decides whether to install the skill in a project.

@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/cli/render_test.go`\n- `docs/guide.md`\n- `docs/design.md`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestRenderCLIViewsWritesFiles` in `internal/cli/render_test.go`: with `-renders DIR` and no `-render-fixture`, the five default files; with `-render-fixture NAME[,NAME...]`, exactly NAME.txt for each name, each with non-empty text and no ANSI escapes; an unknown name fails; `-render-fixture` without `-renders` writes nothing. Red before the change: no flag, and no fixture of the eight names.\n- One named test per new fixture in `internal/cli/render_test.go`, each asserting one literal line from its view: `TestRenderProjectsSetFixture`, `TestRenderProjectsSetRefusalsFixture`, `TestRenderWaveStartFixture`, `TestRenderStatusQueuedHeldFixture`, `TestRenderStatusEngineFixture`, `TestRenderSummaryRealFixture`, `TestRenderProjectsSetupFixture`, `TestRenderFakeReplyFixture`. Red before the change: no such fixture."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- `go test ./internal/cli` exits 0."
     },
     {
       "heading": "Git",

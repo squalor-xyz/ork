@@ -74,6 +74,8 @@ and writes slicer and adj only through their CLIs.
   tools, one slice, and who drafts, checks and judges.
 - [docs/guide.md](docs/guide.md): a walk-through for a new owner, from
   install to a landed slice, a wave, and daily monitoring.
+  An agent that drives ork's CLI runs `ork ai instructions` for its own
+  guide; `ork ai skill --install` writes it as a skill (*proposed*, S233).
 - [docs/diagrams.md](docs/diagrams.md): Mermaid diagrams of the components,
   a run's states, one relay round, a wave, setup and daily use.
 - [docs/orchestrator-parity.md](docs/orchestrator-parity.md): what the

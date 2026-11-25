@@ -1,0 +1,39 @@
+{
+  "id": "S551",
+  "title": "allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-131825-4682, project ork, item S548:\n\nallow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert\n\nEvidence: cp of internal/daemon/matrixcopy.go into the role temp dir was denied with \"needs approval ... no approval surface\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

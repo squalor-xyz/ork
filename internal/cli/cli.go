@@ -307,6 +307,14 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               upgrade a tool that is behind or missing
                               (slicer, adj and ork with --upgrade), and run
                               none of them
+  ork ai instructions         print the guide for an agent that drives ork
+                              (proposed, S233); needs no daemon
+  ork ai skill [--output PATH | --install] [--force]
+                              print the ork SKILL.md built from that guide;
+                              --output writes one file; --install writes
+                              .claude, .agents and .grok skills/ork/SKILL.md
+                              under the current directory; a file with other
+                              text is kept unless --force; needs no daemon
 
 RUN is the ork- id that starts a run's row in ork status. The run- id of a
 relay row is slicer's, and the commands refuse it.
@@ -448,6 +456,8 @@ func (a *App) Run(ctx context.Context, args []string, stdout, stderr io.Writer) 
 		return o.printHelp(words...)
 	case "adj":
 		return a.adj(ctx, o, rest)
+	case "ai":
+		return a.ai(ctx, o, rest)
 	case "tracking":
 		return a.tracking(ctx, o, rest)
 	case "new":
