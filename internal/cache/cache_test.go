@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"sort"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -265,6 +266,38 @@ func TestConcurrentReadsOfAPartShareOneCall(t *testing.T) {
 	}
 	if v := c.Get(context.Background(), alpha, source.Items); v.Err != nil || v.Value == nil {
 		t.Fatalf("items after the read: %+v", v)
+	}
+}
+
+// A read's change notice is sent before Get or Refresh returns for that read
+// (S544). A client that reads a part and then subscribes must not get that
+// read's notice. onChange is slow here, so a notice sent after the read's
+// waiters were released would still be running when the call returns.
+func TestChangeNoticeIsSentBeforeTheReadReturns(t *testing.T) {
+	for _, tc := range []struct {
+		name string
+		read func(c *Cache)
+	}{
+		{"Get", func(c *Cache) { c.Get(context.Background(), alpha, source.Items) }},
+		{"Refresh", func(c *Cache) {
+			if err := c.Refresh(context.Background(), alpha, source.Items); err != nil {
+				t.Errorf("refresh: %v", err)
+			}
+		}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			var sent atomic.Bool
+			c := newCache(t, newFetcher(), &fakeClock{}, func(_ string, part source.Part) {
+				if part == source.Items {
+					time.Sleep(50 * time.Millisecond)
+					sent.Store(true)
+				}
+			})
+			tc.read(c)
+			if !sent.Load() {
+				t.Fatal("the read returned before its change notice was sent")
+			}
+		})
 	}
 }
 

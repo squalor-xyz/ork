@@ -6329,3 +6329,7 @@
 {"when": "2026-11-25T13:12:06Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later findings 2-4 in. (2) Af", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:12:06Z", "item": "S548", "action": "set", "from": "", "to": "", "note": "title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs; short_title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs"}
 {"when": "2026-11-25T13:12:07Z", "item": "S548", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later finding 5 in: the add i", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:18:25Z", "item": "S544", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:27:49Z", "item": "S544", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T13:36:09Z", "item": "S544", "action": "note", "from": "", "to": "", "note": "Cache finishRead now sends onChange before close(f.done), so", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:36:09Z", "item": "S544", "action": "status", "from": "started", "to": "done", "note": "Cache finishRead now sends onChange before close(f.done), so a read's notice is sent before Get/Refresh returns; new cache test covers it and the full suite passes under -race.", "by": "Jon Robbins"}

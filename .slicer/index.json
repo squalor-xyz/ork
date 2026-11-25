@@ -28597,7 +28597,7 @@
       "id": "S544",
       "title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
       "short_title": "Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28607,6 +28607,20 @@
           "text": "**2026-11-25** — Owner 2026-11-25: fix the cache ordering. In internal/cache/cache.go call onChange before close(f.done), so a read's notice is sent before Get or Snapshot returns; the test then needs no wait. Check that other cache tests still pass.",
           "created_at": "2026-11-25T13:18:18Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b2498a73-4af5-4230-9436-8adc02fe383c",
+          "kind": "",
+          "text": "**2026-11-25** — Cache finishRead now sends onChange before close(f.done), so a read's notice is sent before Get/Refresh returns; new cache test covers it and the full suite passes under -race.",
+          "created_at": "2026-11-25T13:36:09Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -28633,7 +28647,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

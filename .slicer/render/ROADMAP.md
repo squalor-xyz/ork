@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-548 items · — 53 · done 372 · retired 123
+548 items · — 52 · done 373 · retired 123
 
 ## v1.3
 
@@ -303,7 +303,7 @@ v1.2
 | 246 | [S541](slices/S541.md) | allow read-only slicer relay-roles show for reviewer roles so a matrix-related finding can be checked against the real matrix |  | - |  | discovered from S261 | — |
 | 247 | [S542](slices/S542.md) | before the gate, check that every adj key cited as an owner decision in the diff resolves with adj check, and list the ones that do not in the brief |  | - |  | discovered from S251 | — |
 | 248 | [S543](slices/S543.md) | Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice | S | - |  |  | — |
-| 249 | [S544](slices/S544.md) | Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load | S | - |  |  | — |
+| 249 | [S544](slices/S544.md) | Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load | S | - |  |  | done |
 | 250 | [S545](slices/S545.md) | A red slice check from a flake stays cached across retries until the product or Check text changes | S | - |  |  | — |
 | 251 | [S546](slices/S546.md) | Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns |  | 2 |  | discovered from S251 | — |
 | 252 | [S547](slices/S547.md) | matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields |  | - |  | discovered from S261 | — |
