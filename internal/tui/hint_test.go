@@ -1215,7 +1215,7 @@ func TestCtrlDUHintsShowInThosePanes(t *testing.T) {
 }
 
 // ctrl+u clears the text in a field, and the help says so on the line of the
-// scroll keys, which leaves the standard help as long as it was (S152).
+// scroll keys. Full labels may need scrolling at the standard size (S401).
 func TestHelpMentionsCtrlUClearsAField(t *testing.T) {
 	h := newHarness(t, four...)
 	h.start()
@@ -1227,8 +1227,10 @@ func TestHelpMentionsCtrlUClearsAField(t *testing.T) {
 	if !strings.Contains(v, "ctrl+d/u scroll a pane half a page") {
 		t.Errorf("the help lost the scroll keys:\n%s", v)
 	}
+	h.deliver(tea.KeyPressMsg{Code: tea.KeyPgDown})
+	v = h.view()
 	if strings.Contains(v, "more lines") || !strings.Contains(v, "esc close run, question, item, decision, help or message") {
-		t.Errorf("the help is cut at 100x30:\n%s", v)
+		t.Errorf("the help end is unreachable at 100x30:\n%s", v)
 	}
 }
 
@@ -1351,7 +1353,8 @@ func TestRoadmapNewHelpFitsEightyColumns(t *testing.T) {
 	h.m.cfg.Live = &newLive{}
 	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
 	h.m.Update(press("?"))
-	if v := plainView(h.m); !strings.Contains(v, "n new slice") {
+	v := strings.Join(strings.Fields(helpBody(h)), " ")
+	if !strings.Contains(v, "n new slice") {
 		t.Fatalf("new action clipped in help:\n%s", v)
 	}
 }

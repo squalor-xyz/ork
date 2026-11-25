@@ -1,0 +1,39 @@
+{
+  "id": "S541",
+  "title": "allow read-only slicer relay-roles show for reviewer roles so a matrix-related finding can be checked against the real matrix",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-021106-86c7, project ork, item S261:\n\nallow read-only slicer relay-roles show for reviewer roles so a matrix-related finding can be checked against the real matrix\n\nEvidence: slicer relay-roles show --json --root WORKTREE was denied as requiring approval during the S261 review"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -1,0 +1,39 @@
+{
+  "id": "S536",
+  "title": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-021911-277a, project ork, item S510:\n\nflag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too\n\nEvidence: brief.go:146 is gated on role while runner.go:60 grants in claudeRunner only"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

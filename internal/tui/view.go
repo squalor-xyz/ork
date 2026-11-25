@@ -337,6 +337,9 @@ func (m *Model) screen() string {
 			}
 		}
 	}
+	if m.showHelp {
+		start = min(max(m.helpOffset, 0), windowStart(len(body)-1, len(body), bodyH))
+	}
 	if scrolls && m.launch != nil && bodyH > 0 {
 		// The confirm's window starts at its own line, so each up or down moves
 		// the view by a line; the last window ends flush with the body.
@@ -837,8 +840,8 @@ func (m *Model) hintLine(w int) string {
 	return clip(" "+line, w)
 }
 
-// packHints joins keys with "; " into lines of at most w columns, as many to a
-// line as fit. A line breaks only between keys, so no key splits from its words.
+// packHints joins as many keys with "; " as fit on each line. An individual
+// hint may exceed w; helpLines wraps it without losing any words.
 func packHints(hints []string, w int) []string {
 	var lines []string
 	line := ""
@@ -849,27 +852,70 @@ func packHints(hints []string, w int) []string {
 		case lipgloss.Width(line)+2+lipgloss.Width(h) <= w:
 			line += "; " + h
 		default:
-			lines = append(lines, clip(line, w))
+			lines = append(lines, line)
 			line = h
 		}
 	}
 	if line != "" {
-		lines = append(lines, clip(line, w))
+		lines = append(lines, line)
 	}
 	return lines
+}
+
+// wrapHelpLine keeps hints together before falling back to word wrapping an
+// oversized hint. Continuations hang two spaces; prose notes wrap as sentences.
+func wrapHelpLine(line string, w int) []string {
+	w = max(w, 1)
+	hang := strings.Repeat(" ", min(2, w-1))
+	hints := []string{line}
+	if !strings.HasPrefix(line, "Waves:") && !strings.HasPrefix(line, "Decisions:") {
+		hints = strings.Split(line, "; ")
+		for i := 0; i < len(hints)-1; i++ {
+			hints[i] += ";"
+		}
+	}
+	var out []string
+	prefix, current := "", ""
+	flush := func() {
+		out = append(out, prefix+current)
+		prefix, current = hang, ""
+	}
+	for _, hint := range hints {
+		room := w - len(prefix)
+		if current != "" {
+			if lipgloss.Width(current)+1+lipgloss.Width(hint) <= room {
+				current += " " + hint
+				continue
+			}
+			flush()
+			room = w - len(prefix)
+		}
+		for lipgloss.Width(hint) > room {
+			part := wrapText(hint, room)[0]
+			current = part
+			flush()
+			hint = strings.TrimLeft(strings.TrimPrefix(hint, part), " ")
+			room = w - len(prefix)
+		}
+		current = hint
+	}
+	flush()
+	return out
 }
 
 // helpLines is the key list shown in place of the Overview.
 func (m *Model) helpLines(w, bodyH int) []string {
 	th := m.cfg.Theme
+	group, expand, all := m.keys.NextGroup.Help(), m.keys.Expand.Help(), m.keys.ExpandAll.Help()
+	expandAllWithGroup := m.view != roadmapView &&
+		lipgloss.Width(group.Key+" "+group.Desc+"; "+all.Key+" "+all.Desc) <= w &&
+		lipgloss.Width(expand.Key+" "+expand.Desc+"; "+all.Key+" "+all.Desc) > w
 	lines := []string{th.Heading.Render("Keys")}
 	if m.view == wavesView {
-		// The saved-wave keys ride on the end of this sentence: at 72 columns they
-		// fill its second line, so the help keeps the line count it had (S216).
-		lines = append(lines, wrapText("Waves: A shows all waves. A again shows first 3. <S65: shares files with S65, an earlier item. w saves the ticked items; L lists saved waves.", max(w, 1))...)
+		lines = append(lines, "Waves: A shows all waves. A again shows first 3. <S65: shares files with S65, an earlier item. w saves the ticked items; L lists saved waves.")
 	}
 	if m.view == decisionsView {
-		lines = append(lines, wrapText("Decisions: left/right switch tabs; [ and ] switch projects or entries.", max(w, 1))...)
+		lines = append(lines, "Decisions: left/right switch tabs; [ and ] switch projects or entries.")
 	}
 	var actionHints []string
 	refresh, filter := "", ""
@@ -889,12 +935,12 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			if h == m.keys.PrevView.Help() {
 				next := m.keys.NextView.Help()
-				lines = append(lines, clip(next.Key+" "+next.Desc+"; "+h.Key+" "+h.Desc, w))
+				lines = append(lines, next.Key+" "+next.Desc+"; "+h.Key+" "+h.Desc)
 				continue
 			}
 			if h == m.keys.Next.Help() {
 				p := m.keys.Prev.Help()
-				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+p.Key+" "+p.Desc, w))
+				lines = append(lines, h.Key+" "+h.Desc+"; "+p.Key+" "+p.Desc)
 				continue
 			}
 			if h == m.keys.Prev.Help() {
@@ -902,7 +948,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			// ctrl+u clears a field: it shares the scroll keys' line (S152).
 			if h == m.keys.ScrollDown.Help() {
-				lines = append(lines, clip(h.Key+" "+h.Desc+"; ctrl+u clears a field", w))
+				lines = append(lines, h.Key+" "+h.Desc+"; ctrl+u clears a field")
 				continue
 			}
 			// Refresh shares the quit line, and the filter and sidebar keys one
@@ -916,7 +962,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h == m.keys.Add.Help() {
 				r, mouse := m.keys.Remove.Help(), m.keys.Mouse.Help()
 				// M shares the project-edit line, so the help keeps its length (S66).
-				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+r.Key+" "+r.Desc+"; "+mouse.Key+" "+mouse.Desc, w))
+				lines = append(lines, h.Key+" "+h.Desc+"; "+r.Key+" "+r.Desc+"; "+mouse.Key+" "+mouse.Desc)
 				continue
 			}
 			if h == m.keys.Remove.Help() || h == m.keys.Mouse.Help() || h == m.keys.ExpandAll.Help() || h == m.keys.Tick.Help() {
@@ -929,17 +975,21 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			// The two Waves keys share a line, which pays for the expand keys' (S164).
 			if h == m.keys.EditLineup.Help() {
 				if m.view == roadmapView {
-					lines = append(lines, clip(h.Key+" "+h.Desc, w))
+					lines = append(lines, h.Key+" "+h.Desc)
 					continue
 				}
 				tick := m.keys.Tick.Help()
-				lines = append(lines, clip(tick.Key+" "+tick.Desc+"; "+h.Key+" "+h.Desc, w))
+				lines = append(lines, tick.Key+" "+tick.Desc+"; "+h.Key+" "+h.Desc)
 				continue
 			}
-			// The two expand keys share a line (S164).
-			if h == m.keys.Expand.Help() {
+			if h == m.keys.NextGroup.Help() && expandAllWithGroup {
+				// The expand-all hint fits beside the group keys at 100x30.
 				all := m.keys.ExpandAll.Help()
-				lines = append(lines, clip(h.Key+" "+h.Desc+"; "+all.Key+" "+all.Desc, w))
+				lines = append(lines, h.Key+" "+h.Desc+"; "+all.Key+" "+all.Desc)
+				continue
+			}
+			if h == m.keys.Expand.Help() && !expandAllWithGroup {
+				lines = append(lines, h.Key+" "+h.Desc+"; "+all.Key+" "+all.Desc)
 				continue
 			}
 			if h == m.keys.Filter.Help() {
@@ -947,7 +997,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				continue
 			}
 			if h == m.keys.Sidebar.Help() {
-				lines = append(lines, clip(filter+h.Key+" "+h.Desc, w))
+				lines = append(lines, filter+h.Key+" "+h.Desc)
 				filter = ""
 				continue
 			}
@@ -959,7 +1009,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h == m.keys.Help.Help() {
 				q := m.keys.Quit.Help()
 				s := m.keys.Settings.Help()
-				lines = append(lines, clip(refresh+q.Key+" "+q.Desc+"; "+h.Key+" "+h.Desc+"; "+s.Key+" settings", w))
+				lines = append(lines, refresh+q.Key+" "+q.Desc+"; "+h.Key+" "+h.Desc+"; "+s.Key+" settings")
 				continue
 			}
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {
@@ -979,23 +1029,15 @@ func (m *Model) helpLines(w, bodyH int) []string {
 				if !m.matrixPaneOpen() {
 					text += "; N note; n new slice"
 				}
-				// At 100x30 there is room for a separate line. At 80x24
-				// keep the keys together so help's way out stays visible.
-				// The 25 body rows need 29 layout rows plus the hint row:
-				// a terminal height of 30 or more.
+				// Keep the compact grouping on short terminals. Full labels
+				// wrap and the help scrolls when the body does not fit.
 				separate := slicerTui && bodyH >= 25
 				if slicerTui && !separate {
 					text += "; O slicer tui"
 				}
-				if lipgloss.Width(text) > w {
-					text = strings.Replace(text, "l launch a ready slice (Roadmap)", "l launch ready slice", 1)
-				}
-				if lipgloss.Width(text) > w && slicerTui {
-					text = strings.Replace(text, "l launch ready slice", "l launch", 1)
-				}
-				lines = append(lines, clip(text, w))
+				lines = append(lines, text)
 				if m.matrixPaneOpen() {
-					lines = append(lines, clip("e/n/d/m/r edit, add, remove, move a matrix row; edit a rule", w))
+					lines = append(lines, "e/n/d/m/r edit, add, remove, move a matrix row; edit a rule")
 				}
 				editHelp := "P park/unpark; J/K move item down/up"
 				if separate {
@@ -1003,9 +1045,9 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					if m.itemPane == nil {
 						text += "; " + editHelp
 					}
-					lines = append(lines, clip(text, w))
+					lines = append(lines, text)
 				} else if m.itemPane == nil {
-					lines = append(lines, clip(editHelp, w))
+					lines = append(lines, editHelp)
 				}
 				continue
 			}
@@ -1023,7 +1065,7 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			if h == m.keys.Answer.Help() && len(actionHints) > 0 {
 				if w < 24 {
-					lines = append(lines, clip(strings.Join(actionHints, "; "), w)) // too narrow to pack
+					lines = append(lines, strings.Join(actionHints, "; ")) // too narrow to pack
 				} else {
 					lines = append(lines, packHints(actionHints, w)...)
 				}
@@ -1033,38 +1075,43 @@ func (m *Model) helpLines(w, bodyH int) []string {
 					// on the other views it is all projects or all waves.
 					ownerKeys += "; A approve wave"
 				}
-				lines = append(lines, clip(ownerKeys, w))
+				lines = append(lines, ownerKeys)
 			}
 			if m.relayAnswerable() {
 				if h == m.keys.PickOption.Help() {
-					lines = append(lines, clip(fmt.Sprintf("1-%d pick a ledger option; y answers after confirmation", min(len(m.externalQuestion().Options), 4)), w))
+					lines = append(lines, fmt.Sprintf("1-%d pick a ledger option; y answers after confirmation", min(len(m.externalQuestion().Options), 4)))
 					continue
 				}
 				if h == m.keys.FreeAnswer.Help() {
-					lines = append(lines, clip("t type a free ledger answer; enter reviews", w))
+					lines = append(lines, "t type a free ledger answer; enter reviews")
 					continue
 				}
 			}
 			if m.decisionPane != nil && m.decisionAnswerable() {
 				if h == m.keys.PickOption.Help() {
 					if n := min(len(m.decisionPane.record.Options), 4); n > 0 {
-						lines = append(lines, clip(fmt.Sprintf("1-%d pick an adj option; y decides after confirmation", n), w))
+						lines = append(lines, fmt.Sprintf("1-%d pick an adj option; y decides after confirmation", n))
 					}
 					continue
 				}
 				if h == m.keys.FreeAnswer.Help() {
-					lines = append(lines, clip("t type a free adj answer; enter reviews", w))
+					lines = append(lines, "t type a free adj answer; enter reviews")
 					continue
 				}
 			}
-			lines = append(lines, clip(h.Key+" "+h.Desc, w))
+			lines = append(lines, h.Key+" "+h.Desc)
 		}
 	}
 	available := "Overview, Questions, Waves, Roadmap and Decisions are available."
 	if m.active == runningEntry {
 		available = "Running has Overview and Questions only."
 	}
-	lines = append(lines, "", clip(available, w))
+	lines = append(lines, "", available)
+	var wrapped []string
+	for _, line := range lines {
+		wrapped = append(wrapped, wrapHelpLine(line, w)...)
+	}
+	lines = wrapped
 	mark := brand.Mark(!th.Mono, m.cfg.ASCII)
 	if w >= 12 && bodyH >= len(lines)+len(mark)+1 {
 		lines = append(append(mark, ""), lines...)

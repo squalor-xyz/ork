@@ -1,0 +1,39 @@
+{
+  "id": "S535",
+  "title": "Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261122-081958-ba4a for S401 (discovered from S401):\n\nMake pgup the exact inverse of pgdown in help\npgup steps by the current window's visible count (`model.go:845-846`). From offset 0, pgdown moves to 18 at 80x24. pgup from 18 steps back 17 (both markers are shown) and lands on offset 1, so the top takes two presses. This meets the spec, but the human check asks for smooth paging.\nImportance: 1\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -314,6 +314,14 @@ func (m *Model) contextHints() []hintEntry {
 		l.add(dropPinned, short(k.Quit, "q", "quit"), short(k.Help, "?", "help"))
 	}
 	switch {
+	case m.showHelp:
+		w, h, sideW := m.layoutSize()
+		bodyH := max(h-4, 1)
+		if len(m.helpLines(max(w-sideW, 1), bodyH)) > bodyH {
+			l.add(dropPage, short(k.PageDown, "up/down pgup/pgdown", "scroll"))
+		}
+		l.add(dropPinned, short(k.Help, "? or esc", "close help"))
+		l.add(dropQuit, short(k.Quit, "q", "quit"))
 	case m.settings != nil:
 		m.settingsHints(&l)
 	case m.removing.name != "":
@@ -342,8 +350,6 @@ func (m *Model) contextHints() []hintEntry {
 		case m.welcome.editing:
 			l.add(dropRow, short(k.Select, "enter", "review path"))
 			l.add(dropPinned, short(k.Close, "esc", "cancel"))
-		case m.showHelp:
-			l.add(dropPinned, short(k.Help, "? or esc", "close help"), short(k.Quit, "q", "quit"))
 		default:
 			l.add(dropRow, short(k.Add, "+", "add project"))
 			l.add(dropPinned, short(k.Quit, "q", "quit"))
@@ -502,9 +508,6 @@ func (m *Model) contextHints() []hintEntry {
 	case m.filtering:
 		l.add(dropRow, short(k.Select, "enter", "keep filter"))
 		l.add(dropPinned, short(k.Close, "esc", "clear filter"))
-	case m.showHelp:
-		l.add(dropPinned, short(k.Help, "? or esc", "close help"))
-		l.add(dropQuit, short(k.Quit, "q", "quit"))
 	case m.view == questionsView || m.view == decisionsView:
 		if m.decisionPane != nil {
 			answerable := m.decisionAnswerable() && !m.decisionAnswerPending()

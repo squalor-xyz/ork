@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): How should S510's empty Files, Failing tests, Implement and Check be filled in, and which roles get a temp-dir write grant? -> reviewer-only: only the reviewer gets an Edit/Write grant limited to its own role temp dir (cloud Claude and claude-local). Files: `internal/agent/claude/args.go`, `internal/agent/claude/pretool.go` and the reviewer's brief wording. Failing tests: a new `args_test.go` test asserting the reviewer's args hold `--add-dir TMPDIR`, `Edit(//TMPDIR/**)` and `Write(//TMPDIR/**)`, and a `pretool_test.go` case that allows a Write under TempDir and denies one outside it. Check: `go test ./internal/agent/claude` exits 0. [roles.read-only-temp-write]."
     },
     {
       "heading": "Check",

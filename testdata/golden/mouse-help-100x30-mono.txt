@@ -7,11 +7,11 @@
 [2m4[m agents                   │j/k down/up row; g/G home/end first/last
                            │pgdown/pgup page rows or scroll a pane
                            │ctrl+d/u scroll a pane half a page; ctrl+u clears a field
-                           │}/{ next/previous group, pass or wave
+                           │}/{ next/previous group, pass or wave; E expand or collapse all
                            │enter open run, question, item or decision; other rows select project
                            │/ filter projects; esc clears; s hide/show sidebar
                            │+ add project; - remove active project; M mouse on/off
-                           │space expand or collapse a run, or show the stale rows (Running); E e...
+                           │space expand or collapse a run, or show the stale rows (Running)
                            │space tick item and plan it (Waves); e edit lineup (Waves, launch)
                            │l launch a ready slice (Roadmap) or wave (Waves)
                            │a approve; F fix round; x stop; t retry; v view renders; f file slice

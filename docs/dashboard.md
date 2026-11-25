@@ -295,7 +295,8 @@ names what `y` does and, at the Roadmap launch, `e`, since the prompt above
 it carries the rest: `y run; n cancel; e edit lineup; s split; up/down scroll`, `y start; n cancel`, `y approve; n
 cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor and
 `s` turns split (a lead and parts, S61, *proposed*) on or off and plans again.
-The help screen shows `? or esc close help; q quit`.
+The help screen shows `? or esc close help; q quit`, led by
+`up/down pgup/pgdown scroll` when the help does not fit.
 
 **Mouse (S66).** `M` turns mouse capture on and off. It is off at every launch and ork does not
 save it, so the terminal's own text selection works from the start: the Ready
@@ -2295,12 +2296,20 @@ Without a daemon, the 100x30 Roadmap hint is
 `O slicer tui` drops with `+ add project` and `n new slice`, before `N note`.
 At 100x30 Roadmap help groups `O slicer tui` with
 `P park/unpark; J/K move item down/up` on one line. At 80x24 `O slicer tui`
-shares the launch, matrix, note and new-slice line, shortening the launch
-label to keep the keys visible; the edit keys have their own line.
+shares the launch, matrix, note and new-slice line; the edit keys have their
+own line. Help keeps full labels and breaks between hints at `; ` first,
+packing as many complete hints as fit. Continuations hang two spaces. A hint
+that is too wide wraps between words; prose notes also wrap between words.
+The expand-all hint shares the group-navigation line so Overview help fits
+at 100x30.
 Roadmap help keeps `e edit lineup (Waves, launch)`, since `e` edits the
 lineup on the launch confirmation. It omits the Running-only space keys.
-The help fits at 100x30; at 80x24 the edit keys and the way out remain
-visible above and below the clipped help body.
+When help does not fit, up/down (or j/k) scroll one line and pgup/pgdown
+scroll a page without skipping lines in either direction. These keys also
+scroll help on the Welcome screen. Dim `+N lines above` and `+N more lines`
+markers count the hidden lines. Every help line can be reached at 80x24 without moving the row
+cursor. Help starts at the top each time it opens. The hint names the scroll
+keys only when the help does not fit, followed by `? or esc close help; q quit`.
 
 Human checks for terminal handover (S399): at 200x40 the Roadmap hint starts
 `O slicer tui;`; at 100x30 and 80x24 the unchanged drop tier hides it when
