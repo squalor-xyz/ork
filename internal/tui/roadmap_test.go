@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/squalor-xyz/ork/internal/daemon"
+	"regexp"
 	"strings"
 	"testing"
 
@@ -184,6 +185,57 @@ func TestRoadmapGoalsLiftDropsWhenSwitching(t *testing.T) {
 				t.Fatalf("%s switch retained the Goals lift:\n%s\nwant:\n%s", tc.name, got, want)
 			}
 		})
+	}
+}
+
+func TestRoadmapGoalsLiftMarkerNamesTheCursorRow(t *testing.T) {
+	marker := regexp.MustCompile(`(?m)(?:^|│)\s*\+\d+ more lines, cursor: S90\s*$`)
+	for _, tc := range []struct {
+		name       string
+		keys       []string
+		switchView bool
+		wantCue    bool
+	}{
+		{name: "no lift"},
+		{name: "home", keys: []string{"home"}, wantCue: true},
+		{name: "pgup", keys: []string{"pgup"}, wantCue: true},
+		{name: "down", keys: []string{"home", "down"}},
+		{name: "down then home", keys: []string{"home", "down", "home"}},
+		{name: "view switch", keys: []string{"home"}, switchView: true},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := roadmapGoalsHarness(t)
+			for _, k := range tc.keys {
+				h.send(press(k))
+			}
+			if tc.switchView {
+				h.m.showView(decisionsView)
+				h.m.showView(roadmapView)
+			}
+			v := plainView(h.m)
+			if tc.wantCue {
+				if !marker.MatchString(v) {
+					t.Fatalf("lifted marker must name cursor S90:\n%s", v)
+				}
+			} else if strings.Contains(v, "cursor:") {
+				t.Fatalf("unlifted view must not name a hidden cursor:\n%s", v)
+			}
+		})
+	}
+}
+
+func TestRoadmapEnterWhileLiftedOpensTheCuedRow(t *testing.T) {
+	h := roadmapGoalsHarness(t)
+	h.send(press("home"))
+	v := plainView(h.m)
+	marker := regexp.MustCompile(`(?m)(?:^|│)\s*\+\d+ more lines, cursor: (\S+)\s*$`)
+	match := marker.FindStringSubmatch(v)
+	if len(match) != 2 || match[1] != "S90" {
+		t.Fatalf("lifted marker must cue S90 before enter:\n%s", v)
+	}
+	h.m.Update(press("enter"))
+	if h.m.itemPane == nil || h.m.itemPane.id != match[1] {
+		t.Fatalf("enter must open cued row %s, got pane %+v", match[1], h.m.itemPane)
 	}
 }
 
