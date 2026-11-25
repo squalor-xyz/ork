@@ -28600,7 +28600,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "18fdcea7-2d8a-4abf-a8b7-c55640cba7a6",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fix the cache ordering. In internal/cache/cache.go call onChange before close(f.done), so a read's notice is sent before Get or Snapshot returns; the test then needs no wait. Check that other cache tests still pass.",
+          "created_at": "2026-11-25T13:18:18Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
