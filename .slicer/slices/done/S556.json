@@ -1,0 +1,39 @@
+{
+  "id": "S556",
+  "title": "give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer of S535 reported that a probe sweep of 30 to 130 columns found widths 41 to 58 dropping the scroll hint while the help overflowed. The named test checked only 60x16. S535 fixed this in `contextHints` (`internal/tui/keys.go:317-344`), but its tests still cover only some widths:\n- `TestHelpNarrowHintKeepsScrollDropsQuit` checks 60x16 and 50x14.\n- `TestHelpNarrowHintNeverQuitWithoutScroll` checks widths 30 to 79 at height 16 only.\n\nNothing guards the scroll key at larger widths or at other heights.\n\nThis slice adds a permanent sweep test in `internal/tui/help_test.go` (adj 572, go-test). It covers widths 30 to 130 at heights 16, 24 and 40. Wherever the help overflows and the keys-only scroll form fits beside the close hint, the hint must keep `pgup/pgdown`. Below that width the hint is the close hint alone, with no `q quit` (adj 571, floor; adj 547 and 552)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/help_test.go`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestHelpHintKeepsScrollKeyWhereHelpOverflows: opens help with `helpHarness`, then for each height in 16, 24 and 40 and each width 30 to 130 sends `tea.WindowSizeMsg` and reads `hintLine(plainView(h.m))`. A case counts as overflowing when the view contains \"more lines\".\n  - Where the help overflows and the keys-only form fits, the hint contains \"pgup/pgdown\" and \"close help\".\n  - Where the help overflows and it does not fit, the hint is exactly \"? or esc close help\".\n  - Where the help overflows, a hint with \"q quit\" must also contain \"pgup/pgdown\", and no hint is wider than the main column.\n  - Each height must have at least one overflowing width, so the sweep cannot pass by never overflowing.\n  - Each failure names the width and height and prints the hint.\n- Status on the current tree: this is a regression guard and should pass unchanged. The implementer must show it can fail by temporarily breaking the hint code (Implement step 4) and reverting.\n- Not probed: the sweep itself was never run (scratch write denied). The overflow range at heights 24 and 40 is unmeasured."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. In `internal/tui/help_test.go`, add `TestHelpHintKeepsScrollKeyWhereHelpOverflows` after `TestHelpNarrowHintNeverQuitWithoutScroll`. Use one `helpHarness(t)` per height inside `t.Run(fmt.Sprintf(\"h%d\", ht), ...)`, so help opens at the top and the offset never moves.\n2. Compute the expectation in the test from the layout, not from the hint code:\n   - Call `_, _, sideW := h.m.layoutSize()` and set `room := w - sideW - 1`. This matches `mainW := max(w-sideW, 1)` at `internal/tui/view.go:75` and the `w-1` room in `hintLine` at `internal/tui/view.go:807`.\n   - Set `keysOnly := lipgloss.Width(\"pgup/pgdown; ? or esc close help\")`, which is 32 cells.\n   - The keys-only form fits when `keysOnly <= room`. With the default sidebar this is from width 49 up (sideW 16, main column 33).\n3. For each case, skip the assertions when the view has no \"more lines\" and count the overflowing cases. After the width loop, `t.Fatalf` if the height never overflowed. Then:\n   - When the form fits, require \"pgup/pgdown\" and \"close help\" in the hint.\n   - Otherwise require `hint == \"? or esc close help\"`.\n   - In both cases, fail if the hint contains \"q quit\" without \"pgup/pgdown\".\n   - Also fail if `lipgloss.Width` of the hint exceeds the main column.\n4. Prove the test can fail. Temporarily change the fit test at `internal/tui/keys.go:334` so the keys-only form is skipped, for example by looping over only the first two forms. Run the new test and confirm it fails at widths from about 49 to 58. Then revert `keys.go`; the final diff touches only `internal/tui/help_test.go`.\n5. If a height never overflows in the sweep, or the hint gets wider than the main column at some width, do not change product code. Report it as a finding instead."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./internal/tui -run TestHelpHintKeepsScrollKeyWhereHelpOverflows -count=1 -v` exits 0, and the output lists subtests h16, h24 and h40, all passing.\n- Manual: with the temporary break from Implement step 4, the same go test command exits non-zero. A failure line names a width from about 49 to 58 and a hint with no \"pgup/pgdown\". After reverting, git -C /home/jon/code/squalor-xyz/ork diff --stat lists only internal/tui/help_test.go.\n- `go test ./...` exits 0.\n- `go vet ./...` prints nothing and exits 0.\n- `gofmt -l .` prints nothing."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
