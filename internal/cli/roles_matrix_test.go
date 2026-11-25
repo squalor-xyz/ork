@@ -227,7 +227,11 @@ func TestRolesMatrixCopyAsksPerProjectAndEnterIsNo(t *testing.T) {
 				t.Errorf("no word that nothing was copied:\n%s", stdout)
 			}
 			if tc.writes != nil {
-				wantCalls = append(wantCalls, daemon.MatrixCopyParams{From: "ork", To: tc.writes})
+				expect := map[string][]daemon.MatrixCopyStep{}
+				for _, name := range tc.writes {
+					expect[name] = copyStepsRemove
+				}
+				wantCalls = append(wantCalls, daemon.MatrixCopyParams{From: "ork", To: tc.writes, ExpectSteps: expect})
 			}
 			if !reflect.DeepEqual(calls, wantCalls) {
 				t.Fatalf("calls\n got %+v\nwant %+v", calls, wantCalls)
@@ -246,12 +250,34 @@ func TestRolesMatrixCopyYesSkipsTheQuestion(t *testing.T) {
 	if code != ExitOK || stderr != "" || strings.Contains(stdout, "[y/N]") {
 		t.Fatalf("exit %d\nstdout: %s\nstderr: %s", code, stdout, stderr)
 	}
-	want := []daemon.MatrixCopyParams{{From: "ork", To: []string{"adjudicate"}, DryRun: true}, {From: "ork", To: []string{"adjudicate"}}}
+	want := []daemon.MatrixCopyParams{
+		{From: "ork", To: []string{"adjudicate"}, DryRun: true},
+		{From: "ork", To: []string{"adjudicate"}, ExpectSteps: map[string][]daemon.MatrixCopyStep{"adjudicate": copyStepsRemove}},
+	}
 	if !reflect.DeepEqual(calls, want) {
 		t.Fatalf("calls\n got %+v\nwant %+v", calls, want)
 	}
 	if !strings.HasSuffix(stdout, "adjudicate: changed (3 steps)\n  remove r9\n  add r21\n  rule-add u10\n") {
 		t.Fatalf("the written result is not the last output:\n%s", stdout)
+	}
+}
+
+// The write binds each confirmed project to the steps its own preview showed,
+// and only the confirmed ones (S548).
+func TestRolesMatrixCopyWriteExpectsEachConfirmedProjectsPreviewedSteps(t *testing.T) {
+	stepsB := []daemon.MatrixCopyStep{{Op: "add", ID: "r30", Changed: true}}
+	b := daemon.MatrixCopyProject{Project: "b", Status: daemon.CopyWouldChange, Steps: stepsB}
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{wouldChange("a"), b, wouldChange("c")}}
+	written := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{{Project: "b", Status: daemon.CopyChanged, Steps: stepsB}}}
+	var calls []daemon.MatrixCopyParams
+	app := copyApp(t, &calls, dry, written, "n\ny\nn\n")
+	code, _, stderr := run(t, app, "roles", "matrix", "copy", "ork", "--all")
+	if code != ExitOK || len(calls) != 2 {
+		t.Fatalf("exit %d, calls %+v\nstderr: %s", code, calls, stderr)
+	}
+	got := calls[1]
+	if !reflect.DeepEqual(got.ExpectSteps, map[string][]daemon.MatrixCopyStep{"b": stepsB}) || !reflect.DeepEqual(got.To, []string{"b"}) || got.DryRun {
+		t.Fatalf("write call %+v, want b bound to its own steps", got)
 	}
 }
 

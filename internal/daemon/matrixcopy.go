@@ -23,12 +23,24 @@ import (
 // MatrixCopyParams copies the role matrix of the registered project From to the
 // projects in To, or to every other registered project when All is set (S261,
 // *proposed*). Exactly one of To and All is given. A dry run writes nothing.
+//
+// ExpectSteps binds a write to the preview the owner confirmed (S548, owner
+// decision matrix.copy-bind-preview): it maps a project's name to the steps its
+// preview showed. The daemon dry-runs each such project again and, when the
+// steps differ, refuses that project with CodeStalePreview and writes nothing
+// to it; the other projects go on. A project without an entry is not bound. A
+// dry run ignores ExpectSteps.
 type MatrixCopyParams struct {
-	From   string   `json:"from"`
-	To     []string `json:"to,omitempty"`
-	All    bool     `json:"all,omitempty"`
-	DryRun bool     `json:"dry_run,omitempty"`
+	From        string                      `json:"from"`
+	To          []string                    `json:"to,omitempty"`
+	All         bool                        `json:"all,omitempty"`
+	DryRun      bool                        `json:"dry_run,omitempty"`
+	ExpectSteps map[string][]MatrixCopyStep `json:"expect_steps,omitempty"`
 }
+
+// CodeStalePreview is the code of a project the write refused because its steps
+// are no longer the ones the owner confirmed (S548).
+const CodeStalePreview = "stale_preview"
 
 // What a project's copy came to.
 const (
@@ -482,18 +494,28 @@ func (d *Daemon) matrixCopy(ctx context.Context, p MatrixCopyParams) (*MatrixCop
 	}
 	result := &MatrixCopyResult{From: from.Name, Projects: make([]MatrixCopyProject, len(targets))}
 	var jobs []copyJob
-	failed := false
+	failed, refused := false, false
 	for i, target := range targets {
 		out := &result.Projects[i]
 		out.Project = target.Name
-		job, err := d.checkCopy(ctx, slicer, from, source, target, out)
+		var expect []MatrixCopyStep
+		bound := false
+		if !p.DryRun {
+			expect, bound = p.ExpectSteps[target.Name]
+		}
+		job, err := d.checkCopy(ctx, slicer, from, source, target, out, expect, bound)
 		if err != nil {
 			var wire *ipc.Error
 			if errors.As(err, &wire) && wire.Code == "slicer_too_old" {
 				return nil, err
 			}
 			out.Status, out.Error = CopyFailed, ipc.ErrorOf(err)
-			failed = true
+			if wire != nil && wire.Code == CodeStalePreview {
+				// Refused alone: the other projects still go on.
+				refused = true
+			} else {
+				failed = true
+			}
 			continue
 		}
 		if job != nil {
@@ -518,14 +540,27 @@ func (d *Daemon) matrixCopy(ctx context.Context, p MatrixCopyParams) (*MatrixCop
 		}
 		changed = true
 	}
-	result.Partial = changed && failed
+	result.Partial = changed && (failed || refused)
 	return result, nil
+}
+
+// addedIDs is the ids of the rows that slicer's steps add, in order.
+func addedIDs(steps []MatrixCopyStep) []string {
+	var ids []string
+	for _, step := range steps {
+		if step.Op == "add" {
+			ids = append(ids, step.ID)
+		}
+	}
+	return ids
 }
 
 // checkCopy reads target's matrix, plans the copy and dry-runs it, filling out.
 // It returns the job to write when the matrix would change. A refusal comes back
-// as the error, for the caller to file under the project.
-func (d *Daemon) checkCopy(ctx context.Context, slicer slicercli.Client, from registry.Project, source *slicercli.Matrix, target registry.Project, out *MatrixCopyProject) (*copyJob, error) {
+// as the error, for the caller to file under the project. When bound is set, the
+// dry run's steps must be expect, the steps the owner confirmed, else the error
+// is CodeStalePreview (S548).
+func (d *Daemon) checkCopy(ctx context.Context, slicer slicercli.Client, from registry.Project, source *slicercli.Matrix, target registry.Project, out *MatrixCopyProject, expect []MatrixCopyStep, bound bool) (*copyJob, error) {
 	matrix, err := slicer.RelayMatrix(ctx, target.Path)
 	if err != nil {
 		var tool *clirun.ToolError
@@ -541,19 +576,16 @@ func (d *Daemon) checkCopy(ctx context.Context, slicer slicercli.Client, from re
 		return nil, err
 	}
 	targetSlicer := d.runDeps(target).Slicer
-	if plan.pending() {
+	var adds []string // the ids the first dry run gave the added rows
+	learned := plan.pending()
+	if learned {
 		// The first dry run, with the source's rule text, tells which ids slicer
 		// gives the rows it adds.
 		first, err := copyApply(ctx, targetSlicer, target.Path, plan.set(), true)
 		if err != nil {
 			return nil, err
 		}
-		var adds []string
-		for _, step := range first.Steps {
-			if step.Op == "add" {
-				adds = append(adds, step.ID)
-			}
-		}
+		adds = addedIDs(first.Steps)
 		newRows := plan.newRows()
 		if len(adds) != len(newRows) {
 			return nil, fmt.Errorf("slicer added %d rows to %s for %d new rows", len(adds), target.Name, len(newRows))
@@ -570,6 +602,17 @@ func (d *Daemon) checkCopy(ctx context.Context, slicer slicercli.Client, from re
 	dry, err := copyApply(ctx, targetSlicer, target.Path, set, true)
 	if err != nil {
 		return nil, err
+	}
+	if learned {
+		// The rewritten rules name the ids of the first dry run; the write must give
+		// the added rows those ids.
+		if second := addedIDs(dry.Steps); !slices.Equal(adds, second) {
+			return nil, fmt.Errorf("slicer gave the rows added to %s the ids %v in the first dry run and %v in the second", target.Name, adds, second)
+		}
+	}
+	if bound && !slices.Equal(dry.Steps, expect) {
+		return nil, &ipc.Error{Code: CodeStalePreview, Message: fmt.Sprintf(
+			"the copy to %s would now make other steps than the preview showed: preview again, then copy", target.Name)}
 	}
 	if !dry.Changed {
 		out.Status = CopyUnchanged

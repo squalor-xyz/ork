@@ -1,0 +1,39 @@
+{
+  "id": "S552",
+  "title": "UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the ui in round 1 of ork run ork-20261125-131038-69e9 for S499 (discovered from S499):\n\nTell the UI pass brief about -render-fixture\n`internal/engine/brief.go:187-188` gives only `-renders` and still says \"This writes status.txt, show.txt and help.txt\". Without `-render-fixture` in the brief, a UI pass does not learn of the eight new views, and they do not reach the approval card, which is the slice's purpose. The brief text should name `-render-fixture NAME[,NAME...]` and list the fixture names. It should also say that `-renders` alone writes five files, not three. That file is outside this slice's Files.\nImportance: 3\nUrgency: 2\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/cache/cache.go`: finishRead sends onChange before close(f.done)\n- `internal/cache/cache_test.go`: TestChangeNoticeIsSentBeforeTheReadReturns"
     },
     {
       "heading": "Failing tests",
