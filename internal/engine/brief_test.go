@@ -1617,7 +1617,7 @@ func TestOwnerDecisionKeyChecksReachBriefs(t *testing.T) {
 				}
 			})
 			h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
-			h.cfg.Decisions = "Unrelated [brief.outside].\n\nOwner decisions (2026-11-25): Always missing [brief.missing]. Target [brief.target]. Reused [brief.reused, adj 7].\n\nOther paragraph [brief.after]."
+			h.cfg.Decisions = "Unrelated [brief.outside].\n\nOwner decisions (2026-11-25):\nAlways missing -> x [brief.missing].\nTarget -> y [brief.target].\nReused -> z [brief.reused, adj 7].\n\nOther paragraph [brief.after]."
 			h.start()
 			for _, r := range h.runner.requests() {
 				_, body, ok := strings.Cut(r.Brief, "## Owner decisions\n\n")

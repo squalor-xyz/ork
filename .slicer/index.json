@@ -30128,7 +30128,7 @@
       "id": "S573",
       "title": "Spec-answer question text can flag paths the owner did not choose",
       "short_title": "Spec-answer question text can flag paths the owner did not choose",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30138,6 +30138,20 @@
           "text": "**2026-11-25** — Owner decision (adj 569, spec.owner-decisions-format): one-line-each. RecordSpecAnswers (internal/engine/speccheck.go) writes each 'title -> answer [key].' on its own line, and the decision-paths check scans only the text after '->' on each line. Text with no '->' is still scanned whole. Update TestRecordSpecAnswers and the paragraph splitters (ownerDecisionBody, internal/engine/brief.go) to match. Jon chose 'One line each', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T18:10:14Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "04e75e81-3287-43f5-b397-0bb201ab5599",
+          "kind": "",
+          "text": "**2026-11-25** — S573 done: RecordSpecAnswers writes one `title -> answer [key].` line each, and the decision-paths check scans only the text after `->` on each line (whole line when none); full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-25T18:33:16Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30164,7 +30178,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

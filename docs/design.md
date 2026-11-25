@@ -355,8 +355,11 @@ ork (TUI)  ork status --json (CLI)
    and `AGENTS.md` cannot settle get one question per slice, proposing concrete
    wording to tighten them, a human check, or acceptance as written, without a
    decision key. The owner answers them in one sitting. ork appends an
-   `Owner decisions (date)`
-   paragraph to the slice's Implement section with `slicer edit --append`, and
+   `Owner decisions (date):`
+   paragraph to the slice's Implement section with `slicer edit --append`. The
+   header is the first line and each answer is its own line,
+   `TITLE -> ANSWER [KEY].` (`spec.owner-decisions-format`, adj 569, S573). Ork
+   also
    files a question that has a decision key in adj the way a run's answer is
    filed (`owner.questions`, S28). *Proposed (S314; owner decisions
    owner.setting-command, owner.setting-store, adj 228 to 230):* the daemon
@@ -2015,7 +2018,11 @@ separately.
     branch diff against the base (`relay.landed-changed-path-check`, S560).
     Ork scans the run's spec answers, answered run questions, owner decision
     paragraphs in the slice, and decided adj records cited by number
-    (`adj N` or `decision N`) or a key in brackets or backticks. Adj records
+    (`adj N` or `decision N`) or a key in brackets or backticks. For owner
+    decision paragraphs (the run's spec answers and the slice's), only the
+    text after `->` on each line is scanned, so a path named only in a
+    question's title is not flagged; a line without `->` is scanned whole
+    (`spec.owner-decisions-format`, adj 569, S573). Adj records
     are read through the CLI in the project's main checkout; only their
     decision and rationale are scanned, not unchosen options. The path
     comparison uses the same merge-base diff and untracked paths as Direction.

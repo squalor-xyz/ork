@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-575 items · — 59 · done 389 · retired 127
+575 items · — 58 · done 390 · retired 127
 
 ## v1.3
 
@@ -332,7 +332,7 @@ v1.2
 | 275 | [S570](slices/S570.md) | flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded |  | - |  | discovered from S566 | — |
 | 276 | [S571](slices/S571.md) | give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies |  | - |  | discovered from S563 | — |
 | 277 | [S572](slices/S572.md) | Narrow the Files-path exemption to files that run |  | 1 |  | discovered from S563 | — |
-| 278 | [S573](slices/S573.md) | Spec-answer question text can flag paths the owner did not choose |  | 1 |  | discovered from S560 | — |
+| 278 | [S573](slices/S573.md) | Spec-answer question text can flag paths the owner did not choose |  | 1 |  | discovered from S560 | done |
 | 279 | [S574](slices/S574.md) | add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test |  | - |  | discovered from S563 | — |
 | 280 | [S575](slices/S575.md) | allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from |  | - |  | discovered from S554 | — |
 

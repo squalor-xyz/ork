@@ -23,6 +23,21 @@ import (
 // BriefSection is one headed part of a brief that is specific to the round.
 type BriefSection struct{ Title, Body string }
 
+var blankLine = regexp.MustCompile(`\n[ \t]*\n`)
+
+// ownerDecisionParagraphs returns the paragraphs of text, split on blank lines,
+// that start with the "Owner decisions (" header RecordSpecAnswers writes. A
+// paragraph holds the header line and one line for each question.
+func ownerDecisionParagraphs(text string) []string {
+	var out []string
+	for _, paragraph := range blankLine.Split(text, -1) {
+		if strings.HasPrefix(strings.TrimSpace(paragraph), "Owner decisions (") {
+			out = append(out, paragraph)
+		}
+	}
+	return out
+}
+
 // ownerDecisionBody checks only markers in RecordSpecAnswers' paragraphs.
 // An adj id already identifies a record; other keys may never have been filed.
 // A project without adj is not checked, and a failed check adds a soft line:
@@ -34,10 +49,7 @@ func (e *Engine) ownerDecisionBody(ctx context.Context, text string) string {
 	}
 	marker := regexp.MustCompile(`\[([a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+)(, adj [0-9]+)?\]`)
 	seen := map[string]bool{}
-	for _, paragraph := range strings.Split(text, "\n\n") {
-		if !strings.HasPrefix(strings.TrimSpace(paragraph), "Owner decisions (") {
-			continue
-		}
+	for _, paragraph := range ownerDecisionParagraphs(text) {
 		for _, match := range marker.FindAllStringSubmatch(paragraph, -1) {
 			key := match[1]
 			if match[2] != "" || seen[key] {

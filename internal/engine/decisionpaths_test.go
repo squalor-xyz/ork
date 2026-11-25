@@ -26,6 +26,10 @@ func TestDecisionPathsReviewerBrief(t *testing.T) {
 		{"cited key missing", "key", "", ""},
 		{"slice owner paragraph", "paragraph", "", ""},
 		{"multiple paths", "multiple", "", ""},
+		{"spec question path ignored", "spec question", "landed-changed/S548.md\x00", ""},
+		{"slice paragraph question path ignored", "slice question", "landed-changed/S548.md\x00", ""},
+		{"line without arrow scanned whole", "no arrow", "", ""},
+		{"answer paths still flagged", "answer paths", "", ""},
 		{"diff unavailable", "spec", "", "diff"},
 		{"adj unavailable", "number", "", "adj"},
 	} {
@@ -39,6 +43,9 @@ func TestDecisionPathsReviewerBrief(t *testing.T) {
 					}
 					if tc.source == "key" {
 						raw = strings.Replace(raw, "Because.", "Because [changelog.correct-entry].", 1)
+					}
+					if tc.source == "slice question" {
+						raw = strings.Replace(raw, "Because.", "Owner decisions (2026-11-25):\\nWrite landed-changed/ID.md? -> yes, edit landed-changed/S548.md.", 1)
 					}
 					if tc.source == "paragraph" {
 						raw = strings.Replace(raw, "Because.", "Owner decisions (2026-11-25): Edit landed-changed/S548.md.", 1)
@@ -64,6 +71,15 @@ func TestDecisionPathsReviewerBrief(t *testing.T) {
 			h.deps.Adj = adjcli.Client{Bin: h.fake.Bin("adj")}
 			if tc.source == "spec" {
 				h.cfg.Decisions = "Edit `landed-changed/S548.md`, twice: landed-changed/S548.md."
+			}
+			if tc.source == "spec question" {
+				h.cfg.Decisions = "Owner decisions (2026-11-25):\nWrite landed-changed/ID.md? -> landed-changed/S548.md."
+			}
+			if tc.source == "no arrow" {
+				h.cfg.Decisions = "Owner decisions (2026-11-25):\nNote: edit landed-changed/S548.md."
+			}
+			if tc.source == "answer paths" {
+				h.cfg.Decisions = "Owner decisions (2026-11-25):\nWhich entry? -> edit landed-changed/S548.md and landed-changed/S549.md."
 			}
 			if tc.source == "multiple" {
 				h.cfg.Decisions = "Edit landed-changed/S549.md and landed-changed/S548.md and landed-changed/S549.md."
@@ -93,7 +109,7 @@ func TestDecisionPathsReviewerBrief(t *testing.T) {
 					}
 					body, _, _ = strings.Cut(body, "\n## ")
 					want := "Flagged finding: owner decisions name paths absent from the branch diff against the base:\n\n- `landed-changed/S548.md`\n\nReview these omissions. This check is advisory and does not block the run.\n"
-					if tc.source == "multiple" {
+					if tc.source == "multiple" || tc.source == "answer paths" {
 						want = strings.Replace(want, "- `landed-changed/S548.md`", "- `landed-changed/S548.md`\n- `landed-changed/S549.md`", 1)
 					}
 					if tc.failure == "diff" {

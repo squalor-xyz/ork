@@ -20,11 +20,24 @@ var (
 	decisionPathKey   = regexp.MustCompile("[\\[`]([a-z][a-z0-9_-]*(?:\\.[a-z][a-z0-9_-]*)+)[\\]`,]")
 )
 
+// ownerAnswerText keeps, for each line of an owner decision text, what follows
+// the first "->" (the answer, not the question's title). A line without "->"
+// is kept whole.
+func ownerAnswerText(text string) string {
+	lines := strings.Split(text, "\n")
+	for i, line := range lines {
+		if _, answer, ok := strings.Cut(line, "->"); ok {
+			lines[i] = answer
+		}
+	}
+	return strings.Join(lines, "\n")
+}
+
 // decisionPathsSection runs after implementation, before review. Like the
 // direction digest, unavailable evidence is advisory and never pauses a run.
 func (e *Engine) decisionPathsSection(ctx context.Context, rec runrec.Record, raw []byte) *BriefSection {
 	var texts []string
-	texts = append(texts, rec.Decisions)
+	texts = append(texts, ownerAnswerText(rec.Decisions))
 	for _, q := range rec.Questions {
 		if q.Answer != "" {
 			texts = append(texts, q.Answer)
@@ -40,10 +53,8 @@ func (e *Engine) decisionPathsSection(ctx context.Context, rec runrec.Record, ra
 		citationText.WriteString(detail.Slice.Boundary)
 		for _, section := range detail.Slice.Sections {
 			citationText.WriteString("\n" + section.Body)
-			for _, line := range strings.Split(section.Body, "\n") {
-				if strings.HasPrefix(strings.TrimSpace(line), "Owner decisions (") {
-					texts = append(texts, line)
-				}
+			for _, paragraph := range ownerDecisionParagraphs(section.Body) {
+				texts = append(texts, ownerAnswerText(paragraph))
 			}
 		}
 		if e.proj.Adj {
