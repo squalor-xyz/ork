@@ -13358,14 +13358,43 @@
       "id": "S233",
       "title": "ork ai: print the agent guide and install the ork skill for Claude, Codex and Grok",
       "short_title": "ork ai guide and skill",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S240",
         "S241",
         "S242"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6f91bd3f-3b2d-4548-8051-48f40e5042ea",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S233):\n- later: After landing and a rebuild, the owner reads \"ork ai instructions\" once and says whether it matches how an agent should drive ork, and decides whether to install the skill in a project.",
+          "created_at": "2026-11-25T03:25:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0781af2d-fcd3-4719-9543-b3fc1def7fb0",
+          "kind": "",
+          "text": "**2026-11-25** — Added `ork ai instructions` and `ork ai skill [--output|--install|--force]` with an embedded guide that matches current CLI, tests, docs and changelog; the UI pass found no defects, and race tests, vet, gofmt, slicer check and adj lint are green.",
+          "created_at": "2026-11-25T03:25:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -13383,7 +13412,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

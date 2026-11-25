@@ -551,6 +551,10 @@ be read. A failed file read does not block launch. A started run prints
 `stop it: ork stop RUNID`. JSON results keep their existing shape.
 The run is now in the daemon. Closing the TUI or the shell does not stop it.
 
+An agent that drives these commands can read `ork ai instructions` for the
+`RUN` id rule, the steering commands and the owner-only steps (*proposed*,
+S233; section 14).
+
 The roles run in this order (`docs/design.md:391-631`):
 
 1. **setup**: git worktree and branch, and a slicer ledger run.
@@ -1161,6 +1165,21 @@ on a pipe or file line 1 is plain `ork VERSION`.
     ork daemon status
     ork daemon run | stop [--force] | restart [--force] [--rebuild]
     ork doctor
+    ork ai instructions
+    ork ai skill [--output PATH | --install] [--force]
+
+*Proposed (S233):* `ork ai instructions` prints a short guide for an agent that
+drives ork from the command line, and `ork ai skill` prints a `SKILL.md` built
+from the same text (front matter `name: ork`, then the guide). Both read the
+text embedded in the binary, so it follows the CLI, and neither needs the
+daemon. `--output PATH` writes the skill to one file, creating parent
+directories. `--install` writes `.claude/skills/ork/SKILL.md`,
+`.agents/skills/ork/SKILL.md` and `.grok/skills/ork/SKILL.md` under the current
+directory. A file that holds other text is kept and the command exits 1 naming
+it, with nothing written, unless you add `--force`; a file that already holds
+the text is left alone. With `--json`, `ai instructions` prints `{"text": ...}`
+and a write prints `{"written": [PATH, ...]}`, plus `unchanged` when a file
+needed no write. Checking a skill into a project is the owner's call.
 
 *Proposed (S405; adj 462 for the ranges):* `ork tracking commit P` commits the tracking files that
 filing slices, spec answers and owner decisions leave uncommitted on the base
