@@ -2401,9 +2401,8 @@ func TestWavesHintLinesShowSaveAndSavedAt100And80Columns(t *testing.T) {
 	}
 }
 
-// The help names the saved-wave keys on the end of the Waves sentence, which
-// costs the help no line: at 100x30 the Waves help already hid its last three
-// lines before S216 (the marker read +3), and still hides exactly those.
+// The help names the saved-wave keys in the Waves sentence. Wrapped labels
+// scroll without hiding the refresh and help keys permanently (S401).
 func TestWavesHelpListsTheSavedWaveKeys(t *testing.T) {
 	h, _ := wavesHarness(t)
 	openWaves(t, h)
@@ -2412,8 +2411,10 @@ func TestWavesHelpListsTheSavedWaveKeys(t *testing.T) {
 	if !strings.Contains(v, "S65, an earlier item. w saves the ticked items; L lists saved waves.") {
 		t.Errorf("the help lacks the saved-wave keys:\n%s", v)
 	}
-	if !strings.Contains(v, "+3 more lines") || !strings.Contains(v, "r refresh now; q quit; ? show or hide this help") {
-		t.Errorf("the saved-wave keys cost the Waves help a line at 100x30:\n%s", v)
+	h.deliver(tea.KeyPressMsg{Code: tea.KeyPgDown})
+	v = h.at(100, 30)
+	if strings.Contains(v, "more lines") || !strings.Contains(v, "r refresh now; q quit; ? show or hide this help") {
+		t.Errorf("the Waves help end is unreachable at 100x30:\n%s", v)
 	}
 }
 

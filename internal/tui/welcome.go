@@ -129,6 +129,9 @@ func (m *Model) welcomeKey(msg tea.KeyPressMsg) tea.Cmd {
 		return tea.Quit
 	case "?":
 		m.showHelp = !m.showHelp
+		if m.showHelp {
+			m.helpOffset = 0
+		}
 	case "esc":
 		m.showHelp = false
 		m.actionStatus = ""

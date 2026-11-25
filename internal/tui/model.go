@@ -166,6 +166,7 @@ type Model struct {
 	filter           string
 	focusing         bool
 	showHelp         bool
+	helpOffset       int
 	pageTop          pagerTop
 	expanded         map[string]bool // the Running runs the owner opened, by project and run id (S164)
 	staleOpen        bool            // the Running list shows the stale relay ledgers behind its `stale: N` line (S333)
@@ -639,7 +640,38 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	return m, nil
 }
 
+func (m *Model) scrollHelp(msg tea.KeyPressMsg) {
+	w, h, sideW := m.layoutSize()
+	bodyH := max(h-4, 1)
+	total := len(m.helpLines(max(w-sideW, 1), bodyH))
+	last := windowStart(total-1, total, bodyH)
+	m.helpOffset = min(max(m.helpOffset, 0), last)
+	hi, _, _ := span(total, m.helpOffset, bodyH)
+	step := 1
+	if key.Matches(msg, m.keys.PageDown) {
+		step = max(hi-m.helpOffset, 1)
+	}
+	if key.Matches(msg, m.keys.PageUp) {
+		// Size the preceding window, whose markers can differ from this one.
+		for from := 0; from < m.helpOffset; from++ {
+			if end, _, _ := span(total, from, bodyH); end >= m.helpOffset {
+				m.helpOffset = from
+				return
+			}
+		}
+		return
+	}
+	if key.Matches(msg, m.keys.RowPrev) {
+		step = -step
+	}
+	m.helpOffset = min(max(m.helpOffset+step, 0), last)
+}
+
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PageDown, m.keys.PageUp) {
+		m.scrollHelp(msg)
+		return nil
+	}
 	if m.reportOn() > 0 {
 		return m.paneKey(msg)
 	}
@@ -834,9 +866,6 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		// the lineup and the text fields. The status says what switches projects.
 		m.actionStatus = "[ and ] switch projects"
 		return nil
-	case m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
-		// The cursor is hidden under the help: the line keys leave it where it is.
-		return nil
 	case m.roadmapPaneOpen() && !m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PageDown, m.keys.PageUp, m.keys.First, m.keys.Last):
 		m.scrollRoadmapPane(msg)
 	case key.Matches(msg, m.keys.ScrollDown, m.keys.ScrollUp):
@@ -928,6 +957,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return tea.Quit
 	case key.Matches(msg, m.keys.Help):
 		m.showHelp = !m.showHelp
+		if m.showHelp {
+			m.helpOffset = 0
+		}
 	case key.Matches(msg, m.keys.Close):
 		m.actionStatus = ""
 		m.itemPane = nil
