@@ -6246,3 +6246,11 @@
 {"when": "2026-11-25T02:15:11Z", "item": "S535", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
 {"when": "2026-11-25T02:15:15Z", "item": "S535", "action": "set", "from": "", "to": "", "note": "title Make pgup the exact inverse of pgdown in help→Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help; short_title Make pgup the exact inverse of pgdown in help→Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help"}
 {"when": "2026-11-25T02:15:15Z", "item": "S535", "action": "note", "from": "", "to": "", "note": "Owner (2026-11-24) folded S401's later findings 2-5 into thi", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:17:21Z", "item": "S532", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S510 (reviewer write to its role temp dir); same evidence from S401's reviewer"}
+{"when": "2026-11-25T02:17:21Z", "item": "S510", "action": "note", "from": "", "to": "", "note": "S532 (retired as duplicate) reported the same denial from S4", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:19:02Z", "item": "S502", "action": "retire", "from": "open", "to": "retired", "note": "Superseded by S385: adj 409 cites code by symbol, so no line cites remain to watch (owner 2026-11-24)"}
+{"when": "2026-11-25T02:19:03Z", "item": "S534", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S499 (owner 2026-11-24): its views join S499's fixture list"}
+{"when": "2026-11-25T02:19:03Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-24: S534 folded in. Add fixtures for the proje", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:19:10Z", "item": "S510", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T02:19:21Z", "item": "S509", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-24 (adj 543, tests.allowlist-write-commands = ", "by": "Jon Robbins"}
+{"when": "2026-11-25T02:19:21Z", "item": "S499", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-24 (adj 542, ui.render-fixture-select = fixtur", "by": "Jon Robbins"}

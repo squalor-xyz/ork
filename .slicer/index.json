@@ -27078,6 +27078,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "7319fd29-b169-4309-8b32-89e318b92ea4",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-24 (adj 542, ui.render-fixture-select = fixture-flag): add a test flag -render-fixture NAME[,NAME...] beside -renders; with none, the current five files are written unchanged; each fixture name writes NAME.txt.",
+          "created_at": "2026-11-25T02:19:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27409,6 +27423,20 @@
           "kind": "",
           "text": "**2026-11-20** — Merged S513 (2026-11-20): prefer Claude Code's real permission matcher over the test's own regex model.",
           "created_at": "2026-11-20T15:38:45Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "28e6edd9-b2a0-481c-bf0c-1668340ffb6b",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-24 (adj 543, tests.allowlist-write-commands = extend): extend TestReadOnlyAllowlistMatchesNoTrackingWrite and its allowlistMatches model in internal/engine/perm_test.go with the fixed write list (slicer note, slicer done, slicer set, slicer ai relay --init-roles, slicer changelog add), run over LocalReadOnlyAllowlist() and CloudUIAllowlist(). Check: go test ./internal/engine -run TestReadOnlyAllowlist exits 0.",
+          "created_at": "2026-11-25T02:19:21Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-535 items · — 47 · done 368 · retired 120
+535 items · — 44 · done 368 · retired 123
 
 ## v1.3
 
@@ -261,7 +261,7 @@ v1.2
 | 204 | [S499](slices/S499.md) | let TestRenderCLIViews render the projects set summary and run error texts from fixtures, so a UI pass can put them on the approval card |  | - |  | discovered from S307 | — |
 | 205 | [S500](slices/S500.md) | TestRenderCLIViews could take a fixture name so a UI pass can render wave start and a status with queued or held runs without an overlay test |  | - |  | Folded into S499 per the owner (adj 514). · discovered from S342 | retired |
 | 206 | [S501](slices/S501.md) | say in the reviewer brief that compound commands are denied, the way the cloud UI pass brief now says it |  | - |  | Duplicate of S481 (say in the reviewer brief which shell forms are denied). · discovered from S416 | retired |
-| 207 | [S502](slices/S502.md) | flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff |  | - |  | discovered from S337 | — |
+| 207 | [S502](slices/S502.md) | flag doc `file:N-M` cites in a diff whose target lines moved because of that same diff |  | - |  | Superseded by S385: adj 409 cites code by symbol, so no line cites remain to watch (owner 2026-11-24) · discovered from S337 | retired |
 | 208 | [S503](slices/S503.md) | say in the reviewer brief that `; echo exit=$?` and shell loop variables are denied, and name the Grep tool for acceptance rg lines |  | - |  | Folded into S505 (adj 519: the brief names the denied forms). · discovered from S391 | retired |
 | 209 | [S504](slices/S504.md) | allow `python3 -I -c` reading stdin in read-only reviewer roles, or name `grep -o` as the way to pick fields out of slicer JSON |  | - |  | Folded into S505 (adj 519: brief-first; python3 -c is not added). · discovered from S318 | retired |
 | 210 | [S505](slices/S505.md) | Read-only allowlist batch | M | 2 |  | 2026-11-18 to 11-20: ten tool-feedback slices from reviewer, gate and UI passes (S465, S469, S471, S472, S478, S479, S481, S485, S486, S488) report denied commands: shell variables for the worktree path, `; echo exit=$?`, env-prefixed `go test`, `slicer COMMAND --help`, `slicer ai relay`, `rg` on test globs, `ls` and `git ls-files` in the role's own TMPDIR, `git init` for a fixture, and implementers reporting socket tests that fail only in their sandbox. Owner decision adj 519 (`roles.read-only-allowlist-batch` = brief-first, 2026-11-20). | done |
@@ -291,9 +291,9 @@ v1.2
 | 234 | [S529](slices/S529.md) | tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures |  | - |  | discovered from S399 | — |
 | 235 | [S530](slices/S530.md) | say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite |  | - |  | discovered from S399 | — |
 | 236 | [S531](slices/S531.md) | give the UI pass a scroll-sweep check that pages to the end and back at several heights and asserts every line appears |  | - |  | discovered from S401 | — |
-| 237 | [S532](slices/S532.md) | let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run |  | - |  | discovered from S401 | — |
+| 237 | [S532](slices/S532.md) | let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run |  | - |  | Duplicate of S510 (reviewer write to its role temp dir); same evidence from S401's reviewer · discovered from S401 | retired |
 | 238 | [S533](slices/S533.md) | add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test |  | - |  | Folded into S534 (adj 531, owner 2026-11-25) · discovered from S249 | retired |
-| 239 | [S534](slices/S534.md) | let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test |  | - |  | discovered from S250 | — |
+| 239 | [S534](slices/S534.md) | let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test |  | - |  | Folded into S499 (owner 2026-11-24): its views join S499's fixture list · discovered from S250 | retired |
 | 240 | [S535](slices/S535.md) | Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help |  | 1 |  | discovered from S401 | — |
 
 ---
