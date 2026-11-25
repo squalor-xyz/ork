@@ -26,8 +26,8 @@ func TestSliceCheckCommandWarningsExemptsAFilesPath(t *testing.T) {
 	for _, prefix := range []string{"", "./", "A=1 B=2 "} {
 		t.Run(prefix, func(t *testing.T) {
 			raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{
-				{"heading": "Files", "body": "- `scripts/new-check.sh`\n- `internal/cli:12-20`\n- `./tools/x.sh`"},
-				{"heading": "Check", "body": "- `" + prefix + "scripts/new-check.sh --x`\n- `internal/cli`\n- `tools/x.sh`\n- `internal/other`"},
+				{"heading": "Files", "body": "- `scripts/new-check.sh`\n- `internal/newpkg/gen.go:12-20`\n- `./tools/x.sh`"},
+				{"heading": "Check", "body": "- `" + prefix + "scripts/new-check.sh --x`\n- `internal/newpkg/gen.go`\n- `tools/x.sh`\n- `internal/other`"},
 			}}})
 			if err != nil {
 				t.Fatal(err)
@@ -38,6 +38,40 @@ func TestSliceCheckCommandWarningsExemptsAFilesPath(t *testing.T) {
 				t.Fatalf("warnings %q, want only %q", got, want)
 			}
 		})
+	}
+}
+
+func TestSliceCheckCommandWarningsFlagsAnExistingFilesPathThatDoesNotRun(t *testing.T) {
+	tree := t.TempDir()
+	for path, mode := range map[string]os.FileMode{"internal/plain.go": 0o644, "scripts/run.sh": 0o755} {
+		full := filepath.Join(tree, path)
+		if err := os.MkdirAll(filepath.Dir(full), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(full, []byte("x\n"), mode); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Chmod(full, mode); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.MkdirAll(filepath.Join(tree, "internal", "cli"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{
+		{"heading": "Files", "body": "- `internal/cli:12-20`\n- `internal/plain.go`\n- `scripts/run.sh`\n- `scripts/new-check.sh`"},
+		{"heading": "Check", "body": "- `internal/cli`\n- `internal/plain.go`\n- `scripts/run.sh`\n- `scripts/new-check.sh --x`"},
+	}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := SliceCheckCommandWarnings(string(raw), tree)
+	want := []string{
+		`Check entry "internal/cli": first word "internal/cli" is not a runnable command`,
+		`Check entry "internal/plain.go": first word "internal/plain.go" is not a runnable command`,
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("warnings %q, want %q", got, want)
 	}
 }
 

@@ -3075,8 +3075,9 @@ holds one result; a held slice returns `{"started":false,"held":["ID"]}`.
 and repeatable `--answer`. Listing runs only `spec.check`, prints every
 question with its number, decision key when present and answer address, and
 returns without planning or starting a run or recording an answer. It exits
-3 (`ExitWaitQuestion`, S257) with questions pending, otherwise 0. The spec
-check's existing cache is retained. Text listings with no open questions
+3 (`ExitWaitQuestion`, S257) with questions pending or an item waiting on adj,
+otherwise 0; an item held only by a Check finding prints its `held:` line and
+gives 0 (adj 568, S572). The spec check's existing cache is retained. Text listings with no open questions
 print `no open spec questions: S1, S2`; a saved wave with no startable items
 names the wave instead. Keyed wave questions show
 `Decision key: k1 (answer as S1:k1)`; keyless questions show `Answer as: #N`
@@ -3316,7 +3317,10 @@ its first word. Before the worktree
 exists, the project checkout stands in for it. The same Check entry parser as
 the slice checks excludes acceptance criteria, human checks and after-land
 checks. An entry whose command word matches a path in the slice's Files is
-exempt, ignoring line anchors and a leading `./`. Check-entry warnings refuse
+exempt only when that path does not exist in the worktree (or the checkout
+before the worktree exists), ignoring line anchors and a leading `./`; an
+existing Files path goes through the PATH and executable-file lookups above
+(S572). Check-entry warnings refuse
 `run.start` and the affected member of `wave.start` before a role starts. The
 refusal names the item and each entry and asks the owner to edit Check and
 start again. The spec check reports these entries as deterministic findings,

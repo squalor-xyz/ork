@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -751,6 +752,8 @@ type sliceCheckCommand struct {
 
 // SliceCheckCommandWarnings flags Check entries whose first word cannot run.
 // The caller supplies the worktree, or the checkout before that tree exists.
+// A first word that names a Files path is exempt only while that path does not
+// exist there.
 func SliceCheckCommandWarnings(raw, worktree string) []string {
 	sections := sliceChecklistSections(raw)
 	return checkCommandWarnings(checkBodyCommands(sections["Check"]), sections["Files"], worktree)
@@ -761,6 +764,24 @@ func CheckBodyCommandWarnings(body, files, worktree string) []string {
 	return checkCommandWarnings(checkBodyCommands(body), files, worktree)
 }
 
+// filesPathNotYet reports whether a relative path inside the worktree does not
+// exist yet. Any other Lstat result, or a path outside the worktree, is false.
+func filesPathNotYet(path, worktree string) bool {
+	if filepath.IsAbs(path) {
+		return false
+	}
+	full := filepath.Join(worktree, path)
+	rel, err := filepath.Rel(worktree, full)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return false
+	}
+	_, err = os.Lstat(full)
+	return errors.Is(err, fs.ErrNotExist)
+}
+
+// checkCommandWarnings skips a command word that names a Files path only while
+// that path does not exist; an existing one must be on PATH or be an
+// executable regular file in the worktree.
 func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) []string {
 	paths := map[string]bool{}
 	for _, m := range backticked.FindAllStringSubmatch(files, -1) {
@@ -785,7 +806,7 @@ func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) [
 			warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
 			continue
 		}
-		if paths[strings.TrimPrefix(word.text, "./")] {
+		if paths[strings.TrimPrefix(word.text, "./")] && filesPathNotYet(word.text, worktree) {
 			continue
 		}
 		if filepath.IsAbs(word.text) || !strings.ContainsRune(word.text, filepath.Separator) {

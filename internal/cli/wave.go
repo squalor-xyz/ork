@@ -661,10 +661,15 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 				return nil, nil, code
 			}
 		}
-		if len(open) > 0 {
-			return nil, nil, ExitWaitQuestion
+		// An item held only by a Check finding has no question to answer
+		// (adj 568, cli.questions-check-finding-exit): its held line was
+		// printed above and the listing exits 0.
+		for _, r := range open {
+			if len(r.Findings) == 0 || len(r.Questions) > 0 || len(r.WaitsOn) > 0 {
+				return nil, nil, ExitWaitQuestion
+			}
 		}
-		if !o.json {
+		if len(open) == 0 && !o.json {
 			fmt.Fprintf(w, "no open spec questions: %s\n", strings.Join(ids, ", "))
 		}
 		// Stop after a successful listing too; there is no launch to confirm.
