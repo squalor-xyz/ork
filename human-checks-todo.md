@@ -282,3 +282,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S233 (run ork-20261125-015129-4c21, 2026-11-25)
 
 - [ ] After landing and a rebuild, the owner reads "ork ai instructions" once and says whether it matches how an agent should drive ork, and decides whether to install the skill in a project.
+
+## S554 (run ork-20261125-175814-f2ae, 2026-11-25)
+
+- [ ] In the next real reviewer round, open the reviewer's brief under the run's role files. You should see a `## Base overlays` section with one `go -C WORKTREE test -overlay ... ./DIR` command for each changed non-test Go file. Run one of them from your shell. It should fail (red) for the test the slice added, and `git -C WORKTREE status --porcelain` should be unchanged.

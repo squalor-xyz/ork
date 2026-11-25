@@ -2029,6 +2029,22 @@ separately.
     Each missing path appears once as a flagged finding for the reviewer.
     Failed reads add an incomplete-check notice. The check is advisory and
     never blocks the run;
+  - before the reviewer starts, a `## Base overlays` section when the branch
+    diff against the base holds a non-test Go file (S554). For each such file,
+    in sorted order and at most 20, ork writes the file's base version
+    (`git show MERGEBASE:path`, the merge base Direction uses) to
+    `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
+    "TMPDIR/base/path"}}`, in the reviewer's process temp directory. A file
+    the base lacks (new in the slice) maps to `""`, which `go` reads as a file
+    that does not exist; no base copy is written. The section names, for each
+    file, one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
+    ./DIR` command, so a read-only reviewer can run the package's tests with
+    only that file reverted and see a test the slice added fail. It says how
+    many files past 20 it left out. A path that is absolute or holds `..` is
+    never written. A failed diff read or `git show` (other than path not in
+    base) adds an incomplete-check notice that tells the reviewer to run `git
+    show` itself. The section is advisory and never blocks the run. The gate and
+    the architect get none;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,
@@ -2605,7 +2621,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   that directory. A path outside the permitted directories is still denied.
   The brief of a claude or claude-local reviewer tells it that it may write
   there, and nowhere else; the brief of a Codex or Grok reviewer does not. Gate,
-  architect, spec check and spec draft get no such grant.
+  architect, spec check and spec draft get no such grant. The reviewer prompt
+  carries a `## Probe tests` recipe for the write (S554, adj 560): a probe test
+  file in the temp directory, an overlay JSON that maps a new test file name in
+  the package directory to it, and one `go -C WORKTREE test -overlay` command;
+  it applies only when the brief says the reviewer may write its temp
+  directory, and it points to the brief's `## Base overlays` section for revert
+  commands.
   Other calls block on an owner permission question. `ork answer RUN allow`
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.
