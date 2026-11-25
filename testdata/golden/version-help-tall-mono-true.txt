@@ -28,7 +28,7 @@
                            │t (question) type a free answer
                            │ctrl+a (answer) toggle filing the answer in adj
                            │c remove merged worktree and branch (Ready)
-                           │r refresh now; q quit; ? show or hide this help
+                           │r refresh now; q quit; ? show or hide this help; S settings
                            │esc close run, question, item, decision, help or message
                            │
                            │Overview, Questions, Waves, Roadmap and Decisions are available.

@@ -137,14 +137,17 @@ type Model struct {
 	daemonBuild string
 	removing    projectRemoval
 	welcome     welcomeState
-	cfg         Config
-	keys        keyMap
-	help        help.Model
-	projects    []*projectState
-	byName      map[string]*projectState
-	poller      *poll.Poller
-	active      int // runningEntry, needsEntry, or a registry index
-	view        int // the view in the bar: an index into views; 0 is the Overview
+
+	settings        *settingsState // the project settings pane (S251)
+	settingsRequest uint64
+	cfg             Config
+	keys            keyMap
+	help            help.Model
+	projects        []*projectState
+	byName          map[string]*projectState
+	poller          *poll.Poller
+	active          int // runningEntry, needsEntry, or a registry index
+	view            int // the view in the bar: an index into views; 0 is the Overview
 
 	questionsCursor int
 	allProjects     bool
@@ -441,6 +444,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		}
 	case matrixEditMsg:
 		return m, m.applyMatrixEdit(msg)
+	case settingsMsg:
+		m.applySettings(msg)
+	case settingsSetupMsg:
+		return m, m.applySettingsSetup(msg)
 	case specDraftMsg:
 		m.applySpecDraft(msg)
 	case specApplyMsg:
@@ -648,6 +655,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.removing.name != "" {
 		return m.removeProjectKey(msg)
+	}
+	if m.settings != nil {
+		return m.settingsKey(msg)
 	}
 	if !m.projectTextEntry() && m.confirm == nil {
 		switch msg.String() {
@@ -908,6 +918,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.openLaunch()
 	case key.Matches(msg, m.keys.Matrix):
 		return m.openMatrix()
+	case key.Matches(msg, m.keys.Settings):
+		return m.openSettings()
 	case key.Matches(msg, m.keys.SpecDraft):
 		return m.openSpecDraft()
 	case key.Matches(msg, m.keys.Cleanup):
@@ -1456,7 +1468,7 @@ func (m *Model) showView(i int) tea.Cmd {
 // or a sitting holds them (ui.confirm, adj 98). The key switch reads the same
 // states in the same order.
 func (m *Model) mouseReady() bool {
-	if !m.mouse || m.showHelp || m.confirm != nil || m.removing.name != "" || m.reportOn() > 0 || m.pane != nil {
+	if !m.mouse || m.showHelp || m.confirm != nil || m.removing.name != "" || m.settings != nil || m.reportOn() > 0 || m.pane != nil {
 		return false
 	}
 	if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" || m.registeredProjectCount() == 0 {

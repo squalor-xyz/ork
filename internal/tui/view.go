@@ -87,6 +87,8 @@ func (m *Model) screen() string {
 		body = m.helpLines(mainW, bodyH)
 	} else if m.removing.name != "" {
 		body = m.projectRemovalBody(mainW)
+	} else if m.settings != nil {
+		body = m.settingsBody(mainW, bodyH)
 	} else if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" || (m.registeredProjectCount() == 0 && m.pane == nil && m.active < 0) {
 		if m.welcome.scan != nil {
 			body = m.scanBody(mainW, bodyH)
@@ -920,6 +922,10 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			if h == m.keys.Remove.Help() || h == m.keys.Mouse.Help() || h == m.keys.ExpandAll.Help() || h == m.keys.Tick.Help() {
 				continue
 			}
+			// S shares the refresh and quit line, so the help keeps its length (S251).
+			if h == m.keys.Settings.Help() {
+				continue
+			}
 			// The two Waves keys share a line, which pays for the expand keys' (S164).
 			if h == m.keys.EditLineup.Help() {
 				if m.view == roadmapView {
@@ -952,7 +958,8 @@ func (m *Model) helpLines(w, bodyH int) []string {
 			}
 			if h == m.keys.Help.Help() {
 				q := m.keys.Quit.Help()
-				lines = append(lines, clip(refresh+q.Key+" "+q.Desc+"; "+h.Key+" "+h.Desc, w))
+				s := m.keys.Settings.Help()
+				lines = append(lines, clip(refresh+q.Key+" "+q.Desc+"; "+h.Key+" "+h.Desc+"; "+s.Key+" settings", w))
 				continue
 			}
 			if h.Key == m.keys.AllProjects.Help().Key && m.view != decisionsView {

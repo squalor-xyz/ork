@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-534 items · — 48 · done 366 · retired 120
+534 items · — 47 · done 367 · retired 120
 
 ## v1.3
 
@@ -83,7 +83,7 @@ v1.2
 | 26 | [S248](slices/S248.md) | projects set --dry-run | S | 1 |  |  | done |
 | 27 | [S249](slices/S249.md) | Project setup steps | M | 2 |  |  | done |
 | 28 | [S250](slices/S250.md) | Matrix change sets | M | 2 |  |  | — |
-| 29 | [S251](slices/S251.md) | Project settings pane | M | 2 |  |  | — |
+| 29 | [S251](slices/S251.md) | Project settings pane | M | 2 |  |  | done |
 | 30 | S252 | S238 and S190 later notes: pause reason wording, pane clamp, vendor-out timing, retry keeps vendor | S | 2 |  | **2026-11-02** — Later notes from pair wave 5 (S238 and S190, run by ork on the Claude fallback implementer and landed 2026-11-02). S238: (1) the conflict pause reason names ork retry RUN twice in ork status; (2) check how the TUI pane wraps a long conflict pause reason at 80x24, with (5) a pane view test for a five-file conflict reason at 80x24; (3) the pause reason does not say how to resolve a deletion and (4) that a file resolved by deletion needs git rm. S190: (1,4) the help j/k and g/G lines do not mention panes; (2,5) the Roadmap pane offset is clamped in the draw path (clamp it when the content or height changes); (3) hangWrap gives up the hang width for text with a newline. Friction not yet in a slice: F30 ork vendor shows nothing out until the first role of that vendor fails (the out-until time is only learned then); F35 an ork retry resumes the recorded vendor session, so a run that started on the Claude fallback stays on Claude after Codex is back and the owner must stop and rerun to change vendor. Log: .scratch/v11/wave4-friction.md. · discovered from S238 | — |
 | 31 | S253 | S213 later notes: guard that the changelog section and tag message reach release-notes.md; gate stale after fixes | S | 1 |  | S213 gate: no test requires the cat changelog-section.md line that feeds release-notes.md (.github/workflows/release.yml:120), so dropping it would pass every guard. Wave 6 friction: a resumed gate session re-reports a fixed state as open; the gate ran in plan mode and could not write its report; the Sonnet implementer sandbox denies rm and a script run in its own worktree. · discovered from S213 | — |
 | 32 | [S261](slices/S261.md) | Shared role matrix: apply ork's matrix to one project or to every registered project | M | 2 |  | Owner 2026-11-03: the owner should be able to tell ork to apply its relay roles matrix to any project so the matrices unify, or to all registered projects at once. Facts (read with slicer relay-roles show, 2026-11-03): the matrices differ per project. ork has 20 rows and 3 gpt-6.1-sol rows; slicer 18 and 5; daystar 12 and 2; adjudicate 9, pitfight 8 and squalify 8 have no Codex rows. slicer owns the matrix (.slicer/relay-roles.json, changed only through slicer relay-roles commands); S173 edits one project row by row, S250 applies a change set atomically through a proposed slicer relay-roles apply. Needed first: check that slicer has no such capability or roadmap item, then spec it with owner questions: the source (ork's own project matrix or a stored master), what is copied (rows, rules, or both), project-specific rows to keep (the spec-check row and rule, notes), dry run and per-project confirm, and the apply-to-all mode. Spec being drafted by an Opus medium subagent. · discovered from S250 | — |
