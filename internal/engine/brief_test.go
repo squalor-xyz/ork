@@ -1639,7 +1639,7 @@ const directionGoals = `{"records":{"goal":[{"id":"C01","kind":"goal","title":"O
 // directionFixture installs fake slicer and git answers for one review of S383
 // whose diff changes the given paths, and returns the engine and run record to
 // build the Direction section from. With listFails, `slicer list` exits non-zero.
-func directionFixture(t *testing.T, items []directionItem, changed []string, listFails bool) (*Engine, runrec.Record) {
+func directionFixture(t *testing.T, items []directionItem, changed []string, listFails bool, why ...string) (*Engine, runrec.Record) {
 	t.Helper()
 	P := t.TempDir()
 	W := filepath.Join(P, ".worktrees", "S383")
@@ -1647,7 +1647,7 @@ func directionFixture(t *testing.T, items []directionItem, changed []string, lis
 	var routes []clitest.Route
 	for _, it := range items {
 		rows = append(rows, fmt.Sprintf(`{"id":%q,"title":%q,"status":%q,"has_slice":%t,"depends_on":%s,"fields":{}}`, it.id, it.title, it.status, !it.noSpec, jsonList(it.deps)))
-		if it.noSpec {
+		if it.noSpec || it.id == "S383" {
 			continue
 		}
 		show := clitest.Route{Tool: "slicer", Args: []string{"show", it.id, "--json", "--lean", "--root", W}, Stdout: fmt.Sprintf(`{"id":%q,"title":%q,"status":%q,"paths":%s}`, it.id, it.title, it.status, jsonList(it.files))}
@@ -1656,6 +1656,11 @@ func directionFixture(t *testing.T, items []directionItem, changed []string, lis
 		}
 		routes = append(routes, show)
 	}
+	body := ""
+	if len(why) > 0 {
+		body = why[0]
+	}
+	routes = append(routes, clitest.Route{Tool: "slicer", Args: []string{"show", "S383", "--json", "--lean", "--root", W}, Stdout: fmt.Sprintf(`{"id":"S383","slice":{"sections":[{"heading":"Why","body":%q},{"heading":"Implement","body":"unrelated title must not match"}]}}`, body)})
 	list := clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", W}, Stdout: "[" + strings.Join(rows, ",") + "]"}
 	if listFails {
 		list.Stdout, list.Exit = "", 1
@@ -1725,6 +1730,43 @@ func TestDirectionDigestNamesOverlappingItems(t *testing.T) {
 	// digest says so.
 	if !strings.Contains(rest, "S16") || !strings.Contains(section.Body, "Files unread for 1 item") {
 		t.Errorf("an item with unreadable Files is not reported:\n%s", section.Body)
+	}
+}
+
+func TestDirectionDigestLikelyDuplicates(t *testing.T) {
+	const title = "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section"
+	items := []directionItem{
+		{id: "S550", title: title, status: "open", noSpec: true},
+		{id: "S383", title: title, status: "started"},
+		{id: "S551", title: title, status: "done"},
+		{id: "S552", title: title, status: "retired"},
+		{id: "S553", title: "unrelated title must not match", status: "open", noSpec: true},
+	}
+	for _, tc := range []struct {
+		name, why string
+		want      bool
+	}{
+		{"match", "Evidence: S550 \"" + title + "\" duplicates the requested scope. Extra prose does not dilute containment.", true},
+		{"below", "fixture unrelated", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			e, rec := directionFixture(t, items, nil, false, tc.why)
+			body := e.directionSection(context.Background(), rec).Body
+			start := strings.Index(body, "Likely duplicates")
+			end := strings.Index(body, "Open items that touch")
+			if start < 0 || end < start {
+				t.Fatalf("missing likely duplicate group:\n%s", body)
+			}
+			if got := strings.Contains(body[start:end], "- S550 "+title+"\n"); got != tc.want {
+				t.Fatalf("likely duplicate S550 = %v, want %v:\n%s", got, tc.want, body)
+			}
+			if strings.Contains(body[start:end], "S553") || strings.Contains(body, "S383") || strings.Contains(body, "S551") || strings.Contains(body, "S552") {
+				t.Fatalf("unmatched or excluded item in duplicate output:\n%s", body)
+			}
+			if strings.Count(body, "- S550 ") != 1 || !strings.Contains(body, "- S553 unrelated title must not match\n") || !strings.Contains(body, "0 open items left out of 2.") {
+				t.Fatalf("items duplicated, lost, or miscounted:\n%s", body)
+			}
+		})
 	}
 }
 

@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">562 items · — 54 · done 382 · retired 126</p>
+<p class="summary">562 items · — 53 · done 383 · retired 126</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -314,7 +314,7 @@
 <tr class="open"><td>259</td><td>S554</td><td>give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file</td><td></td><td>-</td><td></td><td>discovered from S544</td><td class="status">—</td></tr>
 <tr class="retired"><td>260</td><td>S555</td><td>the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll</td><td></td><td>-</td><td></td><td>Duplicate of S556 (UI pass hint-width sweep that flags a dropped scroll key) · discovered from S535</td><td class="status">retired</td></tr>
 <tr class="open"><td>261</td><td>S556</td><td>give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows</td><td></td><td>-</td><td></td><td>discovered from S535</td><td class="status">—</td></tr>
-<tr class="open"><td>262</td><td>S557</td><td>when a slice&#x27;s Why text matches an open item&#x27;s title, list that item as a likely duplicate in the brief&#x27;s Direction section</td><td></td><td>-</td><td></td><td>discovered from S552</td><td class="status">—</td></tr>
+<tr class="done"><td>262</td><td>S557</td><td>when a slice&#x27;s Why text matches an open item&#x27;s title, list that item as a likely duplicate in the brief&#x27;s Direction section</td><td></td><td>-</td><td></td><td>discovered from S552</td><td class="status">done</td></tr>
 <tr class="done"><td>263</td><td>S558</td><td>matrix copy: bind the confirmed write to source row content, not only steps</td><td></td><td>2</td><td></td><td>discovered from S548</td><td class="status">done</td></tr>
 <tr class="open"><td>264</td><td>S559</td><td>Spec-check brief: look up existing decisions by topic with adj check TEXT</td><td></td><td>-</td><td></td><td>discovered from S558</td><td class="status">—</td></tr>
 <tr class="open"><td>265</td><td>S560</td><td>before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not</td><td></td><td>-</td><td></td><td>discovered from S558</td><td class="status">—</td></tr>

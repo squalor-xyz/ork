@@ -1983,11 +1983,19 @@ separately.
     --lean`, up to 8 at a time) and the slice's changed paths (`git diff
     --name-only` from the merge base with the main checkout's branch, plus
     untracked files). The section holds the active goals and non-goals by
-    title; the open items whose Files hold a changed path or a directory of one
+    title; *proposed (S557):* likely duplicates whose unique title content words
+    are at least 60% present in the current slice's Why text, read with
+    `slicer show`. Matching uses the existing ASCII title-word normalization
+    (lowercase, punctuation split, common stop words and words shorter than two
+    characters removed). Extra Why words do not lower the share. Self, done
+    and retired items are excluded. Likely duplicates appear once, before the
+    file-overlap and other groups, within the same byte budget and omission
+    count; the open items whose Files hold a changed path or a directory of one
     (id, title, status, dependencies); and the other open items by id and
     title, in slicer's order. It is at most 8,000 bytes: past the budget ork
     stops listing and says how many open items it left out. An item whose
-    `slicer show` failed is not matched, and the section says how many. If a read
+    own `slicer show` failed is not matched against changed paths, and the
+    section says how many. Its title can still match the current Why. If a read
     for the digest fails, the section says ork could not build it and tells the
     role to run `slicer goals --json --lean` and `slicer list --json --lean`
     itself; the run does not pause. The prompts tell the role to read the

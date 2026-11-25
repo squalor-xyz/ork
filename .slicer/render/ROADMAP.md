@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-562 items · — 54 · done 382 · retired 126
+562 items · — 53 · done 383 · retired 126
 
 ## v1.3
 
@@ -316,7 +316,7 @@ v1.2
 | 259 | [S554](slices/S554.md) | give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file |  | - |  | discovered from S544 | — |
 | 260 | [S555](slices/S555.md) | the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll |  | - |  | Duplicate of S556 (UI pass hint-width sweep that flags a dropped scroll key) · discovered from S535 | retired |
 | 261 | [S556](slices/S556.md) | give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows |  | - |  | discovered from S535 | — |
-| 262 | [S557](slices/S557.md) | when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section |  | - |  | discovered from S552 | — |
+| 262 | [S557](slices/S557.md) | when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section |  | - |  | discovered from S552 | done |
 | 263 | [S558](slices/S558.md) | matrix copy: bind the confirmed write to source row content, not only steps |  | 2 |  | discovered from S548 | done |
 | 264 | [S559](slices/S559.md) | Spec-check brief: look up existing decisions by topic with adj check TEXT |  | - |  | discovered from S558 | — |
 | 265 | [S560](slices/S560.md) | before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not |  | - |  | discovered from S558 | — |

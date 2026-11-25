@@ -1,0 +1,39 @@
+{
+  "id": "S557",
+  "title": "when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-134345-8b83, project ork, item S552:\n\nwhen a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section\n\nEvidence: S550 \"name -render-fixture and the fixture list in the UI pass brief's CLI text renders section\" duplicates S552's scope"
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/neardup.go:17`: whyContainsTitle and titleWords at line 55.\n- `internal/engine/neardup_test.go:12`: TestWhyContainsTitle.\n- `internal/engine/brief.go:458`: directionDigest and bounded formatter.\n- `internal/engine/brief_test.go:1642`: directionFixture; TestDirectionDigestLikelyDuplicates at line 1736.\n- `docs/design.md:1986`: likely duplicate matching.\n- `landed-changed/S557.md` (new): changelog entry via slicer."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestWhyContainsTitle`: unique title-word containment at 0.6, below threshold, case/punctuation/stop words, empty title and empty Why.\n- `TestDirectionDigestLikelyDuplicates`: current Why matches open title without shared Files; exclude self/done/retired and below-threshold titles; preserve unrelated items and bounded counts."
+    },
+    {
+      "heading": "Implement",
+      "body": "Use the owner's why-containment rule (feedback.direction-duplicates): count unique titleWords from an open item's title found in the current slice's Why, divided by that title's unique content-word count. Use threshold 0.6. Add a helper alongside titleWords; keep existing title Jaccard behavior unchanged. Read current Why through slicer show. List matches once under Likely duplicates before file-overlap and other items, preserving the digest budget and omission count. Retain existing fallback on failed digest reads. Update behavior documentation and add the changelog through slicer."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./internal/engine -run 'TestWhyContainsTitle|TestDirectionDigest' -count=1`\n- `go test ./...`\n- `go vet ./...`\n- `gofmt -l .`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
