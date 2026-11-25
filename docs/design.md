@@ -831,6 +831,9 @@ slice.
     in the brief under Your files. The pass
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
     names for the approval card.
+    The UI brief also tells the pass that a `go test -run` pattern holds no
+    pipe, because a pipe makes a compound command that the permission check
+    denies, and gives the one-test-per-command form (S565).
     TUI views and the pass's commands (*proposed*, S416; adj 507):
     a TUI view may come from a test file kept outside the tree, run with
     `go -C WORKTREE test -overlay FILE -run NAME ./PKG` (for ork, the recipe is

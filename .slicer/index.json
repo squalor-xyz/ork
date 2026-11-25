@@ -29846,10 +29846,39 @@
       "id": "S565",
       "title": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed",
       "short_title": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6140834e-23bc-4dd7-b2b6-15dec2f80983",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S565):\n- later: Read the rendered UI brief. It should show `## Test run patterns` after `## CLI text renders`, with the one-test-per-command example. The implementer, reviewer and gate briefs should not show it.",
+          "created_at": "2026-11-25T18:38:05Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "284a903e-f0a1-4084-981b-b02328187343",
+          "kind": "",
+          "text": "**2026-11-25** — The UI pass brief now has a `## Test run patterns` section, after `## CLI text renders` and before `## UI design doc`, saying a `go test -run` pattern must not contain a pipe and giving the one-test-per-command form; design and guide docs and the changelog entry match, and the full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-25T18:38:05Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29867,7 +29896,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

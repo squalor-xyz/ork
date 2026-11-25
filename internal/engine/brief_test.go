@@ -1049,6 +1049,43 @@ func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 	}
 }
 
+// The UI pass brief says a go test -run pattern holds no pipe and gives the
+// one-test-per-command form; no other role's brief has the section (S565).
+func TestUIPassBriefNamesRunPatternRule(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleUI
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"## Test run patterns",
+		"A `go test -run` pattern must not contain a pipe",
+		"`go -C " + in.Worktree + " test -run TestRenderCLIViews ./internal/cli`",
+		"one test per command",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("UI brief lacks %q", want)
+		}
+	}
+	cli := strings.Index(got, "## CLI text renders")
+	pat := strings.Index(got, "## Test run patterns")
+	doc := strings.Index(got, "## UI design doc")
+	if cli < 0 || pat < 0 || doc < 0 || !(cli < pat && pat < doc) {
+		t.Errorf("heading order wrong: CLI text renders %d, Test run patterns %d, UI design doc %d", cli, pat, doc)
+	}
+	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate} {
+		in.Role = role
+		got, err := BuildBrief(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(got, "## Test run patterns") {
+			t.Errorf("%s brief has the Test run patterns section", role)
+		}
+	}
+}
+
 // The UI pass brief names the project's design doc from the registry field
 // ui_doc, or tells the pass to find the project's own UI docs (S136).
 func TestUIBriefNamesTheProjectDesignDoc(t *testing.T) {

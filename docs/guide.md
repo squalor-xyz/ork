@@ -1011,6 +1011,12 @@ the render test writes nothing. The pass copies selected scratch files into
 its `renders/` directory with the prompt's `VIEW-80x24.txt` names so they
 appear on the approval card.
 
+The UI pass brief also says that a `go test -run` pattern must not contain a
+pipe, because `|` makes a compound command that the permission check denies.
+It gives the form that is allowed: one test per command, for example
+`go -C WORKTREE test -run TestRenderCLIViews ./internal/cli`, or a pipe-free
+pattern the tests share, such as a common name prefix.
+
 *Proposed (S254):* before it merges, ork looks at the main checkout. If you
 have uncommitted changes there to a file the slice also changes, the run
 pauses at once with one line that names the files; commit or stash them and

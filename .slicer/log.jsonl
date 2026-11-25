@@ -6603,3 +6603,8 @@
 {"when": "2026-11-25T18:21:30Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T18:21:30Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-25T18:22:00Z", "item": "S573", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T18:22:50Z", "item": "S565", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:36:26Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T18:38:05Z", "item": "S565", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S565):", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:38:05Z", "item": "S565", "action": "note", "from": "", "to": "", "note": "The UI pass brief now has a `## Test run patterns` section, ", "by": "Jon Robbins"}
+{"when": "2026-11-25T18:38:05Z", "item": "S565", "action": "status", "from": "started", "to": "done", "note": "The UI pass brief now has a `## Test run patterns` section, after `## CLI text renders` and before `## UI design doc`, saying a `go test -run` pattern must not contain a pipe and giving the one-test-per-command form; design and guide docs and the changelog entry match, and the full suite, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
