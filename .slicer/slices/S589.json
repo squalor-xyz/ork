@@ -1,0 +1,39 @@
+{
+  "id": "S589",
+  "title": "put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #576 was decided to file it:\n\nProposal: put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe\nRole: reviewer\nRun: ork-20261125-185255-fc37\nProject: ork\nItem: S556\nEvidence: my first probe imported github.com/charmbracelet/bubbletea and failed setup, but this module uses charm.land/bubbletea/v2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
