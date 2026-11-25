@@ -322,3 +322,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S588 (run ork-20261125-222934-1f3d, 2026-11-25)
 
 - [ ] Open the doc comment of TestScrollSweep in internal/tui/scroll_sweep_test.go. Each of decisions detail, questions detail, waves item pane and settings should be either a table row or a named Left out entry with a reason and a follow-up slice ID. No pane should be missing from both.
+
+## S600 (run ork-20261125-222936-fc21, 2026-11-25)
+
+- [ ] Run ork in a terminal of 80x10 and open a Roadmap with several goals. Press home twice: the Goals show, and the dim line under them reads +N more lines, cursor: S90 (the first row's ID). Press enter: that item opens. Press esc, then down: the cue is gone.
