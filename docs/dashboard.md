@@ -201,7 +201,10 @@ The way out, `esc` in a pane and `? help` elsewhere, never drops, and on the
 main views and their decision and Roadmap item panes `q quit` never drops
 either (S152). When the line
 is too narrow, whole hints drop, lowest priority first: `M mouse` (S66; it
-shows on the main views when the line has room), `f file slice`,
+shows on the main views when the line has room), then `S settings` (S251,
+*proposed*; owner 2026-11-24, `ui.settings-pane-hint`: it outlasts `M mouse`,
+so it shows at 120 columns on most views, and it goes before `-` remove
+project), `f file slice`,
 `v renders`, `F fix round`, the check digits, `t retry`, `x stop`, then
 `ctrl+d/u half page`, `p report`, `tab views`, `pgup/pgdown`, `a approve`
 (with `A approve wave`, S222, *proposed*, which shows only when two runs of a
@@ -292,7 +295,8 @@ names what `y` does and, at the Roadmap launch, `e`, since the prompt above
 it carries the rest: `y run; n cancel; e edit lineup; s split; up/down scroll`, `y start; n cancel`, `y approve; n
 cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor and
 `s` turns split (a lead and parts, S61, *proposed*) on or off and plans again.
-The help screen shows `? or esc close help; q quit`.
+The help screen shows `? or esc close help; q quit`, led by
+`up/down pgup/pgdown scroll` when the help does not fit.
 
 **Mouse (S66).** `M` turns mouse capture on and off. It is off at every launch and ork does not
 save it, so the terminal's own text selection works from the start: the Ready
@@ -2292,12 +2296,20 @@ Without a daemon, the 100x30 Roadmap hint is
 `O slicer tui` drops with `+ add project` and `n new slice`, before `N note`.
 At 100x30 Roadmap help groups `O slicer tui` with
 `P park/unpark; J/K move item down/up` on one line. At 80x24 `O slicer tui`
-shares the launch, matrix, note and new-slice line, shortening the launch
-label to keep the keys visible; the edit keys have their own line.
+shares the launch, matrix, note and new-slice line; the edit keys have their
+own line. Help keeps full labels and breaks between hints at `; ` first,
+packing as many complete hints as fit. Continuations hang two spaces. A hint
+that is too wide wraps between words; prose notes also wrap between words.
+The expand-all hint shares the group-navigation line so Overview help fits
+at 100x30.
 Roadmap help keeps `e edit lineup (Waves, launch)`, since `e` edits the
 lineup on the launch confirmation. It omits the Running-only space keys.
-The help fits at 100x30; at 80x24 the edit keys and the way out remain
-visible above and below the clipped help body.
+When help does not fit, up/down (or j/k) scroll one line and pgup/pgdown
+scroll a page without skipping lines in either direction. These keys also
+scroll help on the Welcome screen. Dim `+N lines above` and `+N more lines`
+markers count the hidden lines. Every help line can be reached at 80x24 without moving the row
+cursor. Help starts at the top each time it opens. The hint names the scroll
+keys only when the help does not fit, followed by `? or esc close help; q quit`.
 
 Human checks for terminal handover (S399): at 200x40 the Roadmap hint starts
 `O slicer tui;`; at 100x30 and 80x24 the unchanged drop tier hides it when
@@ -2430,6 +2442,58 @@ A saved move that leaves the displayed index unchanged says
 and `before` or `after`. It reports the result without attributing a cause
 at readiness or parked boundaries.
 Lowercase `j` / `k` remain row movement keys.
+
+## Project settings (one project)
+
+*Proposed* (S251; owner decision 2026-11-25, `ui.settings-pane-key`: capital
+`S`). `S` opens a pane for the active project on every view, and `esc` closes
+it. It reads `projects.show` (S247) and shows every setting, one block per
+owner, each with a heading line and `KEY  VALUE` lines whose values are cut to
+the width with `...`:
+
+1. `ork (projects.json)`: the project's registry entry. `vendor_env` shows the
+   names of its keys and never a value (`docs/state.md`).
+2. `ork (global)`: `global_cap`, `daemon_idle_minutes`, `owner`,
+   `file_answers`.
+3. `slicer config`: only `relay_contract`, `check_command`, `claim_owner` and
+   `implement_finish`. The rest of slicer's config is in
+   `ork projects show --json`.
+4. `slicer relay roles`: one line for each row of the matrix, with its id,
+   role, agent, model and reasoning, and what ork does with it in dim text.
+5. `adj`: `enabled` and `config_file`.
+
+A part slicer could not read shows slicer's code and message, dimmed, in its
+block; the other blocks still draw. `j` / `k`, `pgup` / `pgdown` and `g` / `G`
+scroll the body as the item pane does. A line under it names the way to change
+a field: `ork projects set NAME --FIELD VALUE`. The pane edits no field.
+
+The pane is the screen's body while it is open: the hint line lists its keys,
+the mouse does nothing, and a read that was open when it closed is dropped.
+`S` is typed while a text field owns the keys (the note and new slice forms,
+the answer fields, the filter, the wave name prompt). It does nothing while
+another pane or confirm owns the keys: help, a run pane, the confirm bar, the
+Waves item pane, the wave lineup editor and the saved-wave list, the launch
+flow, a spec sitting, the spec draft view and the matrix row editor. With no
+selected project, an unavailable project, no daemon, or a Live
+without the daemon calls, it says why on the status line.
+
+`i` opens a one-line chooser of the setup steps that apply, and `left` /
+`right` move between them. A step is offered only when it applies:
+
+- `slicer-init` when the slicer config part failed with `no .slicer/ found`.
+- `relay-roles-init` when the matrix part failed with `no_relay_roles`.
+- `adj-init` when adj is off, and `adj-off` when it is on.
+
+`enter` calls `project.setup` (S249) with `preview: true` and shows
+`Run: <command>` and `[y/N] (Enter is No)` under the body. Only `y` runs the
+step, once. `n`, Enter and `esc` cancel it without a run call. After a run the
+pane reads `projects.show` again and says `Ran: <command>`. A refusal from
+slicer or adj shows as it came, for example `state: slicer refuses ...`, and
+nothing is read again. While a call is out `esc` closes the pane and the
+reply is dropped; the next `S` reads the settings fresh.
+
+`m` closes the pane and opens the Roadmap's role matrix pane for the project,
+switching to the Roadmap first when another view is shown.
 
 ## Decisions (one project or all)
 

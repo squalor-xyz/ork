@@ -1,0 +1,39 @@
+{
+  "id": "S510",
+  "title": "allow the reviewer to write to its own role temp dir, as the prompt says it may",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-133801-8a30, project ork, item S449:\n\nallow the reviewer to write to its own role temp dir, as the prompt says it may\n\nEvidence: Write to /home/jon/.local/state/ork/t/8ae0a8bc5bac0fd2/3b735833065ebf2c/render_overlay_test.go denied: \"Path is outside allowed working directories\""
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/agent/claude/args.go`\n- `internal/agent/claude/pretool.go`\n- `internal/agent/claude/types.go`\n- `internal/daemon/runner.go`\n- `internal/engine/brief.go` (the reviewer's brief wording)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `internal/agent/claude/args_test.go`: a new test asserting the reviewer's args hold `--add-dir TMPDIR`, `Edit(//TMPDIR/**)` and `Write(//TMPDIR/**)` (cloud Claude and claude-local).\n- `internal/agent/claude/pretool_test.go`: a case that allows a Write under the role temp dir and denies one outside it."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner decisions (2026-11-25): How should S510's empty Files, Failing tests, Implement and Check be filled in, and which roles get a temp-dir write grant? -> reviewer-only: only the reviewer gets an Edit/Write grant limited to its own role temp dir (cloud Claude and claude-local). Files: `internal/agent/claude/args.go`, `internal/agent/claude/pretool.go` and the reviewer's brief wording. Failing tests: a new `args_test.go` test asserting the reviewer's args hold `--add-dir TMPDIR`, `Edit(//TMPDIR/**)` and `Write(//TMPDIR/**)`, and a `pretool_test.go` case that allows a Write under TempDir and denies one outside it. Check: `go test ./internal/agent/claude` exits 0. [roles.read-only-temp-write]."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test ./internal/agent/claude` exits 0."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

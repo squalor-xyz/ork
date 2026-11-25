@@ -102,7 +102,7 @@ func TestHelpStartsWithMark(t *testing.T) {
 			if strings.Join(rows[:6], "\n") != strings.Join(want, "\n") || len(rows) != h {
 				t.Fatalf("help mark: %q", rows)
 			}
-			if len(m.helpLines(72, h-1)) != len(base) || len(m.helpLines(11, h)) != len(base) {
+			if len(m.helpLines(72, h-1)) != len(base) || len(m.helpLines(11, h)) != len(m.helpLines(11, 0)) {
 				t.Fatal("mark without room")
 			}
 		}

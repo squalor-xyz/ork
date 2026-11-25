@@ -137,14 +137,17 @@ type Model struct {
 	daemonBuild string
 	removing    projectRemoval
 	welcome     welcomeState
-	cfg         Config
-	keys        keyMap
-	help        help.Model
-	projects    []*projectState
-	byName      map[string]*projectState
-	poller      *poll.Poller
-	active      int // runningEntry, needsEntry, or a registry index
-	view        int // the view in the bar: an index into views; 0 is the Overview
+
+	settings        *settingsState // the project settings pane (S251)
+	settingsRequest uint64
+	cfg             Config
+	keys            keyMap
+	help            help.Model
+	projects        []*projectState
+	byName          map[string]*projectState
+	poller          *poll.Poller
+	active          int // runningEntry, needsEntry, or a registry index
+	view            int // the view in the bar: an index into views; 0 is the Overview
 
 	questionsCursor int
 	allProjects     bool
@@ -166,6 +169,7 @@ type Model struct {
 	filter           string
 	focusing         bool
 	showHelp         bool
+	helpOffset       int
 	pageTop          pagerTop
 	expanded         map[string]bool // the Running runs the owner opened, by project and run id (S164)
 	staleOpen        bool            // the Running list shows the stale relay ledgers behind its `stale: N` line (S333)
@@ -441,6 +445,10 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		}
 	case matrixEditMsg:
 		return m, m.applyMatrixEdit(msg)
+	case settingsMsg:
+		m.applySettings(msg)
+	case settingsSetupMsg:
+		return m, m.applySettingsSetup(msg)
 	case specDraftMsg:
 		m.applySpecDraft(msg)
 	case specApplyMsg:
@@ -639,7 +647,38 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	return m, nil
 }
 
+func (m *Model) scrollHelp(msg tea.KeyPressMsg) {
+	w, h, sideW := m.layoutSize()
+	bodyH := max(h-4, 1)
+	total := len(m.helpLines(max(w-sideW, 1), bodyH))
+	last := windowStart(total-1, total, bodyH)
+	m.helpOffset = min(max(m.helpOffset, 0), last)
+	hi, _, _ := span(total, m.helpOffset, bodyH)
+	step := 1
+	if key.Matches(msg, m.keys.PageDown) {
+		step = max(hi-m.helpOffset, 1)
+	}
+	if key.Matches(msg, m.keys.PageUp) {
+		// Size the preceding window, whose markers can differ from this one.
+		for from := 0; from < m.helpOffset; from++ {
+			if end, _, _ := span(total, from, bodyH); end >= m.helpOffset {
+				m.helpOffset = from
+				return
+			}
+		}
+		return
+	}
+	if key.Matches(msg, m.keys.RowPrev) {
+		step = -step
+	}
+	m.helpOffset = min(max(m.helpOffset+step, 0), last)
+}
+
 func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
+	if m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PageDown, m.keys.PageUp) {
+		m.scrollHelp(msg)
+		return nil
+	}
 	if m.reportOn() > 0 {
 		return m.paneKey(msg)
 	}
@@ -648,6 +687,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 	}
 	if m.removing.name != "" {
 		return m.removeProjectKey(msg)
+	}
+	if m.settings != nil {
+		return m.settingsKey(msg)
 	}
 	if !m.projectTextEntry() && m.confirm == nil {
 		switch msg.String() {
@@ -834,9 +876,6 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		// the lineup and the text fields. The status says what switches projects.
 		m.actionStatus = "[ and ] switch projects"
 		return nil
-	case m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev):
-		// The cursor is hidden under the help: the line keys leave it where it is.
-		return nil
 	case m.roadmapPaneOpen() && !m.showHelp && key.Matches(msg, m.keys.RowNext, m.keys.RowPrev, m.keys.PageDown, m.keys.PageUp, m.keys.First, m.keys.Last):
 		m.scrollRoadmapPane(msg)
 	case key.Matches(msg, m.keys.ScrollDown, m.keys.ScrollUp):
@@ -908,6 +947,8 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return m.openLaunch()
 	case key.Matches(msg, m.keys.Matrix):
 		return m.openMatrix()
+	case key.Matches(msg, m.keys.Settings):
+		return m.openSettings()
 	case key.Matches(msg, m.keys.SpecDraft):
 		return m.openSpecDraft()
 	case key.Matches(msg, m.keys.Cleanup):
@@ -928,6 +969,9 @@ func (m *Model) key(msg tea.KeyPressMsg) tea.Cmd {
 		return tea.Quit
 	case key.Matches(msg, m.keys.Help):
 		m.showHelp = !m.showHelp
+		if m.showHelp {
+			m.helpOffset = 0
+		}
 	case key.Matches(msg, m.keys.Close):
 		m.actionStatus = ""
 		m.itemPane = nil
@@ -1456,7 +1500,7 @@ func (m *Model) showView(i int) tea.Cmd {
 // or a sitting holds them (ui.confirm, adj 98). The key switch reads the same
 // states in the same order.
 func (m *Model) mouseReady() bool {
-	if !m.mouse || m.showHelp || m.confirm != nil || m.removing.name != "" || m.reportOn() > 0 || m.pane != nil {
+	if !m.mouse || m.showHelp || m.confirm != nil || m.removing.name != "" || m.settings != nil || m.reportOn() > 0 || m.pane != nil {
 		return false
 	}
 	if m.welcome.editing || m.welcome.pending || m.welcome.confirm != "" || m.registeredProjectCount() == 0 {

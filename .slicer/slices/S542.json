@@ -1,0 +1,39 @@
+{
+  "id": "S542",
+  "title": "before the gate, check that every adj key cited as an owner decision in the diff resolves with adj check, and list the ones that do not in the brief",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-015357-ca10, project ork, item S251:\n\nbefore the gate, check that every adj key cited as an owner decision in the diff resolves with adj check, and list the ones that do not in the brief\n\nEvidence: keys.go:211 and docs/dashboard.md:204 cite ui.settings-pane-hint as an owner decision; adj check printed not found"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

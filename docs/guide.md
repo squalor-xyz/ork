@@ -1118,6 +1118,8 @@ them all (`internal/tui/keys.go:82-157`).
 | Anywhere | `[` `]`, `1`-`9`, `0` | previous or next project, jump to project, Needs you |
 | Anywhere | `+` / `-` | add / remove project |
 | Anywhere | `/`, `s`, `r`, `?`, `q` | filter, sidebar, refresh, help, quit |
+| Anywhere (*proposed*, S251) | `S` | open the project settings pane: every setting by owner (`esc` closes) |
+| Project settings pane | `i`, `m`, `j` `k` | run a setup step after a `[y/N]` that shows the command; open the role matrix; scroll |
 | Lists | `j` `k`, `g` `G`, `pgup` `pgdown`, `ctrl+d` `ctrl+u` | move and scroll |
 | Overview | `enter`, `esc` | open / close a run |
 | Overview, run pane | `a`, `x`, `t`, `c` | approve, stop, retry, clean up a merged worktree |

@@ -207,6 +207,49 @@ func TestUIPassWriteDirEscapesPatternCharacters(t *testing.T) {
 	}
 }
 
+// A reviewer may write its own process temp dir (S510, roles.read-only-temp-write,
+// *proposed*): --add-dir plus Edit and Write rules for that directory, on cloud
+// Claude and on claude-local. Without the grant a reviewer's args hold none.
+func TestReviewerMayWriteOnlyItsTMPDir(t *testing.T) {
+	const tmp = "/state/t/run/reviewer-1"
+	rules := "Edit(/" + tmp + "/**),Write(/" + tmp + "/**)"
+	base := []string{"-p", "--output-format", "stream-json", "--verbose", "--include-partial-messages"}
+	cloud, err := (Spec{Bin: "claude", Dir: "/work/tree", TMPDir: tmp, WriteTMP: true, Prompt: "review", ReadOnly: true, Allowlist: []string{"Read", "Bash(go test*)"}}).Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := append(slices.Clone(base), "--add-dir", tmp, "--allowedTools", "Read,Bash(go test*),"+rules, "--permission-prompts", "none", "review")
+	if !reflect.DeepEqual(cloud, want) {
+		t.Fatalf("cloud reviewer argv: got %q; want %q", cloud, want)
+	}
+	local, err := (Spec{Bin: "claude-local", TMPDir: tmp, WriteTMP: true, Prompt: "review", ReadOnly: true, SystemPromptFile: localSystemPath, Allowlist: []string{"Read"}}).Args()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want = append(slices.Clone(base), "--system-prompt-file", localSystemPath, "--tools", "Read,Grep,Glob,Edit,Write,Bash", "--disable-slash-commands",
+		"--add-dir", tmp, "--allowedTools", "Read,"+rules, "--permission-prompts", "none", "--permission-mode", "manual", "--settings", HookSettings(""), "review")
+	if !reflect.DeepEqual(local, want) {
+		t.Fatalf("local reviewer argv: got %q; want %q", local, want)
+	}
+	for _, bin := range []string{"claude", "claude-local"} {
+		got, err := (Spec{Bin: bin, TMPDir: tmp, Prompt: "review", ReadOnly: true, SystemPromptFile: localSystemPath, Allowlist: []string{"Read"}}).Args()
+		if err != nil {
+			t.Fatal(err)
+		}
+		if slices.Contains(got, "--add-dir") || strings.Contains(strings.Join(got, " "), "Edit(") {
+			t.Fatalf("%s read-only role without the grant: %q", bin, got)
+		}
+	}
+}
+
+func TestReviewerTMPDirGrantNeedsAnAbsoluteCleanPath(t *testing.T) {
+	for _, tmp := range []string{"t/run", "/state/../t/run"} {
+		if _, err := (Spec{Bin: "claude", TMPDir: tmp, WriteTMP: true, Prompt: "review", ReadOnly: true, Allowlist: []string{"Read"}}).Args(); err == nil {
+			t.Fatalf("TMPDIR %q accepted", tmp)
+		}
+	}
+}
+
 func TestArgsCloudRoleUnchanged(t *testing.T) {
 	for _, keep := range []bool{false, true} {
 		got, err := (Spec{Bin: "claude", Prompt: "implement", KeepSkills: keep, SystemPromptFile: localSystemPath, Allowlist: []string{"Read", "Edit"}}).Args()

@@ -8,17 +8,17 @@
                    │pgdown/pgup page rows or scroll a pane
                    │ctrl+d/u scroll a pane half a page; ctrl+u clears a field
                    │}/{ next/previous group, pass or wave
-                   │enter open run, question, item or decision; other rows se...
+                   │enter open run, question, item or decision;
+                   │  other rows select project
                    │/ filter projects; esc clears; s hide/show sidebar
                    │+ add project; - remove active project; M mouse on/off
                    │e edit lineup (Waves, launch)
-                   │l launch; m matrix; N note; n new slice; O slicer tui
+                   │l launch a ready slice (Roadmap); m matrix; N note;
+                   │  n new slice; O slicer tui
                    │P park/unpark; J/K move item down/up
                    │a approve; F fix round; x stop; t retry; v view renders
                    │f file slice
-                   │o answer owner finding; p report (run pane)
-                   │enter (answer) submit free text
-                   │[2m  +8 more lines[m
+                   │[2m  +11 more lines[m
                    │[2m────────────────────────────────────────────────────────────[m
-                   │ ? or esc [2mclose help[m; q [2mquit[m
+                   │ up/down pgup/pgdown [2mscroll[m; ? or esc [2mclose help[m; q [2mquit[m
                    │ 2 projects | refreshed 16:42:00

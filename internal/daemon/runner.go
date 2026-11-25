@@ -53,6 +53,11 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 		writeDir = req.TempDir
 		allowlist = engine.CloudUIAllowlist()
 	}
+	// A reviewer may write its own process temp dir (S510,
+	// roles.read-only-temp-write, *proposed*), as its prompt says. Args adds
+	// the rules to the command line; a claude-local role's approval hook gets
+	// the same rules, because the hook decides there.
+	writeTMP := req.ReadOnly && req.Role == engine.RoleReviewer && req.TMPDir != ""
 	addDir := ""
 	if req.Vendor == "claude-local" && req.ProgressFile != "" {
 		if !filepath.IsAbs(req.ProgressFile) || filepath.Clean(req.ProgressFile) != req.ProgressFile {
@@ -72,7 +77,11 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	// worktree is denied there too. A failed setup stops the role before launch.
 	if (req.Vendor == "claude-local" || (req.Vendor == "claude" && !req.ReadOnly)) && r.approval != nil {
 		var err error
-		hookCommand, finishApproval, err = r.approval(ctx, req, allowlist, addDir)
+		hookAllow := allowlist
+		if writeTMP && req.Vendor == "claude-local" {
+			hookAllow = append(slices.Clone(allowlist), claude.EditRules(req.TMPDir)...)
+		}
+		hookCommand, finishApproval, err = r.approval(ctx, req, hookAllow, addDir)
 		if err != nil {
 			return engine.Result{}, err
 		}
@@ -104,7 +113,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	if processTemp == "" {
 		processTemp = req.TempDir
 	}
-	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, TMPDir: req.TMPDir, WriteDir: writeDir, Env: claudeEnv(r.env, processTemp, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
+	round, err := call(ctx, claude.Spec{Bin: req.Vendor, Dir: req.Worktree, AddDir: addDir, TMPDir: req.TMPDir, WriteDir: writeDir, WriteTMP: writeTMP, Env: claudeEnv(r.env, processTemp, req.Vendor), Prompt: req.Brief, Model: req.Model, Effort: req.Effort,
 		HookCommand: hookCommand, SystemPromptFile: systemFile,
 		ReadOnly: req.ReadOnly, Allowlist: allowlist, KeepSkills: req.Role == engine.RoleUI, Resume: req.Resume, ReportFile: req.ReportPath, OnStart: req.OnStart, OnEvent: func(ev claude.Event) {
 			if ev.ContextTokens > 0 {

@@ -1,6 +1,6 @@
 {
-  "id": "S510",
-  "title": "allow the reviewer to write to its own role temp dir, as the prompt says it may",
+  "id": "S536",
+  "title": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
@@ -12,7 +12,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261120-133801-8a30, project ork, item S449:\n\nallow the reviewer to write to its own role temp dir, as the prompt says it may\n\nEvidence: Write to /home/jon/.local/state/ork/t/8ae0a8bc5bac0fd2/3b735833065ebf2c/render_overlay_test.go denied: \"Path is outside allowed working directories\""
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-021911-277a, project ork, item S510:\n\nflag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too\n\nEvidence: brief.go:146 is gated on role while runner.go:60 grants in claudeRunner only"
     },
     {
       "heading": "Files",
