@@ -627,7 +627,7 @@ func TestSpecAnswerRecordsTheAnswersAndReleasesTheItem(t *testing.T) {
 			edits = append(edits, c.Args)
 		}
 	}
-	if len(edits) != 1 || edits[0][3] != "Implement" || !strings.Contains(strings.Join(edits[0], " "), "Which store holds the index? -> memory: rebuilt at each start [cache.index-store]. What names the flag? -> long: --extra.") {
+	if len(edits) != 1 || edits[0][3] != "Implement" || !strings.Contains(strings.Join(edits[0], " "), "Which store holds the index? -> memory: rebuilt at each start [cache.index-store].\nWhat names the flag? -> long: --extra.") {
 		t.Fatalf("edits: %v", edits)
 	}
 	res := rig.check(t, "S2")
@@ -943,7 +943,7 @@ func TestAnsweredSpecQuestionsReachTheImplementerBrief(t *testing.T) {
 	if len(s2) == 0 || len(s1) == 0 {
 		t.Fatalf("roles did not start: %d for S2, %d for S1", len(s2), len(s1))
 	}
-	want := "Which store holds the index? -> memory: rebuilt at each start [cache.index-store]. What names the flag? -> long: --extra."
+	want := "Which store holds the index? -> memory: rebuilt at each start [cache.index-store].\nWhat names the flag? -> long: --extra."
 	if r := s2[0]; r.Role != engine.RoleImplementer || !strings.Contains(r.Brief, "## Owner decisions\n\n"+para) || !strings.Contains(r.Brief, want) {
 		t.Errorf("S2 implementer brief lacks the decisions:\n%s", r.Brief)
 	}
@@ -1446,7 +1446,7 @@ func TestSingleRunCarriesSpecAnswersIntoTheBrief(t *testing.T) {
 	if err := json.Unmarshal(b, &rec); err != nil {
 		t.Fatal(err)
 	}
-	want := "Which store holds the index? -> memory [cache.index-store]. What names the flag? -> long."
+	want := "Which store holds the index? -> memory [cache.index-store].\nWhat names the flag? -> long."
 	deadline := time.Now().Add(5 * time.Second)
 	for len(rig.roleRequests()) == 0 && time.Now().Before(deadline) {
 		time.Sleep(time.Millisecond)

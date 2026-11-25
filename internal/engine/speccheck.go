@@ -813,7 +813,9 @@ type SpecAnswerConfig struct {
 }
 
 // RecordSpecAnswers writes the answers into the slice's spec as one
-// "Owner decisions (date)" paragraph appended to its Implement section, then
+// "Owner decisions (date):" paragraph appended to its Implement section: the
+// header on the first line, then one "title -> answer [key]." line for each
+// question, so a check can tell a title from the answer (adj 569). It then
 // files each answered question that has a decision key in adj through the
 // answer path of a run (S28). It returns the paragraph, which the run of the
 // item carries into its briefs (a worktree does not see the main checkout's
@@ -836,7 +838,7 @@ func RecordSpecAnswers(ctx context.Context, d Deps, cfg SpecAnswerConfig) (strin
 		if q.Ask != nil {
 			title = q.Ask.Title
 		}
-		fmt.Fprintf(&para, " %s -> %s", title, answers[i])
+		fmt.Fprintf(&para, "\n%s -> %s", title, answers[i])
 		if q.Key != "" {
 			if i < len(cfg.ReusedIDs) && cfg.ReusedIDs[i] > 0 {
 				fmt.Fprintf(&para, " [%s, adj %d]", q.Key, cfg.ReusedIDs[i])

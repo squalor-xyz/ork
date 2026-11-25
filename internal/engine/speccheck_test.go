@@ -1037,7 +1037,7 @@ func TestRecordSpecAnswersAppendsToTheImplementSection(t *testing.T) {
 	if err != nil || len(notices) != 0 {
 		t.Fatalf("%v %v", notices, err)
 	}
-	wantPara := "Owner decisions (2026-10-19): Which store holds the index? -> memory: rebuilt at each start [cache.index-store]. What names the flag? -> --extra."
+	wantPara := "Owner decisions (2026-10-19):\nWhich store holds the index? -> memory: rebuilt at each start [cache.index-store].\nWhat names the flag? -> --extra."
 	if para != wantPara {
 		t.Errorf("paragraph %q, want %q", para, wantPara)
 	}
@@ -1046,7 +1046,7 @@ func TestRecordSpecAnswersAppendsToTheImplementSection(t *testing.T) {
 		t.Fatalf("edits: %v", edits)
 	}
 	want := []string{"edit", "S11", "--section", "Implement", "--append",
-		"--text=Owner decisions (2026-10-19): Which store holds the index? -> memory: rebuilt at each start [cache.index-store]. What names the flag? -> --extra.",
+		"--text=Owner decisions (2026-10-19):\nWhich store holds the index? -> memory: rebuilt at each start [cache.index-store].\nWhat names the flag? -> --extra.",
 		"--render", "--json", "--lean", "--root", h.P}
 	if !reflect.DeepEqual(edits[0], want) {
 		t.Errorf("edit args:\n%q\nwant\n%q", edits[0], want)

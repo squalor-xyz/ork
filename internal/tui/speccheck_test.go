@@ -73,6 +73,21 @@ func TestWavesOpenAdjHold(t *testing.T) {
 	checkGolden(t, "waves-open-adj.txt", h.m.View().Content)
 }
 
+func TestWavesHeldCheckFindingNoteUsesAColon(t *testing.T) {
+	h, l := wavesHarness(t)
+	twoWaveItems(t, h)
+	l.check = func([]string) (*daemon.SpecCheckResult, error) {
+		return &daemon.SpecCheckResult{Items: []daemon.SpecItemResult{{Item: "A", Ready: true}, {Item: "B", Findings: []string{"Check entry q quit is not a runnable command"}}}}, nil
+	}
+	h.deliver(press("l"))
+	if h.m.confirm == nil || !reflect.DeepEqual(h.m.confirm.held, []string{"B: Check entry q quit is not a runnable command"}) {
+		t.Fatalf("confirm %+v", h.m.confirm)
+	}
+	if v := h.view(); !strings.Contains(v, "B: Check entry q quit") || strings.Contains(v, "B Check entry") {
+		t.Fatalf("prompt lacks the colon note: %s", v)
+	}
+}
+
 func TestWavesAdjHoldAfterLaunch(t *testing.T) {
 	h, l := wavesHarness(t)
 	twoWaveItems(t, h)

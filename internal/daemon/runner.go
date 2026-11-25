@@ -40,9 +40,6 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	allowlist := req.Allowlist
 	if req.ReadOnly {
 		allowlist = engine.LocalReadOnlyAllowlist()
-		if req.Role == engine.RoleSpecCheck {
-			allowlist = append(allowlist, "Bash(adj find*)")
-		}
 	}
 	// A cloud UI pass may write its renders under its run temp dir (S369,
 	// adj 372 and 374, *proposed*). Plan mode cannot allow that write, so the

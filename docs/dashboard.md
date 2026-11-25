@@ -2077,7 +2077,7 @@ with open questions closes the launch with `ITEM waits on N spec questions;
 l starts the launch again`; nothing starts (`l` runs the whole flow again,
 S190, *proposed*).
 *Proposed (S563):* a slice held by Check-command findings closes the launch
-with `ITEM FINDINGS; edit Check, then l starts the launch again`; edit the
+with `ITEM: FINDINGS; edit Check, then l starts the launch again`; edit the
 slice's Check section before pressing `l` to check again. When the write of
 the answers failed, the error comes first,
 then `ITEM: answers not saved; l starts the launch again`. If the launch was

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -23,6 +24,21 @@ import (
 // BriefSection is one headed part of a brief that is specific to the round.
 type BriefSection struct{ Title, Body string }
 
+var blankLine = regexp.MustCompile(`\n[ \t]*\n`)
+
+// ownerDecisionParagraphs returns the paragraphs of text, split on blank lines,
+// that start with the "Owner decisions (" header RecordSpecAnswers writes. A
+// paragraph holds the header line and one line for each question.
+func ownerDecisionParagraphs(text string) []string {
+	var out []string
+	for _, paragraph := range blankLine.Split(text, -1) {
+		if strings.HasPrefix(strings.TrimSpace(paragraph), "Owner decisions (") {
+			out = append(out, paragraph)
+		}
+	}
+	return out
+}
+
 // ownerDecisionBody checks only markers in RecordSpecAnswers' paragraphs.
 // An adj id already identifies a record; other keys may never have been filed.
 // A project without adj is not checked, and a failed check adds a soft line:
@@ -34,10 +50,7 @@ func (e *Engine) ownerDecisionBody(ctx context.Context, text string) string {
 	}
 	marker := regexp.MustCompile(`\[([a-z][a-z0-9_-]*(?:\.[a-z0-9_-]+)+)(, adj [0-9]+)?\]`)
 	seen := map[string]bool{}
-	for _, paragraph := range strings.Split(text, "\n\n") {
-		if !strings.HasPrefix(strings.TrimSpace(paragraph), "Owner decisions (") {
-			continue
-		}
+	for _, paragraph := range ownerDecisionParagraphs(text) {
 		for _, match := range marker.FindAllStringSubmatch(paragraph, -1) {
 			key := match[1]
 			if match[2] != "" || seen[key] {
@@ -561,25 +574,32 @@ func (e *Engine) directionDigest(ctx context.Context, rec runrec.Record) (string
 // tracked changes since the merge base, which include the worktree's own, and
 // the untracked files. The base is the main checkout's branch, as for a landing.
 func (e *Engine) branchPaths(ctx context.Context, rec runrec.Record) ([]string, error) {
+	_, paths, err := e.branchChange(ctx, rec)
+	return paths, err
+}
+
+// branchChange is branchPaths with the merge base the paths are measured from.
+func (e *Engine) branchChange(ctx context.Context, rec runrec.Record) (string, []string, error) {
 	base, err := e.gitRead(ctx, e.proj.Path, "symbolic-ref", "--short", "HEAD")
 	if err != nil {
-		return nil, fmt.Errorf("git symbolic-ref: %w", err)
+		return "", nil, fmt.Errorf("git symbolic-ref: %w", err)
 	}
 	base = strings.TrimSpace(base)
 	if base == "" {
-		return nil, errors.New("the main checkout is not on a branch")
+		return "", nil, errors.New("the main checkout is not on a branch")
 	}
 	mergeBase, err := e.gitRead(ctx, rec.Worktree, "merge-base", base, "HEAD")
 	if err != nil {
-		return nil, fmt.Errorf("git merge-base: %w", err)
+		return "", nil, fmt.Errorf("git merge-base: %w", err)
 	}
-	changed, err := e.gitRead(ctx, rec.Worktree, "diff", "--name-only", "-z", "--no-renames", "--no-relative", strings.TrimSpace(mergeBase))
+	mergeBase = strings.TrimSpace(mergeBase)
+	changed, err := e.gitRead(ctx, rec.Worktree, "diff", "--name-only", "-z", "--no-renames", "--no-relative", mergeBase)
 	if err != nil {
-		return nil, fmt.Errorf("git diff: %w", err)
+		return "", nil, fmt.Errorf("git diff: %w", err)
 	}
 	untracked, err := e.gitRead(ctx, rec.Worktree, "ls-files", "--others", "--exclude-standard", "-z", "--full-name")
 	if err != nil {
-		return nil, fmt.Errorf("git ls-files: %w", err)
+		return "", nil, fmt.Errorf("git ls-files: %w", err)
 	}
 	var paths []string
 	for _, p := range strings.Split(changed+untracked, "\x00") {
@@ -587,7 +607,7 @@ func (e *Engine) branchPaths(ctx context.Context, rec runrec.Record) ([]string, 
 			paths = append(paths, p)
 		}
 	}
-	return paths, nil
+	return mergeBase, paths, nil
 }
 
 // touchesPaths reports whether a path of files equals a changed path or is a
@@ -752,6 +772,8 @@ type sliceCheckCommand struct {
 
 // SliceCheckCommandWarnings flags Check entries whose first word cannot run.
 // The caller supplies the worktree, or the checkout before that tree exists.
+// A first word that names a Files path is exempt only while that path does not
+// exist there.
 func SliceCheckCommandWarnings(raw, worktree string) []string {
 	sections := sliceChecklistSections(raw)
 	return checkCommandWarnings(checkBodyCommands(sections["Check"]), sections["Files"], worktree)
@@ -762,6 +784,24 @@ func CheckBodyCommandWarnings(body, files, worktree string) []string {
 	return checkCommandWarnings(checkBodyCommands(body), files, worktree)
 }
 
+// filesPathNotYet reports whether a relative path inside the worktree does not
+// exist yet. Any other Lstat result, or a path outside the worktree, is false.
+func filesPathNotYet(path, worktree string) bool {
+	if filepath.IsAbs(path) {
+		return false
+	}
+	full := filepath.Join(worktree, path)
+	rel, err := filepath.Rel(worktree, full)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return false
+	}
+	_, err = os.Lstat(full)
+	return errors.Is(err, fs.ErrNotExist)
+}
+
+// checkCommandWarnings skips a command word that names a Files path only while
+// that path does not exist; an existing one must be on PATH or be an
+// executable regular file in the worktree.
 func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) []string {
 	paths := map[string]bool{}
 	for _, m := range backticked.FindAllStringSubmatch(files, -1) {
@@ -786,7 +826,7 @@ func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) [
 			warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
 			continue
 		}
-		if paths[strings.TrimPrefix(word.text, "./")] {
+		if paths[strings.TrimPrefix(word.text, "./")] && filesPathNotYet(word.text, worktree) {
 			continue
 		}
 		if filepath.IsAbs(word.text) || !strings.ContainsRune(word.text, filepath.Separator) {

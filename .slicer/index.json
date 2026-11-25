@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 576,
+  "next_id": 579,
   "preamble": "",
   "passes": [
     {
@@ -29279,7 +29279,7 @@
       "id": "S554",
       "title": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file",
       "short_title": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29352,6 +29352,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "e009ff46-ea94-478f-b4ef-54f5c2771f64",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S554):\n- later: In the next real reviewer round, open the reviewer's brief under the run's role files. You should see a `## Base overlays` section with one `go -C WORKTREE test -overlay ... ./DIR` command for each changed non-test Go file. Run one of them from your shell. It should fail (red) for the test the slice added, and `git -C WORKTREE status --porcelain` should be unchanged.",
+          "created_at": "2026-11-25T18:12:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3eb27caa-d51c-497f-aa96-ef93426edbbe",
+          "kind": "",
+          "text": "**2026-11-25** — S554 done: the reviewer brief now carries a `## Base overlays` section (base copy plus overlay JSON per changed non-test Go file, written by ork into the reviewer's temp dir, with a ready `go -C WORKTREE test -overlay ... ./DIR` command), the reviewer prompt carries the probe recipe, and the dead `Bash(adj find*)` spec-check grant is gone; go test ./..., go vet ./..., gofmt -l and slicer check are green.",
+          "created_at": "2026-11-25T18:12:53Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29371,7 +29399,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -29415,6 +29443,20 @@
           "kind": "",
           "text": "**2026-11-25** — S555 (retired as duplicate) asked for the same sweep at widths 80, 70, 60, 50, 40, flagging a hint that keeps quit while it drops scroll.",
           "created_at": "2026-11-25T13:54:19Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "26d5bb2b-083c-40b5-a2d0-388c64419f14",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decisions (adj 571, 572): the sweep asserts pgup/pgdown in the help hint wherever the keys-only form fits beside the close hint, and below that width the close hint alone with no q quit (floor). It is a permanent Go test in internal/tui/help_test.go sweeping widths 30-130 at heights 16, 24 and 40. Jon chose 'Floor' and 'Go test', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:31:51Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -29821,7 +29863,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "3cf5515f-e475-4cd6-a909-1e6626c456b4",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 573, review.untested-call-site-check): ork-code-warn. A deterministic Go step using go/parser and go/ast on the slice diff lists new non-test functions whose product call sites sit in no function a test reaches (only direct unit calls in tests), and shows them in the reviewer brief as an advisory section, like the decision-paths section. It never blocks or pauses a run. Jon chose 'ork code, warn in brief', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:31:51Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30100,7 +30157,7 @@
       "id": "S572",
       "title": "Narrow the Files-path exemption to files that run",
       "short_title": "Narrow the Files-path exemption to files that run",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30131,6 +30188,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "35db289d-d3de-4f01-8d13-746c5fdb9170",
+          "kind": "",
+          "text": "**2026-11-25** — Check entries naming an existing Files directory or non-executable file are flagged as not runnable (only a not-yet-existing Files path is exempt); `--questions` exits 0 for a Check-finding-only hold; TUI held notes read `ITEM: finding`; dashboard.md now documents the colon; full suite, vet and gofmt were clean at round 1.",
+          "created_at": "2026-11-25T18:34:48Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30150,14 +30221,14 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S573",
       "title": "Spec-answer question text can flag paths the owner did not choose",
       "short_title": "Spec-answer question text can flag paths the owner did not choose",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30167,6 +30238,20 @@
           "text": "**2026-11-25** — Owner decision (adj 569, spec.owner-decisions-format): one-line-each. RecordSpecAnswers (internal/engine/speccheck.go) writes each 'title -> answer [key].' on its own line, and the decision-paths check scans only the text after '->' on each line. Text with no '->' is still scanned whole. Update TestRecordSpecAnswers and the paragraph splitters (ownerDecisionBody, internal/engine/brief.go) to match. Jon chose 'One line each', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T18:10:14Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "04e75e81-3287-43f5-b397-0bb201ab5599",
+          "kind": "",
+          "text": "**2026-11-25** — S573 done: RecordSpecAnswers writes one `title -> answer [key].` line each, and the decision-paths check scans only the text after `->` on each line (whole line when none); full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-25T18:33:16Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30193,7 +30278,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30231,7 +30316,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "9e5be2a1-7a29-4316-8171-7e8174578ad2",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 574, launch.read-only-merge-base): add both Bash(git merge-base*) and Bash(git -C * merge-base*) to LocalReadOnlyAllowlist in internal/engine/perm.go, after the git show entries. Jon chose 'Add both forms', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:31:52Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30243,6 +30343,90 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-3337cca2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S576",
+      "title": "spec draft: keep the role's raw report when the report shape check fails, and name its path in the error",
+      "short_title": "spec draft: keep the role's raw report when the report shape check fails, and name its path in the error",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S577",
+      "title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
+      "short_title": "When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S572",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-397a3274",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S578",
+      "title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
+      "short_title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S572",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f27058a6",
         "pass": "v1.2",
         "group": "",
         "reason": "",

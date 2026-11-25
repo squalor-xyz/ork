@@ -355,8 +355,11 @@ ork (TUI)  ork status --json (CLI)
    and `AGENTS.md` cannot settle get one question per slice, proposing concrete
    wording to tighten them, a human check, or acceptance as written, without a
    decision key. The owner answers them in one sitting. ork appends an
-   `Owner decisions (date)`
-   paragraph to the slice's Implement section with `slicer edit --append`, and
+   `Owner decisions (date):`
+   paragraph to the slice's Implement section with `slicer edit --append`. The
+   header is the first line and each answer is its own line,
+   `TITLE -> ANSWER [KEY].` (`spec.owner-decisions-format`, adj 569, S573). Ork
+   also
    files a question that has a decision key in adj the way a run's answer is
    filed (`owner.questions`, S28). *Proposed (S314; owner decisions
    owner.setting-command, owner.setting-store, adj 228 to 230):* the daemon
@@ -2018,13 +2021,33 @@ separately.
     branch diff against the base (`relay.landed-changed-path-check`, S560).
     Ork scans the run's spec answers, answered run questions, owner decision
     paragraphs in the slice, and decided adj records cited by number
-    (`adj N` or `decision N`) or a key in brackets or backticks. Adj records
+    (`adj N` or `decision N`) or a key in brackets or backticks. For owner
+    decision paragraphs (the run's spec answers and the slice's), only the
+    text after `->` on each line is scanned, so a path named only in a
+    question's title is not flagged; a line without `->` is scanned whole
+    (`spec.owner-decisions-format`, adj 569, S573). Adj records
     are read through the CLI in the project's main checkout; only their
     decision and rationale are scanned, not unchosen options. The path
     comparison uses the same merge-base diff and untracked paths as Direction.
     Each missing path appears once as a flagged finding for the reviewer.
     Failed reads add an incomplete-check notice. The check is advisory and
     never blocks the run;
+  - before the reviewer starts, a `## Base overlays` section when the branch
+    diff against the base holds a non-test Go file (S554). For each such file,
+    in sorted order and at most 20, ork writes the file's base version
+    (`git show MERGEBASE:path`, the merge base Direction uses) to
+    `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
+    "TMPDIR/base/path"}}`, in the reviewer's process temp directory. A file
+    the base lacks (new in the slice) maps to `""`, which `go` reads as a file
+    that does not exist; no base copy is written. The section names, for each
+    file, one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
+    ./DIR` command, so a read-only reviewer can run the package's tests with
+    only that file reverted and see a test the slice added fail. It says how
+    many files past 20 it left out. A path that is absolute or holds `..` is
+    never written. A failed diff read or `git show` (other than path not in
+    base) adds an incomplete-check notice that tells the reviewer to run `git
+    show` itself. The section is advisory and never blocks the run. The gate and
+    the architect get none;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,
@@ -2601,7 +2624,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   that directory. A path outside the permitted directories is still denied.
   The brief of a claude or claude-local reviewer tells it that it may write
   there, and nowhere else; the brief of a Codex or Grok reviewer does not. Gate,
-  architect, spec check and spec draft get no such grant.
+  architect, spec check and spec draft get no such grant. The reviewer prompt
+  carries a `## Probe tests` recipe for the write (S554, adj 560): a probe test
+  file in the temp directory, an overlay JSON that maps a new test file name in
+  the package directory to it, and one `go -C WORKTREE test -overlay` command;
+  it applies only when the brief says the reviewer may write its temp
+  directory, and it points to the brief's `## Base overlays` section for revert
+  commands.
   Other calls block on an owner permission question. `ork answer RUN allow`
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.
@@ -3078,8 +3107,9 @@ holds one result; a held slice returns `{"started":false,"held":["ID"]}`.
 and repeatable `--answer`. Listing runs only `spec.check`, prints every
 question with its number, decision key when present and answer address, and
 returns without planning or starting a run or recording an answer. It exits
-3 (`ExitWaitQuestion`, S257) with questions pending, otherwise 0. The spec
-check's existing cache is retained. Text listings with no open questions
+3 (`ExitWaitQuestion`, S257) with questions pending or an item waiting on adj,
+otherwise 0; an item held only by a Check finding prints its `held:` line and
+gives 0 (adj 568, S572). The spec check's existing cache is retained. Text listings with no open questions
 print `no open spec questions: S1, S2`; a saved wave with no startable items
 names the wave instead. Keyed wave questions show
 `Decision key: k1 (answer as S1:k1)`; keyless questions show `Answer as: #N`
@@ -3319,7 +3349,10 @@ its first word. Before the worktree
 exists, the project checkout stands in for it. The same Check entry parser as
 the slice checks excludes acceptance criteria, human checks and after-land
 checks. An entry whose command word matches a path in the slice's Files is
-exempt, ignoring line anchors and a leading `./`. Check-entry warnings refuse
+exempt only when that path does not exist in the worktree (or the checkout
+before the worktree exists), ignoring line anchors and a leading `./`; an
+existing Files path goes through the PATH and executable-file lookups above
+(S572). Check-entry warnings refuse
 `run.start` and the affected member of `wave.start` before a role starts. The
 refusal names the item and each entry and asks the owner to edit Check and
 start again. The spec check reports these entries as deterministic findings,
