@@ -6526,3 +6526,9 @@
 {"when": "2026-11-25T16:38:38Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 chose both: ork code writes the base file (", "by": "Jon Robbins"}
 {"when": "2026-11-25T16:38:39Z", "item": "S559", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T16:38:42Z", "item": "S566", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T16:55:29Z", "item": "S568", "action": "add", "from": "", "to": "open", "note": "name the decided adj key for each owner note in the brief so the reviewer does not look it up"}
+{"when": "2026-11-25T16:55:29Z", "item": "S568", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:08:41Z", "item": "S569", "action": "add", "from": "", "to": "open", "note": "when a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief"}
+{"when": "2026-11-25T17:08:41Z", "item": "S569", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:26:41Z", "item": "S570", "action": "add", "from": "", "to": "open", "note": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded"}
+{"when": "2026-11-25T17:26:41Z", "item": "S570", "action": "promote", "from": "", "to": "", "note": ""}
