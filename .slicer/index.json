@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 563,
+  "next_id": 567,
   "preamble": "",
   "passes": [
     {
@@ -28768,7 +28768,7 @@
       "id": "S545",
       "title": "A red slice check from a flake stays cached across retries until the product or Check text changes",
       "short_title": "A red slice check from a flake stays cached across retries until the product or Check text changes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28778,6 +28778,20 @@
           "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
           "created_at": "2026-11-25T14:49:20Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "279f3f86-3541-4c28-bfe2-16861d053be6",
+          "kind": "",
+          "text": "**2026-11-25** — `ork retry` (paused run or resumed stopped run) sets `recheck_slice`, so the next slice check reruns a red batch of unchanged product and Check text and a green batch stays cached; verified by four engine tests, mutation checks, and `go test -race -count=1 ./internal/engine` green; fix round 1 changed no code because the review held no findings.",
+          "created_at": "2026-11-25T15:40:43Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -28804,7 +28818,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28882,7 +28896,7 @@
       "id": "S547",
       "title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
       "short_title": "matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28955,6 +28969,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "acde59af-bf7e-40ea-9eaf-e7f8f1737d90",
+          "kind": "",
+          "text": "**2026-11-25** — Matrix copy now asks after each project preview, labels concise written results, wraps refusals, exposes changed set fields, and refuses copied-rule changes after preview; focused regressions and 30 mutation checks pass.",
+          "created_at": "2026-11-25T15:54:49Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28974,7 +29002,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -29609,6 +29637,118 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Folded into S554 (adj 560, owner 2026-11-25)",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S563",
+      "title": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run",
+      "short_title": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S564",
+      "title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
+      "short_title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S547",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-431843f5",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S565",
+      "title": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed",
+      "short_title": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S547",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-72b887b3",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S566",
+      "title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
+      "short_title": "when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S557",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-21c33cdd",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,

@@ -330,6 +330,163 @@ func TestPrintsNothingOtherCommandExit1Fails(t *testing.T) {
 	}
 }
 
+// flakyCheck makes the slice's `go test ./pkg` row a fake that counts its runs
+// in a file outside the worktree and is green only while a flag file outside
+// the worktree exists. Neither file is part of the product fingerprint, so a
+// flake is the same product with a different result (S545).
+func flakyCheck(t *testing.T, h *harness) (runs func() int, setGreen func(bool)) {
+	t.Helper()
+	dir := t.TempDir()
+	trace, flag := filepath.Join(dir, "runs"), filepath.Join(dir, "green")
+	writeCheckTool(t, h.W, "go", "echo run >> '"+trace+"'\n[ -f '"+flag+"' ]")
+	runs = func() int {
+		b, err := os.ReadFile(trace)
+		if errors.Is(err, os.ErrNotExist) {
+			return 0
+		}
+		if err != nil {
+			t.Fatal(err)
+		}
+		return strings.Count(string(b), "run\n")
+	}
+	setGreen = func(on bool) {
+		if on {
+			writeFile(t, flag, "green\n")
+		} else if err := os.Remove(flag); err != nil && !errors.Is(err, os.ErrNotExist) {
+			t.Fatal(err)
+		}
+	}
+	return runs, setGreen
+}
+
+// sliceCheckRows are the slice check rows the record holds.
+func sliceCheckRows(e *Engine) []runrec.CheckRecord {
+	var rows []runrec.CheckRecord
+	for _, c := range e.Snapshot().Checks {
+		if c.Slice {
+			rows = append(rows, c)
+		}
+	}
+	return rows
+}
+
+// S545 (adj checks.red-evidence-retry): ork retry reruns a red slice check
+// whose product and Check text are unchanged, so a flake cannot pin a run.
+func TestSliceChecksRetryRerunsARedBatch(t *testing.T) {
+	h := sliceChecksHarness(t, "- `go test ./pkg`")
+	runs, setGreen := flakyCheck(t, h)
+	e := h.start()
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.Kind != runrec.PendingRounds {
+		t.Fatalf("pending %+v, want a rounds pause", rec.Pending)
+	}
+	if got := runs(); got != 1 {
+		t.Fatalf("check ran %d times before the retry, want 1 (the red batch is reused until the retry)", got)
+	}
+	setGreen(true) // the flake is gone; the product did not change
+	if err := e.RetryWith(context.Background(), RetryOptions{Rounds: 1}); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if got := runs(); got != 2 {
+		t.Errorf("check ran %d times, want 2: the retry must rerun the red batch", got)
+	}
+	rows := sliceCheckRows(e)
+	if len(rows) == 0 || !rows[len(rows)-1].OK {
+		t.Errorf("last slice row = %+v, want the green rerun", rows)
+	}
+}
+
+// A retry reruns red only: a green batch with the same product and Check text
+// stays cached, and the retry mark is spent by the check that sees it (S545).
+func TestSliceChecksRetryKeepsAGreenBatchCached(t *testing.T) {
+	h := sliceChecksHarness(t, "- `go test ./pkg`")
+	runs, setGreen := flakyCheck(t, h)
+	setGreen(true)
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	call := func() checkRun {
+		t.Helper()
+		run, paused, err := e.runSliceChecks(context.Background(), e.Snapshot(), runrec.StateGate, "slice-checks", false)
+		if err != nil || paused {
+			t.Fatalf("runSliceChecks: paused=%v err=%v", paused, err)
+		}
+		return run
+	}
+	if !call().ok || runs() != 1 {
+		t.Fatalf("first check: runs=%d, want 1 green run", runs())
+	}
+	if err := e.run.Update(func(r *runrec.Record) { r.RecheckSlice = true }); err != nil {
+		t.Fatal(err)
+	}
+	if !call().ok || runs() != 1 {
+		t.Errorf("green batch after a retry: runs=%d, want it reused (1)", runs())
+	}
+	if e.Snapshot().RecheckSlice {
+		t.Error("retry mark still set after a green batch was reused")
+	}
+}
+
+// Without a retry the red batch is still reused (adj 468's cache), and a retry
+// mark is spent by the rerun it causes, so the next unchanged round reuses the
+// new red again (S545).
+func TestSliceChecksRedBatchReusedUntilARetry(t *testing.T) {
+	h := sliceChecksHarness(t, "- `go test ./pkg`")
+	runs, _ := flakyCheck(t, h)
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	call := func() checkRun {
+		t.Helper()
+		run, paused, err := e.runSliceChecks(context.Background(), e.Snapshot(), runrec.StateGate, "slice-checks", false)
+		if err != nil || paused {
+			t.Fatalf("runSliceChecks: paused=%v err=%v", paused, err)
+		}
+		return run
+	}
+	if first := call(); first.ok || runs() != 1 {
+		t.Fatalf("first check: ok=%v runs=%d, want one red run", first.ok, runs())
+	}
+	if again := call(); again.ok || runs() != 1 || !strings.Contains(again.failure, "remains red") {
+		t.Fatalf("second check: ok=%v runs=%d failure=%q, want the red batch reused", again.ok, runs(), again.failure)
+	}
+	if err := e.run.Update(func(r *runrec.Record) { r.RecheckSlice = true }); err != nil {
+		t.Fatal(err)
+	}
+	if third := call(); third.ok || runs() != 2 {
+		t.Fatalf("after a retry: ok=%v runs=%d, want a rerun (2) that is red again", third.ok, runs())
+	}
+	if e.Snapshot().RecheckSlice {
+		t.Error("retry mark still set after the rerun")
+	}
+	if call(); runs() != 2 {
+		t.Errorf("runs=%d, want the new red reused until the next retry", runs())
+	}
+}
+
+// A stopped run that ork retry resumes also reruns its red batch (S545).
+func TestSliceChecksResumeStoppedSetsTheRetryMark(t *testing.T) {
+	h := sliceChecksHarness(t, "- `go test ./pkg`")
+	runs, setGreen := flakyCheck(t, h)
+	e := h.start()
+	requireState(t, e, runrec.StatePaused)
+	if err := e.Stop(context.Background(), "test"); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateStopped)
+	setGreen(true)
+	if err := e.RetryWith(context.Background(), RetryOptions{}); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateAwaitingApproval)
+	if got := runs(); got != 2 {
+		t.Errorf("check ran %d times, want 2: a resumed run reruns its red batch", got)
+	}
+}
+
 // ork does not run a piped line, so the rule is a pure helper (S419).
 func TestPrintsNothingPipedLineJudgedByLastCommand(t *testing.T) {
 	for _, tc := range []struct {

@@ -225,6 +225,9 @@ func TestRolesMatrixCopyAsksPerProjectAndEnterIsNo(t *testing.T) {
 					t.Errorf("no question %q in\n%s", q, stdout)
 				}
 			}
+			if strings.Index(stdout, "Copy ork's matrix to a?") > strings.Index(stdout, "b: would change") {
+				t.Fatalf("a's question must precede b's preview:\n%s", stdout)
+			}
 			wantCalls := []daemon.MatrixCopyParams{{From: "ork", To: []string{"a", "b"}, DryRun: true}}
 			if tc.writes == nil && !strings.HasSuffix(stdout, "nothing copied\n") {
 				t.Errorf("no word that nothing was copied:\n%s", stdout)
@@ -263,7 +266,7 @@ func TestRolesMatrixCopyYesSkipsTheQuestion(t *testing.T) {
 	if !reflect.DeepEqual(calls, want) {
 		t.Fatalf("calls\n got %+v\nwant %+v", calls, want)
 	}
-	if !strings.HasSuffix(stdout, "adjudicate: changed (3 steps)\n  remove r9\n  add r21\n  rule-add u10\n") {
+	if !strings.HasSuffix(stdout, "written:\nadjudicate: changed (3 steps)\n") || strings.Count(stdout, "  remove r9\n") != 1 {
 		t.Fatalf("the written result is not the last output:\n%s", stdout)
 	}
 }
@@ -326,7 +329,7 @@ func TestRolesMatrixCopyAllExitsOneOnAFailure(t *testing.T) {
 	if code != ExitFailure {
 		t.Fatalf("exit %d, want %d\n%s", code, ExitFailure, stdout)
 	}
-	want := "a: changed (1 step)\n  remove r9\nb: failed: the matrix changed (stale_revision)\nc: changed (2 steps)\n  remove r9\n  add r21\n"
+	want := "written:\na: changed (1 step)\nb: failed: the matrix changed (stale_revision)\nc: changed (2 steps)\n"
 	if !strings.HasSuffix(stdout, want) {
 		t.Fatalf("stdout\n got %q\nwant it to end with %q", stdout, want)
 	}
@@ -457,5 +460,26 @@ func TestUsageNamesRolesMatrix(t *testing.T) {
 	_, stdout, _ := run(t, noDaemon(t), "help")
 	if !strings.Contains(stdout, "ork roles matrix P") {
 		t.Fatalf("usage does not name roles matrix:\n%s", stdout)
+	}
+}
+
+func TestMatrixCopyWrappedFailure(t *testing.T) {
+	var out strings.Builder
+	printMatrixCopy(&out, daemon.MatrixCopyResult{Projects: []daemon.MatrixCopyProject{{Project: "target", Status: daemon.CopyFailed, Error: &ipc.Error{Code: "stale_preview", Message: strings.Repeat("changed ", 20) + "preview again, then copy"}}}})
+	for i, line := range strings.Split(strings.TrimSuffix(out.String(), "\n"), "\n") {
+		if len(line) > 80 || i > 0 && !strings.HasPrefix(line, "  ") {
+			t.Fatalf("failure must wrap at 80 with two-space hang: %q", line)
+		}
+	}
+}
+
+func TestMatrixCopyPrintsSetFieldsInOrder(t *testing.T) {
+	var step daemon.MatrixCopyStep
+	mustJSON(t, `{"op":"set","id":"r1","changed":true,"fields":{"note":"","reasoning":"high","model":"gpt-x","vendor":"openai","agent":"Codex","when":"[\"L\"]","role":"reviewer"}}`, &step)
+	var out strings.Builder
+	printMatrixCopy(&out, daemon.MatrixCopyResult{Projects: []daemon.MatrixCopyProject{{Project: "target", Status: daemon.CopyWouldChange, Steps: []daemon.MatrixCopyStep{step}}}})
+	want := "target: would change (1 step)\n  set r1 role=reviewer when=[\"L\"] agent=Codex vendor=openai model=gpt-x reasoning=high note=\"\"\n"
+	if out.String() != want {
+		t.Fatalf("set fields output got %q, want %q", out.String(), want)
 	}
 }

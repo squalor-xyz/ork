@@ -11,6 +11,7 @@ import (
 	"io"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -158,7 +159,7 @@ func (a *App) rolesMatrixCopy(ctx context.Context, o *output, args []string) int
 		}
 		return code
 	}
-	if !o.json {
+	if !o.json && *yes {
 		printMatrixCopy(o.stdout, checked)
 	}
 	confirmed := todo
@@ -173,7 +174,14 @@ func (a *App) rolesMatrixCopy(ctx context.Context, o *output, args []string) int
 			input = os.Stdin
 		}
 		reader := bufio.NewReader(input)
-		for _, name := range todo {
+		for _, project := range checked.Projects {
+			if !o.json {
+				printMatrixCopy(o.stdout, daemon.MatrixCopyResult{Projects: []daemon.MatrixCopyProject{project}})
+			}
+			if project.Status != daemon.CopyWouldChange {
+				continue
+			}
+			name := project.Project
 			fmt.Fprintf(prompts, "Copy %s's matrix to %s? [y/N] ", params.From, name)
 			line, err := readLine(reader, prompts)
 			if err != nil && err != io.EOF {
@@ -206,6 +214,22 @@ func (a *App) rolesMatrixCopy(ctx context.Context, o *output, args []string) int
 	if code := a.call(ctx, o, daemon.MethodMatrixCopy, daemon.MatrixCopyParams{From: params.From, To: confirmed, ExpectSteps: expect, ExpectRows: rows}, &written); code != ExitOK {
 		return code
 	}
+	if !o.json {
+		fmt.Fprintln(o.stdout, "written:")
+		for _, project := range written.Projects {
+			if project.Status == daemon.CopyChanged {
+				// Keep the step count, but do not repeat the already shown plan.
+				noun := "steps"
+				if len(project.Steps) == 1 {
+					noun = "step"
+				}
+				fmt.Fprintf(o.stdout, "%s: %s (%d %s)\n", project.Project, project.Status, len(project.Steps), noun)
+			} else {
+				printMatrixCopy(o.stdout, daemon.MatrixCopyResult{Projects: []daemon.MatrixCopyProject{project}})
+			}
+		}
+		return copyExit(written)
+	}
 	return show(written)
 }
 
@@ -232,8 +256,17 @@ func printMatrixCopy(w io.Writer, r daemon.MatrixCopyResult) {
 			}
 			fmt.Fprintf(w, "%s: %s (%d %s)\n", p.Project, p.Status, len(p.Steps), noun)
 			for _, step := range p.Steps {
+				fields := ""
+				for _, key := range []string{"role", "when", "agent", "vendor", "model", "reasoning", "note"} {
+					if value, ok := step.Fields[key]; ok {
+						if value == "" || strings.ContainsAny(value, " \t\n\r") {
+							value = strconv.Quote(value)
+						}
+						fields += " " + key + "=" + value
+					}
+				}
 				if step.Changed {
-					fmt.Fprintf(w, "  %s %s\n", step.Op, step.ID)
+					fmt.Fprintf(w, "  %s %s%s\n", step.Op, step.ID, fields)
 				} else {
 					fmt.Fprintf(w, "  %s %s: unchanged\n", step.Op, step.ID)
 				}
@@ -248,7 +281,9 @@ func printMatrixCopy(w io.Writer, r daemon.MatrixCopyResult) {
 			} else if p.Error != nil {
 				text += ": " + p.Error.Message
 			}
-			fmt.Fprintf(w, "%s: %s\n", p.Project, text)
+			for _, line := range wrapLines(p.Project+": "+text, 80, "  ") {
+				fmt.Fprintln(w, line)
+			}
 		default:
 			fmt.Fprintf(w, "%s: %s\n", p.Project, p.Status)
 		}
