@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "\n- `go test -race -count=1 ./internal/engine` (exits 0; the new test TestSliceChecksRetryRerunsARedBatch passes)"
     },
     {
       "heading": "Git",

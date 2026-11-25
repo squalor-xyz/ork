@@ -6458,3 +6458,5 @@
 {"when": "2026-11-25T15:30:47Z", "item": "S562", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T15:35:20Z", "item": "S559", "action": "set", "from": "", "to": "", "note": "title adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic→Spec-check brief: look up existing decisions by topic with adj check TEXT; short_title adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic→Spec-check brief: look up existing decisions by topic with adj check TEXT"}
 {"when": "2026-11-25T15:35:21Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: adj already searches by topic: adj check T", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:35:27Z", "item": "S562", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S554 (adj 560, owner 2026-11-25)"}
+{"when": "2026-11-25T15:35:33Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Check"}
