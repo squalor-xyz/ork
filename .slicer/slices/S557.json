@@ -1,0 +1,39 @@
+{
+  "id": "S557",
+  "title": "when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-134345-8b83, project ork, item S552:\n\nwhen a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section\n\nEvidence: S550 \"name -render-fixture and the fixture list in the UI pass brief's CLI text renders section\" duplicates S552's scope"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

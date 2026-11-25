@@ -6378,3 +6378,9 @@
 {"when": "2026-11-25T13:32:23Z", "item": "S552", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S499's later findings 1, 2 and 5 in.", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:35:52Z", "item": "S554", "action": "add", "from": "", "to": "open", "note": "give the reviewer a ready overlay command that runs the new test against the base version of a changed file, so the mutation check can run read-only without retyping the whole file"}
 {"when": "2026-11-25T13:35:52Z", "item": "S554", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:45:00Z", "item": "S555", "action": "add", "from": "", "to": "open", "note": "the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll"}
+{"when": "2026-11-25T13:45:01Z", "item": "S555", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:46:16Z", "item": "S556", "action": "add", "from": "", "to": "open", "note": "give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows"}
+{"when": "2026-11-25T13:46:16Z", "item": "S556", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:50:34Z", "item": "S557", "action": "add", "from": "", "to": "open", "note": "when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section"}
+{"when": "2026-11-25T13:50:34Z", "item": "S557", "action": "promote", "from": "", "to": "", "note": ""}
