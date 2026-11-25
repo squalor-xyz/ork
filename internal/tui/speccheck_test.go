@@ -18,6 +18,17 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+func TestSpecNoteNamesACheckFinding(t *testing.T) {
+	var result daemon.SpecItemResult
+	const finding = "Check entry q quit is not a runnable command"
+	if err := json.Unmarshal([]byte(`{"item":"S1","ready":false,"findings":["`+finding+`"]}`), &result); err != nil {
+		t.Fatal(err)
+	}
+	if got := specNote(result); got != finding {
+		t.Fatalf("note %q, want %q", got, finding)
+	}
+}
+
 // twoQuestions are the open questions of item B: the first has a decision key.
 func twoQuestions() []engine.SpecQuestion {
 	return []engine.SpecQuestion{

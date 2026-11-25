@@ -653,6 +653,23 @@ func TestWaveStartSaysToWaitForTheSpecCheck(t *testing.T) {
 	}
 }
 
+func TestWaveStartHoldsAnItemWithACheckFinding(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","ready":false,"findings":["Check entry q quit is not a runnable command"]},{"item":"S2","ready":true}]}`}
+	code, out, errs := runWaveStart(t, stub, "y\n")
+	if code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	if !strings.Contains(out, "held: S1: Check entry q quit is not a runnable command\n") {
+		t.Errorf("missing finding: %s", out)
+	}
+	if !reflect.DeepEqual(stub.started, []string{"S2"}) {
+		t.Errorf("started %v", stub.started)
+	}
+	if len(stub.answers) != 0 || strings.Contains(out, "[S1 ") || strings.Contains(out, "0 open spec") {
+		t.Errorf("asked about finding: %s answers %+v", out, stub.answers)
+	}
+}
+
 func TestWaveStartSkipsAnItemWithNoSpec(t *testing.T) {
 	stub := &specStub{t: t, check: specCheckS2NoSpec}
 	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--yes")

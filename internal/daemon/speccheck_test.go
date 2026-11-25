@@ -298,12 +298,13 @@ func TestSpecCheckReusesAdjDecision(t *testing.T) {
 // role answers with the report in rig.report. S1 and S2 are the project's
 // slices; their `slicer show` output is in files the test can rewrite.
 type specRig struct {
-	d      *Daemon
-	store  *runrec.Store
-	fake   *clitest.Fake
-	mu     sync.Mutex
-	report string
-	carve  string // when set, the answer to a carve round (S359); the other rounds answer report
+	d           *Daemon
+	store       *runrec.Store
+	fake        *clitest.Fake
+	mu          sync.Mutex
+	report      string
+	readyReport bool   // generate Ready for exactly the requested batch
+	carve       string // when set, the answer to a carve round (S359); the other rounds answer report
 	// onCarve runs when a carve round starts, before it answers (S359): a test
 	// uses it to change what `slicer list` finds afterwards.
 	onCarve func()
@@ -371,6 +372,13 @@ func newSpecRig(t *testing.T, rules string, extra ...clitest.Route) *specRig {
 		rig.mu.Lock()
 		rig.reqs = append(rig.reqs, r)
 		report, gate := rig.report, rig.gate
+		if rig.readyReport {
+			report = ""
+			for _, item := range r.SpecItems {
+				report += "## Slice " + item + "\nReady\n\n"
+			}
+			report += "## Owner needed\nnone\n"
+		}
 		onCarve := rig.onCarve
 		if rig.carve != "" && strings.Contains(r.Brief, "Role: carve.") {
 			report = rig.carve
@@ -419,6 +427,45 @@ func (r *specRig) item(res SpecCheckResult, id string) SpecItemResult {
 		}
 	}
 	return SpecItemResult{}
+}
+
+func TestSpecCheckReportsNotReadyForANonCommandCheckEntry(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
+	rig.readyReport = true
+	raw := `{"id":"S1","slice":{"id":"S1","sections":[{"heading":"Check","body":"- ` + "`q quit`" + `"}]}}`
+	if err := os.WriteFile(filepath.Join(rig.root, "S1.json"), []byte(raw), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res := rig.check(t, "S1", "S2")
+	// Decode the public wire shape so this test fails behaviorally before the field exists.
+	b, _ := json.Marshal(rig.item(res, "S1"))
+	var held struct {
+		Ready     bool
+		Findings  []string
+		Questions []engine.SpecQuestion
+	}
+	if err := json.Unmarshal(b, &held); err != nil {
+		t.Fatal(err)
+	}
+	if held.Ready || len(held.Findings) != 1 || !strings.Contains(held.Findings[0], "q quit") || len(held.Questions) != 0 {
+		t.Errorf("bad item: %s", b)
+	}
+	if !rig.item(res, "S2").Ready {
+		t.Errorf("good item held: %+v", res)
+	}
+	for _, req := range rig.requests() {
+		if strings.Contains(req.Brief, "q quit") {
+			t.Error("role ran for bad Check")
+		}
+	}
+	if _, ok := rig.d.runs.specs[specKey("p", "S1")]; ok {
+		t.Error("finding cached as role result")
+	}
+	rig.setSpec(t, "S1", "fixed")
+	rig.report = "## Slice S1\nReady\n\n## Owner needed\nnone\n"
+	if res := rig.check(t, "S1"); !rig.item(res, "S1").Ready {
+		t.Fatalf("fixed item still held: %+v", res)
+	}
 }
 
 func TestSpecCheckRunsTheSpecCheckRowReadOnly(t *testing.T) {

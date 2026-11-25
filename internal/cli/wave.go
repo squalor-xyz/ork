@@ -613,6 +613,9 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 			missing[r.Item] = true
 		case !r.Ready:
 			open[r.Item] = r
+			for _, finding := range r.Findings {
+				fmt.Fprintf(w, "held: %s: %s\n", r.Item, finding)
+			}
 		}
 	}
 	if len(ready) > 0 {
@@ -744,7 +747,7 @@ func (a *App) specCheck(ctx context.Context, o *output, in *bufio.Reader, w io.W
 			kept = append(kept, item)
 			continue
 		}
-		if len(r.WaitsOn) > 0 {
+		if len(r.WaitsOn) > 0 || len(r.Findings) > 0 {
 			held = append(held, r.Item)
 			continue
 		}

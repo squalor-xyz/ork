@@ -3288,8 +3288,7 @@ check command keeps `ork projects set NAME --round-check CMD`. The daemon checks
 `pyproject.toml` when it plans. `ork run` prints each as `warning: LINE` after
 the role rows and before the note, and the TUI launch confirm shows each in
 the Warn style, wrapped. Both show an empty check command as `check: none`.
-The `expected` plan check compares the JSON, so a plan with warnings starts as
-any other. *Proposed (S508):* the plan also warns for each backticked Check
+The `expected` plan check compares the JSON. The plan also warns for each backticked Check
 entry whose first word is neither found on PATH nor, when it has a path
 separator, an executable file in the worktree. A bare name is looked up on PATH
 only, as the slice checks run it. Leading `NAME=value` words are skipped, as
@@ -3297,7 +3296,17 @@ the slice checks treat them as environment. Each warning quotes the entry and
 its first word. Before the worktree
 exists, the project checkout stands in for it. The same Check entry parser as
 the slice checks excludes acceptance criteria, human checks and after-land
-checks. These warnings never refuse a start or change which checks run.
+checks. An entry whose command word matches a path in the slice's Files is
+exempt, ignoring line anchors and a leading `./`. Check-entry warnings refuse
+`run.start` and the affected member of `wave.start` before a role starts. The
+refusal names the item and each entry and asks the owner to edit Check and
+start again. The spec check reports these entries as deterministic findings,
+with Ready false and no questions or role run for that item; it recomputes
+them on every check. The CLI prints each finding as `held: ITEM: LINE` and
+keeps that item out of the confirmed start set. A changed Check section in a spec draft gets a problem
+per entry and cannot be applied. Its exemptions use the draft's changed
+Files section, or the current slice's Files when unchanged. Answer text and
+Owner decisions paragraphs are outside this check.
 A start on a project with no check command is refused (adj 191,
 `launch.no-check-command`, *proposed*): `run.start` carries `allow_no_check`
 (`ork run P ID --allow-no-check`; `ork wave start` sets it on every item), and

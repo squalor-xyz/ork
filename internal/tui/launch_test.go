@@ -1340,6 +1340,30 @@ func TestLaunchSittingAnswersRecordThenConfirm(t *testing.T) {
 		t.Fatal("ready launch did not start")
 	}
 }
+
+func TestLaunchCheckFindingNamesTheEditBeforeRetry(t *testing.T) {
+	const finding = `Check entry "q quit": first word "q" is not a runnable command`
+	const want = "S90 " + finding + "; edit Check, then l starts the launch again"
+	for _, size := range [][2]int{{80, 24}, {120, 40}} {
+		for _, ascii := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%dx%d/ascii-%t", size[0], size[1], ascii), func(t *testing.T) {
+				h, l := launchHarness(t)
+				h.m.cfg.Theme, h.m.cfg.ASCII = NewTheme(ascii), ascii
+				h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+				l.check = func([]string) (*daemon.SpecCheckResult, error) {
+					return &daemon.SpecCheckResult{Items: []daemon.SpecItemResult{{Item: "S90", Findings: []string{finding}}}}, nil
+				}
+				h.deliver(launchPlanning(t, h)())
+				view := strings.NewReplacer("\u2502", "", "|", "").Replace(plainView(h.m))
+				view = strings.Join(strings.Fields(view), " ")
+				if !strings.Contains(view, want) {
+					t.Fatalf("launch status lacks %q:\n%s", want, plainView(h.m))
+				}
+			})
+		}
+	}
+}
+
 func TestLaunchSittingSkipClosesTheLaunchWithAStatus(t *testing.T) {
 	for _, key := range []string{"s", "esc"} {
 		t.Run(key, func(t *testing.T) {

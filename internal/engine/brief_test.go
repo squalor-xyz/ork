@@ -21,6 +21,25 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+func TestSliceCheckCommandWarningsExemptsAFilesPath(t *testing.T) {
+	for _, prefix := range []string{"", "./", "A=1 B=2 "} {
+		t.Run(prefix, func(t *testing.T) {
+			raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{
+				{"heading": "Files", "body": "- `scripts/new-check.sh`\n- `internal/cli:12-20`\n- `./tools/x.sh`"},
+				{"heading": "Check", "body": "- `" + prefix + "scripts/new-check.sh --x`\n- `internal/cli`\n- `tools/x.sh`\n- `internal/other`"},
+			}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			got := SliceCheckCommandWarnings(string(raw), t.TempDir())
+			want := `Check entry "internal/other": first word "internal/other" is not a runnable command`
+			if len(got) != 1 || got[0] != want {
+				t.Fatalf("warnings %q, want only %q", got, want)
+			}
+		})
+	}
+}
+
 func TestReadOnlyBriefsNameTheDeniedForms(t *testing.T) {
 	const want = "Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C."
 	for _, vendor := range []string{"claude", "claude-local", "codex", "grok"} {

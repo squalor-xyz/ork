@@ -11,6 +11,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
@@ -109,6 +110,40 @@ func TestSpecDraftTreeChangeNamesThePaths(t *testing.T) {
 	_, err := RunSpecDraft(context.Background(), h.deps, cfg)
 	if !errors.Is(err, errDraftTreeChanged) || !strings.HasSuffix(err.Error(), ": changed src/a.py") {
 		t.Fatalf("error %v", err)
+	}
+}
+
+func TestSpecDraftRefusesACheckEntryThatIsNotACommand(t *testing.T) {
+	for _, tc := range []struct {
+		name, check, files string
+		want               []SpecDraftProblem
+	}{
+		{"bad entries", "- `go test ./...`\n- `q quit`\n- `TestFoo`", "unchanged", []SpecDraftProblem{
+			{Section: "Check", Message: `Check entry "q quit": first word "q" is not a runnable command`},
+			{Section: "Check", Message: `Check entry "TestFoo": first word "TestFoo" is not a runnable command`},
+		}},
+		{"acceptance", "Acceptance criteria:\n- `q quit`\nCommands:\n- `go test ./...`", "unchanged", nil},
+		{"human", "- HUMAN CHECK: `q quit`", "unchanged", nil},
+		{"after land", "- [AFTER LAND] `q quit`", "unchanged", nil},
+		{"unchanged", "unchanged", "unchanged", nil},
+		{"draft Files", "- `scripts/new-check.sh --x`", "- `scripts/new-check.sh` (new)", nil},
+		{"current Files", "- `tools/current.sh`", "unchanged", nil},
+		{"replaced Files", "- `tools/current.sh`", "- `scripts/new-check.sh` (new)", []SpecDraftProblem{{Section: "Check", Message: `Check entry "tools/current.sh": first word "tools/current.sh" is not a runnable command`}}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			raw := `{"id":"S10","slice":{"id":"S10","sections":[{"heading":"Files","body":"- ` + "`tools/current.sh`" + `"},{"heading":"Check","body":"- ` + "`q quit`" + `"}]}}`
+			h := specHarnessRoutes(t, []clitest.Route{{Tool: "slicer", Args: []string{"show", "S10"}, Prefix: true, Stdout: raw}}, nil, "", "", "")
+			report := strings.Replace(draftReport, "- `internal/a/a.go`", tc.files, 1)
+			report = strings.Replace(report, "## Section Check\nunchanged", "## Section Check\n"+tc.check, 1)
+			h.runner.script = func(Request, int) (Result, error) { return Result{Exit: ExitOK, Report: report}, nil }
+			got, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: t.TempDir(), Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !reflect.DeepEqual(got.Problems, tc.want) {
+				t.Fatalf("problems %+v, want %+v", got.Problems, tc.want)
+			}
+		})
 	}
 }
 

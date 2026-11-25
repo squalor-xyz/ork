@@ -719,10 +719,23 @@ type sliceCheckCommand struct {
 
 // SliceCheckCommandWarnings flags Check entries whose first word cannot run.
 // The caller supplies the worktree, or the checkout before that tree exists.
-// These are advisory: command execution and classification stay unchanged.
 func SliceCheckCommandWarnings(raw, worktree string) []string {
+	sections := sliceChecklistSections(raw)
+	return checkCommandWarnings(checkBodyCommands(sections["Check"]), sections["Files"], worktree)
+}
+
+// CheckBodyCommandWarnings checks draft text using the slice-check parser.
+func CheckBodyCommandWarnings(body, files, worktree string) []string {
+	return checkCommandWarnings(checkBodyCommands(body), files, worktree)
+}
+
+func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) []string {
+	paths := map[string]bool{}
+	for _, m := range backticked.FindAllStringSubmatch(files, -1) {
+		paths[strings.TrimPrefix(lineAnchor.ReplaceAllString(strings.TrimSpace(m[1]), ""), "./")] = true
+	}
 	var warnings []string
-	for _, entry := range sliceCheckCommands(raw) {
+	for _, entry := range entries {
 		// Leading NAME=value words are environment, as plainCheckRow reads them.
 		word, end := scanWord(entry.command, 0)
 		for envAssignment.MatchString(word.text) && end < len(entry.command) {
@@ -738,6 +751,9 @@ func SliceCheckCommandWarnings(raw, worktree string) []string {
 		}
 		if envAssignment.MatchString(word.text) {
 			warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
+			continue
+		}
+		if paths[strings.TrimPrefix(word.text, "./")] {
 			continue
 		}
 		if filepath.IsAbs(word.text) || !strings.ContainsRune(word.text, filepath.Separator) {
@@ -768,8 +784,12 @@ func SliceCheckCommandWarnings(raw, worktree string) []string {
 // Entries after an "Acceptance criteria:" line, up to a "Commands:" line or the
 // end of the section, are prose and add no command (S407, adj 448).
 func sliceCheckCommands(raw string) []sliceCheckCommand {
+	return checkBodyCommands(sliceChecklistSections(raw)["Check"])
+}
+
+func checkBodyCommands(body string) []sliceCheckCommand {
 	var commands []sliceCheckCommand
-	for _, entry := range checklistEntries(withoutAcceptanceCriteria(sliceChecklistSections(raw)["Check"])) {
+	for _, entry := range checklistEntries(withoutAcceptanceCriteria(body)) {
 		if strings.Contains(entry, "HUMAN CHECK") || strings.Contains(entry, "[AFTER LAND]") {
 			continue
 		}

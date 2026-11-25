@@ -1732,6 +1732,9 @@ each ticked item's lineup, and an item the check or its answers carved into
 slivers is planned again before the confirmation; its Lineup column adds
 `slivers: N` and `y` starts the plan that lists them. A ready item's row says `spec ready` after
 its title; an item with open questions says `waits on N spec questions`.
+*Proposed (S563):* an item whose Check holds an entry that is not a command
+shows its spec-check findings on its row, joined with `; `. The confirmation,
+launch status and all-held status repeat the findings, and `l` checks again.
 *Proposed (S313):* an item held on an open adj record says `waits on adj N`;
 the sitting opens no question for it, and a question whose decided option
 no longer fits shows a dim `decided as X on DATE` line under its heading.
@@ -2072,7 +2075,11 @@ recorded with `spec.answer` before confirmation. `s` or `esc` skips the rest
 (`esc` in an option's free-text field first returns to the options). A slice
 with open questions closes the launch with `ITEM waits on N spec questions;
 l starts the launch again`; nothing starts (`l` runs the whole flow again,
-S190, *proposed*). When the write of the answers failed, the error comes first,
+S190, *proposed*).
+*Proposed (S563):* a slice held by Check-command findings closes the launch
+with `ITEM FINDINGS; edit Check, then l starts the launch again`; edit the
+slice's Check section before pressing `l` to check again. When the write of
+the answers failed, the error comes first,
 then `ITEM: answers not saved; l starts the launch again`. If the launch was
 closed while the write ran and the write fails, the status reads `ITEM: ` and
 the error. A replan that returns no plan keeps the confirmation of the plan the

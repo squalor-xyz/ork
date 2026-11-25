@@ -103,6 +103,7 @@ type RunAction struct {
 
 // RunPlan is checkpoint 1 (run.launch-wire).
 type RunPlan struct {
+	checkFindings     []string                        // private admission gate; Warnings keeps the public plan unchanged
 	StopAfter         string                          `json:"stop_after,omitempty"`
 	project           registry.Project                // registry settings are private to the daemon
 	effective         registry.Project                // project with the check command the run uses (S246); the engine gets this one
@@ -915,7 +916,8 @@ func (d *Daemon) planRun(ctx context.Context, p RunParams) (*RunPlan, error) {
 		if info, err := os.Stat(checkDir); err != nil || !info.IsDir() {
 			checkDir = proj.Path
 		}
-		plan.Warnings = append(plan.Warnings, engine.SliceCheckCommandWarnings(string(raw), checkDir)...)
+		plan.checkFindings = engine.SliceCheckCommandWarnings(string(raw), checkDir)
+		plan.Warnings = append(plan.Warnings, plan.checkFindings...)
 	}
 	return plan, nil
 }
@@ -1099,6 +1101,9 @@ func (d *Daemon) startRunReply(ctx context.Context, p RunParams) (RunReply, erro
 	}
 	if !p.AllowNoCheck && plan.effective.CheckCommand == "" {
 		return RunReply{}, noCheckRefusal(plan.project.Name)
+	}
+	if len(plan.checkFindings) > 0 {
+		return RunReply{}, &ipc.Error{Code: CodeRefused, Message: fmt.Sprintf("%s: %s; edit the Check section, then start again", p.Item, strings.Join(plan.checkFindings, "; "))}
 	}
 	if err := d.restoreRunSpecAnswers(ctx, plan.project, p.Item); err != nil {
 		return RunReply{}, err

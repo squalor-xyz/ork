@@ -545,6 +545,9 @@ func specNote(r daemon.SpecItemResult) string {
 	if r.Ready {
 		return "spec ready"
 	}
+	if len(r.Findings) > 0 {
+		return strings.Join(r.Findings, "; ")
+	}
 	if len(r.WaitsOn) > 0 {
 		var names []string
 		for _, id := range r.WaitsOn {

@@ -6508,3 +6508,11 @@
 {"when": "2026-11-25T16:32:28Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T16:32:28Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T16:32:29Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T16:33:14Z", "item": "S563", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T16:33:51Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T16:33:52Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T17:24:10Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:24:11Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T17:27:20Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T17:39:20Z", "item": "S563", "action": "note", "from": "", "to": "", "note": "Non-command Check entries now refuse run and wave admission,", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:39:20Z", "item": "S563", "action": "status", "from": "started", "to": "done", "note": "Non-command Check entries now refuse run and wave admission, hold spec checks with deterministic findings, and block drafted Check sections; the launch status for a finding says to edit Check before retrying; Files-listed command paths remain exempt.", "by": "Jon Robbins"}

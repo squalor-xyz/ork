@@ -376,6 +376,9 @@ func (m *Model) finishLaunchSpec() tea.Cmd {
 	// l starts the whole launch flow again. A failed write means the owner did
 	// answer: say the answers were not saved, not that questions remain (S190).
 	status := l.params.Item + " " + specNote(l.specs[l.params.Item]) + "; l starts the launch again"
+	if len(l.specs[l.params.Item].Findings) > 0 {
+		status = l.params.Item + " " + specNote(l.specs[l.params.Item]) + "; edit Check, then l starts the launch again"
+	}
 	if l.unsaved[l.params.Item] {
 		status = l.params.Item + ": answers not saved; l starts the launch again"
 	}

@@ -153,6 +153,26 @@ func CheckDraftFiles(root string, secs []SpecDraftSection) []SpecDraftProblem {
 	return out
 }
 
+// CheckDraftCheck reports non-command entries in a changed Check section.
+// Changed Files replace the current slice's exemptions, including new paths.
+func CheckDraftCheck(root string, secs []SpecDraftSection, raw []byte) []SpecDraftProblem {
+	files := sliceChecklistSections(string(raw))["Files"]
+	for _, s := range secs {
+		if s.Name == "Files" && !s.Unchanged {
+			files = s.Text
+		}
+	}
+	var out []SpecDraftProblem
+	for _, s := range secs {
+		if s.Name == "Check" && !s.Unchanged {
+			for _, warning := range CheckBodyCommandWarnings(s.Text, files, root) {
+				out = append(out, SpecDraftProblem{Section: "Check", Message: warning})
+			}
+		}
+	}
+	return out
+}
+
 // SpecDraftConfig describes one spec draft: one slice, drafted in one
 // read-only pass of the spec-check row's chain (owner decision 2026-11-16,
 // roles.spec-draft-row).
@@ -330,5 +350,6 @@ entries:
 	if err := os.WriteFile(reportPath, []byte(text), 0o600); err != nil {
 		return nil, fmt.Errorf("save spec draft: %w", err)
 	}
-	return &SpecDraftResult{Draft: draft, Problems: CheckDraftFiles(root, draft.Sections), Fingerprint: fp, Raw: raw}, nil
+	problems := append(CheckDraftFiles(root, draft.Sections), CheckDraftCheck(root, draft.Sections, raw)...)
+	return &SpecDraftResult{Draft: draft, Problems: problems, Fingerprint: fp, Raw: raw}, nil
 }

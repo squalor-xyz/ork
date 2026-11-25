@@ -615,6 +615,9 @@ output is empty and its exit is 0, or 1 from `rg`, `grep` or `git grep` (their
 no-match code). Output, exit 2 or more, or exit 1 from any other command
 fails it. ork does not run a piped line; the orchestrator runs it and judges it
 by its last command, by the same rule. A line not worded that way must exit 0.
+Backticked entries that are not commands refuse a start and hold the spec
+check or draft; paths listed in Files are exempt, so edit Check before
+starting again when ork names a non-command entry.
 
 ## 8. Watch it
 

@@ -474,6 +474,26 @@ func TestWaveStartCarriesStopAfterPerItem(t *testing.T) {
 	w.expectStarts(t, "S1", "S2")
 }
 
+func TestWaveStartRefusesAMemberWithANonCommandCheckEntry(t *testing.T) {
+	w := newWaveRigRoutes(t, 4, 0, clitest.Route{Tool: "slicer", Args: []string{"show", "S1"}, Prefix: true, Stdout: `{"id":"S1","slice":{"id":"S1","sections":[{"heading":"Check","body":"- ` + "`q quit`" + `"}]}}`})
+	var out WaveResult
+	if err := json.Unmarshal(request(t, w.d, MethodWaveStart, `{"items":[{"project":"p","item":"S1"},{"project":"p","item":"S2"}]}`), &out); err != nil {
+		t.Fatal(err)
+	}
+	if len(out.Items) != 2 {
+		t.Fatalf("items %+v", out.Items)
+	}
+	if it := out.Items[0]; it.Error == nil || it.Error.Code != CodeRefused || !strings.Contains(it.Error.Message, "q quit") || !strings.Contains(it.Error.Message, "S1") || it.Run != nil {
+		t.Errorf("bad member: %+v", it)
+	}
+	if it := out.Items[1]; it.Error != nil || it.Run == nil || it.Run.Item != "S2" {
+		t.Fatalf("good member: %+v", it)
+	}
+	if runs, err := w.store.List(); err != nil || len(runs) != 1 || runs[0].Snapshot().Item != "S2" {
+		t.Errorf("stored runs: %+v %v", runs, err)
+	}
+}
+
 func TestWaveStartRefusesAProjectWithoutACheckCommand(t *testing.T) {
 	w := newWaveRig(t, 4, 0)
 	editProject(t, w.d, func(p *registry.Project) { p.CheckCommand = "" })

@@ -4185,6 +4185,7 @@ func TestPlanWarnsOnANonCommandCheckEntry(t *testing.T) {
 		want       []string
 	}{
 		{"prose path", "- UI pass: `internal/cli` output changes.", []string{`Check entry "internal/cli": first word "internal/cli" is not a runnable command`}},
+		{"Files path", "- `scripts/new-check.sh --x`", nil},
 		{"quoted output", "- `slicer ai relay` prints `Contract: relay v13`.", []string{`Check entry "Contract: relay v13": first word "Contract:" is not a runnable command`}},
 		{"go", "- `go test ./...`", nil},
 		{"gofmt", "- `gofmt -l .` prints nothing.", nil},
@@ -4198,11 +4199,11 @@ func TestPlanWarnsOnANonCommandCheckEntry(t *testing.T) {
 		{"non executable", "- `./check-text`", []string{`Check entry "./check-text": first word "./check-text" is not a runnable command`}},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
-			raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": tc.body}}}})
+			raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": tc.body}, {"heading": "Files", "body": "- `scripts/new-check.sh`"}}}})
 			if err != nil {
 				t.Fatal(err)
 			}
-			d, _, p := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
+			d, store, p := runDaemon(t, func(ctx context.Context, _ engine.Request) (engine.Result, error) {
 				<-ctx.Done()
 				return engine.Result{}, ctx.Err()
 			}, clitest.Route{Tool: "slicer", Args: []string{"show"}, Prefix: true, Stdout: string(raw)})
@@ -4226,10 +4227,67 @@ func TestPlanWarnsOnANonCommandCheckEntry(t *testing.T) {
 				t.Fatal(err)
 			}
 			var rec runrec.Record
+			if len(tc.want) > 0 {
+				_, err := d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1","expected":`+string(shown)+`}`))
+				if re := ipc.ErrorOf(err); err == nil || re.Code != CodeRefused {
+					t.Errorf("warned plan must refuse: %v", err)
+				}
+				if runs, err := store.List(); err != nil || len(runs) != 0 {
+					t.Errorf("refusal created runs: %+v, %v", runs, err)
+				}
+				return
+			}
 			if err := json.Unmarshal(request(t, d, MethodRunStart, `{"project":"p","item":"S1","expected":`+string(shown)+`}`), &rec); err != nil || rec.ID == "" {
 				t.Fatalf("start with a warned plan: %+v, %v", rec, err)
 			}
 		})
+	}
+}
+
+func TestRunStartRefusesANonCommandCheckEntry(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
+	proj, err := rig.d.registered("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(proj.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(proj.Path, "go.mod"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	write := func(body string) {
+		t.Helper()
+		raw, err := json.Marshal(map[string]any{"id": "S1", "slice": map[string]any{"id": "S1", "sections": []map[string]string{{"heading": "Check", "body": body}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(rig.root, "S1.json"), raw, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("- `q quit`\n- `TestFoo`")
+	plan := launchPlan(t, rig.d, `{"project":"p","item":"S1"}`)
+	if len(plan.Warnings) != 2 {
+		t.Fatalf("warnings %q", plan.Warnings)
+	}
+	_, err = rig.d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1"}`))
+	if re := ipc.ErrorOf(err); err == nil || re.Code != CodeRefused {
+		t.Errorf("must refuse bad Check: %v", err)
+	} else {
+		for _, text := range []string{"S1", "q quit", "TestFoo", "edit the Check section", "start again"} {
+			if !strings.Contains(re.Message, text) {
+				t.Errorf("refusal %q lacks %q", re.Message, text)
+			}
+		}
+	}
+	if runs, err := rig.store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("refusal created runs: %+v %v", runs, err)
+	}
+	write("- `go test ./...`")
+	var rec runrec.Record
+	if err := json.Unmarshal(request(t, rig.d, MethodRunStart, `{"project":"p","item":"S1"}`), &rec); err != nil || rec.ID == "" {
+		t.Fatalf("fixed Check start: %+v %v", rec, err)
 	}
 }
 

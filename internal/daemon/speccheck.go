@@ -45,6 +45,7 @@ type SpecCheckParams struct {
 // is not Ready, has no questions and no role ran for it. The caller keeps the
 // item out of its wave and names the fix, slicer promote.
 type SpecItemResult struct {
+	Findings  []string              `json:"findings,omitempty"`
 	WaitsOn   []int                 `json:"waits_on,omitempty"`
 	Notices   []string              `json:"notices,omitempty"`
 	Item      string                `json:"item"`
@@ -299,6 +300,7 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 	deps := d.runDeps(proj)
 	var stale, localItems []string
 	noSpec := map[string]bool{}
+	findings := map[string][]string{}
 	// A local implementer on a slice above size S takes slivers, which this
 	// check carves once the item is Ready (S359, *proposed*; adj 396). The
 	// saved carve is what an earlier filing that failed part way left to finish.
@@ -318,6 +320,10 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		}
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", item, err)
+		}
+		if warnings := engine.SliceCheckCommandWarnings(string(raw), proj.Path); len(warnings) > 0 {
+			findings[item] = warnings
+			continue
 		}
 		if err := d.loadSpecAnswers(proj.Name, item, fp); err != nil {
 			return nil, err
@@ -354,7 +360,7 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		}
 	}
 	for _, item := range items {
-		if noSpec[item] {
+		if noSpec[item] || len(findings[item]) > 0 {
 			continue
 		}
 		if err := d.reuseSpecAnswers(ctx, deps, proj, item); err != nil {
@@ -380,6 +386,10 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 	defer d.runs.mu.Unlock()
 	ownerTexts := map[string]bool{}
 	for _, item := range items {
+		if len(findings[item]) > 0 {
+			out.Items = append(out.Items, SpecItemResult{Item: item, Findings: findings[item]})
+			continue
+		}
 		if noSpec[item] {
 			out.Items = append(out.Items, SpecItemResult{Item: item, NoSpec: true})
 			continue
