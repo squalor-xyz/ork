@@ -1,0 +1,39 @@
+{
+  "id": "S553",
+  "title": "In ork status, print the wave line after the multi-line wait's options",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the ui in round 1 of ork run ork-20261125-131038-69e9 for S499 (discovered from S499):\n\nIn ork status, print the wave line after the multi-line wait's options\nstatus-engine lines 5-10 show the question on the row line, then `wave: wave-20261125-ab`, then the numbered options. The wave line splits the question from its options. The printer writes the wave at `internal/cli/daemoncmds.go:137`, before the remaining wait lines at `:139`. This was already so before this slice; the new fixture shows it.\nImportance: 1\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner decisions (2026-11-25): How should this slice's empty Files, Failing tests, Implement and Check sections say when it is done? -> tighten: Files `internal/cli/daemoncmds.go`, `internal/cli/statusfmt_test.go`, `docs/design.md` and `docs/dashboard.md`. Failing test `TestStatusShowsTheWaveOfARow` in `internal/cli/statusfmt_test.go` asserts the new order, with the `wave:` line after the last numbered option. Check: `go test ./internal/cli` exits 0, then `go test ./...`, `go vet ./...` and `gofmt -l .` are clean.. Where does the `wave:` line go relative to the `next:` line? -> after-next: print the question, the options, the `next:` line, then `wave:`. The `next:` command stays attached to its options, and the wave comes last. [ui.status-wave-line-order]."
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

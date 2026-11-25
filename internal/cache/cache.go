@@ -514,11 +514,14 @@ func (c *Cache) finishRead(k key, f *flight, out readOut) {
 		// A run began or ended: the next read is due by the new interval.
 		c.scheduleLocked(k)
 	}
-	close(f.done)
 	c.mu.Unlock()
+	// The notice goes out before the read's waiters are released, so a client
+	// whose Get or Refresh has returned has already had it sent, and a
+	// subscription made after the call does not get it (S544).
 	if changed && k.part != source.Head && c.onChange != nil {
 		c.onChange(k.project, k.part)
 	}
+	close(f.done)
 }
 
 func (e *entry) valueLocked() Value {

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/squalor-xyz/ork/internal/daemon"
@@ -101,7 +102,8 @@ func (a *App) rolesMatrix(ctx context.Context, o *output, args []string) int {
 
 // rolesMatrixCopy copies one project's role matrix to others through the daemon
 // (S261, *proposed*). It always previews with a dry run, then asks per project
-// (Enter is no) unless --yes, then writes the confirmed projects in one call.
+// (Enter is no) unless --yes, then writes the confirmed projects in one call,
+// each bound to the steps its preview showed (S548).
 // A failed check stops the copy before any question. With --json the prompts go
 // to stderr and stdout holds the last result as the daemon sent it.
 func (a *App) rolesMatrixCopy(ctx context.Context, o *output, args []string) int {
@@ -190,8 +192,16 @@ func (a *App) rolesMatrixCopy(ctx context.Context, o *output, args []string) int
 		}
 		return ExitOK
 	}
+	// Bind each confirmed project to the steps its preview showed, so the daemon
+	// refuses a project whose copy changed since the owner said yes (S548).
+	expect := map[string][]daemon.MatrixCopyStep{}
+	for _, p := range checked.Projects {
+		if slices.Contains(confirmed, p.Project) {
+			expect[p.Project] = p.Steps
+		}
+	}
 	var written daemon.MatrixCopyResult
-	if code := a.call(ctx, o, daemon.MethodMatrixCopy, daemon.MatrixCopyParams{From: params.From, To: confirmed}, &written); code != ExitOK {
+	if code := a.call(ctx, o, daemon.MethodMatrixCopy, daemon.MatrixCopyParams{From: params.From, To: confirmed, ExpectSteps: expect}, &written); code != ExitOK {
 		return code
 	}
 	return show(written)

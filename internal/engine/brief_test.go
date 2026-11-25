@@ -997,6 +997,38 @@ func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
 	}
 }
 
+// The UI pass brief says that -renders alone writes five files and names the
+// -render-fixture flag with the eight fixtures it adds (S552, adj 542).
+func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleUI
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory",
+		"`-render-fixture NAME[,NAME...]`",
+		"writes only NAME.txt for each name",
+		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup and fake-reply",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("UI brief lacks %q", want)
+		}
+	}
+	if strings.Contains(got, "This writes status.txt, show.txt and help.txt") {
+		t.Error("UI brief still says -renders writes three files")
+	}
+	in.Role = RoleImplementer
+	got, err = BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(got, "-render-fixture") {
+		t.Error("non-UI brief names -render-fixture")
+	}
+}
+
 // The UI pass brief names the project's design doc from the registry field
 // ui_doc, or tells the pass to find the project's own UI docs (S136).
 func TestUIBriefNamesTheProjectDesignDoc(t *testing.T) {

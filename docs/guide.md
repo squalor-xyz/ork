@@ -995,8 +995,14 @@ directory named under Your files in its brief in place of DIR:
 
     go test ./internal/cli -run TestRenderCLIViews -renders DIR
 
-It writes `status.txt`, `show.txt` and `help.txt` from the CLI test fixtures
-to that existing directory, without changing the tree. The files contain
+It writes `status.txt`, `status-summary.txt`, `status-summary-long.txt`,
+`show.txt` and `help.txt` from the CLI test fixtures to that existing
+directory, without changing the tree. Add `-render-fixture NAME[,NAME...]` to
+write only `NAME.txt` for each name. The names are the five above (without
+`.txt`) and `projects-set`, `projects-set-refusals`, `wave-start`,
+`status-queued-held`, `status-engine`, `summary-real`, `projects-setup` and
+`fake-reply`. A view of several commands puts a `$ ork ARGS` line, with the
+arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`
 the render test writes nothing. The pass copies selected scratch files into
 its `renders/` directory with the prompt's `VIEW-80x24.txt` names so they

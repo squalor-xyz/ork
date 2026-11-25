@@ -2469,12 +2469,23 @@ the width with `...`:
    `implement_finish`. The rest of slicer's config is in
    `ork projects show --json`.
 4. `slicer relay roles`: one line for each row of the matrix, with its id,
-   role, agent, model and reasoning, and what ork does with it in dim text.
+   role, agent, model and reasoning, and what ork does with it (`use`) in dim
+   text. Each of the five is padded to the widest value in its column, so the
+   `use` text starts at one column on every row; a column no row fills takes no
+   room (owner 2026-11-25, `ui.settings-pane-role-columns`). When the `use`
+   text would get under 4 columns, no row shows it and the head is cut to the
+   width.
 5. `adj`: `enabled` and `config_file`.
 
 A part slicer could not read shows slicer's code and message, dimmed, in its
 block; the other blocks still draw. `j` / `k`, `pgup` / `pgdown` and `g` / `G`
-scroll the body as the item pane does. A line under it names the way to change
+scroll the body as the item pane does. When the window starts inside a block,
+the first body line is that block's heading in dim text, under the `+N lines
+above` marker, and the window shows one line fewer of the body, so a row is
+never read under another block's heading (owner 2026-11-25,
+`ui.settings-pane-scroll-heading`). A window that starts on a heading or on
+the blank line between blocks pins nothing, and neither does a window under 4
+lines. A line under it names the way to change
 a field: `ork projects set NAME --FIELD VALUE`. The pane edits no field.
 
 The pane is the screen's body while it is open: the hint line lists its keys,

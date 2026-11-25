@@ -1,0 +1,39 @@
+{
+  "id": "S555",
+  "title": "the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-133013-979c, project ork, item S535:\n\nthe UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll\n\nEvidence: the 60x16 test passed, but 50x14 shows \"? or esc close help; q quit\" over \"+42 more lines\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
