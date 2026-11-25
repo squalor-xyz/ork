@@ -6922,3 +6922,28 @@
 {"when": "2026-11-25T23:26:46Z", "item": "S597", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 595): the rule goes in the Renders secti", "by": "Jon Robbins"}
 {"when": "2026-11-25T23:28:31Z", "item": "S606", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing"}
 {"when": "2026-11-25T23:28:32Z", "item": "S606", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:49Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:50Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:50Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:51Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:51Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:51Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:51Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:51Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:51Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:52Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:52Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:53Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Check"}
