@@ -670,6 +670,51 @@ func TestWaveStartHoldsAnItemWithACheckFinding(t *testing.T) {
 	}
 }
 
+func TestWaveStartQuestionsExitsOKForACheckFindingHold(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","ready":false,"findings":["Check entry q quit is not a runnable command"]},{"item":"S2","ready":true}]}`}
+	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--questions")
+	if code != ExitOK {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	if !strings.Contains(out, "held: S1: Check entry q quit is not a runnable command\n") {
+		t.Errorf("missing held line: %s", out)
+	}
+	if strings.Contains(out, "Question") || strings.Contains(out, "[S1 ") || strings.Contains(out, "no open spec questions") {
+		t.Errorf("a finding is not a question: %s", out)
+	}
+	if stub.waveStarts() != 0 || len(stub.started) != 0 || len(stub.answers) != 0 {
+		t.Errorf("--questions starts nothing: calls %v started %v", stub.calls, stub.started)
+	}
+}
+
+func TestWaveStartQuestionsStillExitsWaitQuestionForARealQuestion(t *testing.T) {
+	stub := &specStub{t: t, check: `{"items":[{"item":"S1","ready":false,"findings":["Check entry q quit is not a runnable command"]},{"item":"S2","ready":false,"questions":[` +
+		`{"ask":{"title":"Which store?","options":[{"label":"file","summary":"one JSON file"},{"label":"memory","summary":"rebuilt at each start"}],"recommend":2,"reason":"nothing reads it"},"key":"cache.store","text":"Question: Which store?"}]}]}`}
+	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--questions")
+	if code != ExitWaitQuestion {
+		t.Fatalf("code %d: %s %s", code, out, errs)
+	}
+	if !strings.Contains(out, "held: S1: Check entry q quit is not a runnable command\n") || !strings.Contains(out, "Which store?") {
+		t.Errorf("want the held line and S2's question: %s", out)
+	}
+}
+
+func TestWaveStartQuestionsKeepsExitWaitQuestionForAFindingWithMore(t *testing.T) {
+	for name, check := range map[string]string{
+		"waits on adj": `{"items":[{"item":"S1","ready":false,"findings":["Check entry q is not a runnable command"],"waits_on":[42]},{"item":"S2","ready":true}]}`,
+		"question": `{"items":[{"item":"S1","ready":false,"findings":["Check entry q is not a runnable command"],"questions":[` +
+			`{"ask":{"title":"Which store?","options":[{"label":"file","summary":"one JSON file"},{"label":"memory","summary":"rebuilt at each start"}],"recommend":2,"reason":"nothing reads it"},"key":"cache.store","text":"Question: Which store?"}]},{"item":"S2","ready":true}]}`,
+	} {
+		t.Run(name, func(t *testing.T) {
+			stub := &specStub{t: t, check: check}
+			code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--questions")
+			if code != ExitWaitQuestion {
+				t.Fatalf("code %d: %s %s", code, out, errs)
+			}
+		})
+	}
+}
+
 func TestWaveStartSkipsAnItemWithNoSpec(t *testing.T) {
 	stub := &specStub{t: t, check: specCheckS2NoSpec}
 	code, out, errs := runWaveItems(t, stub, "", []string{"S1", "S2"}, "--yes")

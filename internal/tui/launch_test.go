@@ -1343,7 +1343,7 @@ func TestLaunchSittingAnswersRecordThenConfirm(t *testing.T) {
 
 func TestLaunchCheckFindingNamesTheEditBeforeRetry(t *testing.T) {
 	const finding = `Check entry "q quit": first word "q" is not a runnable command`
-	const want = "S90 " + finding + "; edit Check, then l starts the launch again"
+	const want = "S90: " + finding + "; edit Check, then l starts the launch again"
 	for _, size := range [][2]int{{80, 24}, {120, 40}} {
 		for _, ascii := range []bool{false, true} {
 			t.Run(fmt.Sprintf("%dx%d/ascii-%t", size[0], size[1], ascii), func(t *testing.T) {

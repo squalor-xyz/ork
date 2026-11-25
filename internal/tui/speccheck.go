@@ -403,9 +403,18 @@ func (m *Model) askLaunch() tea.Cmd {
 func (w *wavesState) heldNotes(items []string) []string {
 	var notes []string
 	for _, id := range items {
-		notes = append(notes, id+" "+specNote(w.specs[id]))
+		notes = append(notes, heldNote(id, w.specs[id]))
 	}
 	return notes
+}
+
+// heldNote joins an item and its spec note: "ID: finding" for a Check finding,
+// as the CLI prints it, and "ID note" for the other holds.
+func heldNote(id string, r daemon.SpecItemResult) string {
+	if len(r.Findings) > 0 {
+		return id + ": " + specNote(r)
+	}
+	return id + " " + specNote(r)
 }
 
 func (m *Model) sittingKey(state *specState, done func() tea.Cmd, msg tea.KeyPressMsg) tea.Cmd {

@@ -515,7 +515,8 @@ still refuses unanswered questions from the last check of the same spec.
 and prints every open question, numbered with its options, recommendation
 and decision key. It records no answers, changes nothing in the project and
 starts no run. It exits 3 when questions are pending (the same question code
-as `ork wait`, S257), or 0 when none are pending. The daemon may cache the check.
+as `ork wait`, S257), or 0 when none are pending. An item held only by a Check
+finding prints its `held:` line and gives 0. The daemon may cache the check.
 `ork wave start PROJECT ITEM... --questions` does the same for all items;
 the saved-wave form accepts the flag too. When no questions are open, text
 mode prints `no open spec questions: S1, S2`; a saved wave with no startable
@@ -616,7 +617,7 @@ no-match code). Output, exit 2 or more, or exit 1 from any other command
 fails it. ork does not run a piped line; the orchestrator runs it and judges it
 by its last command, by the same rule. A line not worded that way must exit 0.
 Backticked entries that are not commands refuse a start and hold the spec
-check or draft; paths listed in Files are exempt, so edit Check before
+check or draft; paths listed in Files that do not exist yet are exempt, so edit Check before
 starting again when ork names a non-command entry.
 
 ## 8. Watch it

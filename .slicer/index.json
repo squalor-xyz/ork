@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 578,
+  "next_id": 579,
   "preamble": "",
   "passes": [
     {
@@ -30128,7 +30128,7 @@
       "id": "S572",
       "title": "Narrow the Files-path exemption to files that run",
       "short_title": "Narrow the Files-path exemption to files that run",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30159,6 +30159,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "35db289d-d3de-4f01-8d13-746c5fdb9170",
+          "kind": "",
+          "text": "**2026-11-25** — Check entries naming an existing Files directory or non-executable file are flagged as not runnable (only a not-yet-existing Files path is exempt); `--questions` exits 0 for a Check-finding-only hold; TUI held notes read `ITEM: finding`; dashboard.md now documents the colon; full suite, vet and gofmt were clean at round 1.",
+          "created_at": "2026-11-25T18:34:48Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30178,7 +30192,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30356,6 +30370,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-397a3274",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S578",
+      "title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
+      "short_title": "Do not split a Check criterion phrase starting with a dash flag into a runnable Check row",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S572",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f27058a6",
         "pass": "v1.2",
         "group": "",
         "reason": "",
