@@ -386,7 +386,7 @@ func (m *Model) settingsBody(width, height int) []string {
 	}
 	var body []string
 	if pin != "" {
-		body = slices.Insert(window(lines, s.offset, room-1, th), 1, pin)
+		body = slices.Insert(window(lines, s.offset, room-1, th, ""), 1, pin)
 	} else {
 		// The offset is on a heading or a blank line, or the window is too short
 		// to pin. Fitting it to room lines must not move it into a block, where
@@ -395,7 +395,7 @@ func (m *Model) settingsBody(width, height int) []string {
 		if !canPin || fit == s.offset || fit >= len(heads) || heads[fit] == "" {
 			s.offset = fit
 		}
-		body = window(lines, s.offset, room, th)
+		body = window(lines, s.offset, room, th, "")
 	}
 	return append(append(head, body...), foot...)
 }

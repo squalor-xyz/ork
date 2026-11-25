@@ -31588,7 +31588,7 @@
       "id": "S600",
       "title": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen.",
       "short_title": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen.",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31598,6 +31598,34 @@
           "text": "**2026-11-25** — Owner decision (adj 589, ui.goals-lift-enter-cue): cursor cue. While the Goals are lifted, the lift marker shows the selected row (for example cursor: S90); enter keeps opening that row. Jon chose 'Cursor cue', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T22:20:11Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "a4793a31-0091-49fa-8c4e-c6a0d15e0313",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S600):\n- later: Run ork in a terminal of 80x10 and open a Roadmap with several goals. Press home twice: the Goals show, and the dim line under them reads +N more lines, cursor: S90 (the first row's ID). Press enter: that item opens. Press esc, then down: the cue is gone.",
+          "created_at": "2026-11-25T23:09:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "cec37b22-40d5-4da1-913d-027669cfc6d9",
+          "kind": "",
+          "text": "**2026-11-25** — Lifted Roadmap Goals show the selected row in the below marker, Enter opens that row, and unlifted views omit the cue.",
+          "created_at": "2026-11-25T23:09:39Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31624,7 +31652,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
