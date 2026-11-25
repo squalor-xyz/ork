@@ -6901,3 +6901,5 @@
 {"when": "2026-11-25T22:48:18Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S588):", "by": "Jon Robbins"}
 {"when": "2026-11-25T22:48:19Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Added four reachable scrolling fixtures, retained three pass", "by": "Jon Robbins"}
 {"when": "2026-11-25T22:48:19Z", "item": "S588", "action": "status", "from": "started", "to": "done", "note": "Added four reachable scrolling fixtures, retained three passing height-40 sweep cases, and documented paging gaps with follow-up slices S601-S604.", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "add", "from": "", "to": "open", "note": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24"}
+{"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "promote", "from": "", "to": "", "note": ""}
