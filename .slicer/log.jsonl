@@ -6587,3 +6587,19 @@
 {"when": "2026-11-25T18:10:14Z", "item": "S531", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 570, ui.scroll-sweep-home): in-tree-test", "by": "Jon Robbins"}
 {"when": "2026-11-25T18:11:29Z", "item": "S575", "action": "add", "from": "", "to": "open", "note": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from"}
 {"when": "2026-11-25T18:11:29Z", "item": "S575", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T18:21:28Z", "item": "S572", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T18:21:28Z", "item": "S572", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T18:21:28Z", "item": "S572", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T18:21:28Z", "item": "S572", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T18:21:28Z", "item": "S572", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T18:21:29Z", "item": "S573", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T18:21:29Z", "item": "S573", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T18:21:29Z", "item": "S573", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T18:21:29Z", "item": "S573", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T18:21:29Z", "item": "S573", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T18:21:29Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T18:21:29Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T18:21:30Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T18:21:30Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T18:21:30Z", "item": "S565", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T18:22:00Z", "item": "S573", "action": "edit", "from": "", "to": "", "note": "Check"}
