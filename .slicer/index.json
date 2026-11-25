@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 606,
+  "next_id": 607,
   "preamble": "",
   "passes": [
     {
@@ -31889,6 +31889,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-ea964bdc",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S606",
+      "title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
+      "short_title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S596",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1f292ee0",
         "pass": "v1.2",
         "group": "",
         "reason": "",
