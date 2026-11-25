@@ -6656,3 +6656,10 @@
 {"when": "2026-11-25T18:57:53Z", "item": "S581", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T19:03:48Z", "item": "S582", "action": "add", "from": "", "to": "open", "note": "in the Base overlays section, say which tests the brief's focused -run pattern covers, as separate commands without a pipe"}
 {"when": "2026-11-25T19:03:48Z", "item": "S582", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:07:06Z", "item": "S583", "action": "add", "from": "", "to": "open", "note": "give the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation"}
+{"when": "2026-11-25T19:07:06Z", "item": "S583", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:07:07Z", "item": "S583", "action": "note", "from": "", "to": "", "note": "possible duplicate of S523, S571", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:07:12Z", "item": "S584", "action": "add", "from": "", "to": "open", "note": "When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected"}
+{"when": "2026-11-25T19:07:12Z", "item": "S584", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:07:21Z", "item": "S585", "action": "add", "from": "", "to": "open", "note": "in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X"}
+{"when": "2026-11-25T19:07:21Z", "item": "S585", "action": "promote", "from": "", "to": "", "note": ""}

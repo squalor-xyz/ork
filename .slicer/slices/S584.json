@@ -1,0 +1,39 @@
+{
+  "id": "S584",
+  "title": "When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261125-185405-f675, project ork, item S531:\n\nWhen a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected\n\nEvidence: S531 diff is only internal/tui/scroll_sweep_test.go; the render requirement had to be ruled out by hand"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
