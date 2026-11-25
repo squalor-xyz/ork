@@ -1,0 +1,39 @@
+{
+  "id": "S565",
+  "title": "say in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261125-153042-530c, project ork, item S547:\n\nsay in the UI brief that a go test -run pattern must not contain a pipe and offer a form that is allowed\n\nEvidence: go -C ... test -run MatrixCopy|RenderCLIViews ./internal/cli was denied as \"multiple operations\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

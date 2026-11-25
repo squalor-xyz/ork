@@ -9,6 +9,25 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+func TestWhyContainsTitle(t *testing.T) {
+	for _, tc := range []struct {
+		name, why, title string
+		want             bool
+	}{
+		{"boundary", "alpha beta gamma extra context", "alpha beta gamma delta epsilon", true},
+		{"below", "alpha beta extra context", "alpha beta gamma delta epsilon", false},
+		{"normalization", "ALPHA, beta-beta gamma! unrelated prose", "the alpha beta gamma delta epsilon", true},
+		{"empty title", "alpha beta", "the and a", false},
+		{"empty why", "", "alpha beta", false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := whyContainsTitle(tc.why, tc.title); got != tc.want {
+				t.Fatalf("whyContainsTitle = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 // Historical proposals read through slicer show; S418's original wording is
 // preserved in its Why after its title changed to the decided implementation.
 const (

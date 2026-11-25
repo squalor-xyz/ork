@@ -10,6 +10,24 @@ import (
 
 const nearDuplicateMin = 0.5
 
+const whyContainmentMin = 0.6
+
+// whyContainsTitle compares unique title content words against the Why text.
+// Extra words in Why do not dilute the share of the title that is present.
+func whyContainsTitle(why, title string) bool {
+	words, content := titleWords(title), titleWords(why)
+	if len(words) == 0 {
+		return false
+	}
+	matched := 0
+	for word := range words {
+		if content[word] {
+			matched++
+		}
+	}
+	return float64(matched)/float64(len(words)) >= whyContainmentMin
+}
+
 // NearDuplicateTitles returns similar, unfinished items in list order. Titles
 // are compared as sets of ASCII content words using the Jaccard index.
 func NearDuplicateTitles(title, selfID string, open []slicercli.Item, min float64) []string {

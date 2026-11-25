@@ -816,6 +816,9 @@ func (e *Engine) RetryWith(ctx context.Context, o RetryOptions) error {
 		}
 	}
 	grantRounds := func(r *runrec.Record) {
+		// An owner retry reruns a red slice check that nothing has changed
+		// since (S545, adj checks.red-evidence-retry).
+		r.RecheckSlice = true
 		if rec.Pending.Kind == runrec.PendingRounds {
 			r.RoundLimit = r.Round + grant
 			r.Round++

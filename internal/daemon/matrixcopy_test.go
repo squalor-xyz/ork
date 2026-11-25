@@ -155,8 +155,8 @@ func TestMatrixCopyPlanTargetWithoutASpecCheckRowIsRefused(t *testing.T) {
 	}
 	plan, err := planCopy("pitfight", source, target)
 	e := ruleErr(t, err, CodeNoSpecCheckRow)
-	if !strings.Contains(e.Message, "pitfight") || !strings.Contains(e.Message, "slicer relay-roles rule-add") {
-		t.Fatalf("message %q does not name the project and the fix", e.Message)
+	if strings.Contains(e.Message, "pitfight") || !strings.Contains(e.Message, "slicer relay-roles rule-add") {
+		t.Fatalf("message %q should omit the redundant project name and retain the fix", e.Message)
 	}
 	if len(plan.rows) != 0 || len(plan.rules) != 0 {
 		t.Fatalf("a refused plan holds rows or rules: %+v", plan)
@@ -770,6 +770,9 @@ func TestMatrixCopyAddIDsThatDifferBetweenTheDryRunsFailTheProject(t *testing.T)
 		t.Fatalf("result %+v", got)
 	}
 	p := got.Projects[0]
+	if p.Error == nil || p.Error.Code != "add_id_mismatch" || p.Error.Message != "slicer gave added rows ids r10, r11 in the first dry run and r10, r12 in the second; nothing was written to this project: preview again, then copy" {
+		t.Fatalf("want named add-id refusal and recovery guidance, got %+v", p.Error)
+	}
 	if p.Status != CopyFailed || p.Error == nil || !strings.Contains(p.Error.Message, "r11") || !strings.Contains(p.Error.Message, "r12") {
 		t.Fatalf("project %+v, want failed with an error that names both ids", p)
 	}
@@ -907,6 +910,61 @@ func TestMatrixCopyWritesAProjectWhoseSourceRowsAreTheOnesPreviewed(t *testing.T
 	}
 	if got.Partial {
 		t.Fatal("every project was written: not partial")
+	}
+}
+
+func TestMatrixCopyRefusesChangedCopiedRuleText(t *testing.T) {
+	edited := slices.Clone(srcRules)
+	edited[0].Text += " Changed rule text."
+	_, got := copyThenWrite(t, showBody(t, "rev-src", srcRows, srcRules), showBody(t, "rev-src", srcRows, edited))
+	a := got.Projects[0]
+	if a.Status != CopyFailed || a.Error == nil || a.Error.Code != CodeStalePreview {
+		t.Fatalf("changed copied rule must refuse bound project: %+v", a)
+	}
+	if got.Projects[1].Status != CopyChanged || !got.Partial {
+		t.Fatalf("unbound project should still change: %+v", got)
+	}
+	for _, set := range lastFake.CallsTo("slicer") {
+		if isWrite(set.Args) && set.Args[len(set.Args)-1] == "/p/a" {
+			t.Fatal("refused project's write was invoked")
+		}
+	}
+}
+
+func TestMatrixCopySetFieldsDescribeOnlyChangedValues(t *testing.T) {
+	base := copyRowJSON{ID: "r1", Role: "reviewer", When: json.RawMessage(`["L"]`), Agent: "Codex", Vendor: "openai", Model: "gpt-x", Reasoning: "high", Note: "old"}
+	for _, field := range []string{"role", "when", "agent", "vendor", "model", "reasoning", "note"} {
+		t.Run(field, func(t *testing.T) {
+			body, _ := json.Marshal(base)
+			var changed map[string]json.RawMessage
+			_ = json.Unmarshal(body, &changed)
+			value := `"new"`
+			want := "new"
+			if field == "when" {
+				value, want = `["M"]`, `["M"]`
+			}
+			if field == "note" {
+				value, want = `""`, ""
+			}
+			changed[field] = json.RawMessage(value)
+			body, _ = json.Marshal(changed)
+			var row copyRowJSON
+			_ = json.Unmarshal(body, &row)
+			var target slicercli.Row
+			body, _ = json.Marshal(base)
+			_ = json.Unmarshal(body, &target)
+			target.When = json.RawMessage(`[ "L" ]`)
+			steps := []MatrixCopyStep{{Op: "set", ID: "r1", Changed: true}}
+			setStepFields(steps, copySet{Replace: copyReplace{Rows: []copyRowJSON{row}}}, &slicercli.Matrix{Rows: []slicercli.Row{target}})
+			body, _ = json.Marshal(steps[0])
+			var got struct {
+				Fields map[string]string `json:"fields"`
+			}
+			_ = json.Unmarshal(body, &got)
+			if !reflect.DeepEqual(got.Fields, map[string]string{field: want}) {
+				t.Fatalf("changed %s: fields %v, want only %s=%q", field, got.Fields, field, want)
+			}
+		})
 	}
 }
 
@@ -1153,7 +1211,7 @@ func TestMatrixCopyAPlannerRefusalFailsOnlyThatProject(t *testing.T) {
 	if len(got.Projects) != 2 || got.Projects[0].Status != CopyWouldChange || got.Projects[1].Status != CopyFailed {
 		t.Fatalf("result %+v", got)
 	}
-	if e := got.Projects[1].Error; e == nil || e.Code != CodeNoSpecCheckRow || !strings.Contains(e.Message, "b") {
+	if e := got.Projects[1].Error; e == nil || e.Code != CodeNoSpecCheckRow || strings.HasPrefix(e.Message, "b ") {
 		t.Fatalf("error %+v", e)
 	}
 	for _, args := range callArgs(t) {

@@ -1082,7 +1082,9 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 	}
 	fingerprint = fmt.Sprintf("%x", sha256.Sum256([]byte(fingerprint+"\x00"+sliceChecklistSections(string(raw))["Check"])))
 	// Reuse complete batches when product and Check spec are unchanged.
-	// Red evidence stays red until a product change invalidates it.
+	// Red evidence stays red until a product change invalidates it or an owner
+	// retry asks for a rerun, so a flake cannot pin a run (S545, adj
+	// checks.red-evidence-retry). A green batch stays cached after a retry.
 	if !force {
 		var previous []runrec.CheckRecord
 		for _, c := range rec.Checks {
@@ -1097,14 +1099,27 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 				match = match && c.Command == rows[i].command && c.ProductSHA256 == fingerprint
 			}
 			if match {
+				red := ""
 				for _, c := range previous {
 					if !c.OK && c.NotRun == "" {
-						return checkRun{log: c.Log, failure: "slice check remains red; product unchanged"}, false, nil
+						red = c.Log
+						break
 					}
 				}
-				return checkRun{ok: true}, false, nil
+				if red != "" && !rec.RecheckSlice {
+					return checkRun{log: red, failure: "slice check remains red; product unchanged"}, false, nil
+				}
+				if red == "" {
+					if err := e.spendRecheck(rec); err != nil {
+						return checkRun{}, false, err
+					}
+					return checkRun{ok: true}, false, nil
+				}
 			}
 		}
+	}
+	if err := e.spendRecheck(rec); err != nil {
+		return checkRun{}, false, err
 	}
 	defer e.beginWork(prefix, nil)()
 	timeout := time.Duration(e.proj.CheckMinutes) * time.Minute
@@ -1169,6 +1184,14 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 		}
 	}
 	return failed, false, nil
+}
+
+// spendRecheck clears the retry mark once a slice check has seen it (S545).
+func (e *Engine) spendRecheck(rec runrec.Record) error {
+	if !rec.RecheckSlice {
+		return nil
+	}
+	return e.run.Update(func(r *runrec.Record) { r.RecheckSlice = false })
 }
 
 // printsNothingOK judges a Check line that prints nothing (adj 468,

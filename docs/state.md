@@ -696,7 +696,11 @@ records without `ask` continue to use free text. An older ork refuses a
 `run.json` with `ask` because `Store.Open` uses strict keys. `feedback`
 names the file (kind
 `checks`, `findings`, `architect`, `fail`, `owner` or `land`) that the next implementer round must act on.
-`land_recheck` (omitted when false; *proposed*, S119) is set before the base
+`recheck_slice` (omitted when false; *proposed*, S545, `checks.red-evidence-retry`)
+is set by `ork retry` (a paused run and a resumed stopped run) and cleared by
+the next slice check that sees it. While it is set, a red batch of slice check
+rows whose product and Check text are unchanged is run again instead of reused;
+a green batch is still reused. `land_recheck` (omitted when false; *proposed*, S119) is set before the base
 branch is merged into the slice branch and cleared by the first green re-check
 after that (or when the landing is handed to the fix round); while it is set, a
 retried landing merges the base if it is not in yet, then renders and

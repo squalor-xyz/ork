@@ -468,6 +468,18 @@ func (e *Engine) directionDigest(ctx context.Context, rec runrec.Record) (string
 	if err != nil {
 		return "", err
 	}
+	current, err := e.d.Slicer.Show(ctx, rec.Worktree, rec.Item)
+	if err != nil {
+		return "", err
+	}
+	var why string
+	if current.Slice != nil {
+		for _, section := range current.Slice.Sections {
+			if section.Heading == "Why" {
+				why = section.Body
+			}
+		}
+	}
 	var open []directionEntry
 	for _, it := range items {
 		if it.ID != rec.Item && it.Status != "done" && it.Status != "retired" {
@@ -495,19 +507,21 @@ func (e *Engine) directionDigest(ctx context.Context, rec runrec.Record) (string
 		}()
 	}
 	wg.Wait()
-	var touching, rest []directionEntry
+	var duplicates, touching, rest []directionEntry
 	unreadCount := 0
 	for i, entry := range open {
 		if unread[i] {
 			unreadCount++
 		}
-		if touchesPaths(entry.files, changed) {
+		if whyContainsTitle(why, entry.item.Title) {
+			duplicates = append(duplicates, entry)
+		} else if touchesPaths(entry.files, changed) {
 			touching = append(touching, entry)
 		} else {
 			rest = append(rest, entry)
 		}
 	}
-	return formatDirection(goals, touching, rest, unreadCount), nil
+	return formatDirection(goals, duplicates, touching, rest, unreadCount), nil
 }
 
 // branchPaths lists the paths the slice changed against the base branch: the
@@ -573,10 +587,10 @@ func cutTitle(title string) string {
 	return title[:n] + "..."
 }
 
-// formatDirection writes the digest: the goals, the items that touch the diff,
+// formatDirection writes the digest: the goals, likely duplicates, items that touch the diff,
 // then the others by id and title, in slicer's order, until the budget is used.
 // It names how many open items it left out.
-func formatDirection(goals *slicercli.Goals, touching, rest []directionEntry, unread int) string {
+func formatDirection(goals *slicercli.Goals, duplicates, touching, rest []directionEntry, unread int) string {
 	var b strings.Builder
 	room := func(line string) bool { return b.Len()+len(line)+1 <= directionBudget-directionFooter }
 	line := func(s string) bool {
@@ -602,6 +616,15 @@ func formatDirection(goals *slicercli.Goals, touching, rest []directionEntry, un
 		}
 	}
 	listed := 0
+	line("\nLikely duplicates (at least 60% of title content words in this slice's Why):")
+	if len(duplicates) == 0 {
+		line("- none")
+	}
+	for _, d := range duplicates {
+		if line("- " + d.item.ID + " " + cutTitle(d.item.Title)) {
+			listed++
+		}
+	}
 	line("\nOpen items that touch this diff's files (id, title, status, dependencies):")
 	if len(touching) == 0 {
 		line("- none")
@@ -635,7 +658,7 @@ func formatDirection(goals *slicercli.Goals, touching, rest []directionEntry, un
 	if leftGoals > 0 {
 		fmt.Fprintf(&b, "%d goals left out; run `slicer goals --json --lean` for all.\n", leftGoals)
 	}
-	total := len(touching) + len(rest)
+	total := len(duplicates) + len(touching) + len(rest)
 	noun := "items"
 	if total-listed == 1 {
 		noun = "item"

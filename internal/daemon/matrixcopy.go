@@ -10,6 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"maps"
 	"reflect"
 	"regexp"
 	"slices"
@@ -33,10 +34,10 @@ import (
 // to it; the other projects go on. A project without an entry is not bound. A
 // dry run ignores ExpectSteps.
 //
-// ExpectRows binds a write to the content of the rows the preview showed (S558,
+// ExpectRows binds a write to the rows and rules the preview showed (S558,
 // owner decision matrix.copy-bind-content): it maps a project's name to the
 // Digest its preview carried. The steps alone miss a source row whose content
-// changed after the preview, since the steps then stay the same. The daemon
+// or copied rule text changed after the preview, since the steps can stay the same. The daemon
 // plans each such project again and, when the digest differs, refuses that
 // project with CodeStalePreview and writes nothing to it; the other projects go
 // on. A project without an entry is not bound. A dry run ignores ExpectRows.
@@ -53,6 +54,9 @@ type MatrixCopyParams struct {
 // are no longer the ones the owner confirmed (S548).
 const CodeStalePreview = "stale_preview"
 
+// CodeAddIDMismatch refuses a project whose dry runs assigned different row ids.
+const CodeAddIDMismatch = "add_id_mismatch"
+
 // What a project's copy came to.
 const (
 	CopyWouldChange = "would change"
@@ -62,16 +66,18 @@ const (
 	CopyFailed      = "failed"
 )
 
-// MatrixCopyStep is one step of slicer's result, as `relay-roles apply` prints it.
+// MatrixCopyStep is one step of slicer's result. Fields contains the changed
+// row values from ork's set, compared with the current target, for set steps.
 type MatrixCopyStep struct {
-	Op      string `json:"op"`
-	ID      string `json:"id"`
-	Changed bool   `json:"changed"`
+	Op      string            `json:"op"`
+	ID      string            `json:"id"`
+	Changed bool              `json:"changed"`
+	Fields  map[string]string `json:"fields,omitempty"`
 }
 
 // MatrixCopyProject is the outcome for one target. Error is slicer's or ork's
 // code and message as they came; a skipped project has one too, which says
-// what to run. Digest is the SHA-256 of the rows the copy plans for the project,
+// what to run. Digest is the SHA-256 of the rows and rules planned for the project,
 // which a preview that would change the project carries, for ExpectRows (S558).
 type MatrixCopyProject struct {
 	Project  string           `json:"project"`
@@ -194,8 +200,7 @@ func checkRowSets(proj registry.Project, rules []slicercli.Rule) (spec, ui []str
 // source's row ids until rewrite gives the target's.
 func planMatrixCopy(sourceProject registry.Project, source *slicercli.Matrix, project registry.Project, target *slicercli.Matrix) (copyPlan, error) {
 	if len(slicercli.SpecCheckRowIDs(target.Rules)) == 0 {
-		return copyPlan{}, &ipc.Error{Code: CodeNoSpecCheckRow, Message: fmt.Sprintf(
-			"%s has no rule that names a Spec check row (rNN), and the copy keeps each project's own: add one with slicer relay-roles rule-add, then copy again", project.Name)}
+		return copyPlan{}, &ipc.Error{Code: CodeNoSpecCheckRow, Message: "no rule names a Spec check row (rNN), and the copy keeps each project's own: add one with slicer relay-roles rule-add, then copy again"}
 	}
 	specIDs, uiIDs := checkRowSets(project, target.Rules)
 	targetRow := map[string]slicercli.Row{}
@@ -452,6 +457,7 @@ type copyJob struct {
 	project registry.Project
 	set     copySet
 	out     *MatrixCopyProject
+	current *slicercli.Matrix
 }
 
 // matrixCopy copies the matrix of p.From to each target through slicer's atomic
@@ -549,6 +555,7 @@ func (d *Daemon) matrixCopy(ctx context.Context, p MatrixCopyParams) (*MatrixCop
 		}
 		job.out.Status = CopyChanged
 		if applied.Steps != nil {
+			setStepFields(applied.Steps, job.set, job.current)
 			job.out.Steps = applied.Steps
 		}
 		changed = true
@@ -569,7 +576,7 @@ func addedIDs(steps []MatrixCopyStep) []string {
 }
 
 // copyBinding is what the owner confirmed for one target: the steps (S548) and
-// the digest of the planned rows (S558) its preview showed. Each part binds only
+// the digest of the planned rows and rules (S558) its preview showed. Each part binds only
 // when its Bound flag is set; the zero value binds nothing.
 type copyBinding struct {
 	steps       []MatrixCopyStep
@@ -578,11 +585,12 @@ type copyBinding struct {
 	digestBound bool
 }
 
-// rowsDigest is the SHA-256 of the rows the copy plans for a target, as
+// rowsDigest is the SHA-256 of the rows and rules the copy plans for a target, as
 // "sha256:" and hex. It covers each row's id and every field the copy writes, so
 // an edit to a source row changes it even when the steps stay the same. A row's
 // conditions are hashed as slicer's JSON values, whatever their spacing.
-func rowsDigest(rows []plannedRow) string {
+// Rules include their target ids and final rewritten text.
+func rowsDigest(rows []plannedRow, rules []plannedRule) string {
 	h := sha256.New()
 	enc := json.NewEncoder(h)
 	for _, r := range rows {
@@ -598,7 +606,53 @@ func rowsDigest(rows []plannedRow) string {
 			Model: r.row.Model, Reasoning: r.row.Reasoning, Note: r.row.Note,
 		})
 	}
+	for _, r := range rules {
+		_ = enc.Encode(copyRuleJSON{ID: r.id, Text: r.text})
+	}
 	return "sha256:" + hex.EncodeToString(h.Sum(nil))
+}
+
+// setStepFields attaches only the row values changed by a set step.
+func setStepFields(steps []MatrixCopyStep, set copySet, current *slicercli.Matrix) {
+	for i := range steps {
+		step := &steps[i]
+		if step.Op != "set" || !step.Changed {
+			continue
+		}
+		for _, row := range set.Replace.Rows {
+			if row.ID != step.ID {
+				continue
+			}
+			for _, before := range current.Rows {
+				if before.ID != row.ID {
+					continue
+				}
+				step.Fields = nil
+				add := func(key, value, old string) {
+					if value != old {
+						if step.Fields == nil {
+							step.Fields = map[string]string{}
+						}
+						step.Fields[key] = value
+					}
+				}
+				add("role", row.Role, before.Role)
+				if !sameJSON(row.When, before.When) {
+					var compact bytes.Buffer
+					when := string(row.When)
+					if json.Compact(&compact, row.When) == nil {
+						when = compact.String()
+					}
+					add("when", when, string(before.When))
+				}
+				add("agent", row.Agent, before.Agent)
+				add("vendor", row.Vendor, before.Vendor)
+				add("model", row.Model, before.Model)
+				add("reasoning", row.Reasoning, before.Reasoning)
+				add("note", row.Note, before.Note)
+			}
+		}
+	}
 }
 
 // checkCopy reads target's matrix, plans the copy and dry-runs it, filling out.
@@ -654,17 +708,20 @@ func (d *Daemon) checkCopy(ctx context.Context, slicer slicercli.Client, from re
 		// The rewritten rules name the ids of the first dry run; the write must give
 		// the added rows those ids.
 		if second := addedIDs(dry.Steps); !slices.Equal(adds, second) {
-			return nil, fmt.Errorf("slicer gave the rows added to %s the ids %v in the first dry run and %v in the second", target.Name, adds, second)
+			return nil, &ipc.Error{Code: CodeAddIDMismatch, Message: fmt.Sprintf("slicer gave added rows ids %s in the first dry run and %s in the second; nothing was written to this project: preview again, then copy", strings.Join(adds, ", "), strings.Join(second, ", "))}
 		}
 	}
-	if bind.stepsBound && !slices.Equal(dry.Steps, bind.steps) {
+	setStepFields(dry.Steps, set, matrix)
+	if bind.stepsBound && !slices.EqualFunc(dry.Steps, bind.steps, func(a, b MatrixCopyStep) bool {
+		return a.Op == b.Op && a.ID == b.ID && a.Changed == b.Changed && maps.Equal(a.Fields, b.Fields)
+	}) {
 		return nil, &ipc.Error{Code: CodeStalePreview, Message: fmt.Sprintf(
 			"the copy to %s would now make other steps than the preview showed: preview again, then copy", target.Name)}
 	}
-	digest := rowsDigest(plan.rows)
+	digest := rowsDigest(plan.rows, plan.rules)
 	if bind.digestBound && digest != bind.digest {
 		return nil, &ipc.Error{Code: CodeStalePreview, Message: fmt.Sprintf(
-			"the rows the copy to %s would write differ from the ones the preview showed: preview again, then copy", target.Name)}
+			"the rows or rules the copy to %s would write differ from the ones the preview showed: preview again, then copy", target.Name)}
 	}
 	if !dry.Changed {
 		out.Status = CopyUnchanged
@@ -672,5 +729,5 @@ func (d *Daemon) checkCopy(ctx context.Context, slicer slicercli.Client, from re
 	}
 	out.Status, out.Steps, out.Warnings, out.Digest = CopyWouldChange, dry.Steps, plan.Warnings, digest
 	set.Expect = dry.RevisionBefore
-	return &copyJob{project: target, set: set, out: out}, nil
+	return &copyJob{project: target, set: set, out: out, current: matrix}, nil
 }

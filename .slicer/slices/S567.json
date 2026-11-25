@@ -1,0 +1,39 @@
+{
+  "id": "S567",
+  "title": "adj: allow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on adj in ork run ork-20261125-153915-ab03, project ork, item S560:\n\nallow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records\n\nEvidence: adj check landed-changed --json returned four full records with options and history to confirm only titles named landed-changed/ID.md"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
