@@ -203,12 +203,8 @@ var (
 // passed the 80x24 tests until the UI pass found it by hand (S401).
 //
 // Left out, as the owner decided (adj 570, adj 575): the sweep found a real
-// paging defect in each, so the view or height stays out until its follow-up
-// slice lands and then joins this table.
-//   - Roadmap item pane (openLongItemPane, pgdown and pgup), all heights: a
-//     page moves the offset by the whole room, but the draw spends one line of
-//     it on the "+N more lines" marker, so each page skips the line under the
-//     marker (roadmap.go scrollRoadmapPane). Follow-up: S579.
+// paging defect, so the view or height stays out until its follow-up slice
+// lands and then joins this table.
 //   - Roadmap row list at height 10: the Goals block above the first row is
 //     marked as "+5 lines above" and no key reaches it, because the page keys
 //     move the row cursor and the first row is already on screen. Follow-up:
@@ -236,6 +232,9 @@ func TestScrollSweep(t *testing.T) {
 			h.m.projects[0].snap = s
 			return h
 		}, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		// unique stays unset: the reference repeats lines, such as the pane's
+		// own heading.
+		{name: "roadmap-item", heights: sweepAll, setup: openLongItemPane, pageDown: sweepPgDown, pageUp: sweepPgUp},
 		{name: "launch-confirm", heights: sweepAll, setup: func(t *testing.T) *harness {
 			h, l := launchHarness(t)
 			for i := 1; i <= 8; i++ {

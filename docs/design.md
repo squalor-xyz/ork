@@ -815,7 +815,9 @@ slice.
     Renders (*proposed*, S121; adj #165): the
     UI pass writes each changed view as plain text files at 80x24, 120x40 and in
     ASCII mode, in `tmp/ui-N/renders/` of the run directory, using the
-    project's own tooling. When the gate passes, the
+    project's own tooling. ork makes that directory, empty, before each UI pass
+    starts (S581), so the pass and its test files write into it without making
+    it. When the gate passes, the
     approval card keeps the files of the latest UI pass that ended well (see
     Approval card).
     For ork CLI views, the brief names

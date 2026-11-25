@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 591,
+  "next_id": 595,
   "preamble": "",
   "passes": [
     {
@@ -30567,7 +30567,7 @@
       "id": "S579",
       "title": "Roadmap item pane page keys skip the line under the more-lines marker",
       "short_title": "Roadmap item pane page keys skip the line under the more-lines marker",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30577,6 +30577,34 @@
           "text": "**2026-11-25** — Owner decision: page step. The page keys move pane.offset by the room minus the lines the draw spends on the more-lines marker, so no line is skipped; this also fixes the spec-draft pane, which shares scrollRoadmapPane (internal/tui/roadmap.go). Re-enable the S579 case in internal/tui/scroll_sweep_test.go:208-211. Jon chose 'Page step', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T20:22:00Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4caea531-327a-4f54-9359-f9d62001c9b7",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S579):\n- later: Open a long item on the Roadmap at 80x24 and press pgdown until the end. Each page should start with the line that sat under the \"+N more lines\" marker on the page before. Press pgup back up the same way. Open the spec draft pane on a long draft and page it; it should behave the same.",
+          "created_at": "2026-11-25T20:47:43Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b09e7f9f-8177-4450-b049-0e33c9c16f2e",
+          "kind": "",
+          "text": "**2026-11-25** — The Roadmap item, role matrix and spec-draft panes now page by their lines minus the \"+N more lines\" marker line (new itemPane.page), so no line is skipped; the roadmap-item case joins TestScrollSweep and passes at heights 10, 16, 24 and 40.",
+          "created_at": "2026-11-25T20:47:43Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30603,7 +30631,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30653,10 +30681,25 @@
       "id": "S581",
       "title": "create the renders directory before the UI pass starts",
       "short_title": "create the renders directory before the UI pass starts",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "732c1633-e9ed-4922-99a6-59d3b335791f",
+          "kind": "",
+          "text": "**2026-11-25** — ork now makes the UI pass's empty `tmp/ui-N/renders/` directory before each UI pass starts (including reruns), so the pass no longer needs `os.MkdirAll`; full suite and `slicer check` pass.",
+          "created_at": "2026-11-25T20:00:54Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30674,7 +30717,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31036,6 +31079,133 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-47212cda",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S591",
+      "title": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds",
+      "short_title": "when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S579",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-798481a0",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S592",
+      "title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
+      "short_title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S571",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-02a8ba18",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S593",
+      "title": "when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check",
+      "short_title": "when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S586",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-e1d22f61",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S594",
+      "title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
+      "short_title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "294d767c-81da-4184-880b-427d1ab0bbf1",
+          "kind": "",
+          "text": "**2026-11-25** — possible duplicate of S591",
+          "created_at": "2026-11-25T20:47:42Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S579",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-34bf9623",
         "pass": "v1.2",
         "group": "",
         "reason": "",
