@@ -6334,3 +6334,7 @@
 {"when": "2026-11-25T13:18:23Z", "item": "S548", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T13:18:35Z", "item": "S535", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:18:35Z", "item": "S546", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:20:21Z", "item": "S549", "action": "add", "from": "", "to": "open", "note": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures"}
+{"when": "2026-11-25T13:20:22Z", "item": "S549", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:21:14Z", "item": "S550", "action": "add", "from": "", "to": "open", "note": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section"}
+{"when": "2026-11-25T13:21:14Z", "item": "S550", "action": "promote", "from": "", "to": "", "note": ""}

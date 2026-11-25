@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 549,
+  "next_id": 551,
   "preamble": "",
   "passes": [
     {
@@ -28818,6 +28818,62 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S549",
+      "title": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures",
+      "short_title": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-3c534959",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S550",
+      "title": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section",
+      "short_title": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-db3fef09",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

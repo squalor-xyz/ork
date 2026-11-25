@@ -1,0 +1,39 @@
+{
+  "id": "S549",
+  "title": "allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-131038-69e9, project ork, item S499:\n\nallow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures\n\nEvidence: the go test -run ^TestRenderCLIViews$ -renders TEMPDIR -render-fixture ... command was denied with \"This command can't be checked before it runs\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
