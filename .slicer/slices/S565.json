@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test ./internal/engine -run TestUIPassBriefNamesRunPatternRule` passes, with the test red before the code change in `internal/engine/brief.go` and green after.\n- `go test ./internal/engine -run TestUIPassBriefNamesRenderFixtures` passes (the existing UI brief assertions still hold).\n- `go test ./...` passes.\n- `go vet ./...` prints nothing and exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] Read the rendered UI brief. It should show `## Test run patterns` after `## CLI text renders`, with the one-test-per-command example. The implementer, reviewer and gate briefs should not show it."
+      "body": "\n- `go test ./internal/engine -run TestUIPassBriefNamesRunPatternRule` passes, with the test red before the code change in internal/engine/brief.go and green after.\n- `go test ./internal/engine -run TestUIPassBriefNamesRenderFixtures` passes (the existing UI brief assertions still hold).\n- `go test ./...` passes.\n- `go vet ./...` prints nothing and exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] Read the rendered UI brief. It should show `## Test run patterns` after `## CLI text renders`, with the one-test-per-command example. The implementer, reviewer and gate briefs should not show it."
     },
     {
       "heading": "Git",
