@@ -746,6 +746,140 @@ func TestMatrixCopyAppliesWithTheDryRunsRevision(t *testing.T) {
 	}
 }
 
+// pendingSrcRules makes the copy wait for the ids of the rows slicer adds: a
+// copied rule names the source's r2.
+var pendingSrcRules = []slicercli.Rule{
+	{ID: "u1", Text: copySourceRule},
+	{ID: "u2", Text: "The spec check runs the Spec check row (r3)."},
+	{ID: "u3", Text: "Use r2 for review."},
+}
+
+func TestMatrixCopyAddIDsThatDifferBetweenTheDryRunsFailTheProject(t *testing.T) {
+	routes := []clitest.Route{
+		showRoute("src", showBody(t, "rev-src", srcRows, pendingSrcRules)),
+		showRoute("a", showBody(t, "rev-a-show", tgtRows, tgtRules)),
+		// The second dry run gives the second added row another id than the first.
+		dryRoute("a",
+			dryReply("rev-0", true, "remove r1", "add r10", "add r11"),
+			dryReply("rev-a", true, "remove r1", "add r10", "add r12"),
+		),
+	}
+	h := newCopyHarness(t, []string{"src", "a"}, routes...)
+	got := h.copy(t, `{"from":"src","to":["a"]}`)
+	if len(got.Projects) != 1 {
+		t.Fatalf("result %+v", got)
+	}
+	p := got.Projects[0]
+	if p.Status != CopyFailed || p.Error == nil || !strings.Contains(p.Error.Message, "r11") || !strings.Contains(p.Error.Message, "r12") {
+		t.Fatalf("project %+v, want failed with an error that names both ids", p)
+	}
+	for _, args := range callArgs(t) {
+		if isWrite(args) {
+			t.Fatalf("a write call after the add ids changed: %v", args)
+		}
+	}
+}
+
+func TestMatrixCopyFewerAddsThanNewRowsFailTheProject(t *testing.T) {
+	routes := []clitest.Route{
+		showRoute("src", showBody(t, "rev-src", srcRows, pendingSrcRules)),
+		showRoute("a", showBody(t, "rev-a-show", tgtRows, tgtRules)),
+		// Two rows are new, but slicer adds one.
+		dryRoute("a", dryReply("rev-0", true, "remove r1", "add r10")),
+	}
+	h := newCopyHarness(t, []string{"src", "a"}, routes...)
+	got := h.copy(t, `{"from":"src","to":["a"]}`)
+	p := got.Projects[0]
+	if p.Status != CopyFailed || p.Error == nil || p.Error.Message != "slicer added 1 rows to a for 2 new rows" {
+		t.Fatalf("project %+v", p)
+	}
+	for _, args := range callArgs(t) {
+		if isWrite(args) {
+			t.Fatalf("a write call after the count mismatch: %v", args)
+		}
+	}
+}
+
+func TestMatrixCopyWritesOnlyProjectsWhoseStepsMatchThePreview(t *testing.T) {
+	changed := clitest.Reply{Stdout: `{"changed":true,"revision":"z","steps":[{"op":"add","id":"r10","changed":true}]}`}
+	routes := append(srcTarget(t, "a", "b", "c", "d"),
+		dryRoute("a", dryReply("rev-a", true, "add r10")),
+		dryRoute("b", dryReply("rev-b", true, "add r10", "add r11")), // the preview showed one step
+		dryRoute("c", dryReply("rev-c", true, "add r10")),
+		dryRoute("d", dryReply("rev-d", false)), // the preview showed a change
+		writeRoute("a", changed),
+		writeRoute("c", changed),
+	)
+	h := newCopyHarness(t, []string{"src", "a", "b", "c", "d"}, routes...)
+	step := `[{"op":"add","id":"r10","changed":true}]`
+	got := h.copy(t, `{"from":"src","to":["a","b","c","d"],"expect_steps":{"a":`+step+`,"b":`+step+`,"c":`+step+`,"d":`+step+`}}`)
+	var statuses []string
+	for _, p := range got.Projects {
+		statuses = append(statuses, p.Project+" "+p.Status)
+	}
+	if want := []string{"a changed", "b failed", "c changed", "d failed"}; !reflect.DeepEqual(statuses, want) {
+		t.Fatalf("statuses %v, want %v", statuses, want)
+	}
+	for _, i := range []int{1, 3} {
+		if e := got.Projects[i].Error; e == nil || e.Code != CodeStalePreview {
+			t.Fatalf("%s error %+v, want %s", got.Projects[i].Project, e, CodeStalePreview)
+		}
+	}
+	if !got.Partial {
+		t.Fatal("some projects changed and some were refused: partial")
+	}
+	var written []string
+	for _, args := range callArgs(t) {
+		if isWrite(args) {
+			written = append(written, args[len(args)-1])
+		}
+	}
+	if want := []string{"/p/a", "/p/c"}; !reflect.DeepEqual(written, want) {
+		t.Fatalf("written %v, want %v: a refused project is not written", written, want)
+	}
+}
+
+func TestMatrixCopyWithoutExpectedStepsWritesWhateverTheDryRunSays(t *testing.T) {
+	routes := append(srcTarget(t, "a"),
+		dryRoute("a", dryReply("rev-a", true, "add r10", "add r11")),
+		writeRoute("a", clitest.Reply{Stdout: `{"changed":true,"revision":"z","steps":[{"op":"add","id":"r10","changed":true}]}`}),
+	)
+	h := newCopyHarness(t, []string{"src", "a"}, routes...)
+	got := h.copy(t, `{"from":"src","to":["a"]}`)
+	if got.Projects[0].Status != CopyChanged || got.Partial {
+		t.Fatalf("result %+v", got)
+	}
+}
+
+func TestMatrixCopyADryRunIgnoresExpectedSteps(t *testing.T) {
+	routes := append(srcTarget(t, "a"), dryRoute("a", dryReply("rev-a", true, "add r10", "add r11")))
+	h := newCopyHarness(t, []string{"src", "a"}, routes...)
+	got := h.copy(t, `{"from":"src","to":["a"],"dry_run":true,"expect_steps":{"a":[{"op":"add","id":"r10","changed":true}]}}`)
+	if p := got.Projects[0]; p.Status != CopyWouldChange || len(p.Steps) != 2 {
+		t.Fatalf("project %+v, want the preview of what would change", p)
+	}
+}
+
+func TestMatrixCopyAFailedCheckStillWritesNothingWhenStepsAreExpected(t *testing.T) {
+	// Only a stale preview is refused per project; a failed check anywhere still
+	// writes nothing.
+	step := `[{"op":"add","id":"r10","changed":true}]`
+	routes := append(srcTarget(t, "a", "b"),
+		dryRoute("a", dryReply("rev-a", true, "add r10")),
+		dryRoute("b", refusal("bad_role_field", "row 2: reasoning must not be empty")),
+	)
+	h := newCopyHarness(t, []string{"src", "a", "b"}, routes...)
+	got := h.copy(t, `{"from":"src","to":["a","b"],"expect_steps":{"a":`+step+`}}`)
+	for _, args := range callArgs(t) {
+		if isWrite(args) {
+			t.Fatalf("a write call after a failed check: %v", args)
+		}
+	}
+	if got.Projects[0].Status != CopyWouldChange || got.Projects[1].Status != CopyFailed {
+		t.Fatalf("result %+v", got)
+	}
+}
+
 func TestMatrixCopySameMatrixIsUnchanged(t *testing.T) {
 	routes := append(srcTarget(t, "a"), dryRoute("a", dryReply("rev-a", false)))
 	h := newCopyHarness(t, []string{"src", "a"}, routes...)

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-548 items · — 53 · done 372 · retired 123
+548 items · — 52 · done 373 · retired 123
 
 ## v1.3
 
@@ -307,7 +307,7 @@ v1.2
 | 250 | [S545](slices/S545.md) | A red slice check from a flake stays cached across retries until the product or Check text changes | S | - |  |  | — |
 | 251 | [S546](slices/S546.md) | Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns |  | 2 |  | discovered from S251 | — |
 | 252 | [S547](slices/S547.md) | matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields |  | - |  | discovered from S261 | — |
-| 253 | [S548](slices/S548.md) | matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs |  | 2 |  | discovered from S261 | — |
+| 253 | [S548](slices/S548.md) | matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs |  | 2 |  | discovered from S261 | done |
 
 ---
 

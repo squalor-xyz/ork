@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/daemon/matrixcopy.go`\n- `internal/daemon/matrixcopy_test.go`\n- `internal/cli/roles.go`\n- `internal/cli/roles_matrix_test.go`\n- `docs/design.md`"
     },
     {
       "heading": "Failing tests",

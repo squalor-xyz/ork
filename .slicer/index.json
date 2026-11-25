@@ -28754,7 +28754,7 @@
       "id": "S548",
       "title": "matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs",
       "short_title": "matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28764,6 +28764,20 @@
           "text": "**2026-11-25** — Owner 2026-11-25 folded S261's later finding 5 in: the add ids are mapped from the first dry run and never compared with the second (internal/daemon/matrixcopy.go:526-552); nothing tests the len(adds) mismatch error at matrixcopy.go:540-541. Source: ork show ork-20261125-021106-86c7.",
           "created_at": "2026-11-25T13:12:07Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2bfb067f-6801-410e-a8bf-aa06b44cdd70",
+          "kind": "",
+          "text": "**2026-11-25** — matrix copy writes now bind each confirmed project to the steps its preview showed (expect_steps; a differing project is refused with stale_preview, written nothing, the others go on), and a project whose added row ids differ between the two dry runs now fails; full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-25T13:36:14Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -28790,7 +28804,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     }
   ],
