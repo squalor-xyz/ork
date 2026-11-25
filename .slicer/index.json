@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 572,
+  "next_id": 574,
   "preamble": "",
   "passes": [
     {
@@ -29323,6 +29323,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "1eb91f7e-e46a-4fcb-856d-1b899705a60c",
+          "kind": "",
+          "text": "**2026-11-25** — Also remove the dead Bash(adj find*) grant from the local spec-check allowlist (adj has no find command). From S559 run ork-20261125-163840-c68e finding 1; Jon chose 'Fold into S554', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T17:55:32Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29902,7 +29916,7 @@
       "id": "S567",
       "title": "adj: allow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records",
       "short_title": "adj: allow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -29919,7 +29933,7 @@
         "key": "tool-feedback-adj-6e9959f8",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Covered: plain adj check TEXT already prints one line per record (id, status, title, refs, decision) without options or history; Jon chose 'Retire as covered', session 8d711f67, 2026-11-25.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -30035,6 +30049,77 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S572",
+      "title": "Narrow the Files-path exemption to files that run",
+      "short_title": "Narrow the Files-path exemption to files that run",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "54e562e3-c185-4325-bf59-004e9069cc7b",
+          "kind": "",
+          "text": "**2026-11-25** — Also covers: (b) --questions exits with the wait-question code for an item held only by a Check finding (internal/cli/wave.go:614-615, 664-665); give it a separate code or skip it there. (c) TUI held notes join ID and finding as 'S90 Check entry ...' (internal/tui/speccheck.go:406, internal/tui/launch.go:378); use 'S90: ' like the CLI. From S563 run ork-20261125-163301-8662 findings 2-5; Jon chose 'One slice for all three', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T17:55:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S563",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-163301-8662-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S573",
+      "title": "Spec-answer question text can flag paths the owner did not choose",
+      "short_title": "Spec-answer question text can flag paths the owner did not choose",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S560",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-153915-ab03-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

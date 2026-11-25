@@ -1,0 +1,39 @@
+{
+  "id": "S573",
+  "title": "Spec-answer question text can flag paths the owner did not choose",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-153915-ab03 for S560 (discovered from S560):\n\nSpec-answer question text can flag paths the owner did not choose\n`rec.Decisions` and the slice's \"Owner decisions (\" lines hold the question as well as the answer (`decisionpaths.go:27,44-45`). So a path named only in the question or in an option not chosen is flagged too. An example is a placeholder like `landed-changed/ID.md`, which is in adj 404's title. PLAUSIBLE: I did not find a live run that shows it. The fix would scan only the text after \"->\" in each answer line.\nImportance: 1\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

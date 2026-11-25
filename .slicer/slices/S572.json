@@ -1,0 +1,39 @@
+{
+  "id": "S572",
+  "title": "Narrow the Files-path exemption to files that run",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-163301-8662 for S563 (discovered from S563):\n\nNarrow the Files-path exemption to files that run\nThe exemption skips the check for any path listed in Files (`internal/engine/brief.go:756`), including directories and plain source files. `TestSliceCheckCommandWarningsExemptsAFilesPath` even exempts `internal/cli` because Files lists `internal/cli:12-20`. A Check entry like `internal/cli` therefore passes the gate but still fails later at the slice checks with \"executable file not found\", which is the failure this slice exists to stop. Owner decision (2) accepts this as written, so it stays out of this slice. A follow-up could exempt only Files paths that do not exist yet, or that are executable files in the worktree.\nImportance: 2\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

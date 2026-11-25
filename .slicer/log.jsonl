@@ -6565,3 +6565,12 @@
 {"when": "2026-11-25T17:26:41Z", "item": "S570", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T17:37:33Z", "item": "S571", "action": "add", "from": "", "to": "open", "note": "give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies"}
 {"when": "2026-11-25T17:37:33Z", "item": "S571", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:55:30Z", "item": "S572", "action": "add", "from": "", "to": "open", "note": "Narrow the Files-path exemption to files that run"}
+{"when": "2026-11-25T17:55:30Z", "item": "S572", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:55:31Z", "item": "S572", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
+{"when": "2026-11-25T17:55:31Z", "item": "S573", "action": "add", "from": "", "to": "open", "note": "Spec-answer question text can flag paths the owner did not choose"}
+{"when": "2026-11-25T17:55:31Z", "item": "S573", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T17:55:31Z", "item": "S573", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
+{"when": "2026-11-25T17:55:32Z", "item": "S567", "action": "retire", "from": "open", "to": "retired", "note": "Covered: plain adj check TEXT already prints one line per record (id, status, title, refs, decision) without options or history; Jon chose 'Retire as covered', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T17:55:32Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Also remove the dead Bash(adj find*) grant from the local sp", "by": "Jon Robbins"}
+{"when": "2026-11-25T17:55:35Z", "item": "S572", "action": "note", "from": "", "to": "", "note": "Also covers: (b) --questions exits with the wait-question co", "by": "Jon Robbins"}
