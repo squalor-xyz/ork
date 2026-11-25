@@ -179,7 +179,7 @@ func TestFirstRowBriefIsUnchanged(t *testing.T) {
 		TempDir: req.TempDir, TMPDir: req.TMPDir, ReportPath: req.ReportPath,
 		SliceJSON: sliceJSON(), EnvLines: h.proj.EnvironmentLines,
 		CheckCommand: h.proj.CheckCommand,
-		Allow:        DefaultImplementerAllowlist(h.proj.CheckCommand),
+		Allow:        PinGitC(DefaultImplementerAllowlist(h.proj.CheckCommand), req.Worktree),
 		Sections:     []BriefSection{{Title: "Round", Body: "This is the first round. The slice is not started: run `slicer start " + item + " --render --strict` first."}},
 	})
 	if err != nil {
@@ -1262,10 +1262,17 @@ func TestCloudUIPassDoneWhenListsItsAllowedForms(t *testing.T) {
 	if line == "" {
 		t.Fatal("cloud UI pass Done when has no Allowed forms item")
 	}
-	for _, entry := range CloudUIAllowlist() {
+	for _, entry := range CloudUIAllowlist(in.Worktree) {
 		if !strings.Contains(line, entry) {
 			t.Errorf("Allowed forms lacks %q", entry)
 		}
+	}
+	// S586 (adj 577): the forms are pinned to the worktree; none is a wildcard.
+	if strings.Contains(line, "git -C *") {
+		t.Errorf("Allowed forms holds an unpinned git -C entry: %s", line)
+	}
+	if want := "Bash(git -C " + in.Worktree + " status*)"; !strings.Contains(line, want) {
+		t.Errorf("Allowed forms lacks %q", want)
 	}
 	for _, want := range []string{"Skill", "Edit and Write under " + in.TempDir, "any other command is denied", "one plain command"} {
 		if !strings.Contains(line, want) {

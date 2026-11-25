@@ -39,7 +39,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	}
 	allowlist := req.Allowlist
 	if req.ReadOnly {
-		allowlist = engine.LocalReadOnlyAllowlist()
+		allowlist = engine.LocalReadOnlyAllowlist(req.Worktree)
 	}
 	// A cloud UI pass may write its renders under its run temp dir (S369,
 	// adj 372 and 374, *proposed*). Plan mode cannot allow that write, so the
@@ -48,7 +48,7 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	writeDir := ""
 	if req.ReadOnly && req.Vendor == "claude" && req.Role == engine.RoleUI && req.TempDir != "" {
 		writeDir = req.TempDir
-		allowlist = engine.CloudUIAllowlist()
+		allowlist = engine.CloudUIAllowlist(req.Worktree)
 	}
 	// A reviewer may write its own process temp dir (S510,
 	// roles.read-only-temp-write, *proposed*), as its prompt says. Args adds

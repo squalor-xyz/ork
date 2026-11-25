@@ -2566,7 +2566,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   share a fixed read-only allowlist instead of plan mode. Cloud Claude uses
   `--permission-prompts none` and no permission mode flag; Grok read-only
   roles keep plan mode. The list allows `Read`, `Grep`,
-  `Glob`, `git diff`, `git log`, `git status`, `git show` and `git merge-base` (also with `git -C`; adj 574),
+  `Glob`, `git diff`, `git log`, `git status`, `git show` and `git merge-base` (also with `git -C`; adj 574).
+  Each `git -C` entry names the role's worktree, as in `Bash(git -C PATH status*)`,
+  and holds no `*` in its place. A mid-pattern `*` would span the subcommand
+  and match `git -C /w commit -m show` (adj 577, `launch.read-only-git-c-form`).
+  The runner pins the entries at launch (adj 579). A worktree that is not
+  absolute, or holds a space, `*`, `,`, a quote or a parenthesis, drops every
+  `git -C` entry instead (adj 580). The list also allows
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
   `slicer check` (adj 504, including `slicer check --root DIR`), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
@@ -2699,6 +2705,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   also include `Bash(git ls-files*)`, `Bash(git -C * ls-files*)`,
   `Bash(git mv*)`, `Bash(git -C * mv*)`, `Bash(git rm *)`,
   `Bash(git -C * rm *)` and `Bash(rm *)` (adj 478).
+  The registry stores and the settings views show the `git -C *` entries as a
+  template. At launch the implementer's and a part's entries take the run's
+  worktree in place of the `*` (`Bash(git -C PATH status*)`; adj 577, adj 579),
+  with or without grants from `ork retry --allow`, which are added as written.
+  A worktree that cannot be pinned drops them (adj 580).
   Both presets also include `Bash(ork show*)` (adj 488). An implementer reads
   a run report named by its slice with `ork show RUN NAME`, without reading
   ork's state directory directly. No other ork command is added.

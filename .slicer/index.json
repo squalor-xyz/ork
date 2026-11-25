@@ -30808,7 +30808,7 @@
       "id": "S586",
       "title": "Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name",
       "short_title": "Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30853,6 +30853,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9d02e925-ed38-4111-b0f5-31d362bc3c32",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S586):\n- later: Probe the real Claude Code matcher (not run by this draft). In a scratch git repo, start Claude Code with the allow rule Bash(git -C * show*) and ask it to run git -C /scratch commit --allow-empty -m show. If it runs without a prompt, the CLI's * spans the subcommand like ork's hook does. Then repeat with Bash(git -C /scratch show*): the commit command should prompt or be denied, and git -C /scratch show HEAD should run. Record the result on S586.",
+          "created_at": "2026-11-25T20:47:49Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "df5615dc-ac18-4893-9582-c2586b403205",
+          "kind": "",
+          "text": "**2026-11-25** — S586 pins every read-only and implementer `git -C` allowlist entry to the role's worktree (`Bash(git -C PATH SUBCMD*)`) at launch, so no git write ending in a subcommand name matches; full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-25T20:47:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -30872,7 +30900,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
