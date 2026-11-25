@@ -1,0 +1,39 @@
+{
+  "id": "S603",
+  "title": "Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:** Other scrollable panes and sweep helper changes.",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S588 observed TestScrollSweep/waves-item skip content with pgdown and pgup at heights 10, 16, 24 and 40. The page step in internal/tui/waves.go:waveItemKey advances by the available room without reserving the scroll marker lines. Example missing line: body of wave section 015. S588 leaves these heights out under adj 575."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/tui/waves.go`\n- `internal/tui/scroll_sweep_test.go`"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "Re-enable `TestScrollSweep/waves-item` at heights 10, 16, 24 and 40 using the S588 fixture. It must currently fail with \"never showed\" lines in both paging passes."
+    },
+    {
+      "heading": "Implement",
+      "body": "Correct the waves-item page budget so pgdown and pgup expose every content line. Keep the S588 fixture and sweep helpers unchanged. Restore the excluded sweep heights and remove this pane's Left out entry once they pass. Include any changed behavior documentation in the same diff."
+    },
+    {
+      "heading": "Check",
+      "body": "- `go test -run 'TestScrollSweep|TestSweepPaneFixturesScroll|TestSweepMissingNamesSkippedLines' ./internal/tui` exits 0.\n- `go test ./...` exits 0.\n- `go vet ./...` exits 0.\n- `gofmt -l .` prints nothing."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

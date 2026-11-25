@@ -6857,3 +6857,47 @@
 {"when": "2026-11-25T22:27:36Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T22:27:37Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T22:27:37Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:30:07Z", "item": "S588", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:30:08Z", "item": "S588", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:30:08Z", "item": "S588", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:31:26Z", "item": "S601", "action": "add", "from": "", "to": "open", "note": "Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget)"}
+{"when": "2026-11-25T22:31:27Z", "item": "S602", "action": "add", "from": "", "to": "open", "note": "Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget)"}
+{"when": "2026-11-25T22:31:27Z", "item": "S603", "action": "add", "from": "", "to": "open", "note": "Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget)"}
+{"when": "2026-11-25T22:31:27Z", "item": "S604", "action": "add", "from": "", "to": "open", "note": "Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget)"}
+{"when": "2026-11-25T22:31:33Z", "item": "S601", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T22:31:50Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T22:31:50Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:31:50Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:31:51Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T22:31:51Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:31:51Z", "item": "S602", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T22:31:51Z", "item": "S602", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T22:31:51Z", "item": "S602", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:31:52Z", "item": "S602", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:31:52Z", "item": "S602", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T22:31:52Z", "item": "S602", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:31:52Z", "item": "S603", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T22:31:53Z", "item": "S603", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T22:31:53Z", "item": "S603", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:31:53Z", "item": "S603", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:31:53Z", "item": "S603", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T22:31:53Z", "item": "S603", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:31:54Z", "item": "S604", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T22:31:54Z", "item": "S604", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T22:31:54Z", "item": "S604", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:31:54Z", "item": "S604", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:31:55Z", "item": "S604", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T22:31:55Z", "item": "S604", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:35:06Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:35:07Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:35:07Z", "item": "S602", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:35:07Z", "item": "S602", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:35:07Z", "item": "S603", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:35:08Z", "item": "S603", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:35:08Z", "item": "S604", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:35:08Z", "item": "S604", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T22:35:08Z", "item": "S588", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:35:08Z", "item": "S588", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T22:48:18Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S588):", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:48:19Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Added four reachable scrolling fixtures, retained three pass", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:48:19Z", "item": "S588", "action": "status", "from": "started", "to": "done", "note": "Added four reachable scrolling fixtures, retained three passing height-40 sweep cases, and documented paging gaps with follow-up slices S601-S604.", "by": "Jon Robbins"}
