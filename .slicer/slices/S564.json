@@ -1,0 +1,39 @@
+{
+  "id": "S564",
+  "title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-153042-530c, project ork, item S547:\n\nflag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route\n\nEvidence: setStepFields is called at matrixcopy.go:558 and :714, but no matrixcopy test route sends a set step"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

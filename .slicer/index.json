@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 564,
+  "next_id": 565,
   "preamble": "",
   "passes": [
     {
@@ -29620,6 +29620,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S564",
+      "title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
+      "short_title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S547",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-431843f5",
         "pass": "v1.2",
         "group": "",
         "reason": "",
