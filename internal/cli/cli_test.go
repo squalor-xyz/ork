@@ -30,6 +30,198 @@ import (
 	"github.com/squalor-xyz/ork/internal/source"
 )
 
+const matrixApplyReply = `{"slicer":{"dry_run":true,"changed":true,"steps":[{"op":"add","id":"r25","changed":true},{"op":"move","id":"r25","changed":false}],"extra":42},"warnings":["r25: agent \"Acme\" has no ork adapter: a plan skips this row"]}`
+
+func TestRolesMatrixApplyReadsTheFileOrStdin(t *testing.T) {
+	for _, set := range []string{`{"ops":[]}`, `{"replace":{"rows":[],"rules":[]}}`} {
+		for _, stdin := range []bool{false, true} {
+			t.Run(fmt.Sprintf("%s/%t", set, stdin), func(t *testing.T) {
+				a := &App{Input: strings.NewReader(set), Call: func(_ context.Context, method string, params, result any) error {
+					b, err := json.Marshal(params)
+					if err != nil {
+						t.Fatal(err)
+					}
+					var p struct {
+						Project string
+						Set     json.RawMessage
+					}
+					if err := json.Unmarshal(b, &p); err != nil {
+						t.Fatal(err)
+					}
+					if method != "matrix.apply" || p.Project != "p" || string(p.Set) != set {
+						t.Fatalf("call %s %s", method, b)
+					}
+					return json.Unmarshal([]byte(matrixApplyReply), result)
+				}}
+				args := []string{"roles", "matrix", "apply", "p"}
+				if stdin {
+					args = append(args, "--stdin")
+				} else {
+					path := filepath.Join(t.TempDir(), "set.json")
+					if err := os.WriteFile(path, []byte(set), 0600); err != nil {
+						t.Fatal(err)
+					}
+					args = append(args, "--file", path)
+				}
+				if code, stdout, stderr := run(t, a, args...); code != 0 || !strings.Contains(stdout, "r25") {
+					t.Fatalf("exit %d: %q %s", code, stdout, stderr)
+				}
+			})
+		}
+	}
+}
+
+func TestRolesMatrixApplyDryRunText(t *testing.T) {
+	a := &App{Input: strings.NewReader(`{"ops":[]}`), Call: func(_ context.Context, method string, params, result any) error {
+		b, _ := json.Marshal(params)
+		var p struct {
+			DryRun bool `json:"dry_run"`
+		}
+		json.Unmarshal(b, &p)
+		if !p.DryRun {
+			t.Fatalf("dry_run missing: %s", b)
+		}
+		return json.Unmarshal([]byte(matrixApplyReply), result)
+	}}
+	code, stdout, stderr := run(t, a, "roles", "matrix", "apply", "p", "--stdin", "--dry-run")
+	want := "dry run: nothing written\nadd r25: changed\nmove r25: unchanged\nr25: agent \"Acme\" has no ork adapter: a plan skips this row\n"
+	if code != 0 || stdout != want {
+		t.Fatalf("exit %d: %q %s; want %q", code, stdout, stderr, want)
+	}
+}
+
+func TestRolesMatrixApplyRealWriteHasNoDryRunLine(t *testing.T) {
+	a := &App{Input: strings.NewReader(`{"ops":[]}`), Call: func(_ context.Context, _ string, _, result any) error {
+		return json.Unmarshal([]byte(matrixApplyReply), result)
+	}}
+	code, stdout, stderr := run(t, a, "roles", "matrix", "apply", "p", "--stdin")
+	want := "add r25: changed\nmove r25: unchanged\nr25: agent \"Acme\" has no ork adapter: a plan skips this row\n"
+	if code != 0 || stdout != want {
+		t.Fatalf("exit %d: %q %s; want %q", code, stdout, stderr, want)
+	}
+}
+
+func TestRolesMatrixApplyEmptyResultSaysSo(t *testing.T) {
+	for _, dry := range []bool{false, true} {
+		t.Run(fmt.Sprintf("dry=%t", dry), func(t *testing.T) {
+			a := &App{Input: strings.NewReader(`{"ops":[]}`), Call: func(_ context.Context, _ string, _, result any) error {
+				return json.Unmarshal([]byte(`{"slicer":{"changed":false,"steps":[]},"warnings":[]}`), result)
+			}}
+			args := []string{"roles", "matrix", "apply", "p", "--stdin"}
+			want := "no steps: matrix unchanged\n"
+			if dry {
+				args = append(args, "--dry-run")
+				want = "dry run: nothing written\n" + want
+			}
+			code, stdout, stderr := run(t, a, args...)
+			if code != 0 || stdout != want {
+				t.Fatalf("exit %d: %q %s; want %q", code, stdout, stderr, want)
+			}
+		})
+	}
+}
+
+func setupApp(t *testing.T, preview bool, response string) *App {
+	t.Helper()
+	return &App{Call: func(_ context.Context, method string, params, result any) error {
+		if method != "project.setup" {
+			t.Fatalf("method: %s", method)
+		}
+		b, err := json.Marshal(params)
+		if err != nil {
+			return err
+		}
+		var p map[string]any
+		if err := json.Unmarshal(b, &p); err != nil {
+			return err
+		}
+		if p["project"] != "p" || p["step"] != "adj-init" || (p["preview"] == true) != preview {
+			t.Fatalf("params: %s", b)
+		}
+		return json.Unmarshal([]byte(response), result)
+	}}
+}
+
+func TestProjectsSetupDryRunPrintsTheCommand(t *testing.T) {
+	a := setupApp(t, true, `{"command":"adj init","done":false,"adj":false}`)
+	code, out, errs := run(t, a, "projects", "setup", "p", "adj-init", "--dry-run")
+	if code != 0 || out != "would run: adj init\n" || errs != "" {
+		t.Fatalf("dry run: %d %q %q", code, out, errs)
+	}
+}
+
+func TestProjectsSetupRunsAndReports(t *testing.T) {
+	const response = `{"command":"adj init","done":true,"adj":true}`
+	for _, asJSON := range []bool{false, true} {
+		t.Run(fmt.Sprint(asJSON), func(t *testing.T) {
+			a := setupApp(t, false, response)
+			args := []string{"projects", "setup", "p", "adj-init"}
+			if asJSON {
+				args = append(args, "--json")
+			}
+			code, out, errs := run(t, a, args...)
+			if code != 0 || errs != "" {
+				t.Fatalf("run: %d %q %q", code, out, errs)
+			}
+			if asJSON {
+				var got, want any
+				if err := json.Unmarshal([]byte(out), &got); err != nil {
+					t.Fatal(err)
+				}
+				_ = json.Unmarshal([]byte(response), &want)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("JSON: %s", out)
+				}
+			} else if out != "ran: adj init (adj on)\n" {
+				t.Fatalf("text: %q", out)
+			}
+		})
+	}
+}
+
+func TestRolesMatrixApplyJSONIsTheWireResult(t *testing.T) {
+	a := &App{Input: strings.NewReader(`{"ops":[]}`), Call: func(_ context.Context, _ string, _, result any) error {
+		return json.Unmarshal([]byte(matrixApplyReply), result)
+	}}
+	code, stdout, stderr := run(t, a, "roles", "matrix", "apply", "p", "--stdin", "--json")
+	if code != 0 {
+		t.Fatalf("exit %d: %s", code, stderr)
+	}
+	var got, want any
+	mustJSON(t, stdout, &got)
+	mustJSON(t, matrixApplyReply, &want)
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("wire JSON %s", stdout)
+	}
+}
+
+func TestRolesMatrixApplyUsage(t *testing.T) {
+	for _, args := range [][]string{
+		{"p"}, {"p", "--stdin", "--file", "set.json"}, {"--stdin"}, {"p", "q", "--stdin"},
+	} {
+		a := &App{Call: func(context.Context, string, any, any) error { t.Fatal("usage called daemon"); return nil }}
+		code, _, stderr := run(t, a, append([]string{"roles", "matrix", "apply"}, args...)...)
+		if code != ExitUsage || !strings.Contains(stderr, "roles matrix apply needs PROJECT and exactly one of --file PATH or --stdin") {
+			t.Fatalf("exit %d: %s", code, stderr)
+		}
+	}
+}
+
+func TestProjectsSetupUsage(t *testing.T) {
+	for _, args := range [][]string{{"projects", "setup"}, {"projects", "setup", "p"}, {"projects", "setup", "p", "bad"}, {"projects", "setup", "p", "adj-init", "extra"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			a := &App{Call: func(context.Context, string, any, any) error { t.Fatal("usage called daemon"); return nil }}
+			code, _, errs := run(t, a, args...)
+			if code != ExitUsage || !strings.Contains(errs, "STEP") {
+				t.Fatalf("usage: %d %q", code, errs)
+			}
+		})
+	}
+	if !strings.Contains(usageText, "ork projects setup NAME STEP [--dry-run]") {
+		t.Fatal("help lacks setup usage")
+	}
+}
+
 // fakeVendorScript is the one script every fakeVendor link points at. It logs
 // to $0.log and answers --version from $0.version, so each link keeps its own
 // log and version beside it.

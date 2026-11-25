@@ -6,6 +6,9 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
@@ -18,6 +21,176 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
+
+const applyOutput = `{"dry_run":true,"changed":true,"steps":[{"op":"add","id":"r25","changed":true}],"rows":[{"id":"r25","agent":"Acme"},{"id":"r21","agent":"Grok"}],"rules":[],"extra":"preserved"}`
+const applyWarning = `r25: agent "Acme" has no ork adapter: a plan skips this row`
+
+func applyRequest(t *testing.T, d *Daemon, set string, dry bool) (json.RawMessage, []string) {
+	t.Helper()
+	var got struct {
+		Slicer   json.RawMessage `json:"slicer"`
+		Warnings []string        `json:"warnings"`
+	}
+	raw := fmt.Sprintf(`{"project":"p","set":%s,"dry_run":%t}`, set, dry)
+	if err := json.Unmarshal(request(t, d, "matrix.apply", raw), &got); err != nil {
+		t.Fatal(err)
+	}
+	return got.Slicer, got.Warnings
+}
+
+func TestMatrixApplyPassesTheSetAndReturnsSlicersResult(t *testing.T) {
+	d, store, p := runDaemon(t, nil, editRoute(applyOutput))
+	bin := filepath.Join(t.TempDir(), "capture")
+	script := fmt.Sprintf("#!/bin/sh\ncat > \"$0.stdin\"\nexec %q \"$@\"\n", lastFake.Bin("slicer"))
+	if err := os.WriteFile(bin, []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.deps.Slicer.Bin = bin
+	set := `{ "expect": "abc", "ops": [] }`
+	got, _ := applyRequest(t, d, set, false)
+	if string(got) != applyOutput {
+		t.Fatalf("slicer %s; want %s", got, applyOutput)
+	}
+	input, err := os.ReadFile(bin + ".stdin")
+	if err != nil || string(input) != set {
+		t.Fatalf("stdin %q, %v", input, err)
+	}
+	calls := lastFake.CallsTo("slicer")
+	want := []string{"relay-roles", "apply", "--stdin", "--render", "--json", "--root", p.Path}
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+		t.Fatalf("calls %+v", calls)
+	}
+	if runs, err := store.List(); err != nil || len(runs) != 0 {
+		t.Fatalf("run records %v, %v", runs, err)
+	}
+}
+
+func TestMatrixApplyDryRunWritesNothingAndStillWarns(t *testing.T) {
+	d := readDaemon(t, editRoute(applyOutput))
+	_, warnings := applyRequest(t, d, `{"ops":[]}`, true)
+	if !reflect.DeepEqual(warnings, []string{applyWarning}) {
+		t.Fatalf("warnings %v", warnings)
+	}
+	calls := lastFake.CallsTo("slicer")
+	want := []string{"relay-roles", "apply", "--stdin", "--dry-run", "--json", "--root", waveRoot}
+	if len(calls) != 1 || !reflect.DeepEqual(calls[0].Args, want) {
+		t.Fatalf("dry-run calls %+v", calls)
+	}
+}
+
+func TestMatrixApplyWarnsOnlyForAddedOrChangedRows(t *testing.T) {
+	for _, tc := range []struct {
+		op      string
+		changed bool
+		agent   string
+		warn    bool
+	}{
+		{"add", true, "Acme", true}, {"set", true, "Acme", true},
+		{"set", false, "Acme", false}, {"move", true, "Acme", false},
+		{"remove", true, "Acme", false}, {"add", true, "CoDeX", false},
+	} {
+		t.Run(fmt.Sprintf("%s/%t/%s", tc.op, tc.changed, tc.agent), func(t *testing.T) {
+			output := fmt.Sprintf(`{"steps":[{"op":%q,"id":"r25","changed":%t}],"rows":[{"id":"r25","agent":%q},{"id":"r21","agent":"Other"}]}`, tc.op, tc.changed, tc.agent)
+			d := readDaemon(t, editRoute(output))
+			_, got := applyRequest(t, d, `{"ops":[]}`, false)
+			want := []string{}
+			if tc.warn {
+				want = append(want, applyWarning)
+			}
+			if !reflect.DeepEqual(got, want) {
+				t.Fatalf("warnings %v; want %v", got, want)
+			}
+		})
+	}
+}
+
+func TestMatrixApplyPassesSlicersRefusalThrough(t *testing.T) {
+	for _, code := range []string{"stale_revision", "unknown_role_row", "bad_role_field"} {
+		t.Run(code, func(t *testing.T) {
+			d, store, _ := runDaemon(t, nil, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "apply"}, Prefix: true, Exit: 2, Stdout: fmt.Sprintf(`{"error":{"code":%q,"message":"exact slicer refusal"}}`, code)})
+			_, err := d.handle(context.Background(), "matrix.apply", json.RawMessage(`{"project":"p","set":{"ops":[]}}`))
+			if e := ipc.ErrorOf(err); e == nil || e.Code != code || e.Message != "exact slicer refusal" {
+				t.Fatalf("error %+v", e)
+			}
+			if runs, err := store.List(); err != nil || len(runs) != 0 {
+				t.Fatalf("runs %v, %v", runs, err)
+			}
+		})
+	}
+}
+
+func TestMatrixApplyOnAnOldSlicer(t *testing.T) {
+	d := readDaemon(t, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "apply"}, Prefix: true, Exit: 2, Stderr: "argument command: invalid choice: 'apply' (choose from 'show', 'add')"})
+	_, err := d.handle(context.Background(), "matrix.apply", json.RawMessage(`{"project":"p","set":{"ops":[]}}`))
+	e := ipc.ErrorOf(err)
+	if e == nil || e.Code != "slicer_too_old" || e.Message != "slicer relay-roles apply is not available in this slicer; upgrade slicer (ork doctor --upgrade)" {
+		t.Fatalf("error %+v", e)
+	}
+}
+
+func TestMatrixApplyPassesAReplaceUnchanged(t *testing.T) {
+	d := readDaemon(t, editRoute(applyOutput))
+	bin := filepath.Join(t.TempDir(), "capture")
+	script := fmt.Sprintf("#!/bin/sh\ncat > \"$0.stdin\"\nexec %q \"$@\"\n", lastFake.Bin("slicer"))
+	if err := os.WriteFile(bin, []byte(script), 0700); err != nil {
+		t.Fatal(err)
+	}
+	d.runs.deps.Slicer.Bin = bin
+	set := `{ "expect":"abc", "replace": { "rows": [], "rules": [] } }`
+	_, warnings := applyRequest(t, d, set, false)
+	input, err := os.ReadFile(bin + ".stdin")
+	if err != nil || string(input) != set {
+		t.Fatalf("replace stdin %q, %v", input, err)
+	}
+	if !reflect.DeepEqual(warnings, []string{applyWarning}) {
+		t.Fatalf("warnings %v", warnings)
+	}
+}
+
+func TestMatrixApplyReplaceOnASlicerWithoutReplace(t *testing.T) {
+	d := readDaemon(t, clitest.Route{Tool: "slicer", Args: []string{"relay-roles", "apply"}, Prefix: true, Exit: 2, Stdout: `{"error":{"code":"usage","message":"unknown key: replace"}}`})
+	_, err := d.handle(context.Background(), "matrix.apply", json.RawMessage(`{"project":"p","set":{"replace":{"rows":[],"rules":[]}}}`))
+	if e := ipc.ErrorOf(err); e == nil || e.Code != "usage" || e.Message != "unknown key: replace" {
+		t.Fatalf("error %+v", e)
+	}
+}
+
+func TestMatrixApplyRefusesBadRequests(t *testing.T) {
+	for _, tc := range []struct{ raw, code string }{
+		{`{"set":{"ops":[]}}`, CodeBadParams},
+		{`{"project":"missing","set":{"ops":[]}}`, CodeNotFound},
+		{`{"project":"p"}`, CodeBadParams},
+		{`{"project":"p","set":null}`, CodeBadParams},
+		{`{"project":"p","set":[]}`, CodeBadParams},
+		{`{"project":"p","set":"x"}`, CodeBadParams},
+		{`{"project":"p","set":{}}`, CodeBadParams},
+		{`{"project":"p","set":{"ops":[],"replace":{}}}`, CodeBadParams},
+	} {
+		t.Run(tc.raw, func(t *testing.T) {
+			d := readDaemon(t, editRoute(applyOutput))
+			_, err := d.handle(context.Background(), "matrix.apply", json.RawMessage(tc.raw))
+			if e := ipc.ErrorOf(err); e == nil || e.Code != tc.code {
+				t.Fatalf("error %+v; want %s", e, tc.code)
+			}
+			if calls := lastFake.CallsTo("slicer"); len(calls) != 0 {
+				t.Fatalf("bad request called slicer: %+v", calls)
+			}
+		})
+	}
+}
+
+func TestMatrixApplyOverTheSocket(t *testing.T) {
+	e := newEnv(t)
+	e.writeRegistry(t, 0, registry.Project{Name: "p", Path: waveRoot})
+	fake := clitest.Install(t, editRoute(applyOutput))
+	e.deps = &engine.Deps{Slicer: slicercli.Client{Bin: fake.Bin("slicer")}}
+	e.start(t)
+	c := e.dial(t)
+	got, err := c.MatrixApply(context.Background(), MatrixApplyParams{Project: "p", Set: json.RawMessage(`{"ops":[]}`)})
+	if err != nil || string(got.Slicer) != applyOutput || !reflect.DeepEqual(got.Warnings, []string{applyWarning}) {
+		t.Fatalf("socket result %+v, %v", got, err)
+	}
+}
 
 func TestLocalMatrixRowsKeepTheirVendorIdentity(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "codex-local", "grok-local"} {

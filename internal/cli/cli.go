@@ -207,6 +207,9 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
                               list the projects below DIR; add the tracked
                               ones after a yes, or at once with --yes
   ork projects rm NAME        unregister a project
+  ork projects setup NAME STEP [--dry-run] [--json]
+                              run slicer-init, relay-roles-init, adj-init or
+                              adj-off; --dry-run prints the command only
   ork projects pin NAME [--relay N] [--adj M]
                               pin slicer at N ({CONTRACTS}) through slicer.
                               Or adj at M ({ADJ}); at least one flag.
@@ -286,6 +289,8 @@ const usageTemplate = `usage: ork COMMAND [ARGS] [--json]
   ork roles print [ROLE]      print the embedded role prompts
   ork roles matrix P          show the role matrix as slicer prints it, then
                               which rows ork uses, skips or does not run
+  ork roles matrix apply P (--file PATH | --stdin) [--dry-run] [--json]
+                              apply a slicer matrix change set
   ork daemon run              serve the daemon in the foreground
   ork daemon status           show daemon build, state and running roles
   ork daemon stop [--force]   stop the daemon

@@ -281,7 +281,11 @@ Notes on the fields:
   `cap`, `budgets.minutes`, `budgets.tokens` and, since S174 (*proposed*,
   owner decision 2026-10-29), `environment_lines`, `permissions` and
   `vendor_env`, and leaves every other key as it was (`name`, `path` and
-  `adj` are set by `projects add`; `global_cap`, `daemon_idle_minutes`,
+  `adj` are set by `projects add`; *proposed (S249)*, `projects setup`
+  also sets `adj`: `adj-init` enables it only after `adj init` succeeds,
+  and `adj-off` disables it without changing adj's files. Both save under
+  the registry and runs locks and refuse unfinished runs.
+  `global_cap`, `daemon_idle_minutes`,
   `owner` and `file_answers` are file-level and belong to `ork settings set`,
   below). The daemon validates
   each value, refuses while the project has unfinished runs, and saves under

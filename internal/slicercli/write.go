@@ -128,6 +128,18 @@ func yesNo(b bool) string {
 	return "no"
 }
 
+// Init runs slicer init without overwriting existing project state.
+func (c Client) Init(ctx context.Context, w runrec.Writer, root string) error {
+	_, err := c.write(ctx, w, root, "init", "--json")
+	return err
+}
+
+// RelayRolesInit asks slicer to create and render its example role matrix.
+func (c Client) RelayRolesInit(ctx context.Context, w runrec.Writer, root string) error {
+	_, err := c.write(ctx, w, root, "relay-roles", "init", "--render", "--json")
+	return err
+}
+
 // RecommendRoles runs `slicer relay-roles recommend ID --well-specified yes|no
 // --split yes|no --json --root ROOT`.
 func (c Client) RecommendRoles(ctx context.Context, root, id string, wellSpecified, split bool) (*Recommendation, error) {
@@ -289,6 +301,31 @@ type Matrix struct {
 	// Revision is the matrix's revision when slicer prints one (S247,
 	// *proposed*; the slicer slice relay-roles-apply); empty otherwise.
 	Revision string `json:"revision,omitempty"`
+}
+
+// RelayRolesApply passes a change set unchanged to slicer. A dry run validates
+// without rendering or saving; the result is slicer's stdout as printed.
+func (c Client) RelayRolesApply(ctx context.Context, w runrec.Writer, root string, set json.RawMessage, dryRun bool) (json.RawMessage, error) {
+	argv := []string{"relay-roles", "apply", "--stdin"}
+	if dryRun {
+		argv = append(argv, "--dry-run")
+	} else {
+		argv = append(argv, "--render")
+	}
+	argv = append(argv, "--json")
+	call := c.longCall()
+	res, err := w.Run(ctx, runrec.Cmd{
+		Tool: "slicer", Bin: call.Bin, Root: root, Argv: argv,
+		Args:  append(append([]string{}, argv...), "--root", root),
+		Stdin: set, Timeout: call.Timeout,
+	})
+	if err != nil {
+		return nil, err
+	}
+	if !json.Valid(res.Stdout) {
+		return nil, errors.New("slicer relay-roles apply: invalid JSON output")
+	}
+	return json.RawMessage(res.Stdout), nil
 }
 
 // RelayMatrix runs `slicer relay-roles show --json --root ROOT`.

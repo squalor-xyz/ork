@@ -158,6 +158,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return d.matrixEdit(ctx, p)
+	case MethodMatrixApply:
+		var p MatrixApplyParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.matrixApply(ctx, p)
 	case MethodSpecCheck:
 		var p SpecCheckParams
 		if err := decode(params, &p); err != nil {
@@ -273,6 +279,12 @@ func (d *Daemon) handle(ctx context.Context, method string, params json.RawMessa
 			return nil, err
 		}
 		return nil, d.removeProject(p.Name)
+	case MethodProjectSetup:
+		var p ProjectSetupParams
+		if err := decode(params, &p); err != nil {
+			return nil, err
+		}
+		return d.projectSetup(ctx, p)
 	case MethodProjectsSet:
 		var p SetProjectParams
 		if err := decode(params, &p); err != nil {

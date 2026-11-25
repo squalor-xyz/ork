@@ -13,7 +13,7 @@ Relay-run statistics belong to slicer; ork only displays them through `slicer re
 | Queue, items, slice specs, readiness, claims | slicer | `slicer/docs/how-it-works.md` |
 | Relay contract rules: roles, gate, briefs, stop, report shape | slicer | `slicer ai relay`, `slicer ai relay-orchestrator` (`slicer/src/slicer/ai.py`) |
 | Contract version | slicer | `RELAY_CONTRACT` in `ai.py` |
-| Role matrix and lineup recommendation | slicer | `slicer relay-roles` (`lineup.source`). *Proposed* (S173): ork runs the edit verbs `add`, `set`, `remove`, `move` and `rule-edit` on the owner's confirmation; slicer still owns the file and the edit is left uncommitted |
+| Role matrix and lineup recommendation | slicer | `slicer relay-roles` (`lineup.source`). *Proposed* (S173): ork runs the edit verbs `add`, `set`, `remove`, `move` and `rule-edit` on the owner's confirmation. *Proposed* (S250): ork passes JSON change sets to `slicer relay-roles apply`; slicer validates and saves them, and dry runs write nothing. Slicer still owns the file and the edit is left uncommitted |
 | Relay-run ledger | slicer (ork writes it through the CLI) | `slicer relay-run` (`ledger.write`) |
 | Wave suggestion | slicer. *Proposed* exception (S218, owner decision 2026-11-07): ork defers a second engine, daemon or cmd slice of a suggested wave into a wave of its own after it, by its self-hosting rule (`engine.self-host`); it changes nothing else in slicer's plan | `slicer plan-parallel`, `next --batch` (`wave.selection`) |
 | Landing | after the owner approves, ork sequences the landing: merge the base branch in, re-check, ff-merge, `slicer land`, optional push, confirmed cleanup (S119); until then it lists ready runs and detects merged branches | `slicer land` stays the tracking step, run by ork through the CLI (`landing.in-ork` #162, which supersedes `landing.v1`; `landing.merge-detect`, `git.cleanup-key`) |
@@ -82,6 +82,9 @@ orchestrator, ork documents the difference in design.md. ork does not
 change the contract by itself.
 
 ## Interfaces ork uses
+
+*Proposed (S249):* on the owner's request ork runs `slicer init`,
+`slicer relay-roles init --render` or `adj init`; it never passes `--force`.
 
 - **slicer CLI**, with `--json` (and `--lean`). Branch on the exit code (0
   ok, 1 failed check, 2 usage or empty queue, 3 internal or state error,

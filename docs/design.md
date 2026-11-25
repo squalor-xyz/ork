@@ -136,6 +136,7 @@ ork (TUI)  ork status --json (CLI)
   | `wave.approve` (*proposed* wire, S222) | `{"wave"}` (a `wave-` id: anything else is `bad_params`; an unknown wave is `not_found`) | `{"wave","items":[{"item","run","outcome","error"?,"state"}]}`, every run of the wave in start order; approves each run that awaits approval one after the other through the path of `run.approve`, which returns once the run rests again, and stops at the first run that does not end `committed`; `outcome` is `landed` (committed with `landed_at`), `committed` (committed without a landing, `stop_after` `commit`), `failed` (an error, or the run rests in another state: a landing that went to its fix round is `awaiting-approval` with `land_fixes` above 0, and `state` says which; the loop stops here), `not-attempted` (waits for approval, after the stop), `not-waiting` (in another state, left alone) or `done` (already committed). A wave with no run awaiting approval, or with a human check open on any waiting run, is `refused` before anything is approved; the refusal names each run and its open checks. It never ticks or marks a check. The call checks its context between runs: when it is cancelled the runs not yet approved are `not-attempted` and the one in flight finishes |
   | `wave.suggest` (proposed wire) | `{"project"}` | slicer's `plan-parallel` result for the registered project, limited to the fields `ParallelPlan` reads, with a second engine, daemon or cmd slice of a wave moved into a wave of its own after it (S218, *proposed*; see Self-hosting); slicer runs on each call, not from the cache |
   | `roles.matrix` (proposed wire, S168) | `{"project"}` | `{"markdown","rows":[{"id","role","agent","vendor","model","reasoning","note","use"}],"rules":[{"id","text"}]}` from `slicer relay-roles show --json`: slicer's own text (*proposed*, S173: `vendor`, `model`, `reasoning` and `note` are omitted when empty), and for each row what ork does with it (`use`: `used as claude\|codex\|grok`, `UI pass row, ...`, `Spec check row, ...` (every row that the project's role row setting or a rule classifies), `skipped: no adapter for AGENT`, `not used: the gate runs the reviewer's lineup`, `not run by ork`, `not used: ork has no role ROLE`); read-only, no slicer write; slicer's error keeps its code and message; slicer runs on each call |
+  | `matrix.apply` (*proposed*, S250) | `{"project","set","dry_run"?}`; `set` is a JSON object with exactly one of `ops` and `replace` | `{"slicer": RESULT,"warnings": [...]}`; passes the set unchanged on stdin to `slicer relay-roles apply --stdin --render --json --root ROOT` in the registered project's main checkout, with no run record and the write left uncommitted. A dry run replaces `--render` with `--dry-run`. Slicer validates all other set contents and owns the atomic save and revision guard. Its result is preserved under `slicer`. Each resulting row with no ork adapter whose `add` or `set` step has `changed: true` gets `ID: agent "AGENT" has no ork adapter: a plan skips this row`. Untouched rows get no warning. Slicer's refusals keep their code and message, including `stale_revision` and `usage` for an unsupported `replace`. An argparse `invalid choice: 'apply'` refusal (exit 2) becomes `slicer_too_old: slicer relay-roles apply is not available in this slicer; upgrade slicer (ork doctor --upgrade)`. Missing project or invalid set shape is `bad_params`, an unknown project is `not_found`, and neither calls slicer. Doctor's minimum version stays unchanged. |
   | `matrix.edit` (*proposed* wire, S173) | `{"project","op","id"?,"fields"?,"before"?,"last"?,"text"?,"preview"?}`; `op` is `add`, `set`, `remove`, `move` or `rule-edit`; `fields` maps a flag name (`role size effort importance urgency well-specified split sliver agent vendor model reasoning note`) to a text value for `add` and `set`: an absent name is not passed, an empty value clears the field; `move` takes exactly one of `before` and `last`; `rule-edit` takes `id` and `text` | `{"command","warning"?,"id"?,"done"}`; previews (`preview`, `done` false) or runs one `slicer relay-roles` write in the registered project's main checkout with `--render`, with no run record; the change is left uncommitted for the owner, and slicer owns the file; `command` is the line the owner confirms, quoted for a shell; slicer's refusal comes back with its code and message; `warning` when `fields.agent` matches no adapter (`agent "X" has no ork adapter: a plan skips this row`), and the edit still runs; `id` is the new row after `add`; a missing project, an unknown op, a missing id, a field name outside the list, `fields` on `remove`, `move` or `rule-edit`, a blank text or a text that starts with `-` and has no space (slicer's parser would read it as a flag) is `bad_params`, with no slicer call; no cache refresh, because `roles.matrix` reads slicer on each call |
   | `wave.overlap` (proposed wire) | `{"project","items":[ID...]}` | `{"overlap":[{"a","b","shared"?}]}` from `slicer deps --overlap`; `shared` is absent when a pair shares no path; fewer than two items is `bad_params`; slicer runs on each call |
   | `subscribe` | `{"focus":[names]}` | none; the connection gets notices (below) and the named projects become visible |
@@ -146,6 +147,7 @@ ork (TUI)  ork status --json (CLI)
   | `projects.add` | `{"path","name"?}` | the added project; the first add creates the registry |
   | `projects.rm` | `{"name"}` | none; *proposed* `project_busy` refuses unfinished runs |
   | `projects.set` (*proposed*, S161) | `{"name", ...}` plus at least one of `push`, `bell` (a boolean, S224, *proposed*), `ui_doc`, `ui_pass_skills` (a list, S209), `spec_check_rows` (a list, S258), `ui_pass_rows` (a list, S344), `worktree_pattern`, `branch_pattern`, `check_command`, `check_minutes`, `cap`, `budget_minutes`, `budget_tokens` and, from S174, `environment_lines` (a list), `permissions` (`{ROLE: "read-only" or [patterns] or null}`) and `vendor_env` (`{VENDOR: {KEY: "value" or null}}`), and, from S265 (*proposed*), `implementer_preset` (`go` or `python`) and `allow_add` (`{ROLE: [patterns]}`), and `dry_run` (a boolean, S248, *proposed*), which the field check ignores | `SetProjectResult` (`{project,added?,already_listed?}`, S307, adj 512), with pattern lists grouped by role; with `dry_run` the project as it would be saved, without saving it, every check of a real call running; otherwise the project as saved; an omitted field keeps its value, `""` or 0 clears one, `[]` clears `ui_pass_skills`, `spec_check_rows` or `ui_pass_rows`; `null` removes one role or one vendor key, and the other roles and keys stay; `allow_add` appends the patterns not yet in the role's list (from the built-in default when the role has no entry) and `implementer_preset` sets the implementer's list first, so `allow_add` in the same call follows it; `bad_params` for an unknown field, no field, an invalid value, an unknown preset, or `permissions` naming a role that `allow_add` or `implementer_preset` names; `not_found`; `project_busy` while a run is unfinished and the call sets a field other than `cap`, `bell`, `budget_minutes`, `budget_tokens`, `worktree_pattern` or `branch_pattern` (S265, S224, *proposed*; the message names the refused fields as command line flags, for example `--push`); a call that sets `cap` also starts the queued runs that now fit, as `settings.set` does |
+  | `project.setup` (*proposed*, S249) | `{"project","step","preview"?}` | `{"command","done","adj"?}`; steps `slicer-init`, `relay-roles-init`, `adj-init`, `adj-off`; previews run nothing; adj steps return the current registry flag and refuse writes while runs are unfinished (`project_busy`); tool errors retain their code and message |
   | `settings.get` (*proposed*, S174) | none | `{"global_cap","daemon_idle_minutes","effective_global_cap","effective_daemon_idle_minutes","owner"?,"file_answers"}`; the first two are the stored values (0 is unset); from S314 (*proposed*) `owner` is the stored name (absent when unset) and `file_answers` is true unless the registry turns it off |
   | `settings.set` (*proposed*, S174) | `{"global_cap"?,"daemon_idle_minutes"?,"owner"?,"file_answers"?}`, at least one | the same shape as `settings.get`; 0 clears one, `""` clears `owner` and `true` clears `file_answers` (on is the default and is not written); `bad_params` for no field, a negative number or an owner that is not one line; not refused while runs are unfinished; a raised `global_cap` starts the queued runs that now fit |
 
@@ -2945,7 +2947,9 @@ ork daemon restart [--force] [--rebuild]
 ork roles print [ROLE]      print the embedded role prompts
 ork roles matrix P          show the role matrix as slicer prints it, then
                             which rows ork uses, skips or does not run (S168)
-ork projects add|list|rm|set|pin|unpin
+ork roles matrix apply P (--file PATH | --stdin) [--dry-run] [--json]
+                            apply a slicer matrix change set (S250, proposed)
+ork projects add|list|rm|set|setup|pin|unpin
                             manage the registry
 ork doctor [--upgrade]      check versions, CLIs, logins, contract, ork path,
                             projects; print upgrade commands (S178)
@@ -3905,6 +3909,19 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   stopped. This includes queued, paused, awaiting-approval and running states.
   The message names the run ids. The project stays registered.
   A planned start that loses the race to removal is refused with `not_found`.
+- *Proposed (S249):* `projects setup NAME STEP [--dry-run] [--json]` runs
+  one owning-tool command in the registered main checkout, leaving changes
+  uncommitted. Steps are `slicer-init` (`slicer init`), `relay-roles-init`
+  (`slicer relay-roles init --render`), `adj-init` (`adj init`, then enable
+  the registry's adj flag), and `adj-off` (disable the flag, no tool call).
+  No step passes `--force`. Dry runs print `would run: COMMAND`, run no
+  tools and leave the registry unchanged. Successful writes print
+  `ran: COMMAND`, with `(adj on)` or `(adj off)` for the adj steps.
+  JSON prints `{command, done, adj?}`; `adj` is the current registry flag
+  for adj steps, including previews. Adj writes lock the registry then
+  runs through the tool call and registry save, refusing unfinished runs
+  with `project_busy`. Slicer steps defer refusals to slicer. Successful
+  tool writes refresh the cache; a refresh failure does not undo the write.
 - `projects set NAME [--push on|off] [--bell on|off] [--auto-land on|off] [--ui-doc PATH]
   [--ui-pass-skills A,B] [--spec-check-rows rNN,rNN] [--ui-pass-rows rNN,rNN]
   [--worktree-pattern P]
@@ -4131,6 +4148,14 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   The Gate rows are marked unused because the gate follows the reviewer's
   lineup (S83). The TUI pane shows the same lines with the `## ork` section
   first, then slicer's text (owner, 2026-10-29).
+- `roles matrix apply PROJECT (--file PATH | --stdin) [--dry-run] [--json]`
+  (*proposed*, S250): reads a JSON change set and calls `matrix.apply`.
+  Exactly one input source is required. Text prints `dry run: nothing
+  written` first when `--dry-run` is set, then one line per slicer step,
+  `OP ID: changed` or `OP ID: unchanged`, then each adapter warning. A result
+  with no steps prints `no steps: matrix unchanged` in place of the step lines.
+  JSON prints the entire wire result, including slicer's extra fields.
+  A dry run asks slicer to validate without writing or rendering.
 - `doctor`: `{"ok","tools":[{"name","required","present","path","version",
   "ok","error"}],"contract":{"accepted":[10,11],"found","ok","error",
   "projects":[{"project","pinned","found","ok","error","adj_pinned","adj_found","adj_error"}]},"binary",

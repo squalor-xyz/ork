@@ -6180,6 +6180,23 @@
 {"when": "2026-11-22T04:16:03Z", "item": "S525", "action": "status", "from": "started", "to": "done", "note": "finds nothing, matches nothing and returns nothing now mark Check lines as empty-output checks, including passing an empty rg exit 1.", "by": "Jon Robbins"}
 {"when": "2026-11-22T03:42:57Z", "item": "S526", "action": "add", "from": "", "to": "open", "note": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written"}
 {"when": "2026-11-22T03:42:57Z", "item": "S526", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T04:33:50Z", "item": "S250", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-22T04:34:59Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T04:34:59Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T04:45:00Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-22T04:46:28Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T08:18:56Z", "item": "S250", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-22T08:26:56Z", "item": "S250", "action": "note", "from": "", "to": "", "note": "Implemented matrix.apply and roles matrix apply with stdin f", "by": "Jon Robbins"}
+{"when": "2026-11-22T08:26:56Z", "item": "S250", "action": "status", "from": "started", "to": "done", "note": "Implemented matrix.apply and roles matrix apply with stdin forwarding, slicer dry-run validation, preserved results and adapter warnings. Text output now marks dry runs and empty results.", "by": "Jon Robbins"}
+{"when": "2026-11-22T04:13:30Z", "item": "S249", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-22T04:14:23Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T04:14:23Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T04:19:35Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-22T04:23:05Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T04:27:23Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-22T08:18:55Z", "item": "S249", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-22T08:26:50Z", "item": "S249", "action": "note", "from": "", "to": "", "note": "Fixed the adjcli doc-comment placement so `Init` and `write`", "by": "Jon Robbins"}
+{"when": "2026-11-22T08:26:50Z", "item": "S249", "action": "status", "from": "started", "to": "done", "note": "Fixed the adjcli doc-comment placement so `Init` and `write` each carry their own comment; the setup steps, locked adj flag update, cache refresh and CLI text/JSON from the earlier round are unchanged.", "by": "Jon Robbins"}
 {"when": "2026-11-22T04:51:43Z", "item": "S399", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-22T04:51:43Z", "item": "S399", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-22T04:51:43Z", "item": "S399", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
@@ -6209,3 +6226,17 @@
 {"when": "2026-11-25T02:09:19Z", "item": "S401", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S401):", "by": "Jon Robbins"}
 {"when": "2026-11-25T02:09:19Z", "item": "S401", "action": "note", "from": "", "to": "", "note": "Welcome help scrolls and resets correctly, wrapping keeps fi", "by": "Jon Robbins"}
 {"when": "2026-11-25T02:09:20Z", "item": "S401", "action": "status", "from": "started", "to": "done", "note": "Welcome help scrolls and resets correctly, wrapping keeps fitting hints intact, page-up reaches every help line, Overview help fits at 100x30, and all focused help checks pass.", "by": "Jon Robbins"}
+{"when": "2026-11-22T08:42:13Z", "item": "S531", "action": "add", "from": "", "to": "open", "note": "give the UI pass a scroll-sweep check that pages to the end and back at several heights and asserts every line appears"}
+{"when": "2026-11-22T08:42:14Z", "item": "S531", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T08:43:22Z", "item": "S532", "action": "add", "from": "", "to": "open", "note": "let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run"}
+{"when": "2026-11-22T08:43:22Z", "item": "S532", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-22T08:43:22Z", "item": "S532", "action": "note", "from": "", "to": "", "note": "possible duplicate of S510", "by": "Jon Robbins"}
+{"when": "2026-11-25T01:44:01Z", "item": "S395", "action": "set", "from": "", "to": "", "note": "pass_key v1.2→v1.3"}
+{"when": "2026-11-25T01:44:06Z", "item": "S533", "action": "add", "from": "", "to": "open", "note": "add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test"}
+{"when": "2026-11-25T01:44:06Z", "item": "S533", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T01:44:06Z", "item": "S534", "action": "add", "from": "", "to": "open", "note": "let the CLI render flag take extra views such as a fake-reply command, so a new subcommand's text can be rendered without an overlay test"}
+{"when": "2026-11-25T01:44:07Z", "item": "S534", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T01:44:23Z", "item": "S533", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S534 (adj 531, owner 2026-11-25)"}
+{"when": "2026-11-25T01:44:23Z", "item": "S534", "action": "note", "from": "", "to": "", "note": "Covers adj 531 too: include a projects-setup view (from S249", "by": "Jon Robbins"}
+{"when": "2026-11-25T01:52:06Z", "item": "S251", "action": "note", "from": "", "to": "", "note": "Owner decision (adj ui.settings-pane-key, 2026-11-25): capit", "by": "Jon Robbins"}
+{"when": "2026-11-25T01:53:55Z", "item": "S251", "action": "edit", "from": "", "to": "", "note": "Implement"}

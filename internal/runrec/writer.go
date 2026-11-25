@@ -27,6 +27,7 @@ type Cmd struct {
 	Argv    []string
 	Args    []string
 	Dir     string
+	Stdin   []byte
 	Timeout time.Duration
 }
 
@@ -70,7 +71,7 @@ func (w Writer) Run(ctx context.Context, c Cmd) (clirun.Result, error) {
 	}
 	for retry := 0; ; retry++ {
 		start := w.now()
-		res, err := clirun.Run(ctx, clirun.Call{Bin: c.Bin, Args: c.Args, Dir: c.Dir, Timeout: c.Timeout})
+		res, err := clirun.Run(ctx, clirun.Call{Bin: c.Bin, Args: c.Args, Dir: c.Dir, Stdin: c.Stdin, Timeout: c.Timeout})
 		entry := Write{At: start.UTC(), Tool: c.Tool, Root: c.Root, Argv: append([]string(nil), c.Argv...), Exit: res.ExitCode, Retry: retry, MS: w.now().Sub(start).Milliseconds()}
 		var exitErr *clirun.ExitError
 		locked := false

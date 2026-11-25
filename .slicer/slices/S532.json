@@ -1,0 +1,39 @@
+{
+  "id": "S532",
+  "title": "let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261122-081958-ba4a, project ork, item S401:\n\nlet the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run\n\nEvidence: Write to /home/jon/.local/state/ork/t/ef118a306b68c6d2/3b735833065ebf2c/probe_test.go denied: \"Path is outside allowed working directories\" (same as S510)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

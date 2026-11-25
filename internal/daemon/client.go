@@ -74,6 +74,15 @@ func (c *Client) SetProject(ctx context.Context, p SetProjectParams) (SetProject
 	return out, err
 }
 
+// ProjectSetup previews or runs one setup step through the owning tool.
+func (c *Client) ProjectSetup(ctx context.Context, p ProjectSetupParams) (*ProjectSetupResult, error) {
+	var out ProjectSetupResult
+	if err := c.Call(ctx, MethodProjectSetup, p, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 // SetSettings changes the file-level registry settings p sets and returns
 // them as saved (S174, *proposed*).
 func (c *Client) SetSettings(ctx context.Context, p SetSettingsParams) (SettingsResult, error) {
@@ -285,6 +294,15 @@ func (c *Client) WaveSuggest(ctx context.Context, project string) (*slicercli.Pa
 func (c *Client) WaveOverlap(ctx context.Context, project string, items []string) (*slicercli.Overlap, error) {
 	var out slicercli.Overlap
 	if err := c.Call(ctx, MethodWaveOverlap, WaveOverlapParams{Project: project, Items: items}, &out); err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+// MatrixApply validates or applies a slicer matrix change set.
+func (c *Client) MatrixApply(ctx context.Context, p MatrixApplyParams) (*MatrixApplyResult, error) {
+	var out MatrixApplyResult
+	if err := c.Call(ctx, MethodMatrixApply, p, &out); err != nil {
 		return nil, err
 	}
 	return &out, nil
