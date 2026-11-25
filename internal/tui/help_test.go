@@ -289,6 +289,51 @@ func TestHelpNarrowHintNeverQuitWithoutScroll(t *testing.T) {
 	}
 }
 
+// Wherever the help overflows, the hint keeps pgup/pgdown when the keys-only form
+// fits beside the close hint, and below that width it is the close hint alone,
+// never q quit (S556; adj 571, 572; S535). The sweep covers widths 30 to 130 at
+// heights 16, 24 and 40. The expectation comes from the layout, not the hint code.
+func TestHelpHintKeepsScrollKeyWhereHelpOverflows(t *testing.T) {
+	const closeOnly = "? or esc close help"
+	keysOnly := lipgloss.Width("pgup/pgdown; " + closeOnly)
+	for _, ht := range []int{16, 24, 40} {
+		t.Run(fmt.Sprintf("h%d", ht), func(t *testing.T) {
+			h := helpHarness(t)
+			overflowing := 0
+			for w := 30; w <= 130; w++ {
+				h.send(tea.WindowSizeMsg{Width: w, Height: ht})
+				view := plainView(h.m)
+				if !strings.Contains(view, "more lines") {
+					continue
+				}
+				overflowing++
+				_, _, sideW := h.m.layoutSize()
+				mainW := max(w-sideW, 1)
+				room := w - sideW - 1
+				hint := hintLine(view)
+				if keysOnly <= room {
+					for _, want := range []string{"pgup/pgdown", "close help"} {
+						if !strings.Contains(hint, want) {
+							t.Errorf("%dx%d help hint lacks %q: %q", w, ht, want, hint)
+						}
+					}
+				} else if hint != closeOnly {
+					t.Errorf("%dx%d help hint: %q, want %q", w, ht, hint, closeOnly)
+				}
+				if strings.Contains(hint, "q quit") && !strings.Contains(hint, "pgup/pgdown") {
+					t.Errorf("%dx%d help hint shows q quit without the scroll keys: %q", w, ht, hint)
+				}
+				if got := lipgloss.Width(hint); got > mainW {
+					t.Errorf("%dx%d help hint is %d cells, wider than the main column %d: %q", w, ht, got, mainW, hint)
+				}
+			}
+			if overflowing == 0 {
+				t.Fatalf("help never overflows at height %d across widths 30 to 130", ht)
+			}
+		})
+	}
+}
+
 // One wheel notch moves the help one line, like up and down, and only with mouse
 // mode on (S535; owner 2026-11-25, ui.help-wheel-step; adj 129).
 func TestHelpMouseWheelScrollsOneLine(t *testing.T) {

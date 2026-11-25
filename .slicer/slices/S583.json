@@ -1,0 +1,39 @@
+{
+  "id": "S583",
+  "title": "give the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261125-185405-f675, project ork, item S531:\n\ngive the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation\n\nEvidence: go test -run 'TestSweepMissing|TestScrollSweep' was denied as \"multiple operations\"; ran two separate commands instead (same as S523/S571)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

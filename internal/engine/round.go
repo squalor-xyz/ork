@@ -607,6 +607,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if section := e.baseOverlaySection(ctx, rec, tmpDir); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
+		if section := e.untestedCallSitesSection(ctx, rec); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
 	}
 	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
 		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
