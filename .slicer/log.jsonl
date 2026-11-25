@@ -6694,6 +6694,18 @@
 {"when": "2026-11-25T19:50:35Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Owner direction: add negative cases (git -C /w commit -m sho", "by": "Jon Robbins"}
 {"when": "2026-11-25T19:50:35Z", "item": "S587", "action": "note", "from": "", "to": "", "note": "Also covers: run branchChange once per reviewer round and sh", "by": "Jon Robbins"}
 {"when": "2026-11-25T19:50:35Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Covers S531 run findings 1 and 2: extend TestScrollSweep to ", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:33:06Z", "item": "S571", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:55:58Z", "item": "S571", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S571):", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:55:58Z", "item": "S571", "action": "note", "from": "", "to": "", "note": "The UI brief, the Base overlays section, the gate prompt and", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:55:59Z", "item": "S571", "action": "status", "from": "started", "to": "done", "note": "The UI brief, the Base overlays section, the gate prompt and the spec-draft prompt now each say one `go -C DIR test -run NAME PKG` command per test and never a `-run` pattern that joins names; four tests assert it (including no pipe on any -run line), and go test ./..., go vet, gofmt and slicer check are clean.", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:33:05Z", "item": "S586", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:47:49Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S586):", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:47:50Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "S586 pins every read-only and implementer `git -C` allowlist", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:47:51Z", "item": "S586", "action": "status", "from": "started", "to": "done", "note": "S586 pins every read-only and implementer `git -C` allowlist entry to the role's worktree (`Bash(git -C PATH SUBCMD*)`) at launch, so no git write ending in a subcommand name matches; full suite, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:33:07Z", "item": "S579", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:47:43Z", "item": "S579", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S579):", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:47:43Z", "item": "S579", "action": "note", "from": "", "to": "", "note": "The Roadmap item, role matrix and spec-draft panes now page ", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:47:43Z", "item": "S579", "action": "status", "from": "started", "to": "done", "note": "The Roadmap item, role matrix and spec-draft panes now page by their lines minus the \"+N more lines\" marker line (new itemPane.page), so no line is skipped; the roadmap-item case joins TestScrollSweep and passes at heights 10, 16, 24 and 40.", "by": "Jon Robbins"}
 {"when": "2026-11-25T19:53:25Z", "item": "S581", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-25T20:00:54Z", "item": "S581", "action": "note", "from": "", "to": "", "note": "ork now makes the UI pass's empty `tmp/ui-N/renders/` direct", "by": "Jon Robbins"}
 {"when": "2026-11-25T20:00:54Z", "item": "S581", "action": "status", "from": "started", "to": "done", "note": "ork now makes the UI pass's empty `tmp/ui-N/renders/` directory before each UI pass starts (including reruns), so the pass no longer needs `os.MkdirAll`; full suite and `slicer check` pass.", "by": "Jon Robbins"}
@@ -6751,3 +6763,46 @@
 {"when": "2026-11-25T21:39:10Z", "item": "S580", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S580):", "by": "Jon Robbins"}
 {"when": "2026-11-25T21:39:11Z", "item": "S580", "action": "note", "from": "", "to": "", "note": "Roadmap first-row pgup, up and home reveal hidden Goals at 8", "by": "Jon Robbins"}
 {"when": "2026-11-25T21:39:11Z", "item": "S580", "action": "status", "from": "started", "to": "done", "note": "Roadmap first-row pgup, up and home reveal hidden Goals at 80x10; the lift clears on cursor movement and view/project switches, and the docs include the key aliases.", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:46:40Z", "item": "S580", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "add", "from": "", "to": "open", "note": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds"}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:47:42Z", "item": "S594", "action": "note", "from": "", "to": "", "note": "possible duplicate of S591", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:55:42Z", "item": "S577", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T20:55:42Z", "item": "S591", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T20:55:42Z", "item": "S593", "action": "note", "from": "", "to": "", "note": "Owner decision: merged S577 and S591 here. ork runs go vet w", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:55:42Z", "item": "S595", "action": "add", "from": "", "to": "open", "note": "`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem"}
+{"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
+{"when": "2026-11-25T20:55:43Z", "item": "S595", "action": "note", "from": "", "to": "", "note": "Owner decision: pin go -C read-only entries at launch the sa", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:05:01Z", "item": "S596", "action": "add", "from": "", "to": "open", "note": "when two changed files depend on each other's new fields, write a base overlay that reverts both together"}
+{"when": "2026-11-25T21:05:01Z", "item": "S596", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T21:05:40Z", "item": "S597", "action": "add", "from": "", "to": "open", "note": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24"}
+{"when": "2026-11-25T21:05:41Z", "item": "S597", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T21:05:49Z", "item": "S587", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 583): both. Skip selector calls on a *te", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:05:49Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 584): add test-only fixtures so each pan", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:14:48Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T21:14:48Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T21:14:48Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T21:14:49Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T21:14:49Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T21:14:49Z", "item": "S595", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T21:14:49Z", "item": "S595", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T21:14:49Z", "item": "S595", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T21:14:49Z", "item": "S595", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T21:14:49Z", "item": "S595", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T21:14:50Z", "item": "S587", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T21:17:28Z", "item": "S593", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:17:42Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T21:19:29Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T21:22:43Z", "item": "S593", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T21:36:37Z", "item": "S593", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S593):", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:36:37Z", "item": "S593", "action": "note", "from": "", "to": "", "note": "Base overlays now vet each generated overlay and replace non", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:36:37Z", "item": "S593", "action": "status", "from": "started", "to": "done", "note": "Base overlays now vet each generated overlay and replace non-zero exits with bounded diagnostics and git-show pointers, preserving test commands when vet cannot run.", "by": "Jon Robbins"}
+{"when": "2026-11-25T21:34:46Z", "item": "S598", "action": "add", "from": "", "to": "open", "note": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice"}
+{"when": "2026-11-25T21:34:46Z", "item": "S598", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T21:36:36Z", "item": "S599", "action": "add", "from": "", "to": "open", "note": "build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice"}
+{"when": "2026-11-25T21:36:36Z", "item": "S599", "action": "promote", "from": "", "to": "", "note": ""}

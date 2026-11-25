@@ -298,3 +298,19 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S531 (run ork-20261125-185405-f675, 2026-11-25)
 
 - [ ] Read the TestScrollSweep table in internal/tui/scroll_sweep_test.go. It should name the help overlay on each tab view, the Roadmap row list, the launch confirm and the Roadmap item pane, and no scrollable view you know of in the launch harness is left out.
+
+## S579 (run ork-20261125-203305-0dc5, 2026-11-25)
+
+- [ ] Open a long item on the Roadmap at 80x24 and press pgdown until the end. Each page should start with the line that sat under the "+N more lines" marker on the page before. Press pgup back up the same way. Open the spec draft pane on a long draft and page it; it should behave the same.
+
+## S586 (run ork-20261125-203302-a88e, 2026-11-25)
+
+- [ ] Probe the real Claude Code matcher (not run by this draft). In a scratch git repo, start Claude Code with the allow rule Bash(git -C * show*) and ask it to run git -C /scratch commit --allow-empty -m show. If it runs without a prompt, the CLI's * spans the subcommand like ork's hook does. Then repeat with Bash(git -C /scratch show*): the commit command should prompt or be denied, and git -C /scratch show HEAD should run. Record the result on S586.
+
+## S571 (run ork-20261125-203303-45c3, 2026-11-25)
+
+- [ ] Read the rendered UI brief and the reviewer brief's ## Base overlays section. Each should say one test per command with go -C DIR test -run NAME PKG, with no | character in the -run text. Read internal/roles/prompts/gate.md and internal/roles/prompts/spec-draft.md; each should carry the same rule.
+
+## S593 (run ork-20261125-211625-10ac, 2026-11-25)
+
+- [ ] In the next reviewer round for a slice that changes a signature, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... with the compiler error for the file whose revert cannot compile. That entry should have no go -C ... test -overlay command. The other files should keep their commands.

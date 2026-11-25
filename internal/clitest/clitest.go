@@ -102,7 +102,7 @@ func Install(t *testing.T, routes ...Route) *Fake {
 		t.Fatal(err)
 	}
 	dir := t.TempDir()
-	for _, tool := range []string{"slicer", "adj", "git"} {
+	for _, tool := range []string{"slicer", "adj", "git", "go"} {
 		if err := os.Symlink(exe, filepath.Join(dir, tool)); err != nil {
 			t.Fatal(err)
 		}
@@ -131,7 +131,7 @@ func Install(t *testing.T, routes ...Route) *Fake {
 func Main() {
 	routesPath := os.Getenv(envRoutes)
 	tool := filepath.Base(os.Args[0])
-	if routesPath == "" || (tool != "slicer" && tool != "adj" && tool != "git") {
+	if routesPath == "" || (tool != "slicer" && tool != "adj" && tool != "git" && tool != "go") {
 		return
 	}
 	args := os.Args[1:]

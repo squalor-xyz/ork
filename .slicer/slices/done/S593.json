@@ -1,0 +1,39 @@
+{
+  "id": "S593",
+  "title": "when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "When a slice changes a signature, adds a struct field that its tests read, or moves a helper that other files use, the base overlay for one changed file does not build. The reviewer reported this as friction in run ork-20261125-203302-a88e, item S586. Overlays 1 and 2 failed with \"not enough arguments in call to engine.LocalReadOnlyAllowlist / CloudUIAllowlist\". The reviewer ran the `go test -overlay` command that the brief's `## Base overlays` section offered and got a build error. It was not a red test, so the command proved nothing.\n\nThe owner merged S577 (undefined `heldNote`), S591 (`pane.page` undefined) and S593 here and decided the fix. Before listing a command, ork runs `go vet` with each overlay. An overlay that fails to build is listed as `does not build: ERROR` and gets no revert command. This is advisory, like the rest of the section, and it never blocks the run.\n\nOwner decisions, 2026-11-25: adj 585 (any non-zero go vet exit on an overlay is shown as does not build: ERROR with the first output lines)."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/baseoverlay.go:34`: baseOverlaySection; overlayBuildError at line 112 and writeBaseOverlay at line 150.\n- `internal/engine/baseoverlay_test.go:116`: six vet tests through TestBaseOverlayVetCannotRunKeepsCommand at line 200.\n- `internal/engine/engine.go:48`: Deps; gitBin at line 79 and goBin at line 86.\n- `internal/engine/harness_test.go:258`: route precedence; Deps at line 316.\n- `internal/clitest/clitest.go:98`: Install; Main at line 131.\n- `docs/design.md:2041`: Base overlays bullet through line 2066."
+    },
+    {
+      "heading": "Failing tests",
+      "body": "All tests are in `internal/engine/baseoverlay_test.go`, after baseOverlayCommand, and use overlayVetHarness plus overlayVetResult to route fake go calls and inspect the reviewer brief. Existing named helpers remain the anchors when line numbers drift.\n- TestBaseOverlayVetsEachOverlayFirst: reverse-ordered a.go and b.go produce exactly two sorted vet calls with -C WORKTREE vet -overlay TMPDIR/overlay-N.json ./internal/x and retain both test commands.\n- TestBaseOverlayBuildFailureReplacesCommand: success followed by the signature diagnostic replaces only the second command with the exact one-line error and git show pointer; mixed entries retain all command guidance and overlay-2.json remains readable.\n- TestBaseOverlayNoIntroWhenNothingBuilds: both vet exits fail; both entries are diagnostics, with no test command or command guidance.\n- TestBaseOverlayBuildErrorIsOneShortLine: ten long lines separated by blank lines and containing pipes produce exactly three non-empty lines truncated to 200 characters, joined with semicolons, with pipes replaced by slashes and a git show pointer on the same line.\n- TestBaseOverlayNewFileBuildFailureKeepsNote: failed vet retains the exact new-file note and diagnostic instead of a command.\n- TestBaseOverlayVetCannotRunKeepsCommand: a failing-vet control and an unavailable GoBin differ only by binary path; only the unavailable tool retains the command without a diagnostic, and both reach StateAwaitingApproval."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. `internal/engine/engine.go`: add `GoBin string // empty means \"go\"` to `Deps`, and `func (d Deps) goBin() string` next to `gitBin`.\n2. `internal/clitest/clitest.go`: add `\"go\"` to the tool list that `Install` symlinks (line 105) and to the tool check in `Main` (line 134), so a test can route `go` calls. Add no other behavior.\n3. `internal/engine/baseoverlay.go`: add `const baseOverlayVetTimeout = 2 * time.Minute`.\n4. `internal/engine/baseoverlay.go`: add `func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overlayFile, pkg string) string`.\n   - It runs `clirun.Run` with `Bin: e.d.goBin()`, `Args: [\"-C\", rec.Worktree, \"vet\", \"-overlay\", overlayFile, pkg]` and `Timeout: baseOverlayVetTimeout`.\n   - It returns \"\" on success.\n   - On `*clirun.ExitError` it returns a one-line message built from stderr, or from stdout when stderr is empty. The message is the first 3 non-empty lines, each cut to 200 characters, joined with `; `. If both are empty it returns `go vet exit N`.\n   - For any other error (go not found, timeout) it returns \"\", so the command is offered unchanged. This is advisory, as in the rest of the file.\n5. `internal/engine/baseoverlay.go`, in `baseOverlaySection`:\n   - After `writeBaseOverlay` succeeds, call `overlayBuildError` with the same overlay path and `packageArg(p)` that the command uses.\n   - When the message is non-empty, append `- `p`` (with the new-file note when `isNew`) `: does not build: MESSAGE. Trace its base version with `git -C WORKTREE show MERGEBASE:p` instead.` and do not build the command.\n   - Keep the overlay file, and keep the numbering `len(entries)+1`.\n   - Count the entries that carry a command. Write the intro paragraph (\"Each command runs one package's tests...\") only when that count is above zero.\n6. `internal/engine/harness_test.go`:\n   - Set `GoBin: fake.Bin(\"go\")` in `h.deps`.\n   - Add a default route to the harness routes: `clitest.Route{Tool: \"go\", Args: []string{\"-C\", W, \"vet\"}, Prefix: true}` (exit 0), after the `routesFor` routes so a test's own route wins.\n   - New tests route `go` with a `Seq` of replies, one per overlay in sorted order.\n7. `internal/engine/baseoverlay_test.go`: add the six tests above. Existing tests pass unchanged through the default exit-0 route.\n8. `docs/design.md`, in the `## Base overlays` bullet (lines 2041-2058): add that ork first runs `go -C WORKTREE vet -overlay TMPDIR/overlay-N.json ./DIR` for each overlay. An overlay whose vet exits non-zero is listed as `does not build: ERROR` with a `git show` pointer and no command. A vet that cannot run leaves the command in place. Mark it with the slice id."
+    },
+    {
+      "heading": "Check",
+      "body": "- Acceptance: with the fake go exiting 0 the Base overlays section is unchanged from before. With a failing vet the entry reads does not build: ERROR and has no test -overlay command. A go that cannot run changes nothing.\n- `go test -run TestBaseOverlayVetsEachOverlayFirst ./internal/engine` passes.\n- `go test -run TestBaseOverlayBuildFailureReplacesCommand ./internal/engine` passes.\n- `go test -run TestBaseOverlayNoIntroWhenNothingBuilds ./internal/engine` passes.\n- `go test -run TestBaseOverlayBuildErrorIsOneShortLine ./internal/engine` passes.\n- `go test -run TestBaseOverlayNewFileBuildFailureKeepsNote ./internal/engine` passes.\n- `go test -run TestBaseOverlayVetCannotRunKeepsCommand ./internal/engine` passes.\n- `go test ./...` passes.\n- `go vet ./...` prints nothing and exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] In the next reviewer round for a slice that changes a signature, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... with the compiler error for the file whose revert cannot compile. That entry should have no go -C ... test -overlay command. The other files should keep their commands."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

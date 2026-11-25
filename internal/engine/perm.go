@@ -4,6 +4,7 @@ package engine
 
 import (
 	"fmt"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -21,9 +22,12 @@ type Permission struct {
 // LocalReadOnlyAllowlist is the fixed tool list shared by read-only cloud
 // Claude (adj 489) and local launchers (adj 307). The original name is kept
 // for callers. It avoids plan mode's model-backed classifier. Each call
-// returns its own slice.
-func LocalReadOnlyAllowlist() []string {
-	return []string{
+// returns its own slice. The git -C entries name the role's worktree, so no
+// write command that ends in a subcommand name matches (S586, adj 577,
+// launch.read-only-git-c-form); a worktree that cannot be pinned drops them
+// (PinGitC).
+func LocalReadOnlyAllowlist(worktree string) []string {
+	return PinGitC([]string{
 		"Read", "Grep", "Glob",
 		"Bash(slicer * --help)", "Bash(slicer ai relay)", "Bash(ls*)",
 		"Bash(git ls-files*)", "Bash(git -C * ls-files*)",
@@ -34,16 +38,45 @@ func LocalReadOnlyAllowlist() []string {
 		"Bash(adj show*)", "Bash(adj check*)", "Bash(adj lint*)",
 		"Bash(go test*)", "Bash(go vet*)", "Bash(go -C * test*)", "Bash(go -C * vet*)",
 		"Bash(gofmt -l*)",
+	}, worktree)
+}
+
+// gitCTemplate starts every allowlist entry whose `*` stands for the worktree
+// (S586). The `*` is mid-pattern, so it also spans the subcommand: the entry
+// Bash(git -C * show*) matches `git -C /w commit -m show`.
+const gitCTemplate = "Bash(git -C * "
+
+// PinGitC returns a new list in which the `*` of each `git -C * SUBCMD` entry
+// is the worktree path, so `Bash(git -C * status*)` becomes
+// `Bash(git -C /w status*)` and no write command that ends in a subcommand name
+// can match (S586, adj 577, launch.read-only-git-c-form). Every other entry is
+// copied as it is. The worktree must be absolute and need no quoting, so it
+// holds no space, `*`, quote, parenthesis or `,` (a comma would split the
+// --allowedTools list); otherwise it cannot be pinned and every `git -C *`
+// entry is dropped (adj 580).
+func PinGitC(list []string, worktree string) []string {
+	usable := filepath.IsAbs(worktree) && ShellWord(worktree) == worktree
+	out := make([]string, 0, len(list))
+	for _, entry := range list {
+		rest, template := strings.CutPrefix(entry, gitCTemplate)
+		switch {
+		case !template:
+			out = append(out, entry)
+		case usable:
+			out = append(out, "Bash(git -C "+worktree+" "+rest)
+		}
 	}
+	return out
 }
 
 // CloudUIAllowlist is the tool list of a cloud Claude UI pass (S369, S416,
 // adj 372 and 374): the read-only list plus Skill. The runner sends it and the
 // brief's Allowed forms item names it, so there is one source. The Edit and
 // Write rules under the role's temp dir are added where the arguments are
-// built. Each call returns its own slice.
-func CloudUIAllowlist() []string {
-	return append(LocalReadOnlyAllowlist(), "Skill")
+// built. Each call returns its own slice. Its git -C entries name the worktree
+// as LocalReadOnlyAllowlist's do (adj 577, launch.read-only-git-c-form).
+func CloudUIAllowlist(worktree string) []string {
+	return append(LocalReadOnlyAllowlist(worktree), "Skill")
 }
 
 // presetReadOnly is the one registry preset (docs/state.md).
@@ -122,11 +155,17 @@ func partAllowlist(implementer []string) []string {
 // it, also get the patterns the owner granted the run with ork retry --allow.
 // A part keeps no slicer write entry, a grant included. A read-only role, and
 // an implementer the project made read-only, keep their permission. The
-// project in the registry is never changed.
+// project in the registry is never changed. The implementer's and a part's
+// git -C entries are pinned to the run's worktree here, at launch, with or
+// without grants (S586, adj 579); a grant is added as written.
 func (e *Engine) rolePermission(rec runrec.Record, role string) (Permission, error) {
 	perm, err := ResolvePermission(e.proj, role)
-	if err != nil || perm.ReadOnly || len(rec.Grants) == 0 || (role != RoleImplementer && role != RolePart) {
+	if err != nil || perm.ReadOnly || (role != RoleImplementer && role != RolePart) {
 		return perm, err
+	}
+	perm.Allow = PinGitC(perm.Allow, rec.Worktree)
+	if len(rec.Grants) == 0 {
+		return perm, nil
 	}
 	grants := rec.Grants
 	if role == RolePart {

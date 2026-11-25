@@ -28,6 +28,9 @@ this prompt disagree, the brief wins; say so in your report.
 - Run your own shell commands in the foreground and background none. Use a long
   timeout for long commands, such as the full test suite. Do not report while a
   command you started still runs.
+- Run a focused test as one `go -C {{worktree}} test -run NAME PKG` command, one test
+  per command, and the next test in its own command. Never join test names in one
+  `-run` pattern: a pipe makes a compound command that the read-only allowlist denies.
 - Never commit, push, tag, merge or rebase.
 - Never read vendor credential or login files, and never print tokens, keys or
   passwords.

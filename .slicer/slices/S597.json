@@ -1,0 +1,39 @@
+{
+  "id": "S597",
+  "title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261125-204703-eec0, project ork, item S580:\n\nname a preset fixture height in the render brief when the changed behavior only shows below 80x24\n\nEvidence: the lift is a no-op at 80x24 and 120x40 (roadmap-goals-home-80x24.txt shows all lines), so the required VIEW-80x24 and VIEW-120x40 renders do not show the change"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

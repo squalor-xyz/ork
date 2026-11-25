@@ -50,6 +50,7 @@ type Deps struct {
 	Runner         Runner
 	Slicer         slicercli.Client
 	GitBin         string // empty means "git"
+	GoBin          string // empty means "go"
 	Store          *runrec.Store
 	Check          CheckFunc  // nil means RunCheck
 	Verify         VerifyFunc // nil means VerifyCheck (S295, *proposed*)
@@ -80,6 +81,13 @@ func (d Deps) gitBin() string {
 		return d.GitBin
 	}
 	return "git"
+}
+
+func (d Deps) goBin() string {
+	if d.GoBin != "" {
+		return d.GoBin
+	}
+	return "go"
 }
 
 func (d Deps) maxRounds() int {

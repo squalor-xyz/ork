@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -20,8 +21,10 @@ import (
 // baseOverlayLimit caps the files the reviewer's Base overlays section lists.
 const baseOverlayLimit = 20
 
-// baseOverlaySection gives the reviewer a ready `go test -overlay` command for
-// each changed non-test Go file (S554). The command runs the package's tests
+const baseOverlayVetTimeout = 2 * time.Minute
+
+// baseOverlaySection checks base overlays for changed non-test Go files (S554,
+// S593), offering test commands unless vet exits non-zero. Each command runs tests
 // with only that file reverted to the merge base, so the reviewer can confirm
 // that a test the slice added fails without the product change, with no write
 // to the tree. ork writes the base copy and the overlay JSON into tmpDir, the
@@ -55,6 +58,7 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	}
 
 	var entries, unread []string
+	commands := 0
 	for _, p := range goFiles {
 		isNew, err := e.writeBaseOverlay(ctx, rec, tmpDir, mergeBase, p, len(entries)+1)
 		if err != nil {
@@ -62,17 +66,25 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			continue
 		}
 		n := len(entries) + 1
-		command := fmt.Sprintf("go -C %s test -overlay %s %s", ShellWord(rec.Worktree), ShellWord(filepath.Join(tmpDir, fmt.Sprintf("overlay-%d.json", n))), ShellWord(packageArg(p)))
+		overlayFile := filepath.Join(tmpDir, fmt.Sprintf("overlay-%d.json", n))
 		line := "- `" + p + "`"
 		if isNew {
 			line += " (new in this slice; the overlay hides it)"
 		}
+		if message := e.overlayBuildError(ctx, rec, overlayFile, packageArg(p)); message != "" {
+			entries = append(entries, line+": does not build: "+message+". Trace its base version with `git -C "+ShellWord(rec.Worktree)+" show "+ShellWord(mergeBase+":"+p)+"` instead.")
+			continue
+		}
+		command := fmt.Sprintf("go -C %s test -overlay %s %s", ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(packageArg(p)))
 		entries = append(entries, line+": `"+command+"`")
+		commands++
 	}
 
 	var body strings.Builder
+	if commands > 0 {
+		body.WriteString("Each command runs one package's tests with only that file reverted to the base version (the merge base with the main checkout's branch). ork wrote the base copies and the overlay files under your temp directory. A test this slice added for that file should fail with the file reverted. To run one test, add `-run NAME` before the package in a command. Run one test per command and never join test names in one `-run` pattern: a pipe makes the command compound and it is denied as multiple operations. A command changes nothing in the tree.\n\n")
+	}
 	if len(entries) > 0 {
-		body.WriteString("Each command runs one package's tests with only that file reverted to the base version (the merge base with the main checkout's branch). ork wrote the base copies and the overlay files under your temp directory. A test this slice added for that file should fail with the file reverted. Add `-run NAME` to run one test. A command changes nothing in the tree.\n\n")
 		body.WriteString(strings.Join(entries, "\n"))
 		body.WriteString("\n")
 	}
@@ -93,6 +105,43 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		body.WriteString("Check incomplete: the base version of " + strings.Join(unread, ", ") + " could not be read. Trace it yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`); this does not block the run.\n")
 	}
 	return &BriefSection{Title: title, Body: strings.TrimRight(body.String(), "\n")}
+}
+
+// overlayBuildError is advisory: only a vet process that exits non-zero
+// replaces the test command. Failure to start or finish vet leaves it intact.
+func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overlayFile, pkg string) string {
+	result, err := clirun.Run(ctx, clirun.Call{
+		Bin: e.d.goBin(), Args: []string{"-C", rec.Worktree, "vet", "-overlay", overlayFile, pkg},
+		Timeout: baseOverlayVetTimeout,
+	})
+	var exit *clirun.ExitError
+	if !errors.As(err, &exit) {
+		return ""
+	}
+	output := strings.TrimSpace(string(result.Stderr))
+	if output == "" {
+		output = strings.TrimSpace(string(result.Stdout))
+	}
+	var lines []string
+	for _, line := range strings.Split(output, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		line = strings.ReplaceAll(line, "|", "/")
+		runes := []rune(line)
+		if len(runes) > 200 {
+			line = string(runes[:200])
+		}
+		lines = append(lines, line)
+		if len(lines) == 3 {
+			break
+		}
+	}
+	if len(lines) == 0 {
+		return fmt.Sprintf("go vet exit %d", result.ExitCode)
+	}
+	return strings.Join(lines, "; ")
 }
 
 // writeBaseOverlay writes the base copy of p (unless the base lacks it) and

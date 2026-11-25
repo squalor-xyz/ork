@@ -231,7 +231,7 @@ func BuildBrief(in BriefInput) (string, error) {
 		b.WriteString("## CLI text renders\n\nFor ork CLI views, run this from the worktree with the test flag:\n\n")
 		fmt.Fprintf(&b, "`go test ./internal/cli -run TestRenderCLIViews -renders %s`\n\n", ShellWord(processTemp))
 		b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory (named under Your files), exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup and fake-reply. Copy the views you want on the approval card into the renders directory under the VIEW-80x24.txt names required by your prompt.\n\n")
-		fmt.Fprintf(&b, "## Test run patterns\n\nA `go test -run` pattern must not contain a pipe: `|` turns the command into a compound command and it is denied as multiple operations. Run one test per command, for example `go -C %s test -run TestRenderCLIViews ./internal/cli`, and run the next test in its own command. A pattern with no pipe that the tests share, such as a common name prefix, is also allowed.\n\n", in.Worktree)
+		fmt.Fprintf(&b, "## Test run patterns\n\nRun one test per command: `go -C %s test -run NAME PKG`, for example `go -C %s test -run TestRenderCLIViews ./internal/cli`, then the next test in its own command. A `go test -run` pattern must not contain a pipe: a pipe makes a compound command, and the permission check denies it as multiple operations. Do not join test names in one pattern.\n\n", in.Worktree, in.Worktree)
 		if (in.Vendor == "claude" || in.Vendor == "claude-local") && len(in.UIPassSkills) > 0 {
 			fmt.Fprintf(&b, "## Skills\n\nLoad these skills for the UI pass: %s. If one is not available, say so in your report and go on.\n\n", strings.Join(in.UIPassSkills, ", "))
 		}
@@ -350,7 +350,7 @@ func doneWhen(in BriefInput) string {
 		if in.Role == RoleUI && in.Vendor == "claude" {
 			// S416: a cloud UI pass runs on an allowlist, not plan mode (adj 372),
 			// so it is told the forms it may run. Same list the runner sends.
-			items = append(items, "Allowed forms, verbatim: "+strings.Join(CloudUIAllowlist(), "; ")+"; Edit and Write under "+in.TempDir+"; any other command is denied; run one plain command per shell call.")
+			items = append(items, "Allowed forms, verbatim: "+strings.Join(CloudUIAllowlist(in.Worktree), "; ")+"; Edit and Write under "+in.TempDir+"; any other command is denied; run one plain command per shell call.")
 		}
 		if isGrok {
 			add("Grok plan mode: the fixtures show git status --short, git diff -- PATH and git diff --check -- PATH running, plus the built-in file tools read_file, grep and list_dir. rg, slicer and test commands remain unverified.")

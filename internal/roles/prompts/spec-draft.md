@@ -56,7 +56,9 @@ the brief and this prompt disagree, the brief wins; say so in your report.
    entry is a command the implementer's sandbox can run with an expected result
    (counts, exit status, output text or an observable file or state), or a
    `[HUMAN CHECK]` item that says what the owner looks at and what they should see.
-   Use the project's own test command from its `AGENTS.md`.
+   Use the project's own test command from its `AGENTS.md`. Write each focused test
+   command in **Check** as `go -C DIR test -run NAME PKG`, one command for each test,
+   as its own entry; DIR is the worktree. Never write a `-run` pattern that joins names.
 5. **Implement**: the steps in order, naming the symbols and files. Leave no design
    choice that is the owner's open in the text: interfaces, data models, new
    components and tradeoffs. Ask the owner about them in `## Owner needed` instead and
