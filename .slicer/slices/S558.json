@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): Where does the source row content ride, and is it content or a hash? -> digest: A per-project SHA-256 of the planned rows goes in a new MatrixCopyProject field. The CLI sends it back in a new MatrixCopyParams.ExpectRows map, and checkCopy refuses a mismatch with CodeStalePreview. MatrixCopyStep stays slicer's output shape. [matrix.copy-bind-content]. How should this slice's empty Files, Failing tests, Implement and Check sections say when it is done? -> tighten: Files are the matrixcopy.go and matrixcopy_test.go files under internal/daemon and the roles.go and roles_matrix_test.go files under internal/cli. Failing tests are a daemon test where a source row's model is edited between preview and write with the steps unchanged (refused with CodeStalePreview, nothing written to that project, other projects go on), a daemon test where an unchanged source passes, and a CLI test that the confirmed write sends the preview's digest. Check is go test ./... exiting 0 with the new tests passing, plus go vet ./... and gofmt -l . clean. The landed-changed/S548.md text gets corrected through slicer changelog add, not by hand.."
     },
     {
       "heading": "Check",
