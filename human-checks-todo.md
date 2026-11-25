@@ -310,3 +310,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S571 (run ork-20261125-203303-45c3, 2026-11-25)
 
 - [ ] Read the rendered UI brief and the reviewer brief's ## Base overlays section. Each should say one test per command with go -C DIR test -run NAME PKG, with no | character in the -run text. Read internal/roles/prompts/gate.md and internal/roles/prompts/spec-draft.md; each should carry the same rule.
+
+## S593 (run ork-20261125-211625-10ac, 2026-11-25)
+
+- [ ] In the next reviewer round for a slice that changes a signature, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... with the compiler error for the file whose revert cannot compile. That entry should have no go -C ... test -overlay command. The other files should keep their commands.
