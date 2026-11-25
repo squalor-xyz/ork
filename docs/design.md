@@ -2045,12 +2045,20 @@ separately.
     `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
     "TMPDIR/base/path"}}`, in the reviewer's process temp directory. A file
     the base lacks (new in the slice) maps to `""`, which `go` reads as a file
-    that does not exist; no base copy is written. The section names, for each
-    file, one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
+    that does not exist; no base copy is written. ork first runs
+    `go -C WORKTREE vet -overlay TMPDIR/overlay-N.json ./DIR` for each overlay
+    with a two-minute timeout (S593). Any non-zero vet exit lists the file as
+    `does not build: ERROR`, with the first three non-empty output lines,
+    each limited to 200 characters, and a `git show` pointer instead of a test
+    command. stderr takes priority over stdout; empty output gives the exit
+    code. A vet that cannot run or times out leaves the test command in place.
+    For each remaining file, the section names
+    one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
     ./DIR` command, so a read-only reviewer can run the package's tests with
     only that file reverted and see a test the slice added fail. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
-    test names in one `-run` pattern (S571). It says how
+    test names in one `-run` pattern (S571). This command guidance appears only
+    when at least one test command remains (S593). It says how
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git
@@ -2583,12 +2591,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `--permission-prompts none` and no permission mode flag; Grok read-only
   roles keep plan mode. The list allows `Read`, `Grep`,
   `Glob`, `git diff`, `git log`, `git status`, `git show` and `git merge-base` (also with `git -C`; adj 574).
-  Each `git -C` entry names the role's worktree, as in `Bash(git -C PATH status*)`,
+  Each `git -C` and `go -C` entry names the role's worktree, as in
+  `Bash(git -C PATH status*)` and `Bash(go -C PATH test*)`,
   and holds no `*` in its place. A mid-pattern `*` would span the subcommand
   and match `git -C /w commit -m show` (adj 577, `launch.read-only-git-c-form`).
   The runner pins the entries at launch (adj 579). A worktree that is not
   absolute, or holds a space, `*`, `,`, a quote or a parenthesis, drops every
-  `git -C` entry instead (adj 580). The list also allows
+  `git -C` and `go -C` entry instead (adj 580). The list also allows
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
   `slicer check` (adj 504, including `slicer check --root DIR`), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
@@ -2721,11 +2730,13 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   also include `Bash(git ls-files*)`, `Bash(git -C * ls-files*)`,
   `Bash(git mv*)`, `Bash(git -C * mv*)`, `Bash(git rm *)`,
   `Bash(git -C * rm *)` and `Bash(rm *)` (adj 478).
-  The registry stores and the settings views show the `git -C *` entries as a
+  The registry stores and the settings views show the `git -C *` and `go -C *` entries as a
   template. At launch the implementer's and a part's entries take the run's
-  worktree in place of the `*` (`Bash(git -C PATH status*)`; adj 577, adj 579),
+  worktree in place of the `*` (`Bash(git -C PATH status*)` and
+  `Bash(go -C PATH test*)`; adj 577, adj 579, adj 586),
   with or without grants from `ork retry --allow`, which are added as written.
   A worktree that cannot be pinned drops them (adj 580).
+  The gate's Check classification uses this pinned list without run grants.
   Both presets also include `Bash(ork show*)` (adj 488). An implementer reads
   a run report named by its slice with `ork show RUN NAME`, without reading
   ork's state directory directly. No other ork command is added.
@@ -2769,8 +2780,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   `Bash(go test*)`, `Bash(go vet*)`, `Bash(gofmt *)`); `go` adds them back
   and `python` adds `Bash(python3 -m unittest*)`; each ends with
   `Bash(<check command>*)` when the command is set. `ork projects set --preset`
-  writes the expanded list into the registry as plain patterns. Broader
-  Python forms such as `Bash(python3 *)` are left to `--allow`.
+  writes the expanded list into the registry as plain patterns.
+  The registry keeps the `Bash(go -C * ...)` templates until launch.
+  Broader Python forms such as `Bash(python3 *)` are left to `--allow`.
   Stored lists are not rewritten when presets change. Run
   `ork projects set NAME --preset go|python` again to replace a stored list,
   or add individual entries with `--allow implementer=PATTERN` (adj 190).

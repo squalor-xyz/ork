@@ -1,0 +1,39 @@
+{
+  "id": "S599",
+  "title": "build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-211625-10ac, project ork, item S593:\n\nbuild the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice\n\nEvidence: reviewer-1 brief offered overlay-3 (engine.go reverted) as a test command, but go vet on it fails with \"e.d.goBin undefined\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

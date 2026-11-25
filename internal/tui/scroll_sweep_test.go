@@ -177,7 +177,11 @@ func (c sweepCase) sweep(t *testing.T) {
 				}
 			}
 			limit := 3*len(reference) + 5
-			down := sweepPass(t, h, c.pageDown, limit)
+			// A row list may initially follow its cursor below the Goals.
+			// Keep the frames reaching the true top: pgdown ends that lift
+			// and resumes paging from the cursor (S580, adj 582).
+			top := sweepPass(t, h, c.pageUp, limit)
+			down := append(top, sweepPass(t, h, c.pageDown, limit)...)
 			up := sweepPass(t, h, c.pageUp, limit)
 			for _, pass := range []struct {
 				direction string
@@ -202,13 +206,9 @@ var (
 // view never appears (S531, adj 570). A page-up that skips a line at 80x16
 // passed the 80x24 tests until the UI pass found it by hand (S401).
 //
-// Left out, as the owner decided (adj 570, adj 575): the sweep found a real
-// paging defect, so the view or height stays out until its follow-up slice
-// lands and then joins this table.
-//   - Roadmap row list at height 10: the Goals block above the first row is
-//     marked as "+5 lines above" and no key reaches it, because the page keys
-//     move the row cursor and the first row is already on screen. Follow-up:
-//     S580.
+// The first sweep found a real paging defect in the Roadmap item pane and in
+// the Roadmap row list at height 10 (adj 570, adj 575). Both are fixed (S579,
+// S580), so every view runs at every height.
 func TestScrollSweep(t *testing.T) {
 	cases := []sweepCase{
 		{name: "help-running", heights: sweepAll, setup: sweepHelp(0), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
@@ -216,7 +216,7 @@ func TestScrollSweep(t *testing.T) {
 		{name: "help-roadmap", heights: sweepAll, setup: sweepHelp(roadmapView), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
 		{name: "help-decisions", heights: sweepAll, setup: sweepHelp(decisionsView), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
 		{name: "help-questions", heights: sweepAll, setup: sweepHelp(questionsView), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
-		{name: "roadmap-list", heights: []int{16, 24, 40}, unique: true, setup: func(t *testing.T) *harness {
+		{name: "roadmap-list", heights: sweepAll, unique: true, setup: func(t *testing.T) *harness {
 			h, _ := launchHarness(t)
 			h.m.view = roadmapView
 			// The four fixture rows fit the window from height 16, so add

@@ -95,6 +95,8 @@ func TestAllowlistMatchesModel(t *testing.T) {
 		// This is why the lists pin the worktree (adj 577).
 		{"Bash(git -C * show*)", "git -C /w commit -m show", true},
 		{"Bash(git -C /w show*)", "git -C /w commit -m show", false},
+		{"Bash(go -C * test*)", "go -C /w get example.com/m test", true},
+		{"Bash(go -C /w test*)", "go -C /w get example.com/m test", false},
 	} {
 		if got := allowlistMatches(tc.entry, tc.command); got != tc.want {
 			t.Errorf("allowlistMatches(%q, %q) = %v, want %v", tc.entry, tc.command, got, tc.want)
@@ -469,8 +471,8 @@ func TestImplementerGitCEntriesRefuseWritesEndingInASubcommand(t *testing.T) {
 }
 
 func TestPinGitC(t *testing.T) {
-	in := []string{"Read", "Bash(git -C * status*)", "Bash(git -C * rm *)", "Bash(go -C * test*)", "Bash(git status*)"}
-	want := []string{"Read", "Bash(git -C /w status*)", "Bash(git -C /w rm *)", "Bash(go -C * test*)", "Bash(git status*)"}
+	in := []string{"Read", "Bash(git -C * status*)", "Bash(git -C * rm *)", "Bash(go -C * test*)", "Bash(go -C * vet*)", "Bash(go test*)", "Bash(git status*)"}
+	want := []string{"Read", "Bash(git -C /w status*)", "Bash(git -C /w rm *)", "Bash(go -C /w test*)", "Bash(go -C /w vet*)", "Bash(go test*)", "Bash(git status*)"}
 	snapshot := slices.Clone(in)
 	got := PinGitC(in, "/w")
 	if !reflect.DeepEqual(got, want) {
@@ -483,9 +485,9 @@ func TestPinGitC(t *testing.T) {
 	if in[0] != "Read" {
 		t.Errorf("the result shares the input's array")
 	}
-	// A worktree that is not one safe absolute path drops every git -C entry.
+	// A worktree that is not one safe absolute path drops every git -C and go -C entry.
 	for _, bad := range []string{"", "w", "rel/w", "/a b", "/a*b", "/a,b", "/a'b", `/a"b`, "/a(b", "/a)b"} {
-		if got, want := PinGitC(in, bad), []string{"Read", "Bash(go -C * test*)", "Bash(git status*)"}; !reflect.DeepEqual(got, want) {
+		if got, want := PinGitC(in, bad), []string{"Read", "Bash(go test*)", "Bash(git status*)"}; !reflect.DeepEqual(got, want) {
 			t.Errorf("worktree %q: %q, want %q", bad, got, want)
 		}
 	}
@@ -506,13 +508,13 @@ func TestRolePermissionPinsGitCForImplementerAndPart(t *testing.T) {
 			if err != nil || got.ReadOnly {
 				t.Fatalf("%s %s: %+v, %v", name, role, got, err)
 			}
-			for _, entry := range []string{"Bash(git -C /w status*)", "Bash(git -C /w diff*)", "Bash(git -C /w mv*)", "Bash(git -C /w rm *)"} {
+			for _, entry := range []string{"Bash(git -C /w status*)", "Bash(git -C /w diff*)", "Bash(git -C /w mv*)", "Bash(git -C /w rm *)", "Bash(go -C /w test*)", "Bash(go -C /w vet*)"} {
 				if !slices.Contains(got.Allow, entry) {
 					t.Errorf("%s %s: missing %s in %q", name, role, entry, got.Allow)
 				}
 			}
 			for _, entry := range got.Allow {
-				if strings.HasPrefix(entry, "Bash(git -C *") && entry != grant {
+				if (strings.HasPrefix(entry, "Bash(git -C *") || strings.HasPrefix(entry, "Bash(go -C *")) && entry != grant {
 					t.Errorf("%s %s: unpinned entry %s", name, role, entry)
 				}
 			}
@@ -530,5 +532,75 @@ func TestRolePermissionPinsGitCForImplementerAndPart(t *testing.T) {
 	// The registry's own list is not rewritten.
 	if got, _ := ResolvePermission(e.proj, RoleImplementer); !slices.Contains(got.Allow, "Bash(git -C * status*)") {
 		t.Errorf("ResolvePermission rewrote the template: %q", got.Allow)
+	}
+	if got, _ := ResolvePermission(e.proj, RoleImplementer); !slices.Contains(got.Allow, "Bash(go -C * test*)") {
+		t.Errorf("ResolvePermission rewrote the Go template: %q", got.Allow)
+	}
+}
+
+func goWritesEndingIn(x string) []string {
+	return []string{
+		"go -C /w get example.com/m " + x,
+		"go -C /w mod edit -droprequire=x " + x,
+		"go -C /w build -o /w/bin " + x,
+		"go -C /w install example.com/m " + x,
+		"go -C /w generate " + x,
+	}
+}
+
+func TestReadOnlyAllowlistRefusesGoWritesEndingInTestOrVet(t *testing.T) {
+	for name, list := range map[string][]string{"local": LocalReadOnlyAllowlist("/w"), "cloudui": CloudUIAllowlist("/w")} {
+		for _, x := range []string{"test", "vet"} {
+			for _, command := range goWritesEndingIn(x) {
+				t.Run(name+"/"+command, func(t *testing.T) {
+					if got := matchingEntries(list, command); len(got) != 0 {
+						t.Errorf("entries %q match %q", got, command)
+					}
+				})
+			}
+		}
+	}
+}
+
+func TestReadOnlyAllowlistPinsGoCToTheWorktree(t *testing.T) {
+	for name, list := range map[string][]string{"local": LocalReadOnlyAllowlist("/w"), "cloudui": CloudUIAllowlist("/w")} {
+		for _, command := range []string{"go -C /w test ./...", "go -C /w vet ./..."} {
+			if len(matchingEntries(list, command)) == 0 {
+				t.Errorf("%s: no entry matches %q", name, command)
+			}
+		}
+		for _, command := range []string{"go -C /other test ./...", "go -C /w/sub test ./..."} {
+			if got := matchingEntries(list, command); len(got) != 0 {
+				t.Errorf("%s: entries %q match %q", name, got, command)
+			}
+		}
+		for _, entry := range list {
+			if strings.HasPrefix(entry, "Bash(go -C *") {
+				t.Errorf("%s: unpinned entry %s", name, entry)
+			}
+		}
+	}
+}
+
+func TestImplementerGoCEntriesRefuseWritesEndingInTestOrVet(t *testing.T) {
+	list, err := ImplementerPreset("go", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	pinned := PinGitC(list, "/w")
+	for _, x := range []string{"test", "vet"} {
+		for _, command := range goWritesEndingIn(x) {
+			if got := matchingEntries(pinned, command); len(got) != 0 {
+				t.Errorf("entries %q match %q", got, command)
+			}
+		}
+		if command := "go -C /w " + x + " ./..."; len(matchingEntries(pinned, command)) == 0 {
+			t.Errorf("no entry matches %q", command)
+		}
+	}
+	for _, entry := range pinned {
+		if strings.HasPrefix(entry, "Bash(go -C *") {
+			t.Errorf("unpinned entry %s", entry)
+		}
 	}
 }

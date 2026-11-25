@@ -264,6 +264,7 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		version = o.contract
 	}
 	routes = append(routes,
+		clitest.Route{Tool: "go", Args: []string{"-C", W, "vet"}, Prefix: true},
 		clitest.Route{Tool: "slicer", Args: []string{"ai", "relay", "--json", "--root", P}, File: filepath.Join("..", "..", "testdata", "cli", "slicer", fmt.Sprintf("relay-v%d.json", version))},
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "begin"}, Prefix: true}, `{"run":{"id":"run-1"}}`),
 		with(clitest.Route{Tool: "slicer", Args: []string{"relay-run", "ask"}, Prefix: true}, `{"question":{"id":"q1"}}`),
@@ -313,7 +314,7 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		runner: &fakeRunner{}, checks: &fakeChecks{}, proc: &fakeProc{alive: map[int]bool{}}, sleep: &fakeSleep{}}
 	clock := &fakeClock{t: time.Date(2026, 10, 19, 16, 12, 0, 0, time.UTC)}
 	h.deps = Deps{
-		Runner: h.runner, Slicer: slicercli.Client{Bin: fake.Bin("slicer")}, GitBin: fake.Bin("git"),
+		Runner: h.runner, Slicer: slicercli.Client{Bin: fake.Bin("slicer")}, GitBin: fake.Bin("git"), GoBin: fake.Bin("go"),
 		Store: h.store, Check: h.checks.Run, Proc: h.proc, Now: clock.Now, Sleep: h.sleep.Sleep,
 		Backoff: []time.Duration{time.Millisecond, 2 * time.Millisecond, 4 * time.Millisecond},
 		RandHex: func() string { return "a1b2" },

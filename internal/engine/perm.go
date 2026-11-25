@@ -22,7 +22,7 @@ type Permission struct {
 // LocalReadOnlyAllowlist is the fixed tool list shared by read-only cloud
 // Claude (adj 489) and local launchers (adj 307). The original name is kept
 // for callers. It avoids plan mode's model-backed classifier. Each call
-// returns its own slice. The git -C entries name the role's worktree, so no
+// returns its own slice. The git -C and go -C entries name the role's worktree, so no
 // write command that ends in a subcommand name matches (S586, adj 577,
 // launch.read-only-git-c-form); a worktree that cannot be pinned drops them
 // (PinGitC).
@@ -41,29 +41,36 @@ func LocalReadOnlyAllowlist(worktree string) []string {
 	}, worktree)
 }
 
-// gitCTemplate starts every allowlist entry whose `*` stands for the worktree
-// (S586). The `*` is mid-pattern, so it also spans the subcommand: the entry
-// Bash(git -C * show*) matches `git -C /w commit -m show`.
+// gitCTemplate and goCTemplate start entries whose `*` stands for the worktree
+// (S586, S595). The mid-pattern `*` also spans the subcommand: for example,
+// Bash(git -C * show*) matches `git -C /w commit -m show`, and
+// Bash(go -C * test*) matches `go -C /w get example.com/m test`.
 const gitCTemplate = "Bash(git -C * "
+const goCTemplate = "Bash(go -C * "
 
-// PinGitC returns a new list in which the `*` of each `git -C * SUBCMD` entry
+// PinGitC returns a new list in which the `*` of each git -C or go -C template
 // is the worktree path, so `Bash(git -C * status*)` becomes
 // `Bash(git -C /w status*)` and no write command that ends in a subcommand name
 // can match (S586, adj 577, launch.read-only-git-c-form). Every other entry is
 // copied as it is. The worktree must be absolute and need no quoting, so it
 // holds no space, `*`, quote, parenthesis or `,` (a comma would split the
-// --allowedTools list); otherwise it cannot be pinned and every `git -C *`
+// --allowedTools list); otherwise it cannot be pinned and every git -C or go -C
 // entry is dropped (adj 580).
 func PinGitC(list []string, worktree string) []string {
 	usable := filepath.IsAbs(worktree) && ShellWord(worktree) == worktree
 	out := make([]string, 0, len(list))
 	for _, entry := range list {
+		prefix := "Bash(git -C "
 		rest, template := strings.CutPrefix(entry, gitCTemplate)
+		if !template {
+			prefix = "Bash(go -C "
+			rest, template = strings.CutPrefix(entry, goCTemplate)
+		}
 		switch {
 		case !template:
 			out = append(out, entry)
 		case usable:
-			out = append(out, "Bash(git -C "+worktree+" "+rest)
+			out = append(out, prefix+worktree+" "+rest)
 		}
 	}
 	return out
@@ -73,7 +80,7 @@ func PinGitC(list []string, worktree string) []string {
 // adj 372 and 374): the read-only list plus Skill. The runner sends it and the
 // brief's Allowed forms item names it, so there is one source. The Edit and
 // Write rules under the role's temp dir are added where the arguments are
-// built. Each call returns its own slice. Its git -C entries name the worktree
+// built. Each call returns its own slice. Its git -C and go -C entries name the worktree
 // as LocalReadOnlyAllowlist's do (adj 577, launch.read-only-git-c-form).
 func CloudUIAllowlist(worktree string) []string {
 	return append(LocalReadOnlyAllowlist(worktree), "Skill")
@@ -156,7 +163,7 @@ func partAllowlist(implementer []string) []string {
 // A part keeps no slicer write entry, a grant included. A read-only role, and
 // an implementer the project made read-only, keep their permission. The
 // project in the registry is never changed. The implementer's and a part's
-// git -C entries are pinned to the run's worktree here, at launch, with or
+// git -C and go -C entries are pinned to the run's worktree here, at launch, with or
 // without grants (S586, adj 579); a grant is added as written.
 func (e *Engine) rolePermission(rec runrec.Record, role string) (Permission, error) {
 	perm, err := ResolvePermission(e.proj, role)
