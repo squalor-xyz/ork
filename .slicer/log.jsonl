@@ -6401,3 +6401,17 @@
 {"when": "2026-11-25T13:54:09Z", "item": "S558", "action": "set", "from": "", "to": "", "note": "title Binding by steps alone misses a change in the content of a source row→matrix copy: bind the confirmed write to source row content, not only steps; short_title Binding by steps alone misses a change in the content of a source row→matrix copy: bind the confirmed write to source row content, not only steps"}
 {"when": "2026-11-25T13:54:09Z", "item": "S558", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 chose: add each source row's content (or a ", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:54:09Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S548's later findings 1 and 3 in: th", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:54:19Z", "item": "S555", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S556 (UI pass hint-width sweep that flags a dropped scroll key)"}
+{"when": "2026-11-25T13:54:19Z", "item": "S556", "action": "note", "from": "", "to": "", "note": "S555 (retired as duplicate) asked for the same sweep at widt", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:44:57Z", "item": "S559", "action": "add", "from": "", "to": "open", "note": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic"}
+{"when": "2026-11-25T14:44:57Z", "item": "S559", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T14:47:32Z", "item": "S553", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:33Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:33Z", "item": "S558", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:33Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: set-step fields come from ork's own set st", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:34Z", "item": "S553", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T14:47:37Z", "item": "S558", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T14:49:20Z", "item": "S545", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:49:20Z", "item": "S543", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:49:20Z", "item": "S557", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:49:22Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Implement"}
