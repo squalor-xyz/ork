@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 551,
+  "next_id": 552,
   "preamble": "",
   "passes": [
     {
@@ -28911,6 +28911,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-db3fef09",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S551",
+      "title": "allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert",
+      "short_title": "allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S548",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1f61cd0b",
         "pass": "v1.2",
         "group": "",
         "reason": "",
