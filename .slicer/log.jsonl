@@ -6367,6 +6367,12 @@
 {"when": "2026-11-25T13:30:12Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T13:30:40Z", "item": "S551", "action": "add", "from": "", "to": "open", "note": "allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert"}
 {"when": "2026-11-25T13:30:40Z", "item": "S551", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:36:12Z", "item": "S546", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T13:36:14Z", "item": "S546", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T13:36:15Z", "item": "S546", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T13:36:17Z", "item": "S546", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:50:48Z", "item": "S546", "action": "note", "from": "", "to": "", "note": "The settings pane pins the dim block heading under the `+N l", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:50:48Z", "item": "S546", "action": "status", "from": "started", "to": "done", "note": "The settings pane pins the dim block heading under the `+N lines above` marker when the window starts inside a block, now also at the end of the body at every height with room to pin, and pads the relay role columns so `use` starts at one column; tests, goldens and docs/dashboard.md updated, full suite, vet and gofmt clean.", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:31:40Z", "item": "S546", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T13:32:22Z", "item": "S552", "action": "add", "from": "", "to": "open", "note": "Tell the UI pass brief about -render-fixture"}
 {"when": "2026-11-25T13:32:22Z", "item": "S552", "action": "promote", "from": "", "to": "", "note": ""}
@@ -6383,3 +6389,9 @@
 {"when": "2026-11-25T13:45:43Z", "item": "S552", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T13:50:48Z", "item": "S552", "action": "note", "from": "", "to": "", "note": "The UI pass brief now says `-renders` alone writes five file", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:50:48Z", "item": "S552", "action": "status", "from": "started", "to": "done", "note": "The UI pass brief now says `-renders` alone writes five files and names `-render-fixture NAME[,NAME...]` with its eight fixtures; guide and design docs already said so.", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:45:00Z", "item": "S555", "action": "add", "from": "", "to": "open", "note": "the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll"}
+{"when": "2026-11-25T13:45:01Z", "item": "S555", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:46:16Z", "item": "S556", "action": "add", "from": "", "to": "open", "note": "give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows"}
+{"when": "2026-11-25T13:46:16Z", "item": "S556", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:50:34Z", "item": "S557", "action": "add", "from": "", "to": "open", "note": "when a slice's Why text matches an open item's title, list that item as a likely duplicate in the brief's Direction section"}
+{"when": "2026-11-25T13:50:34Z", "item": "S557", "action": "promote", "from": "", "to": "", "note": ""}

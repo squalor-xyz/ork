@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/tui/settings.go`\n- `internal/tui/settings_test.go`\n- `testdata/golden/` (the settings goldens of `TestSettingsPaneGoldens`)\n- `docs/dashboard.md` (the settings section)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestSettingsPaneKeepsTheBlockHeadingWhenScrolled`: scrolls the full matrix with `G` and asserts the view contains `slicer config` above `check_command` (pinned heading, ui.settings-pane-scroll-heading).\n- `TestSettingsPaneAlignsRelayRoleRows`: asserts the `use` text starts at the same column on every matrix row (ui.settings-pane-role-columns)."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- `go test ./internal/tui` exits 0.\n- `go test ./...`\n- `go vet ./...` is clean.\n- `gofmt -l .` prints nothing.\n- The goldens are rewritten with `go test ./internal/tui -update` and reviewed."
     },
     {
       "heading": "Git",
