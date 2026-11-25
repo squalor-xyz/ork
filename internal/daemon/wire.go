@@ -45,6 +45,7 @@ const (
 	MethodProjectsAdd    = "projects.add"    // params AddProjectParams, result registry.Project
 	MethodProjectsRm     = "projects.rm"     // params RemoveProjectParams, no result
 	MethodProjectsSet    = "projects.set"    // proposed (S161, S307); params SetProjectParams, result SetProjectResult
+	MethodProjectSetup   = "project.setup"   // proposed (S249); params ProjectSetupParams, result ProjectSetupResult
 	MethodProjectsShow   = "projects.show"   // proposed (S247); params ProjectsShowParams, result ProjectsShowResult
 	MethodSettingsGet    = "settings.get"    // proposed (S174); no params, result SettingsResult
 	MethodSettingsSet    = "settings.set"    // proposed (S174); params SetSettingsParams, result SettingsResult
@@ -290,6 +291,22 @@ type AddProjectParams struct {
 // RemoveProjectParams is a projects.rm call.
 type RemoveProjectParams struct {
 	Name string `json:"name"`
+}
+
+// ProjectSetupParams previews or runs one owning tool's setup step (S249,
+// proposed), in a registered project's main checkout.
+type ProjectSetupParams struct {
+	Project string `json:"project"`
+	Step    string `json:"step"`
+	Preview bool   `json:"preview,omitempty"`
+}
+
+// ProjectSetupResult carries the confirmation line and whether the step ran.
+// Adj is the current registry flag, present only for the two adj steps.
+type ProjectSetupResult struct {
+	Command string `json:"command"`
+	Done    bool   `json:"done"`
+	Adj     *bool  `json:"adj,omitempty"`
 }
 
 // SetProjectParams is a projects.set call (S161, *proposed*). Name picks the

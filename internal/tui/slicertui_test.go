@@ -155,8 +155,8 @@ func TestHintBarOffersSlicerTuiOnTheRoadmap(t *testing.T) {
 	if !strings.Contains(wideHint(h), "O slicer tui") {
 		t.Fatal("Roadmap hint omits O slicer tui")
 	}
-	if hint := wideHint(h); !strings.Contains(hint, "N note; enter open; l launch; O slicer tui; m matrix") {
-		t.Fatalf("slicer tui hint must follow row actions before matrix: %s", hint)
+	if hint := wideHint(h); !strings.HasPrefix(hint, "O slicer tui; ") || !strings.Contains(hint, "N note; enter open; l launch; m matrix") {
+		t.Fatalf("slicer tui must lead without reordering row actions: %s", hint)
 	}
 	for _, size := range [][2]int{{80, 24}, {100, 30}} {
 		h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
@@ -186,48 +186,30 @@ func TestHintBarOffersSlicerTuiOnTheRoadmap(t *testing.T) {
 }
 
 func TestSlicerTuiReturnFollowsTheSelectedItemAfterRefresh(t *testing.T) {
-	for _, inflight := range []bool{false, true} {
-		name := "new refresh"
-		if inflight {
-			name = "refresh already in flight"
-		}
-		t.Run(name, func(t *testing.T) {
-			h, c := slicerTuiHarness(t)
-			h.m.Update(press("O")) // S90 is selected before handing over the terminal.
-			snapshot := h.m.projects[0].snap
-			items := append([]slicercli.Item(nil), snapshot.Items.Value...)
-			items[0].Status = "parked"
-			snapshot.Items.Value = []slicercli.Item{items[1], items[2], items[0], items[3]}
-			h.src.set(snapshot)
-			var pending tea.Cmd
-			if inflight {
-				pending = h.m.fetch("ork", false)
-			}
-			_, refresh := h.m.Update(c.done(nil))
-			if h.m.roadmapCursor != 0 {
-				t.Fatal("restored before refreshed snapshot arrived")
-			}
-			if inflight {
-				if refresh != nil {
-					t.Fatal("duplicate read while refresh in flight")
-				}
-				refresh = pending
-			}
-			if refresh == nil {
-				t.Fatal("no snapshot command")
-			}
-			h.m.Update(refresh())
-			if h.m.roadmapCursor != 2 {
-				t.Fatalf("cursor=%d; want selected S90 at row 2", h.m.roadmapCursor)
-			}
-			// Restoration is consumed once; polling must not pin the selection.
-			h.m.roadmapCursor = 1
-			next := h.m.fetch("ork", false)
-			h.m.Update(next())
-			if h.m.roadmapCursor != 1 {
-				t.Fatal("later poll restored the old selection again")
-			}
-		})
+	h, c := slicerTuiHarness(t)
+	h.m.Update(press("O")) // S90 is selected before handing over the terminal.
+	snapshot := h.m.projects[0].snap
+	items := append([]slicercli.Item(nil), snapshot.Items.Value...)
+	items[0].Status = "parked"
+	snapshot.Items.Value = []slicercli.Item{items[1], items[2], items[0], items[3]}
+	h.src.set(snapshot)
+	_, refresh := h.m.Update(c.done(nil))
+	if h.m.roadmapCursor != 0 {
+		t.Fatal("restored before refreshed snapshot arrived")
+	}
+	if refresh == nil {
+		t.Fatal("no snapshot command")
+	}
+	h.m.Update(refresh())
+	if h.m.roadmapCursor != 2 {
+		t.Fatalf("cursor=%d; want selected S90 at row 2", h.m.roadmapCursor)
+	}
+	// Restoration is consumed once; polling must not pin the selection.
+	h.m.roadmapCursor = 1
+	next := h.m.fetch("ork", false)
+	h.m.Update(next())
+	if h.m.roadmapCursor != 1 {
+		t.Fatal("later poll restored the old selection again")
 	}
 }
 func TestSlicerTuiReturnKeepsTheOldRowWhenTheItemIsGone(t *testing.T) {
@@ -265,20 +247,144 @@ func TestSlicerTuiLookupKeepsOtherErrorsVerbatim(t *testing.T) {
 	}
 }
 
-func TestSlicerTuiHintFollowsRowActionsWhenEditHintsAreHidden(t *testing.T) {
+func TestSlicerTuiLeadsTheRoadmapHint(t *testing.T) {
 	h, _ := slicerTuiHarness(t)
 	h.m.cfg.Live = nil
 	hint := wideHint(h)
 	if strings.Contains(hint, "n new slice") || strings.Contains(hint, "N note") {
 		t.Fatalf("edit hints should be hidden: %s", hint)
 	}
-	if strings.HasPrefix(hint, "O slicer tui") || !strings.HasPrefix(hint, "enter open; O slicer tui; tab views") {
-		t.Fatalf("O must follow the row action when edit hints are hidden: %s", hint)
+	if !strings.HasPrefix(hint, "O slicer tui; enter open; tab views") {
+		t.Errorf("O must lead when edit hints are hidden: %s", hint)
 	}
 	h.m.cfg.Live = &roadmapLive{}
 	h.m.projects[0].snap.Items.Value = nil
 	hint = wideHint(h)
-	if strings.HasPrefix(hint, "O slicer tui") || !strings.HasPrefix(hint, "l launch; O slicer tui; m matrix") {
-		t.Fatalf("O must follow launch when there are no items: %s", hint)
+	if !strings.HasPrefix(hint, "O slicer tui; l launch; m matrix") {
+		t.Errorf("O must lead when there are no items: %s", hint)
+	}
+}
+
+func TestSlicerTuiRestoreIsDroppedOnAnItemListError(t *testing.T) {
+	h, c := slicerTuiHarness(t)
+	h.m.Update(press("O"))
+	snapshot := h.m.projects[0].snap
+	snapshot.Items.Err = errors.New("item list failed")
+	h.src.set(snapshot)
+	_, refresh := h.m.Update(c.done(nil))
+	h.m.Update(refresh())
+	if h.m.slicerTuiRestore != nil {
+		t.Error("item-list error retained restore")
+	}
+	snapshot.Items.Err = nil
+	// An errored list hides its rows. Reinstate the readable old list before
+	// delivering j, independently of the later poll that supplies the new order.
+	h.m.projects[0].snap = snapshot
+	items := snapshot.Items.Value
+	snapshot.Items.Value = []slicercli.Item{items[1], items[2], items[0], items[3]}
+	h.src.set(snapshot)
+	h.m.Update(press("j"))
+	next := h.m.fetch("ork", false)
+	h.m.Update(next())
+	if h.m.roadmapCursor != 1 {
+		t.Fatalf("cursor=%d; want owner-selected row 1 after item-list error", h.m.roadmapCursor)
+	}
+}
+
+func TestSlicerTuiRestoreIsDroppedWhenTheCursorMoves(t *testing.T) {
+	h, c := slicerTuiHarness(t)
+	h.m.Update(press("O"))
+	_, refresh := h.m.Update(c.done(nil))
+	h.m.Update(press("j"))
+	snapshot := h.m.projects[0].snap
+	items := snapshot.Items.Value
+	snapshot.Items.Value = []slicercli.Item{items[1], items[2], items[0], items[3]}
+	h.src.set(snapshot)
+	h.m.Update(refresh())
+	if h.m.roadmapCursor != 1 {
+		t.Errorf("cursor=%d; want owner-selected row 1", h.m.roadmapCursor)
+	}
+	if h.m.slicerTuiRestore != nil {
+		t.Error("cursor movement retained restore")
+	}
+}
+
+func TestSlicerTuiReturnToAnotherProjectLeavesItsCursor(t *testing.T) {
+	h, c := slicerTuiHarness(t)
+	h.m.Update(press("O"))
+	h.m.switchTo(1)
+	h.m.roadmapCursor = 1
+	_, refresh := h.m.Update(c.done(nil))
+	h.m.Update(refresh())
+	if h.m.roadmapCursor != 1 {
+		t.Errorf("other project cursor=%d; want 1", h.m.roadmapCursor)
+	}
+	if h.m.slicerTuiRestore != nil {
+		t.Error("other project return retained restore")
+	}
+	h.m.switchTo(0)
+	if h.m.roadmapCursor != 0 {
+		t.Errorf("switch back cursor=%d; want 0", h.m.roadmapCursor)
+	}
+}
+
+func TestSlicerTuiReturnSkipsAReadStartedBeforeTheExit(t *testing.T) {
+	h, c := slicerTuiHarness(t)
+	l := &noteLive{}
+	h.m.cfg.Live = l
+	h.m.Update(press("O"))
+	pending := h.m.fetch("ork", false)
+	_, refresh := h.m.Update(c.done(nil))
+	if refresh != nil {
+		t.Error("duplicate read while old read is in flight")
+	}
+	_, follow := h.m.Update(pending())
+	if h.m.roadmapCursor != 0 {
+		t.Errorf("stale read moved cursor to %d", h.m.roadmapCursor)
+	}
+	if h.m.slicerTuiRestore == nil {
+		t.Error("stale read consumed restore")
+	}
+	if follow == nil {
+		t.Fatal("stale read did not schedule fresh read")
+	}
+	snapshot := h.m.projects[0].snap
+	items := snapshot.Items.Value
+	snapshot.Items.Value = []slicercli.Item{items[1], items[2], items[0], items[3]}
+	h.src.set(snapshot)
+	h.m.Update(follow())
+	if h.m.roadmapCursor != 2 {
+		t.Errorf("fresh read cursor=%d; want S90 at row 2", h.m.roadmapCursor)
+	}
+	if l.refreshes != 1 {
+		t.Errorf("daemon refreshes=%d; want 1", l.refreshes)
+	}
+	if h.m.slicerTuiRestore != nil {
+		t.Error("fresh read retained restore")
+	}
+}
+
+func TestSlicerTuiHelpAndRefusalAgree(t *testing.T) {
+	for _, state := range []string{"unloaded", "unavailable", "setup", "item", "matrix", "ready"} {
+		t.Run(state, func(t *testing.T) {
+			h, _ := slicerTuiHarness(t)
+			switch state {
+			case "unloaded":
+				h.m.projects[0].loaded = false
+			case "unavailable":
+				h.m.projects[0].snap.Unavailable = true
+			case "setup":
+				h.m.projects[0].snap = noSlicer(h.m.projects[0].reg)
+			case "item":
+				h.m.itemPane = &itemPane{id: "S90"}
+			case "matrix":
+				h.m.itemPane = &itemPane{id: matrixPaneID}
+			}
+			_, refused := h.m.slicerTuiRefusal()
+			h.m.showHelp = true
+			if offered := strings.Contains(h.view(), "O slicer tui"); offered == refused {
+				t.Errorf("help offers O=%v; action refuses=%v", offered, refused)
+			}
+		})
 	}
 }

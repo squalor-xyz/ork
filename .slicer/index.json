@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 527,
+  "next_id": 531,
   "preamble": "",
   "passes": [
     {
@@ -14262,10 +14262,25 @@
       "id": "S249",
       "title": "Set up a project through its tools: slicer init, matrix init, adj init and the adj flag",
       "short_title": "Project setup steps",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "ddd0dd7a-c01e-41bb-8221-af9ce1e8b009",
+          "kind": "",
+          "text": "**2026-11-22** — Fixed the adjcli doc-comment placement so `Init` and `write` each carry their own comment; the setup steps, locked adj flag update, cache refresh and CLI text/JSON from the earlier round are unchanged.",
+          "created_at": "2026-11-22T08:26:50Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "M",
@@ -14283,7 +14298,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -22837,12 +22852,41 @@
       "id": "S399",
       "title": "slicer tui: O leads the Roadmap hint; drop a stale cursor restore; share the O condition",
       "short_title": "slicer tui hint and restore fixes",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [
         "S409"
       ],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "dbd66553-637e-4ea5-b635-bc049a7c3733",
+          "kind": "",
+          "text": "**2026-11-22** — Human checks at approval (S399):\n- later: In a 200x40 terminal, open the Roadmap: the hint line starts `O slicer tui;`. At 100x30 and 80x24 the hint line does not show it (unchanged drop tier).\n- later: In a 100x30 terminal, open the Roadmap, select the third item, press `O`; inside slicer's TUI resize the terminal to 80x24, then quit it normally: ork redraws at 80x24 with the cursor on the same item and no stale lines.\n- later: In a 100x30 terminal, press `O` on the Roadmap, then quit slicer's TUI with ctrl+c: record whether the status line shows `slicer tui: exit status N` (and which N), and that ork stays responsive.",
+          "created_at": "2026-11-22T05:12:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "673a6193-4eeb-4d03-b856-3ada2cb3d13f",
+          "kind": "",
+          "text": "**2026-11-22** — O leads the Roadmap hint; help and refusal share project availability, and cursor restoration skips pre-exit reads, requests a fresh daemon refresh, and cancels on item-list errors or owner cursor movement.",
+          "created_at": "2026-11-22T05:12:18Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -22860,7 +22904,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -27776,10 +27820,25 @@
       "id": "S525",
       "title": "\"finds nothing\" and \"matches nothing\" mark a Check line as an empty-output check",
       "short_title": "More prints-nothing wordings",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bae819b7-8e0d-4e77-98ae-a2c77a27b214",
+          "kind": "",
+          "text": "**2026-11-22** — finds nothing, matches nothing and returns nothing now mark Check lines as empty-output checks, including passing an empty rg exit 1.",
+          "created_at": "2026-11-22T04:16:03Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -27797,7 +27856,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -27819,6 +27878,118 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-0e168812",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S527",
+      "title": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output",
+      "short_title": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S249",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f03b23ba",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S528",
+      "title": "allow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated",
+      "short_title": "allow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S250",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-57cfc620",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S529",
+      "title": "tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures",
+      "short_title": "tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S399",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-7e89b824",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S530",
+      "title": "say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite",
+      "short_title": "say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S399",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-6a7cd4ac",
         "pass": "v1.2",
         "group": "",
         "reason": "",

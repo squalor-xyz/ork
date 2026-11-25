@@ -83,6 +83,9 @@ change the contract by itself.
 
 ## Interfaces ork uses
 
+*Proposed (S249):* on the owner's request ork runs `slicer init`,
+`slicer relay-roles init --render` or `adj init`; it never passes `--force`.
+
 - **slicer CLI**, with `--json` (and `--lean`). Branch on the exit code (0
   ok, 1 failed check, 2 usage or empty queue, 3 internal or state error,
   including `locked`) and on `error.code`, never on message text (`EXITS`

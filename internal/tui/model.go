@@ -72,15 +72,16 @@ type snapshotMsg struct {
 
 // projectState is what the Model knows about one project.
 type projectState struct {
-	reg     registry.Project
-	loaded  bool
-	snap    source.Snapshot
-	open    int  // open adj records, from the last Open call that worked
-	held    int  // items held needs-owner, from the last Items call that worked
-	hasOpen bool // Open has had a good reading
-	hasHeld bool // Items has had a good reading
-	running bool
-	dirty   bool
+	reg          registry.Project
+	loaded       bool
+	snap         source.Snapshot
+	open         int  // open adj records, from the last Open call that worked
+	held         int  // items held needs-owner, from the last Items call that worked
+	hasOpen      bool // Open has had a good reading
+	hasHeld      bool // Items has had a good reading
+	running      bool
+	dirty        bool
+	dirtyRefresh bool // the coalesced follow-up must ask the daemon to refresh
 
 	ended         map[string]bool // final run ids seen in earlier good readings
 	hasEngineEnds bool
@@ -405,6 +406,14 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 		return m, m.applyScanAdded(msg)
 	case slicerTuiDoneMsg:
 		m.slicerTuiRestore = msg.selection
+		if msg.selection != nil {
+			msg.selection.atReturn = m.roadmapCursor
+			msg.selection.skipOne = m.poller.InFlight(msg.project)
+		}
+		if ps := m.byName[msg.project]; ps != nil && m.poller.InFlight(msg.project) {
+			ps.dirty = true
+			ps.dirtyRefresh = true
+		}
 		m.actionStatus = ""
 		if msg.err != nil {
 			m.actionStatus = "slicer tui: " + msg.err.Error()
@@ -1322,7 +1331,9 @@ func (m *Model) apply(msg snapshotMsg) tea.Cmd {
 	}
 	if ps.dirty {
 		ps.dirty = false
-		cmds = append(cmds, m.fetch(msg.name, false))
+		refresh := ps.dirtyRefresh
+		ps.dirtyRefresh = false
+		cmds = append(cmds, m.fetch(msg.name, refresh))
 	}
 	if (rose || endedRose) && ps.reg.BellOn() {
 		bell := m.cfg.Bell

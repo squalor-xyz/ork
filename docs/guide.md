@@ -136,8 +136,16 @@ With none set the third column is `-`. JSON output is unchanged.
 ork needs an existing absolute directory (`docs/design.md:2561-2568`). The
 TUI Welcome view offers the current directory only if it holds `.slicer` or
 `.adjudicate.json` (`docs/dashboard.md:31-35`), and the roadmap and ledger
-features need slicer. To set a directory up, run `slicer init` and `adj init`
-in it; these are slicer and adj commands, not ork's.
+features need slicer. *Proposed (S249):* after registering a directory, run
+`ork projects setup NAME STEP [--dry-run] [--json]`. Choose `slicer-init`
+for `slicer init`, `relay-roles-init` for `slicer relay-roles init --render`,
+`adj-init` for `adj init` and enabling adj in ork, or `adj-off` to disable
+adj in ork without calling adj or removing its files. A dry run prints
+`would run: COMMAND` and changes nothing. A successful step prints
+`ran: COMMAND`, with `(adj on)` or `(adj off)` for adj steps. JSON returns
+`{command, done, adj?}`. The tools run in the registered main checkout,
+leave changes uncommitted and never receive `--force`. Adj steps refuse
+while the project has unfinished runs; slicer steps defer to slicer.
 
 After `slicer init`, run `slicer setup-git` and run the `git config` lines it
 prints in the same project. They configure slicer's merge drivers once per
@@ -574,7 +582,8 @@ The roles run in this order (`docs/design.md:391-631`):
 **Writing Check lines.** Before the gate, ork runs each backticked plain
 command in the slice's Check section (`docs/design.md`, slice checks). *Proposed
 (S419, `checks.prints-nothing-exit`, adj 468):* word a line that finds nothing
-as "prints nothing" (or "must print nothing"). Such a line passes when its
+as "prints nothing", "must print nothing", "finds nothing", "matches nothing"
+or "returns nothing" (case-insensitive; S525). Such a line passes when its
 output is empty and its exit is 0, or 1 from `rg`, `grep` or `git grep` (their
 no-match code). Output, exit 2 or more, or exit 1 from any other command
 fails it. ork does not run a piped line; the orchestrator runs it and judges it

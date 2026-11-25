@@ -1,0 +1,39 @@
+{
+  "id": "S528",
+  "title": "allow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261122-041409-eedc, project ork, item S250:\n\nallow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated\n\nEvidence: Write to .../3b735833065ebf2c/set.json denied \"Path is outside allowed working directories\"; slicer init --root in that dir denied"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

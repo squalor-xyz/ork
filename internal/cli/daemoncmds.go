@@ -222,7 +222,7 @@ func workingDuration(d time.Duration) string {
 // projects dispatches the projects subcommands.
 func (a *App) projects(ctx context.Context, o *output, args []string) int {
 	if len(args) == 0 {
-		return o.usage("projects needs add, list, show, rm, set, pin or unpin")
+		return o.usage("projects needs add, list, show, rm, set, setup, pin or unpin")
 	}
 	sub, rest := args[0], args[1:]
 	fs := flag.NewFlagSet("projects "+sub, flag.ContinueOnError)
@@ -357,6 +357,36 @@ func (a *App) projects(ctx context.Context, o *output, args []string) int {
 		})
 	case "set":
 		return a.projectsSet(ctx, o, fs, rest)
+	case "setup":
+		dryRun := fs.Bool("dry-run", false, "print the command without running it")
+		pos, err := parse(fs, rest)
+		if err != nil {
+			return o.usage("projects setup: %v", err)
+		}
+		if len(pos) != 2 || !slices.Contains([]string{"slicer-init", "relay-roles-init", "adj-init", "adj-off"}, pos[1]) {
+			return o.usage("projects setup NAME STEP: STEP is slicer-init, relay-roles-init, adj-init or adj-off")
+		}
+		var res daemon.ProjectSetupResult
+		if code := a.call(ctx, o, daemon.MethodProjectSetup, daemon.ProjectSetupParams{Project: pos[0], Step: pos[1], Preview: *dryRun}, &res); code != 0 {
+			return code
+		}
+		if o.json {
+			return o.printJSON(res)
+		}
+		if !res.Done {
+			fmt.Fprintf(o.stdout, "would run: %s\n", res.Command)
+		} else {
+			fmt.Fprintf(o.stdout, "ran: %s", res.Command)
+			if res.Adj != nil {
+				state := "off"
+				if *res.Adj {
+					state = "on"
+				}
+				fmt.Fprintf(o.stdout, " (adj %s)", state)
+			}
+			fmt.Fprintln(o.stdout)
+		}
+		return ExitOK
 	case "pin":
 		return a.projectsPin(ctx, o, fs, rest)
 	case "unpin":

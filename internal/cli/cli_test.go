@@ -121,6 +121,64 @@ func TestRolesMatrixApplyEmptyResultSaysSo(t *testing.T) {
 	}
 }
 
+func setupApp(t *testing.T, preview bool, response string) *App {
+	t.Helper()
+	return &App{Call: func(_ context.Context, method string, params, result any) error {
+		if method != "project.setup" {
+			t.Fatalf("method: %s", method)
+		}
+		b, err := json.Marshal(params)
+		if err != nil {
+			return err
+		}
+		var p map[string]any
+		if err := json.Unmarshal(b, &p); err != nil {
+			return err
+		}
+		if p["project"] != "p" || p["step"] != "adj-init" || (p["preview"] == true) != preview {
+			t.Fatalf("params: %s", b)
+		}
+		return json.Unmarshal([]byte(response), result)
+	}}
+}
+
+func TestProjectsSetupDryRunPrintsTheCommand(t *testing.T) {
+	a := setupApp(t, true, `{"command":"adj init","done":false,"adj":false}`)
+	code, out, errs := run(t, a, "projects", "setup", "p", "adj-init", "--dry-run")
+	if code != 0 || out != "would run: adj init\n" || errs != "" {
+		t.Fatalf("dry run: %d %q %q", code, out, errs)
+	}
+}
+
+func TestProjectsSetupRunsAndReports(t *testing.T) {
+	const response = `{"command":"adj init","done":true,"adj":true}`
+	for _, asJSON := range []bool{false, true} {
+		t.Run(fmt.Sprint(asJSON), func(t *testing.T) {
+			a := setupApp(t, false, response)
+			args := []string{"projects", "setup", "p", "adj-init"}
+			if asJSON {
+				args = append(args, "--json")
+			}
+			code, out, errs := run(t, a, args...)
+			if code != 0 || errs != "" {
+				t.Fatalf("run: %d %q %q", code, out, errs)
+			}
+			if asJSON {
+				var got, want any
+				if err := json.Unmarshal([]byte(out), &got); err != nil {
+					t.Fatal(err)
+				}
+				_ = json.Unmarshal([]byte(response), &want)
+				if !reflect.DeepEqual(got, want) {
+					t.Fatalf("JSON: %s", out)
+				}
+			} else if out != "ran: adj init (adj on)\n" {
+				t.Fatalf("text: %q", out)
+			}
+		})
+	}
+}
+
 func TestRolesMatrixApplyJSONIsTheWireResult(t *testing.T) {
 	a := &App{Input: strings.NewReader(`{"ops":[]}`), Call: func(_ context.Context, _ string, _, result any) error {
 		return json.Unmarshal([]byte(matrixApplyReply), result)
@@ -146,6 +204,21 @@ func TestRolesMatrixApplyUsage(t *testing.T) {
 		if code != ExitUsage || !strings.Contains(stderr, "roles matrix apply needs PROJECT and exactly one of --file PATH or --stdin") {
 			t.Fatalf("exit %d: %s", code, stderr)
 		}
+	}
+}
+
+func TestProjectsSetupUsage(t *testing.T) {
+	for _, args := range [][]string{{"projects", "setup"}, {"projects", "setup", "p"}, {"projects", "setup", "p", "bad"}, {"projects", "setup", "p", "adj-init", "extra"}} {
+		t.Run(strings.Join(args, " "), func(t *testing.T) {
+			a := &App{Call: func(context.Context, string, any, any) error { t.Fatal("usage called daemon"); return nil }}
+			code, _, errs := run(t, a, args...)
+			if code != ExitUsage || !strings.Contains(errs, "STEP") {
+				t.Fatalf("usage: %d %q", code, errs)
+			}
+		})
+	}
+	if !strings.Contains(usageText, "ork projects setup NAME STEP [--dry-run]") {
+		t.Fatal("help lacks setup usage")
 	}
 }
 

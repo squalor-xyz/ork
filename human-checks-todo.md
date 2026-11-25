@@ -264,3 +264,9 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S240 (run ork-20261120-152559-6a31, 2026-11-22)
 
 - [ ] After landing and a rebuild, with a paused run that has a multi-line question and a run in `checks`, the owner runs `ork status --project ork` in an 80-column terminal and reads: the ids, the times, the question, the counts.
+
+## S399 (run ork-20261122-043418-2637, 2026-11-22)
+
+- [ ] In a 200x40 terminal, open the Roadmap: the hint line starts `O slicer tui;`. At 100x30 and 80x24 the hint line does not show it (unchanged drop tier).
+- [ ] In a 100x30 terminal, open the Roadmap, select the third item, press `O`; inside slicer's TUI resize the terminal to 80x24, then quit it normally: ork redraws at 80x24 with the cursor on the same item and no stale lines.
+- [ ] In a 100x30 terminal, press `O` on the Roadmap, then quit slicer's TUI with ctrl+c: record whether the status line shows `slicer tui: exit status N` (and which N), and that ork stays responsive.
