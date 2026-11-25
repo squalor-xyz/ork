@@ -1,0 +1,39 @@
+{
+  "id": "S559",
+  "title": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The spec-check reported this as tool feedback (friction) on adj in spec check of S558, project ork, item S558:\n\nadd an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic\n\nEvidence: `adj find \"matrix.copy\"` returned `adj: unknown command \"find\"`"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

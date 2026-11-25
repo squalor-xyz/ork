@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 559,
+  "next_id": 560,
   "preamble": "",
   "passes": [
     {
@@ -28855,6 +28855,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "d2f60dde-70bc-4c15-85bd-ddb1101df164",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
+          "created_at": "2026-11-25T14:47:32Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4f416d21-1ba0-4d6c-b990-faec145ef8bd",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: set-step fields come from ork's own set step (plan.set()), printed after the id as key=value pairs; add a MatrixCopyStep field in internal/daemon/matrixcopy.go.",
+          "created_at": "2026-11-25T14:47:33Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29082,7 +29110,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "fa059a56-ec25-40f5-9ad5-b979148e7e18",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
+          "created_at": "2026-11-25T14:47:32Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29135,7 +29178,7 @@
       "id": "S555",
       "title": "the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll",
       "short_title": "the UI pass could render the help hint at a fixed list of narrow widths (80, 70, 60, 50, 40) and flag a hint that keeps quit while it drops scroll",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -29152,7 +29195,7 @@
         "key": "tool-feedback-ork-34964c66",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Duplicate of S556 (UI pass hint-width sweep that flags a dropped scroll key)",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -29166,7 +29209,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1a824a2c-51b4-465e-99b7-37d7ec08b867",
+          "kind": "",
+          "text": "**2026-11-25** — S555 (retired as duplicate) asked for the same sweep at widths 80, 70, 60, 50, 40, flagging a hint that keeps quit while it drops scroll.",
+          "created_at": "2026-11-25T13:54:19Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29236,6 +29294,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "cf278d56-5889-45e1-b39f-0ff4d188cb4d",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
+          "created_at": "2026-11-25T14:47:33Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29255,6 +29327,34 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S559",
+      "title": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic",
+      "short_title": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S558",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-adj-d57c1ab6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
