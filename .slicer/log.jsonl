@@ -6364,6 +6364,15 @@
 {"when": "2026-11-25T13:20:22Z", "item": "S549", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T13:21:14Z", "item": "S550", "action": "add", "from": "", "to": "open", "note": "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section"}
 {"when": "2026-11-25T13:21:14Z", "item": "S550", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T13:36:02Z", "item": "S535", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:39:08Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T13:39:09Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T13:39:10Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T14:44:46Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T14:44:47Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T14:49:36Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T14:51:31Z", "item": "S535", "action": "note", "from": "", "to": "", "note": "Help overlay scrolls one line per wheel notch (mouse on); wh", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:51:31Z", "item": "S535", "action": "status", "from": "started", "to": "done", "note": "Help overlay scrolls one line per wheel notch (mouse on); while it overflows the hint keeps the scroll keys in three widths and never shows `q quit` without them; pgup already inverts pgdown (regression test); vet, gofmt, go test ./... and slicer check pass.", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:30:12Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T13:30:40Z", "item": "S551", "action": "add", "from": "", "to": "open", "note": "allow cp into the role temp dir, or provide a mutation-overlay helper, so a reviewer can check that a test goes red on revert"}
 {"when": "2026-11-25T13:30:40Z", "item": "S551", "action": "promote", "from": "", "to": "", "note": ""}
@@ -6409,3 +6418,60 @@
 {"when": "2026-11-25T15:35:33Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-25T15:40:43Z", "item": "S545", "action": "note", "from": "", "to": "", "note": "`ork retry` (paused run or resumed stopped run) sets `rechec", "by": "Jon Robbins"}
 {"when": "2026-11-25T15:40:44Z", "item": "S545", "action": "status", "from": "started", "to": "done", "note": "`ork retry` (paused run or resumed stopped run) sets `recheck_slice`, so the next slice check reruns a red batch of unchanged product and Check text and a green batch stays cached; verified by four engine tests, mutation checks, and `go test -race -count=1 ./internal/engine` green; fix round 1 changed no code because the review held no findings.", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:50Z", "item": "S558", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:50:29Z", "item": "S558", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T14:50:31Z", "item": "S558", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T14:50:31Z", "item": "S558", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T15:05:03Z", "item": "S558", "action": "note", "from": "", "to": "", "note": "matrix copy now binds the confirmed write to source row cont", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:05:04Z", "item": "S558", "action": "status", "from": "started", "to": "done", "note": "matrix copy now binds the confirmed write to source row content: the preview carries a per-project SHA-256 digest of the planned rows, the CLI sends it back as expect_rows, and the daemon refuses a changed project with stale_preview, writing nothing to it and going on to the others; the S548 changelog entry no longer claims more than it checked, the IPC table in docs/design.md lists expect_rows and digest, and the full suite, vet and gofmt pass.", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:50Z", "item": "S553", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T14:47:50Z", "item": "S553", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T14:47:51Z", "item": "S553", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T14:47:52Z", "item": "S553", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:04:00Z", "item": "S553", "action": "note", "from": "", "to": "", "note": "ork status prints the `wave:` line after the wait's numbered", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:04:00Z", "item": "S553", "action": "status", "from": "started", "to": "done", "note": "ork status prints the `wave:` line after the wait's numbered options and the `next:` line; `TestStatusShowsTheWaveOfARow` asserts the order, and the changelog entry landed-changed/S553.md is written.", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:54:19Z", "item": "S555", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S556 (UI pass hint-width sweep that flags a dropped scroll key)"}
+{"when": "2026-11-25T13:54:19Z", "item": "S556", "action": "note", "from": "", "to": "", "note": "S555 (retired as duplicate) asked for the same sweep at widt", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:44:57Z", "item": "S559", "action": "add", "from": "", "to": "open", "note": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic"}
+{"when": "2026-11-25T14:44:57Z", "item": "S559", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T14:47:32Z", "item": "S553", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:33Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:33Z", "item": "S558", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:33Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: set-step fields come from ork's own set st", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:47:34Z", "item": "S553", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T14:47:37Z", "item": "S558", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T14:49:20Z", "item": "S545", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:49:20Z", "item": "S543", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:49:20Z", "item": "S557", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:49:22Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T14:49:36Z", "item": "S535", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T14:59:29Z", "item": "S543", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:04:00Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T15:04:02Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T15:04:03Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T15:10:12Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T15:13:40Z", "item": "S543", "action": "note", "from": "", "to": "", "note": "The start commit commits a retired or done item's slice-file", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:13:40Z", "item": "S543", "action": "status", "from": "started", "to": "done", "note": "The start commit commits a retired or done item's slice-file move and render with the index only when both the active and the done/retired slice file are dirty, so an in-place edit of a done file stays with the owner; verified by engine tests, mutation checks and a green full suite.", "by": "Jon Robbins"}
+{"when": "2026-11-25T14:55:53Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T14:57:32Z", "item": "S560", "action": "add", "from": "", "to": "open", "note": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not"}
+{"when": "2026-11-25T14:57:32Z", "item": "S560", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:09:34Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded in: (a) S558's later finding: extend", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:09:34Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Reported again from S545's reviewer (adj 559, dropped as cov", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:09:45Z", "item": "S561", "action": "add", "from": "", "to": "open", "note": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test"}
+{"when": "2026-11-25T15:09:46Z", "item": "S561", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:22:55Z", "item": "S561", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S547 (adj 558, owner 2026-11-25)"}
+{"when": "2026-11-25T15:30:41Z", "item": "S547", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T15:30:42Z", "item": "S554", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded adj 560 in: put the go test -overlay", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:30:46Z", "item": "S562", "action": "add", "from": "", "to": "open", "note": "put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree"}
+{"when": "2026-11-25T15:30:47Z", "item": "S562", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:35:20Z", "item": "S559", "action": "set", "from": "", "to": "", "note": "title adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic→Spec-check brief: look up existing decisions by topic with adj check TEXT; short_title adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic→Spec-check brief: look up existing decisions by topic with adj check TEXT"}
+{"when": "2026-11-25T15:35:21Z", "item": "S559", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: adj already searches by topic: adj check T", "by": "Jon Robbins"}
+{"when": "2026-11-25T15:35:27Z", "item": "S562", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S554 (adj 560, owner 2026-11-25)"}
+{"when": "2026-11-25T15:35:33Z", "item": "S545", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T15:39:08Z", "item": "S557", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T15:39:14Z", "item": "S560", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T15:39:23Z", "item": "S563", "action": "add", "from": "", "to": "open", "note": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run"}
+{"when": "2026-11-25T15:39:23Z", "item": "S563", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T15:39:23Z", "item": "S563", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T15:52:08Z", "item": "S564", "action": "add", "from": "", "to": "open", "note": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route"}
+{"when": "2026-11-25T15:52:09Z", "item": "S564", "action": "promote", "from": "", "to": "", "note": ""}

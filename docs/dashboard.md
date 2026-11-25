@@ -296,7 +296,8 @@ it carries the rest: `y run; n cancel; e edit lineup; s split; up/down scroll`, 
 cancel`. At the Roadmap launch confirmation, `e` opens the lineup editor and
 `s` turns split (a lead and parts, S61, *proposed*) on or off and plans again.
 The help screen shows `? or esc close help; q quit`, led by
-`up/down pgup/pgdown scroll` when the help does not fit.
+`up/down pgup/pgdown scroll` when the help does not fit (a shorter scroll hint
+and no `q quit` on a narrow line, S535).
 
 **Mouse (S66).** `M` turns mouse capture on and off. It is off at every launch and ork does not
 save it, so the terminal's own text selection works from the start: the Ready
@@ -323,7 +324,7 @@ With capture on, a left click does what the matching key does:
 A click on anything else does nothing: a heading, a rule, the hint and status
 lines, the detail area, a view whose rows do not move (Questions, Waves,
 Decisions) and the cells past the screen. The wheel and the other buttons do
-nothing. A click also does nothing while a confirm bar, the help, a run pane, a
+nothing, except that the wheel scrolls the help one line a notch (S535). A click also does nothing while a confirm bar, the help, a run pane, a
 text field, a launch, a project removal or a spec sitting is open: the keys of
 that state are in charge (`ui.confirm`, adj 98), and a key of the pane would
 not switch view or project either. With a run pane open (S106 draws it under
@@ -993,7 +994,8 @@ A row says when its state began (`, waiting since HH:MM (AGE)` or
 `, updated HH:MM (AGE ago)`, local time, nothing for a zero time), prints a
 multi-line wait one line per line (the first on the row, the rest indented six
 spaces) with the `; next:` command as `    next: COMMAND`, and prints
-`    wave: ID` when the run has a wave. The TUI does not change.
+`    wave: ID` when the run has a wave, after the wait's options and the `next:`
+line (S553, `ui.status-wave-line-order`). The TUI does not change.
 `ork status --json` includes hidden engine runs still in the snapshot and
 the *proposed* optional `open:[{id,key,title}]` and `held:[{id,title}]` fields.
 Those fields are omitted when empty.
@@ -2310,6 +2312,15 @@ scroll help on the Welcome screen. Dim `+N lines above` and `+N more lines`
 markers count the hidden lines. Every help line can be reached at 80x24 without moving the row
 cursor. Help starts at the top each time it opens. The hint names the scroll
 keys only when the help does not fit, followed by `? or esc close help; q quit`.
+While the help overflows, `q quit` is the first hint to go, and the scroll hint
+takes the longest of three forms that fits beside `? or esc close help`:
+`up/down pgup/pgdown scroll`, then `pgup/pgdown scroll`, then `pgup/pgdown`
+alone (S535, owner 2026-11-25, `ui.help-narrow-hint`). Where not even the last
+form fits, only `? or esc close help` shows: `q quit` never shows without the
+scroll keys while the help overflows. With mouse mode on, one wheel notch over
+the help scrolls it one line, like up and down; with mouse mode off the wheel
+does nothing (S535, `ui.help-wheel-step`; adj 129). One `pgup` after one
+`pgdown` returns to the offset it left.
 
 Human checks for terminal handover (S399): at 200x40 the Roadmap hint starts
 `O slicer tui;`; at 100x30 and 80x24 the unchanged drop tier hides it when

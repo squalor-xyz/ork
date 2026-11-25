@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): What rule decides that an open item is a likely duplicate of the slice in the Direction section? -> why-containment: count the open item's title words (the `titleWords` set) found in the slice's Why text. List the item when the share is at least a threshold you name, for example 0.6. This matches \"Why text matches a title\" and can catch the S550/S552 case. It needs a new helper and a threshold. The empty Files, Failing tests, Implement and Check sections are then filled per your 2026-11-25 `tighten` note. [feedback.direction-duplicates]."
     },
     {
       "heading": "Check",

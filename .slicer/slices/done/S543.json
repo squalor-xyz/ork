@@ -1,0 +1,39 @@
+{
+  "id": "S543",
+  "title": "Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Observed 2026-11-24 on S510. Three slices (S502, S532, S534) were retired on main with `slicer retire`, which moves each `.slicer/slices/ID.json` to `.slicer/slices/retired/ID.json` and updates `.slicer/index.json`. `ork run ork S510` then made the commit \"Tracking edits on main before starting S510\" (a54310dc). It committed `.slicer/index.json` (now saying the three are retired) and S510's own files, but not the three moves. The worktree was branched from that commit, so it had index status `retired` with the files still in `.slicer/slices/`. `slicer done S510` then failed `slicer check`: \"S502: slice file is in the wrong folder for status 'retired'\" (and S532, S534). The orchestrator fixed it by hand in the worktree. The same failure hit S448/S439 and S476/S477/S346 earlier.\n\nThe start commit must leave the tree consistent: if it commits `.slicer/index.json`, it must also commit every slice-file move and render that the index change reflects (or commit none of them). Design choice for the owner when this is specced."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/landdirty.go`: `commitLaunchTracking` and new helpers `sliceFileItem`, `movedItems`\n- `internal/engine/landdirty_test.go`\n- `docs/design.md`: setup bullet on the start commit"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- `TestLaunchTrackingCommitsRetireMoves` (`internal/engine/landdirty_test.go`): three items moved to retired/ or done/ with the index and renders changed, plus an unrelated dirty slice S700. Expected: the commit holds the index, each moved item's deleted and new slice file and its render; S700 stays dirty. Red: only the index is committed.\n- `TestLaunchTrackingLeavesInPlaceDoneEdit` (`internal/engine/landdirty_test.go`): a done item edited in place (file and render) with the index dirty. Expected: the commit holds the index alone; the done file and render stay dirty. Red: both are committed.\n- `TestLaunchTrackingLeavesMovesWithoutIndex` (`internal/engine/landdirty_test.go`): a move with no index change makes no commit."
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner decisions (2026-11-25): Which tracking files does the start commit add when it commits `.slicer/index.json` and the index change comes from a retire move? -> moves and renders: also commit each slice-file move (the deleted `.slicer/slices/ID.json` and the new `.slicer/slices/retired/ID.json`, or `done/`) and each affected `.slicer/render/slices/ID.md`. Leave other dirty tracking files alone, as the code does today. [run.start-commit-tracking-moves]."
+    },
+    {
+      "heading": "Check",
+      "body": "- Acceptance: with a retire move dirty on main, the start commit holds the index, the moved slice files and their renders, and a new worktree passes `slicer check`.\n- `go test ./internal/engine -run TestLaunchTracking`"
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

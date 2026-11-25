@@ -157,8 +157,11 @@ var (
 )
 
 func wouldChange(project string) daemon.MatrixCopyProject {
-	return daemon.MatrixCopyProject{Project: project, Status: daemon.CopyWouldChange, Steps: copyStepsRemove}
+	return daemon.MatrixCopyProject{Project: project, Status: daemon.CopyWouldChange, Steps: copyStepsRemove, Digest: digestOf(project)}
 }
+
+// digestOf is the digest the preview of a project carries in these tests.
+func digestOf(project string) string { return "digest-" + project }
 
 func TestRolesMatrixCopyDryRunPrintsEachProject(t *testing.T) {
 	var calls []daemon.MatrixCopyParams
@@ -228,10 +231,12 @@ func TestRolesMatrixCopyAsksPerProjectAndEnterIsNo(t *testing.T) {
 			}
 			if tc.writes != nil {
 				expect := map[string][]daemon.MatrixCopyStep{}
+				rows := map[string]string{}
 				for _, name := range tc.writes {
 					expect[name] = copyStepsRemove
+					rows[name] = digestOf(name)
 				}
-				wantCalls = append(wantCalls, daemon.MatrixCopyParams{From: "ork", To: tc.writes, ExpectSteps: expect})
+				wantCalls = append(wantCalls, daemon.MatrixCopyParams{From: "ork", To: tc.writes, ExpectSteps: expect, ExpectRows: rows})
 			}
 			if !reflect.DeepEqual(calls, wantCalls) {
 				t.Fatalf("calls\n got %+v\nwant %+v", calls, wantCalls)
@@ -252,7 +257,8 @@ func TestRolesMatrixCopyYesSkipsTheQuestion(t *testing.T) {
 	}
 	want := []daemon.MatrixCopyParams{
 		{From: "ork", To: []string{"adjudicate"}, DryRun: true},
-		{From: "ork", To: []string{"adjudicate"}, ExpectSteps: map[string][]daemon.MatrixCopyStep{"adjudicate": copyStepsRemove}},
+		{From: "ork", To: []string{"adjudicate"}, ExpectSteps: map[string][]daemon.MatrixCopyStep{"adjudicate": copyStepsRemove},
+			ExpectRows: map[string]string{"adjudicate": digestOf("adjudicate")}},
 	}
 	if !reflect.DeepEqual(calls, want) {
 		t.Fatalf("calls\n got %+v\nwant %+v", calls, want)
@@ -278,6 +284,24 @@ func TestRolesMatrixCopyWriteExpectsEachConfirmedProjectsPreviewedSteps(t *testi
 	got := calls[1]
 	if !reflect.DeepEqual(got.ExpectSteps, map[string][]daemon.MatrixCopyStep{"b": stepsB}) || !reflect.DeepEqual(got.To, []string{"b"}) || got.DryRun {
 		t.Fatalf("write call %+v, want b bound to its own steps", got)
+	}
+}
+
+// The write sends back the digest of the rows each confirmed project's preview
+// carried, and only the confirmed ones' (S558).
+func TestRolesMatrixCopyWriteSendsEachConfirmedProjectsPreviewDigest(t *testing.T) {
+	b := wouldChange("b")
+	b.Digest = "sha256:b-rows"
+	dry := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{wouldChange("a"), b, wouldChange("c")}}
+	written := daemon.MatrixCopyResult{From: "ork", Projects: []daemon.MatrixCopyProject{{Project: "b", Status: daemon.CopyChanged, Steps: copyStepsRemove}}}
+	var calls []daemon.MatrixCopyParams
+	app := copyApp(t, &calls, dry, written, "n\ny\nn\n")
+	code, _, stderr := run(t, app, "roles", "matrix", "copy", "ork", "--all")
+	if code != ExitOK || len(calls) != 2 {
+		t.Fatalf("exit %d, calls %+v\nstderr: %s", code, calls, stderr)
+	}
+	if want := map[string]string{"b": "sha256:b-rows"}; !reflect.DeepEqual(calls[1].ExpectRows, want) {
+		t.Fatalf("ExpectRows %v, want %v", calls[1].ExpectRows, want)
 	}
 }
 

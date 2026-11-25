@@ -195,13 +195,15 @@ func (a *App) rolesMatrixCopy(ctx context.Context, o *output, args []string) int
 	// Bind each confirmed project to the steps its preview showed, so the daemon
 	// refuses a project whose copy changed since the owner said yes (S548).
 	expect := map[string][]daemon.MatrixCopyStep{}
+	rows := map[string]string{}
 	for _, p := range checked.Projects {
 		if slices.Contains(confirmed, p.Project) {
 			expect[p.Project] = p.Steps
+			rows[p.Project] = p.Digest
 		}
 	}
 	var written daemon.MatrixCopyResult
-	if code := a.call(ctx, o, daemon.MethodMatrixCopy, daemon.MatrixCopyParams{From: params.From, To: confirmed, ExpectSteps: expect}, &written); code != ExitOK {
+	if code := a.call(ctx, o, daemon.MethodMatrixCopy, daemon.MatrixCopyParams{From: params.From, To: confirmed, ExpectSteps: expect, ExpectRows: rows}, &written); code != ExitOK {
 		return code
 	}
 	return show(written)

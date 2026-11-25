@@ -1,6 +1,6 @@
 {
   "id": "S559",
-  "title": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic",
+  "title": "Spec-check brief: look up existing decisions by topic with adj check TEXT",
   "lead": [],
   "depends_note": null,
   "findings_note": "",

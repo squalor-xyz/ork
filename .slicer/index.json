@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 560,
+  "next_id": 565,
   "preamble": "",
   "passes": [
     {
@@ -28387,7 +28387,7 @@
       "id": "S535",
       "title": "Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help",
       "short_title": "Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28418,6 +28418,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "d5f61546-6dff-4144-905e-a2ef9775b031",
+          "kind": "",
+          "text": "**2026-11-25** — Help overlay scrolls one line per wheel notch (mouse on); while it overflows the hint keeps the scroll keys in three widths and never shows `q quit` without them; pgup already inverts pgdown (regression test); vet, gofmt, go test ./... and slicer check pass.",
+          "created_at": "2026-11-25T14:51:31Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28437,7 +28451,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28640,7 +28654,7 @@
       "id": "S543",
       "title": "Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice",
       "short_title": "Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28650,6 +28664,20 @@
           "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
           "created_at": "2026-11-25T14:49:20Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "768a5737-dfd4-4278-9cf9-5ee99c1beaf1",
+          "kind": "",
+          "text": "**2026-11-25** — The start commit commits a retired or done item's slice-file move and render with the index only when both the active and the done/retired slice file are dirty, so an in-place edit of a done file stays with the owner; verified by engine tests, mutation checks and a green full suite.",
+          "created_at": "2026-11-25T15:13:40Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -28676,7 +28704,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28927,6 +28955,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "766fe924-834d-4870-8f68-02a6d46898a6",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded in: (a) S558's later finding: extend the per-project digest (rowsDigest, internal/daemon/matrixcopy.go:585) to cover the copied rule text too, so a rule text edit between preview and write is refused as stale_preview; (b) adj 558: add a -render-fixture for matrix copy (preview, per-project prompts, stale_preview refusal) to TestRenderCLIViews.",
+          "created_at": "2026-11-25T15:09:34Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29151,7 +29193,7 @@
       "id": "S553",
       "title": "In ork status, print the wave line after the multi-line wait's options",
       "short_title": "In ork status, print the wave line after the multi-line wait's options",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29161,6 +29203,20 @@
           "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
           "created_at": "2026-11-25T14:47:32Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "30dd9db5-7ed6-40af-9c67-e3f6874e634a",
+          "kind": "",
+          "text": "**2026-11-25** — ork status prints the `wave:` line after the wait's numbered options and the `next:` line; `TestStatusShowsTheWaveOfARow` asserts the order, and the changelog entry landed-changed/S553.md is written.",
+          "created_at": "2026-11-25T15:04:00Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -29187,7 +29243,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -29197,7 +29253,36 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "89c6dd27-42e9-42d8-abe9-cffbda346eef",
+          "kind": "",
+          "text": "**2026-11-25** — Reported again from S545's reviewer (adj 559, dropped as covered here): could not run the revert mutations under read-only rules and relied on the implementer's table.",
+          "created_at": "2026-11-25T15:09:34Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0a2792fa-7253-4aac-a4cc-7594ed130eec",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded adj 560 in: put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test in its role temp dir (S510 grants the write).",
+          "created_at": "2026-11-25T15:30:42Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29336,7 +29421,7 @@
       "id": "S558",
       "title": "matrix copy: bind the confirmed write to source row content, not only steps",
       "short_title": "matrix copy: bind the confirmed write to source row content, not only steps",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29367,6 +29452,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "3a919efe-b7b2-472b-a4d3-e0839eb9f33b",
+          "kind": "",
+          "text": "**2026-11-25** — matrix copy now binds the confirmed write to source row content: the preview carries a per-project SHA-256 digest of the planned rows, the CLI sends it back as expect_rows, and the daemon refuses a changed project with stale_preview, writing nothing to it and going on to the others; the S548 changelog entry no longer claims more than it checked, the IPC table in docs/design.md lists expect_rows and digest, and the full suite, vet and gofmt pass.",
+          "created_at": "2026-11-25T15:05:03Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29386,13 +29485,56 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S559",
-      "title": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic",
-      "short_title": "adj: add an adj find TEXT or key-substring search so a spec check can look up an existing decision key by topic",
+      "title": "Spec-check brief: look up existing decisions by topic with adj check TEXT",
+      "short_title": "Spec-check brief: look up existing decisions by topic with adj check TEXT",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "4d0d1573-b7ce-42dd-8e05-907ef3cd1316",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: adj already searches by topic: adj check TEXT matches titles, keys, tags and refs (adj check \"matrix.copy\" returned adj 535 and related records). Not an adj feature. Change ork's spec-check (and spec-draft) brief to tell the role to use adj check TEXT to find an existing decision key, never adj find.",
+          "created_at": "2026-11-25T15:35:21Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S558",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-adj-d57c1ab6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S560",
+      "title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
+      "short_title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
@@ -29407,7 +29549,119 @@
         "discovered_from": "S558",
         "parent": "",
         "cites": [],
-        "key": "tool-feedback-adj-d57c1ab6",
+        "key": "tool-feedback-ork-803b8cb7",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S561",
+      "title": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test",
+      "short_title": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S558",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1f3ba451",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Folded into S547 (adj 558, owner 2026-11-25)",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S562",
+      "title": "put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree",
+      "short_title": "put the go test -overlay probe recipe in the reviewer brief so a reviewer can add a probe test without writing to the tree",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S543",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-89105671",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Folded into S554 (adj 560, owner 2026-11-25)",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S563",
+      "title": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run",
+      "short_title": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S564",
+      "title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
+      "short_title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S547",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-431843f5",
         "pass": "v1.2",
         "group": "",
         "reason": "",

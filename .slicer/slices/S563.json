@@ -1,0 +1,39 @@
+{
+  "id": "S563",
+  "title": "Refuse a backticked Check entry that is not a command, in the spec check, the spec draft and ork run",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork runs every backticked entry in a slice's Check section. S508 (landed) made the plan warn about a backticked entry that is not a command, but the warning does not stop the run, so the run fails later at the slice checks with \"exec: X: executable file not found\" and sits paused until someone edits the Check text. Between 2026-11-22 and 2026-11-25 this stopped six runs: S249 and S250 (`.scratch/` in a manual scratch-project line), S261 (the same), S233 (`.scratch/`), S535 (`q quit` in an acceptance line) and S545 (a test name). The last two came from the spec check's own drafted Check sections (\"tighten\" answers), so the spec check writes the very entries that later fail.\n\nOwner decision 2026-11-25 (interactive question): file this slice. The spec check, the spec draft and `ork run` refuse a Check entry in backticks that is not a runnable command, and name the line, before any role starts. The spec check's draft must not write such entries."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

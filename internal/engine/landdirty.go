@@ -119,7 +119,50 @@ func splitTracking(prefix string, files []string) (tracking, other []string) {
 	return tracking, other
 }
 
+// sliceFileItem returns the item id of a slice file (active, done or retired)
+// or a slice render, or "" for any other path (S543).
+func sliceFileItem(rel string) string {
+	for _, location := range []struct{ dir, ext string }{
+		{".slicer/slices/", ".json"},
+		{".slicer/slices/done/", ".json"},
+		{".slicer/slices/retired/", ".json"},
+		{".slicer/render/slices/", ".md"},
+	} {
+		name, ok := strings.CutPrefix(rel, location.dir)
+		if ok && !strings.Contains(name, "/") && strings.HasSuffix(name, location.ext) {
+			return strings.TrimSuffix(name, location.ext)
+		}
+	}
+	return ""
+}
+
+// movedItems returns the items whose slice file moved between the active
+// folder and done/ or retired/: the active file and the file in done/ or
+// retired/ are both dirty (one deleted, one new). An edit in place of a done
+// or retired file dirties only one of them and is not a move. The index change
+// that goes with a move is committed, so each moved item's slice files and
+// render go with it and the commit leaves the tree consistent (S543).
+func movedItems(tracking []string) map[string]bool {
+	active := map[string]bool{}
+	for _, rel := range tracking {
+		if name, ok := strings.CutPrefix(rel, ".slicer/slices/"); ok && !strings.Contains(name, "/") && strings.HasSuffix(name, ".json") {
+			active[strings.TrimSuffix(name, ".json")] = true
+		}
+	}
+	moved := map[string]bool{}
+	for _, rel := range tracking {
+		if strings.HasPrefix(rel, ".slicer/slices/done/") || strings.HasPrefix(rel, ".slicer/slices/retired/") {
+			if id := sliceFileItem(rel); active[id] {
+				moved[id] = true
+			}
+		}
+	}
+	return moved
+}
+
 // commitLaunchTracking carries this item's tracking edits into a new worktree.
+// When it commits the index it also commits each moved item's slice-file move
+// and render, so the worktree has no index status without its file (S543).
 // When committing the index, include listed items' untracked slice files so
 // the committed index does not refer to files left only in the main checkout.
 func (e *Engine) commitLaunchTracking(ctx context.Context, item string) string {
@@ -144,9 +187,15 @@ func (e *Engine) commitLaunchTracking(ctx context.Context, item string) string {
 	for _, rel := range listed {
 		include[rel] = true
 	}
+	var moved map[string]bool
+	for _, rel := range tracking {
+		if rel == ".slicer/index.json" {
+			moved = movedItems(tracking)
+		}
+	}
 	var own []string
 	for _, rel := range tracking {
-		if include[rel] || rel == ".slicer/index.json" || rel == ".slicer/slices/"+item+".json" || rel == ".slicer/render/slices/"+item+".md" {
+		if include[rel] || rel == ".slicer/index.json" || rel == ".slicer/slices/"+item+".json" || rel == ".slicer/render/slices/"+item+".md" || moved[sliceFileItem(rel)] {
 			own = append(own, rel)
 		}
 	}

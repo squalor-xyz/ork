@@ -1,0 +1,39 @@
+{
+  "id": "S561",
+  "title": "add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #558 was decided to file it:\n\nProposal: add a -render-fixture for roles matrix copy (preview, prompts, stale_preview refusal) so the UI pass need not write an overlay test\nRole: ui\nRun: ork-20261125-144738-d085\nProject: ork\nItem: S558\nEvidence: TestRenderCLIViews fixtures list has no matrix copy view; I rendered it through an overlay on copyApp"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

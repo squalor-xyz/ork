@@ -317,11 +317,31 @@ func (m *Model) contextHints() []hintEntry {
 	case m.showHelp:
 		w, h, sideW := m.layoutSize()
 		bodyH := max(h-4, 1)
+		showQuit := true
 		if len(m.helpLines(max(w-sideW, 1), bodyH)) > bodyH {
-			l.add(dropPage, short(k.PageDown, "up/down pgup/pgdown", "scroll"))
+			// The scroll hint takes the longest of three forms that fits beside
+			// the close hint, so q quit goes first and the scroll keys stay. Where
+			// none fits, q quit stays out too: it never shows without the scroll
+			// keys while the help overflows (S535; owner 2026-11-25,
+			// ui.help-narrow-hint). The widths are ASCII cell counts.
+			const closeHint = "? or esc close help"
+			showQuit = false
+			for _, f := range [][2]string{{"up/down pgup/pgdown", "scroll"}, {"pgup/pgdown", "scroll"}, {"pgup/pgdown", ""}} {
+				width := len(f[0]) + 2 + len(closeHint)
+				if f[1] != "" {
+					width += 1 + len(f[1])
+				}
+				if width <= max(w-sideW, 1)-1 {
+					l.add(dropPage, short(k.PageDown, f[0], f[1]))
+					showQuit = true
+					break
+				}
+			}
 		}
 		l.add(dropPinned, short(k.Help, "? or esc", "close help"))
-		l.add(dropQuit, short(k.Quit, "q", "quit"))
+		if showQuit {
+			l.add(dropQuit, short(k.Quit, "q", "quit"))
+		}
 	case m.settings != nil:
 		m.settingsHints(&l)
 	case m.removing.name != "":

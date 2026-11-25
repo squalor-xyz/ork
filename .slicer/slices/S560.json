@@ -1,0 +1,39 @@
+{
+  "id": "S560",
+  "title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261125-144738-d085, project ork, item S558:\n\nbefore review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not\n\nEvidence: the owner decision names landed-changed/S548.md, but the diff touches only landed-changed/S558.md"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": "Owner decisions (2026-11-25): How should S560 be specified before an implementer starts? -> rule: a deterministic engine step that runs after the implementer hands off and before the reviewer starts. It scans the run's decisions (adj records the slice cites, plus the owner answers recorded for the run) for `landed-changed/<ID>.md` paths. Any path not in the branch diff against the base is added to the reviewer's brief as a flagged finding. It does not block the run. [relay.landed-changed-path-check]."
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
