@@ -13393,6 +13393,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "8d1f9654-fb52-414a-860d-3fb5f8465698",
+          "kind": "",
+          "text": "**2026-11-25** — Added `ork ai instructions` and `ork ai skill [--output|--install|--force]` with an embedded guide; the unchanged tree passes the full race suite, vet, gofmt and slicer check, and the earlier daemon failure was the flake S544, outside this slice.",
+          "created_at": "2026-11-25T13:21:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,

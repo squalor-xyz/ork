@@ -6287,3 +6287,5 @@
 {"when": "2026-11-25T03:20:39Z", "item": "S543", "action": "add", "from": "", "to": "open", "note": "Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice"}
 {"when": "2026-11-25T03:20:44Z", "item": "S543", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T03:20:44Z", "item": "S543", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T13:11:07Z", "item": "S233", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T13:21:57Z", "item": "S233", "action": "note", "from": "", "to": "", "note": "Added `ork ai instructions` and `ork ai skill [--output|--in", "by": "Jon Robbins"}
