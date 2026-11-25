@@ -795,6 +795,11 @@ func (m *Model) hintLine(w int) string {
 				hints = append(hints, m.cfg.Theme.Dim.Render(h.Desc))
 				continue
 			}
+			if h.Desc == "" {
+				// A key with no words (the narrowest scroll hint, S535).
+				hints = append(hints, h.Key)
+				continue
+			}
 			hints = append(hints, strings.TrimSpace(h.Key+" "+lipgloss.NewStyle().Faint(true).Render(h.Desc)))
 		}
 		return strings.Join(hints, "; ")

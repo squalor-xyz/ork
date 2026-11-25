@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 560,
+  "next_id": 561,
   "preamble": "",
   "passes": [
     {
@@ -28387,7 +28387,7 @@
       "id": "S535",
       "title": "Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help",
       "short_title": "Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28418,6 +28418,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "d5f61546-6dff-4144-905e-a2ef9775b031",
+          "kind": "",
+          "text": "**2026-11-25** — Help overlay scrolls one line per wheel notch (mouse on); while it overflows the hint keeps the scroll keys in three widths and never shows `q quit` without them; pgup already inverts pgdown (regression test); vet, gofmt, go test ./... and slicer check pass.",
+          "created_at": "2026-11-25T14:51:31Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28437,7 +28451,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28643,7 +28657,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "824c2384-32cc-44b6-965a-9d64d51e7832",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
+          "created_at": "2026-11-25T14:49:20Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -28728,7 +28757,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "1f1e260a-2d74-41e5-adde-99058cd13dc2",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
+          "created_at": "2026-11-25T14:49:20Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -29266,7 +29310,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5fd40325-9eec-4732-b4ca-bdbc2eb91955",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten).",
+          "created_at": "2026-11-25T14:49:20Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -29363,6 +29422,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-adj-d57c1ab6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S560",
+      "title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
+      "short_title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S558",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-803b8cb7",
         "pass": "v1.2",
         "group": "",
         "reason": "",

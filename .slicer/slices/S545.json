@@ -24,7 +24,7 @@
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "Owner decisions (2026-11-25): Which fix stops a flaky red slice check from pinning a run across retries? -> rerun-on-retry: `ork retry` always re-runs red slice checks (force=true on the retry path in `runSliceChecks`, internal/engine/states.go:1061). Green batches stay cached, and red is never reused after a retry grant. [checks.red-evidence-retry]. How should this slice's empty Files, Failing tests, Implement and Check sections be filled? -> tighten: the owner picks the fix above, then the spec gets named files (`internal/engine/states.go`, plus the retry command file if option 1 or 3), a named failing engine test, and the Check `go test -race -count=1 ./internal/engine`, done when it exits 0 and the new test passes. The spec check would then be re-run.."
     },
     {
       "heading": "Check",

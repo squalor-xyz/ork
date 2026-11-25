@@ -227,6 +227,97 @@ func TestHelpScrollDoesNotMoveTheRowCursor(t *testing.T) {
 	}
 }
 
+// pgup is the exact inverse of pgdown (S535): from the offset one pgdown reached,
+// one pgup is back on the top, at 80x24 and at every height that pages.
+func TestHelpPageUpInvertsPageDown(t *testing.T) {
+	for _, size := range [][2]int{{80, 24}, {80, 16}, {60, 16}, {100, 24}} {
+		h := helpHarness(t)
+		h.send(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
+		if h.m.helpOffset != 0 {
+			t.Fatalf("%dx%d: help did not open at the top: %d", size[0], size[1], h.m.helpOffset)
+		}
+		h.deliver(tea.KeyPressMsg{Code: tea.KeyPgDown})
+		if h.m.helpOffset == 0 {
+			t.Fatalf("%dx%d: pgdown did not move", size[0], size[1])
+		}
+		h.deliver(tea.KeyPressMsg{Code: tea.KeyPgUp})
+		if h.m.helpOffset != 0 {
+			t.Errorf("%dx%d: one pgup after one pgdown left the offset at %d, want 0", size[0], size[1], h.m.helpOffset)
+		}
+	}
+}
+
+// Below 80 columns the hint keeps the scroll keys while the help overflows, and
+// drops q quit first (S535; owner 2026-11-25, ui.help-narrow-hint).
+func TestHelpNarrowHintKeepsScrollDropsQuit(t *testing.T) {
+	h := helpHarness(t)
+	h.send(tea.WindowSizeMsg{Width: 60, Height: 16})
+	if !strings.Contains(helpBody(h), "more lines") {
+		t.Fatalf("help does not overflow at 60x16:\n%s", helpBody(h))
+	}
+	hint := hintLine(plainView(h.m))
+	for _, want := range []string{"pgup/pgdown", "close help"} {
+		if !strings.Contains(hint, want) {
+			t.Errorf("60x16 help hint lacks %q: %q", want, hint)
+		}
+	}
+	if strings.Contains(hint, "q quit") {
+		t.Errorf("60x16 help hint keeps q quit: %q", hint)
+	}
+	// Narrower still, the scroll keys stay as keys alone (50x14).
+	h.send(tea.WindowSizeMsg{Width: 50, Height: 14})
+	hint = hintLine(plainView(h.m))
+	if !strings.Contains(hint, "pgup/pgdown") || !strings.Contains(hint, "close help") || strings.Contains(hint, "q quit") {
+		t.Errorf("50x14 help hint: %q, want the scroll keys and close help, no q quit", hint)
+	}
+}
+
+// While the help overflows, q quit never shows without the scroll keys, at any
+// width from 30 to 79 columns (S535, ui.help-narrow-hint).
+func TestHelpNarrowHintNeverQuitWithoutScroll(t *testing.T) {
+	h := helpHarness(t)
+	for w := 30; w < 80; w++ {
+		h.send(tea.WindowSizeMsg{Width: w, Height: 16})
+		view := plainView(h.m)
+		if !strings.Contains(view, "more lines") {
+			t.Fatalf("help does not overflow at %dx16", w)
+		}
+		hint := hintLine(view)
+		if strings.Contains(hint, "q quit") && !strings.Contains(hint, "pgup/pgdown") {
+			t.Errorf("%dx16 help hint shows q quit without the scroll keys: %q", w, hint)
+		}
+	}
+}
+
+// One wheel notch moves the help one line, like up and down, and only with mouse
+// mode on (S535; owner 2026-11-25, ui.help-wheel-step; adj 129).
+func TestHelpMouseWheelScrollsOneLine(t *testing.T) {
+	h := helpHarness(t)
+	wheel := func(b tea.MouseButton) { h.deliver(tea.MouseWheelMsg{X: 40, Y: 10, Button: b}) }
+	wheel(tea.MouseWheelDown)
+	if h.m.helpOffset != 0 {
+		t.Fatalf("wheel scrolled the help with mouse mode off: %d", h.m.helpOffset)
+	}
+	h.send(press("M"))
+	if !h.m.mouse || !h.m.showHelp {
+		t.Fatalf("mouse %v, help %v; want both on", h.m.mouse, h.m.showHelp)
+	}
+	wheel(tea.MouseWheelDown)
+	if h.m.helpOffset != 1 {
+		t.Fatalf("wheel down: offset %d, want 1", h.m.helpOffset)
+	}
+	wheel(tea.MouseWheelDown)
+	wheel(tea.MouseWheelUp)
+	if h.m.helpOffset != 1 {
+		t.Fatalf("wheel down, down, up: offset %d, want 1", h.m.helpOffset)
+	}
+	wheel(tea.MouseWheelUp)
+	wheel(tea.MouseWheelUp)
+	if h.m.helpOffset != 0 {
+		t.Fatalf("wheel up past the top: offset %d, want 0", h.m.helpOffset)
+	}
+}
+
 func TestHelpHintNamesTheScrollKeys(t *testing.T) {
 	h := helpHarness(t)
 	if got := hintLine(plainView(h.m)); got != "up/down pgup/pgdown scroll; ? or esc close help; q quit" {
