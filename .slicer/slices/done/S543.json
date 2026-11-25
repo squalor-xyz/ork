@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/landdirty.go`: `commitLaunchTracking` and new helpers `sliceFileItem`, `movedItems`\n- `internal/engine/landdirty_test.go`\n- `docs/design.md`: setup bullet on the start commit"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- `TestLaunchTrackingCommitsRetireMoves` (`internal/engine/landdirty_test.go`): three items moved to retired/ or done/ with the index and renders changed, plus an unrelated dirty slice S700. Expected: the commit holds the index, each moved item's deleted and new slice file and its render; S700 stays dirty. Red: only the index is committed.\n- `TestLaunchTrackingLeavesInPlaceDoneEdit` (`internal/engine/landdirty_test.go`): a done item edited in place (file and render) with the index dirty. Expected: the commit holds the index alone; the done file and render stay dirty. Red: both are committed.\n- `TestLaunchTrackingLeavesMovesWithoutIndex` (`internal/engine/landdirty_test.go`): a move with no index change makes no commit."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- Acceptance: with a retire move dirty on main, the start commit holds the index, the moved slice files and their renders, and a new worktree passes `slicer check`.\n- `go test ./internal/engine -run TestLaunchTracking`"
     },
     {
       "heading": "Git",

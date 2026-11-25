@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">559 items · — 56 · done 379 · retired 124</p>
+<p class="summary">559 items · — 55 · done 380 · retired 124</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -300,7 +300,7 @@
 <tr class="open"><td>245</td><td>S540</td><td>For CLI-only slices, say in the UI pass brief that the 80x24, 120x40 and ascii renders are identical and allow one file per view</td><td></td><td>-</td><td></td><td>discovered from S261</td><td class="status">—</td></tr>
 <tr class="open"><td>246</td><td>S541</td><td>allow read-only slicer relay-roles show for reviewer roles so a matrix-related finding can be checked against the real matrix</td><td></td><td>-</td><td></td><td>discovered from S261</td><td class="status">—</td></tr>
 <tr class="open"><td>247</td><td>S542</td><td>before the gate, check that every adj key cited as an owner decision in the diff resolves with adj check, and list the ones that do not in the brief</td><td></td><td>-</td><td></td><td>discovered from S251</td><td class="status">—</td></tr>
-<tr class="open"><td>248</td><td>S543</td><td>Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>248</td><td>S543</td><td>Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice</td><td>S</td><td>-</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>249</td><td>S544</td><td>Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load</td><td>S</td><td>-</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="open"><td>250</td><td>S545</td><td>A red slice check from a flake stays cached across retries until the product or Check text changes</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
 <tr class="done"><td>251</td><td>S546</td><td>Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns</td><td></td><td>2</td><td></td><td>discovered from S251</td><td class="status">done</td></tr>

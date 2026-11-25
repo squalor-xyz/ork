@@ -66,6 +66,105 @@ func TestLaunchTrackingListedSlices(t *testing.T) {
 	}
 }
 
+// S543: a retire (or done) move on main changes the index, so the start commit
+// carries the slice-file move and the render of each moved item with it, and
+// leaves other dirty tracking files with the owner.
+func TestLaunchTrackingCommitsRetireMoves(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	moved := map[string]string{"S502": "retired", "S532": "retired", "S600": "done"}
+	for id := range moved {
+		writeFile(t, filepath.Join(h.P, ".slicer/slices/"+id+".json"), "{}\n")
+		writeFile(t, filepath.Join(h.P, ".slicer/render/slices/"+id+".md"), "# "+id+"\n")
+	}
+	writeFile(t, filepath.Join(h.P, ".slicer/slices/S700.json"), "{}\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/render/slices/S700.md"), "# S700\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/index.json"), "[]\n")
+	gitRun(t, h.P, "add", "-A")
+	gitRun(t, h.P, "commit", "-qm", "slices")
+	// The retire: move the file, update the index and the render. S700 is an
+	// unrelated edit the owner has not committed.
+	var wantCommit []string
+	for id, folder := range moved {
+		if err := os.MkdirAll(filepath.Join(h.P, ".slicer/slices/"+folder), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.Rename(filepath.Join(h.P, ".slicer/slices/"+id+".json"), filepath.Join(h.P, ".slicer/slices/"+folder+"/"+id+".json")); err != nil {
+			t.Fatal(err)
+		}
+		writeFile(t, filepath.Join(h.P, ".slicer/render/slices/"+id+".md"), "# "+id+" "+folder+"\n")
+		wantCommit = append(wantCommit, ".slicer/render/slices/"+id+".md", ".slicer/slices/"+id+".json", ".slicer/slices/"+folder+"/"+id+".json")
+	}
+	wantCommit = append(wantCommit, ".slicer/index.json")
+	sort.Strings(wantCommit)
+	writeFile(t, filepath.Join(h.P, ".slicer/index.json"), `[{"id":"S502","status":"retired"}]`+"\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/slices/S700.json"), "owner\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/render/slices/S700.md"), "owner\n")
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", h.P}, Stdout: `[]`})
+	e := &Engine{proj: h.proj, d: h.deps}
+	e.d.Slicer = slicercli.Client{Bin: fake.Bin("slicer")}
+	if reason := e.commitLaunchTracking(context.Background(), "S900"); reason != "" {
+		t.Fatalf("launch reason %q", reason)
+	}
+	committed := strings.Split(gitRun(t, h.P, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"), "\n")
+	sort.Strings(committed)
+	if strings.Join(committed, "\n") != strings.Join(wantCommit, "\n") {
+		t.Errorf("committed paths %q, want %q", committed, wantCommit)
+	}
+	dirty := gitRun(t, h.P, "status", "--porcelain", "--untracked-files=all")
+	if want := "M .slicer/render/slices/S700.md\n M .slicer/slices/S700.json"; strings.TrimSpace(dirty) != strings.TrimSpace(want) {
+		t.Errorf("owner status %q, want %q", dirty, want)
+	}
+}
+
+// An in-place edit of a done item (a note, say) is not a move: the active file
+// is not dirty, so the start commit takes the index alone and leaves the done
+// file and the render with the owner.
+func TestLaunchTrackingLeavesInPlaceDoneEdit(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	writeFile(t, filepath.Join(h.P, ".slicer/slices/done/S100.json"), "{}\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/render/slices/S100.md"), "# S100\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/index.json"), "[]\n")
+	gitRun(t, h.P, "add", "-A")
+	gitRun(t, h.P, "commit", "-qm", "slices")
+	writeFile(t, filepath.Join(h.P, ".slicer/slices/done/S100.json"), "{\"note\":1}\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/render/slices/S100.md"), "# S100 note\n")
+	writeFile(t, filepath.Join(h.P, ".slicer/index.json"), `[{"id":"S100"}]`+"\n")
+	fake := clitest.Install(t, clitest.Route{Tool: "slicer", Args: []string{"list", "--json", "--lean", "--root", h.P}, Stdout: `[]`})
+	e := &Engine{proj: h.proj, d: h.deps}
+	e.d.Slicer = slicercli.Client{Bin: fake.Bin("slicer")}
+	if reason := e.commitLaunchTracking(context.Background(), "S900"); reason != "" {
+		t.Fatalf("launch reason %q", reason)
+	}
+	if got := gitRun(t, h.P, "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"); got != ".slicer/index.json" {
+		t.Errorf("committed paths %q, want the index alone", got)
+	}
+	if got, want := gitRun(t, h.P, "status", "--porcelain"), "M .slicer/render/slices/S100.md\n M .slicer/slices/done/S100.json"; got != want {
+		t.Errorf("owner status %q, want %q", got, want)
+	}
+}
+
+// Without an index change the start commit has nothing to keep consistent, so a
+// move stays with the owner.
+func TestLaunchTrackingLeavesMovesWithoutIndex(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	writeFile(t, filepath.Join(h.P, ".slicer/slices/S502.json"), "{}\n")
+	gitRun(t, h.P, "add", "-A")
+	gitRun(t, h.P, "commit", "-qm", "slice")
+	if err := os.MkdirAll(filepath.Join(h.P, ".slicer/slices/retired"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(filepath.Join(h.P, ".slicer/slices/S502.json"), filepath.Join(h.P, ".slicer/slices/retired/S502.json")); err != nil {
+		t.Fatal(err)
+	}
+	e := &Engine{proj: h.proj, d: h.deps}
+	if reason := e.commitLaunchTracking(context.Background(), "S900"); reason != "" {
+		t.Fatalf("launch reason %q", reason)
+	}
+	if got := gitRun(t, h.P, "log", "-1", "--format=%s"); got != "slice" {
+		t.Errorf("a commit was made: %q", got)
+	}
+}
+
 // landingTrackingIndex gives both branches index edits, with newly listed
 // slice files present only as untracked files in the main checkout.
 func landingTrackingIndex(t *testing.T) *landEnv {

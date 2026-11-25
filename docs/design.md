@@ -520,11 +520,17 @@ slice.
     `slicer list --json --lean` through the slicer client and include each
     listed item's untracked slice JSON and render when `has_slice` is true
     (S347, adj 321). This keeps the committed index from listing slice files
-    left uncommitted on main. Edits to other items' already tracked files,
-    unlisted files, configuration and relay roles stay uncommitted, including
-    staged edits. Clean main needs no commit. A status, prefix, list, untracked
-    file read, add or commit error pauses setup with one line before creating the
-    worktree. An existing worktree directory skips this commit, including on
+    left uncommitted on main. When committing the index, also include the
+    slice-file move and the render of each item that moved between
+    `.slicer/slices/` and `.slicer/slices/retired/` or `.slicer/slices/done/`
+    (both slice files dirty; an edit in place of a done file is not a move):
+    the deleted `.slicer/slices/ID.json`, the new file in `retired/` or
+    `done/`, and `.slicer/render/slices/ID.md`, so a retired item has no
+    active copy in the new worktree (S543, `run.start-commit-tracking-moves`).
+    Edits to other items' already tracked files, unlisted files, configuration
+    and relay roles stay uncommitted, including staged edits. Clean main needs
+    no commit. A status, prefix, list, untracked file read, add or commit error
+    pauses setup with one line before creating the worktree. An existing worktree directory skips this commit, including on
     a retry after setup already created it.
   - Beside this commit, and not part of setup: *proposed (S405; adj 453, adj
     461, adj 462)* `ork tracking commit P` (the `tracking.commit` daemon method, under

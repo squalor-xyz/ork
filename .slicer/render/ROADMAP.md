@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-559 items · — 56 · done 379 · retired 124
+559 items · — 55 · done 380 · retired 124
 
 ## v1.3
 
@@ -302,7 +302,7 @@ v1.2
 | 245 | [S540](slices/S540.md) | For CLI-only slices, say in the UI pass brief that the 80x24, 120x40 and ascii renders are identical and allow one file per view |  | - |  | discovered from S261 | — |
 | 246 | [S541](slices/S541.md) | allow read-only slicer relay-roles show for reviewer roles so a matrix-related finding can be checked against the real matrix |  | - |  | discovered from S261 | — |
 | 247 | [S542](slices/S542.md) | before the gate, check that every adj key cited as an owner decision in the diff resolves with adj check, and list the ones that do not in the brief |  | - |  | discovered from S251 | — |
-| 248 | [S543](slices/S543.md) | Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice | S | - |  |  | — |
+| 248 | [S543](slices/S543.md) | Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice | S | - |  |  | done |
 | 249 | [S544](slices/S544.md) | Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load | S | - |  |  | done |
 | 250 | [S545](slices/S545.md) | A red slice check from a flake stays cached across retries until the product or Check text changes | S | - |  |  | — |
 | 251 | [S546](slices/S546.md) | Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns |  | 2 |  | discovered from S251 | done |
