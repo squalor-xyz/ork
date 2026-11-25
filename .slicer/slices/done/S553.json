@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "`internal/cli/daemoncmds.go`, `internal/cli/statusfmt_test.go`, `docs/design.md` and `docs/dashboard.md`."
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "`TestStatusShowsTheWaveOfARow` in `internal/cli/statusfmt_test.go` asserts the new order, with the `wave:` line after the last numbered option and after the `next:` line."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "`go test ./internal/cli` exits 0, then `go test ./...`, `go vet ./...` and `gofmt -l .` are clean."
     },
     {
       "heading": "Git",

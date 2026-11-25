@@ -587,6 +587,15 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 			return m, m.click(mouse.X, mouse.Y)
 		}
 		return m, nil
+	case tea.MouseWheelMsg:
+		// The wheel scrolls only the help, one line a notch (S535).
+		switch msg.Mouse().Button {
+		case tea.MouseWheelDown:
+			m.wheelHelp(1)
+		case tea.MouseWheelUp:
+			m.wheelHelp(-1)
+		}
+		return m, nil
 	case tea.PasteMsg:
 		if m.removing.name != "" {
 			return m, nil
@@ -647,12 +656,30 @@ func (m *Model) Update(msg tea.Msg) (model tea.Model, cmd tea.Cmd) {
 	return m, nil
 }
 
-func (m *Model) scrollHelp(msg tea.KeyPressMsg) {
+// helpWindow is the help body's line count, its window height and the last
+// offset a window can start at, with helpOffset held inside that range.
+func (m *Model) helpWindow() (total, bodyH, last int) {
 	w, h, sideW := m.layoutSize()
-	bodyH := max(h-4, 1)
-	total := len(m.helpLines(max(w-sideW, 1), bodyH))
-	last := windowStart(total-1, total, bodyH)
+	bodyH = max(h-4, 1)
+	total = len(m.helpLines(max(w-sideW, 1), bodyH))
+	last = windowStart(total-1, total, bodyH)
 	m.helpOffset = min(max(m.helpOffset, 0), last)
+	return total, bodyH, last
+}
+
+// wheelHelp is one mouse-wheel notch over the help: one line, like up and down
+// (S535; owner 2026-11-25, ui.help-wheel-step). It acts only with mouse mode on
+// (adj 129).
+func (m *Model) wheelHelp(step int) {
+	if !m.mouse || !m.showHelp {
+		return
+	}
+	_, _, last := m.helpWindow()
+	m.helpOffset = min(max(m.helpOffset+step, 0), last)
+}
+
+func (m *Model) scrollHelp(msg tea.KeyPressMsg) {
+	total, bodyH, last := m.helpWindow()
 	hi, _, _ := span(total, m.helpOffset, bodyH)
 	step := 1
 	if key.Matches(msg, m.keys.PageDown) {
