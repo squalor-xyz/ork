@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 576,
+  "next_id": 577,
   "preamble": "",
   "passes": [
     {
@@ -30242,6 +30242,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-3337cca2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S576",
+      "title": "spec draft: keep the role's raw report when the report shape check fails, and name its path in the error",
+      "short_title": "spec draft: keep the role's raw report when the report shape check fails, and name its path in the error",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
         "pass": "v1.2",
         "group": "",
         "reason": "",
