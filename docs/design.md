@@ -2045,12 +2045,20 @@ separately.
     `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
     "TMPDIR/base/path"}}`, in the reviewer's process temp directory. A file
     the base lacks (new in the slice) maps to `""`, which `go` reads as a file
-    that does not exist; no base copy is written. The section names, for each
-    file, one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
+    that does not exist; no base copy is written. ork first runs
+    `go -C WORKTREE vet -overlay TMPDIR/overlay-N.json ./DIR` for each overlay
+    with a two-minute timeout (S593). Any non-zero vet exit lists the file as
+    `does not build: ERROR`, with the first three non-empty output lines,
+    each limited to 200 characters, and a `git show` pointer instead of a test
+    command. stderr takes priority over stdout; empty output gives the exit
+    code. A vet that cannot run or times out leaves the test command in place.
+    For each remaining file, the section names
+    one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
     ./DIR` command, so a read-only reviewer can run the package's tests with
     only that file reverted and see a test the slice added fail. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
-    test names in one `-run` pattern (S571). It says how
+    test names in one `-run` pattern (S571). This command guidance appears only
+    when at least one test command remains (S593). It says how
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git
