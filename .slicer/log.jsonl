@@ -6329,3 +6329,8 @@
 {"when": "2026-11-25T13:12:06Z", "item": "S547", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later findings 2-4 in. (2) Af", "by": "Jon Robbins"}
 {"when": "2026-11-25T13:12:06Z", "item": "S548", "action": "set", "from": "", "to": "", "note": "title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs; short_title Bind the CLI write to the preview the owner confirmed→matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs"}
 {"when": "2026-11-25T13:12:07Z", "item": "S548", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25 folded S261's later finding 5 in: the add i", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:18:18Z", "item": "S544", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fix the cache ordering. In internal/cache/", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:18:19Z", "item": "S544", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T13:18:23Z", "item": "S548", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T13:18:35Z", "item": "S535", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}
+{"when": "2026-11-25T13:18:35Z", "item": "S546", "action": "note", "from": "", "to": "", "note": "Owner 2026-11-25: fill the empty Files, Failing tests, Imple", "by": "Jon Robbins"}

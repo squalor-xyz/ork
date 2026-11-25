@@ -28347,6 +28347,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6d22adf5-c557-4676-ad3e-39288ab83031",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten): named failing tests per behaviour; Check go test ./internal/tui, go test ./..., go vet ./..., gofmt -l . (must print nothing); goldens rewritten with -update and reviewed.",
+          "created_at": "2026-11-25T13:18:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28677,6 +28691,20 @@
           "kind": "",
           "text": "**2026-11-25** — Owner 2026-11-25 folded S251's later finding 2 in: align the relay role rows in columns; the use text starts at a different column on each row (internal/tui/settings.go:526-533). Source: ork show ork-20261125-015357-ca10.",
           "created_at": "2026-11-25T13:12:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1395eb49-5bd0-4ee1-bc5c-362b7bb8d40f",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25: fill the empty Files, Failing tests, Implement and Check sections as the spec check drafted them (tighten): named failing tests per behaviour; Check go test ./internal/tui, go test ./..., go vet ./..., gofmt -l . (must print nothing); goldens rewritten with -update and reviewed.",
+          "created_at": "2026-11-25T13:18:35Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
