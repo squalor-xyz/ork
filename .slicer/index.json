@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 552,
+  "next_id": 554,
   "preamble": "",
   "passes": [
     {
@@ -28959,6 +28959,77 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S552",
+      "title": "UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files",
+      "short_title": "UI-pass brief and docs name -render-fixture, its eight fixtures, and the five default render files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "5de0dbee-82ca-4ac6-9e5b-d1f9c754ee06",
+          "kind": "",
+          "text": "**2026-11-25** — Owner 2026-11-25 folded S499's later findings 1, 2 and 5 in. Also update docs/guide.md:992-997 and docs/design.md:805-810: -renders alone writes five files (status, status-summary, status-summary-long, show, help), and -render-fixture NAME[,NAME...] writes the eight fixtures. internal/engine/brief_test.go:992 asserts the current brief text. Source: ork show ork-20261125-131038-69e9.",
+          "created_at": "2026-11-25T13:32:23Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-131038-69e9-later-3",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 3,
+        "urgency": 2,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S553",
+      "title": "In ork status, print the wave line after the multi-line wait's options",
+      "short_title": "In ork status, print the wave line after the multi-line wait's options",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S499",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-131038-69e9-later-4",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }
