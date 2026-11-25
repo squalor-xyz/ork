@@ -1,0 +1,39 @@
+{
+  "id": "S581",
+  "title": "create the renders directory before the UI pass starts",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261125-185255-fc37, project ork, item S556:\n\ncreate the renders directory before the UI pass starts\n\nEvidence: open /home/jon/.local/state/ork/runs/ork-20261125-185255-fc37/tmp/ui-1/renders/help-80x24.txt: no such file or directory (my overlay test had to call os.MkdirAll first)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

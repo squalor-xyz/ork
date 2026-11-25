@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 581,
+  "next_id": 586,
   "preamble": "",
   "passes": [
     {
@@ -29462,7 +29462,7 @@
       "id": "S556",
       "title": "give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows",
       "short_title": "give the UI pass a hint-line width sweep that asserts the help hint keeps its scroll key wherever the help overflows",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29493,6 +29493,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "283398e9-92c2-4c10-88b1-fada61db0c30",
+          "kind": "",
+          "text": "**2026-11-25** — Added TestHelpHintKeepsScrollKeyWhereHelpOverflows (widths 30-130, heights 16, 24, 40) to internal/tui/help_test.go, mutation-checked, plus the slice's changelog entry landed-changed/S556.md.",
+          "created_at": "2026-11-25T19:05:02Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -29512,7 +29526,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -29888,7 +29902,7 @@
       "id": "S564",
       "title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
       "short_title": "flag a new function whose only callers in tests are direct unit calls while its product call sites are reached by no test route",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -29898,6 +29912,34 @@
           "text": "**2026-11-25** — Owner decision (adj 573, review.untested-call-site-check): ork-code-warn. A deterministic Go step using go/parser and go/ast on the slice diff lists new non-test functions whose product call sites sit in no function a test reaches (only direct unit calls in tests), and shows them in the reviewer brief as an advisory section, like the decision-paths section. It never blocks or pauses a run. Jon chose 'ork code, warn in brief', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T18:31:51Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9a19e436-2500-41cd-9a8f-32bf0499b3f4",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S564):\n- later: In the next real reviewer round for a slice that adds a function tests call only directly, open the reviewer's brief under the run's role files. You should see a `## Untested call sites` section naming the function and its unreached call site. The run should not have paused for it.",
+          "created_at": "2026-11-25T19:06:08Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "c2a3b457-271f-434c-acbe-1e2b814b98fc",
+          "kind": "",
+          "text": "**2026-11-25** — The reviewer brief now carries an advisory `## Untested call sites` section naming new functions that tests call only directly while no test reaches the function around any product call site; go test ./..., go vet and gofmt are clean.",
+          "created_at": "2026-11-25T19:06:09Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -29924,7 +29966,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30341,7 +30383,7 @@
       "id": "S575",
       "title": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from",
       "short_title": "allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30351,6 +30393,34 @@
           "text": "**2026-11-25** — Owner decision (adj 574, launch.read-only-merge-base): add both Bash(git merge-base*) and Bash(git -C * merge-base*) to LocalReadOnlyAllowlist in internal/engine/perm.go, after the git show entries. Jon chose 'Add both forms', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T18:31:52Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "09712543-0044-4705-b597-59bf8c07180a",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: in internal/engine/perm_test.go, narrow the rg guard of TestReadOnlyAllowlistBatch to entries starting with Bash(rg (merge-base contains rg); keep the $, ;, && and = substring checks; rg stays banned (adj 520, 457). Jon chose 'Narrow guard', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T18:55:56Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "a2ab1d23-bb16-41cd-839a-a972e899c6d8",
+          "kind": "",
+          "text": "**2026-11-25** — Read-only roles (reviewer, gate, architect, spec-check, spec-draft, cloud UI pass) may run `git merge-base` and `git -C DIR merge-base` without a prompt; `go vet`, `gofmt -l` and `go test ./...` are clean.",
+          "created_at": "2026-11-25T19:09:14Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30377,7 +30447,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30511,6 +30581,161 @@
         "parent": "",
         "cites": [],
         "key": "scroll-sweep-roadmap-list-goals-h10",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S581",
+      "title": "create the renders directory before the UI pass starts",
+      "short_title": "create the renders directory before the UI pass starts",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S556",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0ce1c197",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S582",
+      "title": "in the Base overlays section, say which tests the brief's focused -run pattern covers, as separate commands without a pipe",
+      "short_title": "in the Base overlays section, say which tests the brief's focused -run pattern covers, as separate commands without a pipe",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S564",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-bac1b60e",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S583",
+      "title": "give the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation",
+      "short_title": "give the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "76aa7d0d-737a-4a62-a634-2246c5b5c826",
+          "kind": "",
+          "text": "**2026-11-25** — possible duplicate of S523, S571",
+          "created_at": "2026-11-25T19:07:07Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S531",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-64363444",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S584",
+      "title": "When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected",
+      "short_title": "When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S531",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-d9e05d4f",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S585",
+      "title": "in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X",
+      "short_title": "in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S575",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-fb4b9fc4",
         "pass": "v1.2",
         "group": "",
         "reason": "",

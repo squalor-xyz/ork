@@ -2048,6 +2048,28 @@ separately.
     base) adds an incomplete-check notice that tells the reviewer to run `git
     show` itself. The section is advisory and never blocks the run. The gate and
     the architect get none;
+  - before the reviewer starts, a `## Untested call sites` section when a new
+    function is called directly by tests while no test reaches the function
+    around any of its product call sites (S564, adj 573,
+    `review.untested-call-site-check`). A deterministic Go step parses the
+    changed non-test Go files at the merge base (`git show MERGEBASE:path`,
+    the merge base Direction uses) and every Go file in the worktree with
+    `go/parser`. A function is new when its directory and key (`Recv.Name`,
+    or `Name` for a plain function) are absent from the base version of the
+    changed files; a file the base lacks is all new. A name is reached when a
+    function declared in a `_test.go` file calls it, or when a product function
+    with a reached name calls it, until nothing changes. A new function is
+    listed when a test calls it directly, it has a product call site outside
+    itself, and no product call site sits in a function whose name is reached.
+    The section names the function, each call site with its enclosing
+    function, and the test files that call it directly. It lists at most 20,
+    sorted by path then name, and says how many it left out. The check goes by
+    function names with no type information, and it measures reach per
+    function, so it misses a call site in a reached function on a branch no
+    test takes. A failed diff read or `git show` (other than path not in
+    base), an unreadable file or an unparseable file adds an incomplete-check
+    notice. The section is advisory and never blocks or pauses the run. The
+    gate and the architect get none;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,
@@ -2544,7 +2566,7 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   share a fixed read-only allowlist instead of plan mode. Cloud Claude uses
   `--permission-prompts none` and no permission mode flag; Grok read-only
   roles keep plan mode. The list allows `Read`, `Grep`,
-  `Glob`, `git diff`, `git log`, `git status`, `git show` (also with `git -C`),
+  `Glob`, `git diff`, `git log`, `git status`, `git show` and `git merge-base` (also with `git -C`; adj 574),
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
   `slicer check` (adj 504, including `slicer check --root DIR`), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including

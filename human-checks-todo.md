@@ -290,3 +290,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S565 (run ork-20261125-182244-1153, 2026-11-25)
 
 - [ ] Read the rendered UI brief. It should show `## Test run patterns` after `## CLI text renders`, with the one-test-per-command example. The implementer, reviewer and gate briefs should not show it.
+
+## S564 (run ork-20261125-184829-ca71, 2026-11-25)
+
+- [ ] In the next real reviewer round for a slice that adds a function tests call only directly, open the reviewer's brief under the run's role files. You should see a `## Untested call sites` section naming the function and its unreached call site. The run should not have paused for it.
