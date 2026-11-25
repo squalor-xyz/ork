@@ -6694,3 +6694,34 @@
 {"when": "2026-11-25T19:50:35Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Owner direction: add negative cases (git -C /w commit -m sho", "by": "Jon Robbins"}
 {"when": "2026-11-25T19:50:35Z", "item": "S587", "action": "note", "from": "", "to": "", "note": "Also covers: run branchChange once per reviewer round and sh", "by": "Jon Robbins"}
 {"when": "2026-11-25T19:50:35Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Covers S531 run findings 1 and 2: extend TestScrollSweep to ", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:50:43Z", "item": "S589", "action": "add", "from": "", "to": "open", "note": "put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe"}
+{"when": "2026-11-25T19:50:43Z", "item": "S589", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:51:26Z", "item": "S582", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T19:51:26Z", "item": "S583", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T19:51:26Z", "item": "S571", "action": "note", "from": "", "to": "", "note": "Also covers S582 (Base overlays section says which tests the", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:51:27Z", "item": "S585", "action": "retire", "from": "open", "to": "retired", "note": "Folded into S586; Jon chose 'Fold into S586', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T19:51:27Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Also covers S585: in the permission tests, check every git -", "by": "Jon Robbins"}
+{"when": "2026-11-25T19:53:17Z", "item": "S579", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T19:53:17Z", "item": "S580", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:00:37Z", "item": "S590", "action": "add", "from": "", "to": "open", "note": "give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe"}
+{"when": "2026-11-25T20:00:37Z", "item": "S590", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T20:22:00Z", "item": "S586", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 577 if numbered so; key launch.read-only", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:00Z", "item": "S571", "action": "note", "from": "", "to": "", "note": "Owner decision: text only. Rework the brief's Test run patte", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:00Z", "item": "S579", "action": "note", "from": "", "to": "", "note": "Owner decision: page step. The page keys move pane.offset by", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:01Z", "item": "S580", "action": "note", "from": "", "to": "", "note": "Owner decision (key ui.roadmap-list-goals-scroll): with the ", "by": "Jon Robbins"}
+{"when": "2026-11-25T20:22:01Z", "item": "S578", "action": "retire", "from": "open", "to": "retired", "note": "Already fixed: withoutAcceptanceCriteria (internal/engine/brief.go:886, S407) drops criteria bullets before the backtick split, tested by TestCheckSectionsSkipAcceptanceCriteria. Jon chose 'Retire as fixed', session 8d711f67, 2026-11-25."}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:31:34Z", "item": "S586", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:31:34Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:31:34Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:31:35Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:31:35Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:31:35Z", "item": "S571", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T20:31:35Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T20:31:36Z", "item": "S579", "action": "edit", "from": "", "to": "", "note": "Check"}
