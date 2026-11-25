@@ -6812,3 +6812,6 @@
 {"when": "2026-11-25T21:34:46Z", "item": "S598", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T21:36:36Z", "item": "S599", "action": "add", "from": "", "to": "open", "note": "build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice"}
 {"when": "2026-11-25T21:36:36Z", "item": "S599", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T22:04:07Z", "item": "S600", "action": "add", "from": "", "to": "open", "note": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen."}
+{"when": "2026-11-25T22:04:08Z", "item": "S600", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T22:04:08Z", "item": "S600", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→2"}

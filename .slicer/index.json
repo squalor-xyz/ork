@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 600,
+  "next_id": 601,
   "preamble": "",
   "passes": [
     {
@@ -31508,6 +31508,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S600",
+      "title": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen.",
+      "short_title": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen.",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S580",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261125-204703-eec0-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 2,
         "attempts": 0
       }
     }
