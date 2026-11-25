@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 560,
+  "next_id": 561,
   "preamble": "",
   "passes": [
     {
@@ -29408,6 +29408,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-adj-d57c1ab6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S560",
+      "title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
+      "short_title": "before review, check that every landed-changed path named in an owner decision is modified in the diff, and flag it if not",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S558",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-803b8cb7",
         "pass": "v1.2",
         "group": "",
         "reason": "",
