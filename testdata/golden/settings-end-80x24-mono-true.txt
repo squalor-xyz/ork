@@ -1,8 +1,8 @@
 [1mork[m                │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
 [2m  Running        0 [m│[2m────────────────────────────────────────────────────────────[m
 [2m0[m Needs you      0 │[1mProject settings: ork  (esc closes)[m
-[1;7m1>ork              [m│[2m  +29 lines above[m
-[2m2[m other            │  daemon_idle_minutes  unset (effective 0)
+[1;7m1>ork              [m│[2m  +30 lines above[m
+[2m2[m other            │[2mork (global)[m
                    │  owner                Jon
                    │  file_answers         off
                    │

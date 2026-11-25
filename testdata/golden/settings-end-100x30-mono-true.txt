@@ -1,8 +1,8 @@
 [1mork[m                        │ Overview[2m │ [mQuestions[2m │ [mWaves[2m │ [m[1mRoadmap[m[2m │ [mDecisions
 [2m  Running                0 [m│[2m────────────────────────────────────────────────────────────────────────[m
 [2m0[m Needs you              0 │[1mProject settings: ork  (esc closes)[m
-[1;7m1>ork                      [m│[2m  +23 lines above[m
-[2m2[m other                    │  environment_line     unset
+[1;7m1>ork                      [m│[2m  +24 lines above[m
+[2m2[m other                    │[2mork (projects.json)[m
                            │  permission           unset
                            │  vendor_env           codex: VISIBLE_KEY
                            │

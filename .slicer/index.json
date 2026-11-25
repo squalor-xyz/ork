@@ -28739,7 +28739,7 @@
       "id": "S546",
       "title": "Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns",
       "short_title": "Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28770,6 +28770,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "d4dfc991-bc0a-4c55-a663-f6e820348beb",
+          "kind": "",
+          "text": "**2026-11-25** — The settings pane pins the dim block heading under the `+N lines above` marker when the window starts inside a block, now also at the end of the body at every height with room to pin, and pads the relay role columns so `use` starts at one column; tests, goldens and docs/dashboard.md updated, full suite, vet and gofmt clean.",
+          "created_at": "2026-11-25T13:50:48Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28789,7 +28803,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

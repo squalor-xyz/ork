@@ -328,10 +328,10 @@ func (m *Model) settingsBody(width, height int) []string {
 	}
 	head := []string{th.Heading.Render(clip(title, max(width, 1)))}
 
-	var lines []string
+	var lines, heads []string
 	switch {
 	case s.result != nil:
-		lines = m.settingsLines(s.result, w)
+		lines, heads = m.settingsLines(s.result, w)
 	case s.pending:
 		lines = []string{indent + "pending: projects.show"}
 	case s.err != nil:
@@ -372,9 +372,32 @@ func (m *Model) settingsBody(width, height int) []string {
 
 	room := max(height-len(head)-len(foot), 1)
 	s.room = room
-	s.offset = min(s.offset, windowStart(len(lines)-1, len(lines), room)) // the last window ends flush with the body
-	out := append(head, window(lines, s.offset, room, th)...)
-	return append(out, foot...)
+	last := len(lines) - 1
+	// A window that starts inside a block pins the block's heading on the line
+	// under the +N lines above marker, and shows one line fewer of the body. The
+	// last window ends flush with the body.
+	canPin := room >= 4
+	if canPin {
+		s.offset = min(s.offset, windowStart(last, len(lines), room-1))
+	}
+	pin := ""
+	if canPin && s.offset > 0 && s.offset < len(heads) {
+		pin = heads[s.offset]
+	}
+	var body []string
+	if pin != "" {
+		body = slices.Insert(window(lines, s.offset, room-1, th), 1, pin)
+	} else {
+		// The offset is on a heading or a blank line, or the window is too short
+		// to pin. Fitting it to room lines must not move it into a block, where
+		// its first row would have no heading: then it stays, and the window pads.
+		fit := min(s.offset, windowStart(last, len(lines), room))
+		if !canPin || fit == s.offset || fit >= len(heads) || heads[fit] == "" {
+			s.offset = fit
+		}
+		body = window(lines, s.offset, room, th)
+	}
+	return append(append(head, body...), foot...)
 }
 
 // plainLine is s with its control characters taken out, on one line: every
@@ -413,15 +436,24 @@ func settingsList(items []string) string {
 
 // settingsLines is the body, one block per owner: a heading line, then KEY and
 // VALUE lines with the values cut to the width. vendor_env shows the names of
-// its keys and never a value (docs/state.md).
-func (m *Model) settingsLines(r *daemon.ProjectsShowResult, w int) []string {
+// its keys and never a value (docs/state.md). heads[i] is the dim heading of
+// the block that line i is in, and "" for a heading and a blank line: the pane
+// pins it when the window starts inside the block.
+func (m *Model) settingsLines(r *daemon.ProjectsShowResult, w int) (out, heads []string) {
 	th := m.cfg.Theme
-	var out []string
-	block := func(heading string, rows [][2]string) {
+	var current string
+	start := func(heading string) {
 		if len(out) > 0 {
-			out = append(out, "")
+			out, heads = append(out, ""), append(heads, "")
 		}
-		out = append(out, th.Heading.Render(heading))
+		out, heads = append(out, th.Heading.Render(heading)), append(heads, "")
+		current = th.Dim.Render(heading)
+	}
+	add := func(line string) {
+		out, heads = append(out, line), append(heads, current)
+	}
+	block := func(heading string, rows [][2]string) {
+		start(heading)
 		kw := 0
 		for _, row := range rows {
 			kw = max(kw, lipgloss.Width(row[0]))
@@ -430,7 +462,7 @@ func (m *Model) settingsLines(r *daemon.ProjectsShowResult, w int) []string {
 		for _, row := range rows {
 			name := clip(row[0], kw)
 			value := clip(row[1], max(w-kw-2, 1))
-			out = append(out, indent+name+strings.Repeat(" ", kw-lipgloss.Width(name))+"  "+value)
+			add(indent + name + strings.Repeat(" ", kw-lipgloss.Width(name)) + "  " + value)
 		}
 	}
 	// partError is the line of a part slicer could not read: slicer's code and
@@ -499,9 +531,9 @@ func (m *Model) settingsLines(r *daemon.ProjectsShowResult, w int) []string {
 	if err := json.Unmarshal(r.Slicer.Config, &config); err != nil {
 		config = nil
 	}
-	out = append(out, "", th.Heading.Render("slicer config"))
+	start("slicer config")
 	if config == nil {
-		out = append(out, partError("config"))
+		add(partError("config"))
 	} else {
 		kw := len("implement_finish")
 		for _, name := range []string{"relay_contract", "check_command", "claim_owner", "implement_finish"} {
@@ -514,26 +546,48 @@ func (m *Model) settingsLines(r *daemon.ProjectsShowResult, w int) []string {
 			default:
 				value = plainLine(string(raw))
 			}
-			out = append(out, indent+name+strings.Repeat(" ", kw-len(name))+"  "+clip(value, max(w-kw-2, 1)))
+			add(indent + name + strings.Repeat(" ", kw-len(name)) + "  " + clip(value, max(w-kw-2, 1)))
 		}
 	}
 
-	out = append(out, "", th.Heading.Render("slicer relay roles"))
+	start("slicer relay roles")
 	if mx := r.Slicer.Matrix; mx == nil {
-		out = append(out, partError("matrix"))
+		add(partError("matrix"))
 	} else {
-		for _, row := range mx.Rows {
-			words := []string{row.ID, row.Role, row.Agent, row.Model, row.Reasoning}
-			words = slices.DeleteFunc(words, func(s string) bool { return s == "" })
-			head, use := plainLine(strings.Join(words, " ")), plainLine(row.Use)
-			if room := w - lipgloss.Width(head) - 2; use != "" && room >= 4 {
-				out = append(out, indent+head+"  "+th.Dim.Render(clip(use, room)))
+		// The id, role, agent, model and reasoning of each row are padded to the
+		// widest value of their column, so the use text starts at one column. A
+		// column no row fills takes no room.
+		cells := make([][5]string, len(mx.Rows))
+		var widths [5]int
+		for i, row := range mx.Rows {
+			cells[i] = [5]string{plainLine(row.ID), plainLine(row.Role), plainLine(row.Agent), plainLine(row.Model), plainLine(row.Reasoning)}
+			for c, cell := range cells[i] {
+				widths[c] = max(widths[c], lipgloss.Width(cell))
+			}
+		}
+		headWidth := -1 // the gaps between the columns that take room
+		for _, cw := range widths {
+			if cw > 0 {
+				headWidth += cw + 1
+			}
+		}
+		room := w - max(headWidth, 0) - 2
+		for i, row := range mx.Rows {
+			var parts []string
+			for c, cell := range cells[i] {
+				if widths[c] > 0 {
+					parts = append(parts, cell+strings.Repeat(" ", widths[c]-lipgloss.Width(cell)))
+				}
+			}
+			head, use := strings.Join(parts, " "), plainLine(row.Use)
+			if use != "" && room >= 4 {
+				add(indent + head + "  " + th.Dim.Render(clip(use, room)))
 			} else {
-				out = append(out, indent+clip(head, w))
+				add(indent + clip(strings.TrimRight(head, " "), w))
 			}
 		}
 		if len(mx.Rows) == 0 {
-			out = append(out, indent+"no rows")
+			add(indent + "no rows")
 		}
 	}
 
@@ -542,5 +596,5 @@ func (m *Model) settingsLines(r *daemon.ProjectsShowResult, w int) []string {
 		configFile = "present"
 	}
 	block("adj", [][2]string{{"enabled", settingsOnOff(r.Adj.Enabled)}, {"config_file", configFile}})
-	return out
+	return out, heads
 }

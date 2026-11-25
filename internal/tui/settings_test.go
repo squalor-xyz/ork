@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 
@@ -375,6 +376,188 @@ func TestSettingsPaneScrollsByLineAndPage(t *testing.T) {
 	h.m.Update(press("g"))
 	if v := h.view(); v != top {
 		t.Fatalf("g did not return to the top:\n%s", v)
+	}
+}
+
+// settingsFullMatrix opens the pane for the fixture with every row of the
+// matrix fixture, and the model and reasoning of some of them. A last model
+// that is not empty is the model of the last row.
+func settingsFullMatrix(t *testing.T, lastModel string) *harness {
+	t.Helper()
+	h := roadmapHarness(t)
+	l := &settingsLive{result: settingsFixture()}
+	rows := matrixFixture().Rows
+	rows[0].Model, rows[0].Reasoning = "gpt-6.1-sol", "medium"
+	rows[1].Model, rows[1].Reasoning = "sonnet", "high"
+	rows[2].Model = "tiny"
+	rows[len(rows)-1].Model = lastModel
+	l.result.Slicer.Matrix = &daemon.ShowMatrix{Rows: rows}
+	h.m.cfg.Live = l
+	_, cmd := h.m.Update(press("S"))
+	if cmd == nil {
+		t.Fatal("S returned no projects.show command")
+	}
+	h.m.Update(cmd())
+	return h
+}
+
+// lineIndex is the index of the first line of the view that has every word of
+// words in order, as fields, or -1.
+func lineIndex(view string, words ...string) int {
+	for i, line := range strings.Split(view, "\n") {
+		fields := strings.Fields(line)
+		for at := 0; at+len(words) <= len(fields); at++ {
+			if slices.Equal(fields[at:at+len(words)], words) {
+				return i
+			}
+		}
+	}
+	return -1
+}
+
+// headingIndex is the index of the first line of the view that is exactly text,
+// less its indent, or -1.
+func headingIndex(view, text string) int {
+	return slices.IndexFunc(strings.Split(view, "\n"), func(line string) bool {
+		_, pane, _ := strings.Cut(line, "│")
+		return strings.TrimSpace(pane) == text
+	})
+}
+
+func TestSettingsPaneKeepsTheBlockHeadingWhenScrolled(t *testing.T) {
+	h := settingsFullMatrix(t, "")
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.m.Update(press("G"))
+	v := plainView(h.m)
+	heading, row := headingIndex(v, "slicer config"), lineIndex(v, "check_command", "go", "test", "./...")
+	if row < 0 || heading < 0 || heading > row {
+		t.Fatalf("the slicer config row at line %d is not under its heading at line %d:\n%s", row, heading, v)
+	}
+
+	// At every offset, a row of slicer config, of the relay roles and of adj
+	// has its block heading above it.
+	h.m.Update(press("g"))
+	for off := 0; off < 80; off++ {
+		v := plainView(h.m)
+		for _, c := range []struct {
+			heading string
+			row     []string
+		}{
+			{"slicer config", []string{"claim_owner", "Jon"}},
+			{"slicer relay roles", []string{"r3", "implementer"}},
+			{"adj", []string{"config_file", "absent"}},
+		} {
+			row := lineIndex(v, c.row...)
+			if row < 0 {
+				continue
+			}
+			if heading := headingIndex(v, c.heading); heading < 0 || heading > row {
+				t.Fatalf("offset %d: the row %v has no heading %v above it:\n%s", off, c.row, c.heading, v)
+			}
+		}
+		h.m.Update(press("j"))
+	}
+}
+
+func TestSettingsPanePinsTheHeadingBelowTheMarker(t *testing.T) {
+	h := settingsFullMatrix(t, "")
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 24})
+	h.m.Update(press("G"))
+	lines := strings.Split(plainView(h.m), "\n")
+	marker := -1
+	for i, line := range lines {
+		if strings.Contains(line, "lines above") {
+			marker = i
+		}
+	}
+	if marker < 0 || marker+1 >= len(lines) {
+		t.Fatalf("no marker of the lines above:\n%s", strings.Join(lines, "\n"))
+	}
+	_, next, _ := strings.Cut(lines[marker+1], "│")
+	if next = strings.TrimSpace(next); next != "adj" && next != "slicer config" && next != "slicer relay roles" && next != "ork (global)" && next != "ork (projects.json)" {
+		t.Fatalf("the line under the marker is not a block heading: %q", next)
+	}
+}
+
+func TestSettingsPaneEndsFlushAtEveryHeight(t *testing.T) {
+	for height := 8; height <= 60; height++ {
+		h := settingsFullMatrix(t, "")
+		h.m.Update(tea.WindowSizeMsg{Width: 80, Height: height})
+		h.m.Update(press("G"))
+		v := plainView(h.m)
+		if !strings.Contains(v, "config_file") || strings.Contains(v, "more lines") {
+			t.Fatalf("height %d: G did not end flush:\n%s", height, v)
+		}
+		// With room for a pin, the first body line under the marker is a block
+		// heading or the blank line between blocks, never a row without one.
+		if h.m.settings.room >= 4 {
+			lines := strings.Split(v, "\n")
+			marker := slices.IndexFunc(lines, func(line string) bool { return strings.Contains(line, "lines above") })
+			if marker < 0 && h.m.settings.offset > 0 {
+				t.Fatalf("height %d: no marker of the lines above:\n%s", height, v)
+			}
+			if marker < 0 {
+				continue // the whole body fits
+			}
+			if _, pane, _ := strings.Cut(lines[marker+1], "│"); strings.HasPrefix(pane, indent) {
+				t.Fatalf("height %d: a row under the marker has no block heading:\n%s", height, v)
+			}
+		}
+		// One more j keeps the end in view.
+		h.m.Update(press("j"))
+		if after := plainView(h.m); after != v {
+			t.Fatalf("height %d: j moved past the end:\n%s", height, after)
+		}
+	}
+}
+
+func TestSettingsPaneAlignsRelayRoleRows(t *testing.T) {
+	h := settingsFullMatrix(t, "")
+	// Each row by its id and the start of its use text, which a narrow pane clips.
+	rows := [][2]string{{"r9", "used as codex"}, {"r3", "used as claude"}, {"r21", "skipped:"}, {"r14", "UI pass row"}, {"r6", "not used:"}, {"r10", "not run by"}}
+	for _, width := range []int{160, 100} {
+		h.m.Update(tea.WindowSizeMsg{Width: width, Height: 100})
+		lines := strings.Split(plainView(h.m), "\n")
+		col := -1
+		for _, row := range rows {
+			at := slices.IndexFunc(lines, func(line string) bool {
+				_, pane, _ := strings.Cut(line, "│")
+				return strings.HasPrefix(strings.TrimSpace(pane), row[0]+" ") && strings.Contains(pane, row[1])
+			})
+			if at < 0 {
+				t.Fatalf("%d columns: no line of %s with %q:\n%s", width, row[0], row[1], strings.Join(lines, "\n"))
+			}
+			_, pane, _ := strings.Cut(lines[at], "│")
+			if got := strings.Index(pane, row[1]); col < 0 {
+				col = got
+			} else if got != col {
+				t.Errorf("%d columns: the use text of %s starts at column %d, not %d:\n%s", width, row[0], got, col, lines[at])
+			}
+		}
+	}
+}
+
+func TestSettingsPaneDropsTheUseTextWhenTheColumnsFillTheWidth(t *testing.T) {
+	// The last row has a 17-column model, so the padded head is 53 columns.
+	// The pane at 80 columns is 60 wide: the indent, the head and the gap
+	// leave the use text 3 columns. Unpadded, the longest head is 46 columns.
+	h := settingsFullMatrix(t, strings.Repeat("m", 17))
+	h.m.Update(tea.WindowSizeMsg{Width: 80, Height: 100})
+	v := plainView(h.m)
+	lines := strings.Split(v, "\n")
+	from, to := headingIndex(v, "slicer relay roles"), headingIndex(v, "adj")
+	if from < 0 || to < from {
+		t.Fatalf("no relay roles block:\n%s", v)
+	}
+	for _, line := range lines[from+1 : to] {
+		for _, use := range []string{"used a", "not run", "skipped", "UI pass", "not used", "..."} {
+			if strings.Contains(line, use) {
+				t.Fatalf("the use text %q is drawn without 4 columns:\n%s", use, v)
+			}
+		}
+	}
+	if !strings.Contains(v, "r10 orchestrator Claude Code") {
+		t.Fatalf("the head of a row is missing:\n%s", v)
 	}
 }
 

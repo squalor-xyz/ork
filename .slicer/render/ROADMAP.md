@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-551 items · — 54 · done 374 · retired 123
+551 items · — 53 · done 375 · retired 123
 
 ## v1.3
 
@@ -305,7 +305,7 @@ v1.2
 | 248 | [S543](slices/S543.md) | Start tracking commit includes retire moves, so a new worktree has no active copy of a retired slice | S | - |  |  | — |
 | 249 | [S544](slices/S544.md) | Flaky TestSubscriberGetsANoticeOnlyWhenAPartChanges: settle() races the attach read under -race load | S | - |  |  | — |
 | 250 | [S545](slices/S545.md) | A red slice check from a flake stays cached across retries until the product or Check text changes | S | - |  |  | — |
-| 251 | [S546](slices/S546.md) | Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns |  | 2 |  | discovered from S251 | — |
+| 251 | [S546](slices/S546.md) | Settings pane polish: keep the block heading visible when scrolled; align relay role rows in columns |  | 2 |  | discovered from S251 | done |
 | 252 | [S547](slices/S547.md) | matrix copy output: per-project question after its preview, labelled result, wrapped status lines, set-step fields |  | - |  | discovered from S261 | — |
 | 253 | [S548](slices/S548.md) | matrix copy: write exactly the preview the owner confirmed and check add ids across dry runs |  | 2 |  | discovered from S261 | — |
 | 254 | [S549](slices/S549.md) | allow read-only reviewers to run go test with -renders into their own temp dir so they can inspect render fixtures |  | - |  | discovered from S499 | — |
