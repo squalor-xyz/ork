@@ -517,6 +517,109 @@ func TestSpecCheckAsksAgainOnlyForAChangedSpec(t *testing.T) {
 	}
 }
 
+func TestSpecCheckRerunsACachedVerdictWhenANoteIsRecordedAfterTheSpec(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"log"}, Prefix: true, Stdout: `[{"when":"2026-11-26T02:00:00Z"}]`})
+	rig.readyReport = true
+	if res := rig.check(t, "S1"); !rig.item(res, "S1").Ready || len(rig.requests()) != 1 {
+		t.Fatalf("first check: %+v", res)
+	}
+	path := filepath.Join(rig.root, "S1.json")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw = []byte(strings.TrimSuffix(string(raw), "}") + `,"note_records":[{"id":"new-note","created_at":"2026-11-26T03:00:00Z","text":"list each path"}]}`)
+	if err := os.WriteFile(path, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	res := rig.check(t, "S1")
+	reqs := rig.requests()
+	if len(reqs) != 2 {
+		t.Fatalf("%d role requests; want 2 after new note", len(reqs))
+	}
+	if !rig.item(res, "S1").Ready {
+		t.Fatalf("second check: %+v", res)
+	}
+	_, body, _ := strings.Cut(reqs[1].Brief, "## Notes recorded after the spec\n")
+	if !strings.Contains(body, "new-note") || !strings.Contains(body, "list each path") {
+		t.Fatalf("second brief lacks flagged note: %s", body)
+	}
+	rig.check(t, "S1")
+	if len(rig.requests()) != 2 {
+		t.Fatal("unchanged flagged note was not cached")
+	}
+}
+
+func specRigWithFlaggedNote(t *testing.T) *specRig {
+	t.Helper()
+	rig := newSpecRig(t, rulesJSON(u11), clitest.Route{Tool: "slicer", Args: []string{"log"}, Prefix: true, Stdout: `[{"when":"2026-11-26T02:00:00Z"}]`})
+	path := filepath.Join(rig.root, "S1.json")
+	raw, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw = []byte(strings.TrimSuffix(string(raw), "}") + `,"note_records":[{"id":"later-note","created_at":"2026-11-26T03:00:00Z","text":"list each path"}]}`)
+	if err := os.WriteFile(path, raw, 0600); err != nil {
+		t.Fatal(err)
+	}
+	return rig
+}
+
+func TestStatusKeepsSpecQuestionsWithFlaggedNotes(t *testing.T) {
+	rig := specRigWithFlaggedNote(t)
+	before := statusOf(t, rig.d).NeedsYou
+	rig.report = "## Slice S1\nQuestion: Follow the note?\nOptions:\n1. note: follow the note\n2. spec: follow the spec\nRecommend: 1 - carry out the note\n\n## Owner needed\nnone\n"
+	rig.check(t, "S1")
+	got := statusOf(t, rig.d)
+	want := []SpecQuestions{{Item: "S1", Keys: []string{"#1"}, List: "ork wave start p S1 --questions"}}
+	if !reflect.DeepEqual(got.SpecQuestions, want) {
+		t.Errorf("flagged-note spec questions = %+v; want %+v", got.SpecQuestions, want)
+	}
+	if got.NeedsYou != before+1 {
+		t.Errorf("flagged-note needs_you = %d; want %d", got.NeedsYou, before+1)
+	}
+}
+
+func TestRestoreRunSpecAnswersKeepsFlaggedNoteFingerprint(t *testing.T) {
+	rig := specRigWithFlaggedNote(t)
+	p, err := rig.d.registered("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw, err := os.ReadFile(filepath.Join(rig.root, "S1.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	fp, err := engine.SpecFingerprintWithNotes(context.Background(), rig.d.runDeps(p), p.Path, "S1", raw)
+	if err != nil {
+		t.Fatal(err)
+	}
+	stored := storedSpecAnswers{Fingerprint: fp, Decisions: "Owner decisions: follow the note."}
+	path := filepath.Join(rig.d.specDir("p", "S1"), "answers.json")
+	if err := writeSpecJSON(path, stored); err != nil {
+		t.Fatal(err)
+	}
+	if err := rig.d.restoreRunSpecAnswers(context.Background(), p, "S1"); err != nil {
+		t.Fatal(err)
+	}
+	want, err := json.Marshal(stored)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := os.ReadFile(path)
+	if err != nil || string(got) != string(want) {
+		t.Errorf("flagged-note stored answers changed: %s, %v; want %s", got, err, want)
+	}
+	rec, err := rig.d.startRun(context.Background(), RunParams{Project: "p", Item: "S1"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	waitIdle(t, rig.d, rec.ID)
+	if rec.Decisions != stored.Decisions {
+		t.Errorf("restored run decisions = %q; want %q", rec.Decisions, stored.Decisions)
+	}
+}
+
 func TestSpecCheckReportsAMissingSpecPerItem(t *testing.T) {
 	rig := newSpecRig(t, rulesJSON(u11))
 	rig.mu.Lock()

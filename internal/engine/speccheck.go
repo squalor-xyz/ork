@@ -375,6 +375,7 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		return nil, fmt.Errorf("read-only fingerprint: %w", err)
 	}
 	specs := map[string]string{}
+	var noteBody strings.Builder
 	var raws []string
 	for _, id := range cfg.Items {
 		raw, err := d.Slicer.ShowRaw(ctx, root, id)
@@ -385,7 +386,17 @@ func runSpecCheckOnce(ctx context.Context, d Deps, cfg SpecCheckConfig) (*SpecCh
 		if err != nil {
 			return nil, fmt.Errorf("%s: %w", id, err)
 		}
-		specs[id] = fp
+		notes, err := SpecNotesAfterWrite(ctx, d, root, id, raw)
+		if err != nil {
+			return nil, fmt.Errorf("%s: %w", id, err)
+		}
+		specs[id] = specFingerprintNotes(fp, notes)
+		if len(notes) > 0 {
+			fmt.Fprintf(&noteBody, "%s:\n", id)
+			for _, n := range notes {
+				fmt.Fprintf(&noteBody, "- id: %s; created_at: %s; by: %s; kind: %s; text: %s\n", n.ID, n.CreatedAt, n.By, n.Kind, n.Text)
+			}
+		}
 		raws = append(raws, strings.TrimSpace(string(raw)))
 	}
 	tempDir := filepath.Join(cfg.Dir, "tmp")
@@ -411,11 +422,15 @@ entries:
 		if err := os.Remove(reportPath); err != nil && !errors.Is(err, os.ErrNotExist) {
 			return nil, fmt.Errorf("old report: %w", err)
 		}
+		sections := []BriefSection{{Title: "Spec check", Body: "Check these slices in one pass: " + strings.Join(cfg.Items, ", ") + ". Report one `## Slice ID` section for each, in this order. The project checkout is your working directory; you may not change it." + orientationRequest(cfg.LocalItems)}}
+		if noteBody.Len() > 0 {
+			sections = append(sections, BriefSection{Title: "Notes recorded after the spec", Body: noteBody.String()})
+		}
 		brief, err := BuildBrief(BriefInput{
 			Allow: implementerPerm.Allow,
 			Role:  RoleSpecCheck, Vendor: entry.Vendor, ReadOnly: true, SliceID: strings.Join(cfg.Items, ", "), Worktree: root, TempDir: tempDir, ReportPath: reportPath,
 			SliceJSON: "[" + strings.Join(raws, ",") + "]", EnvLines: cfg.Project.EnvironmentLines,
-			Sections: []BriefSection{{Title: "Spec check", Body: "Check these slices in one pass: " + strings.Join(cfg.Items, ", ") + ". Report one `## Slice ID` section for each, in this order. The project checkout is your working directory; you may not change it." + orientationRequest(cfg.LocalItems)}},
+			Sections: sections,
 		})
 		if err != nil {
 			return nil, err

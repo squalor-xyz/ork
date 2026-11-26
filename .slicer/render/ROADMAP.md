@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-619 items · — 66 · done 418 · retired 135
+619 items · — 65 · done 419 · retired 135
 
 ## v1.3
 
@@ -376,7 +376,7 @@ v1.2
 | 319 | [S614](slices/S614.md) | landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files | S | - |  |  | — |
 | 320 | [S615](slices/S615.md) | before round 1 check that each path argument in a slice Check command exists in the worktree |  | - |  | discovered from S597 | — |
 | 321 | [S616](slices/S616.md) | when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default |  | - |  | discovered from S584 | — |
-| 322 | [S617](slices/S617.md) | flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts |  | - |  | discovered from S592 | — |
+| 322 | [S617](slices/S617.md) | flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts |  | - |  | discovered from S592 | done |
 | 323 | [S618](slices/S618.md) | Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint | S | - |  |  | — |
 | 324 | [S619](slices/S619.md) | spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report | S | - |  |  | — |
 

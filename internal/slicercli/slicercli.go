@@ -182,6 +182,25 @@ func (c Client) Snapshot(ctx context.Context, roots, parts []string) (*SnapshotR
 	return &reply, nil
 }
 
+// LastSpecWrite returns the newest edit or promote timestamp for an item.
+func (c Client) LastSpecWrite(ctx context.Context, root, id string) (time.Time, bool, error) {
+	if err := checkID("log", id); err != nil {
+		return time.Time{}, false, err
+	}
+	var entries []LogEntry
+	if err := clirun.RunJSON(ctx, c.call("log", "--item", id, "--action", "edit", "--action", "promote", "--limit", "1", "--json", "--lean", "--root", root), &entries); err != nil {
+		return time.Time{}, false, err
+	}
+	if len(entries) == 0 {
+		return time.Time{}, false, nil
+	}
+	wrote, err := time.Parse(time.RFC3339, entries[0].When)
+	if err != nil {
+		return time.Time{}, false, fmt.Errorf("slicer log %s: %w", id, err)
+	}
+	return wrote, true, nil
+}
+
 // RelayStats reads slicer's aggregate statistics, without caching or computing.
 func (c Client) RelayStats(ctx context.Context, root, since string) (*RelayStats, error) {
 	args := []string{"relay-run", "stats", "--json"}

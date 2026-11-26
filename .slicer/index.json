@@ -32595,7 +32595,7 @@
       "id": "S617",
       "title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
       "short_title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32605,6 +32605,20 @@
           "text": "**2026-11-26** — Owner decision (key spec.note-after-spec-check): both. Code flags any slice note recorded after the spec sections were last written (slicer note dates); the spec check then judges each flagged note against Implement and Failing tests and raises an owner question on a conflict. Jon chose 'Both', session 8d711f67, 2026-11-26.",
           "created_at": "2026-11-26T02:04:59Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0cc94f2e-19c9-4c9a-a27f-483f2c303b6e",
+          "kind": "",
+          "text": "**2026-11-26** — S617 now has proving tests for flagged-note fingerprints in status reporting and stored-answer restoration; removing either reviewed wiring call fails its corresponding test.",
+          "created_at": "2026-11-26T03:39:57Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -32631,7 +32645,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
