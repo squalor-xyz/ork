@@ -480,7 +480,7 @@ func (d *Daemon) addSpecQuestions(ctx context.Context, proj registry.Project, ps
 		if err != nil {
 			continue
 		}
-		if fp, err := engine.SpecFingerprint(raw); err != nil || fp != c.fingerprint {
+		if fp, err := engine.SpecFingerprintWithNotes(ctx, d.runDeps(proj), proj.Path, c.item, raw); err != nil || fp != c.fingerprint {
 			continue
 		}
 		ps.SpecQuestions = append(ps.SpecQuestions, SpecQuestions{Item: c.item, Keys: c.keys, List: "ork wave start " + proj.Name + " " + c.item + " --questions"})

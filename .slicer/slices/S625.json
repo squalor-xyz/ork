@@ -1,0 +1,39 @@
+{
+  "id": "S625",
+  "title": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-021918-bdc3, project ork, item S607:\n\nadd a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test\n\nEvidence: the two docs fell three names behind brief.go:233 and only a human-read UI pass caught it"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -24,12 +24,14 @@ var adjGuardAllowlist = map[string]string{
 // adj client (Deps.Adj) in f that is not guarded by a project Adj flag.
 //
 // The check is syntactic. A client use is a ".Adj" selector that is the
-// operand of another selector (d.Adj.Check) or the right-hand side of an
-// assignment (c := d.Adj). Any other ".Adj" selector is a bool read
-// (Project.Adj). A client use is guarded when it lies in the body of an if
-// whose condition reads the bool, or when an earlier statement in the same or
-// an enclosing statement list is such an if whose body ends in return,
-// continue or break.
+// operand of another selector (d.Adj.Check), an assignment right-hand side
+// (c := d.Adj), a call argument (use(d.Adj)), or a var value (var c = d.Adj).
+// A bool passed as a call argument also counts as a client use; the tree has
+// no such site. Any other ".Adj" selector is a bool read (Project.Adj).
+// A client use is guarded in an if body whose condition being true implies
+// the flag is set, or after an earlier if in the same or an enclosing statement
+// list whose condition being false implies the flag is set and whose body
+// ends in return, continue or break.
 func unguardedAdjCalls(fset *token.FileSet, f *ast.File) []string {
 	var out []string
 	for _, decl := range f.Decls {
@@ -75,26 +77,44 @@ func isAdjClientUse(sel *ast.SelectorExpr, parent ast.Node) bool {
 				return true
 			}
 		}
+	case *ast.CallExpr:
+		for _, arg := range p.Args {
+			if arg == ast.Expr(sel) {
+				return true
+			}
+		}
+	case *ast.ValueSpec:
+		for _, value := range p.Values {
+			if value == ast.Expr(sel) {
+				return true
+			}
+		}
 	}
 	return false
 }
 
-// readsAdjBool reports whether expr contains a bool ".Adj" read.
-func readsAdjBool(expr ast.Expr) bool {
-	found := false
-	var stack []ast.Node
-	ast.Inspect(expr, func(n ast.Node) bool {
-		if n == nil {
-			stack = stack[:len(stack)-1]
-			return true
+// condImpliesAdj reports whether cond evaluating to whenTrue implies the
+// project's Adj flag is set. Only boolean operators and parentheses are walked;
+// client expressions such as e.d.Adj != nil are not descended into.
+func condImpliesAdj(cond ast.Expr, whenTrue bool) bool {
+	switch c := cond.(type) {
+	case *ast.ParenExpr:
+		return condImpliesAdj(c.X, whenTrue)
+	case *ast.UnaryExpr:
+		if c.Op == token.NOT {
+			return condImpliesAdj(c.X, !whenTrue)
 		}
-		if sel, ok := n.(*ast.SelectorExpr); ok && sel.Sel.Name == "Adj" && !isAdjClientUse(sel, parentOf(stack)) {
-			found = true
+	case *ast.BinaryExpr:
+		switch c.Op {
+		case token.LAND:
+			return whenTrue && (condImpliesAdj(c.X, true) || condImpliesAdj(c.Y, true))
+		case token.LOR:
+			return !whenTrue && (condImpliesAdj(c.X, false) || condImpliesAdj(c.Y, false))
 		}
-		stack = append(stack, n)
-		return !found
-	})
-	return found
+	case *ast.SelectorExpr:
+		return c.Sel.Name == "Adj" && whenTrue
+	}
+	return false
 }
 
 // exitsEarly reports whether the block ends in return, continue or break.
@@ -121,7 +141,7 @@ func adjGuarded(n ast.Node, stack []ast.Node) bool {
 		}
 		switch a := anc.(type) {
 		case *ast.IfStmt:
-			if child == ast.Node(a.Body) && readsAdjBool(a.Cond) {
+			if child == ast.Node(a.Body) && condImpliesAdj(a.Cond, true) {
 				return true
 			}
 		case *ast.BlockStmt:
@@ -142,13 +162,13 @@ func adjGuarded(n ast.Node, stack []ast.Node) bool {
 }
 
 // earlyExitGuardBefore reports whether a statement in list that ends before n
-// is an if on a bool Adj read with a body that exits early.
+// is an if whose false condition implies Adj is set and whose body exits early.
 func earlyExitGuardBefore(list []ast.Stmt, n ast.Node) bool {
 	for _, s := range list {
 		if s.End() > n.Pos() {
 			break
 		}
-		if ifs, ok := s.(*ast.IfStmt); ok && readsAdjBool(ifs.Cond) && exitsEarly(ifs.Body) {
+		if ifs, ok := s.(*ast.IfStmt); ok && condImpliesAdj(ifs.Cond, false) && exitsEarly(ifs.Body) {
 			return true
 		}
 	}
@@ -205,6 +225,96 @@ func three(e *E) {
 	}
 }
 
+func TestAdjGuardFlagsClientArgument(t *testing.T) {
+	cases := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{"only argument", `package p
+
+func argument(e *E) {
+	use(e.d.Adj)
+}
+`, "4: argument"},
+		{"second argument", `package p
+
+func second(e *E) {
+	use(ctx,
+		e.d.Adj)
+}
+`, "5: second"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := checkAdjSnippet(t, c.src)
+			if len(got) != 1 || got[0] != c.want {
+				t.Fatalf("findings = %q, want [%q]", got, c.want)
+			}
+		})
+	}
+}
+
+func TestAdjGuardFlagsVarBoundClient(t *testing.T) {
+	got := checkAdjSnippet(t, `package p
+
+func bound(e *E) {
+	var c = e.d.Adj
+	_ = c
+}
+`)
+	if len(got) != 1 || got[0] != "4: bound" {
+		t.Fatalf("findings = %q, want [\"4: bound\"]", got)
+	}
+}
+
+func TestAdjGuardFlagsInvertedGuard(t *testing.T) {
+	cases := []struct {
+		name string
+		src  string
+		want string
+	}{
+		{"positive early exit", `package p
+
+func positive(e *E) {
+	if e.proj.Adj { return }
+	e.d.Adj.Check(1)
+}
+`, "5: positive"},
+		{"negative body", `package p
+
+func negative(e *E) {
+	if !e.proj.Adj {
+		e.d.Adj.Check(1)
+	}
+}
+`, "5: negative"},
+		{"positive OR body", `package p
+
+func disjunction(e *E, f F) {
+	if e.proj.Adj || f.Key != "" {
+		e.d.Adj.Check(1)
+	}
+}
+`, "5: disjunction"},
+		{"negative AND early exit", `package p
+
+func conjunction(e *E, f F) {
+	if !e.proj.Adj && f.Key != "" { return }
+	e.d.Adj.Check(1)
+}
+`, "5: conjunction"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			got := checkAdjSnippet(t, c.src)
+			if len(got) != 1 || got[0] != c.want {
+				t.Fatalf("findings = %q, want [%q]", got, c.want)
+			}
+		})
+	}
+}
+
 func TestAdjGuardFlagsAliasedClient(t *testing.T) {
 	got := checkAdjSnippet(t, `package p
 
@@ -219,6 +329,14 @@ func alias(d Deps) {
 }
 
 func TestAdjGuardAcceptsIfBodyGuard(t *testing.T) {
+	for _, use := range []string{"use(e.d.Adj)", "var c = e.d.Adj"} {
+		t.Run(use, func(t *testing.T) {
+			got := checkAdjSnippet(t, "package p\nfunc guarded(e *E) {\nif e.proj.Adj {\n"+use+"\n}\n}")
+			if len(got) != 0 {
+				t.Fatalf("findings = %q, want none", got)
+			}
+		})
+	}
 	got := checkAdjSnippet(t, `package p
 
 func plain(e *E) {
@@ -248,6 +366,17 @@ func nested(e *E) {
 }
 
 func TestAdjGuardAcceptsEarlyExitGuard(t *testing.T) {
+	t.Run("parenthesized negation", func(t *testing.T) {
+		got := checkAdjSnippet(t, `package p
+func parenthesized(e *E) {
+	if !(e.proj.Adj) { return }
+	e.d.Adj.Check(1)
+}
+`)
+		if len(got) != 0 {
+			t.Fatalf("findings = %q, want none", got)
+		}
+	})
 	got := checkAdjSnippet(t, `package p
 
 func returns(e *E) int {
