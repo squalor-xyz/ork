@@ -7145,3 +7145,9 @@
 {"when": "2026-11-26T04:14:15Z", "item": "S625", "action": "add", "from": "", "to": "open", "note": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test"}
 {"when": "2026-11-26T04:14:15Z", "item": "S625", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T04:14:16Z", "item": "S625", "action": "note", "from": "", "to": "", "note": "possible duplicate of S611", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:28:40Z", "item": "S626", "action": "add", "from": "", "to": "open", "note": "check that each path in a slice's Check commands exists before round 1 (S615 covers this)"}
+{"when": "2026-11-26T04:28:40Z", "item": "S626", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T04:28:40Z", "item": "S626", "action": "note", "from": "", "to": "", "note": "possible duplicate of S615", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:55:10Z", "item": "S627", "action": "add", "from": "", "to": "open", "note": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)"}
+{"when": "2026-11-26T04:55:10Z", "item": "S627", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T04:55:11Z", "item": "S627", "action": "note", "from": "", "to": "", "note": "possible duplicate of S615, S626", "by": "Jon Robbins"}
