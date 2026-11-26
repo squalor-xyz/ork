@@ -31024,10 +31024,39 @@
       "id": "S584",
       "title": "When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected",
       "short_title": "When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "90cf37c3-2cbc-4210-bd40-c9e5ffdd70f3",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S584):\n- later: On the next slice whose diff is only _test.go files under internal/tui, open the ui role's brief in the run directory. It should hold ## No renders expected and no \"Produce the required renders\" Done-when item. The ui report should say that no renders were expected.",
+          "created_at": "2026-11-26T01:50:54Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "74173827-f445-4343-a619-370e28b9fe69",
+          "kind": "",
+          "text": "**2026-11-26** — UI-pass briefs carry a \"No renders expected\" section and a matching Done-when item when the diff, with `.slicer/` and `landed-changed/` paths skipped (adj 600), holds at least one path and only `_test.go` files under `internal/tui`; unreadable or other diffs and the reviewer brief are unchanged; the slice's gofmt Check line now names `./internal/engine`.",
+          "created_at": "2026-11-26T01:50:54Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -31045,7 +31074,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31462,7 +31491,7 @@
       "id": "S592",
       "title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
       "short_title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31493,6 +31522,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "dc0de098-e38a-472e-999b-a467156d6618",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S592):\n- later: In the next reviewer round for a slice that changes a Go file and a non-Go file, open the reviewer's brief under the run's role files. The ## Base overlays section should end with a paragraph saying other changed files are read with git -C WORKTREE show MERGEBASE:PATH and that git grep is not available. It should name no changed file, and the entry lines for the Go files should look as before.",
+          "created_at": "2026-11-26T01:37:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1c991ab8-7c42-4418-bfa8-a09eb7ccf685",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer's Base overlays section now ends with a paragraph naming `git -C WORKTREE show MERGEBASE:PATH` for any changed file other than a non-test Go file and saying `git grep` is not available; the unreadable-diff notice says \"each changed file\"; no allowlist change; docs/design.md and the changelog entry updated; full suite, vet, gofmt, slicer check and adj lint are clean.",
+          "created_at": "2026-11-26T01:37:58Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31512,7 +31569,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31818,7 +31875,7 @@
       "id": "S598",
       "title": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice",
       "short_title": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31849,6 +31906,48 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9844ac21-1799-4386-a806-5ea614220db5",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S598):\n- later: Start a reviewer round on a self-host daemon that ork daemon status reports as behind main, on a slice that changes a Go file. Open the reviewer brief under the run's role files. The ## Base overlays section should open with the \"older than this slice's code\" line, and the file entries should follow. After ork daemon restart --rebuild, the next round's section should not show that line.",
+          "created_at": "2026-11-26T00:29:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ad3eccbc-fb91-4ec4-9e58-572ae6ddb951",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer brief's Base overlays section opens with a one-line older-binary note when the daemon is behind main (Deps.Behind fed by projectBuild), with four engine tests and one daemon test, all mutation-checked, and the full suite green.",
+          "created_at": "2026-11-26T00:29:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ea85f89a-f7b7-49f1-a0ca-551c3637bda6",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer brief's Base overlays section opens with a one-line older-binary note when the daemon is behind main (Deps.Behind fed by projectBuild), with four engine tests and one daemon test, all mutation-checked, and the full suite green after merging main.",
+          "created_at": "2026-11-26T00:48:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31868,7 +31967,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

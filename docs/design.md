@@ -843,6 +843,15 @@ slice.
     in the brief under Your files. The pass
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
     names for the approval card.
+    No renders expected (*proposed*, S584; adj 600): ork skips the run's own
+    tracking paths under `.slicer/` and `landed-changed/` in the branch's diff.
+    When at least one path is left and every path left is a `_test.go` file
+    under `internal/tui`, no view changed. The UI
+    round's brief then gets a "No renders expected" section, and its Done-when
+    item for renders says that no renders are expected and none are to be
+    written. The reviewer's brief gets neither. A diff that cannot be read adds
+    neither, does not pause the review, and leaves the brief as it is for any
+    other diff.
     The UI brief also tells the pass that a `go test -run` pattern holds no
     pipe, because a pipe makes a compound command that the permission check
     denies, and gives the one-test-per-command form (S565).
@@ -2080,8 +2089,20 @@ separately.
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git
-    show` itself. The section is advisory and never blocks the run. The gate and
-    the architect get none;
+    show` itself; when the diff itself cannot be read, the notice says to trace
+    the base version of each changed file, not only each Go file. When the diff
+    also holds any other changed file (a non-Go file or a `_test.go` file), the
+    section ends with one paragraph that names no path: the overlays cover
+    non-test Go files only, and the reviewer reads the base version of any other
+    changed file with `git -C WORKTREE show MERGEBASE:path`. It adds that `git
+    grep` is not on the read-only list. No `git grep` entry was added, because
+    `git grep -O` can run a program (S592, adj 594, `roles.reviewer-git-grep`).
+    When the running ork binary is behind main for the project (the daemon's
+    `behind_main` signal), the section opens with one line, "Note: an ork
+    binary older than this slice's code made this list, so it may offer
+    commands that do not build." (S598, adj 591); the failed-diff-read notice
+    and a brief with no section do not get it. The section is advisory and never
+    blocks the run. The gate and the architect get none;
   - before the reviewer starts, a `## Go module imports` section when the
     worktree has a `go.mod` (S589, adj 590, `roles.probe-import-paths`). ork
     reads the file and lists each `require` path (block and one-line forms,
