@@ -298,13 +298,28 @@ func shapeRetryBrief(reason string, asked bool) string {
 	return body
 }
 
+// ownerAnswerTitle is the title of the section that carries the owner's
+// answer. It names the decision key and the adj record, so a role needs no adj
+// check: "Owner answer (adj 42, storage.engine)", "Owner answer
+// (storage.engine)" when nothing was filed, "Owner answer" with no key (S568,
+// adj 592, adj 597).
+func ownerAnswerTitle(p *runrec.Pending) string {
+	switch {
+	case p.Key == "":
+		return "Owner answer"
+	case p.AdjID > 0:
+		return fmt.Sprintf("Owner answer (adj %d, %s)", p.AdjID, p.Key)
+	}
+	return "Owner answer (" + p.Key + ")"
+}
+
 func pendingKindSection(p *runrec.Pending) []BriefSection {
 	if p.Answer != "" {
-		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
+		return []BriefSection{{Title: ownerAnswerTitle(p), Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
 	}
 	switch p.Kind {
 	case runrec.PendingQuestion:
-		return []BriefSection{{Title: "Owner answer", Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
+		return []BriefSection{{Title: ownerAnswerTitle(p), Body: fmt.Sprintf("Your report asked the owner:\n\n%s\n\nThe owner answered:\n\n%s", p.Question, p.Answer)}}
 	case runrec.PendingShape:
 		// The plain error: a capped pause's reason names commands for the owner.
 		reason := p.ShapeError

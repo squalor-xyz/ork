@@ -1697,7 +1697,14 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   a project with adj) files nothing and says `file_answers is off; answer not
   filed in adj (ork settings set --file-answers on)`. Ledger answers
   (`relay.answer`) and finding answers are unchanged and still need
-  `ADJ_DECIDED_BY`.
+  `ADJ_DECIDED_BY`. *Proposed (S568; owner decisions brief.owner-note-adj-key,
+  adj 592, and adj 597):* when the pending question has a decision key, the
+  rerun brief's `Owner answer` section names it in its title, as `Owner answer
+  (adj 42, storage.engine)`, so the role and the reviewer need no `adj check`.
+  The id is the record the answer decided, or the record already decided for
+  the key; it is kept in `pending.adj_id`. An answer that was not filed names
+  the key alone, `Owner answer (storage.engine)`. A question with no key keeps
+  the title `Owner answer`. A retry's `Owner note` is unchanged.
 - **Stops.** `rate_limited` and `error` exits fall back while a next row
   remains (adj 156); otherwise they stop with the reason. Auth and
   unclassified exits, unsuccessful rounds with permission denials, and a

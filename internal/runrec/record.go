@@ -230,14 +230,17 @@ type Pending struct {
 	LedgerQuestion string         `json:"ledger_question,omitempty"`
 	Ask            *OwnerQuestion `json:"ask,omitempty"`
 	Key            string         `json:"key,omitempty"`
-	Kind           string         `json:"kind"`
-	State          string         `json:"state"`
-	Role           string         `json:"role,omitempty"`
-	Round          int            `json:"round,omitempty"`
-	Reason         string         `json:"reason"`
-	Question       string         `json:"question,omitempty"`
-	Part           string         `json:"part,omitempty"` // the split part the pause belongs to (S61, *proposed*)
-	Answer         string         `json:"answer,omitempty"`
+	// AdjID is the adj record of the answer filed for this question (S568,
+	// adj 592). It is zero when nothing was filed.
+	AdjID    int    `json:"adj_id,omitempty"`
+	Kind     string `json:"kind"`
+	State    string `json:"state"`
+	Role     string `json:"role,omitempty"`
+	Round    int    `json:"round,omitempty"`
+	Reason   string `json:"reason"`
+	Question string `json:"question,omitempty"`
+	Part     string `json:"part,omitempty"` // the split part the pause belongs to (S61, *proposed*)
+	Answer   string `json:"answer,omitempty"`
 	// Note is the owner's text sent with a retry. It goes to the rerun's brief
 	// and leaves the record when the round ends (S256, *proposed*).
 	Note string `json:"note,omitempty"`

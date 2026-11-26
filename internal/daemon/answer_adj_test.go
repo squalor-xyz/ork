@@ -42,6 +42,7 @@ func adjAnswerRunGated(t *testing.T, gate *roleGate, check string, decideError b
 	}
 	runner := roundRunner(func(ctx context.Context, r engine.Request) (engine.Result, error) {
 		if gate != nil && strings.Contains(r.Brief, "use stdlib") {
+			gate.brief.Store(r.Brief)
 			gate.started <- struct{}{}
 			select {
 			case <-gate.release:
@@ -78,6 +79,104 @@ func adjAnswerRunGated(t *testing.T, gate *roleGate, check string, decideError b
 	waitState(t, store, rec.ID, runrec.StatePaused)
 	waitIdle(t, d, rec.ID)
 	return d, store, rec.ID
+}
+
+// rerunBrief is the brief of the role round that follows the answer and the
+// pending the stored record holds while that round runs (S568).
+func rerunBrief(t *testing.T, gate *roleGate, store *runrec.Store, id string) (string, runrec.Pending) {
+	t.Helper()
+	select {
+	case <-gate.started:
+	case <-time.After(5 * time.Second):
+		t.Fatal("the rerun round did not start")
+	}
+	got, err := store.Open(id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := got.Snapshot()
+	if rec.Pending == nil {
+		t.Fatalf("no pending while the rerun round runs: %+v", rec)
+	}
+	brief, _ := gate.brief.Load().(string)
+	return brief, *rec.Pending
+}
+
+// answerHeading is the heading line of the brief's owner-answer section, so a
+// failure shows that line and not the whole brief.
+func answerHeading(brief string) string {
+	for _, line := range strings.Split(brief, "\n") {
+		if strings.HasPrefix(line, "#") && strings.Contains(line, "Owner answer") {
+			return line
+		}
+	}
+	return "(no Owner answer section)"
+}
+
+func TestRunAnswerNamesTheFiledAdjRecordInTheRerunBrief(t *testing.T) {
+	gate := &roleGate{started: make(chan struct{}, 8), release: make(chan struct{})}
+	d, store, id := adjAnswerRunGated(t, gate, `{"result":"not found"}`, false)
+	t.Cleanup(gate.open)
+	b, _ := json.Marshal(RunAction{Run: id, Text: "use stdlib", Adj: true, By: "owner", NoWait: true})
+	if _, err := callWithin(t, d, MethodRunAnswer, string(b), 2*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	brief, pend := rerunBrief(t, gate, store, id)
+	if !strings.Contains(brief, "(adj 42, storage.engine)") {
+		t.Errorf("rerun brief lacks the key and the id: %s", answerHeading(brief))
+	}
+	if pend.AdjID != 42 {
+		t.Errorf("stored Pending.AdjID %d, want 42", pend.AdjID)
+	}
+	gate.open()
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+}
+
+func TestRunAnswerNamesTheAlreadyDecidedRecordInTheRerunBrief(t *testing.T) {
+	gate := &roleGate{started: make(chan struct{}, 8), release: make(chan struct{})}
+	d, store, id := adjAnswerRunGated(t, gate, `{"decided":[{"id":9,"key":"storage.engine"}]}`, false)
+	t.Cleanup(gate.open)
+	b, _ := json.Marshal(RunAction{Run: id, Text: "use stdlib", Adj: true, By: "owner", NoWait: true})
+	if _, err := callWithin(t, d, MethodRunAnswer, string(b), 2*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	brief, pend := rerunBrief(t, gate, store, id)
+	if !strings.Contains(brief, "(adj 9, storage.engine)") {
+		t.Errorf("rerun brief lacks the decided record: %s", answerHeading(brief))
+	}
+	if pend.AdjID != 9 {
+		t.Errorf("stored Pending.AdjID %d, want 9", pend.AdjID)
+	}
+	for _, c := range lastFake.CallsTo("adj") {
+		if c.Args[0] == "ask" || c.Args[0] == "decide" {
+			t.Errorf("adj %s was called for a decided key", c.Args[0])
+		}
+	}
+	gate.open()
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
+}
+
+func TestRunAnswerWithoutFilingNamesTheKeyOnly(t *testing.T) {
+	gate := &roleGate{started: make(chan struct{}, 8), release: make(chan struct{})}
+	d, store, id := adjAnswerRunGated(t, gate, `{"result":"not found"}`, false)
+	t.Cleanup(gate.open)
+	setAnswerRegistry(t, d, true, "Jon", nil)
+	b, _ := json.Marshal(RunAction{Run: id, Text: "use stdlib", NoAdj: true, NoWait: true})
+	if _, err := callWithin(t, d, MethodRunAnswer, string(b), 2*time.Second); err != nil {
+		t.Fatal(err)
+	}
+	brief, pend := rerunBrief(t, gate, store, id)
+	if !strings.Contains(brief, "(storage.engine)") || strings.Contains(brief, "adj 42") {
+		t.Errorf("rerun brief should name the key alone: %s", answerHeading(brief))
+	}
+	if pend.AdjID != 0 {
+		t.Errorf("stored Pending.AdjID %d, want 0", pend.AdjID)
+	}
+	gate.open()
+	waitState(t, store, id, runrec.StateAwaitingApproval)
+	waitIdle(t, d, id)
 }
 
 func answerAdj(t *testing.T, d *Daemon, id string, on bool, by string) (any, error) {
