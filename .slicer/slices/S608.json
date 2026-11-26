@@ -1,0 +1,39 @@
+{
+  "id": "S608",
+  "title": "Strip quotes from quoted require paths in goModRequirePaths",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the gate in round 1 of ork run ork-20261125-224829-7bd0 for S589 (discovered from S589):\n\nStrip quotes from quoted require paths in goModRequirePaths\nGo allows a quoted path in `go.mod`, such as `require \"quoted.example/q\" v1.0.0`. In the reviewer round, my probe showed that the parser keeps the quotes in the listed path (`gomodimports.go:61` and `:72`). Such paths are rare and the spec does not cover them.\nImportance: 1\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
