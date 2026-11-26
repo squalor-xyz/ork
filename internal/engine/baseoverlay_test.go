@@ -438,6 +438,70 @@ func TestBaseOverlaySectionForChangedGoFile(t *testing.T) {
 	}
 }
 
+func TestBaseOverlayNamesGitShowForNonGoFiles(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "internal/x/x.go\x00internal/x/x_test.go\x00internal/roles/prompts/reviewer.md\x00", "",
+				baseOverlayShow(W, "internal/x/x.go", "package x\n"))
+		}
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	body, found := baseOverlayBody(baseOverlayReviewer(t, h).Brief)
+	if !found {
+		t.Fatal("reviewer brief lacks the Base overlays section")
+	}
+	if entries := baseOverlayEntries(body); len(entries) != 1 || !strings.Contains(entries[0], "internal/x/x.go") {
+		t.Errorf("entries = %q, want one for internal/x/x.go", entries)
+	}
+	command := "git -C " + ShellWord(h.W) + " show " + ShellWord("base") + ":PATH"
+	for _, want := range []string{command, "not overlaid", "`git grep` is not available"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("section lacks %q:\n%s", want, body)
+		}
+	}
+	for _, gone := range []string{"reviewer.md", "x_test.go"} {
+		if strings.Contains(body, gone) {
+			t.Errorf("section names %s:\n%s", gone, body)
+		}
+	}
+}
+
+func TestBaseOverlayNoNonGoNoteForGoOnlyDiff(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{}, clitest.Reply{})
+	_, body, entries := overlayVetResult(t, h)
+	if len(entries) != 2 {
+		t.Fatalf("entries = %q, want two", entries)
+	}
+	for _, gone := range []string{"git grep", "base:PATH", "not overlaid"} {
+		if strings.Contains(body, gone) {
+			t.Errorf("Go-only section contains %q:\n%s", gone, body)
+		}
+	}
+}
+
+func TestBaseOverlayUnreadableDiffNamesEveryChangedFile(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			routes := baseOverlayRoutes(W, "internal/x/x.go\x00", "")
+			routes[1].Exit = 1
+			return routes
+		}
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	body, found := baseOverlayBody(baseOverlayReviewer(t, h).Brief)
+	if !found {
+		t.Fatal("reviewer brief lacks the Base overlays section")
+	}
+	for _, want := range []string{"incomplete", "git show", "each changed file"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("section lacks %q:\n%s", want, body)
+		}
+	}
+	if strings.Contains(body, "changed Go file") {
+		t.Errorf("section still limits the notice to Go files:\n%s", body)
+	}
+}
+
 func TestBaseOverlayNewFileMapsToEmpty(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {

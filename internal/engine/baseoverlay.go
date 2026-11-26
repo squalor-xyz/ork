@@ -39,12 +39,15 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		err = errors.New("the merge base is empty")
 	}
 	if err != nil {
-		return &BriefSection{Title: title, Body: "Check incomplete: the branch diff against the base could not be read. Trace the base version of each changed Go file yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show MERGEBASE:PATH`); this does not block the run."}
+		return &BriefSection{Title: title, Body: "Check incomplete: the branch diff against the base could not be read. Trace the base version of each changed file yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show MERGEBASE:PATH`); this does not block the run."}
 	}
 	var goFiles []string
+	otherChanged := false
 	for _, p := range changed {
 		if strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, "_test.go") {
 			goFiles = append(goFiles, p)
+		} else {
+			otherChanged = true
 		}
 	}
 	slices.Sort(goFiles)
@@ -131,6 +134,12 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			body.WriteString("\n")
 		}
 		body.WriteString("Check incomplete: the base version of " + strings.Join(unread, ", ") + " could not be read. Trace it yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`); this does not block the run.\n")
+	}
+	if otherChanged {
+		if body.Len() > 0 {
+			body.WriteString("\n")
+		}
+		body.WriteString("The overlays cover non-test Go files only; other changed files are not overlaid. To read the base version of any other changed file, run `git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`. `git grep` is not available on the read-only list.\n")
 	}
 	return &BriefSection{Title: title, Body: strings.TrimRight(body.String(), "\n")}
 }

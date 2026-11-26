@@ -7004,3 +7004,8 @@
 {"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "add", "from": "", "to": "open", "note": "before round 1 check that each path argument in a slice Check command exists in the worktree"}
 {"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:41:44Z", "item": "S592", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:42:22Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T01:37:58Z", "item": "S592", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S592):", "by": "Jon Robbins"}
+{"when": "2026-11-26T01:37:58Z", "item": "S592", "action": "note", "from": "", "to": "", "note": "The reviewer's Base overlays section now ends with a paragra", "by": "Jon Robbins"}
+{"when": "2026-11-26T01:37:58Z", "item": "S592", "action": "status", "from": "started", "to": "done", "note": "The reviewer's Base overlays section now ends with a paragraph naming `git -C WORKTREE show MERGEBASE:PATH` for any changed file other than a non-test Go file and saying `git grep` is not available; the unreadable-diff notice says \"each changed file\"; no allowlist change; docs/design.md and the changelog entry updated; full suite, vet, gofmt, slicer check and adj lint are clean.", "by": "Jon Robbins"}

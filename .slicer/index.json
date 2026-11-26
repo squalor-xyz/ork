@@ -31420,7 +31420,7 @@
       "id": "S592",
       "title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
       "short_title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31451,6 +31451,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "dc0de098-e38a-472e-999b-a467156d6618",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S592):\n- later: In the next reviewer round for a slice that changes a Go file and a non-Go file, open the reviewer's brief under the run's role files. The ## Base overlays section should end with a paragraph saying other changed files are read with git -C WORKTREE show MERGEBASE:PATH and that git grep is not available. It should name no changed file, and the entry lines for the Go files should look as before.",
+          "created_at": "2026-11-26T01:37:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1c991ab8-7c42-4418-bfa8-a09eb7ccf685",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer's Base overlays section now ends with a paragraph naming `git -C WORKTREE show MERGEBASE:PATH` for any changed file other than a non-test Go file and saying `git grep` is not available; the unreadable-diff notice says \"each changed file\"; no allowlist change; docs/design.md and the changelog entry updated; full suite, vet, gofmt, slicer check and adj lint are clean.",
+          "created_at": "2026-11-26T01:37:58Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31470,7 +31498,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
