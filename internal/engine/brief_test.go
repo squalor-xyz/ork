@@ -1094,7 +1094,7 @@ func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 		"This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory",
 		"`-render-fixture NAME[,NAME...]`",
 		"writes only NAME.txt for each name",
-		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup and fake-reply",
+		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply and wave-start-finding",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("UI brief lacks %q", want)

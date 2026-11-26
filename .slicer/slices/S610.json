@@ -1,0 +1,39 @@
+{
+  "id": "S610",
+  "title": "say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261126-000049-2b18, project ork, item S574:\n\nsay in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead\n\nEvidence: `-run TestRenderCLIViews$` was denied as \"can't be checked before it runs\", but the plain `-run TestRenderCLIViewsWritesFiles` was allowed"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

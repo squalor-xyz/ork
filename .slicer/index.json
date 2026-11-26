@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 610,
+  "next_id": 612,
   "preamble": "",
   "passes": [
     {
@@ -30499,10 +30499,25 @@
       "id": "S574",
       "title": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test",
       "short_title": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f70a63ea-4323-4cb8-ab85-8ce94dd839f7",
+          "kind": "",
+          "text": "**2026-11-26** — Added the `wave-start-finding` CLI render fixture (a `wave start --yes` that holds S501 on a Check finding and starts S502), listed it in the UI pass brief, guide and design docs; all tests, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-26T00:20:08Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30520,7 +30535,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32120,6 +32135,77 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S610",
+      "title": "say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead",
+      "short_title": "say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S574",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-62d8c235",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S611",
+      "title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md",
+      "short_title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d8d06dcd-174c-4b55-8d6c-41dae3f53769",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S607",
+          "created_at": "2026-11-26T00:20:08Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S574",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-75c8af81",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
