@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 617,
+  "next_id": 618,
   "preamble": "",
   "passes": [
     {
@@ -30115,7 +30115,7 @@
       "id": "S568",
       "title": "name the decided adj key for each owner note in the brief so the reviewer does not look it up",
       "short_title": "name the decided adj key for each owner note in the brief so the reviewer does not look it up",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30125,6 +30125,20 @@
           "text": "**2026-11-25** — Owner decision (adj 592): key from answer. ork answer keeps the key and adj id with the run's pending item; the rerun brief's Owner note names them, e.g. Owner note (adj 564, spec.check-command-finding). Jon chose 'Key from answer', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T23:26:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9b941607-28d5-4d15-ac7e-653c9827f7c2",
+          "kind": "",
+          "text": "**2026-11-26** — The rerun brief's Owner answer section now names the decided adj key and record, as `Owner answer (adj 42, storage.engine)`, or `(storage.engine)` when nothing was filed. The id is kept in `pending.adj_id`, for a filed answer and for an already-decided key, and the four named tests, the full suite, vet, gofmt and `slicer check` pass.",
+          "created_at": "2026-11-26T00:58:22Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30151,7 +30165,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32439,6 +32453,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-f99de795",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S617",
+      "title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
+      "short_title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S592",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1bb11684",
         "pass": "v1.2",
         "group": "",
         "reason": "",

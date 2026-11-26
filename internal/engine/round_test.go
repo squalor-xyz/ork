@@ -18,6 +18,35 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+// The section that carries the owner's answer names the decision key and the
+// adj record, so a role needs no adj check (S568, adj 592, adj 597).
+func TestPendingSectionNamesTheKeyAndAdjID(t *testing.T) {
+	pend := func(key string, adjID int) *runrec.Pending {
+		return &runrec.Pending{Kind: runrec.PendingQuestion, Question: "Which library?", Answer: "use stdlib", Key: key, AdjID: adjID}
+	}
+	one := func(p *runrec.Pending) BriefSection {
+		t.Helper()
+		got := pendingSection(p)
+		if len(got) != 1 {
+			t.Fatalf("sections: %+v", got)
+		}
+		return got[0]
+	}
+	s := one(pend("storage.engine", 42))
+	if !strings.Contains(s.Title, "(adj 42, storage.engine)") {
+		t.Errorf("title %q lacks the key and the id", s.Title)
+	}
+	if !strings.Contains(s.Body, "Which library?") || !strings.Contains(s.Body, "use stdlib") {
+		t.Errorf("body lost the question or the answer: %q", s.Body)
+	}
+	if s := one(pend("storage.engine", 0)); !strings.Contains(s.Title, "(storage.engine)") || strings.Contains(s.Title, "adj") {
+		t.Errorf("key without an id: title %q", s.Title)
+	}
+	if s := one(pend("", 0)); s.Title != "Owner answer" {
+		t.Errorf("no key: title %q, want Owner answer", s.Title)
+	}
+}
+
 func TestRoleTMPDIRLeavesRoomForASocket(t *testing.T) {
 	const root = "/home/jon/.local/state/ork"
 	const run = "ork-20261118-130342-787e"

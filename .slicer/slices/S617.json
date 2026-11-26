@@ -1,0 +1,39 @@
+{
+  "id": "S617",
+  "title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-004139-f69b, project ork, item S592:\n\nflag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts\n\nEvidence: S592 note (adj 596, 2026-11-26) says list each non-Go file; Implement step 3 and the test forbid naming paths"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
