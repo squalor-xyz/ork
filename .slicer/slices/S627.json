@@ -1,0 +1,39 @@
+{
+  "id": "S627",
+  "title": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-021919-09a7, project ork, item S616:\n\nbefore round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)\n\nEvidence: round 1 failed only because the Check line `gofmt -l ./engine` named a missing directory, and fixing it took a whole fix round"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

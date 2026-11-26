@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 625,
+  "next_id": 628,
   "preamble": "",
   "passes": [
     {
@@ -32241,10 +32241,25 @@
       "id": "S607",
       "title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list",
       "short_title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "917a8025-3ac2-4e27-954a-b94bb59ff736",
+          "kind": "",
+          "text": "**2026-11-26** — The UI brief, guide and design document list all twelve optional CLI render fixtures, including all three matrix-copy fixtures.",
+          "created_at": "2026-11-26T04:14:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32262,17 +32277,32 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S608",
       "title": "Strip quotes from quoted require paths in goModRequirePaths",
       "short_title": "Strip quotes from quoted require paths in goModRequirePaths",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "de38a296-332e-43c2-ab1e-c051c6c4a3d1",
+          "kind": "",
+          "text": "**2026-11-26** — S608 now checks formatting in the existing internal/engine directory; quote stripping, deduplication and malformed-field preservation remain verified.",
+          "created_at": "2026-11-26T04:02:26Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32290,7 +32320,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32894,6 +32924,135 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-bb424997",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S625",
+      "title": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test",
+      "short_title": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "52a54138-2656-4ab4-99ef-2a5440b27daf",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S611",
+          "created_at": "2026-11-26T04:14:16Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S607",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-be050999",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S626",
+      "title": "check that each path in a slice's Check commands exists before round 1 (S615 covers this)",
+      "short_title": "check that each path in a slice's Check commands exists before round 1 (S615 covers this)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "512ad2d2-4e52-4fd3-9607-6131485bcf50",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S615",
+          "created_at": "2026-11-26T04:28:40Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S616",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1dd7524c",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S627",
+      "title": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)",
+      "short_title": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "b8e086b3-1b28-4b1b-b53c-e44d7f1ca9a2",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S615, S626",
+          "created_at": "2026-11-26T04:55:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S616",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5964c2fa",
         "pass": "v1.2",
         "group": "",
         "reason": "",
