@@ -1,0 +1,39 @@
+{
+  "id": "S623",
+  "title": "when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261126-021914-40b1, project ork, item S609:\n\nwhen a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only\n\nEvidence: S609 changes only internal/engine/adjguard_test.go, which holds both the checker and its tests"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

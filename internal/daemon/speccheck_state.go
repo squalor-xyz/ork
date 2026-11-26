@@ -220,7 +220,7 @@ func (d *Daemon) restoreRunSpecAnswers(ctx context.Context, p registry.Project, 
 	if err != nil {
 		return fmt.Errorf("restore stored spec answers %s: %w", path, err)
 	}
-	fp, err := engine.SpecFingerprint(raw)
+	fp, err := engine.SpecFingerprintWithNotes(ctx, d.runDeps(p), p.Path, item, raw)
 	if err != nil {
 		return fmt.Errorf("restore stored spec answers %s: %w", path, err)
 	}

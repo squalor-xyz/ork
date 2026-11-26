@@ -887,6 +887,25 @@ func TestSpecCheckPrompt(t *testing.T) {
 	}
 }
 
+func TestSpecCheckPromptJudgesNotesRecordedAfterTheSpec(t *testing.T) {
+	p := prompts(t)["spec-check"]
+	for _, want := range []string{
+		"Notes recorded after the spec", "read each listed note against the slice's Implement and Failing tests, and its Files and Check",
+		"contradict, or do not carry out", "Ask one question for the slice, with exactly two options",
+		"`follow the note`", "`follow the spec`", "Omit the Decision key line for this question",
+		"Ask nothing for a note that does not conflict",
+	} {
+		t.Run(want, func(t *testing.T) {
+			if !has(p, want) {
+				t.Errorf("spec-check does not say %q", want)
+			}
+		})
+	}
+	if !ascii(p) {
+		t.Error("spec-check prompt holds a non-ASCII character")
+	}
+}
+
 func TestSpecCheckPromptRequiresVerifiableCriteria(t *testing.T) {
 	p := prompts(t)["spec-check"]
 	for _, want := range []string{

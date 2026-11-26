@@ -1,0 +1,39 @@
+{
+  "id": "S620",
+  "title": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Follow-up of S618 (run ork-20261126-021911-97a7). Every real relay diff holds .slicer/ tracking files and landed-changed/ID.md, so the per-file git show list S618 adds to the Base overlays section fills with tracking paths up to its 20-path cap. Filter them the way trackingPath does elsewhere (and as adj 600 does for the no-renders rule), with a test.\n\nOwner decision, 2026-11-26 (key base-overlays.tracking-paths): land S618 as specced and file this follow-up (Jon chose 'Follow-up')."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
