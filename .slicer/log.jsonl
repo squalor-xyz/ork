@@ -7002,3 +7002,5 @@
 {"when": "2026-11-26T00:33:58Z", "item": "S614", "action": "add", "from": "", "to": "open", "note": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files"}
 {"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "add", "from": "", "to": "open", "note": "before round 1 check that each path argument in a slice Check command exists in the worktree"}
+{"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "promote", "from": "", "to": "", "note": ""}

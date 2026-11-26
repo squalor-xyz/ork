@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 615,
+  "next_id": 616,
   "preamble": "",
   "passes": [
     {
@@ -32327,6 +32327,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S615",
+      "title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
+      "short_title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S597",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-2378c935",
         "pass": "v1.2",
         "group": "",
         "reason": "",
