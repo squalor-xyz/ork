@@ -12,23 +12,23 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-002418-89aa, project ork, item S584:\n\nwhen a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default\n\nEvidence: the uipass_test.go:897-904 routes leave out .slicer/ and landed-changed/, which hid the dead-feature defect"
+      "body": "`noRendersHarness` (`internal/engine/uipass_test.go:897-915`) routes `git diff --name-only` with only the paths a test lists. A real run's branch diff also carries the run's own tracking files, `.slicer/` and `landed-changed/` (adj 600). So a rule that tests the diff's paths, such as `onlyTUITestFiles`, never saw them in the harness. That hid the defect in S584: the \"No renders expected\" rule never matched a real run. The owner decided (adj 602, key `tests.diff-harness-tracking-paths`, \"Shared default\") that harnesses get these paths through one shared helper in `internal/engine/harness_test.go`. The helper prepends the tracking paths by default. A test opts out for a diff that must list no tracking paths. `noRendersHarness` uses the helper.\n\nOwner decisions, 2026-11-26: adj 602 (shared diff-route helper prepends tracking paths) and adj 607 (only noRendersHarness converts in this slice)."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/harness_test.go:184-190` (the diff-route helper and its tests go here, next to `harnessOpts` and the other harness helpers)\n- `internal/engine/uipass_test.go:895-915` (`noRendersHarness` builds its diff route through the helper)\n- `internal/engine/uipass_test.go:932-957` (`TestUIPassBriefSaysNoRendersWhenOnlyTUITestsChanged` drops its explicit tracking paths, because the helper supplies them)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- TestDiffRouteAddsTrackingPaths: `diffRoute(W, \"base\", \"internal/tui/x_test.go\")` returns a `git -C W diff --name-only -z --no-renames --no-relative base` route. Its Stdout is `.slicer/index.json`, `landed-changed/S04.md` and then `internal/tui/x_test.go`, each ending in NUL.\n- TestDiffRouteExactListsOnlyGivenPaths: `diffRouteExact(W, \"base\", \"internal/tui/x_test.go\")` returns the same route with Stdout `internal/tui/x_test.go\\x00` and no tracking path. This is the opt-out.\n- TestDiffRouteWithNoPathsStillAddsTrackingPaths: `diffRoute(W, \"base\")` lists only the two tracking paths, so a rule that reads this diff sees a run with no product change.\n- TestNoRendersHarnessDiffCarriesTrackingPaths: a `noRendersHarness` run given only `internal/tui/scroll_sweep_test.go` has a UI brief that holds \"## No renders expected\". The rule sees the tracking paths and still ignores them (adj 600). Before the change the harness lists no tracking paths, so the test cannot fail for the right reason. It asserts the `git diff` call the engine made against `h.fake` (a `diff --name-only` call arrived) and that the brief holds the section."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. In `internal/engine/harness_test.go`, add `diffRoute(W, base string, changed ...string) clitest.Route`. It returns `clitest.Route{Tool: \"git\", Args: {\"-C\", W, \"diff\", \"--name-only\", \"-z\", \"--no-renames\", \"--no-relative\", base}}` with Stdout set to NUL-terminated paths. The list is `.slicer/index.json`, `landed-changed/` + `item` + `.md`, then `changed` in order. Add a doc comment citing adj 600 and adj 602.\n2. In the same file, add `diffRouteExact(W, base string, changed ...string) clitest.Route`, the opt-out for a diff that must list no tracking paths. It builds the same route with only the given paths. `diffRoute` calls it with the two tracking paths placed before `changed`.\n3. In `internal/engine/uipass_test.go`, `noRendersHarness` builds `diff` with `diffRoute(W, \"base\", changed...)`. When `len(changed) == 0` it keeps the existing branch (Stdout \"\", Exit 1), so `TestUIPassBriefHasNoRendersNoteWhenTheDiffCannotBeRead` still gets an unreadable diff. Update its doc comment: the routed diff lists the run's tracking paths, then the given paths.\n4. In `TestUIPassBriefSaysNoRendersWhenOnlyTUITestsChanged`, pass only `internal/tui/scroll_sweep_test.go` to `noRendersHarness`. Remove the explicit `.slicer/index.json` and `landed-changed/` + `item` + `.md` arguments, and update the comment above the call.\n5. Add the four tests under Failing tests to `internal/engine/harness_test.go`, with the first three calling the helpers directly.\n6. Leave the other routed `git diff --name-only` sites (`baseOverlayRoutes`, `brief_test.go:1911` and `:2092`, `decisionpaths_test.go:59`) as they are. See Owner needed.\n7. Run `gofmt -l .`, `go vet ./...` and `go test ./...`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- `go test -run TestDiffRouteAddsTrackingPaths ./internal/engine` passes (it fails to compile before the change).\n- `go test -run TestDiffRouteExactListsOnlyGivenPaths ./internal/engine` passes.\n- `go test -run TestDiffRouteWithNoPathsStillAddsTrackingPaths ./internal/engine` passes.\n- `go test -run TestNoRendersHarnessDiffCarriesTrackingPaths ./internal/engine` passes.\n- `go test -run TestUIPassBriefSaysNoRendersWhenOnlyTUITestsChanged ./internal/engine` passes with the shorter argument list.\n- `go test -run TestUIPassBriefHasNoRendersNoteWhenTheDiffCannotBeRead ./internal/engine` passes (no paths still means an unreadable diff).\n- `go test ./internal/engine` exits 0.\n- `go vet ./...` exits 0.\n- `gofmt -l ./engine` prints nothing."
     },
     {
       "heading": "Git",
