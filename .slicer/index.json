@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 612,
+  "next_id": 613,
   "preamble": "",
   "passes": [
     {
@@ -32200,6 +32200,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-75c8af81",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S612",
+      "title": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output",
+      "short_title": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S584",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-8d22e527",
         "pass": "v1.2",
         "group": "",
         "reason": "",

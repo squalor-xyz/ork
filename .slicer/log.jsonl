@@ -6988,3 +6988,6 @@
 {"when": "2026-11-26T00:20:07Z", "item": "S611", "action": "add", "from": "", "to": "open", "note": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md"}
 {"when": "2026-11-26T00:20:07Z", "item": "S611", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T00:20:08Z", "item": "S611", "action": "note", "from": "", "to": "", "note": "possible duplicate of S607", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:23:30Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T00:24:16Z", "item": "S612", "action": "add", "from": "", "to": "open", "note": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output"}
+{"when": "2026-11-26T00:24:17Z", "item": "S612", "action": "promote", "from": "", "to": "", "note": ""}
