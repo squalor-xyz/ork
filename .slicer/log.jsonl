@@ -7094,3 +7094,6 @@
 {"when": "2026-11-26T02:50:48Z", "item": "S620", "action": "add", "from": "", "to": "open", "note": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list"}
 {"when": "2026-11-26T02:50:48Z", "item": "S620", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T02:50:48Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T02:51:19Z", "item": "S621", "action": "add", "from": "", "to": "open", "note": "ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap"}
+{"when": "2026-11-26T02:51:19Z", "item": "S621", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T02:51:19Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Why"}

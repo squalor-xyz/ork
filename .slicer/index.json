@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 621,
+  "next_id": 622,
   "preamble": "",
   "passes": [
     {
@@ -32709,6 +32709,34 @@
       "id": "S620",
       "title": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list",
       "short_title": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S621",
+      "title": "ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap",
+      "short_title": "ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
