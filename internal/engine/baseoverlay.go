@@ -29,8 +29,9 @@ const baseOverlayVetTimeout = 2 * time.Minute
 const baseOverlayOlderBinaryNote = "Note: an ork binary older than this slice's code made this list, so it may offer commands that do not build."
 
 // baseOverlaySection checks base overlays for changed non-test Go files (S554,
-// S593), offering test commands unless vet exits non-zero. Each command runs tests
-// with only that file reverted to the merge base, so the reviewer can confirm
+// S593, S596), offering test commands unless vet exits non-zero. Per-file commands
+// run tests with only that file reverted to the merge base; when none builds,
+// it tries reverting all written files together. The reviewer can confirm
 // that a test the slice added fails without the product change, with no write
 // to the tree. ork writes the base copy and the overlay JSON into tmpDir, the
 // reviewer's process temp directory. Like the decision paths check, a failure
@@ -63,13 +64,17 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	}
 
 	var entries, unread []string
+	replacements := make(map[string]string)
+	var packages []string
 	commands := 0
 	for _, p := range goFiles {
-		isNew, err := e.writeBaseOverlay(ctx, rec, tmpDir, mergeBase, p, len(entries)+1)
+		isNew, key, replacement, err := e.writeBaseOverlay(ctx, rec, tmpDir, mergeBase, p, len(entries)+1)
 		if err != nil {
 			unread = append(unread, "`"+p+"`")
 			continue
 		}
+		replacements[key] = replacement
+		packages = append(packages, packageArg(p))
 		n := len(entries) + 1
 		overlayFile := filepath.Join(tmpDir, fmt.Sprintf("overlay-%d.json", n))
 		line := "- `" + p + "`"
@@ -83,6 +88,29 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		command := fmt.Sprintf("go -C %s test -overlay %s %s", ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(packageArg(p)))
 		entries = append(entries, line+": `"+command+"`")
 		commands++
+	}
+	if len(replacements) >= 2 && commands == 0 {
+		overlayFile := filepath.Join(tmpDir, "overlay-all.json")
+		doc, err := json.Marshal(map[string]map[string]string{"Replace": replacements})
+		if err == nil {
+			err = os.WriteFile(overlayFile, append(doc, '\n'), 0o600)
+		}
+		line := fmt.Sprintf("- All changed Go files at once (%d files)", len(replacements))
+		if err != nil {
+			entries = append(entries, line+": Check incomplete: the combined overlay could not be written. Trace the base versions with `git show` instead.")
+		} else {
+			slices.Sort(packages)
+			packages = slices.Compact(packages)
+			if message := e.overlayBuildError(ctx, rec, overlayFile, packages...); message != "" {
+				entries = append(entries, line+": does not build: "+message+". Trace the base versions with `git show` instead.")
+			} else {
+				command := "go -C " + ShellWord(rec.Worktree) + " test -overlay " + ShellWord(overlayFile)
+				for _, pkg := range packages {
+					command += " " + ShellWord(pkg)
+				}
+				entries = append(entries, line+": `"+command+"`. Because no single-file overlay builds, this one reverts every file listed above together. Add `-run NAME` before the package list, one test per command, and never join test names in one `-run` pattern. A command changes nothing in the tree.")
+			}
+		}
 	}
 
 	var body strings.Builder
@@ -117,9 +145,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 
 // overlayBuildError is advisory: only a vet process that exits non-zero
 // replaces the test command. Failure to start or finish vet leaves it intact.
-func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overlayFile, pkg string) string {
+func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overlayFile string, pkgs ...string) string {
 	result, err := clirun.Run(ctx, clirun.Call{
-		Bin: e.d.goBin(), Args: []string{"-C", rec.Worktree, "vet", "-overlay", overlayFile, pkg},
+		Bin: e.d.goBin(), Args: append([]string{"-C", rec.Worktree, "vet", "-overlay", overlayFile}, pkgs...),
 		Timeout: baseOverlayVetTimeout,
 	})
 	var exit *clirun.ExitError
@@ -153,11 +181,12 @@ func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overl
 }
 
 // writeBaseOverlay writes the base copy of p (unless the base lacks it) and
-// overlay-N.json. It reports whether p is new in the slice. A path that is not
-// in the base maps to "", which `go` reads as a file that does not exist.
-func (e *Engine) writeBaseOverlay(ctx context.Context, rec runrec.Record, tmpDir, mergeBase, p string, n int) (bool, error) {
+// overlay-N.json. It reports whether p is new in the slice and the Replace key
+// and value. A path that is not in the base maps to "", which `go` reads as a
+// file that does not exist.
+func (e *Engine) writeBaseOverlay(ctx context.Context, rec runrec.Record, tmpDir, mergeBase, p string, n int) (bool, string, string, error) {
 	if !filepath.IsLocal(p) || path.IsAbs(p) {
-		return false, fmt.Errorf("path %q is not a plain relative path", p)
+		return false, "", "", fmt.Errorf("path %q is not a plain relative path", p)
 	}
 	replacement := ""
 	isNew := false
@@ -166,21 +195,22 @@ func (e *Engine) writeBaseOverlay(ctx context.Context, rec runrec.Record, tmpDir
 	case err == nil:
 		replacement = filepath.Join(tmpDir, "base", filepath.FromSlash(p))
 		if err := os.MkdirAll(filepath.Dir(replacement), 0o700); err != nil {
-			return false, err
+			return false, "", "", err
 		}
 		if err := os.WriteFile(replacement, []byte(content), 0o600); err != nil {
-			return false, err
+			return false, "", "", err
 		}
 	case notInBase(err):
 		isNew = true
 	default:
-		return false, err
+		return false, "", "", err
 	}
-	doc, err := json.Marshal(map[string]map[string]string{"Replace": {filepath.Join(rec.Worktree, filepath.FromSlash(p)): replacement}})
+	key := filepath.Join(rec.Worktree, filepath.FromSlash(p))
+	doc, err := json.Marshal(map[string]map[string]string{"Replace": {key: replacement}})
 	if err != nil {
-		return false, err
+		return false, "", "", err
 	}
-	return isNew, os.WriteFile(filepath.Join(tmpDir, fmt.Sprintf("overlay-%d.json", n)), append(doc, '\n'), 0o600)
+	return isNew, key, replacement, os.WriteFile(filepath.Join(tmpDir, fmt.Sprintf("overlay-%d.json", n)), append(doc, '\n'), 0o600)
 }
 
 // notInBase reports whether err is git saying the path is absent from the

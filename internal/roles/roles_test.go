@@ -642,6 +642,7 @@ func TestReviewerPromptCarriesTheProbeRecipe(t *testing.T) {
 		`{"Replace": {"{{worktree}}/PKGDIR/probe_test.go": "{{temp_dir}}/probe_test.go"} }`,
 		"only when the brief says you may write your temp directory",
 		"## Base overlays",
+		"## Go module imports",
 	} {
 		if !has(p, want) {
 			t.Errorf("reviewer prompt lacks %q", want)

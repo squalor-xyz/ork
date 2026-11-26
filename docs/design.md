@@ -409,7 +409,12 @@ ork (TUI)  ork status --json (CLI)
    block for each of Why, Files, Failing tests, Implement and Check, each the
    section's whole new text or `unchanged`, then `## Owner needed`; a report
    with an unknown or missing block, or without the Owner needed ending, is a
-   shape error, and the role's session is resumed once with the error. ork
+   shape error, and the role's session is resumed once with the error.
+   *Proposed (S576):* a report that fails its shape is kept as
+   `spec-draft-failed-N.md` in `spec-checks/<project-key>/<item-key>/draft/`,
+   with N counting this draft's failed reports from 1. The error ends with
+   `[report kept in PATH]`. A new draft removes old failed reports, and a
+   draft that passes removes its own. ork
    checks that every path a proposed Files section names is in the checkout
    (`(new)` marks a file the slice creates) and attaches each failure to the
    section as a problem. The daemon method `spec.draft` returns, for each
@@ -829,8 +834,10 @@ slice.
     CLI fixtures, without editing the tree. `-render-fixture NAME[,NAME...]`
     writes only `NAME.txt` for each name: those five and `projects-set`,
     `projects-set-refusals`, `wave-start`, `status-queued-held`,
-    `status-engine`, `summary-real`, `projects-setup` and `fake-reply`
-    (adj 542). With no flag it writes nothing.
+    `status-engine`, `summary-real`, `projects-setup`, `fake-reply` and
+    `wave-start-finding` (a wave start with `--yes` that holds one item on a
+    Check finding and starts the other) (adj 542). With no flag it writes
+    nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). These are scratch files in the role's temp directory named
     in the brief under Your files. The pass
@@ -2058,7 +2065,11 @@ separately.
     only that file reverted and see a test the slice added fail. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
     test names in one `-run` pattern (S571). This command guidance appears only
-    when at least one test command remains (S593). It says how
+    when at least one single-file test command remains (S593). When at least
+    two overlays were written and every one fails vet, ork writes
+    `TMPDIR/overlay-all.json` reverting all those files, vets it over their
+    packages, and lists it as a final entry with a test command (or
+    `does not build: ERROR`) (S596, adj 588). It says how
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git
@@ -2068,6 +2079,15 @@ separately.
     commands that do not build." (S598, adj 591); the failed-diff-read notice
     and a brief with no section do not get it. The section is advisory and never
     blocks the run. The gate and the architect get none;
+  - before the reviewer starts, a `## Go module imports` section when the
+    worktree has a `go.mod` (S589, adj 590, `roles.probe-import-paths`). ork
+    reads the file and lists each `require` path (block and one-line forms,
+    direct and indirect) in file order, once, with no version, `replace`
+    target or module path, so a probe test imports a library by the path the
+    module uses (for example `charm.land/bubbletea/v2`). No `go.mod`, or none
+    with a require line, gives no section. A `go.mod` that cannot be read
+    gives a notice that tells the reviewer to read it itself. The section is
+    advisory and never blocks the run. The gate and the architect get none;
   - before the reviewer starts, a `## Untested call sites` section when a new
     function is called directly by tests while no test reaches the function
     around any of its product call sites (S564, adj 573,
@@ -2687,7 +2707,7 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   the package directory to it, and one `go -C WORKTREE test -overlay` command;
   it applies only when the brief says the reviewer may write its temp
   directory, and it points to the brief's `## Base overlays` section for revert
-  commands.
+  commands and to its `## Go module imports` section for import paths (S589).
   Other calls block on an owner permission question. `ork answer RUN allow`
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.

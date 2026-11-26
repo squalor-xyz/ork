@@ -326,3 +326,15 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S600 (run ork-20261125-222936-fc21, 2026-11-25)
 
 - [ ] Run ork in a terminal of 80x10 and open a Roadmap with several goals. Press home twice: the Goals show, and the dim line under them reads +N more lines, cursor: S90 (the first row's ID). Press enter: that item opens. Press esc, then down: the cue is gone.
+
+## S596 (run ork-20261125-222937-c7ce, 2026-11-25)
+
+- [ ] In the next reviewer round for a slice where two changed Go files depend on each other's new fields, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... for each single file. It should end with an All changed Go files at once entry holding one go -C ... test -overlay .../overlay-all.json ./PKG ... command. Run it from your shell. It should build, and git -C WORKTREE status --porcelain should be unchanged.
+
+## S576 (run ork-20261125-222939-8d33, 2026-11-25)
+
+- [ ] [AFTER LAND] The next time ork spec draft ork ID --json fails with report shape: ..., the error ends with [report kept in .../draft/spec-draft-failed-2.md], and that file holds what the role wrote, so you can see why no block was found.
+
+## S589 (run ork-20261125-224829-7bd0, 2026-11-26)
+
+- [ ] In the next real reviewer round of a Go project, open the reviewer's brief under the run's role files. You should see a ## Go module imports section listing every require path of the worktree's go.mod, for ork charm.land/bubbletea/v2, charm.land/bubbles/v2 and charm.land/lipgloss/v2. In a round of a project with no go.mod, the brief should have no such section.
