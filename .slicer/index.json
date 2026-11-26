@@ -32297,10 +32297,25 @@
       "id": "S609",
       "title": "adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard",
       "short_title": "adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bc59b9df-ca8d-4433-9024-df6a5f23388c",
+          "kind": "",
+          "text": "**2026-11-26** — The checker detects all specified unguarded forms and accepts current engine guards; S609’s formatting check now targets internal/engine and passes.",
+          "created_at": "2026-11-26T03:50:08Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32318,7 +32333,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

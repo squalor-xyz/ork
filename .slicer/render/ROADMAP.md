@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-619 items · — 66 · done 418 · retired 135
+619 items · — 65 · done 419 · retired 135
 
 ## v1.3
 
@@ -368,7 +368,7 @@ v1.2
 | 311 | [S606](slices/S606.md) | say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing |  | - |  | discovered from S596 | — |
 | 312 | [S607](slices/S607.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list |  | - |  | discovered from S574 | — |
 | 313 | [S608](slices/S608.md) | Strip quotes from quoted require paths in goModRequirePaths |  | 1 |  | discovered from S589 | — |
-| 314 | [S609](slices/S609.md) | adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard |  | 1 |  | discovered from S570 | — |
+| 314 | [S609](slices/S609.md) | adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard |  | 1 |  | discovered from S570 | done |
 | 315 | [S610](slices/S610.md) | say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead |  | - |  | discovered from S574 | — |
 | 316 | [S611](slices/S611.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md |  | - |  | discovered from S574 | — |
 | 317 | [S612](slices/S612.md) | In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output |  | - |  | discovered from S584 | — |

@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">619 items · — 66 · done 418 · retired 135</p>
+<p class="summary">619 items · — 65 · done 419 · retired 135</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -366,7 +366,7 @@
 <tr class="open"><td>311</td><td>S606</td><td>say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork&#x27;s run without guessing</td><td></td><td>-</td><td></td><td>discovered from S596</td><td class="status">—</td></tr>
 <tr class="open"><td>312</td><td>S607</td><td>add a test that every name in renderFixtureNames appears in the UI brief&#x27;s fixture list</td><td></td><td>-</td><td></td><td>discovered from S574</td><td class="status">—</td></tr>
 <tr class="open"><td>313</td><td>S608</td><td>Strip quotes from quoted require paths in goModRequirePaths</td><td></td><td>1</td><td></td><td>discovered from S589</td><td class="status">—</td></tr>
-<tr class="open"><td>314</td><td>S609</td><td>adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard</td><td></td><td>1</td><td></td><td>discovered from S570</td><td class="status">—</td></tr>
+<tr class="done"><td>314</td><td>S609</td><td>adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard</td><td></td><td>1</td><td></td><td>discovered from S570</td><td class="status">done</td></tr>
 <tr class="open"><td>315</td><td>S610</td><td>say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead</td><td></td><td>-</td><td></td><td>discovered from S574</td><td class="status">—</td></tr>
 <tr class="open"><td>316</td><td>S611</td><td>add a test that every name in renderFixtureNames appears in the UI brief&#x27;s fixture list and in docs/guide.md</td><td></td><td>-</td><td></td><td>discovered from S574</td><td class="status">—</td></tr>
 <tr class="open"><td>317</td><td>S612</td><td>In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output</td><td></td><td>-</td><td></td><td>discovered from S584</td><td class="status">—</td></tr>
