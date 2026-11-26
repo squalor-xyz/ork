@@ -6962,3 +6962,9 @@
 {"when": "2026-11-26T00:05:00Z", "item": "S568", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-26T00:05:34Z", "item": "S568", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-26T00:05:35Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "Correction: the decisions in the note above are adj 598 (rem", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:09:36Z", "item": "S592", "action": "note", "from": "", "to": "", "note": "Also covers adj 596: the Base overlays note lists each chang", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-26T00:09:44Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Check"}
