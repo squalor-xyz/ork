@@ -1,0 +1,39 @@
+{
+  "id": "S619",
+  "title": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S576 kept the raw report of a failed spec draft. For S614 on 2026-11-26 the kept report (/home/jon/.local/state/ork/spec-checks/a5f7056ce3d12288929e7797d35fe5247d6c491d811f322bea948161c59bc5f1/a6d77f782f53d5850ddd4990a4e7912185006f7a7f4c9c6d6ec783733d49f6fd/draft/spec-draft-failed-1.md) shows why drafts often fail with \"report shape: no block for Why; no block for Files; ...\": the role's first reply held the five sections, ork resumed it once to fix the format, and the role answered with only its owner questions. It wrote: \"This reply follows the format you asked for. It drops the five spec sections from my earlier report ... I haven't re-sent them.\" The same failure hit S531, S556, S564, S569, S575, S580 and S588 this week, each costing a full re-draft.\n\nOwner decision, 2026-11-26: file it (Jon chose 'File it'). When the resumed reply has no section blocks, ork should reuse the first reply's sections with the resumed questions, or the resume prompt should ask for the full report including every section."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

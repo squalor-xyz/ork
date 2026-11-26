@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 619,
+  "next_id": 620,
   "preamble": "",
   "passes": [
     {
@@ -32484,6 +32484,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5457fdac-cc13-427c-ba73-ac91e1fef109",
+          "kind": "",
+          "text": "**2026-11-26** — Owner decisions (adj 605 scope, adj 606 path): the lock is held for all of land() and around the run-start tracking commit (ork tracking commit is not locked); the lock file is ork-main.lock in the git common directory (git rev-parse --git-common-dir), one per repository. Jon chose 'Whole landing, in .git', session 8d711f67, 2026-11-26.",
+          "created_at": "2026-11-26T02:16:50Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32643,6 +32657,34 @@
           "retracted_reason": ""
         }
       ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S619",
+      "title": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report",
+      "short_title": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
       "claim": null,
       "fields": {
         "size": "S",

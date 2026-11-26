@@ -7047,3 +7047,7 @@
 {"when": "2026-11-26T02:04:59Z", "item": "S616", "action": "note", "from": "", "to": "", "note": "Owner decision (key tests.diff-harness-tracking-paths): a sh", "by": "Jon Robbins"}
 {"when": "2026-11-26T02:04:59Z", "item": "S617", "action": "note", "from": "", "to": "", "note": "Owner decision (key spec.note-after-spec-check): both. Code ", "by": "Jon Robbins"}
 {"when": "2026-11-26T02:04:59Z", "item": "S618", "action": "note", "from": "", "to": "", "note": "Owner decision (key base-overlays.other-files-list): reuse b", "by": "Jon Robbins"}
+{"when": "2026-11-26T02:16:50Z", "item": "S619", "action": "add", "from": "", "to": "open", "note": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report"}
+{"when": "2026-11-26T02:16:50Z", "item": "S619", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T02:16:50Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T02:16:50Z", "item": "S614", "action": "note", "from": "", "to": "", "note": "Owner decisions (adj 605 scope, adj 606 path): the lock is h", "by": "Jon Robbins"}
