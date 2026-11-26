@@ -342,3 +342,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S598 (run ork-20261125-232714-f9a7, 2026-11-26)
 
 - [ ] Start a reviewer round on a self-host daemon that ork daemon status reports as behind main, on a slice that changes a Go file. Open the reviewer brief under the run's role files. The ## Base overlays section should open with the "older than this slice's code" line, and the file entries should follow. After ork daemon restart --rebuild, the next round's section should not show that line.
+
+## S592 (run ork-20261126-004139-f69b, 2026-11-26)
+
+- [ ] In the next reviewer round for a slice that changes a Go file and a non-Go file, open the reviewer's brief under the run's role files. The ## Base overlays section should end with a paragraph saying other changed files are read with git -C WORKTREE show MERGEBASE:PATH and that git grep is not available. It should name no changed file, and the entry lines for the Go files should look as before.
