@@ -2121,6 +2121,28 @@ separately.
     base), an unreadable file or an unparseable file adds an incomplete-check
     notice. The section is advisory and never blocks or pauses the run. The
     gate and the architect get none;
+  - before the reviewer and the gate start, a `## Stale doc references` section
+    when `docs/` still names a command that the branch removed from role
+    prompt text (S569, adj 598, adj 599, `review.stale-doc-command-name`). A
+    deterministic step reads `git diff --unified=0` of `internal/roles`
+    against the merge base (test files excluded), which covers the prompt
+    files and the prompt text in `roles.go`, and keeps the removed lines. A
+    command name is the first two words of a backticked span in a removed
+    line, when both are lowercase words (`adj check`, `slicer show`,
+    `go test`); a span with a flag or an uppercase second word, or with one
+    word, gives none. Every name in a removed line is searched, even if the
+    diff adds the same name back elsewhere. The step then searches every
+    regular file under the worktree's `docs/` for each name as literal,
+    case-sensitive text, where the characters on both sides are not letters,
+    digits, `_` or `-` (a name at the edge of a line matches). The section
+    lists each `docs/file:line` hit with the names matched on it, sorted by
+    file then line, at most 20, and says how many it left out. It has no
+    section when no removed line gives a name, or when `docs/` has no hit and
+    no unreadable file. A failed merge-base or diff read, or an unreadable doc
+    file, adds an incomplete-check notice. The section is advisory and never
+    blocks or pauses the run. The reviewer and the gate get it and the
+    architect gets none. The reviewer round shares its branch read with its
+    other sections; the gate round makes its own;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,

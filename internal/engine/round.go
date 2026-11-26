@@ -634,6 +634,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if section := e.untestedCallSitesSection(ctx, rec, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
+		if section := e.staleDocsSection(ctx, rec, change); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
 	}
 	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
 		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
@@ -660,6 +663,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			return fail("implementer permissions", err)
 		}
 		in.Allow = PinGitC(implementerPerm.Allow, rec.Worktree)
+		mergeBase, paths, err := e.branchChange(ctx, rec)
+		change := branchChangeResult{MergeBase: mergeBase, Paths: paths, Err: err}
+		if section := e.staleDocsSection(ctx, rec, change); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
 		body := "No round check result is available. Do not claim tests green without evidence."
 		if len(rec.Checks) > 0 {
 			check := rec.Checks[len(rec.Checks)-1]

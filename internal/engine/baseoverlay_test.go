@@ -29,8 +29,11 @@ func baseOverlayRoutes(W, changed, untracked string, extra ...clitest.Route) []c
 func TestBaseOverlayAndUntestedCallSitesShareOneBranchRead(t *testing.T) {
 	h := ucsReviewerHarness(t, ucsReviewerFiles, "internal/x/x.go\x00", ucsXRoutes)
 	requireState(t, h.start(), runrec.StateAwaitingApproval)
-	reviewers := 0
+	reviewers, gates := 0, 0
 	for _, req := range h.runner.requests() {
+		if req.Role == RoleGate {
+			gates++
+		}
 		if req.Role != RoleReviewer {
 			continue
 		}
@@ -47,8 +50,10 @@ func TestBaseOverlayAndUntestedCallSitesShareOneBranchRead(t *testing.T) {
 		{"-C", h.W, "diff", "--name-only"},
 		{"-C", h.W, "ls-files", "--others", "--exclude-standard", "-z", "--full-name"},
 	} {
-		if reads := h.calls("git", args...); len(reads) != reviewers {
-			t.Errorf("git %v: %d reads for %d reviewer rounds, want one each", args, len(reads), reviewers)
+		// A reviewer round shares one branch read between its sections, and a
+		// gate round makes one for its Stale doc references section (S569).
+		if reads := h.calls("git", args...); len(reads) != reviewers+gates {
+			t.Errorf("git %v: %d reads for %d reviewer and %d gate rounds, want one each", args, len(reads), reviewers, gates)
 		}
 	}
 }

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-618 items · — 69 · done 414 · retired 135
+618 items · — 68 · done 415 · retired 135
 
 ## v1.3
 
@@ -328,7 +328,7 @@ v1.2
 | 271 | [S566](slices/S566.md) | when the brief cites an owner decision key, have ork run adj check on it and say in the brief when it is not found |  | - |  | discovered from S557 | done |
 | 272 | [S567](slices/S567.md) | adj: allow a key-only search mode in adj check so reviewers can list decided records naming a path without dumping full records |  | - |  | Covered: plain adj check TEXT already prints one line per record (id, status, title, refs, decision) without options or history; Jon chose 'Retire as covered', session 8d711f67, 2026-11-25. · discovered from S560 | retired |
 | 273 | [S568](slices/S568.md) | name the decided adj key for each owner note in the brief so the reviewer does not look it up |  | - |  | discovered from S563 | done |
-| 274 | [S569](slices/S569.md) | when a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief |  | - |  | discovered from S559 | — |
+| 274 | [S569](slices/S569.md) | when a slice changes a role prompt's tool instruction, grep docs/ for the old command name and list the hits in the brief |  | - |  | discovered from S559 | done |
 | 275 | [S570](slices/S570.md) | flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded |  | - |  | discovered from S566 | done |
 | 276 | [S571](slices/S571.md) | give the gate a focused test command with one test per command, so it never needs a regex alternation that the read-only allowlist denies |  | - |  | discovered from S563 | done |
 | 277 | [S572](slices/S572.md) | Narrow the Files-path exemption to files that run |  | 1 |  | discovered from S563 | done |

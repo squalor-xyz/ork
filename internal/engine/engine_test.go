@@ -955,15 +955,16 @@ func TestAProblemWithNoItemOrAStaleRenderStaysRed(t *testing.T) {
 			}
 			// The reviewer round shares one base read between its Base overlays
 			// section (S554) and its Untested call sites section (S564); the
-			// report's own deferral reads nothing.
-			reviewers := 0
+			// gate round makes one for its Stale doc references section (S569).
+			// The report's own deferral reads nothing.
+			rounds := 0
 			for _, req := range h.runner.requests() {
-				if req.Role == RoleReviewer {
-					reviewers++
+				if req.Role == RoleReviewer || req.Role == RoleGate {
+					rounds++
 				}
 			}
-			if reads := h.calls("git", "-C", h.P, "symbolic-ref"); len(reads) != reviewers {
-				t.Errorf("git is read only when the report could defer or a reviewer starts: %d reads for %d reviewer rounds, want one each: %v", len(reads), reviewers, reads)
+			if reads := h.calls("git", "-C", h.P, "symbolic-ref"); len(reads) != rounds {
+				t.Errorf("git is read only when the report could defer or a reviewer or gate starts: %d reads for %d reviewer and gate rounds, want one each: %v", len(reads), rounds, reads)
 			}
 		})
 	}
