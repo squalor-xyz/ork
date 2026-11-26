@@ -332,6 +332,10 @@ func deferredSection(checks []runrec.CheckRecord, finish bool) *BriefSection {
 	return &BriefSection{Title: "Deferred tracking problems", Body: body}
 }
 
+// uiNoRendersTitle titles the UI round's section for a diff that changes only
+// test files under internal/tui, where no view changed (S584).
+const uiNoRendersTitle = "No renders expected"
+
 // doneWhen adds acceptance criteria without replacing any role's report format.
 func doneWhen(in BriefInput) string {
 	var items []string
@@ -449,7 +453,13 @@ func doneWhen(in BriefInput) string {
 			add("End the review with blockers or no blockers, then the exact unnumbered heading ## Owner needed with questions or none; in gate mode use its first line and evidence per criterion.")
 			add("Name blocked checks and their verbatim command and denial text; do not claim unrun checks.")
 		case RoleUI:
-			add("Complete sections (A)-(D): findings name the view, size, visible defect, file:line, concrete edit and CONFIRMED or PLAUSIBLE. Produce the required renders or explain each blocked view; list the files produced.")
+			renders := "Produce the required renders or explain each blocked view; list the files produced."
+			for _, section := range in.Sections {
+				if section.Title == uiNoRendersTitle {
+					renders = "No renders are expected: the diff changes only test files under internal/tui. Write no render files and say so in your report."
+				}
+			}
+			add("Complete sections (A)-(D): findings name the view, size, visible defect, file:line, concrete edit and CONFIRMED or PLAUSIBLE. " + renders)
 			add("End with the exact unnumbered heading ## Owner needed and questions or none; give no verdict. Each [later] has proposed Importance, Urgency and Effort scores (1 to 3).")
 			add("Name checks or views you could not run or see, with the verbatim command and denial text when blocked.")
 		case RoleSpecCheck:

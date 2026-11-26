@@ -843,6 +843,15 @@ slice.
     in the brief under Your files. The pass
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
     names for the approval card.
+    No renders expected (*proposed*, S584; adj 600): ork skips the run's own
+    tracking paths under `.slicer/` and `landed-changed/` in the branch's diff.
+    When at least one path is left and every path left is a `_test.go` file
+    under `internal/tui`, no view changed. The UI
+    round's brief then gets a "No renders expected" section, and its Done-when
+    item for renders says that no renders are expected and none are to be
+    written. The reviewer's brief gets neither. A diff that cannot be read adds
+    neither, does not pause the review, and leaves the brief as it is for any
+    other diff.
     The UI brief also tells the pass that a `go test -run` pattern holds no
     pipe, because a pipe makes a compound command that the permission check
     denies, and gives the one-test-per-command form (S565).

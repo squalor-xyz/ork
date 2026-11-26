@@ -618,8 +618,13 @@ func (e *Engine) review(ctx context.Context) error {
 			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateReview, Reason: "slicer show: " + err.Error()})
 		}
 		if ui {
-			rounds = append(rounds, round{role: RoleUI, n: rec.Round, state: runrec.StateReview, task: rec.Item + " ui",
-				sections: []BriefSection{{Title: "UI pass", Body: "The slice touches the UI. Check the screens the diff adds or changes, beside the reviewer, who checks the rest of the diff (adj 165). Use `git status` and `git diff`; you may not change the tree. The implementer's report is under Earlier reports."}}})
+			sections := []BriefSection{{Title: "UI pass", Body: "The slice touches the UI. Check the screens the diff adds or changes, beside the reviewer, who checks the rest of the diff (adj 165). Use `git status` and `git diff`; you may not change the tree. The implementer's report is under Earlier reports."}}
+			// A diff that cannot be read adds no section and does not pause: the
+			// round is built as it was before S584.
+			if paths, err := e.branchPaths(ctx, rec); err == nil && onlyTUITestFiles(paths) {
+				sections = append(sections, BriefSection{Title: uiNoRendersTitle, Body: "The diff changes only `_test.go` files under `internal/tui`, so no view, golden file or doc changed.\n\nNo renders are expected: write no files in the renders directory.\n\nSay so in your report, naming the changed files, and write \"nothing\" for each empty section."})
+			}
+			rounds = append(rounds, round{role: RoleUI, n: rec.Round, state: runrec.StateReview, task: rec.Item + " ui", sections: sections})
 		}
 	}
 
@@ -846,6 +851,24 @@ func sliceTouchesUI(sections []slicercli.Section) bool {
 		}
 	}
 	return false
+}
+
+// onlyTUITestFiles reports whether the changed paths are a diff that changes no
+// view, golden file or doc (S584). The run's own tracking paths, under `.slicer/`
+// and `landed-changed/`, are skipped (adj 600). At least one path must be left,
+// and every path left must be a _test.go file under internal/tui.
+func onlyTUITestFiles(paths []string) bool {
+	found := false
+	for _, p := range paths {
+		if strings.HasPrefix(p, ".slicer/") || strings.HasPrefix(p, "landed-changed/") {
+			continue
+		}
+		if !strings.HasPrefix(p, "internal/tui/") || !strings.HasSuffix(p, "_test.go") {
+			return false
+		}
+		found = true
+	}
+	return found
 }
 
 // beforeGate schedules the optional architect once, after accepted reviewer

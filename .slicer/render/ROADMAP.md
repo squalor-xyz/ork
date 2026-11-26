@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-613 items · — 68 · done 411 · retired 134
+613 items · — 67 · done 412 · retired 134
 
 ## v1.3
 
@@ -343,7 +343,7 @@ v1.2
 | 286 | [S581](slices/S581.md) | create the renders directory before the UI pass starts |  | - |  | discovered from S556 | done |
 | 287 | [S582](slices/S582.md) | in the Base overlays section, say which tests the brief's focused -run pattern covers, as separate commands without a pipe |  | - |  | Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25. · discovered from S564 | retired |
 | 288 | [S583](slices/S583.md) | give the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation |  | - |  | Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25. · discovered from S531 | retired |
-| 289 | [S584](slices/S584.md) | When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected |  | - |  | discovered from S531 | — |
+| 289 | [S584](slices/S584.md) | When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected |  | - |  | discovered from S531 | done |
 | 290 | [S585](slices/S585.md) | in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X |  | - |  | Folded into S586; Jon chose 'Fold into S586', session 8d711f67, 2026-11-25. · discovered from S575 | retired |
 | 291 | [S586](slices/S586.md) | Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name |  | 2 |  | discovered from S575 | done |
 | 292 | [S587](slices/S587.md) | Untested call sites: very common names make every call site in a function of that name count as reached. |  | 2 |  | discovered from S564 | done |

@@ -863,6 +863,129 @@ func TestUIPassBriefCarriesTheRegistryUIDoc(t *testing.T) {
 	}
 }
 
+func TestOnlyTUITestFiles(t *testing.T) {
+	for name, tc := range map[string]struct {
+		paths []string
+		want  bool
+	}{
+		"one tui test":         {[]string{"internal/tui/x_test.go"}, true},
+		"two tui tests":        {[]string{"internal/tui/x_test.go", "internal/tui/y_test.go"}, true},
+		"tui subfolder test":   {[]string{"internal/tui/sub/x_test.go"}, true},
+		"empty list":           {nil, false},
+		"tui source":           {[]string{"internal/tui/model.go"}, false},
+		"tui golden":           {[]string{"internal/tui/testdata/golden/x.txt"}, false},
+		"engine test":          {[]string{"internal/engine/x_test.go"}, false},
+		"cli test":             {[]string{"internal/cli/x_test.go"}, false},
+		"lookalike prefix":     {[]string{"internal/tui2/x_test.go"}, false},
+		"test mixed with code": {[]string{"internal/tui/x_test.go", "internal/tui/model.go"}, false},
+		// adj 600: the run's own tracking paths do not count.
+		"test with tracking paths":    {[]string{".slicer/index.json", "landed-changed/S1.md", "internal/tui/x_test.go"}, true},
+		"tracking paths only":         {[]string{".slicer/index.json", "landed-changed/S1.md"}, false},
+		"tracking paths with source":  {[]string{".slicer/index.json", "internal/tui/model.go"}, false},
+		"lookalike tracking prefixes": {[]string{".slicerx/a.json", "internal/tui/x_test.go"}, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := onlyTUITestFiles(tc.paths); got != tc.want {
+				t.Fatalf("onlyTUITestFiles(%q) = %v, want %v", tc.paths, got, tc.want)
+			}
+		})
+	}
+}
+
+// noRendersHarness is a UI harness whose routed diff lists the given paths, or
+// whose git diff exits 1 when no paths are given.
+func noRendersHarness(t *testing.T, files string, changed ...string) *harness {
+	t.Helper()
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			diff := clitest.Route{Tool: "git", Args: []string{"-C", W, "diff", "--name-only", "-z", "--no-renames", "--no-relative", "base"}, Stdout: strings.Join(changed, "\x00") + "\x00"}
+			if len(changed) == 0 {
+				diff.Stdout, diff.Exit = "", 1
+			}
+			return []clitest.Route{
+				{Tool: "slicer", Args: []string{"show", item, "--json", "--lean", "--root", W}, Stdout: uiSliceJSON(files)},
+				{Tool: "git", Args: []string{"-C", W, "merge-base", "main", "HEAD"}, Stdout: "base\n"},
+				diff,
+				{Tool: "git", Args: []string{"-C", W, "ls-files", "--others", "--exclude-standard", "-z", "--full-name"}},
+			}
+		}
+	})
+	h.cfg.Lineup[RoleUI] = []runrec.LineupEntry{{Vendor: "claude", Model: "opus", Effort: "medium"}}
+	return h
+}
+
+// briefsOf returns the briefs of the reviewer and the UI pass, and how many
+// UI rounds ran.
+func briefsOf(h *harness) (reviewer, ui string, uiRuns int) {
+	for _, req := range h.runner.requests() {
+		switch req.Role {
+		case RoleReviewer:
+			reviewer = req.Brief
+		case RoleUI:
+			ui = req.Brief
+			uiRuns++
+		}
+	}
+	return reviewer, ui, uiRuns
+}
+
+func TestUIPassBriefSaysNoRendersWhenOnlyTUITestsChanged(t *testing.T) {
+	// The diff looks as a real run's does: the run's tracking files ride along
+	// with the test file (adj 600).
+	h := noRendersHarness(t, "- `internal/tui/scroll_sweep_test.go`", ".slicer/index.json", "landed-changed/"+item+".md", "internal/tui/scroll_sweep_test.go")
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	reviewer, ui, runs := briefsOf(h)
+	if runs != 1 {
+		t.Fatalf("the UI pass ran %d times", runs)
+	}
+	for _, want := range []string{"## No renders expected", "No renders are expected: the diff changes only test files under internal/tui. Write no render files and say so in your report.", "internal/tui"} {
+		if !strings.Contains(ui, want) {
+			t.Errorf("UI brief lacks %q:\n%s", want, ui)
+		}
+	}
+	if strings.Contains(ui, "Produce the required renders") {
+		t.Error("UI brief still asks for renders")
+	}
+	if !strings.Contains(ui, "Complete sections (A)-(D)") {
+		t.Error("UI brief lost the rest of the Done-when item")
+	}
+	for _, text := range []string{"No renders expected", "No renders are expected"} {
+		if strings.Contains(reviewer, text) {
+			t.Errorf("reviewer brief holds %q", text)
+		}
+	}
+}
+
+func TestUIPassBriefKeepsRendersWhenAViewChanged(t *testing.T) {
+	h := noRendersHarness(t, "- `internal/tui/x_test.go`\n- `internal/tui/model.go`", "internal/tui/x_test.go", "internal/tui/model.go")
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	_, ui, runs := briefsOf(h)
+	if runs != 1 {
+		t.Fatalf("the UI pass ran %d times", runs)
+	}
+	if strings.Contains(ui, "No renders expected") || strings.Contains(ui, "No renders are expected") {
+		t.Errorf("UI brief says no renders are expected:\n%s", ui)
+	}
+	if !strings.Contains(ui, "Produce the required renders") {
+		t.Error("UI brief lost the renders Done-when item")
+	}
+}
+
+func TestUIPassBriefHasNoRendersNoteWhenTheDiffCannotBeRead(t *testing.T) {
+	h := noRendersHarness(t, "- `internal/tui/scroll_sweep_test.go`")
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	_, ui, runs := briefsOf(h)
+	if runs != 1 {
+		t.Fatalf("the UI pass ran %d times", runs)
+	}
+	if strings.Contains(ui, "No renders expected") || strings.Contains(ui, "No renders are expected") {
+		t.Errorf("UI brief says no renders are expected:\n%s", ui)
+	}
+	if !strings.Contains(ui, "Produce the required renders") {
+		t.Error("UI brief lost the renders Done-when item")
+	}
+}
+
 func TestUIPassBriefCarriesRegistrySkillsForItsVendor(t *testing.T) {
 	for _, vendor := range []string{"claude", "codex"} {
 		t.Run(vendor, func(t *testing.T) {

@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/states.go:606-624` (`review` adds the section to the UI round; new helper `onlyTUITestFiles` beside `sliceTouchesUI` at `:826`)\n- `internal/engine/brief.go:451-454` (`doneWhen`, the `RoleUI` case, plus a new title constant `uiNoRendersTitle`)\n- `internal/engine/uipass_test.go` (new tests; the file exists)\n- `docs/design.md:787-853` (the UI pass bullet states the new rule)"
+      "body": "- `internal/engine/states.go:606-629` (`review` adds the section to the UI round; new helper `onlyTUITestFiles` beside `sliceTouchesUI` at `:831`)\n- `internal/engine/brief.go:451-454` (`doneWhen`, the `RoleUI` case, plus a new title constant `uiNoRendersTitle`)\n- `internal/engine/uipass_test.go` (new tests; the file exists)\n- `docs/design.md:792-860` (the UI pass bullet states the new rule)\n- `landed-changed/S584.md` (the changelog entry, written with `slicer changelog add`)"
     },
     {
       "heading": "Failing tests",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "Acceptance criteria:\n- A UI round whose diff is only _test.go files under internal/tui has a brief with a \"No renders expected\" section and a Done-when item that says no renders are expected.\n- A diff with any other path, or no readable diff, gives a brief with no such section and the unchanged renders Done-when item.\n- The reviewer's brief never gets the section.\n\nCommands:\n- `go test -run TestOnlyTUITestFiles ./internal/engine` exits 0 and all its subtests pass.\n- `go test -run TestUIPassBriefSaysNoRendersWhenOnlyTUITestsChanged ./internal/engine` exits 0.\n- `go test -run TestUIPassBriefKeepsRendersWhenAViewChanged ./internal/engine` exits 0.\n- `go test -run TestUIPassBriefHasNoRendersNoteWhenTheDiffCannotBeRead ./internal/engine` exits 0.\n- `go test ./internal/engine` exits 0.\n- `go test ./...` exits 0.\n- `go vet ./...` exits 0.\n- `gofmt -l ./engine` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] On the next slice whose diff is only _test.go files under internal/tui, open the ui role's brief in the run directory. It should hold ## No renders expected and no \"Produce the required renders\" Done-when item. The ui report should say that no renders were expected."
+      "body": "Acceptance criteria:\n- A UI round whose diff is only _test.go files under internal/tui has a brief with a \"No renders expected\" section and a Done-when item that says no renders are expected.\n- A diff with any other path, or no readable diff, gives a brief with no such section and the unchanged renders Done-when item.\n- The reviewer's brief never gets the section.\n\nCommands:\n- `go test -run TestOnlyTUITestFiles ./internal/engine` exits 0 and all its subtests pass.\n- `go test -run TestUIPassBriefSaysNoRendersWhenOnlyTUITestsChanged ./internal/engine` exits 0.\n- `go test -run TestUIPassBriefKeepsRendersWhenAViewChanged ./internal/engine` exits 0.\n- `go test -run TestUIPassBriefHasNoRendersNoteWhenTheDiffCannotBeRead ./internal/engine` exits 0.\n- `go test ./internal/engine` exits 0.\n- `go test ./...` exits 0.\n- `go vet ./...` exits 0.\n- `gofmt -l ./internal/engine` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] On the next slice whose diff is only _test.go files under internal/tui, open the ui role's brief in the run directory. It should hold ## No renders expected and no \"Produce the required renders\" Done-when item. The ui report should say that no renders were expected."
     },
     {
       "heading": "Git",
