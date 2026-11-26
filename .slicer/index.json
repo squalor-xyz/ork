@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 614,
+  "next_id": 615,
   "preamble": "",
   "passes": [
     {
@@ -32285,6 +32285,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-2f7d8aff",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S614",
+      "title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
+      "short_title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
         "pass": "v1.2",
         "group": "",
         "reason": "",

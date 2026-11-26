@@ -6995,3 +6995,6 @@
 {"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "add", "from": "", "to": "open", "note": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output"}
 {"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "note", "from": "", "to": "", "note": "possible duplicate of S592", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:33:58Z", "item": "S614", "action": "add", "from": "", "to": "open", "note": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files"}
+{"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "edit", "from": "", "to": "", "note": "Why"}
