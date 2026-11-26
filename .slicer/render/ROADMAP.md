@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-619 items · — 66 · done 418 · retired 135
+619 items · — 65 · done 419 · retired 135
 
 ## v1.3
 
@@ -367,7 +367,7 @@ v1.2
 | 310 | [S605](slices/S605.md) | allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24 |  | - |  | discovered from S600 | — |
 | 311 | [S606](slices/S606.md) | say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing |  | - |  | discovered from S596 | — |
 | 312 | [S607](slices/S607.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list |  | - |  | discovered from S574 | — |
-| 313 | [S608](slices/S608.md) | Strip quotes from quoted require paths in goModRequirePaths |  | 1 |  | discovered from S589 | — |
+| 313 | [S608](slices/S608.md) | Strip quotes from quoted require paths in goModRequirePaths |  | 1 |  | discovered from S589 | done |
 | 314 | [S609](slices/S609.md) | adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard |  | 1 |  | discovered from S570 | — |
 | 315 | [S610](slices/S610.md) | say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead |  | - |  | discovered from S574 | — |
 | 316 | [S611](slices/S611.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md |  | - |  | discovered from S574 | — |

@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -41,7 +42,7 @@ func goModuleImportsSection(worktree string) *BriefSection {
 // goModRequirePaths returns the paths of the require lines of a go.mod, in
 // file order and without duplicates. It reads the first field of each line in a
 // `require (` block and of a `require PATH VERSION` line, and ignores every
-// other directive and block.
+// other directive and block. A quoted path is listed without its quotes.
 func goModRequirePaths(text string) []string {
 	var paths []string
 	inRequire, inOther := false, false
@@ -58,7 +59,7 @@ func goModRequirePaths(text string) []string {
 			if fields[0] == ")" {
 				inRequire = false
 			} else {
-				paths = append(paths, fields[0])
+				paths = append(paths, unquoteModPath(fields[0]))
 			}
 		case inOther:
 			if fields[0] == ")" {
@@ -69,7 +70,7 @@ func goModRequirePaths(text string) []string {
 			case len(fields) == 2 && fields[1] == "(":
 				inRequire = true
 			case len(fields) >= 2 && fields[1] != "(":
-				paths = append(paths, fields[1])
+				paths = append(paths, unquoteModPath(fields[1]))
 			}
 		case len(fields) == 2 && fields[1] == "(":
 			inOther = true
@@ -83,4 +84,11 @@ func goModRequirePaths(text string) []string {
 		seen[p] = true
 		return false
 	})
+}
+
+func unquoteModPath(field string) string {
+	if path, err := strconv.Unquote(field); err == nil {
+		return path
+	}
+	return field
 }
