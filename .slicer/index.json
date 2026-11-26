@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 614,
+  "next_id": 619,
   "preamble": "",
   "passes": [
     {
@@ -30115,7 +30115,7 @@
       "id": "S568",
       "title": "name the decided adj key for each owner note in the brief so the reviewer does not look it up",
       "short_title": "name the decided adj key for each owner note in the brief so the reviewer does not look it up",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30125,6 +30125,20 @@
           "text": "**2026-11-25** — Owner decision (adj 592): key from answer. ork answer keeps the key and adj id with the run's pending item; the rerun brief's Owner note names them, e.g. Owner note (adj 564, spec.check-command-finding). Jon chose 'Key from answer', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T23:26:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9b941607-28d5-4d15-ac7e-653c9827f7c2",
+          "kind": "",
+          "text": "**2026-11-26** — The rerun brief's Owner answer section now names the decided adj key and record, as `Owner answer (adj 42, storage.engine)`, or `(storage.engine)` when nothing was filed. The id is kept in `pending.adj_id`, for a filed answer and for an already-decided key, and the four named tests, the full suite, vet, gofmt and `slicer check` pass.",
+          "created_at": "2026-11-26T00:58:22Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30151,7 +30165,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -30229,7 +30243,7 @@
       "id": "S570",
       "title": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded",
       "short_title": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30239,6 +30253,20 @@
           "text": "**2026-11-25** — Owner decision (adj 593): a go/parser test in internal/engine that fails on any d.Adj call not under a Project.Adj or proj.Adj condition, with an explicit allowlist of unguarded sites (adjrecord.go, answer_adj.go). Jon chose 'Go test', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T23:26:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "40ab2dc8-8a53-484e-a45d-28b9b9628a32",
+          "kind": "",
+          "text": "**2026-11-26** — Added internal/engine/adjguard_test.go, a go/parser test that fails on any Deps.Adj client use in a non-allowlisted engine file that is not under a bool Adj condition; the current tree passes, and the spec's gofmt Check line now names the real path internal/engine.",
+          "created_at": "2026-11-26T00:12:11Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30265,7 +30293,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31435,7 +31463,7 @@
       "id": "S592",
       "title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
       "short_title": "allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31466,6 +31494,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "dc0de098-e38a-472e-999b-a467156d6618",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S592):\n- later: In the next reviewer round for a slice that changes a Go file and a non-Go file, open the reviewer's brief under the run's role files. The ## Base overlays section should end with a paragraph saying other changed files are read with git -C WORKTREE show MERGEBASE:PATH and that git grep is not available. It should name no changed file, and the entry lines for the Go files should look as before.",
+          "created_at": "2026-11-26T01:37:57Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1c991ab8-7c42-4418-bfa8-a09eb7ccf685",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer's Base overlays section now ends with a paragraph naming `git -C WORKTREE show MERGEBASE:PATH` for any changed file other than a non-test Go file and saying `git grep` is not available; the unreadable-diff notice says \"each changed file\"; no allowlist change; docs/design.md and the changelog entry updated; full suite, vet, gofmt, slicer check and adj lint are clean.",
+          "created_at": "2026-11-26T01:37:58Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31485,7 +31541,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31734,7 +31790,7 @@
       "id": "S597",
       "title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
       "short_title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31744,6 +31800,20 @@
           "text": "**2026-11-25** — Owner decision (adj 595): the rule goes in the Renders section of internal/roles/prompts/ui.md: when the changed behavior only shows below 80x24, also render at the height the tests use for that view and name it in the report. Jon chose 'UI prompt', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T23:26:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "370c3b92-ec48-4e49-947a-f5cbcf233934",
+          "kind": "",
+          "text": "**2026-11-26** — The ui prompt's Renders section now tells the UI pass to also render a view at the test's height as VIEW-WxH.txt and name that size in its report when the changed behavior only shows below 80x24; TestUIPromptNamesAShortFixtureHeight covers it, the slice's gofmt Check line now names the real path, and the full suite, vet, gofmt and slicer check are clean.",
+          "created_at": "2026-11-26T00:41:31Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31770,14 +31840,14 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
       "id": "S598",
       "title": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice",
       "short_title": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31808,6 +31878,48 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9844ac21-1799-4386-a806-5ea614220db5",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S598):\n- later: Start a reviewer round on a self-host daemon that ork daemon status reports as behind main, on a slice that changes a Go file. Open the reviewer brief under the run's role files. The ## Base overlays section should open with the \"older than this slice's code\" line, and the file entries should follow. After ork daemon restart --rebuild, the next round's section should not show that line.",
+          "created_at": "2026-11-26T00:29:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ad3eccbc-fb91-4ec4-9e58-572ae6ddb951",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer brief's Base overlays section opens with a one-line older-binary note when the daemon is behind main (Deps.Behind fed by projectBuild), with four engine tests and one daemon test, all mutation-checked, and the full suite green.",
+          "created_at": "2026-11-26T00:29:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ea85f89a-f7b7-49f1-a0ca-551c3637bda6",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer brief's Base overlays section opens with a one-line older-binary note when the daemon is behind main (Deps.Behind fed by projectBuild), with four engine tests and one daemon test, all mutation-checked, and the full suite green after merging main.",
+          "created_at": "2026-11-26T00:48:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31827,7 +31939,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32284,7 +32396,7 @@
       "id": "S613",
       "title": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output",
       "short_title": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32314,6 +32426,146 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-2f7d8aff",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Covered by adj 594 (no git grep allowlist entry) and S592 (git show pointer); Jon chose 'Fold hint into follow-up, retire S613', session 8d711f67, 2026-11-26.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S614",
+      "title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
+      "short_title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S615",
+      "title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
+      "short_title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S597",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-2378c935",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S616",
+      "title": "when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default",
+      "short_title": "when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S584",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f99de795",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S617",
+      "title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
+      "short_title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S592",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1bb11684",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S618",
+      "title": "Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint",
+      "short_title": "Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
         "pass": "v1.2",
         "group": "",
         "reason": "",

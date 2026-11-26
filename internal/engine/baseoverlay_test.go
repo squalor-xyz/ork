@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,8 +14,15 @@ import (
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+const olderBinaryNote = "Note: an ork binary older than this slice's code made this list, so it may offer commands that do not build."
+
+func behindFunc(v bool) func(context.Context, registry.Project) bool {
+	return func(context.Context, registry.Project) bool { return v }
+}
 
 // baseOverlayRoutes answers the three git reads that list the slice's changed
 // paths against the merge base "base".
@@ -158,6 +166,71 @@ func TestBaseOverlayVetsEachOverlayFirst(t *testing.T) {
 		if !strings.Contains(entries[i], "internal/x/"+p) || !strings.Contains(entries[i], baseOverlayCommand(h.W, req.TMPDir, i+1, "internal/x")) {
 			t.Errorf("sorted command entry = %q", entries[i])
 		}
+	}
+}
+
+func TestBaseOverlayNotesOlderBinary(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{})
+	h.deps.Behind = behindFunc(true)
+	req, body, entries := overlayVetResult(t, h)
+	if !strings.HasPrefix(body, olderBinaryNote+"\n\n") {
+		t.Errorf("body does not start with the note and a blank line: %q", body)
+	}
+	if strings.Count(body, "older than this slice's code") != 1 {
+		t.Errorf("want the note once: %q", body)
+	}
+	if want := "- `internal/x/a.go`: `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`"; len(entries) != 1 || entries[0] != want {
+		t.Errorf("entries = %q, want [%q]", entries, want)
+	}
+}
+
+func TestBaseOverlayNoNoteWhenBinaryCurrent(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		behind func(context.Context, registry.Project) bool
+	}{{"nil", nil}, {"false", behindFunc(false)}} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{})
+			h.deps.Behind = tc.behind
+			_, body, _ := overlayVetResult(t, h)
+			if strings.Contains(body, "older than this slice's code") {
+				t.Errorf("note present with the binary current: %q", body)
+			}
+			if !strings.HasPrefix(body, "Each command runs one package's tests") {
+				t.Errorf("first line is not the intro: %q", body)
+			}
+		})
+	}
+}
+
+func TestBaseOverlayNoteWhenNothingBuilds(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{Exit: 1, Stderr: "undefined helper"})
+	h.deps.Behind = behindFunc(true)
+	_, body, entries := overlayVetResult(t, h)
+	if !strings.HasPrefix(body, olderBinaryNote+"\n\n- `internal/x/a.go`: does not build:") {
+		t.Errorf("body does not start with the note then the first entry: %q", body)
+	}
+	// Two single-file failures, then the combined overlay's entry (it follows
+	// when no single-file overlay builds), as in the no-intro test.
+	if len(entries) != 2 || strings.Count(body, "does not build: undefined helper") != 3 {
+		t.Errorf("want three build failures: %s", body)
+	}
+}
+
+func TestBaseOverlayNoNoteWithoutGoFiles(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "internal/x/x_test.go\x00README.md\x00", "")
+		}
+	})
+	h.deps.Behind = behindFunc(true)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	req := baseOverlayReviewer(t, h)
+	if body, found := baseOverlayBody(req.Brief); found {
+		t.Errorf("reviewer brief holds a Base overlays section:\n%s", body)
+	}
+	if strings.Contains(req.Brief, "older than this slice's code") {
+		t.Errorf("the note stands alone in the brief")
 	}
 }
 
@@ -435,6 +508,70 @@ func TestBaseOverlaySectionForChangedGoFile(t *testing.T) {
 		if strings.Contains(entry, "|") {
 			t.Errorf("entry holds a pipe: %s", entry)
 		}
+	}
+}
+
+func TestBaseOverlayNamesGitShowForNonGoFiles(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "internal/x/x.go\x00internal/x/x_test.go\x00internal/roles/prompts/reviewer.md\x00", "",
+				baseOverlayShow(W, "internal/x/x.go", "package x\n"))
+		}
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	body, found := baseOverlayBody(baseOverlayReviewer(t, h).Brief)
+	if !found {
+		t.Fatal("reviewer brief lacks the Base overlays section")
+	}
+	if entries := baseOverlayEntries(body); len(entries) != 1 || !strings.Contains(entries[0], "internal/x/x.go") {
+		t.Errorf("entries = %q, want one for internal/x/x.go", entries)
+	}
+	command := "git -C " + ShellWord(h.W) + " show " + ShellWord("base") + ":PATH"
+	for _, want := range []string{command, "not overlaid", "`git grep` is not available"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("section lacks %q:\n%s", want, body)
+		}
+	}
+	for _, gone := range []string{"reviewer.md", "x_test.go"} {
+		if strings.Contains(body, gone) {
+			t.Errorf("section names %s:\n%s", gone, body)
+		}
+	}
+}
+
+func TestBaseOverlayNoNonGoNoteForGoOnlyDiff(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{}, clitest.Reply{})
+	_, body, entries := overlayVetResult(t, h)
+	if len(entries) != 2 {
+		t.Fatalf("entries = %q, want two", entries)
+	}
+	for _, gone := range []string{"git grep", "base:PATH", "not overlaid"} {
+		if strings.Contains(body, gone) {
+			t.Errorf("Go-only section contains %q:\n%s", gone, body)
+		}
+	}
+}
+
+func TestBaseOverlayUnreadableDiffNamesEveryChangedFile(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			routes := baseOverlayRoutes(W, "internal/x/x.go\x00", "")
+			routes[1].Exit = 1
+			return routes
+		}
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	body, found := baseOverlayBody(baseOverlayReviewer(t, h).Brief)
+	if !found {
+		t.Fatal("reviewer brief lacks the Base overlays section")
+	}
+	for _, want := range []string{"incomplete", "git show", "each changed file"} {
+		if !strings.Contains(body, want) {
+			t.Errorf("section lacks %q:\n%s", want, body)
+		}
+	}
+	if strings.Contains(body, "changed Go file") {
+		t.Errorf("section still limits the notice to Go files:\n%s", body)
 	}
 }
 

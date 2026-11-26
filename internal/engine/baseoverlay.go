@@ -23,6 +23,11 @@ const baseOverlayLimit = 20
 
 const baseOverlayVetTimeout = 2 * time.Minute
 
+// baseOverlayOlderBinaryNote opens the section when the running ork binary is
+// behind main (S598, *proposed*; adj 591): that binary may have no vet step, or
+// an older one, so the list may offer commands that do not build.
+const baseOverlayOlderBinaryNote = "Note: an ork binary older than this slice's code made this list, so it may offer commands that do not build."
+
 // baseOverlaySection checks base overlays for changed non-test Go files (S554,
 // S593, S596), offering test commands unless vet exits non-zero. Per-file commands
 // run tests with only that file reverted to the merge base; when none builds,
@@ -39,12 +44,15 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		err = errors.New("the merge base is empty")
 	}
 	if err != nil {
-		return &BriefSection{Title: title, Body: "Check incomplete: the branch diff against the base could not be read. Trace the base version of each changed Go file yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show MERGEBASE:PATH`); this does not block the run."}
+		return &BriefSection{Title: title, Body: "Check incomplete: the branch diff against the base could not be read. Trace the base version of each changed file yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show MERGEBASE:PATH`); this does not block the run."}
 	}
 	var goFiles []string
+	otherChanged := false
 	for _, p := range changed {
 		if strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, "_test.go") {
 			goFiles = append(goFiles, p)
+		} else {
+			otherChanged = true
 		}
 	}
 	slices.Sort(goFiles)
@@ -109,6 +117,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	}
 
 	var body strings.Builder
+	if e.d.behind(ctx, e.proj) {
+		body.WriteString(baseOverlayOlderBinaryNote + "\n\n")
+	}
 	if commands > 0 {
 		body.WriteString("Each command runs one package's tests with only that file reverted to the base version (the merge base with the main checkout's branch). ork wrote the base copies and the overlay files under your temp directory. A test this slice added for that file should fail with the file reverted. To run one test, add `-run NAME` before the package in a command. Run one test per command and never join test names in one `-run` pattern: a pipe makes the command compound and it is denied as multiple operations. A command changes nothing in the tree.\n\n")
 	}
@@ -131,6 +142,12 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			body.WriteString("\n")
 		}
 		body.WriteString("Check incomplete: the base version of " + strings.Join(unread, ", ") + " could not be read. Trace it yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`); this does not block the run.\n")
+	}
+	if otherChanged {
+		if body.Len() > 0 {
+			body.WriteString("\n")
+		}
+		body.WriteString("The overlays cover non-test Go files only; other changed files are not overlaid. To read the base version of any other changed file, run `git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`. `git grep` is not available on the read-only list.\n")
 	}
 	return &BriefSection{Title: title, Body: strings.TrimRight(body.String(), "\n")}
 }

@@ -1,0 +1,39 @@
+{
+  "id": "S618",
+  "title": "Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Follow-up of S592 (run ork-20261126-004139-f69b). adj 596 (tool feedback, folded into S592 on 2026-11-26) asked that the Base overlays section give non-Go changed files such as role prompts a base-read command, or say that none applies. S592 landed one generic paragraph, git -C WORKTREE show MERGEBASE:PATH, with no paths, as its spec said.\n\nOwner decisions, 2026-11-26: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command (Jon chose 'Land generic, per-file later'). Also give a diff with no non-test Go file (for example a prompt-only slice) the same hint; today the section is nil then (internal/engine/baseoverlay.go:55-57; S592 reviewer finding; Jon chose 'Fold hint into follow-up')."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

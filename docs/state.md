@@ -962,6 +962,10 @@ names `answer` and `stop`; answering a pause without a question names
 Question `key` is optional and omitted when absent. It comes from a role report
 line `Decision key: area.topic` under `## Owner needed` and is also copied to
 `pending.key`. The proposed display field `EngineRun.key` carries it to the TUI.
+*Proposed (S568, adj 592):* `pending.adj_id` is the adj record id of the answer
+filed for the question: the record the answer decided, or the record already
+decided for the key. It is omitted (zero) when nothing was filed. The rerun
+brief's `Owner answer` section names the key and this id.
 
 `writes` lists every slicer, adj and git write ork makes for the run, with
 its argv, root, exit, error code and retry count, so a restart or the

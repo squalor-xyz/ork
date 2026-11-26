@@ -1706,7 +1706,14 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   a project with adj) files nothing and says `file_answers is off; answer not
   filed in adj (ork settings set --file-answers on)`. Ledger answers
   (`relay.answer`) and finding answers are unchanged and still need
-  `ADJ_DECIDED_BY`.
+  `ADJ_DECIDED_BY`. *Proposed (S568; owner decisions brief.owner-note-adj-key,
+  adj 592, and adj 597):* when the pending question has a decision key, the
+  rerun brief's `Owner answer` section names it in its title, as `Owner answer
+  (adj 42, storage.engine)`, so the role and the reviewer need no `adj check`.
+  The id is the record the answer decided, or the record already decided for
+  the key; it is kept in `pending.adj_id`. An answer that was not filed names
+  the key alone, `Owner answer (storage.engine)`. A question with no key keeps
+  the title `Owner answer`. A retry's `Owner note` is unchanged.
 - **Stops.** `rate_limited` and `error` exits fall back while a next row
   remains (adj 156); otherwise they stop with the reason. Auth and
   unclassified exits, unsuccessful rounds with permission denials, and a
@@ -2082,8 +2089,20 @@ separately.
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git
-    show` itself. The section is advisory and never blocks the run. The gate and
-    the architect get none;
+    show` itself; when the diff itself cannot be read, the notice says to trace
+    the base version of each changed file, not only each Go file. When the diff
+    also holds any other changed file (a non-Go file or a `_test.go` file), the
+    section ends with one paragraph that names no path: the overlays cover
+    non-test Go files only, and the reviewer reads the base version of any other
+    changed file with `git -C WORKTREE show MERGEBASE:path`. It adds that `git
+    grep` is not on the read-only list. No `git grep` entry was added, because
+    `git grep -O` can run a program (S592, adj 594, `roles.reviewer-git-grep`).
+    When the running ork binary is behind main for the project (the daemon's
+    `behind_main` signal), the section opens with one line, "Note: an ork
+    binary older than this slice's code made this list, so it may offer
+    commands that do not build." (S598, adj 591); the failed-diff-read notice
+    and a brief with no section do not get it. The section is advisory and never
+    blocks the run. The gate and the architect get none;
   - before the reviewer starts, a `## Go module imports` section when the
     worktree has a `go.mod` (S589, adj 590, `roles.probe-import-paths`). ork
     reads the file and lists each `require` path (block and one-line forms,

@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/runrec/record.go:229-243` (`Pending`: a new `AdjID` field beside `Key`)\n- `internal/engine/answer_adj.go:25-55` (`FileAnswer` and `fileDecision` keep the id)\n- `internal/engine/later.go:198` (the other caller of `fileDecision`; it ignores the new return value)\n- `internal/engine/round.go:262-325` (`pendingKindSection`: the section that carries the owner's answer names the key and id)\n- `internal/engine/round_test.go` (a test of the brief section)\n- `internal/daemon/answer_adj_test.go:25-150` (an end-to-end test through `run.answer` with a fake adj)\n- `docs/state.md:962-964` (the `pending.key` paragraph gains `pending.adj_id`)\n- `docs/design.md:3481-3494` (the `run.answer` and `run.retry` paragraph)"
+      "body": "- `internal/runrec/record.go:229-243` (`Pending`: a new `AdjID` field beside `Key`)\n- `internal/engine/answer_adj.go:25-55` (`FileAnswer` and `fileDecision` keep the id)\n- `internal/engine/later.go:198` (the other caller of `fileDecision`; it ignores the new return value)\n- `internal/engine/round.go:262-325` (`pendingKindSection`: the section that carries the owner's answer names the key and id)\n- `internal/engine/round_test.go` (a test of the brief section)\n- `internal/daemon/answer_adj_test.go:25-150` (an end-to-end test through `run.answer` with a fake adj)\n- `internal/daemon/retry_test.go:412` (`roleGate`: a `brief` field that holds the brief of the round after the answer)\n- `docs/state.md:962-964` (the `pending.key` paragraph gains `pending.adj_id`)\n- `docs/design.md:1680-1700` (the answer bullet of the engine text, where `run.answer` filing is described)"
     },
     {
       "heading": "Failing tests",
