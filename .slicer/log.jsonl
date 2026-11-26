@@ -7134,3 +7134,6 @@
 {"when": "2026-11-26T03:07:41Z", "item": "S623", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T03:33:26Z", "item": "S624", "action": "add", "from": "", "to": "open", "note": "add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames"}
 {"when": "2026-11-26T03:33:27Z", "item": "S624", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T04:14:15Z", "item": "S625", "action": "add", "from": "", "to": "open", "note": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test"}
+{"when": "2026-11-26T04:14:15Z", "item": "S625", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T04:14:16Z", "item": "S625", "action": "note", "from": "", "to": "", "note": "possible duplicate of S611", "by": "Jon Robbins"}
