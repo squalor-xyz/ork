@@ -7023,3 +7023,7 @@
 {"when": "2026-11-26T00:50:17Z", "item": "S616", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T00:52:18Z", "item": "S617", "action": "add", "from": "", "to": "open", "note": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts"}
 {"when": "2026-11-26T00:52:18Z", "item": "S617", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T01:35:31Z", "item": "S618", "action": "add", "from": "", "to": "open", "note": "Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint"}
+{"when": "2026-11-26T01:35:31Z", "item": "S618", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T01:35:31Z", "item": "S618", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T01:35:32Z", "item": "S613", "action": "retire", "from": "open", "to": "retired", "note": "Covered by adj 594 (no git grep allowlist entry) and S592 (git show pointer); Jon chose 'Fold hint into follow-up, retire S613', session 8d711f67, 2026-11-26."}
