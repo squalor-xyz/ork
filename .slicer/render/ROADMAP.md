@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-624 items · — 68 · done 421 · retired 135
+624 items · — 67 · done 422 · retired 135
 
 ## v1.3
 
@@ -378,7 +378,7 @@ v1.2
 | 321 | [S616](slices/S616.md) | when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default |  | - |  | discovered from S584 | — |
 | 322 | [S617](slices/S617.md) | flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts |  | - |  | discovered from S592 | done |
 | 323 | [S618](slices/S618.md) | Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint | S | - |  |  | done |
-| 324 | [S619](slices/S619.md) | spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report | S | - |  |  | — |
+| 324 | [S619](slices/S619.md) | spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report | S | - |  |  | done |
 | 325 | [S620](slices/S620.md) | Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list | S | - |  |  | — |
 | 326 | [S621](slices/S621.md) | ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap | S | - |  |  | — |
 | 327 | [S622](slices/S622.md) | For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test |  | - |  | discovered from S617 | — |

@@ -219,6 +219,35 @@ func keepFailedDraftReport(dir string, n int, text string, err error) error {
 	return &specShapeKept{Cause: shape, Path: path}
 }
 
+// specDraftFormat requires a complete replacement report: only the resumed
+// reply is parsed, so sections from the earlier report cannot be omitted.
+func specDraftFormat(item string) string {
+	return "Write the whole report for " + item + " again as your final message, as plain text with no code fence: " +
+		"one `## Section NAME` block for each of " + strings.Join(DraftSections, ", ") + ", in this order, holding the new text, or `unchanged`. " +
+		"Send every section again, even when the earlier report was right, because ork reads only the resumed reply. " +
+		"Then include `## Owner needed` with the owner questions in the same reply, or `none` when nothing is open.\n"
+}
+
+// specDraftDenialNudge keeps the draft's section format after denied commands;
+// the spec check's denial nudge has a different report form.
+func specDraftDenialNudge(denials []runrec.DeniedCommand, item string) string {
+	var b strings.Builder
+	b.WriteString("These commands were denied and did not run:\n\n")
+	const shown = 10
+	for i, d := range denials {
+		if i == shown {
+			fmt.Fprintf(&b, "- and %d more\n", len(denials)-shown)
+			break
+		}
+		b.WriteString("- " + d.Text() + "\n")
+	}
+	b.WriteString("\nYou may only read the tree. Use one command per call: no pipe, no `&&`, no `;`, no redirect, no subshell. " +
+		"Do not repeat a denied command; use the built-in read, search and list tools, or a plainer single command. " +
+		"Read what you still need, then give the whole report.\n\n")
+	b.WriteString(specDraftFormat(item))
+	return b.String()
+}
+
 // RunSpecDraft drafts the item's spec read-only. It runs the role once per
 // lineup entry until one finishes, as the spec check does. A change in the
 // checkout or in HEAD while the role ran fails the draft and keeps nothing. A
@@ -310,7 +339,7 @@ entries:
 			switch {
 			case len(res.Denials) > 0:
 				problem = &specDenialError{text: denialTexts(res.Denials)}
-				nudge = specDenialNudge(res.Denials, []string{cfg.Item})
+				nudge = specDraftDenialNudge(res.Denials, cfg.Item)
 			case class == ExitOK:
 				report := readSpecReport(reportPath, res.Report)
 				if _, perr := ParseSpecDraft(report); perr != nil {
@@ -318,7 +347,8 @@ entries:
 					if _, ok := problem.(*specShapeKept); ok {
 						failed++
 					}
-					nudge = "ork checked your report and refused it: " + perr.Error() + "\n\nWrite the whole report again as your final message, as plain text with no code fence: one `## Section NAME` block for each of " + strings.Join(DraftSections, ", ") + " (the new text, or `unchanged`), then `## Owner needed`. You may only read the tree. Do not start the draft over; fix the report from what you already read.\n"
+					nudge = "ork checked your report and refused it: " + perr.Error() + "\n\n" + specDraftFormat(cfg.Item) +
+						"You may only read the tree. Do not start the draft over; fix the report from what you already read.\n"
 				}
 			}
 			if err := ctx.Err(); err != nil {
