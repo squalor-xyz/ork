@@ -31606,7 +31606,7 @@
       "id": "S598",
       "title": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice",
       "short_title": "build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31637,6 +31637,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "9844ac21-1799-4386-a806-5ea614220db5",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S598):\n- later: Start a reviewer round on a self-host daemon that ork daemon status reports as behind main, on a slice that changes a Go file. Open the reviewer brief under the run's role files. The ## Base overlays section should open with the \"older than this slice's code\" line, and the file entries should follow. After ork daemon restart --rebuild, the next round's section should not show that line.",
+          "created_at": "2026-11-26T00:29:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ad3eccbc-fb91-4ec4-9e58-572ae6ddb951",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer brief's Base overlays section opens with a one-line older-binary note when the daemon is behind main (Deps.Behind fed by projectBuild), with four engine tests and one daemon test, all mutation-checked, and the full suite green.",
+          "created_at": "2026-11-26T00:29:30Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31656,7 +31684,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

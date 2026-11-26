@@ -2062,8 +2062,12 @@ separately.
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git
-    show` itself. The section is advisory and never blocks the run. The gate and
-    the architect get none;
+    show` itself. When the running ork binary is behind main for the project
+    (the daemon's `behind_main` signal), the section opens with one line, "Note:
+    an ork binary older than this slice's code made this list, so it may offer
+    commands that do not build." (S598, adj 591); the failed-diff-read notice
+    and a brief with no section do not get it. The section is advisory and never
+    blocks the run. The gate and the architect get none;
   - before the reviewer starts, a `## Untested call sites` section when a new
     function is called directly by tests while no test reaches the function
     around any of its product call sites (S564, adj 573,

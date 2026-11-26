@@ -3,6 +3,7 @@
 package engine
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,8 +14,15 @@ import (
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
+	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+const olderBinaryNote = "Note: an ork binary older than this slice's code made this list, so it may offer commands that do not build."
+
+func behindFunc(v bool) func(context.Context, registry.Project) bool {
+	return func(context.Context, registry.Project) bool { return v }
+}
 
 // baseOverlayRoutes answers the three git reads that list the slice's changed
 // paths against the merge base "base".
@@ -158,6 +166,69 @@ func TestBaseOverlayVetsEachOverlayFirst(t *testing.T) {
 		if !strings.Contains(entries[i], "internal/x/"+p) || !strings.Contains(entries[i], baseOverlayCommand(h.W, req.TMPDir, i+1, "internal/x")) {
 			t.Errorf("sorted command entry = %q", entries[i])
 		}
+	}
+}
+
+func TestBaseOverlayNotesOlderBinary(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{})
+	h.deps.Behind = behindFunc(true)
+	req, body, entries := overlayVetResult(t, h)
+	if !strings.HasPrefix(body, olderBinaryNote+"\n\n") {
+		t.Errorf("body does not start with the note and a blank line: %q", body)
+	}
+	if strings.Count(body, "older than this slice's code") != 1 {
+		t.Errorf("want the note once: %q", body)
+	}
+	if want := "- `internal/x/a.go`: `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`"; len(entries) != 1 || entries[0] != want {
+		t.Errorf("entries = %q, want [%q]", entries, want)
+	}
+}
+
+func TestBaseOverlayNoNoteWhenBinaryCurrent(t *testing.T) {
+	for _, tc := range []struct {
+		name   string
+		behind func(context.Context, registry.Project) bool
+	}{{"nil", nil}, {"false", behindFunc(false)}} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{})
+			h.deps.Behind = tc.behind
+			_, body, _ := overlayVetResult(t, h)
+			if strings.Contains(body, "older than this slice's code") {
+				t.Errorf("note present with the binary current: %q", body)
+			}
+			if !strings.HasPrefix(body, "Each command runs one package's tests") {
+				t.Errorf("first line is not the intro: %q", body)
+			}
+		})
+	}
+}
+
+func TestBaseOverlayNoteWhenNothingBuilds(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{Exit: 1, Stderr: "undefined helper"})
+	h.deps.Behind = behindFunc(true)
+	_, body, entries := overlayVetResult(t, h)
+	if !strings.HasPrefix(body, olderBinaryNote+"\n\n- `internal/x/a.go`: does not build:") {
+		t.Errorf("body does not start with the note then the first entry: %q", body)
+	}
+	if len(entries) != 2 || strings.Count(body, "does not build: undefined helper") != 2 {
+		t.Errorf("want two build failures: %s", body)
+	}
+}
+
+func TestBaseOverlayNoNoteWithoutGoFiles(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "internal/x/x_test.go\x00README.md\x00", "")
+		}
+	})
+	h.deps.Behind = behindFunc(true)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	req := baseOverlayReviewer(t, h)
+	if body, found := baseOverlayBody(req.Brief); found {
+		t.Errorf("reviewer brief holds a Base overlays section:\n%s", body)
+	}
+	if strings.Contains(req.Brief, "older than this slice's code") {
+		t.Errorf("the note stands alone in the brief")
 	}
 }
 

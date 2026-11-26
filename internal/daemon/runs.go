@@ -237,6 +237,13 @@ func (d *Daemon) initRunManager() {
 		// a rebuild sets it, and a role start waits while it is set.
 		deps.Hold = engine.NewHold(d.rebuildKick)
 	}
+	if deps.Behind == nil {
+		// The same signal as behind_main in status (S598, adj 591).
+		deps.Behind = func(ctx context.Context, p registry.Project) bool {
+			selfHost, behind := d.projectBuild(ctx, p)
+			return selfHost && behind
+		}
+	}
 	if deps.Wake == nil {
 		// One detector for every run of the daemon (S235); recoverRuns starts it.
 		now := time.Now
