@@ -427,6 +427,35 @@ func TestRenderCLIViews(t *testing.T) {
 // default files (adj 542, owner 2026-11-25).
 var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave-start", "wave-start-finding", "status-queued-held", "status-engine", "summary-real", "projects-setup", "fake-reply", "matrix-copy-preview", "matrix-copy-ask", "matrix-copy-stale-preview"}
 
+func TestUIPassBriefListsEveryRenderFixture(t *testing.T) {
+	brief, err := engine.BuildBrief(engine.BriefInput{
+		Role: engine.RoleUI, SliceID: "S607", Worktree: "/worktree",
+		TempDir: "/temp", ReportPath: "/temp/ui.md", SliceJSON: `{"id":"S607"}`,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, rest, ok := strings.Cut(brief, "The names are the five above (without .txt) and ")
+	if !ok {
+		t.Fatal("UI brief lacks fixture list opening")
+	}
+	list, _, ok := strings.Cut(rest, ". Copy the views")
+	if !ok {
+		t.Fatal("UI brief lacks fixture list ending")
+	}
+	names := make(map[string]bool)
+	for _, part := range strings.Split(list, ", ") {
+		for _, name := range strings.Split(strings.TrimPrefix(part, "and "), " and ") {
+			names[name] = true
+		}
+	}
+	for _, name := range renderFixtureNames {
+		if !names[name] {
+			t.Errorf("UI brief fixture list lacks %q", name)
+		}
+	}
+}
+
 func TestRenderCLIViewsWritesFiles(t *testing.T) {
 	if flag.Lookup("renders") == nil {
 		t.Fatal("missing -renders test flag")

@@ -1,0 +1,39 @@
+{
+  "id": "S626",
+  "title": "check that each path in a slice's Check commands exists before round 1 (S615 covers this)",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-021919-09a7, project ork, item S616:\n\ncheck that each path in a slice's Check commands exists before round 1 (S615 covers this)\n\nEvidence: the S616 Check line `gofmt -l ./engine` points at a directory that does not exist, so the implementer could not run it"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

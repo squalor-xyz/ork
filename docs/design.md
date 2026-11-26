@@ -834,7 +834,8 @@ slice.
     CLI fixtures, without editing the tree. `-render-fixture NAME[,NAME...]`
     writes only `NAME.txt` for each name: those five and `projects-set`,
     `projects-set-refusals`, `wave-start`, `status-queued-held`,
-    `status-engine`, `summary-real`, `projects-setup`, `fake-reply` and
+    `status-engine`, `summary-real`, `projects-setup`, `fake-reply`,
+    `matrix-copy-preview`, `matrix-copy-ask`, `matrix-copy-stale-preview` and
     `wave-start-finding` (a wave start with `--yes` that holds one item on a
     Check finding and starts the other) (adj 542). With no flag it writes
     nothing.
@@ -2062,7 +2063,7 @@ separately.
     Failed reads add an incomplete-check notice. The check is advisory and
     never blocks the run;
   - before the reviewer starts, a `## Base overlays` section when the branch
-    diff against the base holds a non-test Go file (S554). For each such file,
+    diff against the base holds any changed file (S618). For each non-test Go file,
     in sorted order and at most 20, ork writes the file's base version
     (`git show MERGEBASE:path`, the merge base Direction uses) to
     `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
@@ -2091,17 +2092,23 @@ separately.
     base) adds an incomplete-check notice that tells the reviewer to run `git
     show` itself; when the diff itself cannot be read, the notice says to trace
     the base version of each changed file, not only each Go file. When the diff
-    also holds any other changed file (a non-Go file or a `_test.go` file), the
-    section ends with one paragraph that names no path: the overlays cover
-    non-test Go files only, and the reviewer reads the base version of any other
-    changed file with `git -C WORKTREE show MERGEBASE:path`. It adds that `git
+    holds any other changed file (a non-Go file or a `_test.go` file), the
+    section lists each as `- Other file` with its path and its own
+    `git -C WORKTREE show MERGEBASE:path` command, in sorted order, at most 20.
+    A separate notice counts other files left out. A file the base lacks is
+    marked "new in this slice, no base version", without a command. Invalid
+    paths and failed reads join the incomplete-check notice. A diff with only
+    other files gets this list without Go overlays, vet calls or the Go intro.
+    The section ends with a paragraph: the overlays cover non-test Go files
+    only; other changed files are not overlaid. It adds that `git
     grep` is not on the read-only list. No `git grep` entry was added, because
     `git grep -O` can run a program (S592, adj 594, `roles.reviewer-git-grep`).
     When the running ork binary is behind main for the project (the daemon's
     `behind_main` signal), the section opens with one line, "Note: an ork
     binary older than this slice's code made this list, so it may offer
-    commands that do not build." (S598, adj 591); the failed-diff-read notice
-    and a brief with no section do not get it. The section is advisory and never
+    commands that do not build." (S598, adj 591), only when the section lists
+    Go entries. The failed-diff-read notice and a brief with no section do not
+    get it. The section is advisory and never
     blocks the run. The gate and the architect get none;
   - before the reviewer starts, a `## Go module imports` section when the
     worktree has a `go.mod` (S589, adj 590, `roles.probe-import-paths`). ork

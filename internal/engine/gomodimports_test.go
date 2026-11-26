@@ -5,12 +5,38 @@ package engine
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
+
+func TestGoModRequirePathsStripsQuotes(t *testing.T) {
+	text := "require (\n\t\"block.example/b\" v1.0.0\n\t`raw.example/r` v1.0.0\n)\n" +
+		"require \"quoted.example/q\" v1.0.0\nrequire block.example/b v1.0.0\n"
+	got := goModRequirePaths(text)
+	want := []string{"block.example/b", "raw.example/r", "quoted.example/q"}
+	if !slices.Equal(got, want) {
+		t.Errorf("paths = %q, want %q", got, want)
+	}
+	for _, path := range got {
+		if strings.ContainsAny(path, "\"`") {
+			t.Errorf("path still contains quotes: %q", path)
+		}
+	}
+}
+
+func TestGoModRequirePathsKeepsUnparsableQuotedField(t *testing.T) {
+	text := "require (\n\tbefore.example/b v1.0.0\n\t\"unterminated/path v1.0.0\n)\n" +
+		"require after.example/a v1.0.0\n"
+	got := goModRequirePaths(text)
+	want := []string{"before.example/b", "\"unterminated/path", "after.example/a"}
+	if !slices.Equal(got, want) {
+		t.Errorf("paths = %q, want %q", got, want)
+	}
+}
 
 const goModImportsGoMod = `module example.com/secret/mod
 

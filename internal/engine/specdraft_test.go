@@ -176,6 +176,88 @@ func TestSpecDraftShapeRetryThatPassesKeepsNoFailedReport(t *testing.T) {
 	}
 }
 
+func TestSpecDraftDenialResumeAsksForTheSectionBlocks(t *testing.T) {
+	h := specHarness(t)
+	h.runner.script = func(_ Request, n int) (Result, error) {
+		res := Result{Exit: ExitOK, Session: "sess", Report: draftReport}
+		if n == 0 {
+			res.Denials = []runrec.DeniedCommand{{Tool: "Bash", Command: "rg spec | head"}}
+		}
+		return res, nil
+	}
+	_, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: t.TempDir(), Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqs := h.runner.requests()
+	if len(reqs) != 2 || reqs[1].Resume != "sess" {
+		t.Fatalf("want two requests resuming sess: %+v", reqs)
+	}
+	brief := reqs[1].Brief
+	for _, want := range []string{"Bash: rg spec | head", "## Section NAME", "Why, Files, Failing tests, Implement, Check", "## Owner needed"} {
+		if !strings.Contains(brief, want) {
+			t.Errorf("draft denial nudge lacks %q:\n%s", want, brief)
+		}
+	}
+	for _, unwanted := range []string{"## Slice", "Ready", "Question:"} {
+		if strings.Contains(brief, unwanted) {
+			t.Errorf("draft denial nudge contains spec-check form %q:\n%s", unwanted, brief)
+		}
+	}
+}
+
+func TestSpecDraftShapeResumeAsksForEverySection(t *testing.T) {
+	h := specHarness(t)
+	malformed := strings.ReplaceAll(draftReport, "## Section ", "## ")
+	h.runner.script = func(_ Request, n int) (Result, error) {
+		report := malformed
+		if n > 0 {
+			report = draftReport
+		}
+		return Result{Exit: ExitOK, Session: "sess", Report: report}, nil
+	}
+	_, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: t.TempDir(), Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	reqs := h.runner.requests()
+	if len(reqs) != 2 {
+		t.Fatalf("want two requests, got %d", len(reqs))
+	}
+	_, shapeErr := ParseSpecDraft(malformed)
+	for _, want := range []string{shapeErr.Error(), "every section again", "even when the earlier report was right", "ork reads only the resumed reply", "new text, or `unchanged`", "Why, Files, Failing tests, Implement, Check", "owner questions in the same reply"} {
+		if !strings.Contains(reqs[1].Brief, want) {
+			t.Errorf("draft shape nudge lacks %q:\n%s", want, reqs[1].Brief)
+		}
+	}
+}
+
+func TestSpecDraftDenialResumeThatSendsTheFullReportPasses(t *testing.T) {
+	h := specHarness(t)
+	dir := t.TempDir()
+	h.runner.script = func(_ Request, n int) (Result, error) {
+		res := Result{Exit: ExitOK, Session: "sess", Report: draftReport}
+		if n == 0 {
+			res.Denials = []runrec.DeniedCommand{{Tool: "Bash", Command: "rg spec | head"}}
+		}
+		return res, nil
+	}
+	got, err := RunSpecDraft(context.Background(), h.deps, SpecDraftConfig{Project: h.proj, Item: "S10", Dir: dir, Lineup: []runrec.LineupEntry{{Vendor: "claude", Model: "sonnet", Effort: "high"}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want, err := ParseSpecDraft(draftReport)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !reflect.DeepEqual(got.Draft, want) {
+		t.Errorf("parsed draft %+v, want %+v", got.Draft, want)
+	}
+	if files, err := filepath.Glob(filepath.Join(dir, "spec-draft-failed-*.md")); err != nil || len(files) != 0 {
+		t.Errorf("failed reports %v, error %v; want none", files, err)
+	}
+}
+
 func TestSpecDraftShapeFailureDropsFailedReportsOfAnOldDraft(t *testing.T) {
 	h := specHarness(t)
 	dir := t.TempDir()

@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/gomodimports.go:41-86`\n- `internal/engine/gomodimports_test.go`"
+      "body": "- `internal/engine/gomodimports.go:42-94` (`goModRequirePaths` and `unquoteModPath`)\n- `internal/engine/gomodimports_test.go`"
     },
     {
       "heading": "Failing tests",
-      "body": "- TestGoModRequirePathsStripsQuotes: calls `goModRequirePaths` with a go.mod text that has a quoted path in a `require (` block, a one-line `require \"quoted.example/q\" v1.0.0`, a raw-quoted path (`` `raw.example/r` ``), and an unquoted line that repeats one of the quoted paths. It asserts the result is the unquoted paths in file order with no duplicates and no `\"` or `` ` `` character in any entry. It fails today because the quotes stay in the returned paths.\n- TestGoModRequirePathsKeepsUnparsableQuotedField: a require field that starts with `\"` but is not a valid Go string (for example `\"unterminated/path`) comes back unchanged, and the other paths in the same text are still listed. It passes today and guards the fallback so the fix does not drop a path or panic."
+      "body": "- `TestGoModRequirePathsStripsQuotes`: directly calls goModRequirePaths with interpreted-quoted paths in a require block and one-line require, a raw-quoted path, and an unquoted duplicate. Assert unquoted paths in file order without duplicates or quote characters. Fails before implementation because quotes remain.\n- `TestGoModRequirePathsKeepsUnparsableQuotedField`: directly calls goModRequirePaths with an unterminated quoted field and ordinary paths. Assert the invalid field and other paths remain unchanged. This fallback guard passes before implementation; mutation-check it after implementation."
     },
     {
       "heading": "Implement",
@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -run TestGoModRequirePathsStripsQuotes ./internal/engine` passes. It fails before the change, with the quotes in the returned paths.\n- `go test -run TestGoModRequirePathsKeepsUnparsableQuotedField ./internal/engine` passes.\n- `go test -run TestGoModuleImportsSectionListsRequirePaths ./internal/engine` still passes, so the unquoted listing is unchanged.\n- `go test ./...` passes.\n- `go vet ./...` prints nothing.\n- `gofmt -l ./engine` prints nothing."
+      "body": "- `go test -run TestGoModRequirePathsStripsQuotes ./internal/engine` passes. It fails before the change, with the quotes in the returned paths.\n- `go test -run TestGoModRequirePathsKeepsUnparsableQuotedField ./internal/engine` passes.\n- `go test -run TestGoModuleImportsSectionListsRequirePaths ./internal/engine` still passes, so the unquoted listing is unchanged.\n- `go test ./...` passes.\n- `go vet ./...` prints nothing.\n- `gofmt -l ./internal/engine` prints nothing."
     },
     {
       "heading": "Git",
