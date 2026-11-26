@@ -18,7 +18,7 @@ import (
 
 // sweepMarker matches the scroll marker lines a clipped view draws. A marker
 // is not content: the reference never holds one and a frame is not asked to.
-var sweepMarker = regexp.MustCompile(`^\+\d+ (lines above|more lines)$`)
+var sweepMarker = regexp.MustCompile(`^\+\d+ (lines above|more lines)(, cursor: \S+)?$`)
 
 // sweepContent trims each line and drops blank lines and marker lines.
 func sweepContent(text string) []string {
@@ -72,6 +72,9 @@ func TestSweepMissingNamesSkippedLines(t *testing.T) {
 	// A marker line in the reference is not content a frame must show.
 	if got := sweepMissing([]string{"alpha", "+4 more lines"}, []string{"alpha"}); len(got) != 0 {
 		t.Errorf("marker in want: missing %q, want none", got)
+	}
+	if got := sweepMissing([]string{"alpha", "+4 more lines, cursor: S90"}, []string{"alpha"}); len(got) != 0 {
+		t.Errorf("cue marker in want: missing %q, want none", got)
 	}
 }
 

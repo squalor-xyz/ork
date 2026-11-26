@@ -337,14 +337,20 @@ func (m *Model) screen() string {
 			}
 		}
 	}
+	cue := ""
 	if m.view == roadmapView && m.itemPane == nil && m.launch == nil {
-		if m.roadmapLift.cursor != clampCursor(m.roadmapCursor, len(m.roadmapItems())) {
+		items := m.roadmapItems()
+		if m.roadmapLift.cursor != clampCursor(m.roadmapCursor, len(items)) {
 			m.roadmapLift = struct{ cursor, lines int }{}
 		}
 		m.roadmapLift.lines = min(m.roadmapLift.lines, start)
 		start -= m.roadmapLift.lines
+		if m.roadmapLift.lines > 0 && len(items) > 0 {
+			cue = "cursor: " + items[clampCursor(m.roadmapCursor, len(items))].ID
+		}
 	}
 	if m.showHelp {
+		cue = ""
 		start = min(max(m.helpOffset, 0), windowStart(len(body)-1, len(body), bodyH))
 	}
 	if scrolls && m.launch != nil && bodyH > 0 {
@@ -358,7 +364,7 @@ func (m *Model) screen() string {
 		hi, _, _ := span(len(body), start, bodyH)
 		m.drawn = drawnRows{lo: start, hi: hi, sel: rowLine, rows: rowStarts, total: len(body), n: bodyH}
 		m.recordRowHits(rowStarts, rowEnds, start, hi, len(body), bodyH)
-		body = window(body, start, bodyH, th)
+		body = window(body, start, bodyH, th, cue)
 	}
 	_, horizontal := th.rules(m.cfg.ASCII)
 	rule := th.Dim.Render(strings.Repeat(horizontal, mainW))
@@ -1166,7 +1172,7 @@ func windowStart(sel, total, n int) int {
 
 // window is n lines of body from start. Lines hidden above or below are said
 // so on a marker line, and the window is padded to n lines.
-func window(lines []string, start, n int, th Theme) []string {
+func window(lines []string, start, n int, th Theme, note string) []string {
 	n = max(n, 1)
 	start = min(max(start, 0), max(len(lines)-1, 0))
 	hi, above, below := span(len(lines), start, n)
@@ -1176,7 +1182,11 @@ func window(lines []string, start, n int, th Theme) []string {
 	}
 	out = append(out, lines[start:hi]...)
 	if below {
-		out = append(out, th.Dim.Render(fmt.Sprintf("%s+%d more lines", indent, len(lines)-hi)))
+		marker := fmt.Sprintf("%s+%d more lines", indent, len(lines)-hi)
+		if note != "" {
+			marker += ", " + note
+		}
+		out = append(out, th.Dim.Render(marker))
 	}
 	for len(out) < n {
 		out = append(out, "")

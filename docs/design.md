@@ -409,7 +409,12 @@ ork (TUI)  ork status --json (CLI)
    block for each of Why, Files, Failing tests, Implement and Check, each the
    section's whole new text or `unchanged`, then `## Owner needed`; a report
    with an unknown or missing block, or without the Owner needed ending, is a
-   shape error, and the role's session is resumed once with the error. ork
+   shape error, and the role's session is resumed once with the error.
+   *Proposed (S576):* a report that fails its shape is kept as
+   `spec-draft-failed-N.md` in `spec-checks/<project-key>/<item-key>/draft/`,
+   with N counting this draft's failed reports from 1. The error ends with
+   `[report kept in PATH]`. A new draft removes old failed reports, and a
+   draft that passes removes its own. ork
    checks that every path a proposed Files section names is in the checkout
    (`(new)` marks a file the slice creates) and attaches each failure to the
    section as a problem. The daemon method `spec.draft` returns, for each
@@ -2058,7 +2063,11 @@ separately.
     only that file reverted and see a test the slice added fail. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
     test names in one `-run` pattern (S571). This command guidance appears only
-    when at least one test command remains (S593). It says how
+    when at least one single-file test command remains (S593). When at least
+    two overlays were written and every one fails vet, ork writes
+    `TMPDIR/overlay-all.json` reverting all those files, vets it over their
+    packages, and lists it as a final entry with a test command (or
+    `does not build: ERROR`) (S596, adj 588). It says how
     many files past 20 it left out. A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git

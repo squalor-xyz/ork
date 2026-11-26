@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 605,
+  "next_id": 607,
   "preamble": "",
   "passes": [
     {
@@ -30118,7 +30118,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "82c251b3-013d-4b65-a3f5-2e1d8a591086",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 592): key from answer. ork answer keeps the key and adj id with the run's pending item; the rerun brief's Owner note names them, e.g. Owner note (adj 564, spec.check-command-finding). Jon chose 'Key from answer', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T23:26:46Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30146,7 +30161,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a8c60153-9694-4f62-827c-f07ca98e90b3",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision: brief section. ork code finds command names a branch diff removes from role-prompt text in internal/roles, greps docs/ in the worktree for them, and lists each file:line hit in a stale doc references section of the reviewer and gate briefs (internal/engine/brief.go). Advisory, never blocks. Jon chose 'Brief section', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T23:26:45Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30174,7 +30204,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b626f864-999f-4114-a484-2d2c76d21d4b",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 593): a go/parser test in internal/engine that fails on any d.Adj call not under a Project.Adj or proj.Adj condition, with an explicit allowlist of unguarded sites (adjrecord.go, answer_adj.go). Jon chose 'Go test', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T23:26:46Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30511,10 +30556,39 @@
       "id": "S576",
       "title": "spec draft: keep the role's raw report when the report shape check fails, and name its path in the error",
       "short_title": "spec draft: keep the role's raw report when the report shape check fails, and name its path in the error",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "231aef18-b0f7-4bc4-b8ed-c66e29def851",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S576):\n- later: deferred to land: The next time ork spec draft ork ID --json fails with report shape: ..., the error ends with [report kept in .../draft/spec-draft-failed-2.md], and that file holds what the role wrote, so you can see why no block was found.",
+          "created_at": "2026-11-25T23:55:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "408d2358-5fd9-45da-a5b3-2a5096ba2d1d",
+          "kind": "",
+          "text": "**2026-11-25** — Spec drafts preserve malformed reports, name the latest kept report in shape errors, and clear failed reports on a new or successful draft.",
+          "created_at": "2026-11-25T23:55:21Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -30532,7 +30606,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31292,7 +31366,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "8cbff06f-1b80-4710-98b8-2da3a310b84f",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 594): no allowlist change (git grep -O can run a program). The Base overlays text (internal/engine/baseoverlay.go) tells reviewers to read non-Go base files with git show MERGEBASE:PATH. Jon chose 'No allowlist change', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T23:26:46Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -31488,7 +31577,7 @@
       "id": "S596",
       "title": "when two changed files depend on each other's new fields, write a base overlay that reverts both together",
       "short_title": "when two changed files depend on each other's new fields, write a base overlay that reverts both together",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31498,6 +31587,34 @@
           "text": "**2026-11-25** — Also covers adj 588: when every single-file base overlay fails to build (a shared signature change), offer one overlay that reverts all changed product files together, alongside the per-file ones. Jon chose 'Two slices', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T22:17:28Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4a27a447-5ec8-44f7-b4c2-c34639454c89",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S596):\n- later: In the next reviewer round for a slice where two changed Go files depend on each other's new fields, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... for each single file. It should end with an All changed Go files at once entry holding one go -C ... test -overlay .../overlay-all.json ./PKG ... command. Run it from your shell. It should build, and git -C WORKTREE status --porcelain should be unchanged.",
+          "created_at": "2026-11-25T23:30:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e2c2d636-6b79-4637-9508-c0ce9d7fc3b9",
+          "kind": "",
+          "text": "**2026-11-25** — Added a combined base overlay when at least two written Go-file overlays all fail their per-file vet checks, preserving the per-file entries and reporting the combined build result.",
+          "created_at": "2026-11-25T23:30:13Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31524,7 +31641,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31534,7 +31651,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7d75bde5-b532-425a-b290-ab6ad5e321f4",
+          "kind": "",
+          "text": "**2026-11-25** — Owner decision (adj 595): the rule goes in the Renders section of internal/roles/prompts/ui.md: when the changed behavior only shows below 80x24, also render at the height the tests use for that view and name it in the report. Jon chose 'UI prompt', session 8d711f67, 2026-11-25.",
+          "created_at": "2026-11-25T23:26:46Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -31644,7 +31776,7 @@
       "id": "S600",
       "title": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen.",
       "short_title": "While the Goals are lifted, `enter` opens the hidden first row with no cue on screen.",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31654,6 +31786,34 @@
           "text": "**2026-11-25** — Owner decision (adj 589, ui.goals-lift-enter-cue): cursor cue. While the Goals are lifted, the lift marker shows the selected row (for example cursor: S90); enter keeps opening that row. Jon chose 'Cursor cue', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T22:20:11Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "a4793a31-0091-49fa-8c4e-c6a0d15e0313",
+          "kind": "",
+          "text": "**2026-11-25** — Human checks at approval (S600):\n- later: Run ork in a terminal of 80x10 and open a Roadmap with several goals. Press home twice: the Goals show, and the dim line under them reads +N more lines, cursor: S90 (the first row's ID). Press enter: that item opens. Press esc, then down: the cue is gone.",
+          "created_at": "2026-11-25T23:09:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "cec37b22-40d5-4da1-913d-027669cfc6d9",
+          "kind": "",
+          "text": "**2026-11-25** — Lifted Roadmap Goals show the selected row in the below marker, Enter opens that row, and unlifted views omit the cue.",
+          "created_at": "2026-11-25T23:09:39Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31680,7 +31840,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31792,6 +31952,62 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S605",
+      "title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
+      "short_title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S600",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ea964bdc",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S606",
+      "title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
+      "short_title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S596",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1f292ee0",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

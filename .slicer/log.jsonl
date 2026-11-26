@@ -6857,6 +6857,25 @@
 {"when": "2026-11-25T22:27:36Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T22:27:37Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T22:27:37Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:27:04Z", "item": "S576", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:27:10Z", "item": "S576", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:27:54Z", "item": "S576", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:30:29Z", "item": "S576", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:55:20Z", "item": "S576", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S576):", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:55:21Z", "item": "S576", "action": "note", "from": "", "to": "", "note": "Spec drafts preserve malformed reports, name the latest kept", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:55:21Z", "item": "S576", "action": "status", "from": "started", "to": "done", "note": "Spec drafts preserve malformed reports, name the latest kept report in shape errors, and clear failed reports on a new or successful draft.", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:07:00Z", "item": "S596", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:07:08Z", "item": "S596", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:07:08Z", "item": "S596", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:30:12Z", "item": "S596", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S596):", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:30:13Z", "item": "S596", "action": "note", "from": "", "to": "", "note": "Added a combined base overlay when at least two written Go-f", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:30:13Z", "item": "S596", "action": "status", "from": "started", "to": "done", "note": "Added a combined base overlay when at least two written Go-file overlays all fail their per-file vet checks, preserving the per-file entries and reporting the combined build result.", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:43:30Z", "item": "S600", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T22:43:50Z", "item": "S600", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T22:43:50Z", "item": "S600", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:09:38Z", "item": "S600", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S600):", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:09:39Z", "item": "S600", "action": "note", "from": "", "to": "", "note": "Lifted Roadmap Goals show the selected row in the below mark", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:09:39Z", "item": "S600", "action": "status", "from": "started", "to": "done", "note": "Lifted Roadmap Goals show the selected row in the below marker, Enter opens that row, and unlifted views omit the cue.", "by": "Jon Robbins"}
 {"when": "2026-11-25T22:30:07Z", "item": "S588", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-25T22:30:08Z", "item": "S588", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T22:30:08Z", "item": "S588", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
@@ -6906,3 +6925,37 @@
 {"when": "2026-11-26T00:02:19Z", "item": "S589", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S589):", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:02:19Z", "item": "S589", "action": "note", "from": "", "to": "", "note": "The reviewer brief gets a `## Go module imports` section lis", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:02:20Z", "item": "S589", "action": "status", "from": "started", "to": "done", "note": "The reviewer brief gets a `## Go module imports` section listing the worktree go.mod's require paths (read by ork, advisory, reviewer only, none without go.mod); the reviewer prompt points to it; design.md and the changelog entry are updated; full suite, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "add", "from": "", "to": "open", "note": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24"}
+{"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T23:26:45Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "Owner decision: brief section. ork code finds command names ", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S568", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 592): key from answer. ork answer keeps ", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S570", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 593): a go/parser test in internal/engin", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S592", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 594): no allowlist change (git grep -O c", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:26:46Z", "item": "S597", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 595): the rule goes in the Renders secti", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:28:31Z", "item": "S606", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing"}
+{"when": "2026-11-25T23:28:32Z", "item": "S606", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:49Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:49Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:50Z", "item": "S574", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:50Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:50Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:51Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:51Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:51Z", "item": "S584", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:51Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:51Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:51Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:52Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:52Z", "item": "S592", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-25T23:54:53Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Check"}
