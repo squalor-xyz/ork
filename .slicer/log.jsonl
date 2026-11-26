@@ -7001,3 +7001,4 @@
 {"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "add", "from": "", "to": "open", "note": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output"}
 {"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "note", "from": "", "to": "", "note": "possible duplicate of S592", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:48:06Z", "item": "S598", "action": "note", "from": "", "to": "", "note": "The reviewer brief's Base overlays section opens with a one-", "by": "Jon Robbins"}

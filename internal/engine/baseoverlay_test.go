@@ -210,8 +210,10 @@ func TestBaseOverlayNoteWhenNothingBuilds(t *testing.T) {
 	if !strings.HasPrefix(body, olderBinaryNote+"\n\n- `internal/x/a.go`: does not build:") {
 		t.Errorf("body does not start with the note then the first entry: %q", body)
 	}
-	if len(entries) != 2 || strings.Count(body, "does not build: undefined helper") != 2 {
-		t.Errorf("want two build failures: %s", body)
+	// Two single-file failures, then the combined overlay's entry (it follows
+	// when no single-file overlay builds), as in the no-intro test.
+	if len(entries) != 2 || strings.Count(body, "does not build: undefined helper") != 3 {
+		t.Errorf("want three build failures: %s", body)
 	}
 }
 
