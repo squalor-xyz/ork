@@ -32638,7 +32638,7 @@
       "id": "S618",
       "title": "Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint",
       "short_title": "Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32648,6 +32648,20 @@
           "text": "**2026-11-26** — Owner decision (key base-overlays.other-files-list): reuse baseOverlayLimit (20) with an N more left out line; a changed file the base lacks (notInBase) is marked new in this slice, no base version, with no command. Jon chose 'Cap 20, mark new', session 8d711f67, 2026-11-26.",
           "created_at": "2026-11-26T02:04:59Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e6f40829-008b-4b41-baa2-20da8e0ed09a",
+          "kind": "",
+          "text": "**2026-11-26** — Base overlays list up to 20 sorted per-file base-read commands for changed non-Go and test files, including prompt-only diffs, with new-file and unreadable-file notices; all Base overlays tests and the full engine package pass.",
+          "created_at": "2026-11-26T03:52:36Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -32674,7 +32688,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
