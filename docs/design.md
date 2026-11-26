@@ -834,8 +834,10 @@ slice.
     CLI fixtures, without editing the tree. `-render-fixture NAME[,NAME...]`
     writes only `NAME.txt` for each name: those five and `projects-set`,
     `projects-set-refusals`, `wave-start`, `status-queued-held`,
-    `status-engine`, `summary-real`, `projects-setup` and `fake-reply`
-    (adj 542). With no flag it writes nothing.
+    `status-engine`, `summary-real`, `projects-setup`, `fake-reply` and
+    `wave-start-finding` (a wave start with `--yes` that holds one item on a
+    Check finding and starts the other) (adj 542). With no flag it writes
+    nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). These are scratch files in the role's temp directory named
     in the brief under Your files. The pass

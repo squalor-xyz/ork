@@ -1,0 +1,39 @@
+{
+  "id": "S609",
+  "title": "adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261125-235639-7e56 for S570 (discovered from S570):\n\nadj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard\nMy probe (TestProbeEdges, temp dir) ran the checker on edge cases. It flagged the else branch (`17: elseBranch`) and the goroutine literal (`22: lit`). It did not flag three forms:\n- `use(e.d.Adj)`, the client passed as an argument;\n- `var c = e.d.Adj`;\n- `if e.proj.Adj { return }` followed by `e.d.Adj.Check`, an inverted guard that passes as guarded.\nThe slice's definition of a client use (Implement 3) leaves the first two out, and its early-exit rule accepts the third, so none of them is a defect in this slice. None of these forms occurs in the engine today.\nImportance: 1\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

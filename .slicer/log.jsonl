@@ -6959,6 +6959,9 @@
 {"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T23:54:53Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T00:02:11Z", "item": "S574", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:20:08Z", "item": "S574", "action": "note", "from": "", "to": "", "note": "Added the `wave-start-finding` CLI render fixture (a `wave s", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:20:09Z", "item": "S574", "action": "status", "from": "started", "to": "done", "note": "Added the `wave-start-finding` CLI render fixture (a `wave start --yes` that holds S501 on a Check finding and starts S502), listed it in the UI pass brief, guide and design docs; all tests, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:04:59Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "Owner decisions (adj 597, 598): every command name in a remo", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:04:59Z", "item": "S568", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-26T00:04:59Z", "item": "S568", "action": "edit", "from": "", "to": "", "note": "Files"}
@@ -6967,3 +6970,28 @@
 {"when": "2026-11-26T00:05:00Z", "item": "S568", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-26T00:05:34Z", "item": "S568", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-26T00:05:35Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "Correction: the decisions in the note above are adj 598 (rem", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:09:36Z", "item": "S592", "action": "note", "from": "", "to": "", "note": "Also covers adj 596: the Base overlays note lists each chang", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-26T00:09:43Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-26T00:09:44Z", "item": "S569", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T00:12:45Z", "item": "S607", "action": "add", "from": "", "to": "open", "note": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list"}
+{"when": "2026-11-26T00:12:46Z", "item": "S607", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:13:45Z", "item": "S608", "action": "add", "from": "", "to": "open", "note": "Strip quotes from quoted require paths in goModRequirePaths"}
+{"when": "2026-11-26T00:13:45Z", "item": "S608", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:13:45Z", "item": "S608", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
+{"when": "2026-11-26T00:13:45Z", "item": "S609", "action": "add", "from": "", "to": "open", "note": "adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard"}
+{"when": "2026-11-26T00:13:46Z", "item": "S609", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:13:46Z", "item": "S609", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
+{"when": "2026-11-26T00:16:20Z", "item": "S610", "action": "add", "from": "", "to": "open", "note": "say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead"}
+{"when": "2026-11-26T00:16:20Z", "item": "S610", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:20:07Z", "item": "S611", "action": "add", "from": "", "to": "open", "note": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md"}
+{"when": "2026-11-26T00:20:07Z", "item": "S611", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:20:08Z", "item": "S611", "action": "note", "from": "", "to": "", "note": "possible duplicate of S607", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:23:30Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T00:24:16Z", "item": "S612", "action": "add", "from": "", "to": "open", "note": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output"}
+{"when": "2026-11-26T00:24:17Z", "item": "S612", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "add", "from": "", "to": "open", "note": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output"}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "note", "from": "", "to": "", "note": "possible duplicate of S592", "by": "Jon Robbins"}

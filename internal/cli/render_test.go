@@ -60,6 +60,7 @@ func renderViews() []renderView {
 		{name: "projects-set", text: renderProjectsSet},
 		{name: "projects-set-refusals", text: renderProjectsSetRefusals},
 		{name: "wave-start", text: renderWaveStart},
+		{name: "wave-start-finding", text: renderWaveStartFinding},
 		{name: "matrix-copy-preview", text: func(t *testing.T) string { return renderMatrixCopy(t, true, false) }},
 		{name: "matrix-copy-ask", text: func(t *testing.T) string { return renderMatrixCopy(t, false, false) }},
 		{name: "matrix-copy-stale-preview", text: func(t *testing.T) string { return renderMatrixCopy(t, false, true) }},
@@ -183,6 +184,42 @@ func renderProjectsSetRefusals(t *testing.T) string {
 // on and no --yes, it prints the plans and stops before the spec check.
 func renderWaveStart(t *testing.T) string {
 	stub := &specStub{t: t, check: `{"items":[{"item":"S501","ready":true},{"item":"S502","ready":true}]}`}
+	app := renderWaveApp(stub, nil)
+	text := renderSteps(t, renderStep{app, []string{"wave", "start", "ork", "S501", "S502", "--well-specified", "yes", "--split", "no"}})
+	if stub.called("spec.check") || stub.called("wave.start") {
+		t.Fatalf("a wave start with no terminal and no --yes made calls %v", stub.calls)
+	}
+	return text
+}
+
+// renderWaveStartFinding is a wave start with --yes where the spec check holds
+// S501 on a Check finding and S502 is ready: the view shows the held line and
+// the run of S502 only.
+func renderWaveStartFinding(t *testing.T) string {
+	stub := &specStub{t: t, check: `{"items":[` +
+		`{"item":"S501","ready":false,"findings":["Check entry \"q quit\": first word \"q\" is not a runnable command"]},` +
+		`{"item":"S502","ready":true}]}`}
+	app := renderWaveApp(stub, func(params any) any {
+		var items []daemon.WaveItemResult
+		for _, item := range params.(daemon.WaveStartParams).Items {
+			if item.Item != "S502" {
+				t.Fatalf("wave.start was asked to start %s, want S502 only", item.Item)
+			}
+			items = append(items, daemon.WaveItemResult{Item: item.Item, Run: &runrec.Record{ID: "ork-20261125-131040-71aa", State: runrec.StateQueued}})
+		}
+		return daemon.WaveResult{Wave: "wave-20261125-ab", Items: items}
+	})
+	text := renderSteps(t, renderStep{app, []string{"wave", "start", "ork", "S501", "S502", "--well-specified", "yes", "--split", "no", "--yes"}})
+	if !stub.called("spec.check") || !stub.called("wave.start") {
+		t.Fatalf("a wave start with --yes made calls %v", stub.calls)
+	}
+	return text
+}
+
+// renderWaveApp is the fake daemon of the wave start fixtures: it answers
+// run.plan with a plan for the item, wave.start with start when it is set, and
+// every other method with stub.
+func renderWaveApp(stub *specStub, start func(params any) any) *App {
 	plan := func(item string) daemon.RunPlan {
 		return daemon.RunPlan{
 			Project: registry.Project{Name: "ork"}, Item: item, Worktree: "/home/jon/code/squalor-xyz/ork/.worktrees/" + item, Branch: item,
@@ -199,19 +236,22 @@ func renderWaveStart(t *testing.T) string {
 			},
 		}
 	}
-	app := &App{Input: strings.NewReader(""), Terminal: func() bool { return false }, Call: func(ctx context.Context, method string, params, result any) error {
-		if method == daemon.MethodRunPlan {
+	return &App{Input: strings.NewReader(""), Terminal: func() bool { return false }, Call: func(ctx context.Context, method string, params, result any) error {
+		switch {
+		case method == daemon.MethodRunPlan:
 			stub.calls = append(stub.calls, method)
 			*(result.(*daemon.RunPlan)) = plan(params.(daemon.RunParams).Item)
 			return nil
+		case method == "wave.start" && start != nil:
+			stub.calls = append(stub.calls, method)
+			b, err := json.Marshal(start(params))
+			if err != nil {
+				return err
+			}
+			return json.Unmarshal(b, result)
 		}
 		return stub.call(ctx, method, params, result)
 	}}
-	text := renderSteps(t, renderStep{app, []string{"wave", "start", "ork", "S501", "S502", "--well-specified", "yes", "--split", "no"}})
-	if stub.called("spec.check") || stub.called("wave.start") {
-		t.Fatalf("a wave start with no terminal and no --yes made calls %v", stub.calls)
-	}
-	return text
 }
 
 // renderStatusApp answers a status with raw. It fixes the zone, so the clock
@@ -385,7 +425,7 @@ func TestRenderCLIViews(t *testing.T) {
 
 // renderFixtureNames are the fixtures that -render-fixture adds beside the five
 // default files (adj 542, owner 2026-11-25).
-var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave-start", "status-queued-held", "status-engine", "summary-real", "projects-setup", "fake-reply", "matrix-copy-preview", "matrix-copy-ask", "matrix-copy-stale-preview"}
+var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave-start", "wave-start-finding", "status-queued-held", "status-engine", "summary-real", "projects-setup", "fake-reply", "matrix-copy-preview", "matrix-copy-ask", "matrix-copy-stale-preview"}
 
 func TestRenderCLIViewsWritesFiles(t *testing.T) {
 	if flag.Lookup("renders") == nil {
@@ -490,6 +530,22 @@ func TestRenderProjectsSetRefusalsFixture(t *testing.T) {
 // The S337 line a wave start prints with no terminal and no --yes.
 func TestRenderWaveStartFixture(t *testing.T) {
 	assertRenderLine(t, "wave-start", "not started: input is not a terminal to confirm on; rerun with --yes, or with --questions to see the spec questions")
+}
+
+// The held line of an item the spec check holds on a Check finding, and the
+// started line of the item that stays in the wave.
+func TestRenderWaveStartFindingFixture(t *testing.T) {
+	assertRenderLine(t, "wave-start-finding", `held: S501: Check entry "q quit": first word "q" is not a runnable command`)
+	text := renderViewText(t, "wave-start-finding")
+	if !strings.Contains(text, "S502 ork-20261125-131040-71aa queued\n") {
+		t.Errorf("wave-start-finding does not list S502 as started:\n%s", text)
+	}
+	if strings.Contains(text, "S501 ork-") {
+		t.Errorf("wave-start-finding lists the held S501 as started:\n%s", text)
+	}
+	if strings.Contains(text, "Start this wave?") {
+		t.Errorf("wave-start-finding has a confirm prompt:\n%s", text)
+	}
 }
 
 // A queued run's row.
