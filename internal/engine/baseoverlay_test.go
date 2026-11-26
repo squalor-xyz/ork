@@ -225,14 +225,15 @@ func TestBaseOverlayNoteWhenNothingBuilds(t *testing.T) {
 func TestBaseOverlayNoNoteWithoutGoFiles(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
-			return baseOverlayRoutes(W, "internal/x/x_test.go\x00README.md\x00", "")
+			return baseOverlayRoutes(W, "internal/x/x_test.go\x00README.md\x00", "",
+				baseOverlayShow(W, "internal/x/x_test.go", "package x\n"), baseOverlayShow(W, "README.md", "readme"))
 		}
 	})
 	h.deps.Behind = behindFunc(true)
 	requireState(t, h.start(), runrec.StateAwaitingApproval)
 	req := baseOverlayReviewer(t, h)
-	if body, found := baseOverlayBody(req.Brief); found {
-		t.Errorf("reviewer brief holds a Base overlays section:\n%s", body)
+	if body, found := baseOverlayBody(req.Brief); !found || strings.Contains(body, "older than this slice's code") {
+		t.Errorf("want a section without the older-binary note: found %v, body %q", found, body)
 	}
 	if strings.Contains(req.Brief, "older than this slice's code") {
 		t.Errorf("the note stands alone in the brief")
@@ -466,7 +467,7 @@ func TestBaseOverlaySectionForChangedGoFile(t *testing.T) {
 	const source = "package x\n\nfunc Old() int { return 1 }\n"
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
-			return baseOverlayRoutes(W, "internal/x/x.go\x00internal/x/x_test.go\x00README.md\x00", "",
+			return baseOverlayRoutes(W, "internal/x/x.go\x00", "",
 				baseOverlayShow(W, "internal/x/x.go", source))
 		}
 	})
@@ -482,11 +483,6 @@ func TestBaseOverlaySectionForChangedGoFile(t *testing.T) {
 	}
 	if want := baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x"); !strings.Contains(entries[0], want) {
 		t.Errorf("entry lacks the command %q:\n%s", want, entries[0])
-	}
-	for _, gone := range []string{"x_test.go", "README"} {
-		if strings.Contains(body, gone) {
-			t.Errorf("section names %s:\n%s", gone, body)
-		}
 	}
 	got, err := os.ReadFile(filepath.Join(req.TMPDir, "base", "internal", "x", "x.go"))
 	if err != nil || string(got) != source {
@@ -519,8 +515,10 @@ func TestBaseOverlaySectionForChangedGoFile(t *testing.T) {
 func TestBaseOverlayNamesGitShowForNonGoFiles(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
-			return baseOverlayRoutes(W, "internal/x/x.go\x00internal/x/x_test.go\x00internal/roles/prompts/reviewer.md\x00", "",
-				baseOverlayShow(W, "internal/x/x.go", "package x\n"))
+			return baseOverlayRoutes(W, "internal/x/x.go\x00internal/x/x_test.go\x00internal/roles/prompts/reviewer.md\x00README.md\x00", "",
+				baseOverlayShow(W, "internal/x/x.go", "package x\n"),
+				baseOverlayShow(W, "internal/x/x_test.go", "package x\n"),
+				baseOverlayShow(W, "internal/roles/prompts/reviewer.md", "review"), baseOverlayShow(W, "README.md", "readme"))
 		}
 	})
 	requireState(t, h.start(), runrec.StateAwaitingApproval)
@@ -531,15 +529,10 @@ func TestBaseOverlayNamesGitShowForNonGoFiles(t *testing.T) {
 	if entries := baseOverlayEntries(body); len(entries) != 1 || !strings.Contains(entries[0], "internal/x/x.go") {
 		t.Errorf("entries = %q, want one for internal/x/x.go", entries)
 	}
-	command := "git -C " + ShellWord(h.W) + " show " + ShellWord("base") + ":PATH"
-	for _, want := range []string{command, "not overlaid", "`git grep` is not available"} {
+	requireOtherFileLines(t, body, h.W, []string{"README.md", "internal/roles/prompts/reviewer.md", "internal/x/x_test.go"})
+	for _, want := range []string{"not overlaid", "`git grep` is not available"} {
 		if !strings.Contains(body, want) {
 			t.Errorf("section lacks %q:\n%s", want, body)
-		}
-	}
-	for _, gone := range []string{"reviewer.md", "x_test.go"} {
-		if strings.Contains(body, gone) {
-			t.Errorf("section names %s:\n%s", gone, body)
 		}
 	}
 }
@@ -609,31 +602,147 @@ func TestBaseOverlayNewFileMapsToEmpty(t *testing.T) {
 	}
 }
 
-func TestBaseOverlayNoSectionWithoutGoFiles(t *testing.T) {
+func TestBaseOverlayPromptOnlyDiffGetsHint(t *testing.T) {
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
-			return baseOverlayRoutes(W, "internal/x/x_test.go\x00README.md\x00docs/a.go.md\x00", "")
+			return baseOverlayRoutes(W, "internal/x/x_test.go\x00README.md\x00docs/a.go.md\x00", "",
+				baseOverlayShow(W, "internal/x/x_test.go", "package x\n"),
+				baseOverlayShow(W, "README.md", "readme"), baseOverlayShow(W, "docs/a.go.md", "doc"))
 		}
 	})
 	requireState(t, h.start(), runrec.StateAwaitingApproval)
 	req := baseOverlayReviewer(t, h)
-	// The section is absent because ork read the changed paths and found no
-	// non-test Go file, not because it never looked.
-	if len(h.calls("git", "-C", h.W, "diff", "--name-only")) == 0 {
-		t.Error("ork never read the changed paths for the reviewer")
+	body, found := baseOverlayBody(req.Brief)
+	if !found {
+		t.Error("missing Base overlays section")
 	}
-	if shown := h.calls("git", "-C", h.W, "show"); len(shown) != 0 {
-		t.Errorf("git show calls for a diff with no non-test Go file: %v", shown)
+	requireOtherFileLines(t, body, h.W, []string{"README.md", "docs/a.go.md", "internal/x/x_test.go"})
+	if !strings.Contains(body, "not overlaid") || strings.Contains(body, "Each command runs") {
+		t.Errorf("wrong prompt-only guidance: %q", body)
 	}
-	// The reviewer prompt itself names the heading, so look for the section.
-	if body, found := baseOverlayBody(req.Brief); found {
-		t.Errorf("reviewer brief holds a Base overlays section:\n%s", body)
+	var paths []string
+	for _, call := range h.calls("git", "-C", h.W, "show") {
+		paths = append(paths, call[3])
+	}
+	if !reflect.DeepEqual(paths, []string{"base:README.md", "base:docs/a.go.md", "base:internal/x/x_test.go"}) {
+		t.Errorf("git show paths = %q", paths)
+	}
+	if calls := h.fake.CallsTo("go"); len(calls) != 0 {
+		t.Errorf("unexpected Go calls: %v", calls)
 	}
 	if _, err := os.Stat(filepath.Join(req.TMPDir, "base")); !errors.Is(err, os.ErrNotExist) {
 		t.Errorf("base directory: %v, want it absent", err)
 	}
 	if overlays, _ := filepath.Glob(filepath.Join(req.TMPDir, "overlay-*.json")); len(overlays) != 0 {
 		t.Errorf("overlay files written: %v", overlays)
+	}
+}
+
+func otherFileLines(body string) []string {
+	var lines []string
+	for _, line := range strings.Split(body, "\n") {
+		if strings.HasPrefix(line, "- Other file") {
+			lines = append(lines, line)
+		}
+	}
+	return lines
+}
+
+func requireOtherFileLines(t *testing.T, body, W string, paths []string) {
+	t.Helper()
+	var want []string
+	for _, p := range paths {
+		want = append(want, "- Other file `"+p+"`: `git -C "+ShellWord(W)+" show "+ShellWord("base:"+p)+"`")
+	}
+	if got := otherFileLines(body); !reflect.DeepEqual(got, want) {
+		t.Errorf("other-file lines = %q, want %q", got, want)
+	}
+}
+
+func TestBaseOverlayOtherFileNewInSlice(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "", "docs/new.md\x00", baseOverlayNotInBase(W, "docs/new.md"))
+		}
+	})
+	_, body, _ := overlayVetResult(t, h)
+	if got := otherFileLines(body); !reflect.DeepEqual(got, []string{"- Other file `docs/new.md`: new in this slice, no base version"}) {
+		t.Errorf("new-file line = %q", got)
+	}
+	if strings.Contains(body, "base:docs/new.md") || strings.Contains(body, "incomplete") {
+		t.Errorf("new file has a command or incomplete notice: %q", body)
+	}
+}
+
+func TestBaseOverlayOtherFileListLimit(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			changed := "internal/x/x.go\x00"
+			extra := []clitest.Route{baseOverlayShow(W, "internal/x/x.go", "package x\n")}
+			for i := 25; i >= 1; i-- {
+				p := fmt.Sprintf("docs/f%02d.md", i)
+				changed += p + "\x00"
+				extra = append(extra, baseOverlayShow(W, p, "doc"))
+			}
+			return baseOverlayRoutes(W, changed, "", extra...)
+		}
+	})
+	_, body, entries := overlayVetResult(t, h)
+	var paths []string
+	for i := 1; i <= 20; i++ {
+		paths = append(paths, fmt.Sprintf("docs/f%02d.md", i))
+	}
+	requireOtherFileLines(t, body, h.W, paths)
+	if !strings.Contains(body, "5 more changed other files were left out") || strings.Contains(body, "f21.md") {
+		t.Errorf("wrong limit notice: %q", body)
+	}
+	if len(entries) != 1 || !strings.Contains(entries[0], "internal/x/x.go") {
+		t.Errorf("Go entries changed: %q", entries)
+	}
+}
+
+func TestBaseOverlayOtherFileUnreadable(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			route := baseOverlayShow(W, "README.md", "")
+			route.Exit, route.Stderr = 128, "fatal: bad object base"
+			return baseOverlayRoutes(W, "README.md\x00", "", route)
+		}
+	})
+	_, body, _ := overlayVetResult(t, h)
+	if !strings.Contains(body, "Check incomplete: the base version of `README.md` could not be read. Trace it yourself with `git show`") {
+		t.Errorf("missing unreadable notice: %q", body)
+	}
+	if lines := otherFileLines(body); len(lines) != 0 {
+		t.Errorf("unreadable file has command lines: %q", lines)
+	}
+}
+
+func TestBaseOverlayRejectsEscapingOtherFiles(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "../evil.md\x00/abs/evil.md\x00", "")
+		}
+	})
+	_, body, _ := overlayVetResult(t, h)
+	if !strings.Contains(body, "incomplete") {
+		t.Errorf("missing incomplete notice: %q", body)
+	}
+	if lines := otherFileLines(body); len(lines) != 0 {
+		t.Errorf("rejected paths listed: %q", lines)
+	}
+	if calls := h.calls("git", "-C", h.W, "show"); len(calls) != 0 {
+		t.Errorf("rejected paths read: %v", calls)
+	}
+}
+
+func TestBaseOverlayNoSectionWithoutChangedFiles(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route { return baseOverlayRoutes(W, "", "") }
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	if body, found := baseOverlayBody(baseOverlayReviewer(t, h).Brief); found {
+		t.Errorf("section for empty diff: %q", body)
 	}
 }
 

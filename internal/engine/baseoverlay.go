@@ -28,15 +28,16 @@ const baseOverlayVetTimeout = 2 * time.Minute
 // an older one, so the list may offer commands that do not build.
 const baseOverlayOlderBinaryNote = "Note: an ork binary older than this slice's code made this list, so it may offer commands that do not build."
 
-// baseOverlaySection checks base overlays for changed non-test Go files (S554,
-// S593, S596), offering test commands unless vet exits non-zero. Per-file commands
-// run tests with only that file reverted to the merge base; when none builds,
+// baseOverlaySection lists base reads for changed files and checks overlays for
+// non-test Go files (S554, S593, S596), offering test commands unless vet exits
+// non-zero. Per-file commands run tests with only that file reverted to the
+// merge base; when none builds,
 // it tries reverting all written files together. The reviewer can confirm
 // that a test the slice added fails without the product change, with no write
 // to the tree. ork writes the base copy and the overlay JSON into tmpDir, the
 // reviewer's process temp directory. Like the decision paths check, a failure
 // is advisory: the section says the check is incomplete and never pauses the
-// run. It returns nil when no Go file changed.
+// run. Other files get git show commands. It returns nil when no file changed.
 func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpDir string, change branchChangeResult) *BriefSection {
 	const title = "Base overlays"
 	mergeBase, changed, err := change.MergeBase, change.Paths, change.Err
@@ -46,24 +47,30 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	if err != nil {
 		return &BriefSection{Title: title, Body: "Check incomplete: the branch diff against the base could not be read. Trace the base version of each changed file yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show MERGEBASE:PATH`); this does not block the run."}
 	}
-	var goFiles []string
-	otherChanged := false
+	var goFiles, otherFiles []string
 	for _, p := range changed {
 		if strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, "_test.go") {
 			goFiles = append(goFiles, p)
 		} else {
-			otherChanged = true
+			otherFiles = append(otherFiles, p)
 		}
 	}
 	slices.Sort(goFiles)
 	goFiles = slices.Compact(goFiles)
-	if len(goFiles) == 0 {
+	slices.Sort(otherFiles)
+	otherFiles = slices.Compact(otherFiles)
+	if len(goFiles) == 0 && len(otherFiles) == 0 {
 		return nil
 	}
 	leftOut := 0
 	if len(goFiles) > baseOverlayLimit {
 		leftOut = len(goFiles) - baseOverlayLimit
 		goFiles = goFiles[:baseOverlayLimit]
+	}
+	otherLeftOut := 0
+	if len(otherFiles) > baseOverlayLimit {
+		otherLeftOut = len(otherFiles) - baseOverlayLimit
+		otherFiles = otherFiles[:baseOverlayLimit]
 	}
 
 	var entries, unread []string
@@ -117,7 +124,7 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	}
 
 	var body strings.Builder
-	if e.d.behind(ctx, e.proj) {
+	if len(goFiles) > 0 && e.d.behind(ctx, e.proj) {
 		body.WriteString(baseOverlayOlderBinaryNote + "\n\n")
 	}
 	if commands > 0 {
@@ -137,13 +144,35 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		}
 		fmt.Fprintf(&body, "%d more changed Go %s left out (ork lists at most %d). Trace the rest yourself with `git show`.\n", leftOut, noun, baseOverlayLimit)
 	}
+	for _, p := range otherFiles {
+		if !filepath.IsLocal(p) || path.IsAbs(p) {
+			unread = append(unread, "`"+p+"`")
+			continue
+		}
+		_, err := e.gitRead(ctx, rec.Worktree, "show", mergeBase+":"+p)
+		switch {
+		case err == nil:
+			fmt.Fprintf(&body, "- Other file `%s`: `git -C %s show %s`\n", p, ShellWord(rec.Worktree), ShellWord(mergeBase+":"+p))
+		case notInBase(err):
+			fmt.Fprintf(&body, "- Other file `%s`: new in this slice, no base version\n", p)
+		default:
+			unread = append(unread, "`"+p+"`")
+		}
+	}
+	if otherLeftOut > 0 {
+		noun := "files were"
+		if otherLeftOut == 1 {
+			noun = "file was"
+		}
+		fmt.Fprintf(&body, "\n%d more changed other %s left out (ork lists at most %d of them). Trace the rest yourself with `git show`.\n", otherLeftOut, noun, baseOverlayLimit)
+	}
 	if len(unread) > 0 {
 		if body.Len() > 0 {
 			body.WriteString("\n")
 		}
 		body.WriteString("Check incomplete: the base version of " + strings.Join(unread, ", ") + " could not be read. Trace it yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`); this does not block the run.\n")
 	}
-	if otherChanged {
+	if len(otherFiles) > 0 {
 		if body.Len() > 0 {
 			body.WriteString("\n")
 		}

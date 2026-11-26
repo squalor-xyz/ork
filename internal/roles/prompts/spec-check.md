@@ -78,7 +78,16 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    Ask the least. One question for each real open decision. Do not ask a question
    about the same decision twice across slices; ask it under the first slice that
    needs it and say in the others' questions that they share it.
-5. Do not suggest extra scope and do not review code quality.
+5. When the brief lists "Notes recorded after the spec", read each listed note
+   against the slice's Implement and Failing tests, and its Files and Check.
+   A note that those sections contradict, or do not carry out, is a conflict.
+   Ask one question for the slice, with exactly two options: `follow the note`
+   (the implementer follows the note over the conflicting spec text) and
+   `follow the spec` (the spec stands and the note is set aside).
+   Omit the Decision key line for this question. Ask nothing for a note that does
+   not conflict. The rule that a gap closable by reading code is not a question
+   still applies.
+6. Do not suggest extra scope and do not review code quality.
 
 ## Report
 

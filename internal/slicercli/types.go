@@ -10,6 +10,15 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
+// LogEntry is one entry from slicer log --json --lean.
+type LogEntry struct {
+	When   string `json:"when"`
+	Item   string `json:"item"`
+	Action string `json:"action"`
+	Note   string `json:"note"`
+	By     string `json:"by"`
+}
+
 // ParallelItem is an item in a plan-parallel wave or its unplaced list.
 type ParallelItem struct {
 	ID     string `json:"id"`

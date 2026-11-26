@@ -311,7 +311,7 @@ func (d *Daemon) specCheck(ctx context.Context, p SpecCheckParams) (*SpecCheckRe
 		if err != nil {
 			return nil, err
 		}
-		fp, err := engine.SpecFingerprint(raw)
+		fp, err := engine.SpecFingerprintWithNotes(ctx, deps, proj.Path, item, raw)
 		if errors.Is(err, engine.ErrNoSpec) {
 			// A row, not an error (adj 245): the client drops the item and keeps
 			// the rest. No role runs for it and nothing is remembered.
@@ -432,7 +432,7 @@ func (d *Daemon) reuseSpecAnswers(ctx context.Context, deps engine.Deps, proj re
 		if err != nil {
 			return err
 		}
-		e.fingerprint, err = engine.SpecFingerprint(raw)
+		e.fingerprint, err = engine.SpecFingerprintWithNotes(ctx, deps, proj.Path, item, raw)
 		if err != nil {
 			return err
 		}
@@ -643,7 +643,7 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 	if err != nil {
 		return nil, err
 	}
-	if fp, err := engine.SpecFingerprint(raw); err != nil {
+	if fp, err := engine.SpecFingerprintWithNotes(ctx, deps, proj.Path, p.Item, raw); err != nil {
 		return nil, err
 	} else if fp != e.fingerprint {
 		return nil, fmt.Errorf("spec changed since the check of %s; run the check again", p.Item)
@@ -673,7 +673,7 @@ func (d *Daemon) specAnswer(ctx context.Context, p SpecAnswerParams) (*SpecAnswe
 	if err != nil {
 		return nil, fmt.Errorf("answers recorded in %s, but its spec could not be read again: %w", p.Item, err)
 	}
-	fp, err := engine.SpecFingerprint(raw)
+	fp, err := engine.SpecFingerprintWithNotes(ctx, deps, proj.Path, p.Item, raw)
 	if err != nil {
 		return nil, err
 	}
@@ -717,7 +717,7 @@ func (d *Daemon) specGate(ctx context.Context, project, item string) error {
 	if err != nil {
 		return err
 	}
-	fp, err := engine.SpecFingerprint(raw)
+	fp, err := engine.SpecFingerprintWithNotes(ctx, d.runDeps(proj), proj.Path, item, raw)
 	if err != nil || fp != e.fingerprint {
 		return nil
 	}

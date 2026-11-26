@@ -1,0 +1,39 @@
+{
+  "id": "S621",
+  "title": "ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "On 2026-11-26, after `ork answer ork-20261126-021911-97a7 ...` (S618) returned \"resume waits for a slot; it starts before queued runs\", the run showed \"paused ... (wait: resume waits for a slot under global cap 4)\". Every new `ork wait --project ork --until question,stopped,landed` and even `--until stopped,landed` then exited at once with \"ork-20261126-021911-97a7 S618 question key: base-overlays.tracking-paths next: ork answer ...\", although the question was answered. The orchestrator could only watch landings until a slot freed, which hides real stops and new questions.\n\nork wait should treat a run whose question is answered and that waits only for a slot as in progress, not as a question or a stop."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

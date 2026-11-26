@@ -115,6 +115,52 @@ func specConfig(h *harness, t *testing.T) SpecCheckConfig {
 	}
 }
 
+func checkNotesBrief(t *testing.T, wrote string, flagged bool) {
+	t.Helper()
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return []clitest.Route{
+				{Tool: "git", Args: []string{"-C", P, "rev-parse", "HEAD"}, Stdout: "abc"},
+				{Tool: "git", Args: []string{"-C", P, "rev-parse", "--show-prefix"}},
+				{Tool: "git", Args: []string{"-C", P, "status", "--porcelain"}, Prefix: true},
+				{Tool: "slicer", Args: []string{"show", "S10"}, Prefix: true, Stdout: strings.TrimSuffix(specSliceJSON("S10", "ten"), "}") + `,"note_records":[` + laterNote + `]}`},
+				{Tool: "slicer", Args: []string{"show", "S11"}, Prefix: true, Stdout: specSliceJSON("S11", "eleven")},
+				{Tool: "slicer", Args: []string{"log"}, Prefix: true, Stdout: `[{"when":"` + wrote + `"}]`},
+			}
+		}
+	})
+	h.runner.script = func(req Request, _ int) (Result, error) {
+		_, body, found := strings.Cut(req.Brief, "## Notes recorded after the spec\n")
+		if found != flagged {
+			t.Errorf("notes section present = %v; want %v", found, flagged)
+		}
+		if flagged {
+			body, _, _ = strings.Cut(body, "\n## ")
+			for _, want := range []string{"S10", "late", "2026-11-26T03:00:00Z", "Jon", "decision", "list each path"} {
+				if !strings.Contains(body, want) {
+					t.Errorf("notes section missing %q: %s", want, body)
+				}
+			}
+			if strings.Contains(body, "S11") {
+				t.Errorf("unflagged item in notes section: %s", body)
+			}
+		}
+		return Result{Exit: ExitOK, Report: specReport}, nil
+	}
+	if _, err := RunSpecCheck(context.Background(), h.deps, specConfig(h, t)); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestSpecCheckBriefListsNotesRecordedAfterTheSpec(t *testing.T) {
+	checkNotesBrief(t, "2026-11-26T02:00:00Z", true)
+}
+
+func TestSpecCheckBriefHasNoNotesSectionWhenNoneAreFlagged(t *testing.T) {
+	checkNotesBrief(t, "2026-11-26T02:00:00Z", true)
+	checkNotesBrief(t, "2026-11-26T04:00:00Z", false)
+}
+
 func TestSpecOrientationRequest(t *testing.T) {
 	for _, local := range []bool{false, true} {
 		t.Run(fmt.Sprint(local), func(t *testing.T) {

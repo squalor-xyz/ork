@@ -1,0 +1,39 @@
+{
+  "id": "S624",
+  "title": "add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-021918-bdc3, project ork, item S607:\n\nadd a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames\n\nEvidence: docs/guide.md:1005-1009 and docs/design.md:835-839 lack the three matrix-copy names that brief.go:233 now lists"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

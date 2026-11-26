@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/clitest"
@@ -22,6 +23,36 @@ func TestMain(m *testing.M) {
 }
 
 const root = "/projects/ork"
+
+func TestLastSpecWriteReadsTheNewestEditOrPromote(t *testing.T) {
+	for _, tc := range []struct {
+		name, body, code string
+		exit             int
+		found            bool
+	}{
+		{"write", `[{"when":"2026-11-26T01:00:00Z","item":"S10","action":"edit","note":"Implement","by":"Jon"}]`, "", 0, true},
+		{"empty", `[]`, "", 0, false},
+		{"error", `{"error":{"code":"not_found","message":"missing"}}`, "not_found", 2, false},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			c, _ := client(t, clitest.Route{Tool: "slicer", Args: []string{"log", "--item", "S10", "--action", "edit", "--action", "promote", "--limit", "1", "--json", "--lean", "--root", root}, Stdout: tc.body, Exit: tc.exit})
+			got, found, err := c.LastSpecWrite(context.Background(), root, "S10")
+			if tc.code != "" {
+				var tool *clirun.ToolError
+				if !errors.As(err, &tool) || tool.Code != tc.code {
+					t.Fatalf("error = %v", err)
+				}
+				return
+			}
+			if err != nil || found != tc.found {
+				t.Fatalf("write = %v, %v, %v", got, found, err)
+			}
+			if found && got.Format(time.RFC3339) != "2026-11-26T01:00:00Z" {
+				t.Fatalf("write time = %v", got)
+			}
+		})
+	}
+}
 
 func recorded(name string) string {
 	return filepath.Join("..", "..", "testdata", "cli", "slicer", name)
