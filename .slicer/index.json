@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 614,
+  "next_id": 616,
   "preamble": "",
   "passes": [
     {
@@ -30229,7 +30229,7 @@
       "id": "S570",
       "title": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded",
       "short_title": "flag a new adj call in the engine that is not guarded by proj.Adj when the existing callers in the package are guarded",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -30239,6 +30239,20 @@
           "text": "**2026-11-25** — Owner decision (adj 593): a go/parser test in internal/engine that fails on any d.Adj call not under a Project.Adj or proj.Adj condition, with an explicit allowlist of unguarded sites (adjrecord.go, answer_adj.go). Jon chose 'Go test', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T23:26:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "40ab2dc8-8a53-484e-a45d-28b9b9628a32",
+          "kind": "",
+          "text": "**2026-11-26** — Added internal/engine/adjguard_test.go, a go/parser test that fails on any Deps.Adj client use in a non-allowlisted engine file that is not under a bool Adj condition; the current tree passes, and the spec's gofmt Check line now names the real path internal/engine.",
+          "created_at": "2026-11-26T00:12:11Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -30265,7 +30279,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -31705,7 +31719,7 @@
       "id": "S597",
       "title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
       "short_title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31715,6 +31729,20 @@
           "text": "**2026-11-25** — Owner decision (adj 595): the rule goes in the Renders section of internal/roles/prompts/ui.md: when the changed behavior only shows below 80x24, also render at the height the tests use for that view and name it in the report. Jon chose 'UI prompt', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T23:26:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "370c3b92-ec48-4e49-947a-f5cbcf233934",
+          "kind": "",
+          "text": "**2026-11-26** — The ui prompt's Renders section now tells the UI pass to also render a view at the test's height as VIEW-WxH.txt and name that size in its report when the changed behavior only shows below 80x24; TestUIPromptNamesAShortFixtureHeight covers it, the slice's gofmt Check line now names the real path, and the full suite, vet, gofmt and slicer check are clean.",
+          "created_at": "2026-11-26T00:41:31Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31741,7 +31769,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32327,6 +32355,62 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-2f7d8aff",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S614",
+      "title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
+      "short_title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S615",
+      "title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
+      "short_title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S597",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-2378c935",
         "pass": "v1.2",
         "group": "",
         "reason": "",

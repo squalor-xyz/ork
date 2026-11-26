@@ -1,0 +1,39 @@
+{
+  "id": "S615",
+  "title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-002357-b81a, project ork, item S597:\n\nbefore round 1 check that each path argument in a slice Check command exists in the worktree\n\nEvidence: round 1 failed on gofmt -l ./roles with lstat ./roles: no such file or directory, and the product code was not at fault"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

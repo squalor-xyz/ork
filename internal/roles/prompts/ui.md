@@ -83,6 +83,13 @@ file. ork keeps up to 24 files, 24 KiB each,
 and only `.txt` files that are not links. If the tooling cannot render a view
 without changing the tree, write no file for it and say so in your report, under
 the view's name. Say in your report which files you wrote.
+- A view whose changed behavior only shows below 80x24 (a list that scrolls, a hint
+  line that shortens, a row that is hidden) looks the same in the two sizes above. For
+  that view also render it at the height the tests use for that view, at the width the
+  test uses, and write it as `VIEW-WxH.txt` with that size in W and H (for example
+  `VIEW-80x12.txt`). Then name the size in your report, and say which behavior it shows.
+  If the project's tests set no such height, say so in your report and render the
+  nearest size where the change shows.
 
 Check each view the diff adds or changes against this list:
 

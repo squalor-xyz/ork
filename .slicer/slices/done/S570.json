@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- Acceptance: with the test in place, a call to d.Adj or e.d.Adj in a non-allowlisted engine file that sits under no Adj condition makes TestEngineAdjCallsAreGuarded fail, naming file:line. The current tree passes.\n- `go test -run TestAdjGuardFlagsUnguardedCall ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardFlagsAliasedClient ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardAcceptsIfBodyGuard ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardAcceptsEarlyExitGuard ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardIgnoresBoolReads ./internal/engine`: ok, exit 0.\n- `go test -run TestEngineAdjCallsAreGuarded ./internal/engine`: ok, exit 0.\n- `go test ./...`: all packages ok.\n- `go vet ./...`: no output, exit 0.\n- `gofmt -l ./engine`: no output."
+      "body": "- Acceptance: with the test in place, a call to d.Adj or e.d.Adj in a non-allowlisted engine file that sits under no Adj condition makes TestEngineAdjCallsAreGuarded fail, naming file:line. The current tree passes.\n- `go test -run TestAdjGuardFlagsUnguardedCall ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardFlagsAliasedClient ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardAcceptsIfBodyGuard ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardAcceptsEarlyExitGuard ./internal/engine`: ok, exit 0.\n- `go test -run TestAdjGuardIgnoresBoolReads ./internal/engine`: ok, exit 0.\n- `go test -run TestEngineAdjCallsAreGuarded ./internal/engine`: ok, exit 0.\n- `go test ./...`: all packages ok.\n- `go vet ./...`: no output, exit 0.\n- `gofmt -l ./internal/engine`: no output."
     },
     {
       "heading": "Git",
