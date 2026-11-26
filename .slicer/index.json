@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 620,
+  "next_id": 621,
   "preamble": "",
   "passes": [
     {
@@ -32681,6 +32681,34 @@
       "id": "S619",
       "title": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report",
       "short_title": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S620",
+      "title": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list",
+      "short_title": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list",
       "status": "open",
       "has_slice": true,
       "depends_on": [],
