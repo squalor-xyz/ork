@@ -32470,7 +32470,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "647f89e1-64ba-4db9-9e74-7ac009591295",
+          "kind": "",
+          "text": "**2026-11-26** — Owner decision (key landing.main-write-serialization): a cross-run file lock (as internal/daemon/lock_unix.go does for the daemon) held around every ork write to main (tracking commit at run start, landing merge, fast-forward); a run waits for the lock instead of pausing. Plus one automatic retry when the blocker is a commit made outside ork's own steps; pause only if the retry fails. Jon chose 'Lock + one retry', session 8d711f67, 2026-11-26.",
+          "created_at": "2026-11-26T02:04:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -32526,7 +32541,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "17eee076-768c-4dd5-a71a-03a597eff41c",
+          "kind": "",
+          "text": "**2026-11-26** — Owner decision (key tests.diff-harness-tracking-paths): a shared diff-route helper in internal/engine/harness_test.go prepends .slicer/ and landed-changed/ paths to every routed git diff --name-only; a test opts out for a diff that must list no tracking paths; noRendersHarness (internal/engine/uipass_test.go:897) uses it. Jon chose 'Shared default', session 8d711f67, 2026-11-26.",
+          "created_at": "2026-11-26T02:04:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32554,7 +32584,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "699d6aa3-827e-4bb5-a422-df51662c99fa",
+          "kind": "",
+          "text": "**2026-11-26** — Owner decision (key spec.note-after-spec-check): both. Code flags any slice note recorded after the spec sections were last written (slicer note dates); the spec check then judges each flagged note against Implement and Failing tests and raises an owner question on a conflict. Jon chose 'Both', session 8d711f67, 2026-11-26.",
+          "created_at": "2026-11-26T02:04:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32582,7 +32627,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5969eaa6-87e5-417d-be27-ff8103eb0a05",
+          "kind": "",
+          "text": "**2026-11-26** — Owner decision (key base-overlays.other-files-list): reuse baseOverlayLimit (20) with an N more left out line; a changed file the base lacks (notInBase) is marked new in this slice, no base version, with no command. Jon chose 'Cap 20, mark new', session 8d711f67, 2026-11-26.",
+          "created_at": "2026-11-26T02:04:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

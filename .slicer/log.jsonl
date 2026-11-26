@@ -7043,3 +7043,7 @@
 {"when": "2026-11-26T01:52:16Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S569):", "by": "Jon Robbins"}
 {"when": "2026-11-26T01:52:16Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "The reviewer and gate briefs now carry an advisory `## Stale", "by": "Jon Robbins"}
 {"when": "2026-11-26T01:52:16Z", "item": "S569", "action": "status", "from": "started", "to": "done", "note": "The reviewer and gate briefs now carry an advisory `## Stale doc references` section listing docs/ lines that still name a command a role prompt change removed; all new tests, the full suite, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
+{"when": "2026-11-26T02:04:59Z", "item": "S614", "action": "note", "from": "", "to": "", "note": "Owner decision (key landing.main-write-serialization): a cro", "by": "Jon Robbins"}
+{"when": "2026-11-26T02:04:59Z", "item": "S616", "action": "note", "from": "", "to": "", "note": "Owner decision (key tests.diff-harness-tracking-paths): a sh", "by": "Jon Robbins"}
+{"when": "2026-11-26T02:04:59Z", "item": "S617", "action": "note", "from": "", "to": "", "note": "Owner decision (key spec.note-after-spec-check): both. Code ", "by": "Jon Robbins"}
+{"when": "2026-11-26T02:04:59Z", "item": "S618", "action": "note", "from": "", "to": "", "note": "Owner decision (key base-overlays.other-files-list): reuse b", "by": "Jon Robbins"}
