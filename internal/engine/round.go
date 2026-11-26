@@ -613,6 +613,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if section := e.baseOverlaySection(ctx, rec, tmpDir, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
+		if section := goModuleImportsSection(rec.Worktree); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
 		if section := e.untestedCallSitesSection(ctx, rec, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}

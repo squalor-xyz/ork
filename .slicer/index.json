@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 613,
+  "next_id": 614,
   "preamble": "",
   "passes": [
     {
@@ -31293,7 +31293,7 @@
       "id": "S589",
       "title": "put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe",
       "short_title": "put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31303,6 +31303,34 @@
           "text": "**2026-11-25** — Owner decision (adj 590, roles.probe-import-paths): the reviewer brief reads the worktree's go.mod and lists its require paths, only when the role has a Go worktree. Jon chose 'go.mod in the brief', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T22:20:11Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "aebefc85-f2b8-4c0e-b408-d64207673243",
+          "kind": "",
+          "text": "**2026-11-26** — Human checks at approval (S589):\n- later: In the next real reviewer round of a Go project, open the reviewer's brief under the run's role files. You should see a ## Go module imports section listing every require path of the worktree's go.mod, for ork charm.land/bubbletea/v2, charm.land/bubbles/v2 and charm.land/lipgloss/v2. In a round of a project with no go.mod, the brief should have no such section.",
+          "created_at": "2026-11-26T00:02:19Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "76c55427-0f07-4c7d-9b3b-400ed96c7552",
+          "kind": "",
+          "text": "**2026-11-26** — The reviewer brief gets a `## Go module imports` section listing the worktree go.mod's require paths (read by ork, advisory, reviewer only, none without go.mod); the reviewer prompt points to it; design.md and the changelog entry are updated; full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-26T00:02:19Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31329,7 +31357,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32228,6 +32256,49 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-8d22e527",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S613",
+      "title": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output",
+      "short_title": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "a9fc69cf-4e99-4684-9b73-20055dfa6c53",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S592",
+          "created_at": "2026-11-26T00:30:18Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S597",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-2f7d8aff",
         "pass": "v1.2",
         "group": "",
         "reason": "",
