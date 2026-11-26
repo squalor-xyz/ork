@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-618 items · — 68 · done 415 · retired 135
+618 items · — 65 · done 418 · retired 135
 
 ## v1.3
 
@@ -343,7 +343,7 @@ v1.2
 | 286 | [S581](slices/S581.md) | create the renders directory before the UI pass starts |  | - |  | discovered from S556 | done |
 | 287 | [S582](slices/S582.md) | in the Base overlays section, say which tests the brief's focused -run pattern covers, as separate commands without a pipe |  | - |  | Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25. · discovered from S564 | retired |
 | 288 | [S583](slices/S583.md) | give the Check's focused test command as one command per test, so read-only roles can run it without a regex alternation |  | - |  | Merged into S571: one slice makes every focused test command ork writes one command per test; Jon chose 'Merge into S571', session 8d711f67, 2026-11-25. · discovered from S531 | retired |
-| 289 | [S584](slices/S584.md) | When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected |  | - |  | discovered from S531 | — |
+| 289 | [S584](slices/S584.md) | When a UI-pass diff touches only `_test.go` files under internal/tui, tell the ui role in the brief that no renders are expected |  | - |  | discovered from S531 | done |
 | 290 | [S585](slices/S585.md) | in the permission tests, check every git -C * X* read-only entry against a fixed list of git write commands whose last argument is X |  | - |  | Folded into S586; Jon chose 'Fold into S586', session 8d711f67, 2026-11-25. · discovered from S575 | retired |
 | 291 | [S586](slices/S586.md) | Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name |  | 2 |  | discovered from S575 | done |
 | 292 | [S587](slices/S587.md) | Untested call sites: very common names make every call site in a function of that name count as reached. |  | 2 |  | discovered from S564 | done |
@@ -351,13 +351,13 @@ v1.2
 | 294 | [S589](slices/S589.md) | put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe |  | - |  | discovered from S556 | done |
 | 295 | [S590](slices/S590.md) | give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe |  | - |  | discovered from S581 | — |
 | 296 | [S591](slices/S591.md) | when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds |  | - |  | Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25. · discovered from S579 | retired |
-| 297 | [S592](slices/S592.md) | allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version |  | - |  | discovered from S571 | — |
+| 297 | [S592](slices/S592.md) | allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version |  | - |  | discovered from S571 | done |
 | 298 | [S593](slices/S593.md) | when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check |  | - |  | discovered from S586 | done |
 | 299 | [S594](slices/S594.md) | when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds |  | - |  | discovered from S579 | — |
 | 300 | [S595](slices/S595.md) | `go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem |  | 1 |  | discovered from S586 | done |
 | 301 | [S596](slices/S596.md) | when two changed files depend on each other's new fields, write a base overlay that reverts both together |  | - |  | discovered from S580 | done |
 | 302 | [S597](slices/S597.md) | name a preset fixture height in the render brief when the changed behavior only shows below 80x24 |  | - |  | discovered from S580 | done |
-| 303 | [S598](slices/S598.md) | build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice |  | - |  | discovered from S593 | — |
+| 303 | [S598](slices/S598.md) | build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice |  | - |  | discovered from S593 | done |
 | 304 | [S599](slices/S599.md) | build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice |  | - |  | Duplicate of S598; Jon chose 'Two slices', session 8d711f67, 2026-11-25. · discovered from S593 | retired |
 | 305 | [S600](slices/S600.md) | While the Goals are lifted, `enter` opens the hidden first row with no cue on screen. |  | 2 |  | discovered from S580 | done |
 | 306 | [S601](slices/S601.md) | Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget) | S | 1 |  | discovered from S588 | — |
