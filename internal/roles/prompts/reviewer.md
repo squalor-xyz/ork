@@ -129,7 +129,9 @@ Accepted (the reason moved into the title line):
 Use this recipe only when the brief says you may write your temp directory. It runs
 a test of your own against the tree without changing the tree. For a revert check,
 read `## Base overlays` in the brief first: it holds ready commands that run a
-package's tests with one changed Go file reverted to the base.
+package's tests with one changed Go file reverted to the base. A probe test imports
+a library by the path listed under `## Go module imports` in the brief, not by a
+path from memory.
 
 1. Write a probe test file with Write in {{temp_dir}}, in the package you probe
    (`{{temp_dir}}/probe_test.go`).

@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/gomodimports.go` (new)\n- `internal/engine/gomodimports_test.go` (new)\n- `internal/engine/round.go:607-619`\n- `internal/roles/prompts/reviewer.md:127-149`\n- `internal/roles/roles_test.go:635-668`\n- `docs/design.md:2041-2066`\n- `docs/design.md:2678-2686`"
+      "body": "- `internal/engine/gomodimports.go` (new)\n- `internal/engine/gomodimports_test.go` (new)\n- `internal/engine/round.go:607-622`\n- `internal/roles/prompts/reviewer.md:127-151`\n- `internal/roles/roles_test.go:635-669`\n- `docs/design.md:2041-2066`\n- `docs/design.md:2678-2686`"
     },
     {
       "heading": "Failing tests",

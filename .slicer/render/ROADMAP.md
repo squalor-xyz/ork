@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-604 items · — 64 · done 406 · retired 134
+604 items · — 63 · done 407 · retired 134
 
 ## v1.3
 
@@ -348,7 +348,7 @@ v1.2
 | 291 | [S586](slices/S586.md) | Mid-pattern `*` in `git -C * SUBCMD*` read-only entries matches write commands that end in the subcommand name |  | 2 |  | discovered from S575 | done |
 | 292 | [S587](slices/S587.md) | Untested call sites: very common names make every call site in a function of that name count as reached. |  | 2 |  | discovered from S564 | done |
 | 293 | [S588](slices/S588.md) | Sweep the remaining scrollable panes: decisions detail, questions detail, waves item pane, settings |  | 2 |  | discovered from S531 | done |
-| 294 | [S589](slices/S589.md) | put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe |  | - |  | discovered from S556 | — |
+| 294 | [S589](slices/S589.md) | put the module's import paths for the Charm libraries in the reviewer brief's probe-test recipe |  | - |  | discovered from S556 | done |
 | 295 | [S590](slices/S590.md) | give the reviewer one test per command in the Base overlays section, so a read-only reviewer never needs a -run regex with a pipe |  | - |  | discovered from S581 | — |
 | 296 | [S591](slices/S591.md) | when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds |  | - |  | Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25. · discovered from S579 | retired |
 | 297 | [S592](slices/S592.md) | allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version |  | - |  | discovered from S571 | — |
