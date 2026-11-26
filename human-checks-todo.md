@@ -350,3 +350,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S584 (run ork-20261126-002418-89aa, 2026-11-26)
 
 - [ ] On the next slice whose diff is only _test.go files under internal/tui, open the ui role's brief in the run directory. It should hold ## No renders expected and no "Produce the required renders" Done-when item. The ui report should say that no renders were expected.
+
+## S569 (run ork-20261126-013618-22bf, 2026-11-26)
+
+- [ ] In the next real reviewer round for a slice that removes a backticked command from a role prompt that docs/ still names, open the reviewer's brief under the run's role files. You should see a ## Stale doc references section listing each docs/...:LINE hit with the command name, and the gate's brief should hold the same section. The run should not have paused for it.
