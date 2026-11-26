@@ -338,3 +338,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S589 (run ork-20261125-224829-7bd0, 2026-11-26)
 
 - [ ] In the next real reviewer round of a Go project, open the reviewer's brief under the run's role files. You should see a ## Go module imports section listing every require path of the worktree's go.mod, for ork charm.land/bubbletea/v2, charm.land/bubbles/v2 and charm.land/lipgloss/v2. In a round of a project with no go.mod, the brief should have no such section.
+
+## S598 (run ork-20261125-232714-f9a7, 2026-11-26)
+
+- [ ] Start a reviewer round on a self-host daemon that ork daemon status reports as behind main, on a slice that changes a Go file. Open the reviewer brief under the run's role files. The ## Base overlays section should open with the "older than this slice's code" line, and the file entries should follow. After ork daemon restart --rebuild, the next round's section should not show that line.
