@@ -6920,6 +6920,11 @@
 {"when": "2026-11-25T22:48:18Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S588):", "by": "Jon Robbins"}
 {"when": "2026-11-25T22:48:19Z", "item": "S588", "action": "note", "from": "", "to": "", "note": "Added four reachable scrolling fixtures, retained three pass", "by": "Jon Robbins"}
 {"when": "2026-11-25T22:48:19Z", "item": "S588", "action": "status", "from": "started", "to": "done", "note": "Added four reachable scrolling fixtures, retained three passing height-40 sweep cases, and documented paging gaps with follow-up slices S601-S604.", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:50:06Z", "item": "S589", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-25T23:54:18Z", "item": "S589", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T00:02:19Z", "item": "S589", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S589):", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:02:19Z", "item": "S589", "action": "note", "from": "", "to": "", "note": "The reviewer brief gets a `## Go module imports` section lis", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:02:20Z", "item": "S589", "action": "status", "from": "started", "to": "done", "note": "The reviewer brief gets a `## Go module imports` section listing the worktree go.mod's require paths (read by ork, advisory, reviewer only, none without go.mod); the reviewer prompt points to it; design.md and the changelog entry are updated; full suite, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
 {"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "add", "from": "", "to": "open", "note": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24"}
 {"when": "2026-11-25T23:08:10Z", "item": "S605", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-25T23:26:45Z", "item": "S569", "action": "note", "from": "", "to": "", "note": "Owner decision: brief section. ork code finds command names ", "by": "Jon Robbins"}
@@ -6954,6 +6959,10 @@
 {"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-25T23:54:52Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-25T23:54:53Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-25T23:56:42Z", "item": "S570", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:07:23Z", "item": "S570", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T00:12:11Z", "item": "S570", "action": "note", "from": "", "to": "", "note": "Added internal/engine/adjguard_test.go, a go/parser test tha", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:12:11Z", "item": "S570", "action": "status", "from": "started", "to": "done", "note": "Added internal/engine/adjguard_test.go, a go/parser test that fails on any Deps.Adj client use in a non-allowlisted engine file that is not under a bool Adj condition; the current tree passes, and the spec's gofmt Check line now names the real path internal/engine.", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:02:11Z", "item": "S574", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:20:08Z", "item": "S574", "action": "note", "from": "", "to": "", "note": "Added the `wave-start-finding` CLI render fixture (a `wave s", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:20:09Z", "item": "S574", "action": "status", "from": "started", "to": "done", "note": "Added the `wave-start-finding` CLI render fixture (a `wave start --yes` that holds S501 on a Check finding and starts S502), listed it in the UI pass brief, guide and design docs; all tests, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
@@ -6989,3 +6998,13 @@
 {"when": "2026-11-26T00:31:56Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-26T00:41:31Z", "item": "S597", "action": "note", "from": "", "to": "", "note": "The ui prompt's Renders section now tells the UI pass to als", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:41:32Z", "item": "S597", "action": "status", "from": "started", "to": "done", "note": "The ui prompt's Renders section now tells the UI pass to also render a view at the test's height as VIEW-WxH.txt and name that size in its report when the changed behavior only shows below 80x24; TestUIPromptNamesAShortFixtureHeight covers it, the slice's gofmt Check line now names the real path, and the full suite, vet, gofmt and slicer check are clean.", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:24:16Z", "item": "S612", "action": "add", "from": "", "to": "open", "note": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output"}
+{"when": "2026-11-26T00:24:17Z", "item": "S612", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "add", "from": "", "to": "open", "note": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output"}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "note", "from": "", "to": "", "note": "possible duplicate of S592", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:33:58Z", "item": "S614", "action": "add", "from": "", "to": "open", "note": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files"}
+{"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "add", "from": "", "to": "open", "note": "before round 1 check that each path argument in a slice Check command exists in the worktree"}
+{"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "promote", "from": "", "to": "", "note": ""}

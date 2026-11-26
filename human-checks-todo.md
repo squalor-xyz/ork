@@ -334,3 +334,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S576 (run ork-20261125-222939-8d33, 2026-11-25)
 
 - [ ] [AFTER LAND] The next time ork spec draft ork ID --json fails with report shape: ..., the error ends with [report kept in .../draft/spec-draft-failed-2.md], and that file holds what the role wrote, so you can see why no block was found.
+
+## S589 (run ork-20261125-224829-7bd0, 2026-11-26)
+
+- [ ] In the next real reviewer round of a Go project, open the reviewer's brief under the run's role files. You should see a ## Go module imports section listing every require path of the worktree's go.mod, for ork charm.land/bubbletea/v2, charm.land/bubbles/v2 and charm.land/lipgloss/v2. In a round of a project with no go.mod, the brief should have no such section.

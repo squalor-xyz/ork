@@ -2075,6 +2075,15 @@ separately.
     base) adds an incomplete-check notice that tells the reviewer to run `git
     show` itself. The section is advisory and never blocks the run. The gate and
     the architect get none;
+  - before the reviewer starts, a `## Go module imports` section when the
+    worktree has a `go.mod` (S589, adj 590, `roles.probe-import-paths`). ork
+    reads the file and lists each `require` path (block and one-line forms,
+    direct and indirect) in file order, once, with no version, `replace`
+    target or module path, so a probe test imports a library by the path the
+    module uses (for example `charm.land/bubbletea/v2`). No `go.mod`, or none
+    with a require line, gives no section. A `go.mod` that cannot be read
+    gives a notice that tells the reviewer to read it itself. The section is
+    advisory and never blocks the run. The gate and the architect get none;
   - before the reviewer starts, a `## Untested call sites` section when a new
     function is called directly by tests while no test reaches the function
     around any of its product call sites (S564, adj 573,
@@ -2694,7 +2703,7 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   the package directory to it, and one `go -C WORKTREE test -overlay` command;
   it applies only when the brief says the reviewer may write its temp
   directory, and it points to the brief's `## Base overlays` section for revert
-  commands.
+  commands and to its `## Go module imports` section for import paths (S589).
   Other calls block on an owner permission question. `ork answer RUN allow`
   or `ork answer RUN deny` answers one call; the run pane offers the same
   choices. The run stays active, with no `PendingQuestion` or resume request.
