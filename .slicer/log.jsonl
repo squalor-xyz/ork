@@ -6985,3 +6985,7 @@
 {"when": "2026-11-26T00:20:07Z", "item": "S611", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T00:20:08Z", "item": "S611", "action": "note", "from": "", "to": "", "note": "possible duplicate of S607", "by": "Jon Robbins"}
 {"when": "2026-11-26T00:23:30Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T00:24:00Z", "item": "S597", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:31:56Z", "item": "S597", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T00:41:31Z", "item": "S597", "action": "note", "from": "", "to": "", "note": "The ui prompt's Renders section now tells the UI pass to als", "by": "Jon Robbins"}
+{"when": "2026-11-26T00:41:32Z", "item": "S597", "action": "status", "from": "started", "to": "done", "note": "The ui prompt's Renders section now tells the UI pass to also render a view at the test's height as VIEW-WxH.txt and name that size in its report when the changed behavior only shows below 80x24; TestUIPromptNamesAShortFixtureHeight covers it, the slice's gofmt Check line now names the real path, and the full suite, vet, gofmt and slicer check are clean.", "by": "Jon Robbins"}

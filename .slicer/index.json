@@ -31677,7 +31677,7 @@
       "id": "S597",
       "title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
       "short_title": "name a preset fixture height in the render brief when the changed behavior only shows below 80x24",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31687,6 +31687,20 @@
           "text": "**2026-11-25** — Owner decision (adj 595): the rule goes in the Renders section of internal/roles/prompts/ui.md: when the changed behavior only shows below 80x24, also render at the height the tests use for that view and name it in the report. Jon chose 'UI prompt', session 8d711f67, 2026-11-25.",
           "created_at": "2026-11-25T23:26:46Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "370c3b92-ec48-4e49-947a-f5cbcf233934",
+          "kind": "",
+          "text": "**2026-11-26** — The ui prompt's Renders section now tells the UI pass to also render a view at the test's height as VIEW-WxH.txt and name that size in its report when the changed behavior only shows below 80x24; TestUIPromptNamesAShortFixtureHeight covers it, the slice's gofmt Check line now names the real path, and the full suite, vet, gofmt and slicer check are clean.",
+          "created_at": "2026-11-26T00:41:31Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -31713,7 +31727,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

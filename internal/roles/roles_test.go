@@ -825,6 +825,27 @@ func TestUIPromptNamesTheOutOfTreeRenderRoute(t *testing.T) {
 	}
 }
 
+// S597 (adj 595): when the changed behavior only shows below 80x24, the UI pass
+// also renders at the height the tests use for that view and names the size.
+func TestUIPromptNamesAShortFixtureHeight(t *testing.T) {
+	p := prompts(t)["ui"]
+	_, renders, ok := strings.Cut(p, "\n## Renders\n")
+	if !ok {
+		t.Fatal("ui prompt has no Renders section")
+	}
+	renders, _, _ = strings.Cut(renders, "\n## Finding kinds\n")
+	for _, want := range []string{
+		"only shows below 80x24",
+		"the height the tests use for that view",
+		"name the size in your report",
+		"VIEW-WxH.txt",
+	} {
+		if !has(renders, want) {
+			t.Errorf("ui Renders lacks %q", want)
+		}
+	}
+}
+
 func ascii(s string) bool {
 	for _, r := range s {
 		if r > 127 {

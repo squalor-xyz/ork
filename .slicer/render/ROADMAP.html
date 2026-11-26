@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">611 items · — 67 · done 410 · retired 134</p>
+<p class="summary">611 items · — 66 · done 411 · retired 134</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -354,7 +354,7 @@
 <tr class="open"><td>299</td><td>S594</td><td>when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds</td><td></td><td>-</td><td></td><td>discovered from S579</td><td class="status">—</td></tr>
 <tr class="done"><td>300</td><td>S595</td><td>`go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem</td><td></td><td>1</td><td></td><td>discovered from S586</td><td class="status">done</td></tr>
 <tr class="done"><td>301</td><td>S596</td><td>when two changed files depend on each other&#x27;s new fields, write a base overlay that reverts both together</td><td></td><td>-</td><td></td><td>discovered from S580</td><td class="status">done</td></tr>
-<tr class="open"><td>302</td><td>S597</td><td>name a preset fixture height in the render brief when the changed behavior only shows below 80x24</td><td></td><td>-</td><td></td><td>discovered from S580</td><td class="status">—</td></tr>
+<tr class="done"><td>302</td><td>S597</td><td>name a preset fixture height in the render brief when the changed behavior only shows below 80x24</td><td></td><td>-</td><td></td><td>discovered from S580</td><td class="status">done</td></tr>
 <tr class="open"><td>303</td><td>S598</td><td>build-check the base overlays with the slice&#x27;s own logic, or say in the brief that the overlay list was made by a binary older than the slice</td><td></td><td>-</td><td></td><td>discovered from S593</td><td class="status">—</td></tr>
 <tr class="retired"><td>304</td><td>S599</td><td>build the reviewer&#x27;s Base overlays section with the slice&#x27;s own binary, or say in the brief that the installed ork predates the slice</td><td></td><td>-</td><td></td><td>Duplicate of S598; Jon chose &#x27;Two slices&#x27;, session 8d711f67, 2026-11-25. · discovered from S593</td><td class="status">retired</td></tr>
 <tr class="done"><td>305</td><td>S600</td><td>While the Goals are lifted, `enter` opens the hidden first row with no cue on screen.</td><td></td><td>2</td><td></td><td>discovered from S580</td><td class="status">done</td></tr>

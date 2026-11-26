@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -run TestUIPromptNamesAShortFixtureHeight ./internal/roles` passes. Before the edit to ui.md it fails, naming the missing phrases.\n- `go test -run TestUIPrompt ./internal/roles` passes. This covers the ASCII check and keeps the prompt free of ork paths and of skill.\n- `go test -run TestUIPromptNamesTheOutOfTreeRenderRoute ./internal/roles` passes.\n- `go test ./...` passes.\n- `go vet ./...` is clean.\n- `gofmt -l ./roles` prints nothing."
+      "body": "- `go test -run TestUIPromptNamesAShortFixtureHeight ./internal/roles` passes. Before the edit to ui.md it fails, naming the missing phrases.\n- `go test -run TestUIPrompt ./internal/roles` passes. This covers the ASCII check and keeps the prompt free of ork paths and of skill.\n- `go test -run TestUIPromptNamesTheOutOfTreeRenderRoute ./internal/roles` passes.\n- `go test ./...` passes.\n- `go vet ./...` is clean.\n- `gofmt -l ./internal/roles` prints nothing."
     },
     {
       "heading": "Git",
