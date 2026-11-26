@@ -6987,3 +6987,6 @@
 {"when": "2026-11-26T00:23:30Z", "item": "S598", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-26T00:24:16Z", "item": "S612", "action": "add", "from": "", "to": "open", "note": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output"}
 {"when": "2026-11-26T00:24:17Z", "item": "S612", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "add", "from": "", "to": "open", "note": "allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output"}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:30:18Z", "item": "S613", "action": "note", "from": "", "to": "", "note": "possible duplicate of S592", "by": "Jon Robbins"}
