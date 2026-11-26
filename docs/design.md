@@ -2301,6 +2301,14 @@ separately.
   local carve; cached material remains available. The daemon still refuses
   open questions against the same spec and a local slice above size S
   without its filed slivers.
+  Ork flags every live slice note recorded after the spec was last written
+  (the newest slicer edit or promote). The check judges each flagged note
+  against Implement and Failing tests, and Files and Check, asking the owner
+  about conflicts (adj 603, `spec.note-after-spec-check`). An owner's answer
+  re-writes Implement through `RecordSpecAnswers`, clearing the flag.
+  Flagged note IDs enter the spec fingerprint, so a new flagged note runs the
+  check again once; without flagged notes the cache key stays unchanged
+  (adj 608, `spec.note-after-spec-cache`).
   It works in the project checkout, not in a worktree, and
   has no engine run record. It begins a ledger run on the batch, records
   `spec-check` steps with no parent, and ends it with `pass` after reading the
