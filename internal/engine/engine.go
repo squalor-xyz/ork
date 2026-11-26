@@ -67,6 +67,16 @@ type Deps struct {
 	Wake           *Wake                                            // the sleep detector (S235); nil means sleep is not detected
 	Project        func(name string) (registry.Project, bool)       // the registered project a tool feedback entry names (S387, *proposed*); nil resolves nothing, so the run's own project is used
 	Hold           *Hold                                            // holds new role starts while the daemon drains for a rebuild (S431, *proposed*); nil holds nothing
+
+	// Behind reports whether the running ork binary is behind main for the
+	// project (S598, *proposed*; adj 591); nil means not behind.
+	Behind func(ctx context.Context, p registry.Project) bool
+}
+
+// behind reports whether the running ork binary is behind main for p. A nil
+// Behind means not behind.
+func (d Deps) behind(ctx context.Context, p registry.Project) bool {
+	return d.Behind != nil && d.Behind(ctx, p)
 }
 
 func (d Deps) now() time.Time {

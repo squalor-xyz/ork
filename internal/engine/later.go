@@ -195,7 +195,7 @@ func (e *Engine) AnswerFinding(ctx context.Context, n int, text, by string) (str
 			return "", fmt.Errorf("ADJ_DECIDED_BY is unset; set it in the caller before filing an answer in adj")
 		}
 		var err error
-		message, err = fileDecision(ctx, e.d, e.wr, e.AdjRoot(), f.Key, f.Title, rec.Item, questionText(f.Ask), text, by)
+		message, _, err = fileDecision(ctx, e.d, e.wr, e.AdjRoot(), f.Key, f.Title, rec.Item, questionText(f.Ask), text, by)
 		if err != nil {
 			return "", err
 		}

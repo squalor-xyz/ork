@@ -203,6 +203,26 @@ func TestProjectBuildCachedUntilHeadMoves(t *testing.T) {
 	check(true, true)
 }
 
+func TestRunDepsBehindFollowsDaemonBuild(t *testing.T) {
+	root, base, git := selfHostRepo(t)
+	d, p := selfHostDaemon(t, root, base)
+	if d.runs.deps.Behind == nil {
+		t.Fatal("run deps have no Behind")
+	}
+	ctx := context.Background()
+	if d.runs.deps.Behind(ctx, p) {
+		t.Fatal("build at main's revision reported behind")
+	}
+	git("commit", "--allow-empty", "-m", "landed")
+	if !d.runs.deps.Behind(ctx, p) {
+		t.Fatal("build not reported behind after a commit landed on main")
+	}
+	d.cfg.BuildID = "dev"
+	if d.runs.deps.Behind(ctx, p) {
+		t.Fatal("a build ID that is not a commit reported behind")
+	}
+}
+
 func TestBaseBranchIsTheMainCheckoutsCurrentBranch(t *testing.T) {
 	root, base, git := selfHostRepo(t)
 	d, p := selfHostDaemon(t, root, base)

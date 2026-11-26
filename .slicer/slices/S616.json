@@ -1,0 +1,39 @@
+{
+  "id": "S616",
+  "title": "when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261126-002418-89aa, project ork, item S584:\n\nwhen a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default\n\nEvidence: the uipass_test.go:897-904 routes leave out .slicer/ and landed-changed/, which hid the dead-feature defect"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

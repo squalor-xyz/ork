@@ -36,22 +36,35 @@ func (e *Engine) FileAnswer(ctx context.Context, text, by string) (string, error
 	if rec.Pending.Ask != nil {
 		title = rec.Pending.Ask.Title
 	}
-	return fileDecision(ctx, e.d, e.wr, e.AdjRoot(), rec.Pending.Key, title, rec.Item, rec.Pending.Question, text, by)
+	notice, id, err := fileDecision(ctx, e.d, e.wr, e.AdjRoot(), rec.Pending.Key, title, rec.Item, rec.Pending.Question, text, by)
+	if err != nil {
+		return "", err
+	}
+	// The rerun brief names the record (S568, adj 592).
+	if err := e.run.Update(func(r *runrec.Record) {
+		if r.Pending != nil {
+			r.Pending.AdjID = id
+		}
+	}); err != nil {
+		return notice, err
+	}
+	return notice, nil
 }
 
 // fileDecision files an owner's answer in adj: it asks the question when the
 // key is not yet open, then decides it. A key that is already decided is left
-// alone. The notice says what happened.
-func fileDecision(ctx context.Context, d Deps, wr runrec.Writer, root, key, title, ref, question, text, by string) (string, error) {
+// alone. The notice says what happened; the id is the adj record, whether the
+// answer decided it or the key was already decided.
+func fileDecision(ctx context.Context, d Deps, wr runrec.Writer, root, key, title, ref, question, text, by string) (string, int, error) {
 	why := "Answered in ork on " + d.now().Format("2006-01-02") + ": " + title
 	id, already, err := decideInAdj(ctx, d, wr, root, key, title, ref, question, text, why, by)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	if already {
-		return fmt.Sprintf("%s already decided as #%d; not changed", key, id), nil
+		return fmt.Sprintf("%s already decided as #%d; not changed", key, id), id, nil
 	}
-	return fmt.Sprintf("decided in adj as #%d", id), nil
+	return fmt.Sprintf("decided in adj as #%d", id), id, nil
 }
 
 // decideInAdj does the adj calls of fileDecision and returns the record's ID,

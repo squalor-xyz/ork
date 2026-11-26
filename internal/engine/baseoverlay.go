@@ -23,6 +23,11 @@ const baseOverlayLimit = 20
 
 const baseOverlayVetTimeout = 2 * time.Minute
 
+// baseOverlayOlderBinaryNote opens the section when the running ork binary is
+// behind main (S598, *proposed*; adj 591): that binary may have no vet step, or
+// an older one, so the list may offer commands that do not build.
+const baseOverlayOlderBinaryNote = "Note: an ork binary older than this slice's code made this list, so it may offer commands that do not build."
+
 // baseOverlaySection checks base overlays for changed non-test Go files (S554,
 // S593, S596), offering test commands unless vet exits non-zero. Per-file commands
 // run tests with only that file reverted to the merge base; when none builds,
@@ -112,6 +117,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	}
 
 	var body strings.Builder
+	if e.d.behind(ctx, e.proj) {
+		body.WriteString(baseOverlayOlderBinaryNote + "\n\n")
+	}
 	if commands > 0 {
 		body.WriteString("Each command runs one package's tests with only that file reverted to the base version (the merge base with the main checkout's branch). ork wrote the base copies and the overlay files under your temp directory. A test this slice added for that file should fail with the file reverted. To run one test, add `-run NAME` before the package in a command. Run one test per command and never join test names in one `-run` pattern: a pipe makes the command compound and it is denied as multiple operations. A command changes nothing in the tree.\n\n")
 	}

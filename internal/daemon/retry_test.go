@@ -12,6 +12,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -413,6 +414,9 @@ type roleGate struct {
 	started chan struct{}
 	release chan struct{}
 	once    sync.Once
+	// brief is the brief of the round that follows an answer (adjAnswerRunGated
+	// sets it before it signals started).
+	brief atomic.Value
 }
 
 func (g *roleGate) open() { g.once.Do(func() { close(g.release) }) }
