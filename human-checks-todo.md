@@ -330,3 +330,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S596 (run ork-20261125-222937-c7ce, 2026-11-25)
 
 - [ ] In the next reviewer round for a slice where two changed Go files depend on each other's new fields, open the reviewer's brief under the run's role files. The ## Base overlays section should show does not build: ... for each single file. It should end with an All changed Go files at once entry holding one go -C ... test -overlay .../overlay-all.json ./PKG ... command. Run it from your shell. It should build, and git -C WORKTREE status --porcelain should be unchanged.
+
+## S576 (run ork-20261125-222939-8d33, 2026-11-25)
+
+- [ ] [AFTER LAND] The next time ork spec draft ork ID --json fails with report shape: ..., the error ends with [report kept in .../draft/spec-draft-failed-2.md], and that file holds what the role wrote, so you can see why no block was found.

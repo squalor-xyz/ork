@@ -197,6 +197,28 @@ type SpecDraftResult struct {
 
 var errDraftTreeChanged = errors.New("spec-draft changed the tree, and it is a read-only role")
 
+// removeFailedDraftReports deletes the failed reports of the previous draft.
+func removeFailedDraftReports(dir string) {
+	old, _ := filepath.Glob(filepath.Join(dir, "spec-draft-failed-*.md"))
+	for _, path := range old {
+		os.Remove(path)
+	}
+}
+
+// keepFailedDraftReport preserves a shape failure and names its path. If the
+// write fails or err is not a shape error, it returns err unchanged.
+func keepFailedDraftReport(dir string, n int, text string, err error) error {
+	var shape *ShapeError
+	if !errors.As(err, &shape) {
+		return err
+	}
+	path := filepath.Join(dir, fmt.Sprintf("spec-draft-failed-%d.md", n))
+	if werr := os.WriteFile(path, []byte(text), 0o600); werr != nil {
+		return err
+	}
+	return &specShapeKept{Cause: shape, Path: path}
+}
+
 // RunSpecDraft drafts the item's spec read-only. It runs the role once per
 // lineup entry until one finishes, as the spec check does. A change in the
 // checkout or in HEAD while the role ran fails the draft and keeps nothing. A
@@ -241,6 +263,8 @@ func RunSpecDraft(ctx context.Context, d Deps, cfg SpecDraftConfig) (*SpecDraftR
 	if err := os.MkdirAll(tempDir, 0o700); err != nil {
 		return nil, fmt.Errorf("temp directory: %w", err)
 	}
+	removeFailedDraftReports(cfg.Dir)
+	failed := 0
 	reportPath := filepath.Join(cfg.Dir, "spec-draft.md")
 	before, err := gitStatusAt(ctx, d, root)
 	if err != nil {
@@ -288,8 +312,12 @@ entries:
 				problem = &specDenialError{text: denialTexts(res.Denials)}
 				nudge = specDenialNudge(res.Denials, []string{cfg.Item})
 			case class == ExitOK:
-				if _, perr := ParseSpecDraft(readSpecReport(reportPath, res.Report)); perr != nil {
-					problem = perr
+				report := readSpecReport(reportPath, res.Report)
+				if _, perr := ParseSpecDraft(report); perr != nil {
+					problem = keepFailedDraftReport(cfg.Dir, failed+1, report, perr)
+					if _, ok := problem.(*specShapeKept); ok {
+						failed++
+					}
 					nudge = "ork checked your report and refused it: " + perr.Error() + "\n\nWrite the whole report again as your final message, as plain text with no code fence: one `## Section NAME` block for each of " + strings.Join(DraftSections, ", ") + " (the new text, or `unchanged`), then `## Owner needed`. You may only read the tree. Do not start the draft over; fix the report from what you already read.\n"
 				}
 			}
@@ -347,6 +375,7 @@ entries:
 	if err != nil {
 		return nil, err
 	}
+	removeFailedDraftReports(cfg.Dir)
 	if err := os.WriteFile(reportPath, []byte(text), 0o600); err != nil {
 		return nil, fmt.Errorf("save spec draft: %w", err)
 	}
