@@ -30175,6 +30175,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f8b19d2a-b245-4304-9fb5-2a17182044ad",
+          "kind": "",
+          "text": "**2026-11-26** — Owner decisions (adj 597, 598): every command name in a removed prompt line is searched in docs/ even if added back elsewhere; a command name is the first two lowercase words of a backticked span (adj check, slicer show, go test), and a span with a flag or uppercase second word gives none. Section is advisory and capped at 20 hits. Files: internal/engine/staledocs.go (new), staledocs_test.go (new), round.go, docs/design.md. Jon chose 'Any name in a removed line' and 'Tool + subcommand', session 8d711f67, 2026-11-26.",
+          "created_at": "2026-11-26T00:04:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2f364d6e-ab8b-4646-9b7b-ce8c7c462f61",
+          "kind": "",
+          "text": "**2026-11-26** — Correction: the decisions in the note above are adj 598 (removed names) and adj 599 (command name), not 597 and 598.",
+          "created_at": "2026-11-26T00:05:35Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
