@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-606 items · — 63 · done 409 · retired 134
+606 items · — 62 · done 410 · retired 134
 
 ## v1.3
 
@@ -335,7 +335,7 @@ v1.2
 | 278 | [S573](slices/S573.md) | Spec-answer question text can flag paths the owner did not choose |  | 1 |  | discovered from S560 | done |
 | 279 | [S574](slices/S574.md) | add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test |  | - |  | discovered from S563 | — |
 | 280 | [S575](slices/S575.md) | allow read-only `git merge-base` for reviewer roles, so a reviewer can name the base commit an overlay is built from |  | - |  | discovered from S554 | done |
-| 281 | [S576](slices/S576.md) | spec draft: keep the role's raw report when the report shape check fails, and name its path in the error | S | - |  |  | — |
+| 281 | [S576](slices/S576.md) | spec draft: keep the role's raw report when the report shape check fails, and name its path in the error | S | - |  |  | done |
 | 282 | [S577](slices/S577.md) | When a base overlay reverts a file that defines a new helper used elsewhere, say in the brief that the package will not build, or give a two-file overlay |  | - |  | Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25. · discovered from S572 | retired |
 | 283 | [S578](slices/S578.md) | Do not split a Check criterion phrase starting with a dash flag into a runnable Check row |  | - |  | Already fixed: withoutAcceptanceCriteria (internal/engine/brief.go:886, S407) drops criteria bullets before the backtick split, tested by TestCheckSectionsSkipAcceptanceCriteria. Jon chose 'Retire as fixed', session 8d711f67, 2026-11-25. · discovered from S572 | retired |
 | 284 | [S579](slices/S579.md) | Roadmap item pane page keys skip the line under the more-lines marker |  | - |  | discovered from S531 | done |
