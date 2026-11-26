@@ -30457,10 +30457,25 @@
       "id": "S574",
       "title": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test",
       "short_title": "add a wave-start-finding fixture to the CLI render flag so a held-on-finding view renders without an overlay test",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f70a63ea-4323-4cb8-ab85-8ce94dd839f7",
+          "kind": "",
+          "text": "**2026-11-26** — Added the `wave-start-finding` CLI render fixture (a `wave start --yes` that holds S501 on a Check finding and starts S502), listed it in the UI pass brief, guide and design docs; all tests, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-26T00:20:08Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -30478,7 +30493,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
