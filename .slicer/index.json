@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 617,
+  "next_id": 618,
   "preamble": "",
   "passes": [
     {
@@ -32397,6 +32397,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-f99de795",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S617",
+      "title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
+      "short_title": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S592",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1bb11684",
         "pass": "v1.2",
         "group": "",
         "reason": "",

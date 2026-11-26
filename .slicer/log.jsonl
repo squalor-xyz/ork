@@ -7010,3 +7010,5 @@
 {"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T00:50:16Z", "item": "S616", "action": "add", "from": "", "to": "open", "note": "when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default"}
 {"when": "2026-11-26T00:50:17Z", "item": "S616", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:52:18Z", "item": "S617", "action": "add", "from": "", "to": "open", "note": "flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts"}
+{"when": "2026-11-26T00:52:18Z", "item": "S617", "action": "promote", "from": "", "to": "", "note": ""}
