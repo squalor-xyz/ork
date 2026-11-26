@@ -7015,3 +7015,5 @@
 {"when": "2026-11-26T00:33:59Z", "item": "S614", "action": "edit", "from": "", "to": "", "note": "Why"}
 {"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "add", "from": "", "to": "open", "note": "before round 1 check that each path argument in a slice Check command exists in the worktree"}
 {"when": "2026-11-26T00:41:30Z", "item": "S615", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T00:50:16Z", "item": "S616", "action": "add", "from": "", "to": "open", "note": "when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default"}
+{"when": "2026-11-26T00:50:17Z", "item": "S616", "action": "promote", "from": "", "to": "", "note": ""}
