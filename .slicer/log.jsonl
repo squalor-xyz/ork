@@ -7097,3 +7097,9 @@
 {"when": "2026-11-26T02:51:19Z", "item": "S621", "action": "add", "from": "", "to": "open", "note": "ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap"}
 {"when": "2026-11-26T02:51:19Z", "item": "S621", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T02:51:19Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-26T02:57:11Z", "item": "S622", "action": "add", "from": "", "to": "open", "note": "For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test"}
+{"when": "2026-11-26T02:57:11Z", "item": "S622", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T03:07:41Z", "item": "S623", "action": "add", "from": "", "to": "open", "note": "when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only"}
+{"when": "2026-11-26T03:07:41Z", "item": "S623", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T03:33:26Z", "item": "S624", "action": "add", "from": "", "to": "open", "note": "add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames"}
+{"when": "2026-11-26T03:33:27Z", "item": "S624", "action": "promote", "from": "", "to": "", "note": ""}

@@ -1,0 +1,39 @@
+{
+  "id": "S622",
+  "title": "For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261126-021913-1034, project ork, item S617:\n\nFor a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test\n\nEvidence: overlay-1.json (handlers.go) and overlay-3.json (speccheck_state.go) both passed ./internal/daemon in full"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
