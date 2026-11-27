@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-631 items · — 59 · done 427 · retired 145
+631 items · — 58 · done 427 · retired 146
 
 ## v1.3
 
@@ -364,7 +364,7 @@ v1.2
 | 307 | [S602](slices/S602.md) | Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
 | 308 | [S603](slices/S603.md) | Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
 | 309 | [S604](slices/S604.md) | Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
-| 310 | [S605](slices/S605.md) | allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24 |  | - |  | discovered from S600 | — |
+| 310 | [S605](slices/S605.md) | allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24 |  | - |  | Covered by S597: ui.md allows VIEW-WxH.txt and the approval card lists extra .txt renders; Jon chose 'Retire as covered', session 8d711f67, 2026-11-27. · discovered from S600 | retired |
 | 311 | [S606](slices/S606.md) | say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing |  | - |  | discovered from S596 | — |
 | 312 | [S607](slices/S607.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list |  | - |  | discovered from S574 | done |
 | 313 | [S608](slices/S608.md) | Strip quotes from quoted require paths in goModRequirePaths |  | 1 |  | discovered from S589 | done |

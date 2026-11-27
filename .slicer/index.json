@@ -32228,7 +32228,7 @@
       "id": "S605",
       "title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
       "short_title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32245,7 +32245,7 @@
         "key": "tool-feedback-ork-ea964bdc",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Covered by S597: ui.md allows VIEW-WxH.txt and the approval card lists extra .txt renders; Jon chose 'Retire as covered', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -32259,7 +32259,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bd3f37f4-51fb-46a3-9462-3d5f6bbc2cf8",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision: one generic line in the reviewer and gate briefs (internal/engine/brief.go:440), like the implementer line (adj 519): socket-bound test failures in the sandbox are sandbox-limited, ork's round check is the evidence, and the reviewer need not run go test ./...; names no packages. Jon chose 'Generic line', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:43:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32914,6 +32929,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6ee3766b-ba7f-4fd1-8707-739814b7c624",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (key base-overlays.importer-packages): ork runs go -C WORKTREE list for the module's packages and adds one overlay test command per package that directly imports the reverted file's package (test imports included), each vetted by overlayBuildError. Jon chose 'Direct importers via go list', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:43:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32992,6 +33021,20 @@
           "kind": "",
           "text": "**2026-11-27** — Also covers S623: when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change. Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T13:03:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "24ac087c-935d-4929-81fa-f0a28f4fca80",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (key reviewer.overlay-pass-note): ork runs each overlay's go test while building the section (bounded, advisory, like the vet step) and marks files whose package passes in full with the file reverted; when every changed Go file is a _test.go file, it says a base overlay cannot isolate the change. Jon chose 'Run at brief', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:43:11Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
