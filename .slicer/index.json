@@ -34447,6 +34447,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "2bae4f64-0664-40d9-8db8-93df1aa23361",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decisions (adj 663, 664): per-test lines go -C WT test -overlay F -count=1 -run '^TestName$' PKG for each test in the changed test files; a live vet sample quoting the first line of a real overlay vet failure, omitted when none fails; and a product-only overlay that reverts only the product file and keeps the new tests (red by compile error). Jon chose 'Per-test lines + live sample' and 'Keep tests, compile red', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -34575,7 +34589,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7059ed1c-e048-4da7-84e6-3aa0e35c2311",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 665): a go test in internal/docscheck diffs docs against main and flags an inserted doc line that touches an unchanged non-blank line (before or after); it skips when git or main is absent. Jon chose 'Diff rule', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -34603,7 +34632,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e61a2870-7958-4231-9795-f85fb43f9d71",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 666): a go test lint in internal/engine that fails when a BuildBrief sentence gated on role has a permission grant gated on vendor; the spec names the sentence and grant. Jon chose 'go test lint', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -35047,6 +35091,20 @@
           "kind": "",
           "text": "**2026-11-27** — Also covers S538 finding 1: the UI brief's render sections (internal/engine/brief.go:233-238) should tell the pass to run -renders with the renders directory as DIR, not copy files (a read-only pass cannot cp). Jon chose 'One slice for both', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T21:56:13Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4bdebe0e-b947-41a7-aa83-10dbe4ba5c31",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 662): write ## CLI text renders and ## TUI renders only when the worktree has the render tests (e.g. TestRenderCLIViews, TestRenderTUIViews); otherwise a short generic ## Renders section pointing at the project's AGENTS.md and docs (like the fallback at brief.go:247). Jon chose 'Detect in worktree + brief fallback', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
