@@ -1,0 +1,39 @@
+{
+  "id": "S662",
+  "title": "allow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-220102-7cc8, project ork, item S526:\n\nallow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search\n\nEvidence: `rg -n \"in\\.Allow|...\" /home/jon/code/squalor-xyz/ork/.worktrees/S526/internal/engine/brief.go` was denied as needing approval"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

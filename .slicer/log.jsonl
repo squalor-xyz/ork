@@ -7606,3 +7606,6 @@
 {"when": "2026-11-27T22:10:48Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Owner decisions (adj 663, 664): per-test lines go -C WT test", "by": "Jon Robbins"}
 {"when": "2026-11-27T22:10:48Z", "item": "S647", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 665): a go test in internal/docscheck di", "by": "Jon Robbins"}
 {"when": "2026-11-27T22:10:48Z", "item": "S648", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 666): a go test lint in internal/engine ", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "add", "from": "", "to": "open", "note": "allow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search"}
+{"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "note", "from": "", "to": "", "note": "possible duplicate of S650", "by": "Jon Robbins"}
