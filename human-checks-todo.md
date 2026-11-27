@@ -383,3 +383,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S450 (run ork-20261127-194937-ac89, 2026-11-27)
 
 - [ ] On the next slice whose diff is only internal/cli _test.go files and docs, open the ui role's brief in the run directory. It should hold ## No renders expected for CLI tests and docs and no "Produce the required renders" Done-when item. On the next slice that changes CLI output text, the UI brief should hold ## Renders are identical at every size, and the role should write one VIEW-80x24.txt for each view.
+
+## S538 (run ork-20261127-194957-90f9, 2026-11-27)
+
+- [ ] Open the UI pass brief in the next UI round. You should see a ## TUI renders section with the go test ./internal/tui ... -renders command and the fixture names. Open AGENTS.md and internal/roles/prompts/ui.md. You should see no overlay JSON recipe.
