@@ -1,0 +1,39 @@
+{
+  "id": "S633",
+  "title": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #619 was decided to file it:\n\nProposal: add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output\nRole: ui\nRun: ork-20261127-131403-3844\nProject: ork\nItem: S621\nEvidence: the -render-fixture list in the brief has no wait view; I wrote TestRenderWaitOverlay to render it"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -7231,3 +7231,17 @@
 {"when": "2026-11-27T13:43:11Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Owner decision (key reviewer.overlay-pass-note): ork runs ea", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:45:17Z", "item": "S632", "action": "add", "from": "", "to": "open", "note": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file"}
 {"when": "2026-11-27T13:45:18Z", "item": "S632", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:11:40Z", "item": "S633", "action": "add", "from": "", "to": "open", "note": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output"}
+{"when": "2026-11-27T14:11:40Z", "item": "S633", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:11:41Z", "item": "S634", "action": "add", "from": "", "to": "open", "note": "give a base overlay for check.go that also reverts brief.go when brief.go reads the new field, so the check.go revert check builds"}
+{"when": "2026-11-27T14:11:41Z", "item": "S634", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:11:45Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T14:11:45Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:11:45Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:11:45Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T14:11:45Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T14:11:45Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T14:11:46Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:11:46Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:11:46Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T14:11:46Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Check"}
