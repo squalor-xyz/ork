@@ -7341,3 +7341,5 @@
 {"when": "2026-11-27T16:03:52Z", "item": "S634", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T16:18:51Z", "item": "S640", "action": "add", "from": "", "to": "open", "note": "in Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line"}
 {"when": "2026-11-27T16:18:52Z", "item": "S640", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T16:38:29Z", "item": "S641", "action": "add", "from": "", "to": "open", "note": "in render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record"}
+{"when": "2026-11-27T16:38:29Z", "item": "S641", "action": "promote", "from": "", "to": "", "note": ""}

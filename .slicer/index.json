@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 641,
+  "next_id": 642,
   "preamble": "",
   "passes": [
     {
@@ -33792,6 +33792,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-6c80cb71",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S641",
+      "title": "in render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record",
+      "short_title": "in render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S633",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b0e30bc2",
         "pass": "v1.2",
         "group": "",
         "reason": "",
