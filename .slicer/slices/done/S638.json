@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "`internal/cli/render_test.go:459` (`TestRenderFixtureDocsListEveryFixture`); `docs/guide.md:1005` (fixture list and check description); `docs/design.md:834` (fixture list and check description); `landed-changed/S638.md` (via slicer changelog add)."
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "No new tests specified. Strengthen `TestRenderFixtureDocsListEveryFixture`: removing an exact fixture name only from the -render-fixture list must fail even when the name remains elsewhere in the document. Check missing list boundaries explicitly."
     },
     {
       "heading": "Implement",

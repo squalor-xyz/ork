@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-638 items · — 61 · done 431 · retired 146
+638 items · — 60 · done 432 · retired 146
 
 ## v1.3
 
@@ -397,7 +397,7 @@ v1.2
 | 340 | [S635](slices/S635.md) | when an owner answer arrives and the tree is unchanged, say in the resumed brief that no fix round ran yet |  | - |  | discovered from S615 | — |
 | 341 | [S636](slices/S636.md) | Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing | S | - |  |  | — |
 | 342 | [S637](slices/S637.md) | give the gate a fresh base overlay for the fix round's changed file so a revert check runs without the earlier role temp dir |  | - |  | discovered from S615 | — |
-| 343 | [S638](slices/S638.md) | Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document |  | 1 |  | discovered from S611 | — |
+| 343 | [S638](slices/S638.md) | Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document |  | 1 |  | discovered from S611 | done |
 
 ---
 

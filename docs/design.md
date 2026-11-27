@@ -845,7 +845,8 @@ slice.
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
     names for the approval card.
     `TestRenderFixtureDocsListEveryFixture` checks that this document and the
-    guide include every additional render fixture by its exact name.
+    guide include every additional render fixture by its exact name in their
+    `-render-fixture` lists, ignoring mentions elsewhere in the documents.
     No renders expected (*proposed*, S584; adj 600): ork skips the run's own
     tracking paths under `.slicer/` and `landed-changed/` in the branch's diff.
     When at least one path is left and every path left is a `_test.go` file
