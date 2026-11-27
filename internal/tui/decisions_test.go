@@ -470,8 +470,8 @@ func TestDecisionsFixScrollIsTopLineAndClamped(t *testing.T) {
 		t.Error("one up did not restore the initial view")
 	}
 	h.send(tea.KeyPressMsg{Code: tea.KeyPgDown})
-	if h.m.decisionScroll != 25 { // the 26 rows of the body less the hint line (S149)
-		t.Errorf("pgdown offset %d, want page 25", h.m.decisionScroll)
+	if h.m.decisionScroll != 24 { // the 26 body rows less the hint and more-lines marker
+		t.Errorf("pgdown offset %d, want page 24", h.m.decisionScroll)
 	}
 	h.send(tea.KeyPressMsg{Code: tea.KeyPgUp})
 	if h.m.decisionScroll != 0 {

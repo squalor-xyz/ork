@@ -1,0 +1,39 @@
+{
+  "id": "S632",
+  "title": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-131403-3844, project ork, item S621:\n\nFor a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file\n\nEvidence: Base overlays said internal/cli/wait.go does not build (unknown field slotWait at wait_test.go:694), so the revert was confirmed only by trace"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

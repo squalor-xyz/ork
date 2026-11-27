@@ -39,7 +39,11 @@ func (e *Engine) setup(ctx context.Context) error {
 		return e.stop(ctx, "setup: "+err.Error())
 	}
 	if _, err := os.Stat(rec.Worktree); errors.Is(err, os.ErrNotExist) {
-		if reason := e.commitLaunchTracking(ctx, rec.Item); reason != "" {
+		reason, err := e.launchTracking(ctx, rec.Item)
+		if err != nil {
+			return err
+		}
+		if reason != "" {
 			return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateSetup, Reason: reason})
 		}
 	}

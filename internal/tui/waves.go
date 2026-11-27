@@ -911,7 +911,7 @@ func (m *Model) waveItemKey(msg tea.KeyPressMsg) tea.Cmd {
 	case "pgdown", "pgup":
 		width, height, side := m.layoutSize()
 		headerLines := len(wrapText("Item "+m.waves.pane.id+"  (esc returns)", max(width-side, 1)))
-		step := max(height-4-headerLines, 1)
+		step := max(height-5-headerLines, 1)
 		if msg.String() == "pgup" {
 			step = -step
 		}

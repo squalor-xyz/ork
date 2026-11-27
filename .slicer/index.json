@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 629,
+  "next_id": 633,
   "preamble": "",
   "passes": [
     {
@@ -32073,7 +32073,7 @@
       "id": "S601",
       "title": "Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget)",
       "short_title": "Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget)",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32083,6 +32083,34 @@
           "text": "**2026-11-27** — Also covers S602 (questions detail, shared scrollDecision marker budget), S603 (waves item pane, waveItemKey marker budget, heights 10-40) and S604 (settings pane, settingsKey marker and pinned heading budget). Apply S579's page-step fix (page by room minus the lines the draw spends on markers) to all four panes and re-enable their TestScrollSweep cases. Jon chose 'One slice', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T13:03:14Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "6512ee34-4a99-4169-9468-32b19016acf0",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S601):\n- later: Open a long record on Decisions at 80x24 and press pgdown to the end. Each page should start with the line that sat under the \"+N more lines\" marker on the page before. Press pgup back up the same way. Do the same in a Questions detail, a Waves item pane and the Settings pane (S on the Roadmap). In Settings, a page that starts inside a block shows that block's dim heading under the \"+N lines above\" marker and still starts at the next unseen row.",
+          "created_at": "2026-11-27T13:32:27Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "16c964d0-7df7-40ec-aac0-8e65db66e001",
+          "kind": "",
+          "text": "**2026-11-27** — Decisions and Questions details, Waves items and Settings show every content line when paging down and back at width 80 and heights 10, 16, 24 and 40, verified by restored sweeps and seven failing mutations.",
+          "created_at": "2026-11-27T13:32:27Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -32109,7 +32137,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32200,7 +32228,7 @@
       "id": "S605",
       "title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
       "short_title": "allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32217,7 +32245,7 @@
         "key": "tool-feedback-ork-ea964bdc",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Covered by S597: ui.md allows VIEW-WxH.txt and the approval card lists extra .txt renders; Jon chose 'Retire as covered', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -32231,7 +32259,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bd3f37f4-51fb-46a3-9462-3d5f6bbc2cf8",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision: one generic line in the reviewer and gate briefs (internal/engine/brief.go:440), like the implementer line (adj 519): socket-bound test failures in the sandbox are sandbox-limited, ork's round check is the evidence, and the reviewer need not run go test ./...; names no packages. Jon chose 'Generic line', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:43:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32541,7 +32584,7 @@
       "id": "S614",
       "title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
       "short_title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32572,6 +32615,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "a84e7ddb-7fbe-4e5a-8103-e5d47fc613af",
+          "kind": "",
+          "text": "**2026-11-27** — S614 is complete and the check is green: landings and run-start tracking commits share the per-repository lock ork-main.lock and retry once when main moved, and the daemon test helper now keeps the git common dir under the test root so the three TestProjectsSet* tests pass again; go test ./... all ok, vet, gofmt and slicer check clean.",
+          "created_at": "2026-11-27T13:17:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32591,7 +32648,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32872,6 +32929,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6ee3766b-ba7f-4fd1-8707-739814b7c624",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (key base-overlays.importer-packages): ork runs go -C WORKTREE list for the module's packages and adds one overlay test command per package that directly imports the reverted file's package (test imports included), each vetted by overlayBuildError. Jon chose 'Direct importers via go list', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:43:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32964,6 +33035,20 @@
           "kind": "",
           "text": "**2026-11-27** — Also covers S623: when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change. Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T13:03:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "24ac087c-935d-4929-81fa-f0a28f4fca80",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (key reviewer.overlay-pass-note): ork runs each overlay's go test while building the section (bounded, advisory, like the vet step) and marks files whose package passes in full with the file reverted; when every changed Go file is a _test.go file, it says a base overlay cannot isolate the change. Jon chose 'Run at brief', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:43:11Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -33201,6 +33286,118 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Merged into S620; Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S629",
+      "title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
+      "short_title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S614",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1547b44a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S630",
+      "title": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused",
+      "short_title": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S614",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-922f0eae",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S631",
+      "title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
+      "short_title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S605",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0b7ca38d",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S632",
+      "title": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file",
+      "short_title": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S621",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ea92a1d6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,

@@ -88,7 +88,11 @@ func (m *Model) decisionPage() (w, visible int) {
 func (m *Model) scrollDecision(delta int, page bool) {
 	w, visible := m.decisionPage()
 	if page {
-		delta *= visible
+		step := visible
+		if visible >= 3 {
+			step-- // the more-lines marker occupies the last row
+		}
+		delta *= step
 	}
 	detail := recordDetailLines(*m.decisionPane, w, m.cfg.Theme, m.decisionAnswerable())
 	last := max(len(detail)-visible, 0)

@@ -354,3 +354,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S569 (run ork-20261126-013618-22bf, 2026-11-26)
 
 - [ ] In the next real reviewer round for a slice that removes a backticked command from a role prompt that docs/ still names, open the reviewer's brief under the run's role files. You should see a ## Stale doc references section listing each docs/...:LINE hit with the command name, and the gate's brief should hold the same section. The run should not have paused for it.
+
+## S601 (run ork-20261127-131401-a265, 2026-11-27)
+
+- [ ] Open a long record on Decisions at 80x24 and press pgdown to the end. Each page should start with the line that sat under the "+N more lines" marker on the page before. Press pgup back up the same way. Do the same in a Questions detail, a Waves item pane and the Settings pane (S on the Roadmap). In Settings, a page that starts inside a block shows that block's dim heading under the "+N lines above" marker and still starts at the next unseen row.
