@@ -4,17 +4,136 @@ package engine
 
 import (
 	"context"
+	"errors"
 	"os"
 	"path/filepath"
 	"sort"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/squalor-xyz/ork/internal/clitest"
 	"github.com/squalor-xyz/ork/internal/registry"
 	"github.com/squalor-xyz/ork/internal/runrec"
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
+
+func launchLockEngine(t *testing.T, h *harness) *Engine {
+	t.Helper()
+	writeFile(t, filepath.Join(h.P, ".slicer/slices/S04.json"), "edited\n")
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	e.proj = h.proj
+	return e
+}
+
+func TestLaunchTrackingWaitsForTheMainLock(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	e := launchLockEngine(t, h)
+	before := gitRun(t, h.P, "rev-parse", "HEAD")
+	release, err := lockMainFile(context.Background(), filepath.Join(h.P, ".git", "ork-main.lock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- e.setup(ctx) }()
+	select {
+	case err := <-done:
+		t.Fatalf("setup returned while locked: %v", err)
+	case <-time.After(200 * time.Millisecond):
+	}
+	if got := gitRun(t, h.P, "rev-parse", "HEAD"); got != before {
+		t.Errorf("main moved while locked: %s", got)
+	}
+	if _, err := os.Stat(e.Snapshot().Worktree); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("worktree exists while locked: %v", err)
+	}
+	release()
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateImplement)
+	if got := gitRun(t, h.P, "log", "-1", "--format=%s"); got != "Tracking edits on main before starting S04" {
+		t.Errorf("tracking commit: %q", got)
+	}
+}
+
+func TestLaunchTrackingWaitGivesUpOnCancel(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	e := launchLockEngine(t, h)
+	release, err := lockMainFile(context.Background(), filepath.Join(h.P, ".git", "ork-main.lock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- e.setup(ctx) }()
+	time.Sleep(200 * time.Millisecond)
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Fatalf("setup: %v, want context.Canceled", err)
+	}
+	rec := requireState(t, e, runrec.StateSetup)
+	if rec.Pending != nil {
+		t.Errorf("setup paused: %+v", rec.Pending)
+	}
+}
+
+func launchMovingGit(t *testing.T, h *harness, always bool) {
+	t.Helper()
+	path := filepath.Join(t.TempDir(), "gitw")
+	again := "[ ! -e \"$0.once\" ]"
+	if always {
+		again = "true"
+	}
+	writeFile(t, path, "#!/bin/sh\nif [ \"$3\" = commit ] && "+again+"; then\n touch \"$0.once\"\n git -C \"$2\" commit --allow-empty --only -qm outside || exit 2\n printf 'commit moved\\nsecond line\\n' >&2\n exit 1\nfi\nexec git \"$@\"\n")
+	if err := os.Chmod(path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	h.deps.GitBin = path
+}
+
+func TestLaunchTrackingRetriesOnceWhenMainMovedMeanwhile(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	launchMovingGit(t, h, false)
+	e := launchLockEngine(t, h)
+	if err := e.setup(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, e, runrec.StateImplement)
+	if got := gitRun(t, h.P, "log", "-2", "--format=%s"); got != "Tracking edits on main before starting S04\noutside" {
+		t.Errorf("main commits: %q", got)
+	}
+	if got := gitRun(t, h.P, "show", "HEAD:.slicer/slices/S04.json"); got != "edited" {
+		t.Errorf("tracking output: %q", got)
+	}
+}
+
+func TestLaunchTrackingPausesWhenTheRetryFailsToo(t *testing.T) {
+	h := launchTrackingHarness(t, false)
+	launchMovingGit(t, h, true)
+	e := launchLockEngine(t, h)
+	if err := e.setup(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	rec := requireState(t, e, runrec.StatePaused)
+	if rec.Pending == nil || rec.Pending.State != runrec.StateSetup || !strings.HasPrefix(rec.Reason, "git commit:") || strings.Contains(rec.Reason, "\n") {
+		t.Errorf("setup pause: %+v", rec)
+	}
+	if got := gitRun(t, h.P, "log", "--format=%s", "--grep=^outside$"); got != "outside\noutside" {
+		t.Errorf("outside commits: %q, want two", got)
+	}
+	if _, err := os.Stat(rec.Worktree); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("worktree exists after failure: %v", err)
+	}
+}
 
 func TestLaunchTrackingListedSlices(t *testing.T) {
 	for _, tracked := range []string{"", ".slicer/slices/S901.json", ".slicer/render/slices/S901.md"} {
@@ -337,6 +456,9 @@ func TestLandFastForwardFailureIsOneLine(t *testing.T) {
 	rec := requireState(t, env.e, runrec.StatePaused)
 	if strings.Contains(rec.Reason, "\n") || !strings.HasPrefix(rec.Reason, "git merge --ff-only "+item+": ") || !strings.Contains(rec.Reason, "fatal: one fatal: two") {
 		t.Errorf("reason %q", rec.Reason)
+	}
+	if n := strings.Count(strings.Join(env.gitCalls(), "\n"), "P: merge --ff-only "+item); n != 1 {
+		t.Errorf("%d fast-forward attempts, want 1", n)
 	}
 }
 
@@ -714,7 +836,11 @@ func TestLandDirtyCheckReadErrorsPause(t *testing.T) {
 				writeFile(t, filepath.Join(env.W, "shared.txt"), "slice\n")
 				writeFile(t, filepath.Join(env.P, "shared.txt"), "owner\n")
 			}
-			script := strings.Replace(fakeGitScript, "exec git", "if [ \"$2\" = \""+env.P+"\" ] && [ \"$3\" = "+tc.op+" ]; then echo \"read broke\" >&2; exit 1; fi\nexec git", 1)
+			guard := ""
+			if tc.op == "rev-parse" {
+				guard = " && [ \"$4\" = --show-prefix ]"
+			}
+			script := strings.Replace(fakeGitScript, "exec git", "if [ \"$2\" = \""+env.P+"\" ] && [ \"$3\" = "+tc.op+" ]"+guard+"; then echo \"read broke\" >&2; exit 1; fi\nexec git", 1)
 			replaceFake(t, filepath.Join(env.fakes, "gitw"), script)
 			env.approve()
 			rec := requireState(t, env.e, runrec.StatePaused)

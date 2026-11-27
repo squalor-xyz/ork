@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 629,
+  "next_id": 632,
   "preamble": "",
   "passes": [
     {
@@ -32569,7 +32569,7 @@
       "id": "S614",
       "title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
       "short_title": "landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32600,6 +32600,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "a84e7ddb-7fbe-4e5a-8103-e5d47fc613af",
+          "kind": "",
+          "text": "**2026-11-27** — S614 is complete and the check is green: landings and run-start tracking commits share the per-repository lock ork-main.lock and retry once when main moved, and the daemon test helper now keeps the git common dir under the test root so the three TestProjectsSet* tests pass again; go test ./... all ok, vet, gofmt and slicer check clean.",
+          "created_at": "2026-11-27T13:17:11Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32619,7 +32633,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33215,6 +33229,90 @@
         "pass": "v1.2",
         "group": "",
         "reason": "Merged into S620; Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S629",
+      "title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
+      "short_title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S614",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1547b44a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S630",
+      "title": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused",
+      "short_title": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S614",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-922f0eae",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S631",
+      "title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
+      "short_title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S605",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0b7ca38d",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
         "importance": 2,
         "urgency": 2,
         "effort": null,

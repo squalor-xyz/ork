@@ -47,6 +47,7 @@ d=$(dirname "$0")
 echo "$@" >> "$d/git.log"
 if [ "$3" = merge ] && [ "$4" = -m ] && [ -f "$d/merge-fails" ]; then echo "merge broke" >&2; exit 1; fi
 if [ "$3" = merge ] && [ "$4" = --ff-only ] && [ -f "$d/ff-fails" ]; then rm "$d/ff-fails"; printf 'fatal: one\nfatal: two\n' >&2; exit 1; fi
+if [ "$3" = merge ] && [ "$4" = --ff-only ] && [ -f "$d/ff-moves" ]; then rm "$d/ff-moves"; git -C "$2" commit --allow-empty -qm outside || exit 1; fi
 if [ "$3" = status ] && [ -f "$d/status-fails" ] && [ "$2" = "$(cat "$d/status-fails")" ]; then echo "status broke" >&2; exit 1; fi
 for op in add commit; do
 	if [ "$3" = "$op" ] && [ -f "$d/$op-fails" ]; then rm "$d/$op-fails"; echo "$op broke" >&2; exit 1; fi
@@ -1368,16 +1369,16 @@ func TestLandAfterConflictRetryCommitsTrackingThenMerges(t *testing.T) {
 func TestLandPausesWhenBaseKeepsMoving(t *testing.T) {
 	env := newLandEnv(t)
 	env.moveBase("base.txt", "from main\n")
-	texts := []string{"one\n", "two\n"}
+	texts := []string{"one\n", "two\n", "three\n", "four\n"}
 	n := 0
 	env.beforeCheck = func() {
-		env.moveBase("later.txt", texts[n])
+		env.moveBase("later.txt", texts[n%len(texts)])
 		n++
 	}
 	env.approve()
 	rec := requireState(t, env.e, runrec.StatePaused)
-	if len(env.seen) != 2 {
-		t.Errorf("%d re-checks, want 2", len(env.seen))
+	if len(env.seen) != 4 {
+		t.Errorf("%d re-checks, want 4", len(env.seen))
 	}
 	if strings.Contains(rec.Reason, "\n") || !strings.HasPrefix(rec.Reason, "git merge --ff-only "+item+": ") || !strings.Contains(rec.Reason, "fatal: Not possible to fast-forward, aborting.") {
 		t.Errorf("reason %q", rec.Reason)
@@ -1388,7 +1389,101 @@ func TestLandPausesWhenBaseKeepsMoving(t *testing.T) {
 	if indexOf(env.log("slicer.log"), "land ") >= 0 {
 		t.Errorf("slicer land ran")
 	}
-	if got := gitRun(t, env.P, "rev-list", "--merges", "--count", item); got != "2" {
-		t.Errorf("%s merge commits on %s, want 2", got, item)
+	if got := gitRun(t, env.P, "rev-list", "--merges", "--count", item); got != "4" {
+		t.Errorf("%s merge commits on %s, want 4", got, item)
 	}
+}
+
+func TestLandRetriesTheFastForwardOnceWhenMainMoved(t *testing.T) {
+	env := newLandEnv(t)
+	writeFile(t, filepath.Join(env.fakes, "ff-moves"), "")
+	env.approve()
+	requireState(t, env.e, runrec.StateCommitted)
+	if got := gitRun(t, env.P, "log", "--format=%s", "main"); !strings.Contains(got, "outside") {
+		t.Errorf("main lacks outside commit: %s", got)
+	}
+	if got := gitRun(t, env.P, "show", "main:feature.txt"); got != "the slice" {
+		t.Errorf("slice output %q", got)
+	}
+	if got := gitRun(t, env.P, "rev-list", "--merges", "--count", "main"); got != "1" {
+		t.Errorf("merge count %s, want 1", got)
+	}
+	if len(env.seen) != 1 {
+		t.Fatalf("%d re-checks, want 1", len(env.seen))
+	}
+	if !env.seen[0].hasBase || gitRun(t, env.P, "show", "-s", "--format=%s", env.seen[0].mainTip) != "outside" {
+		t.Errorf("re-check missed outside commit: %+v", env.seen[0])
+	}
+}
+
+func TestLandWaitsForTheMainLock(t *testing.T) {
+	env := newLandEnv(t)
+	two := env.secondRun()
+	two.e.d.Landings = &Landings{}
+	checked := make(chan struct{}, 1)
+	check := two.e.d.Check
+	two.e.d.Check = func(ctx context.Context, dir, command string, timeout time.Duration) (CheckOutput, error) {
+		checked <- struct{}{}
+		return check(ctx, dir, command, timeout)
+	}
+	env.moveBase("base.txt", "moved\n")
+	tip := gitRun(t, env.P, "rev-parse", "main")
+	release, err := lockMainFile(context.Background(), filepath.Join(env.P, ".git", "ork-main.lock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- two.e.Approve(ctx) }()
+	select {
+	case err := <-done:
+		t.Fatalf("landing returned while lock held: %v", err)
+	case <-time.After(200 * time.Millisecond):
+	}
+	select {
+	case <-checked:
+		t.Error("re-check ran while main lock held")
+	default:
+	}
+	if got := gitRun(t, env.P, "rev-parse", "main"); got != tip {
+		t.Errorf("main moved while locked: %s", got)
+	}
+	release()
+	if err := <-done; err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, two.e, runrec.StateCommitted)
+	if len(two.seen) != 1 {
+		t.Errorf("%d re-checks, want 1 after release", len(two.seen))
+	}
+}
+
+func TestLandWaitingForTheMainLockGivesUpOnCancel(t *testing.T) {
+	env := newLandEnv(t)
+	env.moveBase("base.txt", "moved\n")
+	release, err := lockMainFile(context.Background(), filepath.Join(env.P, ".git", "ork-main.lock"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer release()
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	done := make(chan error, 1)
+	go func() { done <- env.e.Approve(ctx) }()
+	time.Sleep(200 * time.Millisecond)
+	cancel()
+	if err := <-done; !errors.Is(err, context.Canceled) {
+		t.Fatalf("Approve: %v, want context.Canceled", err)
+	}
+	requireState(t, env.e, runrec.StateLand)
+	if len(env.seen) != 0 {
+		t.Errorf("%d checks while locked", len(env.seen))
+	}
+	release()
+	if err := env.e.land(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	requireState(t, env.e, runrec.StateCommitted)
 }

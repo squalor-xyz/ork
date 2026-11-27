@@ -351,6 +351,8 @@ func newHarness(t *testing.T, opts ...func(*harnessOpts)) *harness {
 		with(clitest.Route{Tool: "slicer", Args: []string{"done", item}, Prefix: true}, `{"id":"S04","status":"done"}`),
 		with(clitest.Route{Tool: "slicer", Args: []string{"handoff", item}, Prefix: true}, `{"id":"S04","status":"handoff"}`),
 		with(g("-C", P, "rev-parse", "--git-path", "info/exclude"), ".git/info/exclude\n"),
+		with(g("-C", P, "rev-parse", "--git-common-dir"), filepath.Join(P, ".git")+"\n"),
+		with(g("-C", P, "rev-parse", "HEAD"), "base123\n"),
 		g("-C", P, "worktree", "add", W, "-b", branch),
 		// The project is the repository root (S293); a test that wants a
 		// subfolder routes its own prefix first.
