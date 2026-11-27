@@ -363,3 +363,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 
 - [ ] In the next reviewer round for a slice that changes a non-test Go file with no test of its own, open the reviewer's brief under the run's role files. In ## Base overlays, that file's entry should end with "Passes in full with this file reverted: ..." after its command. An entry for a file whose revert fails a test should have no such sentence.
 - [ ] In the next reviewer round for a slice whose only Go changes are _test.go files, open the reviewer's brief. ## Base overlays should hold a paragraph saying a base overlay cannot isolate the product change, and no go -C ... test -overlay command.
+
+## S610 (run ork-20261127-141849-b10e, 2026-11-27)
+
+- [ ] Read the new sentence in the denied-forms line of a read-only brief. It must name the $ anchor as denied and show -run NAME as the form to use.
