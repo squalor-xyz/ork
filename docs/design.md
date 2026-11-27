@@ -1613,7 +1613,7 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
     (`FileToolFeedback`, `internal/engine/toolfeedback.go`).
   - **Possible duplicates** (adj 493 `feedback.near-duplicates`, alongside
     adj 414's exact-key rule). After a safe-kind entry files a new slice, ork
-    lists the target project's unfinished items and adds one note on the new
+    lists the target project's items and adds one note on the new
     slice: `possible duplicate of ID, ID`. Matches are stored in the entry's
     `near` ids. Titles use word-set Jaccard similarity at or above 0.5:
     lower-case ASCII letters and digits, split at all other runes, dropping
@@ -1621,7 +1621,13 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
     items are excluded; matches keep list order. Exact-key repeats add no
     duplicate note. Wording alone cannot detect every duplicate. A failed list
     or note leaves the slice filed, records `file_error`, and never stops the
-    run (adj 413); ork does not retire matches.
+    run (adj 413); ork does not retire matches. Done items with a similar title
+    get a separate note: `possibly covered by done ID, ID` (adj 647). This uses
+    the same Jaccard 0.5 rule and list order, without a landing date. Only done
+    items qualify for this note; self and retired items are excluded. These
+    matches are not stored in `near`. Both notes are attempted independently;
+    a failed note records `file_error`, keeping the first error. Exact-key
+    repeats add neither note.
   - **Failure.** Filing is advisory. A failed call is written on the entry as
     `file_error`; it never pauses, fails or stops the run, and a failed entry is
     not filed again by a later repeat in the same run.
@@ -2068,16 +2074,19 @@ The reviewer is not told to run the suite.
     are at least 60% present in the current slice's Why text, read with
     `slicer show`. Matching uses the existing ASCII title-word normalization
     (lowercase, punctuation split, common stop words and words shorter than two
-    characters removed). Extra Why words do not lower the share. Self, done
-    and retired items are excluded. Likely duplicates appear once, before the
+    characters removed). Extra Why words do not lower the share. Likely
+    duplicates also include open items whose title has word-set Jaccard
+    similarity at or above 0.5 with the current slice's title, using the same
+    normalization (adj 653). Self, done and retired items are excluded.
+    Likely duplicates appear once, before the
     file-overlap and other groups, within the same byte budget and omission
     count; the open items whose Files hold a changed path or a directory of one
     (id, title, status, dependencies); and the other open items by id and
     title, in slicer's order. It is at most 8,000 bytes: past the budget ork
     stops listing and says how many open items it left out. An item whose
     own `slicer show` failed is not matched against changed paths, and the
-    section says how many. Its title can still match the current Why. If a read
-    for the digest fails, the section says ork could not build it and tells the
+    section says how many. Its title can still match the current Why or title.
+    If a read for the digest fails, the section says ork could not build it and tells the
     role to run `slicer goals --json --lean` and `slicer list --json --lean`
     itself; the run does not pause. The prompts tell the role to read the
     section and to run `slicer show ID --json --lean` for an item that needs

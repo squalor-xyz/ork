@@ -2319,7 +2319,7 @@ func TestDirectionDigestLikelyDuplicates(t *testing.T) {
 	const title = "name -render-fixture and the fixture list in the UI pass brief's CLI text renders section"
 	items := []directionItem{
 		{id: "S550", title: title, status: "open", noSpec: true},
-		{id: "S383", title: title, status: "started"},
+		{id: "S383", title: "different storage policy", status: "started"},
 		{id: "S551", title: title, status: "done"},
 		{id: "S552", title: title, status: "retired"},
 		{id: "S553", title: "unrelated title must not match", status: "open", noSpec: true},
@@ -2349,6 +2349,36 @@ func TestDirectionDigestLikelyDuplicates(t *testing.T) {
 				t.Fatalf("items duplicated, lost, or miscounted:\n%s", body)
 			}
 		})
+	}
+}
+
+func TestDirectionDigestLikelyDuplicatesMatchByTitle(t *testing.T) {
+	items := []directionItem{
+		{id: "S383", title: near438, status: "started"},
+		{id: "S560", title: near419, status: "open", noSpec: true},
+		{id: "S561", title: near423, status: "open", noSpec: true},
+		{id: "S562", title: near419, status: "done"},
+		{id: "S563", title: near419, status: "retired"},
+	}
+	e, rec := directionFixture(t, items, nil, false, "unrelated storage policy")
+	body := e.directionSection(context.Background(), rec).Body
+	start, end := strings.Index(body, "Likely duplicates"), strings.Index(body, "Open items that touch")
+	if start < 0 || end < start {
+		t.Fatalf("missing duplicate group:\n%s", body)
+	}
+	if !strings.Contains(body[start:end], "- S560 ") || strings.Count(body, "- S560 ") != 1 || strings.Contains(body[end:], "S560") {
+		t.Errorf("S560 must appear once under Likely duplicates:\n%s", body)
+	}
+	if strings.Contains(body[start:end], "S561") || !strings.Contains(body[strings.Index(body, "Other open items"):], "S561") {
+		t.Errorf("unrelated S561 must remain under Other open items:\n%s", body)
+	}
+	for _, id := range []string{"S383", "S562", "S563"} {
+		if strings.Contains(body, id) {
+			t.Errorf("excluded %s appears:\n%s", id, body)
+		}
+	}
+	if !strings.Contains(body, "or a title like this slice's") {
+		t.Errorf("heading lacks title rule:\n%s", body)
 	}
 }
 

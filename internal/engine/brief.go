@@ -505,10 +505,11 @@ func doneWhen(in BriefInput) string {
 }
 
 const (
-	directionBudget  = 8000 // bytes, the most a Direction section holds (S383)
-	directionFooter  = 400  // bytes kept free for the closing lines
-	directionTitle   = 120  // bytes of one title in the digest
-	directionWorkers = 8    // `slicer show` calls at the same time
+	directionBudget        = 8000 // bytes, the most a Direction section holds (S383)
+	directionFooter        = 400  // bytes kept free for the closing lines
+	directionTitle         = 120  // bytes of one title in the digest
+	directionWorkers       = 8    // `slicer show` calls at the same time
+	briefTitleDuplicateMin = 0.5
 )
 
 // directionSection is the Direction section of the reviewer's and the
@@ -556,7 +557,11 @@ func (e *Engine) directionDigest(ctx context.Context, rec runrec.Record) (string
 		}
 	}
 	var open []directionEntry
+	var selfTitle string
 	for _, it := range items {
+		if it.ID == rec.Item {
+			selfTitle = it.Title
+		}
 		if it.ID != rec.Item && it.Status != "done" && it.Status != "retired" {
 			open = append(open, directionEntry{item: it})
 		}
@@ -588,7 +593,7 @@ func (e *Engine) directionDigest(ctx context.Context, rec runrec.Record) (string
 		if unread[i] {
 			unreadCount++
 		}
-		if whyContainsTitle(why, entry.item.Title) {
+		if whyContainsTitle(why, entry.item.Title) || similarTitles(selfTitle, entry.item.Title, briefTitleDuplicateMin) {
 			duplicates = append(duplicates, entry)
 		} else if touchesPaths(entry.files, changed) {
 			touching = append(touching, entry)
@@ -705,7 +710,7 @@ func formatDirection(goals *slicercli.Goals, duplicates, touching, rest []direct
 		}
 	}
 	listed := 0
-	line("\nLikely duplicates (at least 60% of title content words in this slice's Why):")
+	line("\nLikely duplicates (at least 60% of title content words in this slice's Why, or a title like this slice's):")
 	if len(duplicates) == 0 {
 		line("- none")
 	}

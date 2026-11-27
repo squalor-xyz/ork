@@ -21,9 +21,13 @@ import (
 )
 
 func nearFeedbackRun(t *testing.T, title string, listExit, noteExit int) (*harness, runrec.Record, string) {
+	return nearFeedbackRowsRun(t, title, listExit, noteExit, []slicercli.Item{{ID: "S419", Title: near419, Status: "open"}})
+}
+
+func nearFeedbackRowsRun(t *testing.T, title string, listExit, noteExit int, items []slicercli.Item) (*harness, runrec.Record, string) {
 	t.Helper()
 	root := filepath.Join(t.TempDir(), "target")
-	rows, _ := json.Marshal([]slicercli.Item{{ID: "S419", Title: near419, Status: "open"}})
+	rows, _ := json.Marshal(items)
 	h, e := toolFeedbackRun(t, root, func(o *harnessOpts) {
 		fileRoutes("S900")(o)
 		o.routes = append(o.routes,
@@ -81,6 +85,58 @@ func checkNearFeedback(t *testing.T, h *harness, rec runrec.Record, root string,
 	} else if len(notes) != 0 {
 		t.Errorf("unexpected notes: %q", notes)
 	}
+}
+
+func checkDoneFeedback(t *testing.T, items []slicercli.Item, noteExit int, wantNotes, wantNear []string, wantError bool) {
+	t.Helper()
+	h, rec, _ := nearFeedbackRowsRun(t, near438, 0, noteExit, items)
+	var notes []string
+	for _, call := range h.calls("slicer", "note") {
+		if len(call) > 1 && call[1] == "S900" {
+			notes = append(notes, strings.TrimPrefix(call[2], "--text="))
+		}
+	}
+	if !reflect.DeepEqual(notes, wantNotes) {
+		t.Errorf("notes = %q, want %q", notes, wantNotes)
+	}
+	raw, err := os.ReadFile(filepath.Join(h.store.RunDir(rec.ID), "run.json"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var disk runrec.Record
+	if err := json.Unmarshal(raw, &disk); err != nil {
+		t.Fatal(err)
+	}
+	if len(disk.ToolFeedback) != 1 {
+		t.Fatalf("feedback = %+v", disk.ToolFeedback)
+	}
+	f := disk.ToolFeedback[0]
+	if f.Filed != "S900" || !reflect.DeepEqual(f.Near, wantNear) {
+		t.Errorf("persisted filing = %q, near = %v; want S900, %v", f.Filed, f.Near, wantNear)
+	}
+	if got := strings.HasPrefix(f.FileError, "near duplicates:"); got != wantError {
+		t.Errorf("file_error = %q, want near duplicates error %v", f.FileError, wantError)
+	}
+}
+
+func TestToolFeedbackDoneNearTitleIsNotedOnTheNewSlice(t *testing.T) {
+	checkDoneFeedback(t, []slicercli.Item{{ID: "S419", Title: near419, Status: "done"}}, 0, []string{"possibly covered by done S419"}, nil, false)
+}
+
+func TestToolFeedbackOpenAndDoneNearTitlesAddTwoNotes(t *testing.T) {
+	checkDoneFeedback(t, []slicercli.Item{{ID: "S419", Title: near419, Status: "open"}, {ID: "S420", Title: near419, Status: "done"}}, 0, []string{"possible duplicate of S419", "possibly covered by done S420"}, []string{"S419"}, false)
+}
+
+func TestToolFeedbackRetiredNearTitleAddsNoNote(t *testing.T) {
+	checkDoneFeedback(t, []slicercli.Item{{ID: "S419", Title: near419, Status: "retired"}}, 0, nil, nil, false)
+}
+
+func TestToolFeedbackDoneNoteFailureStillFiles(t *testing.T) {
+	checkDoneFeedback(t, []slicercli.Item{{ID: "S419", Title: near419, Status: "done"}}, 3, []string{"possibly covered by done S419"}, nil, true)
+}
+
+func TestToolFeedbackFailedOpenNoteStillAddsDoneNote(t *testing.T) {
+	checkDoneFeedback(t, []slicercli.Item{{ID: "S419", Title: near419, Status: "open"}, {ID: "S420", Title: near419, Status: "done"}}, 3, []string{"possible duplicate of S419", "possibly covered by done S420"}, []string{"S419"}, true)
 }
 
 func TestToolFeedbackNearDuplicateIsNotedOnTheNewSlice(t *testing.T) {

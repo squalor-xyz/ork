@@ -1,0 +1,39 @@
+{
+  "id": "S656",
+  "title": "When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261127-194833-6309, project ork, item S631:\n\nWhen a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round\n\nEvidence: the implementer reported the same daemon failure text, run id and time in rounds 2 to 4, and the round 4 check then passed"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

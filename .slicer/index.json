@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 656,
+  "next_id": 658,
   "preamble": "",
   "passes": [
     {
@@ -28307,7 +28307,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "24deb41a-fa7d-446d-83cf-7f3f5c8ac6f8",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 659): when ork renders a Check line into a brief, wrap an unquoted -run pattern that contains | in single quotes (-run 'A|B'); spec Check lines stay as written. The spec check could not verify that the permission check accepts a quoted pipe, so the tests should cover the allowlist matcher with the quoted form. Jon chose 'Quote in brief', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -33878,7 +33893,7 @@
       "id": "S631",
       "title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
       "short_title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33909,6 +33924,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "68c78628-7627-42a0-a94d-bc8d9f885f5e",
+          "kind": "",
+          "text": "**2026-11-27** — New feedback slices receive coverage notes for similar done-item titles, and Direction lists similar open-item titles under Likely duplicates; the engine and daemon suites pass.",
+          "created_at": "2026-11-27T21:41:32Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -33928,7 +33957,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -34560,7 +34589,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "4b35c8dc-9632-4595-ac37-7ded5969ef8d",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 658): a gate-only line 'Intended red: N failed' that CheckReport reads into a new Report field; it adds nothing to Passed or Failed, so PASS reports failed tests no longer fires for it; non-gate roles' line is ignored. Gate prompt, docs/design.md and report_test.go. Jon chose 'Separate evidence line', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -34729,7 +34773,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6e398f8a-2176-47cc-8515-fab5901dc453",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 657): 4 random bytes (8 hex digits), retry the create up to 8 times on file exists, for run IDs (internal/engine/engine.go:428) and chain and wave IDs (internal/daemon/runs.go:1378, :1675); update the {4} test regexes (wave_test.go:51, runs_test.go:2550) and the Deps.RandHex comment. Jon chose '4 bytes, 8 tries, all three', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -34769,6 +34828,77 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-8fc3bae8",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S656",
+      "title": "When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round",
+      "short_title": "When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "97e93f51-3612-4649-9894-fef0a0706837",
+          "kind": "",
+          "text": "**2026-11-27** — possible duplicate of S655",
+          "created_at": "2026-11-27T21:41:31Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S631",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b16958bc",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S657",
+      "title": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop",
+      "short_title": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S652",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-2b2466ca",
         "pass": "v1.2",
         "group": "",
         "reason": "",
