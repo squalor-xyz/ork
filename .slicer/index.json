@@ -32456,7 +32456,7 @@
       "id": "S611",
       "title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md",
       "short_title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32487,6 +32487,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "726af451-91b0-443b-80aa-9acb367813b3",
+          "kind": "",
+          "text": "**2026-11-27** — Reverified S611 without further edits; both fixture coverage tests pass, and all 24 exact-name mutations fail independently.",
+          "created_at": "2026-11-27T14:56:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32506,7 +32520,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

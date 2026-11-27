@@ -1014,6 +1014,9 @@ the render test writes nothing. The pass copies selected scratch files into
 its `renders/` directory with the prompt's `VIEW-80x24.txt` names so they
 appear on the approval card.
 
+`TestRenderFixtureDocsListEveryFixture` checks that every additional render
+fixture has an exact name in this guide and the design document.
+
 The UI pass brief also says that a `go test -run` pattern must not contain a
 pipe, because `|` makes a compound command that the permission check denies.
 It gives the form that is allowed: one test per command, for example

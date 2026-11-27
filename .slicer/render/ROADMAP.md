@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-631 items · — 58 · done 427 · retired 146
+631 items · — 57 · done 428 · retired 146
 
 ## v1.3
 
@@ -370,7 +370,7 @@ v1.2
 | 313 | [S608](slices/S608.md) | Strip quotes from quoted require paths in goModRequirePaths |  | 1 |  | discovered from S589 | done |
 | 314 | [S609](slices/S609.md) | adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard |  | 1 |  | discovered from S570 | done |
 | 315 | [S610](slices/S610.md) | say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead |  | - |  | discovered from S574 | — |
-| 316 | [S611](slices/S611.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md |  | - |  | discovered from S574 | — |
+| 316 | [S611](slices/S611.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md |  | - |  | discovered from S574 | done |
 | 317 | [S612](slices/S612.md) | In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output |  | - |  | Moot: S584 already landed; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S584 | retired |
 | 318 | [S613](slices/S613.md) | allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output |  | - |  | Covered by adj 594 (no git grep allowlist entry) and S592 (git show pointer); Jon chose 'Fold hint into follow-up, retire S613', session 8d711f67, 2026-11-26. · discovered from S597 | retired |
 | 319 | [S614](slices/S614.md) | landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files | S | - |  |  | done |
