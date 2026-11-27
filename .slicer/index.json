@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 653,
+  "next_id": 654,
   "preamble": "",
   "passes": [
     {
@@ -25380,7 +25380,7 @@
       "id": "S450",
       "title": "skip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files",
       "short_title": "skip the UI pass or say \"no TUI views changed\" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -25411,6 +25411,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "95af2af4-8027-4f0c-b2a9-f920129530b5",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S450):\n- later: On the next slice whose diff is only internal/cli _test.go files and docs, open the ui role's brief in the run directory. It should hold ## No renders expected for CLI tests and docs and no \"Produce the required renders\" Done-when item. On the next slice that changes CLI output text, the UI brief should hold ## Renders are identical at every size, and the role should write one VIEW-80x24.txt for each view.",
+          "created_at": "2026-11-27T21:10:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3aefb41c-2036-4cbf-b6ce-5d5daa4e9838",
+          "kind": "",
+          "text": "**2026-11-27** — UI briefs waive renders for CLI tests and docs, request one file per view for CLI output, and preserve mixed/unreadable-diff and S584 behavior; focused tests and the full engine suite pass.",
+          "created_at": "2026-11-27T21:10:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -25430,7 +25458,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -34621,6 +34649,34 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S653",
+      "title": "Make the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide",
+      "short_title": "Make the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S631",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-860cbbca",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
