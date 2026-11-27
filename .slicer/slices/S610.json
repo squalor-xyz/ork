@@ -12,23 +12,23 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261126-000049-2b18, project ork, item S574:\n\nsay in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead\n\nEvidence: `-run TestRenderCLIViews$` was denied as \"can't be checked before it runs\", but the plain `-run TestRenderCLIViewsWritesFiles` was allowed"
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261126-000049-2b18, project ork, item S574:\n\nsay in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead\n\nEvidence: `-run TestRenderCLIViews$` was denied as \"can't be checked before it runs\", but the plain `-run TestRenderCLIViewsWritesFiles` was allowed.\n\nEvery read-only brief already carries one shared line that names the denied command forms (`deniedCommandForms`, `internal/engine/brief.go:129`, added under adj 519 `roles.read-only-allowlist-batch`). It is added to the Done-when checklist at `internal/engine/brief.go:353`. The line says nothing about `$` in a `go test -run` pattern, so a reviewer who anchors a pattern hits the denial and loses a round trip. The denial text is not ork's: `internal/agent/claude/pretool.go` has no such string, so it comes from the Claude Code harness. This slice adds one sentence to the shared line. It says an end anchor with `$` is denied and names the form to use instead.\n\nOwner decisions, 2026-11-27: adj 623 (give -run NAME with the full test name, no anchor) and adj 624 (append the rule to deniedCommandForms, the adj 519 pattern)."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/brief.go:129` (the `deniedCommandForms` constant; `internal/engine/brief.go:353` and `internal/engine/brief.go:165` pick it up with no change)\n- `internal/engine/brief_test.go:78-95` (`TestReadOnlyBriefsNameTheDeniedForms`: its `want` string)\n- `internal/engine/brief_test.go:1608-1645` (`TestClaudeAndCodexReadOnlyDoneWhen`: the line at 1636 repeats the string)\n- `internal/engine/brief_test.go` (a new test, beside `TestReadOnlyBriefsNameTheDeniedForms`)\n- `docs/design.md:2701-2705` (the paragraph that says every read-only brief names the denied forms)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- TestReadOnlyBriefsNameTheDeniedForms in `internal/engine/brief_test.go`: its `want` is the full shared line with the new sentence appended. For each of the vendors claude, claude-local, codex and grok, and each read-only role (reviewer, gate, architect, spec-check, spec-draft, ui), the brief holds that line exactly once. Red before the change: the brief has the old line without the sentence.\n- TestClaudeAndCodexReadOnlyDoneWhen in `internal/engine/brief_test.go`: the expected checklist for each of the five roles, for claude and codex, now has the same full line after the first item. Red before the change: the checklist has the old line.\n- TestReadOnlyBriefsNameTheRunAnchorRule in `internal/engine/brief_test.go` (new): the brief of each read-only role holds these three texts: \"Do not end a `go test -run` pattern with `$`\", \"`-run NAME`\" and \"no anchor\". It holds no `-run` example that ends in `$`. Red before the change: the brief lacks them."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. In `internal/engine/brief_test.go`, update `want` in `TestReadOnlyBriefsNameTheDeniedForms` and the string at line 1636 in `TestClaudeAndCodexReadOnlyDoneWhen` to the new full line. Add `TestReadOnlyBriefsNameTheRunAnchorRule`, which builds the brief with `baseBrief()` for each vendor and read-only role as the first test does. See the three fail.\n2. In `internal/engine/brief.go`, append this to `deniedCommandForms`, after a space: \"Do not end a `go test -run` pattern with `$`: that command is denied because it cannot be checked before it runs. Use `-run NAME` with the full test name and no anchor; it also runs any test whose name starts with NAME.\" The constant stays one line, so the Done-when item at line 353 and the local implementer's \"Tool rules\" text at line 165 carry it with no other change. The local implementer test at `brief_test.go:249` checks only a prefix and stays green.\n3. In `docs/design.md`, in the paragraph at lines 2701-2705, add that the denied-forms line also says a `go test -run` pattern must not end in `$` and gives the plain `-run NAME` form (this slice, from tool feedback).\n4. Run the checks below."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "Acceptance criteria:\n- Every read-only brief (reviewer, gate, architect, spec-check, spec-draft, ui) has one shared denied-forms line. It now says a go test -run pattern must not end in $ and gives -run NAME with the full test name and no anchor.\n- The line stays one line and appears once in each brief.\n- `docs/design.md` describes the added sentence.\n\nCommands:\n- `go test -run TestReadOnlyBriefsNameTheDeniedForms ./internal/engine` exits 0.\n- `go test -run TestClaudeAndCodexReadOnlyDoneWhen ./internal/engine` exits 0.\n- `go test -run TestReadOnlyBriefsNameTheRunAnchorRule ./internal/engine` exits 0.\n- `go test ./...` exits 0.\n- `go vet ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- [HUMAN CHECK] Read the new sentence in the denied-forms line of a read-only brief. It must name the $ anchor as denied and show -run NAME as the form to use."
     },
     {
       "heading": "Git",
