@@ -1031,6 +1031,26 @@ It gives the form that is allowed: one test per command, for example
 `go -C WORKTREE test -run TestRenderCLIViews ./internal/cli`, and the next
 test in its own command.
 
+For TUI views, the same brief has a `## TUI renders` section with this
+command, again with the temp directory in place of DIR:
+
+    go test ./internal/tui -run TestRenderTUIViews -renders DIR
+
+It writes `NAME-80x24.txt`, `NAME-120x40.txt` and `NAME-ascii.txt` for each
+fixture, as plain text from the TUI test harnesses and without changing the
+tree. With no `-render-fixture` it writes the five default fixtures:
+`overview`, `roadmap`, `launch-confirm`, `approval-card` and
+`approval-render`. Add `-render-fixture NAME[,NAME...]` to write only the
+named ones. Add `-render-size WxH[,WxH...]` to write one more `NAME-WxH.txt`
+for each size. Add `-render-print` (and `-v`, so go test shows it) to print each
+file's text to stdout under a `## NAME-SIZE` header, with or without
+`-renders`. No file is written without `-renders`. A slice that changes a TUI
+view adds its fixture in `internal/tui/render_views_test.go`; a view with no
+fixture is reported, not rendered.
+
+`TestRenderTUIFixtureDocsListEveryFixture` checks that this guide and the
+design document name every TUI fixture in that list.
+
 *Proposed (S254):* before it merges, ork looks at the main checkout. If you
 have uncommitted changes there to a file the slice also changes, the run
 pauses at once with one line that names the files; commit or stash them and

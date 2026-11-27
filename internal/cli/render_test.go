@@ -128,23 +128,41 @@ func fakeReplyApp(replies map[string]string, errs map[string]error) *App {
 	}}
 }
 
+// renderPause is the paused reply of run r1 for a pending kind, with the Next
+// the daemon prints for that pause (daemon.PausedNext), so a fixture never shows
+// a hint the daemon would not give (S641).
+func renderPause(kind, key string) daemon.ShowReply {
+	return renderPaused(waitPause(kind, key))
+}
+
+// renderQuestion is runQuestion with the Next the daemon prints for a question
+// pause; runQuestion in wait_test.go keeps its hand-set hint for the wait tests.
+func renderQuestion(id, item, key string) daemon.ShowReply {
+	return renderPaused(runQuestion(id, item, key))
+}
+
+// renderPaused sets the Next of a paused reply from daemon.PausedNext.
+func renderPaused(r daemon.ShowReply) daemon.ShowReply {
+	r.Next = daemon.PausedNext(runrec.Record{ID: r.ID, State: runrec.StatePaused, Pending: &runrec.Pending{Kind: r.Pending.Kind, Reason: r.Pending.Reason}})
+	return r
+}
+
 // renderWaitBlock is the text block of ork wait on one run (S633, adj 629). Each
 // step has its own daemon double, because a double serves one list of replies.
 func renderWaitBlock(t *testing.T) string {
-	question := waitPause("question", "area.topic")
+	question := renderPause("question", "area.topic")
 	question.Pending.Ask = &runrec.OwnerQuestion{Title: "Which store should the cache use?"}
-	question.Next = "ork answer r1 TEXT" // as pausedNext gives a question pause
 	_, questionApp := newWaitFake(t, question)
 
-	shape, shapeApp := newWaitFake(t, waitShow("implement"), waitPause("shape", ""))
+	shape, shapeApp := newWaitFake(t, waitShow("implement"), renderPause("shape", ""))
 	shape.notify = true
 
 	// The run waits for a slot, so its old question is skipped; the wait stops on
 	// the new question the run asks once the slot wait is over.
-	newQuestion := runQuestion("r1", "S1", "new.question")
+	newQuestion := renderQuestion("r1", "S1", "new.question")
 	newQuestion.Pending.Ask = &runrec.OwnerQuestion{Title: "Which store should the cache use now?"}
 	slot, slotApp := multiFake(t, map[string][]daemon.ShowReply{
-		"r1": {runQuestion("r1", "S1", "old.question"), newQuestion},
+		"r1": {renderQuestion("r1", "S1", "old.question"), newQuestion},
 	})
 	slot.slotWait = map[string]bool{"r1": true}
 	slot.afterRun = func(n int) {
@@ -161,6 +179,54 @@ func renderWaitBlock(t *testing.T) string {
 	)
 }
 
+// A paused reply a wait fixture builds has the Next that the daemon gives for
+// that pending kind: a question pause says ork answer, never ork retry (S641).
+func TestRenderWaitPausesUsePausedNext(t *testing.T) {
+	for _, tc := range []struct{ kind, want string }{
+		{runrec.PendingQuestion, "ork answer r1 TEXT"},
+		{runrec.PendingShape, "ork retry r1"},
+		{runrec.PendingRounds, "ork retry r1 [--rounds N] or ork stop r1"},
+	} {
+		t.Run(tc.kind, func(t *testing.T) {
+			got := renderPause(tc.kind, "area.topic")
+			rec := runrec.Record{ID: "r1", State: runrec.StatePaused, Pending: &runrec.Pending{Kind: tc.kind, Reason: "the reason"}}
+			if want := daemon.PausedNext(rec); got.Next != want || got.Next != tc.want {
+				t.Errorf("%s pause Next is %q, daemon.PausedNext gives %q, want %q", tc.kind, got.Next, want, tc.want)
+			}
+			if got.Pending == nil || got.Pending.Kind != tc.kind {
+				t.Errorf("pause pending %+v, want kind %s", got.Pending, tc.kind)
+			}
+		})
+	}
+	// The question replies of the wait-block slot step and of wait-lines carry
+	// the daemon's hint too, for any run ID.
+	for _, id := range []string{"r1", "r2"} {
+		got := renderQuestion(id, "S1", "cache.store")
+		rec := runrec.Record{ID: id, State: runrec.StatePaused, Pending: &runrec.Pending{Kind: runrec.PendingQuestion}}
+		if want := daemon.PausedNext(rec); got.Next != want || got.Next != "ork answer "+id+" TEXT" {
+			t.Errorf("question reply for %s has Next %q, daemon.PausedNext gives %q", id, got.Next, want)
+		}
+		if got.Pending == nil || got.Pending.Key != "cache.store" || got.Item != "S1" {
+			t.Errorf("question reply for %s lost its key or item: %+v", id, got)
+		}
+	}
+	// The fixtures build their question replies with renderQuestion: the only
+	// call to runQuestion in this file is the one inside it, and no reply is
+	// hand-set. The needle is split so this test does not count itself.
+	src, err := os.ReadFile("render_test.go")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if n := strings.Count(string(src), "runQuestion"+"("); n != 1 {
+		t.Errorf("render_test.go has %d calls to runQuestion; fixtures must use renderQuestion, so their Next comes from daemon.PausedNext", n)
+	}
+	// The wait-block fixture shows the question pause's own hint, once.
+	text := renderWaitBlock(t)
+	if !strings.Contains(text, "ork answer r1 TEXT") {
+		t.Errorf("wait-block lacks the question pause's next hint:\n%s", text)
+	}
+}
+
 // renderWaitLines is ork wait on several runs: one line for each run (S633,
 // adj 629).
 func renderWaitLines(t *testing.T) string {
@@ -170,7 +236,7 @@ func renderWaitLines(t *testing.T) string {
 	})
 	_, questionApp := multiFake(t, map[string][]daemon.ShowReply{
 		"r1": {runShow("r1", "S1", "implement"), runLanded("r1", "S1")},
-		"r2": {runShow("r2", "S2", "implement"), runQuestion("r2", "S2", "cache.store")},
+		"r2": {runShow("r2", "S2", "implement"), renderQuestion("r2", "S2", "cache.store")},
 	})
 	return renderSteps(t,
 		renderStep{app: changedApp, args: []string{"wait", "r1", "r2", "--until", "landed,awaiting-approval"}},

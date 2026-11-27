@@ -7548,6 +7548,13 @@
 {"when": "2026-11-27T21:20:26Z", "item": "S654", "action": "add", "from": "", "to": "open", "note": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix"}
 {"when": "2026-11-27T21:20:26Z", "item": "S654", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T21:20:27Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T21:34:44Z", "item": "S538", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:35:43Z", "item": "S538", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T21:35:52Z", "item": "S538", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T21:41:25Z", "item": "S538", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T21:57:38Z", "item": "S538", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S538):", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:57:38Z", "item": "S538", "action": "note", "from": "", "to": "", "note": "S538 gives internal/tui test flags -renders, -render-fixture", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:57:39Z", "item": "S538", "action": "status", "from": "started", "to": "done", "note": "S538 gives internal/tui test flags -renders, -render-fixture, -render-print and -render-size (five fixtures), a `## TUI renders` UI brief section, no overlay recipe in AGENTS.md or ui.md, an exported daemon.PausedNext, and every wait fixture question reply (wait-block slot step, wait-lines) now takes its next: hint from it; go test ./..., go vet ./... and gofmt -l . are clean.", "by": "Jon Robbins"}
 {"when": "2026-11-27T21:36:44Z", "item": "S652", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-27T21:45:29Z", "item": "S652", "action": "note", "from": "", "to": "", "note": "The Decision keys not found brief section now skips every `_", "by": "Jon Robbins"}
 {"when": "2026-11-27T21:45:29Z", "item": "S652", "action": "status", "from": "started", "to": "done", "note": "The Decision keys not found brief section now skips every `_test.go` file, in both the tracked-diff scan and the untracked-file scan, and docs/design.md says so.", "by": "Jon Robbins"}
@@ -7580,3 +7587,15 @@
 {"when": "2026-11-27T21:55:48Z", "item": "S649", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-27T22:04:41Z", "item": "S649", "action": "note", "from": "", "to": "", "note": "The gate may report a base-overlay revert failure on its own", "by": "Jon Robbins"}
 {"when": "2026-11-27T22:04:41Z", "item": "S649", "action": "status", "from": "started", "to": "done", "note": "The gate may report a base-overlay revert failure on its own `Intended red: N failed` line, which CheckReport reads into Report.IntendedRed (gate only) without adding to Passed or Failed, so `PASS reports failed tests` no longer fires for it; gate prompt, docs/design.md and tests updated.", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:56:12Z", "item": "S660", "action": "add", "from": "", "to": "open", "note": "Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects."}
+{"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "note", "from": "", "to": "", "note": "Also covers S538 finding 1: the UI brief's render sections (", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:57:36Z", "item": "S661", "action": "add", "from": "", "to": "open", "note": "in Base overlays, mention an importer that covers a new exported symbol, so \"no test covers it\" on the defining package is not misread"}
+{"when": "2026-11-27T21:57:37Z", "item": "S661", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:57:37Z", "item": "S661", "action": "note", "from": "", "to": "", "note": "possible duplicate of S659", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:00:19Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T22:00:19Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T22:00:19Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T22:00:19Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T22:00:20Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Check"}
