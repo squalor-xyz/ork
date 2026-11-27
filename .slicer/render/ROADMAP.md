@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-650 items · — 40 · done 440 · retired 170
+650 items · — 39 · done 441 · retired 170
 
 ## v1.3
 
@@ -388,7 +388,7 @@ v1.2
 | 331 | [S626](slices/S626.md) | check that each path in a slice's Check commands exists before round 1 (S615 covers this) |  | - |  | Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S616 | retired |
 | 332 | [S627](slices/S627.md) | before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615) |  | - |  | Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S616 | retired |
 | 333 | [S628](slices/S628.md) | in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go |  | - |  | Merged into S620; Jon chose 'Two slices', session 8d711f67, 2026-11-27. · discovered from S607 | retired |
-| 334 | [S629](slices/S629.md) | in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified |  | - |  | discovered from S614 | — |
+| 334 | [S629](slices/S629.md) | in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified |  | - |  | discovered from S614 | done |
 | 335 | [S630](slices/S630.md) | accept the Tests line when it is a list item, or say in the prompt that a leading "- " is refused |  | - |  | Merged into S521; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S614 | retired |
 | 336 | [S631](slices/S631.md) | when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it |  | - |  | discovered from S605 | — |
 | 337 | [S632](slices/S632.md) | For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file |  | - |  | Duplicate of S594 (revert check needs the test file reverted too); Jon chose 'Retire all 9' in triage, session 8d711f67, 2026-11-27. · discovered from S621 | retired |

@@ -1961,6 +1961,11 @@ orchestrator-only line alone does not fail tests-green. Test counts in the gate
 report remain counts of tests the gate itself ran; ork's evidence is cited
 separately.
 
+The reviewer receives the same `Ork round check result` section as the gate
+(S629, adj 646): round, command, log name, success status and captured log,
+including failing lines. It uses the same report reader and 64 KiB truncation.
+The reviewer is not told to run the suite.
+
 - **Prompts.** Embedded in ork and canonical (`roles.prompts`). They are
   seeded from slicer's v11 contract and now written against v13, with anything
   else written fresh (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent
@@ -2765,9 +2770,10 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Implementer briefs say socket-bound tests may fail inside their sandbox,
   report those as sandbox-limited, and use ork's round check outside the
   sandbox as the evidence (adj 519).
-  Reviewer and gate briefs carry a generic line saying socket-bound failures
-  are sandbox-limited, ork's round check is the evidence, and the role need
-  not run `go test ./...`; it names no package (S606, adj 616).
+  Reviewer and gate briefs carry a generic line that treats socket-bound
+  failures as sandbox-limited and points at the `Ork round check result` section
+  for the result and captured log, including failing lines. The role need not
+  run `go test ./...`; the line names no package (S606, adj 616; S629, adj 646).
   A reviewer also gets `slicer init`, `add`, `set`, `note`, `done` and
   `relay-roles` writes with a final, literal `--root` naming its own process
   temp dir (S527, adj 634 and 639), under the same reviewer-only condition as
