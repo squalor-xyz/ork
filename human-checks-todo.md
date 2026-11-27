@@ -367,3 +367,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S610 (run ork-20261127-141849-b10e, 2026-11-27)
 
 - [ ] Read the new sentence in the denied-forms line of a read-only brief. It must name the $ anchor as denied and show -run NAME as the form to use.
+
+## S634 (run ork-20261127-163048-8b5b, 2026-11-27)
+
+- [ ] In the next reviewer round on a slice where one changed Go file adds a field or helper that another changed Go file uses (as in S615, check.go and brief.go), open the reviewer brief's ## Base overlays section.
