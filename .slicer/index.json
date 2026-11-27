@@ -32601,7 +32601,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "72bccb2d-2710-47a9-ac20-3913f1f11d3e",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 614): a relative word with / or a leading ./ is a path argument; flags, URLs, quoted patterns, globs (including ./...) and absolute paths are not. A missing path argument that is not a Files-created path is a finding that refuses the start (internal/daemon/runs.go:1112) and shows in the spec check (internal/daemon/speccheck.go:324). Extend SliceCheckCommandWarnings (internal/engine/brief.go:794). Jon chose 'Refuse the start', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:05:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32886,7 +32901,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f30a8f50-b044-4cdb-b43b-96adffba6bec",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 613): read EngineRun.ResumeWaiting from the status call ork wait already makes (internal/cli/wait.go:306); judge (wait.go:332) treats such a run as in progress, so --until question, stopped and landed do not match it. No wire change. Jon chose 'From the status call', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:05:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",

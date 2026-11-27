@@ -7180,3 +7180,5 @@
 {"when": "2026-11-27T13:03:15Z", "item": "S620", "action": "note", "from": "", "to": "", "note": "Also covers S628 (adj 611): in Base overlays, also list the ", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:03:15Z", "item": "S623", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S622; Jon chose 'Two slices', session 8d711f67, 2026-11-27."}
 {"when": "2026-11-27T13:03:15Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Also covers S623: when a slice's checker and its tests are i", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:05:59Z", "item": "S621", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 613): read EngineRun.ResumeWaiting from ", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:05:59Z", "item": "S615", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 614): a relative word with / or a leadin", "by": "Jon Robbins"}
