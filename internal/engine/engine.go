@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -23,6 +24,9 @@ import (
 
 // DefaultPauseRound is the first red round that needs the owner's OK.
 const DefaultPauseRound = 3
+
+// runIDTries is how many run ids New tries when the run directory exists.
+const runIDTries = 8
 
 // CheckOutput is the result of the project's check command.
 type CheckOutput struct {
@@ -58,7 +62,7 @@ type Deps struct {
 	Now            func() time.Time
 	Sleep          func(ctx context.Context, d time.Duration) error // nil sleeps for real
 	Backoff        []time.Duration                                  // locked-retry delays; nil means runrec.DefaultBackoff
-	RandHex        func() string                                    // four hex digits for run ids; nil is random
+	RandHex        func() string                                    // eight hex digits for run ids; nil is random
 	HeartbeatEvery time.Duration                                    // 0 means heartbeatInterval
 	HungAfter      time.Duration                                    // 0 means DefaultHungAfter; negative turns the hung-role watchdog off
 	MaxRounds      int                                              // first pause after this red round; 0 means DefaultPauseRound
@@ -118,7 +122,7 @@ func (d Deps) randHex() string {
 	if d.RandHex != nil {
 		return d.RandHex()
 	}
-	b := make([]byte, 2)
+	b := make([]byte, 4)
 	rand.Read(b)
 	return hex.EncodeToString(b)
 }
@@ -425,7 +429,7 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	for role, entries := range cfg.Lineup {
 		copied[role] = append([]runrec.LineupEntry(nil), entries...)
 	}
-	id := "ork-" + d.now().Format("20060102-150405") + "-" + d.randHex()
+	stamp := d.now().Format("20060102-150405")
 	state := runrec.StateSetup
 	if cfg.Queued {
 		state = runrec.StateQueued
@@ -444,12 +448,20 @@ func New(ctx context.Context, d Deps, cfg Config) (*Engine, error) {
 	if branch == "" {
 		branch = branchName(cfg.Project, cfg.Item)
 	}
-	run, err := d.Store.Create(runrec.Record{
-		ID: id, StopAfter: cfg.StopAfter, Wave: cfg.Wave, WaveName: cfg.WaveName, After: slices.Clone(cfg.After), Project: cfg.Project.Name, Item: cfg.Item,
-		Parent: cfg.Parent, Chain: cfg.Chain, SliverIndex: cfg.SliverIndex, SliverCount: cfg.SliverCount,
-		Worktree: worktree, Branch: branch,
-		Split: cfg.Split, Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
-	})
+	// A run directory that already exists means two runs drew the same suffix in
+	// the same second: draw a new suffix and try again (S654, adj 657).
+	var run *runrec.Run
+	for range runIDTries {
+		run, err = d.Store.Create(runrec.Record{
+			ID: "ork-" + stamp + "-" + d.randHex(), StopAfter: cfg.StopAfter, Wave: cfg.Wave, WaveName: cfg.WaveName, After: slices.Clone(cfg.After), Project: cfg.Project.Name, Item: cfg.Item,
+			Parent: cfg.Parent, Chain: cfg.Chain, SliverIndex: cfg.SliverIndex, SliverCount: cfg.SliverCount,
+			Worktree: worktree, Branch: branch,
+			Split: cfg.Split, Contract: version, GateCriteria: contract.Gate.Criteria, LedgerRoles: ledgerRoles, State: state, Round: 1, Lineup: copied, Budgets: budgets, Decisions: cfg.Decisions,
+		})
+		if !errors.Is(err, os.ErrExist) {
+			break
+		}
+	}
 	if err != nil {
 		return nil, err
 	}

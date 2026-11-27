@@ -34784,7 +34784,7 @@
       "id": "S654",
       "title": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix",
       "short_title": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -34794,6 +34794,20 @@
           "text": "**2026-11-27** — Owner decision (adj 657): 4 random bytes (8 hex digits), retry the create up to 8 times on file exists, for run IDs (internal/engine/engine.go:428) and chain and wave IDs (internal/daemon/runs.go:1378, :1675); update the {4} test regexes (wave_test.go:51, runs_test.go:2550) and the Deps.RandHex comment. Jon chose '4 bytes, 8 tries, all three', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T21:38:37Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2145f9b8-1128-4662-bb67-b9cf41b36c05",
+          "kind": "",
+          "text": "**2026-11-27** — Run, chain and wave IDs now end in 8 hex digits, and engine.New retries the run create up to 8 times with a fresh suffix on file exists; go test ./..., go vet and gofmt are clean.",
+          "created_at": "2026-11-27T22:09:58Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -34820,7 +34834,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

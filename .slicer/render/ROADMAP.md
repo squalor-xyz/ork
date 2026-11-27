@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-659 items · — 41 · done 448 · retired 170
+659 items · — 40 · done 449 · retired 170
 
 ## v1.3
 
@@ -413,7 +413,7 @@ v1.2
 | 356 | [S651](slices/S651.md) | run the new spec-open-key and decision-key checks on the slice's own spec and diff before the review, so a slice that adds such a check can see its own false positives |  | - |  | discovered from S537 | — |
 | 357 | [S652](slices/S652.md) | Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files |  | 1 |  | discovered from S537 | done |
 | 358 | [S653](slices/S653.md) | Make the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide |  | - |  | discovered from S631 | — |
-| 359 | [S654](slices/S654.md) | run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix | S | - |  |  | — |
+| 359 | [S654](slices/S654.md) | run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix | S | - |  |  | done |
 | 360 | [S655](slices/S655.md) | When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer |  | - |  | discovered from S631 | — |
 | 361 | [S656](slices/S656.md) | When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round |  | - |  | discovered from S631 | — |
 | 362 | [S657](slices/S657.md) | when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop |  | - |  | discovered from S652 | — |

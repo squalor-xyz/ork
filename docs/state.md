@@ -492,8 +492,8 @@ sliver waits for the owner's approval and lands the parent.
 ```json
 {
   "version": 1,
-  "id": "ork-20261018-161200-a1b2",
-  "wave": "wave-20261018-161150-77aa",
+  "id": "ork-20261018-161200-a1b2c3d4",
+  "wave": "wave-20261018-161150-77aa88bb",
   "wave_name": "pair-a",
   "decisions": "Owner decisions (2026-10-18): ...",
   "project": "adjudicate",
