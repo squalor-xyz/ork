@@ -1,0 +1,39 @@
+{
+  "id": "S653",
+  "title": "Make the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The implementer reported this as tool feedback (friction) on ork in ork run ork-20261127-194833-6309, project ork, item S631:\n\nMake the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide\n\nEvidence: internal/engine/engine.go:121 uses 2 random bytes; TestWaveHeldMemberStartsAfterTheEarlierLands failed once with \"mkdir ...runs/ork-20261127-205645-9e55: file exists\" and passed 33 reruns"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

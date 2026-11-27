@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 653,
+  "next_id": 654,
   "preamble": "",
   "passes": [
     {
@@ -34635,6 +34635,34 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S653",
+      "title": "Make the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide",
+      "short_title": "Make the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S631",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-860cbbca",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }
