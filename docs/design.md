@@ -2075,7 +2075,8 @@ separately.
     Each missing path appears once as a flagged finding for the reviewer.
     Failed reads add an incomplete-check notice. The check is advisory and
     never blocks the run;
-  - before the reviewer starts, a `## Base overlays` section when the branch
+  - before the reviewer starts and before every gate round starts, a
+    `## Base overlays` section when the branch
     diff against the base holds any changed file after skipping every path
     under `.slicer/` or `landed-changed/` (S620, adj 600, adj 610). These paths
     are removed before the section test, sorting and limits, including
@@ -2083,7 +2084,8 @@ separately.
     in sorted order and at most 20, ork writes the file's base version
     (`git show MERGEBASE:path`, the merge base Direction uses) to
     `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
-    "TMPDIR/base/path"}}`, in the reviewer's process temp directory. A file
+    "TMPDIR/base/path"}}`, in that role's own process temp directory. The gate's
+    overlay files are separate from the reviewer's (S594, adj 633, adj 637). A file
     the base lacks (new in the slice) maps to `""`, which `go` reads as a file
     that does not exist; no base copy is written. ork first runs
     `go -C WORKTREE vet -overlay TMPDIR/overlay-N.json ./DIR` for each overlay
@@ -2092,23 +2094,27 @@ separately.
     each limited to 200 characters, and a `git show` pointer instead of a test
     command. stderr takes priority over stdout; empty output gives the exit
     code. A vet that cannot run or times out leaves the test command in place.
-    When a file's vet output names other changed non-test Go files (by full
-    relative path, absolute path, or, in the vetted package's directory, the
+    When a file's vet output names other changed Go files, including `_test.go`
+    files (by full relative path, absolute path, or, in the vetted package's directory, the
     package-relative name, each followed by `:` and at the start of a line or
     after a space), ork adds their base versions to that file's overlay and
     vets again. It reads the whole vet output, not the first three lines, and
     repeats up to one round per listed file, stopping when no new changed file
-    is named. It never adds a test file or an unchanged file. The entry reads
+    is named. It never adds an unchanged file. A test file new in the slice
+    maps to `""`. The entry reads
     `- file (with other.go reverted too)`, after any new-in-this-slice marker.
     It gets a test command only when the final vet passes; otherwise it reads
     `does not build: ERROR` from the final output. The all-files fallback
     below is unchanged and still follows only when no single-file entry
-    offers a command (S634, adj 630).
+    offers a command (S634, adj 630). When test files are reverted too, the
+    entry says tests this slice added in those files do not run. Such an entry
+    gets no automatic pass run and no "Passes in full" note (S594, adj 633).
     For each remaining file, the section names
     one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json -count=1
     ./DIR` command, so a read-only reviewer can run the package's tests with
     only that file reverted and see a test the slice added fail. ork also runs
-    each of these single-file test commands sequentially with a two-minute
+    each of these single-file test commands, except those reverting test files,
+    sequentially with a two-minute
     timeout (S622, adj 618, adj 622). An exit-zero run adds "Passes in full
     with this file reverted: no test in the package fails for this change, so
     no test covers it." after the command. A non-zero exit, timeout or failure
