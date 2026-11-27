@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 640,
+  "next_id": 641,
   "preamble": "",
   "passes": [
     {
@@ -33735,6 +33735,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-950e3088",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S640",
+      "title": "in Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line",
+      "short_title": "in Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S620",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-6c80cb71",
         "pass": "v1.2",
         "group": "",
         "reason": "",
