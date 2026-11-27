@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 655,
+  "next_id": 662,
   "preamble": "",
   "passes": [
     {
@@ -28307,7 +28307,36 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "24deb41a-fa7d-446d-83cf-7f3f5c8ac6f8",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 659): when ork renders a Check line into a brief, wrap an unquoted -run pattern that contains | in single quotes (-run 'A|B'); spec Check lines stay as written. The spec check could not verify that the permission check accepts a quoted pipe, so the tests should cover the allowlist matcher with the quoted form. Jon chose 'Quote in brief', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "3370246b-e588-479e-9739-95d99cbc8336",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 661): also add a Check command list to the reviewer brief, built the same way as the gate's, with the quoted -run form; the ## Slice JSON stays as stored. Jon chose 'Reviewer command list', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:54:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -33906,7 +33935,7 @@
       "id": "S631",
       "title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
       "short_title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33937,6 +33966,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "68c78628-7627-42a0-a94d-bc8d9f885f5e",
+          "kind": "",
+          "text": "**2026-11-27** — New feedback slices receive coverage notes for similar done-item titles, and Direction lists similar open-item titles under Likely duplicates; the engine and daemon suites pass.",
+          "created_at": "2026-11-27T21:41:32Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -33956,7 +33999,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -34588,7 +34631,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "4b35c8dc-9632-4595-ac37-7ded5969ef8d",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 658): a gate-only line 'Intended red: N failed' that CheckReport reads into a new Report field; it adds nothing to Passed or Failed, so PASS reports failed tests no longer fires for it; non-gate roles' line is ignored. Gate prompt, docs/design.md and report_test.go. Jon chose 'Separate evidence line', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -34669,7 +34727,7 @@
       "id": "S652",
       "title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
       "short_title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -34679,6 +34737,20 @@
           "text": "**2026-11-27** — Owner direction: the Decision keys not found check skips _test.go files (narrows adj 640, review.decision-key-citation). Jon chose 'File: skip _test.go', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T20:18:38Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7b563a1d-da39-4089-80cf-3efb2ab4bb65",
+          "kind": "",
+          "text": "**2026-11-27** — The Decision keys not found brief section now skips every `_test.go` file, in both the tracked-diff scan and the untracked-file scan, and docs/design.md says so.",
+          "created_at": "2026-11-27T21:45:29Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -34705,7 +34777,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -34743,7 +34815,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6e398f8a-2176-47cc-8515-fab5901dc453",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 657): 4 random bytes (8 hex digits), retry the create up to 8 times on file exists, for run IDs (internal/engine/engine.go:428) and chain and wave IDs (internal/daemon/runs.go:1378, :1675); update the {4} test regexes (wave_test.go:51, runs_test.go:2550) and the Deps.RandHex comment. Jon chose '4 bytes, 8 tries, all three', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -34755,6 +34842,247 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S655",
+      "title": "When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer",
+      "short_title": "When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S631",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-8fc3bae8",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S656",
+      "title": "When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round",
+      "short_title": "When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "97e93f51-3612-4649-9894-fef0a0706837",
+          "kind": "",
+          "text": "**2026-11-27** — possible duplicate of S655",
+          "created_at": "2026-11-27T21:41:31Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S631",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b16958bc",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S657",
+      "title": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop",
+      "short_title": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S652",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-2b2466ca",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S658",
+      "title": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step",
+      "short_title": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S538",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-a9342d54",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S659",
+      "title": "Base overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread",
+      "short_title": "Base overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S538",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b4cd3d6b",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S660",
+      "title": "Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects.",
+      "short_title": "Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects.",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "d7baf1cc-0658-4ee6-bdfd-eba63c8e65c0",
+          "kind": "",
+          "text": "**2026-11-27** — Also covers S538 finding 1: the UI brief's render sections (internal/engine/brief.go:233-238) should tell the pass to run -renders with the renders directory as DIR, not copy files (a read-only pass cannot cp). Jon chose 'One slice for both', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:56:13Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S538",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261127-194957-90f9-later-2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 2,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S661",
+      "title": "in Base overlays, mention an importer that covers a new exported symbol, so \"no test covers it\" on the defining package is not misread",
+      "short_title": "in Base overlays, mention an importer that covers a new exported symbol, so \"no test covers it\" on the defining package is not misread",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "95ce405c-5115-4ff6-9afb-a310f30cc727",
+          "kind": "",
+          "text": "**2026-11-27** — possible duplicate of S659",
+          "created_at": "2026-11-27T21:57:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S538",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-98b7832f",
         "pass": "v1.2",
         "group": "",
         "reason": "",

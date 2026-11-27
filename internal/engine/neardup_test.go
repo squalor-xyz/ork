@@ -40,6 +40,20 @@ const (
 	near423 = `say in the brief whether the reviewer may write the report path, instead of giving both "write your report to PATH" and "you cannot write it"`
 )
 
+func TestNearDoneTitlesReturnsOnlyDoneItems(t *testing.T) {
+	items := []slicercli.Item{
+		{ID: "S419", Title: near419, Status: "done"},
+		{ID: "S420", Title: near419, Status: "open"},
+		{ID: "S421", Title: near419, Status: "retired"},
+		{ID: "S422", Title: near419, Status: "started"},
+		{ID: "S423", Title: near423, Status: "done"},
+		{ID: "NEW", Title: near419, Status: "done"},
+	}
+	if got := NearDoneTitles(near438, "NEW", items, 0.5); !reflect.DeepEqual(got, []string{"S419"}) {
+		t.Fatalf("done = %v, want [S419]", got)
+	}
+}
+
 func TestNearDuplicateTitlesFindsTheMeasuredPairs(t *testing.T) {
 	items := []slicercli.Item{{ID: "S419", Title: near419, Status: "open"}, {ID: "S426", Title: near426, Status: "open"}, {ID: "S418", Title: near418, Status: "open"}}
 	for _, tc := range []struct{ title, want string }{{near438, "S419"}, {near429, "S426"}, {near436, "S418"}} {

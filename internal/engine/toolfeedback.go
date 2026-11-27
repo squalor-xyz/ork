@@ -291,6 +291,11 @@ func FileToolFeedback(ctx context.Context, d Deps, w runrec.Writer, dir string, 
 					out[i].Err = fmt.Errorf("near duplicates: slicer note in %s: %w", t.Project.Name, err)
 				}
 			}
+			if done := NearDoneTitles(t.Title, added.ID, items, nearDuplicateMin); len(done) > 0 {
+				if err := d.Slicer.Note(ctx, w, t.Project.Path, added.ID, "possibly covered by done "+strings.Join(done, ", ")); err != nil && out[i].Err == nil {
+					out[i].Err = fmt.Errorf("near duplicates: slicer note in %s: %w", t.Project.Name, err)
+				}
+			}
 		}
 	}
 	return out

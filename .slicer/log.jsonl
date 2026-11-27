@@ -7505,6 +7505,13 @@
 {"when": "2026-11-27T19:48:28Z", "item": "S450", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T19:48:28Z", "item": "S455", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T19:48:28Z", "item": "S457", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T20:32:36Z", "item": "S631", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T20:32:36Z", "item": "S631", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T20:34:04Z", "item": "S631", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T20:38:33Z", "item": "S631", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T20:39:02Z", "item": "S631", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T21:41:32Z", "item": "S631", "action": "note", "from": "", "to": "", "note": "New feedback slices receive coverage notes for similar done-", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:41:32Z", "item": "S631", "action": "status", "from": "started", "to": "done", "note": "New feedback slices receive coverage notes for similar done-item titles, and Direction lists similar open-item titles under Likely duplicates; the engine and daemon suites pass.", "by": "Jon Robbins"}
 {"when": "2026-11-27T19:56:26Z", "item": "S629", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-27T19:56:26Z", "item": "S629", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-27T19:56:26Z", "item": "S629", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
@@ -7548,3 +7555,39 @@
 {"when": "2026-11-27T21:57:38Z", "item": "S538", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S538):", "by": "Jon Robbins"}
 {"when": "2026-11-27T21:57:38Z", "item": "S538", "action": "note", "from": "", "to": "", "note": "S538 gives internal/tui test flags -renders, -render-fixture", "by": "Jon Robbins"}
 {"when": "2026-11-27T21:57:39Z", "item": "S538", "action": "status", "from": "started", "to": "done", "note": "S538 gives internal/tui test flags -renders, -render-fixture, -render-print and -render-size (five fixtures), a `## TUI renders` UI brief section, no overlay recipe in AGENTS.md or ui.md, an exported daemon.PausedNext, and every wait fixture question reply (wait-block slot step, wait-lines) now takes its next: hint from it; go test ./..., go vet ./... and gofmt -l . are clean.", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:36:44Z", "item": "S652", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:45:29Z", "item": "S652", "action": "note", "from": "", "to": "", "note": "The Decision keys not found brief section now skips every `_", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:45:29Z", "item": "S652", "action": "status", "from": "started", "to": "done", "note": "The Decision keys not found brief section now skips every `_test.go` file, in both the tracked-diff scan and the untracked-file scan, and docs/design.md says so.", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:36:25Z", "item": "S655", "action": "add", "from": "", "to": "open", "note": "When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer"}
+{"when": "2026-11-27T21:36:25Z", "item": "S655", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:38:37Z", "item": "S654", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 657): 4 random bytes (8 hex digits), ret", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:38:37Z", "item": "S649", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 658): a gate-only line 'Intended red: N ", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:38:37Z", "item": "S526", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 659): when ork renders a Check line into", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:41:30Z", "item": "S656", "action": "add", "from": "", "to": "open", "note": "When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round"}
+{"when": "2026-11-27T21:41:31Z", "item": "S656", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:41:31Z", "item": "S656", "action": "note", "from": "", "to": "", "note": "possible duplicate of S655", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:43:37Z", "item": "S657", "action": "add", "from": "", "to": "open", "note": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop"}
+{"when": "2026-11-27T21:43:37Z", "item": "S657", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:48:31Z", "item": "S658", "action": "add", "from": "", "to": "open", "note": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step"}
+{"when": "2026-11-27T21:48:31Z", "item": "S658", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:50:53Z", "item": "S659", "action": "add", "from": "", "to": "open", "note": "Base overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread"}
+{"when": "2026-11-27T21:50:53Z", "item": "S659", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:54:06Z", "item": "S526", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 661): also add a Check command list to t", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:54:18Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T21:54:18Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T21:54:18Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T21:54:19Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T21:54:19Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T21:54:20Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T21:55:03Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T21:56:12Z", "item": "S660", "action": "add", "from": "", "to": "open", "note": "Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects."}
+{"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
+{"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "note", "from": "", "to": "", "note": "Also covers S538 finding 1: the UI brief's render sections (", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:57:36Z", "item": "S661", "action": "add", "from": "", "to": "open", "note": "in Base overlays, mention an importer that covers a new exported symbol, so \"no test covers it\" on the defining package is not misread"}
+{"when": "2026-11-27T21:57:37Z", "item": "S661", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:57:37Z", "item": "S661", "action": "note", "from": "", "to": "", "note": "possible duplicate of S659", "by": "Jon Robbins"}

@@ -1,0 +1,39 @@
+{
+  "id": "S659",
+  "title": "Base overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-194957-90f9, project ork, item S538:\n\nBase overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread\n\nEvidence: overlay-1 for internal/daemon says no test covers runs.go, but TestRenderWaitPausesUsePausedNext in internal/cli covers it and fails to build with it reverted"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
