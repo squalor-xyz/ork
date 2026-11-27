@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 651,
+  "next_id": 653,
   "preamble": "",
   "passes": [
     {
@@ -28036,7 +28036,7 @@
       "id": "S521",
       "title": "let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed",
       "short_title": "let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28067,6 +28067,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ca427a18-5ea5-4d2f-853f-115e23ee3e09",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S521):\n- later: Open an approval card whose gate reported Tests: relied on ork round results. The first line reads Gate PASS (round N)  Tests: relied on ork round results, with no 0 passed, 0 failed.",
+          "created_at": "2026-11-27T20:01:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "a847fc4d-e43c-4311-ab4a-a415dd27b69f",
+          "kind": "",
+          "text": "**2026-11-27** — Corrected the Report checks documentation to describe gate-only reliance reports; all eight regression tests pass.",
+          "created_at": "2026-11-27T20:01:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28086,7 +28114,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -34493,6 +34521,77 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S651",
+      "title": "run the new spec-open-key and decision-key checks on the slice's own spec and diff before the review, so a slice that adds such a check can see its own false positives",
+      "short_title": "run the new spec-open-key and decision-key checks on the slice's own spec and diff before the review, so a slice that adds such a check can see its own false positives",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S537",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ec6580b5",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S652",
+      "title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
+      "short_title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "1913929c-f46d-460d-ab3f-d0fed86ef8ae",
+          "kind": "",
+          "text": "**2026-11-27** — Owner direction: the Decision keys not found check skips _test.go files (narrows adj 640, review.decision-key-citation). Jon chose 'File: skip _test.go', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T20:18:38Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S537",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261127-183724-914b-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

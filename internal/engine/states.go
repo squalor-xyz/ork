@@ -908,7 +908,7 @@ const gateCriteria = "You are the gate. A small fix round is reviewed and gated 
 	"The first line of your report is exactly `VERDICT: PASS` or `VERDICT: FAIL`. " +
 	"A successful ork round check result is the tests-green evidence. You must accept it and must not run the suite. " +
 	"The slice's own Check rows are also required tests-green evidence; read every row's command, result and log. " +
-	"Cite ork's result separately and give only the counts of tests you actually ran on a `Tests: N passed, M failed` line."
+	"Cite ork's result separately and give only the counts of tests you actually ran on a `Tests: N passed, M failed` line, or use `Tests: relied on ork round results` when you ran no tests and relied on ork's round check."
 
 func (e *Engine) gate(ctx context.Context) error {
 	rec := e.run.Snapshot()

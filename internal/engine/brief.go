@@ -446,7 +446,7 @@ func doneWhen(in BriefInput) string {
 			} else {
 				add("Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.")
 				add("For a tracking step denied to the implementer, add one Deviation for the orchestrator evidence line beside the criterion lines, never a [fix]; it is not a finding and starts no fix round.")
-				add("Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts; end with the exact unnumbered heading ## Owner needed and questions or none.")
+				add("Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts, or Tests: relied on ork round results when you ran no tests and relied on ork's round check; either Tests form may start with a list marker. End with the exact unnumbered heading ## Owner needed and questions or none.")
 			}
 			add("Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.")
 		case RoleArchitect:

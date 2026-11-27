@@ -108,7 +108,11 @@ func (m *Model) approvalBlock(project, run string, inPane bool) string {
 func (m *Model) cardSummary(card *runrec.ApprovalCard, width int) []string {
 	th := m.cfg.Theme
 	var lines []string
-	for _, l := range wrapText(fmt.Sprintf("Gate %s (round %d)  Tests: %d passed, %d failed", card.Verdict, card.Round, card.Passed, card.Failed), width) {
+	summary := fmt.Sprintf("Gate %s (round %d)  Tests: %d passed, %d failed", card.Verdict, card.Round, card.Passed, card.Failed)
+	if card.RelianceOnRound {
+		summary = fmt.Sprintf("Gate %s (round %d)  Tests: relied on ork round results", card.Verdict, card.Round)
+	}
+	for _, l := range wrapText(summary, width) {
 		lines = append(lines, th.Heading.Render(l))
 	}
 	diff := diffLine(card.DiffStat)
