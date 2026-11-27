@@ -2078,7 +2078,8 @@ separately.
     Each missing path appears once as a flagged finding for the reviewer.
     Failed reads add an incomplete-check notice. The check is advisory and
     never blocks the run;
-  - before the reviewer starts, a `## Base overlays` section when the branch
+  - before the reviewer starts and before every gate round starts, a
+    `## Base overlays` section when the branch
     diff against the base holds any changed file after skipping every path
     under `.slicer/` or `landed-changed/` (S620, adj 600, adj 610). These paths
     are removed before the section test, sorting and limits, including
@@ -2086,7 +2087,8 @@ separately.
     in sorted order and at most 20, ork writes the file's base version
     (`git show MERGEBASE:path`, the merge base Direction uses) to
     `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
-    "TMPDIR/base/path"}}`, in the reviewer's process temp directory. A file
+    "TMPDIR/base/path"}}`, in that role's own process temp directory. The gate's
+    overlay files are separate from the reviewer's (S594, adj 633, adj 637). A file
     the base lacks (new in the slice) maps to `""`, which `go` reads as a file
     that does not exist; no base copy is written. ork first runs
     `go -C WORKTREE vet -overlay TMPDIR/overlay-N.json ./DIR` for each overlay
@@ -2095,23 +2097,27 @@ separately.
     each limited to 200 characters, and a `git show` pointer instead of a test
     command. stderr takes priority over stdout; empty output gives the exit
     code. A vet that cannot run or times out leaves the test command in place.
-    When a file's vet output names other changed non-test Go files (by full
-    relative path, absolute path, or, in the vetted package's directory, the
+    When a file's vet output names other changed Go files, including `_test.go`
+    files (by full relative path, absolute path, or, in the vetted package's directory, the
     package-relative name, each followed by `:` and at the start of a line or
     after a space), ork adds their base versions to that file's overlay and
     vets again. It reads the whole vet output, not the first three lines, and
     repeats up to one round per listed file, stopping when no new changed file
-    is named. It never adds a test file or an unchanged file. The entry reads
+    is named. It never adds an unchanged file. A test file new in the slice
+    maps to `""`. The entry reads
     `- file (with other.go reverted too)`, after any new-in-this-slice marker.
     It gets a test command only when the final vet passes; otherwise it reads
     `does not build: ERROR` from the final output. The all-files fallback
     below is unchanged and still follows only when no single-file entry
-    offers a command (S634, adj 630).
+    offers a command (S634, adj 630). When test files are reverted too, the
+    entry says tests this slice added in those files do not run. Such an entry
+    gets no automatic pass run and no "Passes in full" note (S594, adj 633).
     For each remaining file, the section names
     one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json -count=1
     ./DIR` command, so a read-only reviewer can run the package's tests with
     only that file reverted and see a test the slice added fail. ork also runs
-    each of these single-file test commands sequentially with a two-minute
+    each of these single-file test commands, except those reverting test files,
+    sequentially with a two-minute
     timeout (S622, adj 618, adj 622). An exit-zero run adds "Passes in full
     with this file reverted: no test in the package fails for this change, so
     no test covers it." after the command. A non-zero exit, timeout or failure
@@ -2744,7 +2750,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   absolute, or holds a space, `*`, `,`, a quote or a parenthesis, drops every
   `git -C` and `go -C` entry instead (adj 580). The list also allows
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
-  `slicer check` (adj 504, including `slicer check --root DIR`), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
+  `slicer check` (adj 504, including `slicer check --root DIR`),
+  `slicer relay-roles show` (adj 634), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet`, `go doc` (also
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
   `adj lint --root DIR`. S358 adds an exact-file Edit/Write exception for
   the local progress note described under Roles.
@@ -2767,6 +2774,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Reviewer and gate briefs carry a generic line saying socket-bound failures
   are sandbox-limited, ork's round check is the evidence, and the role need
   not run `go test ./...`; it names no package (S606, adj 616).
+  A reviewer also gets `slicer init`, `add`, `set`, `note`, `done` and
+  `relay-roles` writes with a final, literal `--root` naming its own process
+  temp dir (S527, adj 634 and 639), under the same reviewer-only condition as
+  the temp-dir write grant (S510). The temp path must be absolute, clean and
+  need no shell quoting. Other roots and trailing arguments are refused.
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs

@@ -31,6 +31,10 @@ this prompt disagree, the brief wins; say so in your report.
 - Run a focused test as one `go -C {{worktree}} test -run NAME PKG` command, one test
   per command, and the next test in its own command. Never join test names in one
   `-run` pattern: a pipe makes a compound command that the read-only allowlist denies.
+- When the brief has a `## Base overlays` section, its commands run a package's tests
+  with one changed Go file reverted to the base, so a test the slice added can be
+  seen to fail without the product change. Run one as given, as a plain command;
+  it changes nothing in the tree. ork wrote those overlay files for this round.
 - Never commit, push, tag, merge or rebase.
 - Never read vendor credential or login files, and never print tokens, keys or
   passwords.

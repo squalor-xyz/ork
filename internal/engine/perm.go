@@ -25,7 +25,7 @@ type Permission struct {
 // returns its own slice. The git -C and go -C entries name the role's worktree, so no
 // write command that ends in a subcommand name matches (S586, adj 577,
 // launch.read-only-git-c-form); a worktree that cannot be pinned drops them
-// (PinGitC).
+// (PinGitC). It includes go doc and slicer relay-roles show (S527, adj 634).
 func LocalReadOnlyAllowlist(worktree string) []string {
 	return PinGitC([]string{
 		"Read", "Grep", "Glob",
@@ -35,10 +35,27 @@ func LocalReadOnlyAllowlist(worktree string) []string {
 		"Bash(git -C * diff*)", "Bash(git -C * log*)", "Bash(git -C * status*)", "Bash(git -C * show*)",
 		"Bash(git merge-base*)", "Bash(git -C * merge-base*)",
 		"Bash(slicer show*)", "Bash(slicer goals*)", "Bash(slicer list*)", "Bash(slicer deps*)", "Bash(slicer find*)", "Bash(slicer check*)",
+		"Bash(slicer relay-roles show*)",
 		"Bash(adj show*)", "Bash(adj check*)", "Bash(adj lint*)",
 		"Bash(go test*)", "Bash(go vet*)", "Bash(go -C * test*)", "Bash(go -C * vet*)",
+		"Bash(go doc*)", "Bash(go -C * doc*)",
 		"Bash(gofmt -l*)",
 	}, worktree)
+}
+
+// ReviewerTempSlicerWrites permits the fixed slicer writes only when --root
+// ends the command and names the reviewer's process temp dir (S527, adj 634
+// and 639). The runner uses S510's reviewer-only temp-dir write condition.
+// Unsafe paths grant nothing. Each call returns its own slice.
+func ReviewerTempSlicerWrites(tmpDir string) []string {
+	if !filepath.IsAbs(tmpDir) || filepath.Clean(tmpDir) != tmpDir || ShellWord(tmpDir) != tmpDir {
+		return nil
+	}
+	var out []string
+	for _, sub := range []string{"init", "add", "set", "note", "done", "relay-roles"} {
+		out = append(out, "Bash(slicer "+sub+"* --root "+tmpDir+")")
+	}
+	return out
 }
 
 // gitCTemplate and goCTemplate start entries whose `*` stands for the worktree

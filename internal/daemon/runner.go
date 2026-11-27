@@ -55,6 +55,9 @@ func (r claudeRunner) Run(ctx context.Context, req engine.Request) (engine.Resul
 	// the rules to the command line; a claude-local role's approval hook gets
 	// the same rules, because the hook decides there.
 	writeTMP := req.ReadOnly && req.Role == engine.RoleReviewer && req.TMPDir != ""
+	if writeTMP {
+		allowlist = append(slices.Clone(allowlist), engine.ReviewerTempSlicerWrites(req.TMPDir)...)
+	}
 	addDir := ""
 	if req.Vendor == "claude-local" && req.ProgressFile != "" {
 		if !filepath.IsAbs(req.ProgressFile) || filepath.Clean(req.ProgressFile) != req.ProgressFile {

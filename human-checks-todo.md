@@ -371,3 +371,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S634 (run ork-20261127-163048-8b5b, 2026-11-27)
 
 - [ ] In the next reviewer round on a slice where one changed Go file adds a field or helper that another changed Go file uses (as in S615, check.go and brief.go), open the reviewer brief's ## Base overlays section.
+
+## S594 (run ork-20261127-183633-38ab, 2026-11-27)
+
+- [ ] In the next reviewer round on a slice where one changed Go file adds a struct field that a changed test file reads (as in S579, roadmap.go and matrix_test.go), open the reviewer brief's ## Base overlays section.

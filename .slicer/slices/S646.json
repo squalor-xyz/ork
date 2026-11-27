@@ -1,0 +1,39 @@
+{
+  "id": "S646",
+  "title": "start the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-183721-0a4e, project ork, item S527:\n\nstart the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines\n\nEvidence: slicer init --root /home/jon/.local/state/ork/t/37d0e04686eac1a1/3b735833065ebf2c/p1 denied: \"This command requires approval\" (S463)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

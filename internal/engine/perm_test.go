@@ -538,6 +538,58 @@ func TestRolePermissionPinsGitCForImplementerAndPart(t *testing.T) {
 	}
 }
 
+func TestReviewerTempSlicerWritesPinTheRootToTheTempDir(t *testing.T) {
+	list := ReviewerTempSlicerWrites("/t/run/reviewer-1")
+	for _, command := range []string{
+		"slicer init --root /t/run/reviewer-1", "slicer init --force --relay-roles --root /t/run/reviewer-1",
+		`slicer add "x" --root /t/run/reviewer-1`, "slicer set S1 --status done --root /t/run/reviewer-1",
+		`slicer note S1 --text "x" --root /t/run/reviewer-1`, `slicer done S1 --note "x" --root /t/run/reviewer-1`, "slicer relay-roles add r1 --root /t/run/reviewer-1",
+	} {
+		t.Run(command, func(t *testing.T) {
+			if len(matchingEntries(list, command)) == 0 {
+				t.Errorf("no entry matches %q", command)
+			}
+		})
+	}
+}
+
+func TestReviewerTempSlicerWritesRefuseOtherRoots(t *testing.T) {
+	list := append(LocalReadOnlyAllowlist("/w"), ReviewerTempSlicerWrites("/t/run/reviewer-1")...)
+	for _, command := range []string{
+		"slicer init --root /w", "slicer init --root /t/run/reviewer-10", "slicer init --root /t/run/reviewer-1/sub", "slicer init --root /t/run/reviewer-1/../x", "slicer init --root /t/run/reviewer-1 --root /w",
+		"slicer init --root /t/run/reviewer-1 /w", "slicer init", "slicer init --root=/t/run/reviewer-1",
+		`slicer note S1 --text "--root /t/run/reviewer-1" --root /w`, `slicer note S1 --root /w --text "x --root /t/run/reviewer-1"`,
+		"slicer --root /t/run/reviewer-1 init", "slicer ai relay --init-roles --root /t/run/reviewer-1", `slicer changelog add S1 --text "x" --root /t/run/reviewer-1`,
+		`slicer note S505 --text "x" --root /w`, `slicer done S505 --note "x" --root /w`, `slicer set S505 --field status=done --root /w`, "slicer ai relay --init-roles --force --root /w", `slicer changelog add S505 --text "x" --root /w`,
+	} {
+		t.Run(command, func(t *testing.T) {
+			if got := matchingEntries(list, command); len(got) != 0 {
+				t.Errorf("entries %q match %q", got, command)
+			}
+		})
+	}
+}
+
+func TestReviewerTempSlicerWritesNeedASafeTempDir(t *testing.T) {
+	for _, bad := range []string{"", "t", "rel/t", "/t/../u", "/a b", "/a*b", "/a,b", "/a'b", `/a"b`, "/a(b", "/a)b"} {
+		t.Run(bad, func(t *testing.T) {
+			if got := ReviewerTempSlicerWrites(bad); len(got) != 0 {
+				t.Errorf("unsafe temp dir %q: %q", bad, got)
+			}
+		})
+	}
+	a := ReviewerTempSlicerWrites("/t/run/reviewer-1")
+	snapshot := slices.Clone(a)
+	b := ReviewerTempSlicerWrites("/t/run/reviewer-1")
+	if len(a) == 0 || len(b) == 0 {
+		t.Fatal("missing temp slicer writes")
+	}
+	a[0] = "changed"
+	if !slices.Equal(b, snapshot) {
+		t.Errorf("calls share their backing array: %q", b)
+	}
+}
+
 func goWritesEndingIn(x string) []string {
 	return []string{
 		"go -C /w get example.com/m " + x,
@@ -545,6 +597,63 @@ func goWritesEndingIn(x string) []string {
 		"go -C /w build -o /w/bin " + x,
 		"go -C /w install example.com/m " + x,
 		"go -C /w generate " + x,
+	}
+}
+
+func TestReadOnlyAllowlistIncludesGoDoc(t *testing.T) {
+	for name, list := range map[string][]string{"local": LocalReadOnlyAllowlist("/w"), "cloudui": CloudUIAllowlist("/w")} {
+		for _, entry := range []string{"Bash(go doc*)", "Bash(go -C /w doc*)"} {
+			if !slices.Contains(list, entry) {
+				t.Errorf("%s missing %s", name, entry)
+			}
+		}
+		for _, command := range []string{"go doc ./internal/adjcli Client.Init", "go -C /w doc ./internal/adjcli Client.Init"} {
+			if len(matchingEntries(list, command)) == 0 {
+				t.Errorf("%s: no entry matches %q", name, command)
+			}
+		}
+		for _, entry := range list {
+			if strings.HasPrefix(entry, "Bash(go -C *") {
+				t.Errorf("%s: unpinned %s", name, entry)
+			}
+		}
+	}
+}
+
+func TestReadOnlyAllowlistRefusesGoWritesEndingInDoc(t *testing.T) {
+	for name, list := range map[string][]string{"local": LocalReadOnlyAllowlist("/w"), "cloudui": CloudUIAllowlist("/w")} {
+		for _, command := range append(goWritesEndingIn("doc"), "go -C /other doc ./x", "go -C /w/sub doc ./x") {
+			t.Run(name+"/"+command, func(t *testing.T) {
+				if got := matchingEntries(list, command); len(got) != 0 {
+					t.Errorf("entries %q match %q", got, command)
+				}
+			})
+		}
+	}
+}
+
+func TestReadOnlyAllowlistIncludesSlicerRelayRolesShow(t *testing.T) {
+	for name, list := range map[string][]string{"local": LocalReadOnlyAllowlist("/w"), "cloudui": CloudUIAllowlist("/w")} {
+		if !slices.Contains(list, "Bash(slicer relay-roles show*)") {
+			t.Errorf("%s missing Bash(slicer relay-roles show*)", name)
+		}
+		for _, command := range []string{"slicer relay-roles show", "slicer relay-roles show --json --root /w", "slicer relay-roles show --root /w"} {
+			if len(matchingEntries(list, command)) == 0 {
+				t.Errorf("%s: no entry matches %q", name, command)
+			}
+		}
+	}
+}
+
+func TestReadOnlyAllowlistRefusesRelayRolesWrites(t *testing.T) {
+	for name, list := range map[string][]string{"local": LocalReadOnlyAllowlist("/w"), "cloudui": CloudUIAllowlist("/w")} {
+		for _, command := range []string{"slicer relay-roles init", "slicer relay-roles init --force --root /w", "slicer relay-roles add r1 --root /w", "slicer relay-roles set r1 --root /w", "slicer relay-roles remove r1", "slicer relay-roles move r1 --root /w", "slicer relay-roles rule-add --root /w", "slicer relay-roles rule-edit --root /w", "slicer relay-roles rule-remove --root /w", "slicer relay-roles apply --stdin --root /w", "slicer relay-roles --root /w add r1", "slicer ai relay-roles --root /w"} {
+			t.Run(name+"/"+command, func(t *testing.T) {
+				if got := matchingEntries(list, command); len(got) != 0 {
+					t.Errorf("entries %q match %q", got, command)
+				}
+			})
+		}
 	}
 }
 

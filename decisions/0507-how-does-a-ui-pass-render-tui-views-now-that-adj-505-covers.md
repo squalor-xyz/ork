@@ -2,7 +2,7 @@
 {
   "id": 507,
   "title": "How does a UI pass render TUI views now that adj 505 covers CLI views?",
-  "status": "decided",
+  "status": "superseded",
   "key": "roles.ui-pass-tui-render",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -25,6 +25,7 @@
   },
   "decision": "overlay",
   "rationale": "Owner chose 'Keep overlay for TUI (Recommended)' in an interactive question, relay session 8d711f67, 2026-11-19.",
+  "superseded_by": 644,
   "refs": [
     "S416"
   ],
@@ -36,6 +37,11 @@
     {
       "date": "2026-11-19",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-27",
+      "event": "supersede",
+      "note": "by 644"
     }
   ]
 }
