@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 638,
+  "next_id": 639,
   "preamble": "",
   "passes": [
     {
@@ -33555,6 +33555,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S638",
+      "title": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document",
+      "short_title": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S611",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261127-134347-4da8-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }
