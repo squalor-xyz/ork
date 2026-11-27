@@ -1,0 +1,39 @@
+{
+  "id": "S654",
+  "title": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "S631's round-1 full suite (run ork-20261127-194833-6309, slice-checks-1-11.log) failed once with:\n\"--- FAIL: TestWaveHeldMemberStartsAfterTheEarlierLands ... item failed: run ork-20261127-205645-9e55: mkdir .../runs/ork-20261127-205645-9e55: file exists\".\nThe test passes 8 of 8 times on main and in the worktree, so it is a collision, not a logic failure. Run IDs are \"ork-\" + time to the second + Deps.randHex(), which is 2 random bytes (internal/engine/engine.go:117-124, :428). Two runs created in the same second (or under a fixed test clock) collide with probability about 1/65536 per pair, and the mkdir then fails the run. The red slice check then stuck through rounds 2 and 3 because the product did not change, and the orchestrator had to retry by hand.\n\nMake run creation retry with a fresh suffix when the directory exists, and use more random bytes; chain- and wave- IDs (internal/daemon/runs.go:1378, :1675) have the same shape."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

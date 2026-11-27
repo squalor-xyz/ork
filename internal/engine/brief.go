@@ -348,6 +348,9 @@ func deferredSection(checks []runrec.CheckRecord, finish bool) *BriefSection {
 // test files under internal/tui, where no view changed (S584).
 const uiNoRendersTitle = "No renders expected"
 
+const uiNoRendersCLITitle = "No renders expected for CLI tests and docs"
+const uiIdenticalRendersTitle = "Renders are identical at every size"
+
 // doneWhen adds acceptance criteria without replacing any role's report format.
 func doneWhen(in BriefInput) string {
 	var items []string
@@ -470,6 +473,9 @@ func doneWhen(in BriefInput) string {
 			for _, section := range in.Sections {
 				if section.Title == uiNoRendersTitle {
 					renders = "No renders are expected: the diff changes only test files under internal/tui. Write no render files and say so in your report."
+				}
+				if section.Title == uiNoRendersCLITitle {
+					renders = "No renders are expected: the diff changes only CLI test files and docs. Write no render files and say so in your report."
 				}
 			}
 			add("Complete sections (A)-(D): findings name the view, size, visible defect, file:line, concrete edit and CONFIRMED or PLAUSIBLE. " + renders)
