@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 638,
+  "next_id": 640,
   "preamble": "",
   "passes": [
     {
@@ -28217,7 +28217,7 @@
       "id": "S530",
       "title": "say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite",
       "short_title": "say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -28234,7 +28234,7 @@
         "key": "tool-feedback-ork-6a7cd4ac",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Covered by S606 (reviewer and gate briefs carry the sandbox socket line, adj 616); Jon chose 'File 626, retire S530', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -32256,7 +32256,7 @@
       "id": "S606",
       "title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
       "short_title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32266,6 +32266,20 @@
           "text": "**2026-11-27** — Owner decision: one generic line in the reviewer and gate briefs (internal/engine/brief.go:440), like the implementer line (adj 519): socket-bound test failures in the sandbox are sandbox-limited, ork's round check is the evidence, and the reviewer need not run go test ./...; names no packages. Jon chose 'Generic line', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T13:43:11Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "359ca686-6e6b-4614-800f-48f018edefe5",
+          "kind": "",
+          "text": "**2026-11-27** — Reviewer and gate sandbox guidance passes its dedicated tests and existing exact-checklist expectations; the full engine suite passes.",
+          "created_at": "2026-11-27T15:10:31Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -32292,7 +32306,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32485,7 +32499,7 @@
       "id": "S611",
       "title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md",
       "short_title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32516,6 +32530,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "726af451-91b0-443b-80aa-9acb367813b3",
+          "kind": "",
+          "text": "**2026-11-27** — Reverified S611 without further edits; both fixture coverage tests pass, and all 24 exact-name mutations fail independently.",
+          "created_at": "2026-11-27T14:56:20Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32535,7 +32563,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33069,7 +33097,7 @@
       "id": "S622",
       "title": "For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test",
       "short_title": "For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33100,6 +33128,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6291e4c9-cb23-487f-9a17-4a674f23358d",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S622):\n- later: In the next reviewer round for a slice that changes a non-test Go file with no test of its own, open the reviewer's brief under the run's role files. In ## Base overlays, that file's entry should end with \"Passes in full with this file reverted: ...\" after its command. An entry for a file whose revert fails a test should have no such sentence.\n- later: In the next reviewer round for a slice whose only Go changes are _test.go files, open the reviewer's brief. ## Base overlays should hold a paragraph saying a base overlay cannot isolate the product change, and no go -C ... test -overlay command.",
+          "created_at": "2026-11-27T15:35:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e0b2ec3b-2308-4491-94ad-5def76105bbc",
+          "kind": "",
+          "text": "**2026-11-27** — Reviewer briefs mark passing single-file base overlays and explain test-only Go changes; all 1228 engine tests pass.",
+          "created_at": "2026-11-27T15:35:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -33119,7 +33175,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33454,7 +33510,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "deeb639e-183f-48ff-bea6-66c27973cb7b",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 629): three fixtures, wait-block (one run, text block with a pause, question and decision key, including the S621 slot-wait state), wait-lines (several runs, one line each) and wait-stop (stage end, timeout and nothing-active messages); add each to renderFixtureNames, the UI pass brief's fixture list, docs/guide.md and docs/design.md, with a renderViews entry and a TestRenderCLIViewsWritesFiles case each. Jon chose 'Three shapes', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T15:46:34Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -33538,7 +33609,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "5abc8869-daab-4aab-96fc-f55909eaee8d",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 628): flag a clause-leading word from a fixed list (go, gofmt, git, slicer, adj, ork), after , ; and or ., followed by an argument, in a Check entry's text outside the backticks; the finding names that command. In the spec check, the spec draft and ork run, like S563's lint. Jon chose 'Known commands', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T15:46:33Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -33578,6 +33664,62 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-f9c3e4da",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S638",
+      "title": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document",
+      "short_title": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S611",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261127-134347-4da8-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S639",
+      "title": "when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text",
+      "short_title": "when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S606",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-950e3088",
         "pass": "v1.2",
         "group": "",
         "reason": "",

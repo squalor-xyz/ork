@@ -22,6 +22,10 @@ import (
 const baseOverlayLimit = 20
 
 const baseOverlayVetTimeout = 2 * time.Minute
+const baseOverlayTestTimeout = 2 * time.Minute
+
+const baseOverlayPassNote = "Passes in full with this file reverted: no test in the package fails for this change, so no test covers it."
+const baseOverlayTestOnlyNote = "Every changed Go file is a test file, so a base overlay cannot isolate the product change: the tests are part of the change. Read each file's base version with `git show` instead."
 
 // baseOverlayOlderBinaryNote opens the section when the running ork binary is
 // behind main (S598, *proposed*; adj 591): that binary may have no vet step, or
@@ -48,13 +52,16 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		return &BriefSection{Title: title, Body: "Check incomplete: the branch diff against the base could not be read. Trace the base version of each changed file yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show MERGEBASE:PATH`); this does not block the run."}
 	}
 	var goFiles, otherFiles []string
+	hasGoTest := false
 	for _, p := range changed {
+		hasGoTest = hasGoTest || strings.HasSuffix(p, "_test.go")
 		if strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, "_test.go") {
 			goFiles = append(goFiles, p)
 		} else {
 			otherFiles = append(otherFiles, p)
 		}
 	}
+	testOnly := len(goFiles) == 0 && hasGoTest
 	slices.Sort(goFiles)
 	goFiles = slices.Compact(goFiles)
 	slices.Sort(otherFiles)
@@ -96,7 +103,11 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			continue
 		}
 		command := fmt.Sprintf("go -C %s test -overlay %s %s", ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(packageArg(p)))
-		entries = append(entries, line+": `"+command+"`")
+		entry := line + ": `" + command + "`"
+		if e.overlayPackagePasses(ctx, rec, overlayFile, packageArg(p)) {
+			entry += ". " + baseOverlayPassNote
+		}
+		entries = append(entries, entry)
 		commands++
 	}
 	if len(replacements) >= 2 && commands == 0 {
@@ -172,6 +183,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		}
 		body.WriteString("Check incomplete: the base version of " + strings.Join(unread, ", ") + " could not be read. Trace it yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`); this does not block the run.\n")
 	}
+	if testOnly {
+		body.WriteString("\n" + baseOverlayTestOnlyNote + "\n")
+	}
 	if len(otherFiles) > 0 {
 		if body.Len() > 0 {
 			body.WriteString("\n")
@@ -179,6 +193,16 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		body.WriteString("The overlays cover non-test Go files only; other changed files are not overlaid. To read the base version of any other changed file, run `git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`. `git grep` is not available on the read-only list.\n")
 	}
 	return &BriefSection{Title: title, Body: strings.TrimRight(body.String(), "\n")}
+}
+
+// overlayPackagePasses annotates only completed, successful test runs. Any
+// failure, including an unavailable tool or deadline, leaves the entry plain.
+func (e *Engine) overlayPackagePasses(ctx context.Context, rec runrec.Record, overlayFile, pkg string) bool {
+	_, err := clirun.Run(ctx, clirun.Call{
+		Bin: e.d.goBin(), Args: []string{"-C", rec.Worktree, "test", "-overlay", overlayFile, pkg},
+		Timeout: baseOverlayTestTimeout,
+	})
+	return err == nil
 }
 
 // overlayBuildError is advisory: only a vet process that exits non-zero

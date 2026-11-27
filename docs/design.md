@@ -844,6 +844,8 @@ slice.
     in the brief under Your files. The pass
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
     names for the approval card.
+    `TestRenderFixtureDocsListEveryFixture` checks that this document and the
+    guide include every additional render fixture by its exact name.
     No renders expected (*proposed*, S584; adj 600): ork skips the run's own
     tracking paths under `.slicer/` and `landed-changed/` in the branch's diff.
     When at least one path is left and every path left is a `_test.go` file
@@ -2085,7 +2087,13 @@ separately.
     For each remaining file, the section names
     one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
     ./DIR` command, so a read-only reviewer can run the package's tests with
-    only that file reverted and see a test the slice added fail. It tells the
+    only that file reverted and see a test the slice added fail. ork also runs
+    each of these single-file test commands sequentially with a two-minute
+    timeout (S622, adj 618, adj 622). An exit-zero run adds "Passes in full
+    with this file reverted: no test in the package fails for this change, so
+    no test covers it." after the command. A non-zero exit, timeout or failure
+    to start leaves the entry plain. Failed-vet and unreadable-base entries,
+    and the combined overlay, get no test run. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
     test names in one `-run` pattern (S571). This command guidance appears only
     when at least one single-file test command remains (S593). When at least
@@ -2105,6 +2113,11 @@ separately.
     marked "new in this slice, no base version", without a command. Invalid
     paths and failed reads join the incomplete-check notice. A diff with only
     other files gets this list without Go overlays, vet calls or the Go intro.
+    When every changed Go file is a `_test.go` file, it adds a paragraph before
+    the closing guidance: a base overlay cannot isolate the product change
+    because the tests are part of the change; read each file's base version
+    with `git show` instead (S622, S623, adj 618). A diff with no Go file gets
+    no such paragraph.
     The section ends with a paragraph: the overlays cover non-test Go files
     only; other changed files are not overlaid. It adds that `git
     grep` is not on the read-only list. No `git grep` entry was added, because
@@ -2710,6 +2723,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Implementer briefs say socket-bound tests may fail inside their sandbox,
   report those as sandbox-limited, and use ork's round check outside the
   sandbox as the evidence (adj 519).
+  Reviewer and gate briefs carry a generic line saying socket-bound failures
+  are sandbox-limited, ork's round check is the evidence, and the role need
+  not run `go test ./...`; it names no package (S606, adj 616).
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs

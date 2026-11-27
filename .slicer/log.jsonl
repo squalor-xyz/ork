@@ -7238,6 +7238,12 @@
 {"when": "2026-11-27T13:43:11Z", "item": "S606", "action": "note", "from": "", "to": "", "note": "Owner decision: one generic line in the reviewer and gate br", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:43:11Z", "item": "S620", "action": "note", "from": "", "to": "", "note": "Owner decision (key base-overlays.importer-packages): ork ru", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:43:11Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Owner decision (key reviewer.overlay-pass-note): ork runs ea", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:06:42Z", "item": "S611", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:07:07Z", "item": "S611", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:07:07Z", "item": "S611", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:08:31Z", "item": "S611", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:56:20Z", "item": "S611", "action": "note", "from": "", "to": "", "note": "Reverified S611 without further edits; both fixture coverage", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:56:20Z", "item": "S611", "action": "status", "from": "started", "to": "done", "note": "Reverified S611 without further edits; both fixture coverage tests pass, and all 24 exact-name mutations fail independently.", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:45:17Z", "item": "S632", "action": "add", "from": "", "to": "open", "note": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file"}
 {"when": "2026-11-27T13:45:18Z", "item": "S632", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T14:11:40Z", "item": "S633", "action": "add", "from": "", "to": "open", "note": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output"}
@@ -7258,6 +7264,23 @@
 {"when": "2026-11-27T14:11:51Z", "item": "S635", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T14:12:48Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T14:12:48Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T15:08:42Z", "item": "S622", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:09:03Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T15:09:03Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T15:11:54Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T15:16:48Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T15:35:36Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S622):", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:35:36Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Reviewer briefs mark passing single-file base overlays and e", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:35:37Z", "item": "S622", "action": "status", "from": "started", "to": "done", "note": "Reviewer briefs mark passing single-file base overlays and explain test-only Go changes; all 1228 engine tests pass.", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:41:32Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:41:32Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:56:27Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:56:27Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T15:10:31Z", "item": "S606", "action": "note", "from": "", "to": "", "note": "Reviewer and gate sandbox guidance passes its dedicated test", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:10:31Z", "item": "S606", "action": "status", "from": "started", "to": "done", "note": "Reviewer and gate sandbox guidance passes its dedicated tests and existing exact-checklist expectations; the full engine suite passes.", "by": "Jon Robbins"}
 {"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "add", "from": "", "to": "open", "note": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing"}
 {"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "edit", "from": "", "to": "", "note": "Why"}
@@ -7279,3 +7302,13 @@
 {"when": "2026-11-27T15:49:24Z", "item": "S610", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S610):", "by": "Jon Robbins"}
 {"when": "2026-11-27T15:49:25Z", "item": "S610", "action": "note", "from": "", "to": "", "note": "S610 adds the decided end-anchor warning and full-test-name ", "by": "Jon Robbins"}
 {"when": "2026-11-27T15:49:25Z", "item": "S610", "action": "status", "from": "started", "to": "done", "note": "S610 adds the decided end-anchor warning and full-test-name alternative to the shared brief line, with documentation and passing focused tests.", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:42:46Z", "item": "S638", "action": "add", "from": "", "to": "open", "note": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document"}
+{"when": "2026-11-27T14:42:47Z", "item": "S638", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:42:47Z", "item": "S638", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
+{"when": "2026-11-27T15:45:12Z", "item": "S530", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S606 (reviewer and gate briefs carry the sandbox socket line, adj 616); Jon chose 'File 626, retire S530', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T15:45:43Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T15:45:43Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T15:45:45Z", "item": "S639", "action": "add", "from": "", "to": "open", "note": "when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text"}
+{"when": "2026-11-27T15:45:45Z", "item": "S639", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T15:46:33Z", "item": "S636", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 628): flag a clause-leading word from a ", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:46:34Z", "item": "S633", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 629): three fixtures, wait-block (one ru", "by": "Jon Robbins"}
