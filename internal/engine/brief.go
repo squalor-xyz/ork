@@ -438,7 +438,7 @@ func doneWhen(in BriefInput) string {
 				}
 			}
 		case RoleReviewer, RoleGate:
-			add("Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./....")
+			add("Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./....")
 			add("Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.")
 			if in.Role == RoleReviewer {
 				add("A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.")
@@ -446,7 +446,7 @@ func doneWhen(in BriefInput) string {
 			} else {
 				add("Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.")
 				add("For a tracking step denied to the implementer, add one Deviation for the orchestrator evidence line beside the criterion lines, never a [fix]; it is not a finding and starts no fix round.")
-				add("Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts; end with the exact unnumbered heading ## Owner needed and questions or none.")
+				add("Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts, or Tests: relied on ork round results when you ran no tests and relied on ork's round check; either Tests form may start with a list marker. End with the exact unnumbered heading ## Owner needed and questions or none.")
 			}
 			add("Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.")
 		case RoleArchitect:

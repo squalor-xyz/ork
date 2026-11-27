@@ -20,7 +20,7 @@ import (
 	"github.com/squalor-xyz/ork/internal/runrec"
 )
 
-// baseOverlayLimit caps the files the reviewer's Base overlays section lists.
+// baseOverlayLimit caps the files a role's Base overlays section lists.
 const baseOverlayLimit = 20
 
 const baseOverlayVetTimeout = 2 * time.Minute
@@ -41,7 +41,7 @@ const baseOverlayOlderBinaryNote = "Note: an ork binary older than this slice's 
 // it tries reverting all written files together. The reviewer can confirm
 // that a test the slice added fails without the product change, with no write
 // to the tree. ork writes the base copy and the overlay JSON into tmpDir, the
-// reviewer's process temp directory. Like the decision paths check, a failure
+// role's process temp directory. Like the decision paths check, a failure
 // is advisory: the section says the check is incomplete and never pauses the
 // run. Other files get git show commands. It returns nil when no file changed.
 func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpDir string, change branchChangeResult) *BriefSection {
@@ -53,13 +53,16 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	if err != nil {
 		return &BriefSection{Title: title, Body: "Check incomplete: the branch diff against the base could not be read. Trace the base version of each changed file yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show MERGEBASE:PATH`); this does not block the run."}
 	}
-	var goFiles, otherFiles []string
+	var goFiles, testFiles, otherFiles []string
 	hasGoTest := false
 	for _, p := range changed {
 		if baseOverlayTrackingPath(p) {
 			continue
 		}
 		hasGoTest = hasGoTest || strings.HasSuffix(p, "_test.go")
+		if strings.HasSuffix(p, "_test.go") {
+			testFiles = append(testFiles, p)
+		}
 		if strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, "_test.go") {
 			goFiles = append(goFiles, p)
 		} else {
@@ -69,6 +72,8 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	testOnly := len(goFiles) == 0 && hasGoTest
 	slices.Sort(goFiles)
 	goFiles = slices.Compact(goFiles)
+	slices.Sort(testFiles)
+	testFiles = slices.Compact(testFiles)
 	slices.Sort(otherFiles)
 	otherFiles = slices.Compact(otherFiles)
 	if len(goFiles) == 0 && len(otherFiles) == 0 {
@@ -79,6 +84,7 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		leftOut = len(goFiles) - baseOverlayLimit
 		goFiles = goFiles[:baseOverlayLimit]
 	}
+	closure := append(slices.Clone(goFiles), testFiles...)
 	otherLeftOut := 0
 	if len(otherFiles) > baseOverlayLimit {
 		otherLeftOut = len(otherFiles) - baseOverlayLimit
@@ -89,6 +95,7 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	replacements := make(map[string]string)
 	var packages []string
 	commands := 0
+	hasRevertedTests := false
 	type builtOverlay struct{ file, overlay string }
 	var built []builtOverlay
 	for _, p := range goFiles {
@@ -105,14 +112,14 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		if isNew {
 			line += " (new in this slice; the overlay hides it)"
 		}
-		// When vet names other changed Go files, revert them in the same overlay
+		// When vet names other changed Go or test files, revert them in the same overlay
 		// and vet again, one round per listed file at most (S634, adj 630).
 		replace := map[string]string{key: replacement}
 		var added []string
 		output, failed := e.overlayVetOutput(ctx, rec, overlayFile, packageArg(p))
-		for round := 0; failed && round < len(goFiles); round++ {
+		for round := 0; failed && round < len(closure); round++ {
 			var next []string
-			for _, f := range namedChangedFiles(output, rec.Worktree, goFiles, path.Dir(p)) {
+			for _, f := range namedChangedFiles(output, rec.Worktree, closure, path.Dir(p)) {
 				if f != p && !slices.Contains(added, f) {
 					next = append(next, f)
 				}
@@ -140,13 +147,22 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		if len(added) > 0 {
 			line += " (with `" + strings.Join(added, "`, `") + "` reverted too)"
 		}
+		var revertedTests []string
+		for _, f := range added {
+			if strings.HasSuffix(f, "_test.go") {
+				revertedTests = append(revertedTests, f)
+			}
+		}
+		hasRevertedTests = hasRevertedTests || len(revertedTests) > 0
 		if failed {
 			entries = append(entries, line+": does not build: "+vetMessage(output)+". Trace its base version with `git -C "+ShellWord(rec.Worktree)+" show "+ShellWord(mergeBase+":"+p)+"` instead.")
 			continue
 		}
 		command := fmt.Sprintf("go -C %s test -overlay %s -count=1 %s", ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(packageArg(p)))
 		entry := line + ": `" + command + "`"
-		if e.overlayPackagePasses(ctx, rec, overlayFile, packageArg(p)) {
+		if len(revertedTests) > 0 {
+			entry += ". Tests this slice added in `" + strings.Join(revertedTests, "`, `") + "` do not run."
+		} else if e.overlayPackagePasses(ctx, rec, overlayFile, packageArg(p)) {
 			entry += ". " + baseOverlayPassNote
 		}
 		entries = append(entries, entry)
@@ -270,7 +286,11 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		if body.Len() > 0 {
 			body.WriteString("\n")
 		}
-		body.WriteString("The overlays cover non-test Go files only; other changed files are not overlaid. To read the base version of any other changed file, run `git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`. `git grep` is not available on the read-only list.\n")
+		guidance := "The overlays cover non-test Go files only; other changed files are not overlaid."
+		if hasRevertedTests {
+			guidance = "The overlays start with non-test Go files; changed test files named by vet may be reverted too. Other changed files are not overlaid."
+		}
+		body.WriteString(guidance + " To read the base version of any other changed file, run `git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`. `git grep` is not available on the read-only list.\n")
 	}
 	return &BriefSection{Title: title, Body: strings.TrimRight(body.String(), "\n")}
 }
@@ -396,15 +416,16 @@ func vetMessage(output string) string {
 	return strings.Join(lines, "; ")
 }
 
-// namedChangedFiles returns the entries of goFiles that a line of the vet
-// output names, in goFiles order. A line names a file with its relative path,
+// namedChangedFiles returns the entries of candidates (Go and test files) that
+// a line of the vet output names, in candidate order. A line names a file with
+// its relative path,
 // "./" and that path, or the worktree path, each followed by ":". A file in
 // the vetted package's directory dir is also named by its base name, bare or
 // with "./". A form counts only at the start of the line or after a space, so
 // another directory's file of the same name is not taken for it.
-func namedChangedFiles(output, worktree string, goFiles []string, dir string) []string {
+func namedChangedFiles(output, worktree string, candidates []string, dir string) []string {
 	var named []string
-	for _, p := range goFiles {
+	for _, p := range candidates {
 		forms := []string{p, "./" + p, filepath.ToSlash(worktree) + "/" + p}
 		if path.Dir(p) == dir {
 			forms = append(forms, path.Base(p), "./"+path.Base(p))

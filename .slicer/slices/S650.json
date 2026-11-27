@@ -1,0 +1,39 @@
+{
+  "id": "S650",
+  "title": "allow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-183723-3908, project ork, item S521:\n\nallow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search\n\nEvidence: git -C WORKTREE grep -n \"CheckReport(\" -- internal was denied, but the brief only says git grep is not on the read-only list for base reads"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

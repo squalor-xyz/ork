@@ -128,9 +128,39 @@ func baseOverlayCommand(W, tmp string, n int, dir string) string {
 
 func baseOverlayVetCalls(h *harness) []clitest.Call {
 	var calls []clitest.Call
-	for _, call := range h.fake.CallsTo("go") {
+	for _, call := range baseOverlayReviewerGoCalls(h) {
 		if len(call.Args) > 2 && call.Args[2] == "vet" {
 			calls = append(calls, call)
+		}
+	}
+	return calls
+}
+
+// baseOverlayReviewerGoCalls excludes the gate's fresh overlay probes. List
+// calls have no overlay argument, so select those between reviewer and gate vet.
+func baseOverlayReviewerGoCalls(h *harness) []clitest.Call {
+	var tmp string
+	for _, req := range h.runner.requests() {
+		if req.Role == RoleReviewer {
+			tmp = req.TMPDir
+			break
+		}
+	}
+	var calls []clitest.Call
+	for _, call := range h.fake.CallsTo("go") {
+		if len(call.Args) > 4 && call.Args[3] == "-overlay" && !strings.HasPrefix(call.Args[4], tmp+string(filepath.Separator)) {
+			break
+		}
+		calls = append(calls, call)
+	}
+	return calls
+}
+
+func baseOverlayReviewerCalls(h *harness, args ...string) [][]string {
+	var calls [][]string
+	for _, call := range baseOverlayReviewerGoCalls(h) {
+		if len(call.Args) >= len(args) && reflect.DeepEqual(call.Args[:len(args)], args) {
+			calls = append(calls, call.Args)
 		}
 	}
 	return calls
@@ -269,7 +299,7 @@ func TestBaseOverlayListsDirectImporterPackages(t *testing.T) {
 	if len(entries) != 1 || strings.Index(body, want[0]) < strings.Index(body, entries[0]) {
 		t.Errorf("Go entry count or importer order: %s", body)
 	}
-	if calls := h.calls("go", "-C", h.W, "list"); !reflect.DeepEqual(calls, [][]string{{"-C", h.W, "list", "-e", "-json", "./..."}}) {
+	if calls := baseOverlayReviewerCalls(h, "-C", h.W, "list"); !reflect.DeepEqual(calls, [][]string{{"-C", h.W, "list", "-e", "-json", "./..."}}) {
 		t.Errorf("list calls = %v", calls)
 	}
 }
@@ -282,7 +312,7 @@ func TestBaseOverlayImporterLinePerRevertedFile(t *testing.T) {
 	if got := importerLines(body); !reflect.DeepEqual(got, want) {
 		t.Errorf("per-file importer lines = %q, want %q", got, want)
 	}
-	if calls := h.calls("go", "-C", h.W, "list"); len(calls) != 1 {
+	if calls := baseOverlayReviewerCalls(h, "-C", h.W, "list"); len(calls) != 1 {
 		t.Errorf("list calls = %v", calls)
 	}
 }
@@ -326,7 +356,7 @@ func TestBaseOverlayNoImporterListWhenNoOverlayBuilds(t *testing.T) {
 			if builds {
 				want = 1
 			}
-			if len(importerLines(body)) != want || len(h.calls("go", "-C", h.W, "list")) != want {
+			if len(importerLines(body)) != want || len(baseOverlayReviewerCalls(h, "-C", h.W, "list")) != want {
 				t.Errorf("builds %v: wrong importer lines or list calls: %s", builds, body)
 			}
 		})
@@ -424,7 +454,7 @@ func TestBaseOverlayMarksPackagePassWithFileReverted(t *testing.T) {
 		}
 	}
 	wantCalls = append(wantCalls, clitest.Call{Tool: "go", Args: []string{"-C", h.W, "list", "-e", "-json", "./..."}})
-	if got := h.fake.CallsTo("go"); !reflect.DeepEqual(got, wantCalls) {
+	if got := baseOverlayReviewerGoCalls(h); !reflect.DeepEqual(got, wantCalls) {
 		t.Errorf("go calls = %v, want %v", got, wantCalls)
 	}
 }
@@ -449,7 +479,7 @@ func TestBaseOverlayNoPassNoteWhenVetFails(t *testing.T) {
 			if fails {
 				wantCalls = 0
 			}
-			if calls := h.calls("go", "-C", h.W, "test"); len(calls) != wantCalls {
+			if calls := baseOverlayReviewerCalls(h, "-C", h.W, "test"); len(calls) != wantCalls {
 				t.Errorf("test calls = %v, vet fails = %v", calls, fails)
 			}
 		})
@@ -1001,7 +1031,10 @@ func TestBaseOverlayPromptOnlyDiffGetsHint(t *testing.T) {
 	for _, call := range h.calls("git", "-C", h.W, "show") {
 		paths = append(paths, call[3])
 	}
-	if !reflect.DeepEqual(paths, []string{"base:README.md", "base:docs/a.go.md", "base:internal/x/x_test.go"}) {
+	// Both reviewer and gate read the other files for their own sections.
+	wantPaths := []string{"base:README.md", "base:docs/a.go.md", "base:internal/x/x_test.go"}
+	wantPaths = append(wantPaths, wantPaths...)
+	if !reflect.DeepEqual(paths, wantPaths) {
 		t.Errorf("git show paths = %q", paths)
 	}
 	if calls := h.fake.CallsTo("go"); len(calls) != 0 {
@@ -1338,7 +1371,15 @@ func TestBaseOverlayNamedFileClosureAcceptsPackageRelativeAndAbsoluteNames(t *te
 
 func TestBaseOverlayNamedFileClosureStopsWhenNoNewFileIsNamed(t *testing.T) {
 	output := "# pkg\ninternal/x/a.go:1:1: self\ninternal/x/other.go:2:2: unchanged\ninternal/x/a_test.go:3:3: test"
-	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/a_test.go\x00", false, clitest.Reply{Exit: 1, Stderr: output})
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "internal/x/a.go\x00", "",
+				baseOverlayShow(W, "internal/x/a.go", "package x\n"),
+				baseOverlayShow(W, "internal/x/other.go", "package x\n"),
+				baseOverlayShow(W, "internal/x/a_test.go", "package x\n"),
+				clitest.Route{Tool: "go", Args: []string{"-C", W, "vet"}, Prefix: true, Stderr: output, Exit: 1})
+		}
+	})
 	req, _, entries := overlayVetResult(t, h)
 	if len(entries) != 1 {
 		t.Fatalf("entries = %q, want one", entries)
@@ -1419,7 +1460,123 @@ func TestBaseOverlayNamedFileClosureKeepsNewFileNote(t *testing.T) {
 	}
 }
 
-func TestBaseOverlayOnlyForTheReviewer(t *testing.T) {
+func TestBaseOverlayRevertsANamedTestFileToo(t *testing.T) {
+	for _, name := range []string{"internal/x/a_test.go", "./a_test.go", "WORKTREE/internal/x/a_test.go"} {
+		t.Run(name, func(t *testing.T) {
+			h := namedVetHarness(t, "internal/x/a.go\x00internal/x/a_test.go\x00", func(string) bool { return false }, func(W string) []clitest.Reply {
+				return []clitest.Reply{{Exit: 1, Stderr: strings.ReplaceAll(name, "WORKTREE", W) + ":201:12: pane.page undefined"}, {}}
+			})
+			req, body, entries := overlayVetResult(t, h)
+			want := "- `internal/x/a.go` (with `internal/x/a_test.go` reverted too): `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`. Tests this slice added in `internal/x/a_test.go` do not run."
+			if !reflect.DeepEqual(entries, []string{want}) {
+				t.Errorf("entries = %q, want %q", entries, want)
+			}
+			if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go", "internal/x/a_test.go"); !reflect.DeepEqual(got, want) {
+				t.Errorf("overlay-1 = %v, want %v", got, want)
+			}
+			if calls := baseOverlayVetCalls(h); len(calls) != 2 {
+				t.Errorf("vet calls = %d, want two", len(calls))
+			}
+			if baseOverlayAllEntry(body) != "" {
+				t.Errorf("unexpected all-files entry: %s", body)
+			}
+			requireOtherFileLines(t, body, h.W, []string{"internal/x/a_test.go"})
+		})
+	}
+}
+
+func TestBaseOverlayTestFileClosureHidesANewTestFile(t *testing.T) {
+	h := namedVetHarness(t, "internal/x/a.go\x00internal/x/a_test.go\x00", func(p string) bool { return strings.HasSuffix(p, "_test.go") }, namedVetReplies(
+		clitest.Reply{Exit: 1, Stderr: "internal/x/a_test.go:201:12: pane.page undefined"}, clitest.Reply{}))
+	req, _, entries := overlayVetResult(t, h)
+	want := baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go")
+	want[filepath.Join(h.W, "internal/x/a_test.go")] = ""
+	if got := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-1 = %v, want %v", got, want)
+	}
+	if len(entries) != 1 || !strings.HasSuffix(entries[0], ". Tests this slice added in `internal/x/a_test.go` do not run.") {
+		t.Errorf("missing reverted-test note: %q", entries)
+	}
+}
+
+func TestBaseOverlayTestFileClosureRepeatsAcrossFileKinds(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00internal/x/a_test.go\x00", false,
+		clitest.Reply{Exit: 1, Stderr: "internal/x/a_test.go:201:12: pane.page undefined"},
+		clitest.Reply{Exit: 1, Stderr: "internal/x/b.go:1:1: undefined"}, clitest.Reply{}, clitest.Reply{})
+	req, _, entries := overlayVetResult(t, h)
+	want := []string{
+		"- `internal/x/a.go` (with `internal/x/a_test.go`, `internal/x/b.go` reverted too): `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`. Tests this slice added in `internal/x/a_test.go` do not run.",
+		"- `internal/x/b.go`: `" + baseOverlayCommand(h.W, req.TMPDir, 2, "internal/x") + "`",
+	}
+	if !reflect.DeepEqual(entries, want) {
+		t.Errorf("entries = %q, want %q", entries, want)
+	}
+	if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go", "internal/x/a_test.go", "internal/x/b.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-1 = %v, want %v", got, want)
+	}
+	if calls := baseOverlayVetCalls(h); len(calls) != 4 {
+		t.Errorf("vet calls = %d, want four", len(calls))
+	}
+}
+
+func TestBaseOverlayRevertedTestFileGetsNoPassRun(t *testing.T) {
+	// A successful test reply would wrongly claim coverage if the probe ran.
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			return baseOverlayRoutes(W, "internal/x/a.go\x00internal/x/a_test.go\x00", "",
+				baseOverlayShow(W, "internal/x/a.go", "package x\n"),
+				baseOverlayShow(W, "internal/x/a_test.go", "package x\n"),
+				clitest.Route{Tool: "go", Args: []string{"-C", W, "vet"}, Prefix: true, Seq: []clitest.Reply{{Exit: 1, Stderr: "internal/x/a_test.go:201:12: pane.page undefined"}, {}}},
+				clitest.Route{Tool: "go", Args: []string{"-C", W, "test"}, Prefix: true})
+		}
+	})
+	req, _, entries := overlayVetResult(t, h)
+	if len(baseOverlayVetCalls(h)) != 2 || len(entries) != 1 || strings.Contains(entries[0], "does not build") {
+		t.Errorf("closure did not build: %q", entries)
+	}
+	if len(entries) != 1 || strings.Contains(entries[0], "Passes in full") {
+		t.Errorf("reverted tests got a pass note: %q", entries)
+	}
+	if calls := h.calls("go", "-C", h.W, "test", "-overlay", filepath.Join(req.TMPDir, "overlay-1.json")); len(calls) != 0 {
+		t.Errorf("reverted tests got a pass run: %v", calls)
+	}
+}
+
+func TestBaseOverlayGateBriefHasItsOwnSection(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{})
+	reviewer, _, _ := overlayVetResult(t, h)
+	seen := false
+	for _, gate := range h.runner.requests() {
+		if gate.Role != RoleGate {
+			continue
+		}
+		seen = true
+		body, found := baseOverlayBody(gate.Brief)
+		if !found {
+			t.Error("gate missing Base overlays section")
+			continue
+		}
+		want := []string{"- `internal/x/a.go`: `" + baseOverlayCommand(h.W, gate.TMPDir, 1, "internal/x") + "`"}
+		if got := baseOverlayEntries(body); !reflect.DeepEqual(got, want) {
+			t.Errorf("gate entries = %q, want %q", got, want)
+		}
+		if gate.TMPDir == reviewer.TMPDir {
+			t.Error("gate reused reviewer temp directory")
+		}
+		overlay := filepath.Join(gate.TMPDir, "overlay-1.json")
+		if got, want := baseOverlayReplace(t, overlay), baseOverlayWantReplace(h, gate.TMPDir, "internal/x/a.go"); !reflect.DeepEqual(got, want) {
+			t.Errorf("gate overlay = %v, want %v", got, want)
+		}
+		if calls := h.calls("go", "-C", h.W, "vet", "-overlay", overlay, "./internal/x"); len(calls) != 1 {
+			t.Errorf("gate vet calls = %v, want one", calls)
+		}
+	}
+	if !seen {
+		t.Fatal("no gate ran")
+	}
+}
+
+func TestBaseOverlayOnlyForReviewerAndGate(t *testing.T) {
 	h := architectHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
 			return baseOverlayRoutes(W, "internal/x/x.go\x00", "", baseOverlayShow(W, "internal/x/x.go", "package x\n"))
@@ -1430,7 +1587,7 @@ func TestBaseOverlayOnlyForTheReviewer(t *testing.T) {
 	for _, req := range h.runner.requests() {
 		seen[req.Role] = true
 		_, has := baseOverlayBody(req.Brief)
-		if want := req.Role == RoleReviewer; has != want {
+		if want := req.Role == RoleReviewer || req.Role == RoleGate; has != want {
 			t.Errorf("%s brief holds a Base overlays section = %v, want %v", req.Role, has, want)
 		}
 	}

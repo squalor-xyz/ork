@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 644,
+  "next_id": 653,
   "preamble": "",
   "passes": [
     {
@@ -25397,6 +25397,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "822925d6-1a5b-433a-ba17-af0d111682e7",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 643): still run the UI pass with a No renders expected section (as S584) when the diff changes only internal/cli _test.go files and docs/*.md (tracking paths skipped, adj 600); and for a CLI-only diff that changes output text, the UI brief says the 80x24, 120x40 and ascii renders are identical, so the role writes one file per view (S540). Jon chose 'Note + S540 rule', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T19:19:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -25567,6 +25581,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "b0431fb1-bc83-4a5a-9dd6-12273d3ca93a",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 645): the gate still runs; its brief gains a plain line saying the slice is done, the tree is unchanged and no fix round ran, extending the Resumed session text (internal/engine/brief.go:257); covers the S635 owner-answer case. Jon chose 'Brief line', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T19:19:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -25659,6 +25687,20 @@
           "kind": "",
           "text": "**2026-11-27** — Merged group (reviewer diff lints): S457 (docs whose example CLI output disagrees with cli_test.go expectations), S518 (a doc insertion with no blank line after it) and S536 (a brief sentence gated on role while the matching permission grant is gated on vendor). S515 stays separate. Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T17:43:03Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "f48d70e7-37d2-4ac5-a5f3-fde797b22022",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 648): a Go test run by go test ./... that compares the CLI output strings quoted in docs/design.md with the expected strings in internal/cli/cli_test.go and fails on a mismatch. S518 and S536 are filed as separate follow-ups. Jon chose 'Go test lint for docs vs cli_test', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T19:19:15Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -27994,7 +28036,7 @@
       "id": "S521",
       "title": "let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed",
       "short_title": "let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28025,6 +28067,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "ca427a18-5ea5-4d2f-853f-115e23ee3e09",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S521):\n- later: Open an approval card whose gate reported Tests: relied on ork round results. The first line reads Gate PASS (round N)  Tests: relied on ork round results, with no 0 passed, 0 failed.",
+          "created_at": "2026-11-27T20:01:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "a847fc4d-e43c-4311-ab4a-a415dd27b69f",
+          "kind": "",
+          "text": "**2026-11-27** — Corrected the Report checks documentation to describe gate-only reliance reports; all eight regression tests pass.",
+          "created_at": "2026-11-27T20:01:56Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28044,7 +28114,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28206,7 +28276,7 @@
       "id": "S527",
       "title": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output",
       "short_title": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28237,6 +28307,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "16c22c03-ff3c-4ed3-a2a2-80889b7bf853",
+          "kind": "",
+          "text": "**2026-11-27** — Read-only Claude allowlists now include go doc and slicer relay-roles show; eligible reviewers receive the six temp-root slicer write grants, verified by focused tests and mutations.",
+          "created_at": "2026-11-27T19:19:45Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28256,7 +28340,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -28711,6 +28795,20 @@
           "kind": "",
           "text": "**2026-11-27** — Merged group (render tools): S538 (a TUI render flag like internal/cli's -renders/-render-fixture, replacing the hand-written overlay recipe in ui.md:65-68), S642 (adj 631: a ready command that prints each new render fixture's text) and S641 (check fixture next: lines against daemon pausedNext, daemon/runs.go:3098). Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T17:43:01Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "bdadb376-c6d6-4344-9bf8-ab759a7dd1ef",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 644, supersedes adj 507): internal/tui gets test flags like internal/cli's -renders DIR and -render-fixture NAME[,NAME...] (internal/cli/render_test.go:26-31): default views at 80x24 and 120x40 plus an ASCII render, as NAME.txt files; plus a mode that prints each fixture's text to stdout (S642). Replace the overlay recipe in AGENTS.md (Project Commands) and internal/roles/prompts/ui.md:65-68. S641 (check fixture next: lines against daemon pausedNext) is also in scope. Jon chose 'Flag, mirror CLI + print', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T19:19:14Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -31807,7 +31905,7 @@
       "id": "S594",
       "title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
       "short_title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31852,6 +31950,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "12bc6908-6d14-430d-9238-4ce85fd4b56d",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S594):\n- later: In the next reviewer round on a slice where one changed Go file adds a struct field that a changed test file reads (as in S579, roadmap.go and matrix_test.go), open the reviewer brief's ## Base overlays section.",
+          "created_at": "2026-11-27T19:03:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "80a15a16-fc6c-46f7-84b5-c833f4d36bbd",
+          "kind": "",
+          "text": "**2026-11-27** — Base overlays revert changed test files named by vet, identify omitted new tests, suppress misleading pass probes, and are freshly generated for every gate round; focused checks and engine/roles suites pass.",
+          "created_at": "2026-11-27T19:03:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31871,7 +31997,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33597,7 +33723,7 @@
       "id": "S629",
       "title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
       "short_title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33607,6 +33733,34 @@
           "text": "**2026-11-27** — Triage 2026-11-27: the reviewer is told it need not run go test ./... (brief.go:441); remaining: give the reviewer the Ork round check result section the gate gets (round.go:660-691) or a FAIL-lines-only form. Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T17:43:03Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2b458539-5dd3-49a2-b89f-ca5aeb202520",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 646): give the reviewer the same Ork round check result section the gate gets (internal/engine/round.go:660-694) and update the reviewer line at brief.go:441. Jon chose 'Round result section', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T19:19:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "123f1148-9147-4fda-aecc-ae4f49650935",
+          "kind": "",
+          "text": "**2026-11-27** — Reviewer and gate briefs share the recorded Ork round check result and captured failure log; acceptance tests, the engine suite and static checks pass.",
+          "created_at": "2026-11-27T20:23:38Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -33633,7 +33787,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33677,6 +33831,20 @@
           "kind": "",
           "text": "**2026-11-27** — Merged group (duplicate detection, neardup.go, toolfeedback.go:288): S631 (check new tool feedback against slices that landed after the feedback's run) and S639 (adj 626: compare titles of open items, not only against the Why text, for Likely duplicates; brief.go:573, 690). Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T17:43:02Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "ddbb7272-58c1-4c60-9203-49712da07afe",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 647): still file the slice, then add a slicer note naming a done item with a near-identical title (NearDuplicateTitles/titleWords in internal/engine/neardup.go; no landing date needed), like the possible-duplicate note at toolfeedback.go:290. Also carry S639: compare open-item titles, not only the Why text, for the brief's Likely duplicates (brief.go:573, 690). Jon chose 'Link; done items by title; include S639', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T19:19:15Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -34138,6 +34306,148 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
+      "note_records": [
+        {
+          "id": "d548699b-e317-4365-a20a-d994d6d400a4",
+          "kind": "",
+          "text": "**2026-11-27** — Also covers adj 655: when a base overlay also reverts a test file (S594 closure), also offer an overlay that reverts only the product file plus a generated stub, so the slice's new tests can show a red result without a hand-written probe (evidence: S629 overlay-2 reverted brief_test.go with round.go). Jon chose 'Fold into S643', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T20:26:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S644",
+      "title": "in the Base overlays intro, say that an entry with \"reverted too\" reverts more than one file",
+      "short_title": "in the Base overlays intro, say that an entry with \"reverted too\" reverts more than one file",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S594",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-410f3551",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S645",
+      "title": "in the Base overlays intro, say that an entry marked \"reverted too\" reverts more than one file",
+      "short_title": "in the Base overlays intro, say that an entry marked \"reverted too\" reverts more than one file",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "2c0c54ec-c808-4d30-a6b3-bb4eb3d2766c",
+          "kind": "",
+          "text": "**2026-11-27** — possible duplicate of S644",
+          "created_at": "2026-11-27T19:03:00Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S594",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-a3205d96",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S646",
+      "title": "start the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines",
+      "short_title": "start the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S527",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0612efe6",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S647",
+      "title": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph",
+      "short_title": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
       "note_records": [],
       "claim": null,
       "fields": {
@@ -34156,6 +34466,161 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S648",
+      "title": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too",
+      "short_title": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S649",
+      "title": "give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line",
+      "short_title": "give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S527",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-23c73137",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S650",
+      "title": "allow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search",
+      "short_title": "allow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S521",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-12bf6a83",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S651",
+      "title": "run the new spec-open-key and decision-key checks on the slice's own spec and diff before the review, so a slice that adds such a check can see its own false positives",
+      "short_title": "run the new spec-open-key and decision-key checks on the slice's own spec and diff before the review, so a slice that adds such a check can see its own false positives",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S537",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ec6580b5",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S652",
+      "title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
+      "short_title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "1913929c-f46d-460d-ab3f-d0fed86ef8ae",
+          "kind": "",
+          "text": "**2026-11-27** — Owner direction: the Decision keys not found check skips _test.go files (narrows adj 640, review.decision-key-citation). Jon chose 'File: skip _test.go', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T20:18:38Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S537",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261127-183724-914b-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

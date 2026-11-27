@@ -329,6 +329,18 @@ func TestApprovalCardShowsVerdictTestsDiffstat(t *testing.T) {
 	}
 }
 
+func TestApprovalCardPrintsRelianceLine(t *testing.T) {
+	c := approvalCard(openChecksThree()...)
+	c.Passed = 0
+	c.RelianceOnRound = true
+	h := cardHarness(t, c)
+	h.m.Update(tea.WindowSizeMsg{Width: 120, Height: 40})
+	v := plainView(h.m)
+	if !strings.Contains(v, "Gate PASS (round 1)  Tests: relied on ork round results") || strings.Contains(v, "0 passed, 0 failed") {
+		t.Fatalf("reliance summary missing or shows zero counts:\n%s", v)
+	}
+}
+
 // Approval is the owner's confirm of the whole landing, so the card says what
 // it does before the owner presses a (S119, adj 162, adj 152).
 func TestApprovalCardSaysApprovalLandsAndCleansUp(t *testing.T) {

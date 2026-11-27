@@ -179,7 +179,7 @@ func TestGatePassBuildsTheApprovalCard(t *testing.T) {
 	if c == nil {
 		t.Fatal("no approval card")
 	}
-	if c.Verdict != "PASS" || c.Round != 1 || c.Passed != 12 || c.Failed != 0 {
+	if c.Verdict != "PASS" || c.Round != 1 || c.Passed != 12 || c.Failed != 0 || c.RelianceOnRound {
 		t.Errorf("verdict and counts: %+v", c)
 	}
 	if strings.TrimSpace(c.DiffStat) != strings.TrimSpace(stat) || !reflect.DeepEqual(c.Untracked, []string{"internal/tui/card.go"}) {
@@ -188,6 +188,20 @@ func TestGatePassBuildsTheApprovalCard(t *testing.T) {
 	want := []runrec.HumanCheck{{Text: checkOne}, {Text: checkTwo}}
 	if !reflect.DeepEqual(c.HumanChecks, want) {
 		t.Errorf("human checks %+v, want %+v", c.HumanChecks, want)
+	}
+}
+
+func TestGateRelianceLineBuildsTheApprovalCard(t *testing.T) {
+	h := newHarness(t)
+	h.runner.script = func(req Request, n int) (Result, error) {
+		if req.Role == RoleGate {
+			return Result{Exit: ExitOK, Report: "VERDICT: PASS\nTests: relied on ork round results\n" + ownerNone}, nil
+		}
+		return Result{}, nil
+	}
+	c := requireState(t, h.start(), runrec.StateAwaitingApproval).Card
+	if c == nil || c.Verdict != "PASS" || c.Passed != 0 || c.Failed != 0 || !c.RelianceOnRound {
+		t.Fatalf("reliance card: %+v", c)
 	}
 }
 

@@ -1,0 +1,39 @@
+{
+  "id": "S629",
+  "title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported (tool feedback, run ork-20261126-022730-61cc, item S614) that its own full `go test ./...` run exited 1, but `internal/daemon` stderr filled the output and hid the `--- FAIL` line. Pipes and redirects are denied, so it could not filter the output.\n\nThe owner decided (adj 646, key `reviewer.round-check-evidence`, Jon chose \"Round result section\", 2026-11-27) that the reviewer gets the same `## Ork round check result` section the gate gets. The gate section is built inline in `internal/engine/round.go:674-694` and carries the round, command, log name, exit status and the captured log, including failing lines. Round checks run before review (`checks` state, `internal/engine/states.go:347-375`), so the record already holds the log when the reviewer starts. The reviewer brief line at `internal/engine/brief.go:441` also changes to point at that section.\n\nOwner decision, 2026-11-27: adj 646."
+    },
+    {
+      "heading": "Files",
+      "body": "- `internal/engine/round.go:452-475` (roundCheckSection)\n- `internal/engine/round.go:646-669` (reviewer sections)\n- `internal/engine/round.go:689-708` (gate check evidence)\n- `internal/engine/brief.go:441` (shared checklist line)\n- `internal/engine/brief_test.go:277-299` (TestReviewerAndGateBriefsNoteSandboxSocketTests)\n- `internal/engine/brief_test.go:1079-1097` (TestGateReceivesRoundCheckEvidence)\n- `internal/engine/brief_test.go:1099-1177` (new reviewer and round-section tests)\n- `internal/engine/brief_test.go:1905` (inline checklist expectation)\n- `internal/engine/brief_test.go:2416-2443` (TestReviewerAndGateDoneWhen)\n- `docs/design.md:1953-1967`\n- `docs/design.md:2773-2776`\n- `landed-changed/S629.md` (new)"
+    },
+    {
+      "heading": "Failing tests",
+      "body": "- TestReviewerReceivesRoundCheckEvidence (`internal/engine/brief_test.go:1099`, new beside TestGateReceivesRoundCheckEvidence): after a default harness run reaches awaiting-approval, the reviewer brief contains ## Ork round check result, checks-1.log, Exit status: 0 and all packages. An architect harness confirms its architect request has no such section. Fails because only the gate gets the section.\n- TestRoundCheckSectionCarriesFailingLines (`internal/engine/brief_test.go:1133`, new): roundCheckSection(runDir string, checks []runrec.CheckRecord) (BriefSection, error) returns the Ork round check result title and fenced failure evidence from a non-slice row with OK false: Exit status: nonzero, Check log: checks-1.log, --- FAIL: TestX and FAIL\\texample/pkg (with existing report sanitization). With no records its body is exactly No round check result is available. Do not claim tests green without evidence. A slice row after a non-slice row does not change the evidence. Fails because the function does not exist.\n- TestReviewerAndGateBriefsNoteSandboxSocketTests (`internal/engine/brief_test.go:277-299`): new shared line appears once for reviewer and gate without internal/ or ./internal package paths. Fails until brief.go:441 changes.\n- TestReviewerAndGateDoneWhen (`internal/engine/brief_test.go:2416`; inline expectation in TestClaudeAndCodexReadOnlyDoneWhen at :1905): claude and codex reviewer/gate checklists contain the new line once after read-only and denied-forms instructions."
+    },
+    {
+      "heading": "Implement",
+      "body": "1. In `internal/engine/brief.go:441`, replace the shared reviewer and gate line with: `Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./....` The line names no package. It stays one `add(...)` call before the `if in.Role == RoleReviewer` split. Both roles carry it, and the gate already has the section.\n2. In `internal/engine/round.go`, extract the gate's inline body-building code (lines 674-693) into `roundCheckSection(runDir string, checks []runrec.CheckRecord) (BriefSection, error)`. It returns the `Ork round check result` section: the latest non-slice record, or the last record when all are slice rows, with the same text as now. When there are no records the body is `No round check result is available. Do not claim tests green without evidence.` Keep `ReadReport`, `fenceFor` and the existing body format unchanged. Report a read error with the wrapped text `round check evidence`.\n3. In the `RoleGate` block (`round.go:660-695`), replace the inline code with a call to `roundCheckSection(e.run.Dir(), rec.Checks)`. Keep its position after the stale-docs section and return `fail(\"gate check evidence\", err)` on error.\n4. In the `RoleReviewer` block (`round.go:622-640`), after `staleDocsSection`, call `roundCheckSection(e.run.Dir(), rec.Checks)` and append the section. Return `fail(\"reviewer check evidence\", err)` on error. The architect and UI pass get none.\n5. Update the three tests named in Failing tests and add the two new ones.\n6. In `docs/design.md:1953-1962`, say the reviewer gets the same round check result section as the gate (S629, adj 646), with the same contents and the same 64 KiB truncation, and that the reviewer is not told to run the suite. In `docs/design.md:2768-2770`, change the reviewer and gate line to say the line points at that section.\n7. Run `slicer changelog add S629 --root /home/jon/code/squalor-xyz/ork --text \"The reviewer brief carries the Ork round check result section, with the captured log and failing lines, so a truncated go test failure can be identified.\"`. This writes `landed-changed/S629.md`. Do not edit `CHANGELOG.md`."
+    },
+    {
+      "heading": "Check",
+      "body": "- Acceptance: the reviewer brief holds a ## Ork round check result section that is identical in form to the gate's, and the reviewer line points at it. The gate brief is unchanged apart from the shared line.\n- `go test -run TestReviewerReceivesRoundCheckEvidence ./internal/engine` passes.\n- `go test -run TestRoundCheckSectionCarriesFailingLines ./internal/engine` passes.\n- `go test -run TestGateReceivesRoundCheckEvidence ./internal/engine` passes.\n- `go test -run TestReviewerAndGateBriefsNoteSandboxSocketTests ./internal/engine` passes.\n- `go test -run TestReviewerAndGateDoneWhen ./internal/engine` passes.\n- `go test ./internal/engine` passes.\n- `go vet ./...` prints nothing.\n- `gofmt -l .` prints nothing."
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

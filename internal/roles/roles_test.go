@@ -250,6 +250,17 @@ func TestImplementerAndGateShowTheTestsLineLiterally(t *testing.T) {
 	}
 }
 
+func TestGatePromptNamesTheRelianceLine(t *testing.T) {
+	p := prompts(t)["gate"]
+	for _, want := range []string{"`Tests: N passed, M failed`", "Tests: relied on ork round results", "ran no tests and relied on ork's round check"} {
+		t.Run(want, func(t *testing.T) {
+			if !strings.Contains(p, want) {
+				t.Fatalf("gate prompt lacks %q", want)
+			}
+		})
+	}
+}
+
 func TestPromptsTellRolesListNumbersAreNotHeadings(t *testing.T) {
 	if !has(prompts(t)["implementer"], "They are not part of the report: never number a heading.") {
 		t.Error("implementer does not explain list numbers are not part of the report and headings are never numbered")
@@ -664,6 +675,30 @@ func TestReviewerPromptCarriesTheProbeRecipe(t *testing.T) {
 	for _, m := range regexp.MustCompile(`\{\{([^{}]*)\}\}`).FindAllStringSubmatch(p, -1) {
 		if !known[m[1]] {
 			t.Errorf("reviewer prompt holds unknown placeholder %s", m[0])
+		}
+	}
+}
+
+func TestGatePromptPointsAtBaseOverlays(t *testing.T) {
+	p := prompts(t)["gate"]
+	for _, want := range []string{"## Base overlays", "one changed Go file reverted to the base", "as a plain command", "ork wrote those overlay files for this round"} {
+		if !has(p, want) {
+			t.Errorf("gate prompt lacks %q", want)
+		}
+	}
+	for _, line := range strings.Split(p, "\n") {
+		if strings.Contains(line, "-run") && strings.Contains(line, "|") {
+			t.Errorf("gate prompt joins test names: %s", line)
+		}
+	}
+	for i, r := range p {
+		if r > 127 {
+			t.Errorf("gate prompt holds a non-ASCII character at %d", i)
+		}
+	}
+	for _, word := range []string{"severity", "medium"} {
+		if strings.Contains(strings.ToLower(p), word) {
+			t.Errorf("gate prompt contains %q", word)
 		}
 	}
 }
