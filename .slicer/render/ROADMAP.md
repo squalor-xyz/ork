@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-651 items · — 40 · done 441 · retired 170
+651 items · — 39 · done 442 · retired 170
 
 ## v1.3
 
@@ -209,7 +209,7 @@ v1.2
 | 152 | [S447](slices/S447.md) | name go test -overlay with a temp-dir test file as the sanctioned render path for read-only UI passes in the brief |  | - |  | Duplicate of S416 (UI pass render path; go test -overlay route, option a). · discovered from S393 | retired |
 | 153 | [S448](slices/S448.md) | say in the brief whether plan mode may wrap a gate session, so the plan-file and ExitPlanMode instructions do not compete with the gate report |  | - |  | Duplicate of S418 (plan mode in read-only and gate briefs). · discovered from S439 | retired |
 | 154 | [S449](slices/S449.md) | S307 TUI follow-ups | M | 2 |  | S258 and S274 reviews and gates, 2026-11-07; re-anchored 2026-11-18; split from S307 by the owner on 2026-11-18. | done |
-| 155 | [S450](slices/S450.md) | skip the UI pass or say "no TUI views changed" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files |  | - |  | discovered from S432 | — |
+| 155 | [S450](slices/S450.md) | skip the UI pass or say "no TUI views changed" in the brief when the diff touches only CLI test strings and docs, no internal/tui or golden files |  | - |  | discovered from S432 | done |
 | 156 | [S451](slices/S451.md) | tell the reviewer in plan mode that the report goes in the final message, so it does not reach for ExitPlanMode |  | - |  | Duplicate of S418 (plan mode in read-only briefs; adj 489 moves cloud Claude read-only roles off plan mode). · discovered from S432 | retired |
 | 157 | [S452](slices/S452.md) | Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored |  | - |  | Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418 | retired |
 | 158 | [S453](slices/S453.md) | Resume the gate without Claude Code plan mode until S418 lands in the daemon binary |  | - |  | Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418 | retired |

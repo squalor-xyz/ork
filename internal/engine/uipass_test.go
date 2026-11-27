@@ -985,6 +985,148 @@ func TestUIPassBriefHasNoRendersNoteWhenTheDiffCannotBeRead(t *testing.T) {
 	}
 }
 
+func TestOnlyCLITestAndDocFiles(t *testing.T) {
+	for name, tc := range map[string]struct {
+		paths []string
+		want  bool
+	}{
+		"cli test":          {[]string{"internal/cli/x_test.go"}, true},
+		"nested cli test":   {[]string{"internal/cli/sub/x_test.go"}, true},
+		"doc":               {[]string{"docs/design.md"}, true},
+		"test and doc":      {[]string{"internal/cli/x_test.go", "docs/design.md"}, true},
+		"tracking and test": {[]string{".slicer/index.json", "landed-changed/S1.md", "internal/cli/x_test.go"}, true},
+		"empty":             {nil, false},
+		"tracking only":     {[]string{".slicer/index.json", "landed-changed/S1.md"}, false},
+		"source":            {[]string{"internal/cli/status.go"}, false},
+		"golden":            {[]string{"internal/cli/testdata/golden/x.txt"}, false},
+		"tui test":          {[]string{"internal/tui/x_test.go"}, false},
+		"engine test":       {[]string{"internal/engine/x_test.go"}, false},
+		"lookalike cli":     {[]string{"internal/cli2/x_test.go"}, false},
+		"nested doc":        {[]string{"docs/sub/x.md"}, false},
+		"readme":            {[]string{"README.md"}, false},
+		"test and source":   {[]string{"internal/cli/x_test.go", "internal/cli/status.go"}, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := onlyCLITestAndDocFiles(tc.paths); got != tc.want {
+				t.Fatalf("onlyCLITestAndDocFiles(%q) = %v, want %v", tc.paths, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestCLIOutputOnly(t *testing.T) {
+	for name, tc := range map[string]struct {
+		paths []string
+		want  bool
+	}{
+		"source":              {[]string{"internal/cli/status.go"}, true},
+		"golden":              {[]string{"internal/cli/testdata/golden/x.txt"}, true},
+		"source and test":     {[]string{"internal/cli/status.go", "internal/cli/x_test.go"}, true},
+		"source and doc":      {[]string{"internal/cli/status.go", "docs/design.md"}, true},
+		"source doc tracking": {[]string{"internal/cli/status.go", "docs/design.md", ".slicer/index.json", "landed-changed/S1.md"}, true},
+		"empty":               {nil, false},
+		"tracking only":       {[]string{".slicer/index.json", "landed-changed/S1.md"}, false},
+		"test only":           {[]string{"internal/cli/x_test.go"}, false},
+		"doc only":            {[]string{"docs/design.md"}, false},
+		"cli and tui":         {[]string{"internal/cli/status.go", "internal/tui/model.go"}, false},
+		"cli and engine":      {[]string{"internal/cli/status.go", "internal/engine/x.go"}, false},
+		"lookalike cli":       {[]string{"internal/cli2/status.go"}, false},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := cliOutputOnly(tc.paths); got != tc.want {
+				t.Fatalf("cliOutputOnly(%q) = %v, want %v", tc.paths, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestUIPassBriefSaysNoRendersWhenOnlyCLITestsAndDocsChanged(t *testing.T) {
+	h := noRendersHarness(t, "- `internal/cli/x_test.go`\n- `docs/design.md`", "internal/cli/x_test.go", "docs/design.md")
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	reviewer, ui, runs := briefsOf(h)
+	if runs != 1 {
+		t.Fatalf("the UI pass ran %d times", runs)
+	}
+	for _, want := range []string{
+		"## No renders expected for CLI tests and docs",
+		"No renders are expected: the diff changes only CLI test files and docs. Write no render files and say so in your report.",
+		"Complete sections (A)-(D)",
+	} {
+		if !strings.Contains(ui, want) {
+			t.Errorf("UI brief lacks %q", want)
+		}
+	}
+	if strings.Contains(ui, "Produce the required renders") {
+		t.Error("UI brief still asks for renders")
+	}
+	for _, text := range []string{"No renders expected", "No renders are expected", "Renders are identical at every size"} {
+		if strings.Contains(reviewer, text) {
+			t.Errorf("reviewer brief holds %q", text)
+		}
+	}
+}
+
+func TestUIPassBriefSaysRendersAreIdenticalWhenOnlyCLIOutputChanged(t *testing.T) {
+	h := noRendersHarness(t, "- `internal/cli/status.go`\n- `internal/cli/testdata/golden/status.txt`", "internal/cli/status.go", "internal/cli/testdata/golden/status.txt", "internal/cli/status_test.go")
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	reviewer, ui, runs := briefsOf(h)
+	if runs != 1 {
+		t.Fatalf("the UI pass ran %d times", runs)
+	}
+	for _, want := range []string{
+		"## Renders are identical at every size",
+		"80x24, 120x40 and ascii renders of a view are identical",
+		"Write one file per view, `VIEW-80x24.txt`, and no `VIEW-120x40.txt` or `VIEW-ascii.txt`.",
+		"Produce the required renders",
+	} {
+		if !strings.Contains(ui, want) {
+			t.Errorf("UI brief lacks %q", want)
+		}
+	}
+	if strings.Contains(ui, "No renders expected") {
+		t.Error("UI brief says no renders expected")
+	}
+	for _, text := range []string{"No renders expected", "No renders are expected", "Renders are identical at every size"} {
+		if strings.Contains(reviewer, text) {
+			t.Errorf("reviewer brief holds %q", text)
+		}
+	}
+}
+
+func TestUIPassBriefKeepsRendersWhenCLIAndTUIChanged(t *testing.T) {
+	h := noRendersHarness(t, "- `internal/cli/status.go`\n- `internal/tui/model.go`", "internal/cli/status.go", "internal/tui/model.go")
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	_, ui, runs := briefsOf(h)
+	if runs != 1 {
+		t.Fatalf("the UI pass ran %d times", runs)
+	}
+	for _, text := range []string{"No renders expected", "Renders are identical at every size"} {
+		if strings.Contains(ui, text) {
+			t.Errorf("UI brief holds %q", text)
+		}
+	}
+	if !strings.Contains(ui, "Produce the required renders") {
+		t.Error("UI brief lost the renders Done-when item")
+	}
+}
+
+func TestUIPassBriefHasNoCLISectionsWhenTheDiffCannotBeRead(t *testing.T) {
+	h := noRendersHarness(t, "- `internal/cli/x_test.go`")
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	_, ui, runs := briefsOf(h)
+	if runs != 1 {
+		t.Fatalf("the UI pass ran %d times", runs)
+	}
+	for _, text := range []string{"No renders expected", "Renders are identical at every size"} {
+		if strings.Contains(ui, text) {
+			t.Errorf("UI brief holds %q", text)
+		}
+	}
+	if !strings.Contains(ui, "Produce the required renders") {
+		t.Error("UI brief lost the renders Done-when item")
+	}
+}
+
 func TestUIPassBriefCarriesRegistrySkillsForItsVendor(t *testing.T) {
 	for _, vendor := range []string{"claude", "codex"} {
 		t.Run(vendor, func(t *testing.T) {

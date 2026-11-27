@@ -857,9 +857,17 @@ slice.
     under `internal/tui`, no view changed. The UI
     round's brief then gets a "No renders expected" section, and its Done-when
     item for renders says that no renders are expected and none are to be
-    written. The reviewer's brief gets neither. A diff that cannot be read adds
-    neither, does not pause the review, and leaves the brief as it is for any
-    other diff.
+    written. A diff whose remaining paths are all `_test.go` files under
+    `internal/cli` or `docs/*.md` directly under `docs/` gets a
+    "No renders expected for CLI tests and docs" section and the matching
+    Done-when item (adj 643). When the diff changes only `internal/cli`
+    output and docs, with at least one non-test CLI path, the brief adds
+    "Renders are identical at every size": the 80x24, 120x40 and ascii
+    renders are identical, so the role writes one `VIEW-80x24.txt` per view
+    and says in its report that the sizes are identical. The renders
+    Done-when item stays. The reviewer's brief gets none of these sections.
+    A diff that cannot be read adds none, does not pause the review, and
+    any other diff leaves the brief as it is.
     The UI brief also tells the pass that a `go test -run` pattern holds no
     pipe, because a pipe makes a compound command that the permission check
     denies, and gives the one-test-per-command form (S565).
