@@ -290,6 +290,23 @@ func TestCheckDraftCheckFlagsAMissingPathArgument(t *testing.T) {
 	}
 }
 
+func TestCheckDraftCheckFlagsASecondCommandOutsideTheBackticks(t *testing.T) {
+	tree := t.TempDir()
+	sections := []SpecDraftSection{{Name: "Check", Text: "- `go test ./...` exits 0, go vet ./... prints nothing"}}
+	want := []SpecDraftProblem{{Section: "Check", Message: `Check entry "go test ./...": text outside the backticks names a second command "go vet"; put each command in its own backticked entry`}}
+	if got := CheckDraftCheck(tree, sections, nil); !reflect.DeepEqual(got, want) {
+		t.Fatalf("problems %+v, want %+v", got, want)
+	}
+	split := []SpecDraftSection{{Name: "Check", Text: "- `go test ./...` exits 0\n- `go vet ./...` prints nothing"}}
+	if got := CheckDraftCheck(tree, split, nil); len(got) != 0 {
+		t.Fatalf("separate entries gave problems %+v", got)
+	}
+	unchanged := []SpecDraftSection{{Name: "Check", Text: "unchanged"}}
+	if got := CheckDraftCheck(tree, unchanged, nil); len(got) != 0 {
+		t.Fatalf("unchanged Check gave problems %+v", got)
+	}
+}
+
 func TestSpecDraftRefusesACheckEntryThatIsNotACommand(t *testing.T) {
 	for _, tc := range []struct {
 		name, check, files string

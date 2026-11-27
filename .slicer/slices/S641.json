@@ -1,0 +1,39 @@
+{
+  "id": "S641",
+  "title": "in render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (deterministic-check) on ork in ork run ork-20261127-160126-bfbb, project ork, item S633:\n\nin render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record\n\nEvidence: the round 1 wait-block fixture showed \"next: ork retry r1\" on a question pause, which the reviewer missed and the UI pass caught"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

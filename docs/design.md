@@ -849,7 +849,8 @@ slice.
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
     names for the approval card.
     `TestRenderFixtureDocsListEveryFixture` checks that this document and the
-    guide include every additional render fixture by its exact name.
+    guide include every additional render fixture by its exact name in their
+    `-render-fixture` lists, ignoring mentions elsewhere in the documents.
     No renders expected (*proposed*, S584; adj 600): ork skips the run's own
     tracking paths under `.slicer/` and `landed-changed/` in the branch's diff.
     When at least one path is left and every path left is a `_test.go` file
@@ -2075,7 +2076,10 @@ separately.
     Failed reads add an incomplete-check notice. The check is advisory and
     never blocks the run;
   - before the reviewer starts, a `## Base overlays` section when the branch
-    diff against the base holds any changed file (S618). For each non-test Go file,
+    diff against the base holds any changed file after skipping every path
+    under `.slicer/` or `landed-changed/` (S620, adj 600, adj 610). These paths
+    are removed before the section test, sorting and limits, including
+    `.slicer/config.json` and `.slicer/relay-roles.json`. For each non-test Go file,
     in sorted order and at most 20, ork writes the file's base version
     (`git show MERGEBASE:path`, the merge base Direction uses) to
     `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
@@ -2089,18 +2093,33 @@ separately.
     command. stderr takes priority over stdout; empty output gives the exit
     code. A vet that cannot run or times out leaves the test command in place.
     For each remaining file, the section names
-    one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
+    one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json -count=1
     ./DIR` command, so a read-only reviewer can run the package's tests with
     only that file reverted and see a test the slice added fail. ork also runs
     each of these single-file test commands sequentially with a two-minute
     timeout (S622, adj 618, adj 622). An exit-zero run adds "Passes in full
     with this file reverted: no test in the package fails for this change, so
     no test covers it." after the command. A non-zero exit, timeout or failure
-    to start leaves the entry plain. Failed-vet and unreadable-base entries,
+    to start leaves the entry plain. Every emitted overlay test command and
+    every automatic single-file test run carries `-count=1`, including combined
+    overlays and importer commands, so test results are never served from the
+    cache (S620, adj 627). Failed-vet and unreadable-base entries,
     and the combined overlay, get no test run. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
     test names in one `-run` pattern (S571). This command guidance appears only
-    when at least one single-file test command remains (S593). When at least
+    when at least one single-file test command remains (S593). In that case,
+    ork also runs `go -C WORKTREE list -e -json ./...` once with a two-minute
+    timeout and reads the module packages (S620, S628, adj 611, adj 617).
+    Direct importers of each reverted file's package, including `TestImports`
+    and `XTestImports`, get `- Importer` lines after the Go entries. Each uses
+    the same overlay as that file and is vetted separately before a test
+    command is offered; a non-zero vet exit gives `does not build: ERROR`
+    instead. Self imports and transitive imports are excluded. Importer
+    lines are sorted by file then package, deduplicated per file, capped at
+    20 across the section, with a count of lines left out (adj 625). When no
+    single-file overlay builds, ork does not list importers. A failed list,
+    timeout or invalid JSON adds one advisory incomplete notice; each file's
+    own package command remains. When at least
     two overlays were written and every one fails vet, ork writes
     `TMPDIR/overlay-all.json` reverting all those files, vets it over their
     packages, and lists it as a final entry with a test command (or
@@ -3535,6 +3554,12 @@ listed in Files. A missing directory containing a Files path is exempt too
 absolute paths, paths outside the worktree, values after `-run`, `-bench`
 and `-skip`, `rev:path` words, and import paths whose first element contains
 a dot (except `.` and `..`) are excluded (adj 614).
+A backticked Check entry whose text outside the backticks has a clause-leading
+`go`, `gofmt`, `git`, `slicer`, `adj` or `ork` followed by an argument also
+warns, naming that command, once for each such command. A clause starts after
+a word ending in `,` or `;`, after a sentence-ending `.`, and after `and` or
+`or`. The refusal, spec check finding and draft problem are the same as for
+the other entry warnings (adj 628).
 Check-entry warnings refuse
 `run.start` and the affected member of `wave.start` before a role starts. The
 refusal names the item and each entry and asks the owner to edit Check and
