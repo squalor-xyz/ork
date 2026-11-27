@@ -4390,7 +4390,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   same role, or `--vendor-env` and `--unset-vendor-env` for the same key is a
   usage error (exit 2) before the daemon starts, and a usage error never
   quotes a `--vendor-env` value. The text line names the fields and counts
-  (`environment_lines=2 lines`, `permissions=implementer:3 patterns;
+  (`environment_lines=2 lines`, `permissions=implementer:2 patterns;
   reviewer:read-only`, `vendor_env=codex:A,B`, with `unset` or `default` for
   a removal) and never prints a `vendor_env` value; `--json` prints the
   project as the registry holds it, as `projects list --json` does, so it

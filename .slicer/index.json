@@ -25664,7 +25664,7 @@
       "id": "S457",
       "title": "flag docs whose example CLI output strings disagree with the expected output in cli_test.go",
       "short_title": "flag docs whose example CLI output strings disagree with the expected output in cli_test.go",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -25709,6 +25709,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "02c9c0d7-38ad-4b1b-a5e0-deb70f8146f0",
+          "kind": "",
+          "text": "**2026-11-27** — S457 adds internal/docscheck/cliout_test.go, a go test lint that fails when a CLI output string quoted in docs/design.md disagrees with the strings internal/cli/cli_test.go expects, and fixes the one real drift (implementer:3 -> implementer:2 patterns); go vet, gofmt and go test ./... are clean.",
+          "created_at": "2026-11-27T21:13:40Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -25728,7 +25742,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

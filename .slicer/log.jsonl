@@ -7512,3 +7512,8 @@
 {"when": "2026-11-27T20:18:38Z", "item": "S652", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
 {"when": "2026-11-27T20:18:38Z", "item": "S652", "action": "note", "from": "", "to": "", "note": "Owner direction: the Decision keys not found check skips _te", "by": "Jon Robbins"}
 {"when": "2026-11-27T20:26:43Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Also covers adj 655: when a base overlay also reverts a test", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:04:43Z", "item": "S457", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:04:50Z", "item": "S457", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T21:04:55Z", "item": "S457", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T21:13:40Z", "item": "S457", "action": "note", "from": "", "to": "", "note": "S457 adds internal/docscheck/cliout_test.go, a go test lint ", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:13:40Z", "item": "S457", "action": "status", "from": "started", "to": "done", "note": "S457 adds internal/docscheck/cliout_test.go, a go test lint that fails when a CLI output string quoted in docs/design.md disagrees with the strings internal/cli/cli_test.go expects, and fixes the one real drift (implementer:3 -> implementer:2 patterns); go vet, gofmt and go test ./... are clean.", "by": "Jon Robbins"}
