@@ -2088,6 +2088,18 @@ separately.
     each limited to 200 characters, and a `git show` pointer instead of a test
     command. stderr takes priority over stdout; empty output gives the exit
     code. A vet that cannot run or times out leaves the test command in place.
+    When a file's vet output names other changed non-test Go files (by full
+    relative path, absolute path, or, in the vetted package's directory, the
+    package-relative name, each followed by `:` and at the start of a line or
+    after a space), ork adds their base versions to that file's overlay and
+    vets again. It reads the whole vet output, not the first three lines, and
+    repeats up to one round per listed file, stopping when no new changed file
+    is named. It never adds a test file or an unchanged file. The entry reads
+    `- file (with other.go reverted too)`, after any new-in-this-slice marker.
+    It gets a test command only when the final vet passes; otherwise it reads
+    `does not build: ERROR` from the final output. The all-files fallback
+    below is unchanged and still follows only when no single-file entry
+    offers a command (S634, adj 630).
     For each remaining file, the section names
     one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json -count=1
     ./DIR` command, so a read-only reviewer can run the package's tests with

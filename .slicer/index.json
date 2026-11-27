@@ -33564,7 +33564,7 @@
       "id": "S634",
       "title": "give a base overlay for check.go that also reverts brief.go when brief.go reads the new field, so the check.go revert check builds",
       "short_title": "give a base overlay for check.go that also reverts brief.go when brief.go reads the new field, so the check.go revert check builds",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33574,6 +33574,34 @@
           "text": "**2026-11-27** — Owner decision (adj 630): named-file closure. When a file's single-file vet fails and the vet output names other changed non-test Go files, add their base copies to that overlay, re-vet, and repeat until it builds or no new changed file is named (rounds capped at the number of listed files). The entry reads '- file (with other.go reverted too)' and carries a test command only if the final vet passes. Jon chose 'Named-file closure', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T15:58:28Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "6af6d0ce-aa05-4d10-ab8d-1b9f8914e34f",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S634):\n- later: In the next reviewer round on a slice where one changed Go file adds a field or helper that another changed Go file uses (as in S615, check.go and brief.go), open the reviewer brief's ## Base overlays section.",
+          "created_at": "2026-11-27T16:46:52Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "60c4f157-ff38-47d1-bfee-18fedae1ac73",
+          "kind": "",
+          "text": "**2026-11-27** — The Base overlays section now reverts other changed Go files that a file's vet output names (closure capped at one round per listed file), shows \"(with other.go reverted too)\", and offers a test command only when the final vet passes; engine tests, go vet, gofmt and slicer check are green.",
+          "created_at": "2026-11-27T16:46:52Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -33600,7 +33628,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

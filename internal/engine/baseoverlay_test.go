@@ -1224,6 +1224,201 @@ func TestBaseOverlayListLimit(t *testing.T) {
 	}
 }
 
+// namedVetHarness is overlayVetHarness with vet replies that may name the
+// worktree, which the harness picks.
+func namedVetHarness(t *testing.T, changed string, isNew func(p string) bool, replies func(W string) []clitest.Reply) *harness {
+	t.Helper()
+	return newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(P, W string) []clitest.Route {
+			extra := []clitest.Route{{Tool: "go", Args: []string{"-C", W, "vet"}, Prefix: true, Seq: replies(W)}}
+			for _, p := range strings.Split(strings.TrimRight(changed, "\x00"), "\x00") {
+				if isNew(p) {
+					extra = append(extra, baseOverlayNotInBase(W, p))
+				} else {
+					extra = append(extra, baseOverlayShow(W, p, "package x\n"))
+				}
+			}
+			return baseOverlayRoutes(W, changed, "", extra...)
+		}
+	})
+}
+
+func namedVetReplies(replies ...clitest.Reply) func(string) []clitest.Reply {
+	return func(string) []clitest.Reply { return replies }
+}
+
+func baseOverlayWantReplace(h *harness, tmp string, files ...string) map[string]string {
+	want := map[string]string{}
+	for _, p := range files {
+		want[filepath.Join(h.W, p)] = filepath.Join(tmp, "base", p)
+	}
+	return want
+}
+
+func TestBaseOverlayRevertsANamedChangedFileToo(t *testing.T) {
+	fail := clitest.Reply{Exit: 1, Stderr: "# pkg\ninternal/x/b.go:20:12: w.quoted undefined"}
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, fail, clitest.Reply{}, clitest.Reply{})
+	req, body, entries := overlayVetResult(t, h)
+	want := []string{
+		"- `internal/x/a.go` (with `internal/x/b.go` reverted too): `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`",
+		"- `internal/x/b.go`: `" + baseOverlayCommand(h.W, req.TMPDir, 2, "internal/x") + "`",
+	}
+	if !reflect.DeepEqual(entries, want) {
+		t.Errorf("entries = %q, want %q", entries, want)
+	}
+	if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go", "internal/x/b.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-1 = %v, want %v", got, want)
+	}
+	if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-2.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/b.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-2 = %v, want %v", got, want)
+	}
+	calls := baseOverlayVetCalls(h)
+	if len(calls) != 3 {
+		t.Fatalf("vet calls = %v, want three", calls)
+	}
+	for i, n := range []int{1, 1, 2} {
+		wantArgs := []string{"-C", h.W, "vet", "-overlay", filepath.Join(req.TMPDir, fmt.Sprintf("overlay-%d.json", n)), "./internal/x"}
+		if !reflect.DeepEqual(calls[i].Args, wantArgs) {
+			t.Errorf("vet call %d args = %q, want %q", i, calls[i].Args, wantArgs)
+		}
+	}
+	if baseOverlayAllEntry(body) != "" {
+		t.Errorf("unexpected all-files entry: %s", body)
+	}
+}
+
+func TestBaseOverlayNamedFileClosureRepeatsUntilItBuilds(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00internal/x/c.go\x00", false,
+		clitest.Reply{Exit: 1, Stderr: "internal/x/b.go:1:1: undefined"},
+		clitest.Reply{Exit: 1, Stderr: "internal/x/c.go:1:1: undefined"},
+		clitest.Reply{}, clitest.Reply{}, clitest.Reply{})
+	req, _, entries := overlayVetResult(t, h)
+	if len(entries) != 3 {
+		t.Fatalf("entries = %q, want three", entries)
+	}
+	want := "- `internal/x/a.go` (with `internal/x/b.go`, `internal/x/c.go` reverted too): `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`"
+	if entries[0] != want {
+		t.Errorf("entry 1 = %q, want %q", entries[0], want)
+	}
+	if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go", "internal/x/b.go", "internal/x/c.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-1 = %v, want %v", got, want)
+	}
+	if calls := baseOverlayVetCalls(h); len(calls) != 5 {
+		t.Errorf("vet calls = %d, want five", len(calls))
+	}
+}
+
+func TestBaseOverlayNamedFileClosureAcceptsPackageRelativeAndAbsoluteNames(t *testing.T) {
+	for _, tc := range []struct{ name, line string }{
+		{"bare", "b.go:20:12: w.quoted undefined"},
+		{"dot", "./b.go:20:12: w.quoted undefined"},
+		{"dot-full", "./internal/x/b.go:20:12: w.quoted undefined"},
+		{"indented", "vet: internal/x/b.go:20:12: w.quoted undefined"},
+		{"absolute", "WORKTREE/internal/x/b.go:20:12: w.quoted undefined"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			h := namedVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", func(string) bool { return false }, func(W string) []clitest.Reply {
+				line := strings.ReplaceAll(tc.line, "WORKTREE", W)
+				return []clitest.Reply{{Exit: 1, Stderr: "# pkg\ninternal/x/zzz.go:1:1: control\n" + line}, {}, {}}
+			})
+			req, _, entries := overlayVetResult(t, h)
+			if len(entries) != 2 {
+				t.Fatalf("entries = %q, want two", entries)
+			}
+			want := "- `internal/x/a.go` (with `internal/x/b.go` reverted too): `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`"
+			if entries[0] != want {
+				t.Errorf("entry 1 = %q, want %q", entries[0], want)
+			}
+			if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go", "internal/x/b.go"); !reflect.DeepEqual(got, want) {
+				t.Errorf("overlay-1 = %v, want %v", got, want)
+			}
+		})
+	}
+}
+
+func TestBaseOverlayNamedFileClosureStopsWhenNoNewFileIsNamed(t *testing.T) {
+	output := "# pkg\ninternal/x/a.go:1:1: self\ninternal/x/other.go:2:2: unchanged\ninternal/x/a_test.go:3:3: test"
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/a_test.go\x00", false, clitest.Reply{Exit: 1, Stderr: output})
+	req, _, entries := overlayVetResult(t, h)
+	if len(entries) != 1 {
+		t.Fatalf("entries = %q, want one", entries)
+	}
+	want := "- `internal/x/a.go`: does not build: # pkg; internal/x/a.go:1:1: self; internal/x/other.go:2:2: unchanged. Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/a.go") + "` instead."
+	if entries[0] != want {
+		t.Errorf("entry = %q, want %q", entries[0], want)
+	}
+	if calls := baseOverlayVetCalls(h); len(calls) != 1 {
+		t.Errorf("vet calls = %v, want one", calls)
+	}
+	if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-1 = %v, want %v", got, want)
+	}
+}
+
+func TestBaseOverlayNamedFileClosureIgnoresASameNamedFileInAnotherDirectory(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{Exit: 1, Stderr: "internal/y/b.go:1:1: other package\nfoo/b.go:2:2: other"})
+	req, _, entries := overlayVetResult(t, h)
+	if len(entries) != 2 || strings.Contains(entries[0], "reverted too") {
+		t.Errorf("entries = %q, want a.go without a reverted-too note", entries)
+	}
+	if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-1 = %v, want %v", got, want)
+	}
+}
+
+func TestBaseOverlayNamedFileClosureThatStillFailsReportsTheFinalError(t *testing.T) {
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false,
+		clitest.Reply{Exit: 1, Stderr: "internal/x/b.go:20:12: w.quoted undefined"},
+		clitest.Reply{Exit: 1, Stderr: "undefined helper"})
+	_, body, entries := overlayVetResult(t, h)
+	want := "- `internal/x/a.go` (with `internal/x/b.go` reverted too): does not build: undefined helper. Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/a.go") + "` instead."
+	if len(entries) != 2 || entries[0] != want {
+		t.Errorf("entries = %q, want first %q", entries, want)
+	}
+	if strings.Contains(entries[0], "go -C "+ShellWord(h.W)+" test") {
+		t.Errorf("a failing entry carries a test command: %s", entries[0])
+	}
+	if baseOverlayAllEntry(body) == "" {
+		t.Errorf("the all-files fallback is missing: %s", body)
+	}
+	if calls := h.calls("go", "-C", h.W, "test"); len(calls) != 0 {
+		t.Errorf("test calls = %v, want none", calls)
+	}
+}
+
+func TestBaseOverlayNamedFileClosureReadsTheWholeVetOutput(t *testing.T) {
+	output := "# pkg\nx.go:1:1: one\nx.go:2:2: two\nx.go:3:3: three\ninternal/x/b.go:20:12: w.quoted undefined"
+	h := overlayVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", false,
+		clitest.Reply{Exit: 1, Stderr: output}, clitest.Reply{Exit: 1, Stderr: output})
+	req, _, entries := overlayVetResult(t, h)
+	// The first three lines are all the entry shows; b.go is only in the fifth.
+	want := "- `internal/x/a.go` (with `internal/x/b.go` reverted too): does not build: # pkg; x.go:1:1: one; x.go:2:2: two. Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/a.go") + "` instead."
+	if len(entries) < 1 || entries[0] != want {
+		t.Errorf("entries = %q, want first %q", entries, want)
+	}
+	if got, want := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")), baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go", "internal/x/b.go"); !reflect.DeepEqual(got, want) {
+		t.Errorf("overlay-1 = %v, want %v", got, want)
+	}
+}
+
+func TestBaseOverlayNamedFileClosureKeepsNewFileNote(t *testing.T) {
+	// b.go has a base version here; a.go does not.
+	h := namedVetHarness(t, "internal/x/a.go\x00internal/x/b.go\x00", func(p string) bool { return p == "internal/x/a.go" }, namedVetReplies(
+		clitest.Reply{Exit: 1, Stderr: "internal/x/b.go:20:12: w.quoted undefined"}, clitest.Reply{}, clitest.Reply{}))
+	req, _, entries := overlayVetResult(t, h)
+	want := "- `internal/x/a.go` (new in this slice; the overlay hides it) (with `internal/x/b.go` reverted too): `" + baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x") + "`"
+	if len(entries) < 1 || entries[0] != want {
+		t.Errorf("entries = %q, want first %q", entries, want)
+	}
+	wantReplace := map[string]string{
+		filepath.Join(h.W, "internal/x/a.go"): "",
+		filepath.Join(h.W, "internal/x/b.go"): filepath.Join(req.TMPDir, "base", "internal/x/b.go"),
+	}
+	if got := baseOverlayReplace(t, filepath.Join(req.TMPDir, "overlay-1.json")); !reflect.DeepEqual(got, wantReplace) {
+		t.Errorf("overlay-1 = %v, want %v", got, wantReplace)
+	}
+}
+
 func TestBaseOverlayOnlyForTheReviewer(t *testing.T) {
 	h := architectHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {

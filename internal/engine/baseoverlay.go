@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
@@ -104,8 +105,43 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		if isNew {
 			line += " (new in this slice; the overlay hides it)"
 		}
-		if message := e.overlayBuildError(ctx, rec, overlayFile, packageArg(p)); message != "" {
-			entries = append(entries, line+": does not build: "+message+". Trace its base version with `git -C "+ShellWord(rec.Worktree)+" show "+ShellWord(mergeBase+":"+p)+"` instead.")
+		// When vet names other changed Go files, revert them in the same overlay
+		// and vet again, one round per listed file at most (S634, adj 630).
+		replace := map[string]string{key: replacement}
+		var added []string
+		output, failed := e.overlayVetOutput(ctx, rec, overlayFile, packageArg(p))
+		for round := 0; failed && round < len(goFiles); round++ {
+			var next []string
+			for _, f := range namedChangedFiles(output, rec.Worktree, goFiles, path.Dir(p)) {
+				if f != p && !slices.Contains(added, f) {
+					next = append(next, f)
+				}
+			}
+			if len(next) == 0 {
+				break
+			}
+			grown := maps.Clone(replace)
+			copied := true
+			for _, f := range next {
+				_, k, r, err := e.writeBaseCopy(ctx, rec, tmpDir, mergeBase, f)
+				if err != nil {
+					copied = false
+					break
+				}
+				grown[k] = r
+			}
+			if !copied || writeOverlayJSON(overlayFile, grown) != nil {
+				break
+			}
+			replace = grown
+			added = append(added, next...)
+			output, failed = e.overlayVetOutput(ctx, rec, overlayFile, packageArg(p))
+		}
+		if len(added) > 0 {
+			line += " (with `" + strings.Join(added, "`, `") + "` reverted too)"
+		}
+		if failed {
+			entries = append(entries, line+": does not build: "+vetMessage(output)+". Trace its base version with `git -C "+ShellWord(rec.Worktree)+" show "+ShellWord(mergeBase+":"+p)+"` instead.")
 			continue
 		}
 		command := fmt.Sprintf("go -C %s test -overlay %s -count=1 %s", ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(packageArg(p)))
@@ -309,18 +345,38 @@ func (e *Engine) overlayPackagePasses(ctx context.Context, rec runrec.Record, ov
 // overlayBuildError is advisory: only a vet process that exits non-zero
 // replaces the test command. Failure to start or finish vet leaves it intact.
 func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overlayFile string, pkgs ...string) string {
+	output, failed := e.overlayVetOutput(ctx, rec, overlayFile, pkgs...)
+	if !failed {
+		return ""
+	}
+	return vetMessage(output)
+}
+
+// overlayVetOutput runs go vet with the overlay. failed is true only when vet
+// exits non-zero; a vet that cannot start or finish reports false. The output
+// is whole, stderr first, else stdout, and "go vet exit N" when both are empty.
+func (e *Engine) overlayVetOutput(ctx context.Context, rec runrec.Record, overlayFile string, pkgs ...string) (output string, failed bool) {
 	result, err := clirun.Run(ctx, clirun.Call{
 		Bin: e.d.goBin(), Args: append([]string{"-C", rec.Worktree, "vet", "-overlay", overlayFile}, pkgs...),
 		Timeout: baseOverlayVetTimeout,
 	})
 	var exit *clirun.ExitError
 	if !errors.As(err, &exit) {
-		return ""
+		return "", false
 	}
-	output := strings.TrimSpace(string(result.Stderr))
+	output = strings.TrimSpace(string(result.Stderr))
 	if output == "" {
 		output = strings.TrimSpace(string(result.Stdout))
 	}
+	if output == "" {
+		output = fmt.Sprintf("go vet exit %d", result.ExitCode)
+	}
+	return output, true
+}
+
+// vetMessage is the short form of a vet output: its first three non-empty
+// lines, each cut to 200 characters, joined on one line.
+func vetMessage(output string) string {
 	var lines []string
 	for _, line := range strings.Split(output, "\n") {
 		line = strings.TrimSpace(line)
@@ -337,10 +393,50 @@ func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overl
 			break
 		}
 	}
-	if len(lines) == 0 {
-		return fmt.Sprintf("go vet exit %d", result.ExitCode)
-	}
 	return strings.Join(lines, "; ")
+}
+
+// namedChangedFiles returns the entries of goFiles that a line of the vet
+// output names, in goFiles order. A line names a file with its relative path,
+// "./" and that path, or the worktree path, each followed by ":". A file in
+// the vetted package's directory dir is also named by its base name, bare or
+// with "./". A form counts only at the start of the line or after a space, so
+// another directory's file of the same name is not taken for it.
+func namedChangedFiles(output, worktree string, goFiles []string, dir string) []string {
+	var named []string
+	for _, p := range goFiles {
+		forms := []string{p, "./" + p, filepath.ToSlash(worktree) + "/" + p}
+		if path.Dir(p) == dir {
+			forms = append(forms, path.Base(p), "./"+path.Base(p))
+		}
+		for _, line := range strings.Split(output, "\n") {
+			if namesForm(line, forms) {
+				named = append(named, p)
+				break
+			}
+		}
+	}
+	return named
+}
+
+// namesForm reports whether line holds any form followed by ":", with the
+// character before it the start of the line or a space.
+func namesForm(line string, forms []string) bool {
+	for _, form := range forms {
+		rest, offset := line, 0
+		for {
+			i := strings.Index(rest, form+":")
+			if i < 0 {
+				break
+			}
+			at := offset + i
+			if at == 0 || line[at-1] == ' ' {
+				return true
+			}
+			offset, rest = at+1, line[at+1:]
+		}
+	}
+	return false
 }
 
 // writeBaseOverlay writes the base copy of p (unless the base lacks it) and
@@ -348,11 +444,20 @@ func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overl
 // and value. A path that is not in the base maps to "", which `go` reads as a
 // file that does not exist.
 func (e *Engine) writeBaseOverlay(ctx context.Context, rec runrec.Record, tmpDir, mergeBase, p string, n int) (bool, string, string, error) {
+	isNew, key, replacement, err := e.writeBaseCopy(ctx, rec, tmpDir, mergeBase, p)
+	if err != nil {
+		return false, "", "", err
+	}
+	return isNew, key, replacement, writeOverlayJSON(filepath.Join(tmpDir, fmt.Sprintf("overlay-%d.json", n)), map[string]string{key: replacement})
+}
+
+// writeBaseCopy writes the base copy of p to tmpDir/base/p unless the base
+// lacks it. It returns whether p is new in the slice and the Replace key and
+// value ("" for a new file).
+func (e *Engine) writeBaseCopy(ctx context.Context, rec runrec.Record, tmpDir, mergeBase, p string) (isNew bool, key, replacement string, err error) {
 	if !filepath.IsLocal(p) || path.IsAbs(p) {
 		return false, "", "", fmt.Errorf("path %q is not a plain relative path", p)
 	}
-	replacement := ""
-	isNew := false
 	content, err := e.gitRead(ctx, rec.Worktree, "show", mergeBase+":"+p)
 	switch {
 	case err == nil:
@@ -368,12 +473,16 @@ func (e *Engine) writeBaseOverlay(ctx context.Context, rec runrec.Record, tmpDir
 	default:
 		return false, "", "", err
 	}
-	key := filepath.Join(rec.Worktree, filepath.FromSlash(p))
-	doc, err := json.Marshal(map[string]map[string]string{"Replace": {key: replacement}})
+	return isNew, filepath.Join(rec.Worktree, filepath.FromSlash(p)), replacement, nil
+}
+
+// writeOverlayJSON writes an overlay file holding the Replace map.
+func writeOverlayJSON(file string, replace map[string]string) error {
+	doc, err := json.Marshal(map[string]map[string]string{"Replace": replace})
 	if err != nil {
-		return false, "", "", err
+		return err
 	}
-	return isNew, key, replacement, os.WriteFile(filepath.Join(tmpDir, fmt.Sprintf("overlay-%d.json", n)), append(doc, '\n'), 0o600)
+	return os.WriteFile(file, append(doc, '\n'), 0o600)
 }
 
 // notInBase reports whether err is git saying the path is absent from the
