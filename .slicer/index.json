@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 636,
+  "next_id": 637,
   "preamble": "",
   "passes": [
     {
@@ -33479,6 +33479,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-3dd66e82",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S636",
+      "title": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing",
+      "short_title": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
         "pass": "v1.2",
         "group": "",
         "reason": "",

@@ -7249,3 +7249,6 @@
 {"when": "2026-11-27T14:11:51Z", "item": "S635", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T14:12:48Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T14:12:48Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "add", "from": "", "to": "open", "note": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing"}
+{"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "edit", "from": "", "to": "", "note": "Why"}
