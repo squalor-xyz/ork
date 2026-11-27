@@ -7197,3 +7197,12 @@
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T13:43:08Z", "item": "S615", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:43:56Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T13:43:57Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T13:55:53Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:18:29Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:18:29Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:20:18Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:33:09Z", "item": "S615", "action": "note", "from": "", "to": "", "note": "Check path validation now excludes test-pattern flag values,", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:33:09Z", "item": "S615", "action": "status", "from": "started", "to": "done", "note": "Check path validation now excludes test-pattern flag values, rev:path words and import paths with a dotted first element, while preserving relative path warnings.", "by": "Jon Robbins"}

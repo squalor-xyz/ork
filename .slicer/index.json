@@ -32598,7 +32598,7 @@
       "id": "S615",
       "title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
       "short_title": "before round 1 check that each path argument in a slice Check command exists in the worktree",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32608,6 +32608,20 @@
           "text": "**2026-11-27** — Owner decision (adj 614): a relative word with / or a leading ./ is a path argument; flags, URLs, quoted patterns, globs (including ./...) and absolute paths are not. A missing path argument that is not a Files-created path is a finding that refuses the start (internal/daemon/runs.go:1112) and shows in the spec check (internal/daemon/speccheck.go:324). Extend SliceCheckCommandWarnings (internal/engine/brief.go:794). Jon chose 'Refuse the start', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T13:05:59Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "0f69fff3-1c55-461b-b16d-7e5961066db0",
+          "kind": "",
+          "text": "**2026-11-27** — Check path validation now excludes test-pattern flag values, rev:path words and import paths with a dotted first element, while preserving relative path warnings.",
+          "created_at": "2026-11-27T14:33:09Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -32634,7 +32648,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

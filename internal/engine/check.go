@@ -295,6 +295,7 @@ var assignmentPrefix = regexp.MustCompile(`^[a-zA-Z_][a-zA-Z0-9_]*=`)
 type shellWord struct {
 	text    string
 	dynamic bool
+	quoted  bool
 }
 
 // simpleCommands splits command into its simple commands, in order, each as
@@ -408,6 +409,7 @@ func substitutionEnd(command string, open int) int {
 func scanWord(command string, i int) (shellWord, int) {
 	var word strings.Builder
 	var quote byte
+	quoted := false
 	for ; i < len(command); i++ {
 		c := command[i]
 		if quote == 0 && strings.ContainsRune(" \t\r\n;&|()<>", rune(c)) {
@@ -424,6 +426,7 @@ func scanWord(command string, i int) (shellWord, int) {
 		if c == '\\' && quote != '\'' && i+1 < len(command) {
 			next := command[i+1]
 			if quote == 0 || strings.ContainsRune("$`\\\"\n", rune(next)) {
+				quoted = true
 				if next != '\n' {
 					word.WriteByte(next)
 				}
@@ -433,6 +436,7 @@ func scanWord(command string, i int) (shellWord, int) {
 		}
 		if c == '\'' || c == '"' {
 			if quote == 0 {
+				quoted = true
 				quote = c
 				continue
 			}
@@ -444,7 +448,7 @@ func scanWord(command string, i int) (shellWord, int) {
 		word.WriteByte(c)
 	}
 	text := word.String()
-	return shellWord{text: text, dynamic: strings.ContainsAny(text, "*?[]{}$`") || strings.HasPrefix(text, "~")}, i
+	return shellWord{text: text, dynamic: strings.ContainsAny(text, "*?[]{}$`") || strings.HasPrefix(text, "~"), quoted: quoted}, i
 }
 
 // CheckDir is the directory the project check command runs in (*proposed*,
