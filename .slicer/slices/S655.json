@@ -1,0 +1,39 @@
+{
+  "id": "S655",
+  "title": "When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The implementer reported this as tool feedback (friction) on ork in ork run ork-20261127-194833-6309, project ork, item S631:\n\nWhen a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer\n\nEvidence: rounds 2, 3 and 4 of ork-20261127-194833-6309 received the same daemon failure text, run id ork-20261127-205645-9e55 and 45.222s time, while the failing test passed 53 reruns"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

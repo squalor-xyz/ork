@@ -54,7 +54,31 @@ func TestTreeFullContentAcceptsAnUntrackedRepository(t *testing.T) {
 
 func resumedTreeBrief(t *testing.T, role string, edit, legacy bool) string {
 	t.Helper()
-	h := launchTrackingHarness(t, false)
+	return resumedTreeBriefWith(t, role, treeScenario{edit: edit, legacy: legacy, fixRound: true})
+}
+
+// treeScenario shapes resumedTreeBriefWith. Beyond the role's own rounds 2 and
+// 3: edit makes the implementer change the tree, legacy clears the round 2
+// start fingerprint, fixRound runs an implementer round 3 between them,
+// firstRound runs an implementer round 1 before the role's round 2, and a
+// non-empty status replaces the fake slicer's status for the slice.
+type treeScenario struct {
+	edit, legacy, fixRound, firstRound bool
+	status                             string
+}
+
+func resumedTreeBriefWith(t *testing.T, role string, sc treeScenario) string {
+	t.Helper()
+	edit, legacy, fixRound, status := sc.edit, sc.legacy, sc.fixRound, sc.status
+	var opts []func(*harnessOpts)
+	if status != "" {
+		opts = append(opts, func(o *harnessOpts) {
+			o.routesFor = func(_, W string) []clitest.Route {
+				return []clitest.Route{{Tool: "slicer", Args: []string{"show", item, "--json", "--lean", "--root", W}, Stdout: fmt.Sprintf(`{"id":"S04","title":"Engine","status":%q}`, status)}}
+			}
+		})
+	}
+	h := launchTrackingHarness(t, false, opts...)
 	gitRun(t, h.P, "worktree", "add", h.W, "-b", "brief-test")
 	h.cfg.Lineup[RoleArchitect] = h.cfg.Lineup[RoleReviewer]
 	e, err := New(context.Background(), h.deps, h.cfg)
@@ -87,15 +111,21 @@ func resumedTreeBrief(t *testing.T, role string, edit, legacy bool) string {
 			t.Fatalf("%s round %d: ok=%v err=%v record=%+v", role, n, out.ok, err, e.Snapshot())
 		}
 	}
+	if sc.firstRound {
+		run(RoleImplementer, 1, false)
+	}
 	run(role, 2, false)
 	if legacy {
 		if err := e.run.Update(func(r *runrec.Record) { r.Roles[len(r.Roles)-1].StartTreeSHA256 = "" }); err != nil {
 			t.Fatal(err)
 		}
 	}
-	run(RoleImplementer, 3, false)
+	if fixRound {
+		run(RoleImplementer, 3, false)
+	}
 	run(role, 3, true)
-	return h.runner.requests()[2].Brief
+	reqs := h.runner.requests()
+	return reqs[len(reqs)-1].Brief
 }
 
 func TestResumedGateBriefSaysTreeUnchanged(t *testing.T) {
@@ -115,6 +145,62 @@ func TestResumedGateBriefOmitsUnchangedAfterAnEdit(t *testing.T) {
 	}
 }
 
+const (
+	noFixRoundLine = "No fix round has run since then."
+	fixRoundLine   = "A fix round ran after that report and left the tree unchanged."
+)
+
+func TestResumedReviewerBriefSaysNoFixRoundRanAfterOwnerAnswer(t *testing.T) {
+	// firstRound: an implementer round before the role's last report is not a
+	// fix round since it.
+	for _, first := range []bool{false, true} {
+		t.Run(fmt.Sprintf("firstRound=%v", first), func(t *testing.T) {
+			brief := resumedTreeBriefWith(t, RoleReviewer, treeScenario{firstRound: first})
+			for _, want := range []string{"The tree is unchanged since round 2", noFixRoundLine} {
+				if !strings.Contains(brief, want) {
+					t.Fatalf("resumed brief lacks %q", want)
+				}
+			}
+			if strings.Contains(brief, fixRoundLine) {
+				t.Fatal("brief says a fix round ran")
+			}
+		})
+	}
+}
+
+func TestResumedGateBriefSaysFixRoundLeftTreeUnchanged(t *testing.T) {
+	brief := resumedTreeBrief(t, RoleGate, false, false)
+	if !strings.Contains(brief, fixRoundLine) {
+		t.Fatal("resumed brief lacks the fix round line")
+	}
+	if strings.Contains(brief, noFixRoundLine) {
+		t.Fatal("brief says no fix round ran")
+	}
+}
+
+func TestResumedGateBriefOmitsFixRoundLineAfterAnEdit(t *testing.T) {
+	brief := resumedTreeBrief(t, RoleGate, true, false)
+	for _, bad := range []string{fixRoundLine, noFixRoundLine} {
+		if strings.Contains(brief, bad) {
+			t.Fatalf("edited-tree brief contains %q", bad)
+		}
+	}
+}
+
+func TestResumedGateBriefSaysSliceDoneFromSlicerStatus(t *testing.T) {
+	for _, tc := range []struct {
+		status string
+		want   bool
+	}{{"done", true}, {"started", false}} {
+		t.Run(tc.status, func(t *testing.T) {
+			brief := resumedTreeBriefWith(t, RoleGate, treeScenario{fixRound: true, status: tc.status})
+			if got := strings.Contains(brief, "The slice is marked done."); got != tc.want {
+				t.Fatalf("done sentence present = %v, want %v", got, tc.want)
+			}
+		})
+	}
+}
+
 func TestResumedBriefWithoutStartFingerprintOmitsUnchanged(t *testing.T) {
 	if strings.Contains(resumedTreeBrief(t, RoleGate, false, true), "The tree is unchanged since round") {
 		t.Fatal("legacy row incorrectly reported unchanged")
@@ -122,11 +208,11 @@ func TestResumedBriefWithoutStartFingerprintOmitsUnchanged(t *testing.T) {
 }
 
 // Launch tests use real git so assertions cover the commit and checkout contents.
-func launchTrackingHarness(t *testing.T, subfolder bool) *harness {
+func launchTrackingHarness(t *testing.T, subfolder bool, extra ...func(*harnessOpts)) *harness {
 	t.Helper()
-	h := newHarness(t, func(o *harnessOpts) {
+	h := newHarness(t, append([]func(*harnessOpts){func(o *harnessOpts) {
 		o.routes = append(o.routes, clitest.Route{Tool: "slicer", Args: []string{"list"}, Prefix: true, Stdout: `[]`})
-	})
+	}}, extra...)...)
 	t.Setenv("GIT_CONFIG_GLOBAL", filepath.Join(t.TempDir(), "gitconfig"))
 	t.Setenv("GIT_CONFIG_NOSYSTEM", "1")
 	for _, key := range []string{"GIT_AUTHOR_NAME", "GIT_COMMITTER_NAME"} {

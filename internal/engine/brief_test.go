@@ -275,7 +275,7 @@ func TestImplementerBriefNotesSandboxSocketTests(t *testing.T) {
 }
 
 func TestReviewerAndGateBriefsNoteSandboxSocketTests(t *testing.T) {
-	const want = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./...."
+	const want = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./...."
 	for _, role := range []string{RoleReviewer, RoleGate} {
 		t.Run(role, func(t *testing.T) {
 			in := baseBrief()
@@ -413,6 +413,78 @@ func TestResumedBriefUnchangedLine(t *testing.T) {
 				t.Error("cited-file read instruction missing")
 			}
 		})
+	}
+}
+
+func resumedSection(t *testing.T, mutate func(*BriefInput)) string {
+	t.Helper()
+	in := baseBrief()
+	in.Resumed = true
+	mutate(&in)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, _ := section(got, "## Resumed session")
+	return s
+}
+
+const (
+	unchangedSentence  = "The tree is unchanged since round 2, when you last reported."
+	doneSentence       = "The slice is marked done."
+	noFixRoundSentence = "No fix round has run since then."
+	fixRoundSentence   = "A fix round ran after that report and left the tree unchanged."
+)
+
+func TestResumedBriefDoneUnchangedLine(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) { in.TreeUnchangedSince = 2; in.SliceDone = true })
+	for _, want := range []string{unchangedSentence, doneSentence, noFixRoundSentence, "read again every file you cite"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("section lacks %q:\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, fixRoundSentence) {
+		t.Errorf("section says a fix round ran:\n%s", s)
+	}
+}
+
+func TestResumedBriefDoneUnchangedAfterFixRoundLine(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) {
+		in.TreeUnchangedSince = 2
+		in.SliceDone = true
+		in.FixRoundSince = true
+	})
+	for _, want := range []string{unchangedSentence, doneSentence, fixRoundSentence} {
+		if !strings.Contains(s, want) {
+			t.Errorf("section lacks %q:\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, noFixRoundSentence) {
+		t.Errorf("section says no fix round ran:\n%s", s)
+	}
+}
+
+func TestResumedBriefUnchangedNotDoneOmitsDoneLine(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) { in.TreeUnchangedSince = 2 })
+	for _, want := range []string{unchangedSentence, noFixRoundSentence} {
+		if !strings.Contains(s, want) {
+			t.Errorf("section lacks %q:\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, doneSentence) {
+		t.Errorf("section says the slice is done:\n%s", s)
+	}
+}
+
+func TestResumedBriefChangedTreeOmitsNoChangeLines(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) { in.SliceDone = true })
+	for _, bad := range []string{"marked done", noFixRoundSentence, fixRoundSentence} {
+		if strings.Contains(s, bad) {
+			t.Errorf("changed-tree section contains %q:\n%s", bad, s)
+		}
+	}
+	if !strings.Contains(s, "run git status and git diff") {
+		t.Errorf("git re-run instruction missing:\n%s", s)
 	}
 }
 
@@ -1094,6 +1166,86 @@ func TestGateReceivesRoundCheckEvidence(t *testing.T) {
 		return
 	}
 	t.Fatal("no gate request")
+}
+
+func TestReviewerReceivesRoundCheckEvidence(t *testing.T) {
+	h := newHarness(t)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	found := false
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleReviewer {
+			continue
+		}
+		found = true
+		for _, want := range []string{"## Ork round check result", "checks-1.log", "Exit status: 0", "all packages"} {
+			if !strings.Contains(req.Brief, want) {
+				t.Errorf("reviewer request lacks %q", want)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("no reviewer request")
+	}
+	t.Run("architect excluded", func(t *testing.T) {
+		h := architectHarness(t)
+		requireState(t, h.start(), runrec.StateAwaitingApproval)
+		for _, req := range h.runner.requests() {
+			if req.Role != RoleArchitect {
+				continue
+			}
+			if strings.Contains(req.Brief, "## Ork round check result") {
+				t.Error("architect request includes round check evidence")
+			}
+			return
+		}
+		t.Fatal("no architect request")
+	})
+}
+
+func TestRoundCheckSectionCarriesFailingLines(t *testing.T) {
+	dir := t.TempDir()
+	const log = "--- FAIL: TestX\nFAIL\texample/pkg\n"
+	if err := os.WriteFile(filepath.Join(dir, "checks-1.log"), []byte(log), 0600); err != nil {
+		t.Fatal(err)
+	}
+	check := runrec.CheckRecord{Round: 1, Command: "go test ./...", Log: "checks-1.log"}
+	t.Run("failure", func(t *testing.T) {
+		section, err := roundCheckSection(dir, []runrec.CheckRecord{check})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if section.Title != "Ork round check result" {
+			t.Errorf("title = %q", section.Title)
+		}
+		want := "Round: 1\nCommand: go test ./...\nCheck log: checks-1.log\nExit status: nonzero (failed; see log for exit code or timeout)\n\n```\n--- FAIL: TestX\nFAIL    example/pkg\n```"
+		if section.Body != want {
+			t.Errorf("failure evidence = %q, want %q", section.Body, want)
+		}
+	})
+	t.Run("no records", func(t *testing.T) {
+		section, err := roundCheckSection(dir, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if section.Body != "No round check result is available. Do not claim tests green without evidence." {
+			t.Errorf("no-record evidence = %q", section.Body)
+		}
+	})
+	t.Run("later slice row", func(t *testing.T) {
+		before, err := roundCheckSection(dir, []runrec.CheckRecord{check})
+		if err != nil {
+			t.Fatal(err)
+		}
+		slice := check
+		slice.Slice, slice.Round = true, 2
+		after, err := roundCheckSection(dir, []runrec.CheckRecord{check, slice})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if after != before {
+			t.Errorf("later slice row changed evidence: %+v, want %+v", after, before)
+		}
+	})
 }
 
 func TestBuildBriefFillsThePromptPlaceholders(t *testing.T) {
@@ -1796,7 +1948,7 @@ func TestGrokWriteDoneWhenNamesTheDontAskLimits(t *testing.T) {
 func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 	wantByRole := map[string]string{
 		RoleReviewer:  "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.\n- [ ] A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.\n- [ ] Complete sections (A)-(D), marking findings CONFIRMED or PLAUSIBLE; end with the exact unnumbered heading ## Owner needed and questions or none. In gate mode use the gate's first line and one evidence line per criterion; put denied tracking in a Deviation for the orchestrator evidence line.\n- [ ] Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.\n",
-		RoleGate:      "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.\n- [ ] Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.\n- [ ] For a tracking step denied to the implementer, add one Deviation for the orchestrator evidence line beside the criterion lines, never a [fix]; it is not a finding and starts no fix round.\n- [ ] Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts; end with the exact unnumbered heading ## Owner needed and questions or none.\n- [ ] Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.\n",
+		RoleGate:      "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.\n- [ ] Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.\n- [ ] For a tracking step denied to the implementer, add one Deviation for the orchestrator evidence line beside the criterion lines, never a [fix]; it is not a finding and starts no fix round.\n- [ ] Include the exact standalone line Tests: N passed, M failed with integer counts of tests actually run and nothing after the counts, or Tests: relied on ork round results when you ran no tests and relied on ork's round check; either Tests form may start with a list marker. End with the exact unnumbered heading ## Owner needed and questions or none.\n- [ ] Report blocked checks with the verbatim command and denial text, apart from test counts; never claim an unrun check passed.\n",
 		RoleArchitect: "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Support placement, ownership, rollback, test-shape and direction findings with file:line and CONFIRMED or PLAUSIBLE; separate change-now from later. On second check, mark every earlier finding CONFIRMED-FIXED, PARTIAL or NOT-FIXED with evidence.\n- [ ] End the review with blockers or no blockers, then the exact unnumbered heading ## Owner needed with questions or none; in gate mode use its first line and evidence per criterion.\n- [ ] Name blocked checks and their verbatim command and denial text; do not claim unrun checks.\n",
 		RoleUI:        "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Complete sections (A)-(D): findings name the view, size, visible defect, file:line, concrete edit and CONFIRMED or PLAUSIBLE. Produce the required renders or explain each blocked view; list the files produced.\n- [ ] End with the exact unnumbered heading ## Owner needed and questions or none; give no verdict. Each [later] has proposed Importance, Urgency and Effort scores (1 to 3).\n- [ ] Name checks or views you could not run or see, with the verbatim command and denial text when blocked.\n",
 		RoleSpecCheck: "- [ ] You may only read the tree; no git or tracking writes. Give the whole report as your final message when the report path is read-only.\n- [ ] Give one ## Slice ID section per slice in order, with Ready or structured owner questions. Only an unresolved owner decision is a question; close code-readable gaps yourself and respect settled decisions.\n- [ ] End with the exact unnumbered heading ## Owner needed and none beneath it; questions belong under their slices. Use that final section only for a whole-check blocker.\n- [ ] State any unreadable slice or blocked read with its verbatim command and denial text; never invent readiness.\n",
@@ -1822,7 +1974,7 @@ func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 			}
 			want := wantByRole[role]
 			if role == RoleReviewer || role == RoleGate {
-				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./....\n", 1)
+				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./....\n", 1)
 			}
 			want = strings.Replace(want, "\n", "\n- [ ] Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C. Do not end a `go test -run` pattern with `$`: that command is denied because it cannot be checked before it runs. Use `-run NAME` with the full test name and no anchor; it also runs any test whose name starts with NAME.\n", 1)
 			if got != want {
@@ -2369,6 +2521,17 @@ func TestReviewerAndGateDoneWhen(t *testing.T) {
 			in := baseBrief()
 			in.Role = role
 			in.ReadOnly = true
+			const evidence = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./...."
+			for _, vendor := range []string{"claude", "codex"} {
+				in.Vendor = vendor
+				got := checklist(t, in)
+				if strings.Count(got, evidence) != 1 {
+					t.Errorf("%s checklist must carry round-check evidence line once", vendor)
+				}
+				if strings.Index(got, evidence) < strings.Index(got, "Run one plain command per call:") {
+					t.Errorf("%s evidence line precedes denied-forms instruction", vendor)
+				}
+			}
 			requireChecklistText(t, in, "file:line", "reproduction or a test", "Deviation", "never a [fix]", "Importance", "Urgency", "Effort", "## Owner needed", "may only read")
 			if role == RoleReviewer {
 				requireChecklistText(t, in, "untagged line under section (C)")
@@ -2376,5 +2539,19 @@ func TestReviewerAndGateDoneWhen(t *testing.T) {
 				requireChecklistText(t, in, "first line exactly VERDICT: PASS or VERDICT: FAIL", "one evidence line per criterion", "Tests: N passed, M failed", "Deviation for the orchestrator", "no [fix]", "no blocker", "tests green", "docs match")
 			}
 		})
+	}
+}
+
+func TestGateBriefChecklistNamesTheRelianceLine(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleGate
+	for name, text := range map[string]string{"checklist": checklist(t, in), "criteria": gateCriteria} {
+		for _, want := range []string{"Tests: N passed, M failed", "Tests: relied on ork round results", "ran no tests"} {
+			t.Run(name+want, func(t *testing.T) {
+				if !strings.Contains(text, want) {
+					t.Fatalf("%s lacks %q", name, want)
+				}
+			})
+		}
 	}
 }

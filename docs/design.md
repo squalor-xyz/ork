@@ -857,9 +857,17 @@ slice.
     under `internal/tui`, no view changed. The UI
     round's brief then gets a "No renders expected" section, and its Done-when
     item for renders says that no renders are expected and none are to be
-    written. The reviewer's brief gets neither. A diff that cannot be read adds
-    neither, does not pause the review, and leaves the brief as it is for any
-    other diff.
+    written. A diff whose remaining paths are all `_test.go` files under
+    `internal/cli` or `docs/*.md` directly under `docs/` gets a
+    "No renders expected for CLI tests and docs" section and the matching
+    Done-when item (adj 643). When the diff changes only `internal/cli`
+    output and docs, with at least one non-test CLI path, the brief adds
+    "Renders are identical at every size": the 80x24, 120x40 and ascii
+    renders are identical, so the role writes one `VIEW-80x24.txt` per view
+    and says in its report that the sizes are identical. The renders
+    Done-when item stays. The reviewer's brief gets none of these sections.
+    A diff that cannot be read adds none, does not pause the review, and
+    any other diff leaves the brief as it is.
     The UI brief also tells the pass that a `go test -run` pattern holds no
     pipe, because a pipe makes a compound command that the permission check
     denies, and gives the one-test-per-command form (S565).
@@ -1491,8 +1499,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Report checks.** `CheckReport` refuses a gate report whose first line is
   not exactly `VERDICT: PASS` or `VERDICT: FAIL`, an implementer or gate
   report with no `Tests: N passed, M failed` line (the finish step needs
-  none), and any report with no `## Owner needed` section. All problems are
-  listed. A gate PASS with a nonzero failed-test count is also refused.
+  none). A gate report may instead carry
+  `Tests: relied on ork round results` when it ran no tests and relied on
+  ork's round check (adj 635, 638). Any report with no `## Owner needed`
+  section is refused. All problems are listed. A gate PASS with a nonzero
+  failed-test count is also refused.
   A plain relay v13 implementer report also needs exactly one non-empty
   `Outcome:` line with the verified outcome. Split leads, sliver chains,
   lone slivers, v12 runs and finish reports keep their existing shape
@@ -1967,6 +1978,11 @@ orchestrator-only line alone does not fail tests-green. Test counts in the gate
 report remain counts of tests the gate itself ran; ork's evidence is cited
 separately.
 
+The reviewer receives the same `Ork round check result` section as the gate
+(S629, adj 646): round, command, log name, success status and captured log,
+including failing lines. It uses the same report reader and 64 KiB truncation.
+The reviewer is not told to run the suite.
+
 - **Prompts.** Embedded in ork and canonical (`roles.prompts`). They are
   seeded from slicer's v11 contract and now written against v13, with anything
   else written fresh (`roles.prompt-seed`). They carry no Claude Code-only mechanics (Agent
@@ -2012,6 +2028,13 @@ separately.
     On resume, if the previous row of that role belongs to the
     resumed session and has the same fingerprint, the section says
     "The tree is unchanged since round N, when you last reported."
+    *Proposed (S455, adj 645):* that section then also says "The slice is
+    marked done." when the slice's tracking status is done (the top-level
+    `status` of the `slicer show --json --lean` ork already reads), and one of
+    two sentences: "No fix round has run since then." or, when an implementer
+    round ran after that report, "A fix round ran after that report and left
+    the tree unchanged." The gate round still runs; the lines only say what
+    happened since the role's last report.
     It drops the git status and git diff re-run instructions, including in
     Done when, but keeps re-reading every cited file (adj 490).
     Missing fingerprints in older records and changed contents keep the
@@ -2240,6 +2263,28 @@ separately.
     blocks or pauses the run. The reviewer and the gate get it and the
     architect gets none. The reviewer round shares its branch read with its
     other sections; the gate round makes its own;
+  - before the reviewer and gate start, a `## Decision keys not found`
+    section lists keys cited as owner decisions in added branch lines when
+    `adj check` reports `not found` (S537, `review.decision-key-citation`).
+    Citations use a lowercase dotted key after `owner DATE`, `adj N`, or
+    `adj`, with optional backticks, brackets or parentheses. Citation phrases
+    are case-insensitive. The check reads the diff
+    against the merge base and scans new files absent from its headers.
+    It skips `.slicer/`, `decisions/` and `landed-changed/`, and skips
+    nonregular, binary or over-1-MiB new files. Missing evidence adds an
+    incomplete-check notice. The section is advisory and never blocks or
+    pauses the run; the architect gets none;
+  - before the reviewer and gate start, a `## Spec text calls a decided key
+    open` section names spec headings and lines that cite a bracketed or
+    backticked key and say `open`, `undecided`, or `not decided` on the same
+    line, when `adj check` reports `decided` (S537, `review.spec-open-key`).
+    Open wording inside key citations does not count.
+    It scans the lead, boundary and section bodies and gives the decided
+    record's id. Failed checks add incomplete-check notices. Both sections
+    require adj and share one check per key per role round, separately from
+    Decision changelog paths. They reuse the role's existing branch read.
+    This section is advisory and never blocks or pauses the run; the
+    architect gets none;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,
@@ -2258,7 +2303,10 @@ separately.
   (S256, *proposed*). ork validates the shape: the gate's first line, the
   test counts. The prompts ask for one line `Tests: N passed, M failed`
   in the implementer's and the gate's report, and for a final `## Owner
-  needed` section in every report (`role.report-shape`).
+  needed` section in every report (`role.report-shape`). The gate alone may
+  instead report `Tests: relied on ork round results` when it ran no tests and
+  relied on ork's round check; the approval card prints that line in place of
+  counts (adj 635, 638). Either Tests form may start with a list marker (adj 636).
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).
@@ -2774,9 +2822,10 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Implementer briefs say socket-bound tests may fail inside their sandbox,
   report those as sandbox-limited, and use ork's round check outside the
   sandbox as the evidence (adj 519).
-  Reviewer and gate briefs carry a generic line saying socket-bound failures
-  are sandbox-limited, ork's round check is the evidence, and the role need
-  not run `go test ./...`; it names no package (S606, adj 616).
+  Reviewer and gate briefs carry a generic line that treats socket-bound
+  failures as sandbox-limited and points at the `Ork round check result` section
+  for the result and captured log, including failing lines. The role need not
+  run `go test ./...`; the line names no package (S606, adj 616; S629, adj 646).
   A reviewer also gets `slicer init`, `add`, `set`, `note`, `done` and
   `relay-roles` writes with a final, literal `--root` naming its own process
   temp dir (S527, adj 634 and 639), under the same reviewer-only condition as
@@ -4387,7 +4436,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   same role, or `--vendor-env` and `--unset-vendor-env` for the same key is a
   usage error (exit 2) before the daemon starts, and a usage error never
   quotes a `--vendor-env` value. The text line names the fields and counts
-  (`environment_lines=2 lines`, `permissions=implementer:3 patterns;
+  (`environment_lines=2 lines`, `permissions=implementer:2 patterns;
   reviewer:read-only`, `vendor_env=codex:A,B`, with `unset` or `default` for
   a removal) and never prints a `vendor_env` value; `--json` prints the
   project as the registry holds it, as `projects list --json` does, so it

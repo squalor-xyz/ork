@@ -86,14 +86,15 @@ type ToolFeedback = runrec.ToolFeedback
 
 // Report is what the engine reads from a role's report.
 type Report struct {
-	Outcome  string // verified outcome for the plain v13 finish step
-	Ask      *OwnerQuestion
-	Verdict  string // "PASS" or "FAIL" for a gate, else empty
-	Passed   int    // from the Tests lines
-	Failed   int
-	HasTests bool
-	Key      string // optional adj decision key
-	Question string // the Owner needed section; empty for none
+	Outcome         string // verified outcome for the plain v13 finish step
+	Ask             *OwnerQuestion
+	Verdict         string // "PASS" or "FAIL" for a gate, else empty
+	Passed          int    // from the Tests lines
+	Failed          int
+	HasTests        bool
+	RelianceOnRound bool
+	Key             string // optional adj decision key
+	Question        string // the Owner needed section; empty for none
 
 	ToolFeedback []ToolFeedback // at most 3 well-formed lines, advisory (relay v12)
 }
@@ -113,7 +114,10 @@ func (e *ShapeError) Error() string {
 
 var decisionKey = regexp.MustCompile(`^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)+$`)
 
-var testsLine = regexp.MustCompile(`(?m)^Tests: (\d+) passed, (\d+) failed\r?$`)
+var testsLine = regexp.MustCompile(`(?m)^(?:(?:[-*+]|\d+[.)])[ \t]+)?Tests: (\d+) passed, (\d+) failed\r?$`)
+
+// adj 635 and adj 636 allow a gate's reliance line, including a list marker.
+var relianceLine = regexp.MustCompile(`(?m)^(?:(?:[-*+]|\d+[.)])[ \t]+)?Tests: relied on ork round results\r?$`)
 
 var outcomeLine = regexp.MustCompile(`(?m)^Outcome:([^\r\n]*)\r?$`)
 
@@ -208,7 +212,11 @@ func CheckReport(role string, finish bool, text string, needsOutcome ...bool) (*
 
 	if ((role == RoleImplementer || role == RolePart) && !finish) || role == RoleGate {
 		matches := testsLine.FindAllStringSubmatch(text, -1)
-		if len(matches) == 0 {
+		if role == RoleGate && relianceLine.MatchString(text) {
+			rep.RelianceOnRound = true
+			rep.HasTests = true
+		}
+		if len(matches) == 0 && !rep.HasTests {
 			problems = append(problems, `no "Tests: N passed, M failed" line`)
 		}
 		for _, m := range matches {

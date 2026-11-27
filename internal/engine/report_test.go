@@ -14,6 +14,87 @@ import (
 
 const ownerNone = "\n## Owner needed\n\nnone\n"
 
+func TestCheckReportTestsLineAcceptsListMarker(t *testing.T) {
+	for _, role := range []string{RoleImplementer, RoleGate} {
+		for _, marker := range []string{"- ", "* ", "+ ", "1. ", "1) ", "12.\t"} {
+			t.Run(role+marker, func(t *testing.T) {
+				r, err := CheckReport(role, false, "VERDICT: PASS\n"+marker+"Tests: 3 passed, 0 failed\n"+ownerNone)
+				if err != nil || !r.HasTests || r.Passed != 3 || r.Failed != 0 {
+					t.Fatalf("list counts: %+v, %v", r, err)
+				}
+			})
+		}
+		for _, line := range []string{"  - Tests: 1 passed, 0 failed", "- see Tests: 1 passed, 0 failed", "- Tests: 1 passed, 0 failed (race)", "-\n Tests: 1 passed, 0 failed"} {
+			t.Run(role+line, func(t *testing.T) {
+				_, err := CheckReport(role, false, "VERDICT: PASS\n"+line+"\n"+ownerNone)
+				if err == nil {
+					t.Fatal("accepted malformed Tests line")
+				}
+				mustMention(t, shapeProblems(t, err), "Tests:")
+			})
+		}
+	}
+}
+
+func TestCheckReportGateAcceptsRelianceLine(t *testing.T) {
+	for _, marker := range []string{"", "- ", "* ", "+ ", "1. ", "1) ", "12.\t"} {
+		t.Run(marker, func(t *testing.T) {
+			r, err := CheckReport(RoleGate, false, "VERDICT: PASS\n"+marker+"Tests: relied on ork round results\r\n"+ownerNone)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if !r.HasTests || r.Passed != 0 || r.Failed != 0 || !r.RelianceOnRound {
+				t.Fatalf("reliance report: %+v", r)
+			}
+		})
+	}
+}
+
+func TestCheckReportRelianceLineKeepsItsShape(t *testing.T) {
+	for _, line := range []string{"Tests: relied on ork round results (race)", "Tests: Relied on ork round results", "see Tests: relied on ork round results", "  Tests: relied on ork round results", "Tests: relied on ork round", "-\n Tests: relied on ork round results"} {
+		t.Run(line, func(t *testing.T) {
+			_, err := CheckReport(RoleGate, false, "VERDICT: PASS\n"+line+"\n"+ownerNone)
+			if err == nil {
+				t.Fatal("accepted malformed reliance line")
+			}
+			mustMention(t, shapeProblems(t, err), "Tests:")
+		})
+	}
+	// Prove the valid form first, so the mixed case cannot pass because the
+	// reliance line was ignored.
+	if _, err := CheckReport(RoleGate, false, "VERDICT: PASS\nTests: relied on ork round results\n"+ownerNone); err != nil {
+		t.Fatal(err)
+	}
+	text := "VERDICT: FAIL\nTests: relied on ork round results\nTests: 2 passed, 1 failed\n" + ownerNone
+	r, err := CheckReport(RoleGate, false, text)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Passed != 2 || r.Failed != 1 || !r.RelianceOnRound {
+		t.Fatalf("lost mixed counts: %+v", r)
+	}
+	_, err = CheckReport(RoleGate, false, strings.Replace(text, "VERDICT: FAIL", "VERDICT: PASS", 1))
+	if err == nil {
+		t.Fatal("PASS accepted failed tests")
+	}
+	mustMention(t, shapeProblems(t, err), "PASS reports failed tests")
+}
+
+func TestCheckReportRelianceLineIsGateOnly(t *testing.T) {
+	for _, role := range []string{RoleImplementer, RolePart} {
+		t.Run(role, func(t *testing.T) {
+			_, err := CheckReport(role, false, "Tests: relied on ork round results\n"+ownerNone)
+			if err == nil {
+				t.Fatal("non-gate accepted reliance")
+			}
+			mustMention(t, shapeProblems(t, err), "Tests:")
+		})
+	}
+	if _, err := CheckReport(RoleGate, false, "VERDICT: PASS\nTests: relied on ork round results\n"+ownerNone); err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestImplementerPromptExampleBlockPassesTheShapeCheck(t *testing.T) {
 	prompt, err := roles.Prompt("implementer")
 	if err != nil {

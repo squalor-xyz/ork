@@ -1278,7 +1278,9 @@ The Questions tab also opens this pane for engine questions.
 that awaits approval and has a card lists what the owner needs to decide, in
 the action area under the run tree, in this order:
 
-- `Gate PASS (round N)  Tests: P passed, F failed` (the gate's test counts) and
+- `Gate PASS (round N)  Tests: P passed, F failed` (the gate's test counts), or
+  `Gate PASS (round N)  Tests: relied on ork round results` in place of counts
+  when the gate reported reliance on ork's round check (adj 635), and
   `Diff: 2 files, +48 -4, 1 new file` (one short line, from the last line of
   `git diff --stat`). The per-file diff stat, then the new files as `PATH | (new)`, scroll above the
   tree. The names are padded to one column, so the bar of every line, and the

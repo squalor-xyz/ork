@@ -375,3 +375,11 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S594 (run ork-20261127-183633-38ab, 2026-11-27)
 
 - [ ] In the next reviewer round on a slice where one changed Go file adds a struct field that a changed test file reads (as in S579, roadmap.go and matrix_test.go), open the reviewer brief's ## Base overlays section.
+
+## S521 (run ork-20261127-183723-3908, 2026-11-27)
+
+- [ ] Open an approval card whose gate reported Tests: relied on ork round results. The first line reads Gate PASS (round N)  Tests: relied on ork round results, with no 0 passed, 0 failed.
+
+## S450 (run ork-20261127-194937-ac89, 2026-11-27)
+
+- [ ] On the next slice whose diff is only internal/cli _test.go files and docs, open the ui role's brief in the run directory. It should hold ## No renders expected for CLI tests and docs and no "Produce the required renders" Done-when item. On the next slice that changes CLI output text, the UI brief should hold ## Renders are identical at every size, and the role should write one VIEW-80x24.txt for each view.

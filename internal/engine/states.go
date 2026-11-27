@@ -625,8 +625,15 @@ func (e *Engine) review(ctx context.Context) error {
 			sections := []BriefSection{{Title: "UI pass", Body: "The slice touches the UI. Check the screens the diff adds or changes, beside the reviewer, who checks the rest of the diff (adj 165). Use `git status` and `git diff`; you may not change the tree. The implementer's report is under Earlier reports."}}
 			// A diff that cannot be read adds no section and does not pause: the
 			// round is built as it was before S584.
-			if paths, err := e.branchPaths(ctx, rec); err == nil && onlyTUITestFiles(paths) {
-				sections = append(sections, BriefSection{Title: uiNoRendersTitle, Body: "The diff changes only `_test.go` files under `internal/tui`, so no view, golden file or doc changed.\n\nNo renders are expected: write no files in the renders directory.\n\nSay so in your report, naming the changed files, and write \"nothing\" for each empty section."})
+			if paths, err := e.branchPaths(ctx, rec); err == nil {
+				switch {
+				case onlyTUITestFiles(paths):
+					sections = append(sections, BriefSection{Title: uiNoRendersTitle, Body: "The diff changes only `_test.go` files under `internal/tui`, so no view, golden file or doc changed.\n\nNo renders are expected: write no files in the renders directory.\n\nSay so in your report, naming the changed files, and write \"nothing\" for each empty section."})
+				case onlyCLITestAndDocFiles(paths):
+					sections = append(sections, BriefSection{Title: uiNoRendersCLITitle, Body: "The diff changes only `_test.go` files under `internal/cli` and docs, so no view or golden file changed.\n\nNo renders are expected: write no files in the renders directory.\n\nSay so in your report, naming the changed files, and write \"nothing\" for each empty section."})
+				case cliOutputOnly(paths):
+					sections = append(sections, BriefSection{Title: uiIdenticalRendersTitle, Body: "The diff changes only CLI output, which does not depend on terminal width, so the 80x24, 120x40 and ascii renders of a view are identical.\n\nWrite one file per view, `VIEW-80x24.txt`, and no `VIEW-120x40.txt` or `VIEW-ascii.txt`.\n\nSay in your report that the sizes are identical."})
+				}
 			}
 			rounds = append(rounds, round{role: RoleUI, n: rec.Round, state: runrec.StateReview, task: rec.Item + " ui", sections: sections})
 		}
@@ -875,6 +882,44 @@ func onlyTUITestFiles(paths []string) bool {
 	return found
 }
 
+// onlyCLITestAndDocFiles recognizes CLI tests and direct docs/*.md paths,
+// ignoring the run's tracking paths (adj 600, adj 643).
+func onlyCLITestAndDocFiles(paths []string) bool {
+	found := false
+	for _, p := range paths {
+		if strings.HasPrefix(p, ".slicer/") || strings.HasPrefix(p, "landed-changed/") {
+			continue
+		}
+		if !(strings.HasPrefix(p, "internal/cli/") && strings.HasSuffix(p, "_test.go")) &&
+			!(strings.HasPrefix(p, "docs/") && strings.HasSuffix(p, ".md") && !strings.Contains(strings.TrimPrefix(p, "docs/"), "/")) {
+			return false
+		}
+		found = true
+	}
+	return found
+}
+
+// cliOutputOnly requires a non-test CLI path and allows CLI tests and direct
+// docs/*.md paths alongside it, ignoring tracking paths (adj 600, adj 643).
+func cliOutputOnly(paths []string) bool {
+	found := false
+	for _, p := range paths {
+		if strings.HasPrefix(p, ".slicer/") || strings.HasPrefix(p, "landed-changed/") {
+			continue
+		}
+		if strings.HasPrefix(p, "internal/cli/") {
+			if !strings.HasSuffix(p, "_test.go") {
+				found = true
+			}
+			continue
+		}
+		if !(strings.HasPrefix(p, "docs/") && strings.HasSuffix(p, ".md") && !strings.Contains(strings.TrimPrefix(p, "docs/"), "/")) {
+			return false
+		}
+	}
+	return found
+}
+
 // beforeGate schedules the optional architect once, after accepted reviewer
 // findings and before the gate (adj 123). The lineup alone enables it (adj 151).
 func (e *Engine) beforeGate(rec runrec.Record) string {
@@ -908,7 +953,7 @@ const gateCriteria = "You are the gate. A small fix round is reviewed and gated 
 	"The first line of your report is exactly `VERDICT: PASS` or `VERDICT: FAIL`. " +
 	"A successful ork round check result is the tests-green evidence. You must accept it and must not run the suite. " +
 	"The slice's own Check rows are also required tests-green evidence; read every row's command, result and log. " +
-	"Cite ork's result separately and give only the counts of tests you actually ran on a `Tests: N passed, M failed` line."
+	"Cite ork's result separately and give only the counts of tests you actually ran on a `Tests: N passed, M failed` line, or use `Tests: relied on ork round results` when you ran no tests and relied on ork's round check."
 
 func (e *Engine) gate(ctx context.Context) error {
 	rec := e.run.Snapshot()

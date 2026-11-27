@@ -255,6 +255,7 @@ func ucsReviewerHarness(t *testing.T, files map[string]string, changed string, e
 			if extra != nil {
 				more = extra(W)
 			}
+			more = append(more, clitest.Route{Tool: "git", Args: []string{"-C", W, "diff", "--no-color", "--no-ext-diff", "--no-renames", "--unified=0", "base"}})
 			return append(baseOverlayRoutes(W, changed, "", more...), ucsWorktree(P, W)...)
 		}
 	})
