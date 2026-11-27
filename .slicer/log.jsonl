@@ -7211,3 +7211,5 @@
 {"when": "2026-11-27T13:15:03Z", "item": "S629", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T13:17:10Z", "item": "S630", "action": "add", "from": "", "to": "open", "note": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused"}
 {"when": "2026-11-27T13:17:10Z", "item": "S630", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T13:29:01Z", "item": "S631", "action": "add", "from": "", "to": "open", "note": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it"}
+{"when": "2026-11-27T13:29:02Z", "item": "S631", "action": "promote", "from": "", "to": "", "note": ""}

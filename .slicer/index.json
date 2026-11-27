@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 631,
+  "next_id": 632,
   "preamble": "",
   "passes": [
     {
@@ -33254,6 +33254,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-922f0eae",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S631",
+      "title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
+      "short_title": "when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S605",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-0b7ca38d",
         "pass": "v1.2",
         "group": "",
         "reason": "",
