@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/brief.go:765-805` (checkCommandSections: quote each command before it is classified and listed)\n- `internal/engine/brief.go:293-295` (list the sections for the reviewer as well)\n- `internal/engine/brief.go:421-437` (the implementer's \"Run or report blocked\" entries use the quoted form)\n- `internal/engine/round.go:706-711` (resolve and pin the implementer allowlist for the reviewer too, as the gate does)\n- `internal/engine/brief_test.go`\n- `internal/agent/claude/pretool_test.go`\n- `docs/design.md:1948-1969` (the check-command split paragraph)"
+      "body": "- `internal/engine/brief.go:767-808` (checkCommandSections: quote each command before it is classified and listed)\n- `internal/engine/brief.go:296-298` (list the sections for the reviewer as well)\n- `internal/engine/brief.go:430-439` (the implementer's \"Run or report blocked\" entries use the quoted form)\n- `internal/engine/round.go:706-711` (resolve and pin the implementer allowlist for the reviewer too, as the gate does)\n- `internal/engine/brief_test.go`\n- `internal/agent/claude/pretool_test.go`\n- `docs/design.md:1967-1984` (the check-command split paragraph)"
     },
     {
       "heading": "Failing tests",

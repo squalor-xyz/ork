@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-661 items · — 41 · done 450 · retired 170
+661 items · — 40 · done 451 · retired 170
 
 ## v1.3
 
@@ -285,7 +285,7 @@ v1.2
 | 228 | [S523](slices/S523.md) | Give the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule |  | - |  | Covered by S565/S571: one test per command, no pipe in -run (internal/engine/brief.go:234); Jon chose 'Retire all 9' in triage, session 8d711f67, 2026-11-27. · discovered from S400 | retired |
 | 229 | [S524](slices/S524.md) | Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator |  | - |  | discovered from S400 | — |
 | 230 | [S525](slices/S525.md) | More prints-nothing wordings | S | 1 |  | 2026-11-22, S240 (run ork-20261120-152559-6a31): the Check line "`rg -n "does not show ages" docs/` finds nothing." went red on exit 1 with no output, because only "prints nothing" and "must print nothing" mark a row as empty-output (S419, adj 468). The slice was correct; the orchestrator reworded the line by hand. | done |
-| 231 | [S526](slices/S526.md) | quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written |  | - |  | discovered from S434 | — |
+| 231 | [S526](slices/S526.md) | quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written |  | - |  | discovered from S434 | done |
 | 232 | [S527](slices/S527.md) | allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output |  | - |  | discovered from S249 | done |
 | 233 | [S528](slices/S528.md) | allow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated |  | - |  | Merged into S527; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S250 | retired |
 | 234 | [S529](slices/S529.md) | tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures |  | - |  | Covered: the implementer brief carries the sandbox socket line (internal/engine/brief.go:399); Jon chose 'Retire all 9' in triage, session 8d711f67, 2026-11-27. · discovered from S399 | retired |

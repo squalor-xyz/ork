@@ -293,7 +293,7 @@ func BuildBrief(in BriefInput) (string, error) {
 			b.WriteString("`slicer check` after the round, outside your sandbox.\n\n")
 		}
 	}
-	if in.Role == RoleGate || (in.Role == RoleSpecCheck && !in.Carve) {
+	if in.Role == RoleGate || in.Role == RoleReviewer || (in.Role == RoleSpecCheck && !in.Carve) {
 		b.WriteString(checkCommandSections(in))
 	}
 	b.WriteString(doneWhen(in))
@@ -435,7 +435,7 @@ func doneWhen(in BriefInput) string {
 							add(entry + ": red before the code, green after; mutation-check every new assertion.")
 						}
 					} else if !strings.Contains(entry, "HUMAN CHECK") {
-						add("Run or report blocked: " + entry)
+						add("Run or report blocked: " + quoteRunPipeSpans(entry))
 					}
 				}
 				if heading == "Failing tests" && in.Vendor == "claude-local" && len(entries) > 0 {
@@ -778,13 +778,17 @@ func checkCommandSections(in BriefInput) string {
 		// runs itself outside the sandbox, else the orchestrator (S406, adj 454).
 		var runnable, byOrk, orchestrator []string
 		for _, entry := range sliceCheckCommands(string(raw)) {
+			// List a -run pattern with | in single quotes, and judge the allowlist
+			// on that form (S526, adj 659). ork runs the stored text, so the "ork
+			// runs" group is judged on it too.
+			command := quoteRunPipe(entry.command)
 			switch {
-			case checkCommandRunnable(entry.command, in.Worktree, in.Allow):
-				runnable = append(runnable, entry.command)
+			case checkCommandRunnable(command, in.Worktree, in.Allow):
+				runnable = append(runnable, command)
 			case checkRunByOrk(entry.command, in.Worktree):
-				byOrk = append(byOrk, entry.command)
+				byOrk = append(byOrk, command)
 			default:
-				orchestrator = append(orchestrator, entry.command)
+				orchestrator = append(orchestrator, command)
 			}
 		}
 		if in.Role == RoleSpecCheck {
@@ -805,6 +809,80 @@ func checkCommandSections(in BriefInput) string {
 		}
 	}
 	return b.String()
+}
+
+// quoteRunPipe wraps an unquoted -run pattern that holds | in single quotes, so
+// a read-only role can run the command as written: the permission check scans
+// an unquoted | as a second operation (S526, adj 659). The command splits into
+// words on whitespace outside quotes. A word -run is followed by the pattern
+// word, or the word is -run=PATTERN. The pattern is left alone when its | is
+// first, last or doubled, or when it holds a quote, a backslash, $, a backtick,
+// ;, &, < or >. Every other word and all whitespace stay byte for byte.
+func quoteRunPipe(command string) string {
+	type word struct{ start, end int }
+	var words []word
+	var quote byte
+	start := -1
+	for i := 0; i < len(command); i++ {
+		c := command[i]
+		space := quote == 0 && (c == ' ' || c == '\t' || c == '\n' || c == '\r')
+		if space {
+			if start >= 0 {
+				words = append(words, word{start, i})
+				start = -1
+			}
+			continue
+		}
+		if start < 0 {
+			start = i
+		}
+		switch {
+		case quote == 0 && (c == '\'' || c == '"'):
+			quote = c
+		case c == quote:
+			quote = 0
+		}
+	}
+	if start >= 0 {
+		words = append(words, word{start, len(command)})
+	}
+	var b strings.Builder
+	last := 0
+	wrap := func(from, to int) {
+		pattern := command[from:to]
+		if from < last || !quotablePipePattern(pattern) {
+			return
+		}
+		b.WriteString(command[last:from])
+		b.WriteString("'" + pattern + "'")
+		last = to
+	}
+	for i, w := range words {
+		text := command[w.start:w.end]
+		switch {
+		case text == "-run" && i+1 < len(words):
+			wrap(words[i+1].start, words[i+1].end)
+		case strings.HasPrefix(text, "-run="):
+			wrap(w.start+len("-run="), w.end)
+		}
+	}
+	b.WriteString(command[last:])
+	return b.String()
+}
+
+func quotablePipePattern(pattern string) bool {
+	return strings.Contains(pattern, "|") && !strings.HasPrefix(pattern, "|") && !strings.HasSuffix(pattern, "|") &&
+		!strings.Contains(pattern, "||") && !strings.ContainsAny(pattern, "'\"\\$`;&<>\n")
+}
+
+// quoteRunPipeSpans applies quoteRunPipe to the backtick spans of a Check entry
+// and leaves the text outside the backticks as written.
+func quoteRunPipeSpans(entry string) string {
+	parts := strings.Split(entry, "`")
+	for i := 1; i < len(parts); i += 2 {
+		parts[i] = quoteRunPipe(parts[i])
+	}
+	return strings.Join(parts, "`")
 }
 
 var envAssignment = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)

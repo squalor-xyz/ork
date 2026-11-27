@@ -1978,6 +1978,17 @@ the whole command (S409). Spec-check raises no finding and asks no question
 for an implementer-runnable or ork-run line, and lists the orchestrator-run
 lines in its report without a question; it raises a finding for one only when
 the command looks wrong or risky.
+*Proposed (S526, adj 659, adj 661):* the reviewer brief lists the same three
+command groups as the gate's. Before a line is listed and judged against the
+allowlist, ork wraps an unquoted `-run` pattern that contains `|` in single quotes (`-run A|B`
+becomes `-run 'A|B'`; the `-run=A|B` form too), because a read-only role that
+runs the unquoted form is denied for a second operation. A pattern with a
+`|` that starts, ends or doubles, or with a quote, backslash, `$`, backtick,
+`;`, `&`, `<` or `>`, is left as written. Spec-check, gate and reviewer briefs
+and the implementer's "Run or report blocked" Done-when items show the quoted
+form. The `## Slice` JSON and the spec's own Check lines stay as stored, and
+ork's check rows run the stored text, so the "Check commands ork runs" group is
+judged on the stored text too: a line ork does not run stays orchestrator-run.
 The brief and the gate and spec-draft prompts tell the roles to write one
 `go -C DIR test -run NAME PKG` command per test, never a `-run` pattern that
 joins names (S571); the classifier text above describes what runs, not what

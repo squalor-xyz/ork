@@ -260,6 +260,22 @@ func TestEvaluateQuotedPipeIsNotAnOperator(t *testing.T) {
 	}
 }
 
+// S526: a read-only role holds the pinned go -C DIR test* entry, not a go -C *
+// wildcard. The quoted -run pattern a brief shows is allowed; the unquoted one asks.
+func TestEvaluateQuotedRunPatternAgainstThePinnedGoCEntry(t *testing.T) {
+	root := t.TempDir()
+	p := ApprovalPolicy{Worktree: root, Allowlist: []string{"Bash(go -C " + root + " test*)"}}
+	eval := func(command string) Approval {
+		return p.Evaluate(ToolCall{ToolName: "Bash", ToolInput: json.RawMessage(`{"command":` + strconvQuote(command) + `}`)})
+	}
+	if got := eval("go -C " + root + " test -run 'A|B' ./internal/cli"); got != (Approval{"allow", "role allowlist"}) {
+		t.Errorf("quoted pattern = %+v, want allow with role allowlist", got)
+	}
+	if got := eval("go -C " + root + " test -run A|B ./internal/cli"); got.Decision != "ask" {
+		t.Errorf("unquoted pattern = %+v, want ask", got)
+	}
+}
+
 func TestEvaluateUnquotedPipeStillAsks(t *testing.T) {
 	root := t.TempDir()
 	p := ApprovalPolicy{Worktree: root, Allowlist: []string{"Bash(go -C * test*)"}}

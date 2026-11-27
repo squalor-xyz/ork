@@ -1148,6 +1148,178 @@ func TestGateBriefClassifiesCheckCommandsAgainstThePinnedImplementerList(t *test
 	t.Fatal("no gate request")
 }
 
+// S526, adj 659: a Check line goes into a brief with an unquoted -run pattern
+// that holds | in single quotes, so a read-only role can run it as written.
+func TestQuoteRunPipePattern(t *testing.T) {
+	for _, tc := range []struct {
+		name, command, want string
+	}{
+		{"separate word", "go test ./internal/cli -run A|B -v", "go test ./internal/cli -run 'A|B' -v"},
+		{"equals form", "go test ./internal/cli -run=A|B", "go test ./internal/cli -run='A|B'"},
+		{"last word", "go test ./internal/cli -run A|B", "go test ./internal/cli -run 'A|B'"},
+		{"three alternatives", "go test ./... -run A|B|C", "go test ./... -run 'A|B|C'"},
+		{"whitespace kept", "go  test\t-run   A|B  -v", "go  test\t-run   'A|B'  -v"},
+		{"and chain quotes only the pattern", "go test ./... -run A|B && make check", "go test ./... -run 'A|B' && make check"},
+		{"no pipe", "go test ./... -run A -v", "go test ./... -run A -v"},
+		{"no run flag", "go test ./... -v", "go test ./... -v"},
+		{"single quoted", "go test ./... -run 'A|B' -v", "go test ./... -run 'A|B' -v"},
+		{"double quoted", `go test ./... -run "A|B" -v`, `go test ./... -run "A|B" -v`},
+		{"single quoted equals", "go test ./... -run='A|B'", "go test ./... -run='A|B'"},
+		{"semicolon", "go test ./... -run A|B;C", "go test ./... -run A|B;C"},
+		{"ampersand", "go test ./... -run A|B&C", "go test ./... -run A|B&C"},
+		{"less than", "go test ./... -run A|B<C", "go test ./... -run A|B<C"},
+		{"greater than", "go test ./... -run A|B>C", "go test ./... -run A|B>C"},
+		{"dollar", "go test ./... -run A|B$", "go test ./... -run A|B$"},
+		{"backtick", "go test ./... -run A|B`x`", "go test ./... -run A|B`x`"},
+		{"backslash", `go test ./... -run A|B\C`, `go test ./... -run A|B\C`},
+		{"pipe first", "go test ./... -run |A", "go test ./... -run |A"},
+		{"pipe last", "go test ./... -run A|", "go test ./... -run A|"},
+		{"doubled pipe", "go test ./... -run A||B", "go test ./... -run A||B"},
+		{"pipe is the word", "go test ./... -run | tee out", "go test ./... -run | tee out"},
+		{"real pipe", "go test ./... | tee out", "go test ./... | tee out"},
+		{"real pipe after pattern", "go test ./... -run A | tee out", "go test ./... -run A | tee out"},
+		{"flag without pattern", "go test ./... -run", "go test ./... -run"},
+		{"other flag", "go test ./... -skip A|B", "go test ./... -skip A|B"},
+		{"unterminated quote", "go test ./... -run 'A|B", "go test ./... -run 'A|B"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := quoteRunPipe(tc.command); got != tc.want {
+				t.Errorf("quoteRunPipe(%q) = %q, want %q", tc.command, got, tc.want)
+			}
+		})
+	}
+	t.Run("spans", func(t *testing.T) {
+		const entry = "Run `go test ./... -run A|B` then `make check`, and a|b stays; -run C|D outside too."
+		const want = "Run `go test ./... -run 'A|B'` then `make check`, and a|b stays; -run C|D outside too."
+		if got := quoteRunPipeSpans(entry); got != want {
+			t.Errorf("quoteRunPipeSpans = %q, want %q", got, want)
+		}
+	})
+}
+
+func TestGateBriefQuotesARunPatternWithAPipe(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleGate
+	in.Allow = DefaultImplementerAllowlist("")
+	raw, _ := json.Marshal(map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- `go test ./internal/cli -run A|B`"}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, runnable, found := strings.Cut(got, "## Implementer-runnable Check commands\n\n")
+	runnable, _, _ = strings.Cut(runnable, "\n## ")
+	if !found || !strings.Contains(runnable, "- go test ./internal/cli -run 'A|B'\n") {
+		t.Errorf("runnable list lacks the quoted command: %q", runnable)
+	}
+	if strings.Contains(got, "\n- go test ./internal/cli -run A|B\n") {
+		t.Error("the unquoted command is listed")
+	}
+	if !strings.Contains(got, "-run A|B") {
+		t.Error("the Slice JSON lost the stored text")
+	}
+}
+
+// ork runs the stored text, so a quoted line that is not implementer-runnable is
+// grouped as the stored line is: with an unquoted | ork does not run it, so it
+// is orchestrator-run, never "Check commands ork runs".
+func TestGateBriefQuotedRunPatternNotRunByOrkStaysOrchestratorRun(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleGate
+	in.Allow = DefaultImplementerAllowlist("")
+	raw, _ := json.Marshal(map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- `GOFLAGS=-count=1 go test ./internal/cli -run A|B`"}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	const quoted = "- GOFLAGS=-count=1 go test ./internal/cli -run 'A|B'\n"
+	_, byOrk, _ := strings.Cut(got, "## Check commands ork runs\n\n")
+	byOrk, _, _ = strings.Cut(byOrk, "\n## ")
+	if strings.Contains(byOrk, quoted) {
+		t.Errorf("quoted line is under Check commands ork runs: %q", byOrk)
+	}
+	_, orchestrator, _ := strings.Cut(got, "## Orchestrator-run Check commands\n\n")
+	orchestrator, _, _ = strings.Cut(orchestrator, "\n## ")
+	if !strings.Contains(orchestrator, quoted) {
+		t.Errorf("quoted line is not under Orchestrator-run Check commands: %q", orchestrator)
+	}
+}
+
+func TestSpecCheckBriefQuotesARunPatternWithAPipe(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleSpecCheck
+	in.Allow = DefaultImplementerAllowlist("")
+	raw, _ := json.Marshal([]any{map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- `go test ./internal/cli -run A|B`"}}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, list, found := strings.Cut(got, "Check command classification for S04:\n\n## Implementer-runnable Check commands\n\n")
+	list, _, _ = strings.Cut(list, "\n## ")
+	if !found || !strings.Contains(list, "- go test ./internal/cli -run 'A|B'\n") {
+		t.Errorf("classification lacks the quoted command under Implementer-runnable: %q", list)
+	}
+	if strings.Contains(got, "\n- go test ./internal/cli -run A|B\n") {
+		t.Error("the unquoted command is listed")
+	}
+}
+
+func TestImplementerBriefQuotesARunPatternWithAPipe(t *testing.T) {
+	in := baseBrief()
+	raw, _ := json.Marshal(map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- `go test ./internal/cli -run A|B` passes, not -run C|D in prose.\n- `make check` passes."}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "Run or report blocked: `go test ./internal/cli -run 'A|B'` passes, not -run C|D in prose."; !strings.Contains(got, want) {
+		t.Errorf("Done-when lacks %q", want)
+	}
+	if strings.Contains(got, "Run or report blocked: `go test ./internal/cli -run A|B`") {
+		t.Error("Done-when still holds the unquoted command")
+	}
+	if !strings.Contains(got, "Run or report blocked: `make check` passes.") {
+		t.Error("an entry without a pattern changed")
+	}
+}
+
+func TestReviewerBriefListsCheckCommandsWithAQuotedRunPattern(t *testing.T) {
+	h := newHarness(t, func(o *harnessOpts) {
+		o.routesFor = func(p, w string) []clitest.Route {
+			raw, err := json.Marshal([]any{map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{
+				{"heading": "Check", "body": "- `go -C " + w + " test ./internal/cli -run A|B`"},
+			}}}})
+			if err != nil {
+				t.Fatal(err)
+			}
+			return []clitest.Route{{Tool: "slicer", Args: []string{"show", "S04", "--json", "--lean", "--root", w}, Stdout: string(raw)}}
+		}
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleReviewer {
+			continue
+		}
+		for _, heading := range []string{"## Implementer-runnable Check commands", "## Check commands ork runs", "## Orchestrator-run Check commands"} {
+			if !strings.Contains(req.Brief, heading+"\n\n") {
+				t.Errorf("reviewer brief lacks %q", heading)
+			}
+		}
+		_, section, found := strings.Cut(req.Brief, "## Implementer-runnable Check commands\n\n")
+		section, _, _ = strings.Cut(section, "\n## ")
+		if !found || !strings.Contains(section, "- go -C "+h.W+" test ./internal/cli -run 'A|B'\n") {
+			t.Errorf("reviewer runnable section lacks the quoted command: %s", section)
+		}
+		if !strings.Contains(req.Brief, "-run A|B") {
+			t.Error("the Slice JSON lost the stored text")
+		}
+		return
+	}
+	t.Fatal("no reviewer request")
+}
+
 func TestGateReceivesRoundCheckEvidence(t *testing.T) {
 	h := newHarness(t)
 	requireState(t, h.start(), runrec.StateAwaitingApproval)

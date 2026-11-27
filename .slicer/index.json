@@ -28304,7 +28304,7 @@
       "id": "S526",
       "title": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written",
       "short_title": "quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28335,6 +28335,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "5e41c34c-a892-4176-b78a-6059ba23fa7e",
+          "kind": "",
+          "text": "**2026-11-27** — Spec-check, gate and reviewer briefs and the implementer's Done-when items show an unquoted -run pattern with | in single quotes, the reviewer brief lists the three Check command groups, and the \"ork runs\" group is judged on the stored text so an env-prefixed quoted line stays orchestrator-run; full suite, go vet, gofmt and slicer check are clean.",
+          "created_at": "2026-11-27T22:25:55Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28354,7 +28368,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

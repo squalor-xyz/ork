@@ -703,12 +703,14 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 			return fail("old read log", err)
 		}
 	}
-	if r.role == RoleGate {
+	if r.role == RoleGate || r.role == RoleReviewer {
 		implementerPerm, err := ResolvePermission(e.proj, RoleImplementer)
 		if err != nil {
 			return fail("implementer permissions", err)
 		}
 		in.Allow = PinGitC(implementerPerm.Allow, rec.Worktree)
+	}
+	if r.role == RoleGate {
 		mergeBase, paths, err := e.branchChange(ctx, rec)
 		change := branchChangeResult{MergeBase: mergeBase, Paths: paths, Err: err}
 		if section := e.unfoundDecisionKeysSection(ctx, rec, change, decisionChecker); section != nil {

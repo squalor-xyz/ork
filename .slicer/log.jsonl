@@ -7599,3 +7599,7 @@
 {"when": "2026-11-27T22:00:19Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-27T22:00:19Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-27T22:00:20Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T22:07:54Z", "item": "S526", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:12:39Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T22:25:55Z", "item": "S526", "action": "note", "from": "", "to": "", "note": "Spec-check, gate and reviewer briefs and the implementer's D", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:25:55Z", "item": "S526", "action": "status", "from": "started", "to": "done", "note": "Spec-check, gate and reviewer briefs and the implementer's Done-when items show an unquoted -run pattern with | in single quotes, the reviewer brief lists the three Check command groups, and the \"ork runs\" group is judged on the stored text so an env-prefixed quoted line stays orchestrator-run; full suite, go vet, gofmt and slicer check are clean.", "by": "Jon Robbins"}
