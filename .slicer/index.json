@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 635,
+  "next_id": 636,
   "preamble": "",
   "passes": [
     {
@@ -33451,6 +33451,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-6ff8d4a4",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S635",
+      "title": "when an owner answer arrives and the tree is unchanged, say in the resumed brief that no fix round ran yet",
+      "short_title": "when an owner answer arrives and the tree is unchanged, say in the resumed brief that no fix round ran yet",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S615",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-3dd66e82",
         "pass": "v1.2",
         "group": "",
         "reason": "",

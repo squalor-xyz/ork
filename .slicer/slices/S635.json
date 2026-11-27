@@ -1,0 +1,39 @@
+{
+  "id": "S635",
+  "title": "when an owner answer arrives and the tree is unchanged, say in the resumed brief that no fix round ran yet",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-131405-8913, project ork, item S615:\n\nwhen an owner answer arrives and the tree is unchanged, say in the resumed brief that no fix round ran yet\n\nEvidence: resumed brief says tree unchanged since round 1 while carrying a narrow-now owner answer that requires code changes"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

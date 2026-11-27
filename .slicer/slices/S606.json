@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- `go test -run TestReviewerAndGateBriefsNoteSandboxSocketTests ./internal/engine` passes, and fails before the brief.go change.\n- `go test -run TestImplementerBriefNotesSandboxSocketTests ./internal/engine` passes.\n- `go test -run TestReviewerAndGateDoneWhen ./internal/engine` passes.\n- `go test -run TestEveryRoleBriefHasADoneWhenSection ./internal/engine` passes, so the checklist is still under 40 lines.\n- `go test -run TestCloudImplementerByteBaseline ./internal/engine` passes. The implementer brief bytes are unchanged.\n- `go vet ./...` reports nothing, and gofmt -l /home/jon/code/squalor-xyz/ork prints nothing.\n- `slicer check` exits 0.\n- ork runs the full go test ./... outside the sandbox. Socket-bound failures inside the implementer's sandbox are sandbox-limited."
+      "body": "- `go test -run TestReviewerAndGateBriefsNoteSandboxSocketTests ./internal/engine` passes, and fails before the brief.go change.\n- `go test -run TestImplementerBriefNotesSandboxSocketTests ./internal/engine` passes.\n- `go test -run TestReviewerAndGateDoneWhen ./internal/engine` passes.\n- `go test -run TestEveryRoleBriefHasADoneWhenSection ./internal/engine` passes, so the checklist is still under 40 lines.\n- `go test -run TestCloudImplementerByteBaseline ./internal/engine` passes. The implementer brief bytes are unchanged.\n- `go vet ./...` prints nothing.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0.\n- ork runs the full go test ./... outside the sandbox. Socket-bound failures inside the implementer's sandbox are sandbox-limited."
     },
     {
       "heading": "Git",
