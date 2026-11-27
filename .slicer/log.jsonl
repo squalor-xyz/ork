@@ -7430,3 +7430,17 @@
 {"when": "2026-11-27T19:03:00Z", "item": "S645", "action": "add", "from": "", "to": "open", "note": "in the Base overlays intro, say that an entry marked \"reverted too\" reverts more than one file"}
 {"when": "2026-11-27T19:03:00Z", "item": "S645", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T19:03:00Z", "item": "S645", "action": "note", "from": "", "to": "", "note": "possible duplicate of S644", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:15:55Z", "item": "S646", "action": "add", "from": "", "to": "open", "note": "start the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines"}
+{"when": "2026-11-27T19:15:55Z", "item": "S646", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T19:19:14Z", "item": "S450", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 643): still run the UI pass with a No re", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:19:14Z", "item": "S538", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 644, supersedes adj 507): internal/tui g", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:19:15Z", "item": "S455", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 645): the gate still runs; its brief gai", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:19:15Z", "item": "S629", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 646): give the reviewer the same Ork rou", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:19:15Z", "item": "S631", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 647): still file the slice, then add a s", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:19:15Z", "item": "S457", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 648): a Go test run by go test ./... tha", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:19:16Z", "item": "S647", "action": "add", "from": "", "to": "open", "note": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph"}
+{"when": "2026-11-27T19:19:16Z", "item": "S647", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T19:19:16Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T19:19:16Z", "item": "S648", "action": "add", "from": "", "to": "open", "note": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too"}
+{"when": "2026-11-27T19:19:17Z", "item": "S648", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T19:19:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Why"}
