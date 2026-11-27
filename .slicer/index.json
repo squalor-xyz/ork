@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 637,
+  "next_id": 638,
   "preamble": "",
   "passes": [
     {
@@ -33507,6 +33507,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S637",
+      "title": "give the gate a fresh base overlay for the fix round's changed file so a revert check runs without the earlier role temp dir",
+      "short_title": "give the gate a fresh base overlay for the fix round's changed file so a revert check runs without the earlier role temp dir",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S615",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-f9c3e4da",
         "pass": "v1.2",
         "group": "",
         "reason": "",
