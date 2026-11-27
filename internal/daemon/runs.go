@@ -3093,6 +3093,11 @@ func (d *Daemon) engineRuns(project string) []EngineRun {
 	return runs
 }
 
+// PausedNext is pausedNext for a caller outside the package, so a render
+// fixture of the CLI or the TUI takes its next: hint from the daemon's own rule
+// (S538, adj 651).
+func PausedNext(rec runrec.Record) string { return pausedNext(rec) }
+
 // pausedNext is the command that resumes a paused run, as ork status and
 // ork show print it.
 func pausedNext(rec runrec.Record) string {

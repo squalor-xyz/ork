@@ -1420,6 +1420,70 @@ func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
 	}
 }
 
+// The UI pass brief has a TUI renders section after the CLI one, with the TUI
+// render command and its flags, and no overlay recipe (S538, adj 644, adj 649,
+// adj 650, adj 651).
+func TestUIPassBriefNamesTheTUIRenderCommand(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleUI
+	in.TempDir = "/state/role scratch/ui-1"
+	in.TMPDir = "/state/process-temp"
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// The prompt names the section too, so look for the heading at a line start.
+	cli := strings.Index(got, "\n## CLI text renders\n")
+	tui := strings.Index(got, "\n## TUI renders\n")
+	pat := strings.Index(got, "\n## Test run patterns\n")
+	if cli < 0 || tui < 0 || pat < 0 || !(cli < tui && tui < pat) {
+		t.Fatalf("heading order wrong: CLI text renders %d, TUI renders %d, Test run patterns %d", cli, tui, pat)
+	}
+	section := got[tui:pat]
+	for _, want := range []string{
+		"`go test ./internal/tui -run TestRenderTUIViews -renders /state/process-temp`",
+		"`-render-fixture NAME[,NAME...]`",
+		"`-render-print`",
+		"`-render-size WxH[,WxH...]`",
+		"overview, roadmap, launch-confirm, approval-card and approval-render",
+		"NAME-80x24.txt",
+	} {
+		if !strings.Contains(section, want) {
+			t.Errorf("TUI renders section lacks %q:\n%s", want, section)
+		}
+	}
+	if strings.Contains(got, "-overlay") {
+		t.Error("UI brief names -overlay")
+	}
+	for _, role := range []string{RoleImplementer, RoleReviewer, RoleGate} {
+		in.Role = role
+		got, err := BuildBrief(in)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if strings.Contains(got, "\n## TUI renders\n") {
+			t.Errorf("%s brief has a TUI renders section", role)
+		}
+	}
+}
+
+// The UI prompt sends the pass to the brief's TUI render command, not to a test
+// file of its own (S538).
+func TestUIPromptHasNoOverlayRecipe(t *testing.T) {
+	prompt, err := roles.Prompt(RoleUI)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, bad := range []string{"-overlay", "render_overlay_test.go"} {
+		if strings.Contains(prompt, bad) {
+			t.Errorf("UI prompt names %q", bad)
+		}
+	}
+	if !strings.Contains(prompt, "## TUI renders") {
+		t.Error("UI prompt does not point to the brief's TUI renders section")
+	}
+}
+
 // The UI pass brief says that -renders alone writes five files and names the
 // -render-fixture flag with the fifteen fixtures it adds (S607, adj 542; S633,
 // adj 629).

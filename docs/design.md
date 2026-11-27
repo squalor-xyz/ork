@@ -871,14 +871,29 @@ slice.
     The UI brief also tells the pass that a `go test -run` pattern holds no
     pipe, because a pipe makes a compound command that the permission check
     denies, and gives the one-test-per-command form (S565).
-    TUI views and the pass's commands (*proposed*, S416; adj 507):
-    a TUI view may come from a test file kept outside the tree, run with
-    `go -C WORKTREE test -overlay FILE -run NAME ./PKG` (for ork, the recipe is
-    in AGENTS.md, Project Commands). The pass writes the test file, the overlay
-    JSON and any other helper file in its temp directory with the Write tool, and
-    the test writes each render into `TEMPDIR/renders/` by an absolute path. The
-    prompt tells the pass to run one plain command per shell call (no `&&`, `;`,
-    pipe, redirect or env prefix). A cloud Claude UI pass's brief adds an
+    TUI views and the pass's commands (*proposed*, S538; adj 644, adj 649,
+    adj 650, adj 651, superseding adj 507 and the overlay recipe of S416):
+    the UI brief's `## TUI renders` section gives
+    `go test ./internal/tui -run TestRenderTUIViews -renders DIR`, with the
+    brief's temp directory as DIR. Add `-v` to see go test's output. For each
+    fixture the flag writes `NAME-80x24.txt`, `NAME-120x40.txt` and
+    `NAME-ascii.txt` (the mono theme and ASCII option, at 80x24) as plain text
+    from the TUI test harnesses, without changing the tree.
+    `-render-fixture NAME[,NAME...]` writes only the named fixtures; with no
+    `-render-fixture` the five defaults are written: `overview`, `roadmap`,
+    `launch-confirm` (the launch plan and its confirm bar), `approval-card`
+    (a run's approval card with three human checks) and `approval-render` (the
+    card's render viewer on its first render). An unknown name fails with
+    `no render fixture` and the list. `-render-size WxH[,WxH...]` adds
+    `NAME-WxH.txt` for each size beside the three. `-render-print` prints each
+    file's text to stdout under a `## NAME-SIZE` header line, with or without
+    `-renders`. No file is written without `-renders`.
+    The slice that changes a TUI view adds its fixture to
+    `internal/tui/render_views_test.go`; a view with no fixture is reported, not
+    rendered. `TestRenderTUIFixtureDocsListEveryFixture` checks that this
+    document and the guide name every TUI fixture in backticks in that list.
+    The prompt tells the pass to run one plain command per shell call (no `&&`,
+    `;`, pipe, redirect or env prefix). A cloud Claude UI pass's brief adds an
     "Allowed forms" Done-when item that lists the allowlist the runner sends
     (the fixed read-only list plus Skill, `engine.CloudUIAllowlist()`), the Edit
     and Write rule under the temp directory, and says any other command is

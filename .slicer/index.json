@@ -28842,7 +28842,7 @@
       "id": "S538",
       "title": "give the UI pass a ready render harness for TUI panes so each role does not write its own overlay test",
       "short_title": "give the UI pass a ready render harness for TUI panes so each role does not write its own overlay test",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28873,6 +28873,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "66cd54b3-0c70-4b0f-8ec0-5763c4756e27",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S538):\n- later: Open the UI pass brief in the next UI round. You should see a ## TUI renders section with the go test ./internal/tui ... -renders command and the fixture names. Open AGENTS.md and internal/roles/prompts/ui.md. You should see no overlay JSON recipe.",
+          "created_at": "2026-11-27T21:57:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "68b3c0e8-56c9-4694-88da-fbf72ee10fcb",
+          "kind": "",
+          "text": "**2026-11-27** — S538 gives internal/tui test flags -renders, -render-fixture, -render-print and -render-size (five fixtures), a `## TUI renders` UI brief section, no overlay recipe in AGENTS.md or ui.md, an exported daemon.PausedNext, and every wait fixture question reply (wait-block slot step, wait-lines) now takes its next: hint from it; go test ./..., go vet ./... and gofmt -l . are clean.",
+          "created_at": "2026-11-27T21:57:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28892,7 +28920,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

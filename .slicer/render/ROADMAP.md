@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-654 items · — 38 · done 446 · retired 170
+654 items · — 37 · done 447 · retired 170
 
 ## v1.3
 
@@ -297,7 +297,7 @@ v1.2
 | 240 | [S535](slices/S535.md) | Help overlay polish: pgup inverts pgdown, scroll keys in the narrow hint, mouse wheel scrolls help |  | 1 |  | discovered from S401 | done |
 | 241 | [S536](slices/S536.md) | flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too |  | - |  | Merged into S457; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S510 | retired |
 | 242 | [S537](slices/S537.md) | include the slice notes, or the owner answers recorded in them, in the reviewer brief so an owner-accepted deviation can be checked |  | - |  | discovered from S233 | done |
-| 243 | [S538](slices/S538.md) | give the UI pass a ready render harness for TUI panes so each role does not write its own overlay test |  | - |  | discovered from S251 | — |
+| 243 | [S538](slices/S538.md) | give the UI pass a ready render harness for TUI panes so each role does not write its own overlay test |  | - |  | discovered from S251 | done |
 | 244 | [S539](slices/S539.md) | flag a slice whose spec text still says a key or choice is open after an owner decision on that key was recorded in its notes |  | - |  | Merged into S537; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S251 | retired |
 | 245 | [S540](slices/S540.md) | For CLI-only slices, say in the UI pass brief that the 80x24, 120x40 and ascii renders are identical and allow one file per view |  | - |  | Merged into S450; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S261 | retired |
 | 246 | [S541](slices/S541.md) | allow read-only slicer relay-roles show for reviewer roles so a matrix-related finding can be checked against the real matrix |  | - |  | Merged into S527; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S261 | retired |
