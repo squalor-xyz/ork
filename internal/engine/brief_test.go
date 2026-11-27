@@ -275,7 +275,7 @@ func TestImplementerBriefNotesSandboxSocketTests(t *testing.T) {
 }
 
 func TestReviewerAndGateBriefsNoteSandboxSocketTests(t *testing.T) {
-	const want = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./...."
+	const want = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./...."
 	for _, role := range []string{RoleReviewer, RoleGate} {
 		t.Run(role, func(t *testing.T) {
 			in := baseBrief()
@@ -1096,6 +1096,86 @@ func TestGateReceivesRoundCheckEvidence(t *testing.T) {
 	t.Fatal("no gate request")
 }
 
+func TestReviewerReceivesRoundCheckEvidence(t *testing.T) {
+	h := newHarness(t)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	found := false
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleReviewer {
+			continue
+		}
+		found = true
+		for _, want := range []string{"## Ork round check result", "checks-1.log", "Exit status: 0", "all packages"} {
+			if !strings.Contains(req.Brief, want) {
+				t.Errorf("reviewer request lacks %q", want)
+			}
+		}
+	}
+	if !found {
+		t.Fatal("no reviewer request")
+	}
+	t.Run("architect excluded", func(t *testing.T) {
+		h := architectHarness(t)
+		requireState(t, h.start(), runrec.StateAwaitingApproval)
+		for _, req := range h.runner.requests() {
+			if req.Role != RoleArchitect {
+				continue
+			}
+			if strings.Contains(req.Brief, "## Ork round check result") {
+				t.Error("architect request includes round check evidence")
+			}
+			return
+		}
+		t.Fatal("no architect request")
+	})
+}
+
+func TestRoundCheckSectionCarriesFailingLines(t *testing.T) {
+	dir := t.TempDir()
+	const log = "--- FAIL: TestX\nFAIL\texample/pkg\n"
+	if err := os.WriteFile(filepath.Join(dir, "checks-1.log"), []byte(log), 0600); err != nil {
+		t.Fatal(err)
+	}
+	check := runrec.CheckRecord{Round: 1, Command: "go test ./...", Log: "checks-1.log"}
+	t.Run("failure", func(t *testing.T) {
+		section, err := roundCheckSection(dir, []runrec.CheckRecord{check})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if section.Title != "Ork round check result" {
+			t.Errorf("title = %q", section.Title)
+		}
+		want := "Round: 1\nCommand: go test ./...\nCheck log: checks-1.log\nExit status: nonzero (failed; see log for exit code or timeout)\n\n```\n--- FAIL: TestX\nFAIL    example/pkg\n```"
+		if section.Body != want {
+			t.Errorf("failure evidence = %q, want %q", section.Body, want)
+		}
+	})
+	t.Run("no records", func(t *testing.T) {
+		section, err := roundCheckSection(dir, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if section.Body != "No round check result is available. Do not claim tests green without evidence." {
+			t.Errorf("no-record evidence = %q", section.Body)
+		}
+	})
+	t.Run("later slice row", func(t *testing.T) {
+		before, err := roundCheckSection(dir, []runrec.CheckRecord{check})
+		if err != nil {
+			t.Fatal(err)
+		}
+		slice := check
+		slice.Slice, slice.Round = true, 2
+		after, err := roundCheckSection(dir, []runrec.CheckRecord{check, slice})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if after != before {
+			t.Errorf("later slice row changed evidence: %+v, want %+v", after, before)
+		}
+	})
+}
+
 func TestBuildBriefFillsThePromptPlaceholders(t *testing.T) {
 	in := baseBrief()
 	got, err := BuildBrief(in)
@@ -1822,7 +1902,7 @@ func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 			}
 			want := wantByRole[role]
 			if role == RoleReviewer || role == RoleGate {
-				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./....\n", 1)
+				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./....\n", 1)
 			}
 			want = strings.Replace(want, "\n", "\n- [ ] Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C. Do not end a `go test -run` pattern with `$`: that command is denied because it cannot be checked before it runs. Use `-run NAME` with the full test name and no anchor; it also runs any test whose name starts with NAME.\n", 1)
 			if got != want {
@@ -2339,6 +2419,17 @@ func TestReviewerAndGateDoneWhen(t *testing.T) {
 			in := baseBrief()
 			in.Role = role
 			in.ReadOnly = true
+			const evidence = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./...."
+			for _, vendor := range []string{"claude", "codex"} {
+				in.Vendor = vendor
+				got := checklist(t, in)
+				if strings.Count(got, evidence) != 1 {
+					t.Errorf("%s checklist must carry round-check evidence line once", vendor)
+				}
+				if strings.Index(got, evidence) < strings.Index(got, "Run one plain command per call:") {
+					t.Errorf("%s evidence line precedes denied-forms instruction", vendor)
+				}
+			}
 			requireChecklistText(t, in, "file:line", "reproduction or a test", "Deviation", "never a [fix]", "Importance", "Urgency", "Effort", "## Owner needed", "may only read")
 			if role == RoleReviewer {
 				requireChecklistText(t, in, "untagged line under section (C)")

@@ -449,6 +449,30 @@ func (e *Engine) overBudget(rec runrec.Record) (string, bool) {
 	return "", false
 }
 
+func roundCheckSection(runDir string, checks []runrec.CheckRecord) (BriefSection, error) {
+	body := "No round check result is available. Do not claim tests green without evidence."
+	if len(checks) > 0 {
+		check := checks[len(checks)-1]
+		for i := len(checks) - 1; i >= 0; i-- {
+			if !checks[i].Slice {
+				check = checks[i]
+				break
+			}
+		}
+		log, err := ReadReport(runDir, check.Log)
+		if err != nil {
+			return BriefSection{}, fmt.Errorf("round check evidence: %w", err)
+		}
+		status := "nonzero (failed; see log for exit code or timeout)"
+		if check.OK {
+			status = "0"
+		}
+		fence := fenceFor(log)
+		body = fmt.Sprintf("Round: %d\nCommand: %s\nCheck log: %s\nExit status: %s\n\n%s\n%s\n%s", check.Round, check.Command, check.Log, status, fence, log, fence)
+	}
+	return BriefSection{Title: "Ork round check result", Body: body}, nil
+}
+
 // runRound runs one role round: brief, ledger step, process, stop rules,
 // report checks. When it returns ok false the slice stopped, paused, or has
 // an automatic retry ready (or err says why not).
@@ -637,6 +661,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if section := e.staleDocsSection(ctx, rec, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
+		section, err := roundCheckSection(e.run.Dir(), rec.Checks)
+		if err != nil {
+			return fail("reviewer check evidence", err)
+		}
+		in.Sections = append(in.Sections, section)
 	}
 	if r.role == RoleImplementer && entry.Vendor == "claude-local" {
 		pack, err := os.ReadFile(filepath.Join(e.run.Dir(), "orientation.md"))
@@ -671,27 +700,11 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		if section := e.staleDocsSection(ctx, rec, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
-		body := "No round check result is available. Do not claim tests green without evidence."
-		if len(rec.Checks) > 0 {
-			check := rec.Checks[len(rec.Checks)-1]
-			for i := len(rec.Checks) - 1; i >= 0; i-- {
-				if !rec.Checks[i].Slice {
-					check = rec.Checks[i]
-					break
-				}
-			}
-			log, err := ReadReport(e.run.Dir(), check.Log)
-			if err != nil {
-				return fail("gate check evidence", err)
-			}
-			status := "nonzero (failed; see log for exit code or timeout)"
-			if check.OK {
-				status = "0"
-			}
-			fence := fenceFor(log)
-			body = fmt.Sprintf("Round: %d\nCommand: %s\nCheck log: %s\nExit status: %s\n\n%s\n%s\n%s", check.Round, check.Command, check.Log, status, fence, log, fence)
+		section, err := roundCheckSection(e.run.Dir(), rec.Checks)
+		if err != nil {
+			return fail("gate check evidence", err)
 		}
-		in.Sections = append(in.Sections, BriefSection{Title: "Ork round check result", Body: body})
+		in.Sections = append(in.Sections, section)
 	}
 	if entryIndex > 0 {
 		if section := fallbackSection(rec, r.role, entries[:entryIndex]); section.Body != "" {

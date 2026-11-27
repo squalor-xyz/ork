@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 652,
+  "next_id": 653,
   "preamble": "",
   "passes": [
     {
@@ -33737,7 +33737,7 @@
       "id": "S629",
       "title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
       "short_title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33768,6 +33768,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "123f1148-9147-4fda-aecc-ae4f49650935",
+          "kind": "",
+          "text": "**2026-11-27** — Reviewer and gate briefs share the recorded Ork round check result and captured failure log; acceptance tests, the engine suite and static checks pass.",
+          "created_at": "2026-11-27T20:23:38Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -33787,7 +33801,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -34306,7 +34320,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "d548699b-e317-4365-a20a-d994d6d400a4",
+          "kind": "",
+          "text": "**2026-11-27** — Also covers adj 655: when a base overlay also reverts a test file (S594 closure), also offer an overlay that reverts only the product file plus a generated stub, so the slice's new tests can show a red result without a hand-written probe (evidence: S629 overlay-2 reverted brief_test.go with round.go). Jon chose 'Fold into S643', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T20:26:43Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -34563,6 +34592,49 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S652",
+      "title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
+      "short_title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "1913929c-f46d-460d-ab3f-d0fed86ef8ae",
+          "kind": "",
+          "text": "**2026-11-27** — Owner direction: the Decision keys not found check skips _test.go files (narrows adj 640, review.decision-key-citation). Jon chose 'File: skip _test.go', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T20:18:38Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S537",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261127-183724-914b-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

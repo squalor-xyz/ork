@@ -1,0 +1,39 @@
+{
+  "id": "S652",
+  "title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261127-183724-914b for S537 (discovered from S537):\n\nDecision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files\nTest fixtures are scanned as citations. My probe on this slice's own untracked `decisionkeys_test.go` found 10 keys, starting with `a.first`, `a.header`, `b.middle` and `c.context`. Every one would be listed as not found in this slice's own reviewer and gate briefs. Any future slice that tests citation-shaped strings gets the same noise. adj 640 does not exclude test files, so changing this is the owner's call in a follow-up.\nImportance: 2\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
