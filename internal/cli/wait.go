@@ -130,6 +130,7 @@ type followed struct {
 	goneReason  string            // the state name it was dropped in, or "unknown"
 	verdict     verdict           // why the wait stops on it, once it does
 	stageReason string            // "ROLE round N ended EXIT" for a stage end
+	slotWait    bool              // the status call says the run waits for a slot (adj 613)
 }
 
 // verdict is what a read says of a followed run.
@@ -253,6 +254,13 @@ func (w *waiter) connection(ctx context.Context) (code int, retry bool) {
 				return drop(err)
 			}
 			w.retried = false // a read worked on this connection
+			f.slotWait = false
+			if questionPending(reply) {
+				f.slotWait, err = w.slotWaiting(ctx, c, f.id)
+				if err != nil {
+					return drop(err)
+				}
+			}
 			verdicts[i] = w.judge(f, reply)
 		}
 		if code, done := w.finish(verdicts); done {
@@ -324,8 +332,24 @@ func (w *waiter) resolve(ctx context.Context, c *daemon.Client, projects []regis
 	return open, 0, false
 }
 
+// slotWaiting reads the status hint for a run whose question may be answered.
+func (w *waiter) slotWaiting(ctx context.Context, c *daemon.Client, id string) (bool, error) {
+	var res daemon.StatusResult
+	if err := c.Call(ctx, daemon.MethodStatus, daemon.StatusParams{Project: w.project}, &res); err != nil {
+		return false, err
+	}
+	for _, p := range res.Projects {
+		for _, r := range p.EngineRuns {
+			if r.ID == id && r.ResumeWaiting {
+				return true, nil
+			}
+		}
+	}
+	return false, nil
+}
+
 // judge says what a read of a followed run means for the wait. A pending
-// question always ends it, because only the owner moves the run on. Then the
+// question ends it unless status says the run only waits for a slot. Then the
 // --until list; with no list, a change of state from the first read. With
 // --stage, a role round that ended since the last read. A final run that
 // matched none of those has nothing more to do.
@@ -340,6 +364,8 @@ func (w *waiter) judge(f *followed, r daemon.ShowReply) verdict {
 	grew := ended > f.ended
 	f.ended = ended
 	switch {
+	case f.slotWait && questionPending(r):
+		return verdictNone
 	case questionPending(r):
 		return verdictQuestion
 	case len(w.until) > 0 && slices.Contains(w.until, name):

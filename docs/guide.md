@@ -727,8 +727,9 @@ When one read has several results, 3 wins over 0, and 0 over 6.
   is in `docs/state.md`. There is no `failed` state for now: a run's record
   does not say whether a ledger run ended with outcome fail, so `--until
   failed` is an unknown state (S311 can add it later).
-- A pending question always ends the wait with code 3, whatever `--until` says,
-  because only you can move the run on.
+- A pending question ends the wait with code 3, whatever `--until` says,
+  except when you have answered it and the run only waits for a slot under
+  the global cap. That run counts as in progress and matches no wait state.
 - A run that is final (`committed`, `stopped`) and matches nothing ends the
   wait with code 4 and a one-line message.
 - Name several runs (`ork wait r1 r2 r3`) to follow them together. Each read

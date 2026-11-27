@@ -7197,3 +7197,9 @@
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T13:28:46Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T13:28:46Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T13:28:46Z", "item": "S621", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:29:27Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T13:47:27Z", "item": "S621", "action": "note", "from": "", "to": "", "note": "Implemented status-based slot-wait suppression in ork wait, ", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:47:27Z", "item": "S621", "action": "status", "from": "started", "to": "done", "note": "Implemented status-based slot-wait suppression in ork wait, updated its documentation, and verified the judgment logic with mutation-checked tests; socket integration remains sandbox-limited.", "by": "Jon Robbins"}

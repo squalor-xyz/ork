@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-628 items · — 58 · done 425 · retired 145
+628 items · — 57 · done 426 · retired 145
 
 ## v1.3
 
@@ -380,7 +380,7 @@ v1.2
 | 323 | [S618](slices/S618.md) | Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint | S | - |  |  | done |
 | 324 | [S619](slices/S619.md) | spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report | S | - |  |  | done |
 | 325 | [S620](slices/S620.md) | Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list | S | - |  |  | — |
-| 326 | [S621](slices/S621.md) | ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap | S | - |  |  | — |
+| 326 | [S621](slices/S621.md) | ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap | S | - |  |  | done |
 | 327 | [S622](slices/S622.md) | For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test |  | - |  | discovered from S617 | — |
 | 328 | [S623](slices/S623.md) | when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only |  | - |  | Merged into S622; Jon chose 'Two slices', session 8d711f67, 2026-11-27. · discovered from S609 | retired |
 | 329 | [S624](slices/S624.md) | add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames |  | - |  | Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S607 | retired |

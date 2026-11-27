@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">628 items · — 58 · done 425 · retired 145</p>
+<p class="summary">628 items · — 57 · done 426 · retired 145</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -378,7 +378,7 @@
 <tr class="done"><td>323</td><td>S618</td><td>Base overlays: list each changed non-Go or _test.go file with its own git show MERGEBASE:path command, and give a prompt-only diff the same hint</td><td>S</td><td>-</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="done"><td>324</td><td>S619</td><td>spec draft: on the format-fix resume, keep the first report&#x27;s spec sections when the role returns only its questions, or ask it for the full report</td><td>S</td><td>-</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="open"><td>325</td><td>S620</td><td>Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
-<tr class="open"><td>326</td><td>S621</td><td>ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap</td><td>S</td><td>-</td><td></td><td></td><td class="status">—</td></tr>
+<tr class="done"><td>326</td><td>S621</td><td>ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap</td><td>S</td><td>-</td><td></td><td></td><td class="status">done</td></tr>
 <tr class="open"><td>327</td><td>S622</td><td>For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test</td><td></td><td>-</td><td></td><td>discovered from S617</td><td class="status">—</td></tr>
 <tr class="retired"><td>328</td><td>S623</td><td>when a slice&#x27;s checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only</td><td></td><td>-</td><td></td><td>Merged into S622; Jon chose &#x27;Two slices&#x27;, session 8d711f67, 2026-11-27. · discovered from S609</td><td class="status">retired</td></tr>
 <tr class="retired"><td>329</td><td>S624</td><td>add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames</td><td></td><td>-</td><td></td><td>Merged into S611; Jon chose &#x27;Merge all as proposed&#x27;, session 8d711f67, 2026-11-27. · discovered from S607</td><td class="status">retired</td></tr>
