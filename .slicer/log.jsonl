@@ -7425,3 +7425,8 @@
 {"when": "2026-11-27T19:03:01Z", "item": "S594", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S594):", "by": "Jon Robbins"}
 {"when": "2026-11-27T19:03:01Z", "item": "S594", "action": "note", "from": "", "to": "", "note": "Base overlays revert changed test files named by vet, identi", "by": "Jon Robbins"}
 {"when": "2026-11-27T19:03:01Z", "item": "S594", "action": "status", "from": "started", "to": "done", "note": "Base overlays revert changed test files named by vet, identify omitted new tests, suppress misleading pass probes, and are freshly generated for every gate round; focused checks and engine/roles suites pass.", "by": "Jon Robbins"}
+{"when": "2026-11-27T19:00:27Z", "item": "S644", "action": "add", "from": "", "to": "open", "note": "in the Base overlays intro, say that an entry with \"reverted too\" reverts more than one file"}
+{"when": "2026-11-27T19:00:27Z", "item": "S644", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T19:03:00Z", "item": "S645", "action": "add", "from": "", "to": "open", "note": "in the Base overlays intro, say that an entry marked \"reverted too\" reverts more than one file"}
+{"when": "2026-11-27T19:03:00Z", "item": "S645", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T19:03:00Z", "item": "S645", "action": "note", "from": "", "to": "", "note": "possible duplicate of S644", "by": "Jon Robbins"}
