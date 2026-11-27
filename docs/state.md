@@ -597,7 +597,11 @@ target text). Other untracked entries, including nested repositories, contribute
 only their name and mode and are not traversed. The next resumed round compares
 it with the previous row of
 that role and session to state that the tree is unchanged since that round
-(adj 490). A missing field leaves the original resumed instructions in place.
+(adj 490). *Proposed (S455, adj 645):* that section also says whether the
+slice is marked done and whether an implementer round ran after the role's last
+report. Neither fact is stored: the status comes from `slicer show`, and the
+fix round from the `roles[]` rows. A missing field leaves the
+original resumed instructions in place.
 This field does not replace `tree_sha256` or change its older comparisons.
 *Proposed (S317):* slice Check commands add rows to `checks[]` with `slice:
 true`, `command`, `exit`, `ok`, `seconds`, `log` and `log_sha256`. Unsupported

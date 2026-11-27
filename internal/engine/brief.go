@@ -74,7 +74,9 @@ type EarlierReport struct{ Name, Text string }
 
 // BriefInput is what a brief is built from (docs/design.md, Roles).
 type BriefInput struct {
-	TreeUnchangedSince int // previous read-only round with the same full-content fingerprint
+	TreeUnchangedSince int  // previous read-only round with the same full-content fingerprint
+	SliceDone          bool // the slice's tracking status is done (S455, adj 645, *proposed*)
+	FixRoundSince      bool // an implementer round ran after the role's last report (S455, adj 645, *proposed*)
 
 	Orientation  string   // saved spec-check pack, shown only to a claude-local implementer
 	ProgressFile string   // exact file the local role may write outside its worktree
@@ -254,7 +256,17 @@ func BuildBrief(in BriefInput) (string, error) {
 	}
 	if in.Resumed {
 		if in.TreeUnchangedSince > 0 {
-			fmt.Fprintf(&b, "## Resumed session\n\nork resumed your earlier session. The tree is unchanged since round %d, when you last reported. Before you judge or change anything, read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n", in.TreeUnchangedSince)
+			// The status and fix-round sentences say what happened since the
+			// role's last report (S455, adj 645, *proposed*).
+			since := " No fix round has run since then."
+			if in.FixRoundSince {
+				since = " A fix round ran after that report and left the tree unchanged."
+			}
+			done := ""
+			if in.SliceDone {
+				done = " The slice is marked done."
+			}
+			fmt.Fprintf(&b, "## Resumed session\n\nork resumed your earlier session. The tree is unchanged since round %d, when you last reported.%s%s Before you judge or change anything, read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n", in.TreeUnchangedSince, done, since)
 		} else {
 			b.WriteString("## Resumed session\n\nork resumed your earlier session. The worktree may have changed since your last report. Before you judge or change anything, run git status and git diff again and read again every file you cite. Do not repeat an earlier finding, verdict or answer without checking it against the tree as it is now.\n\n")
 		}
@@ -335,6 +347,9 @@ func deferredSection(checks []runrec.CheckRecord, finish bool) *BriefSection {
 // uiNoRendersTitle titles the UI round's section for a diff that changes only
 // test files under internal/tui, where no view changed (S584).
 const uiNoRendersTitle = "No renders expected"
+
+const uiNoRendersCLITitle = "No renders expected for CLI tests and docs"
+const uiIdenticalRendersTitle = "Renders are identical at every size"
 
 // doneWhen adds acceptance criteria without replacing any role's report format.
 func doneWhen(in BriefInput) string {
@@ -458,6 +473,9 @@ func doneWhen(in BriefInput) string {
 			for _, section := range in.Sections {
 				if section.Title == uiNoRendersTitle {
 					renders = "No renders are expected: the diff changes only test files under internal/tui. Write no render files and say so in your report."
+				}
+				if section.Title == uiNoRendersCLITitle {
+					renders = "No renders are expected: the diff changes only CLI test files and docs. Write no render files and say so in your report."
 				}
 			}
 			add("Complete sections (A)-(D): findings name the view, size, visible defect, file:line, concrete edit and CONFIRMED or PLAUSIBLE. " + renders)

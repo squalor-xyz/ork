@@ -857,9 +857,17 @@ slice.
     under `internal/tui`, no view changed. The UI
     round's brief then gets a "No renders expected" section, and its Done-when
     item for renders says that no renders are expected and none are to be
-    written. The reviewer's brief gets neither. A diff that cannot be read adds
-    neither, does not pause the review, and leaves the brief as it is for any
-    other diff.
+    written. A diff whose remaining paths are all `_test.go` files under
+    `internal/cli` or `docs/*.md` directly under `docs/` gets a
+    "No renders expected for CLI tests and docs" section and the matching
+    Done-when item (adj 643). When the diff changes only `internal/cli`
+    output and docs, with at least one non-test CLI path, the brief adds
+    "Renders are identical at every size": the 80x24, 120x40 and ascii
+    renders are identical, so the role writes one `VIEW-80x24.txt` per view
+    and says in its report that the sizes are identical. The renders
+    Done-when item stays. The reviewer's brief gets none of these sections.
+    A diff that cannot be read adds none, does not pause the review, and
+    any other diff leaves the brief as it is.
     The UI brief also tells the pass that a `go test -run` pattern holds no
     pipe, because a pipe makes a compound command that the permission check
     denies, and gives the one-test-per-command form (S565).
@@ -2014,6 +2022,13 @@ The reviewer is not told to run the suite.
     On resume, if the previous row of that role belongs to the
     resumed session and has the same fingerprint, the section says
     "The tree is unchanged since round N, when you last reported."
+    *Proposed (S455, adj 645):* that section then also says "The slice is
+    marked done." when the slice's tracking status is done (the top-level
+    `status` of the `slicer show --json --lean` ork already reads), and one of
+    two sentences: "No fix round has run since then." or, when an implementer
+    round ran after that report, "A fix round ran after that report and left
+    the tree unchanged." The gate round still runs; the lines only say what
+    happened since the role's last report.
     It drops the git status and git diff re-run instructions, including in
     Done when, but keeps re-reading every cited file (adj 490).
     Missing fingerprints in older records and changed contents keep the
@@ -4412,7 +4427,7 @@ Text output is plain lines meant to be stable. `--json` output, indented:
   same role, or `--vendor-env` and `--unset-vendor-env` for the same key is a
   usage error (exit 2) before the daemon starts, and a usage error never
   quotes a `--vendor-env` value. The text line names the fields and counts
-  (`environment_lines=2 lines`, `permissions=implementer:3 patterns;
+  (`environment_lines=2 lines`, `permissions=implementer:2 patterns;
   reviewer:read-only`, `vendor_env=codex:A,B`, with `unset` or `default` for
   a removal) and never prints a `vendor_env` value; `--json` prints the
   project as the registry holds it, as `projects list --json` does, so it
