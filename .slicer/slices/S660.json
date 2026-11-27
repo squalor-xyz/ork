@@ -1,0 +1,39 @@
+{
+  "id": "S660",
+  "title": "Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects.",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261127-194957-90f9 for S538 (discovered from S538):\n\nGate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects.\nImportance: 2\nUrgency: 1\nEffort: 2"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
