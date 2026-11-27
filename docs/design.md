@@ -1016,7 +1016,13 @@ slice.
   git and slicer, each step logged in
   `writes[]`. One landing per project runs at a time: the engines of a project
   share a lock (`engine.Landings`), and the next landing waits, then reads the
-  base branch the first one moved. The base branch is the branch the main checkout is on. Each step
+  base branch the first one moved. Landings also share a per-repository file
+  lock with the run-start tracking commit: `ork-main.lock` in the git common
+  directory (`git rev-parse --git-common-dir`). The lock covers all of landing
+  and the run-start tracking commit; a run waits for it. `ork tracking commit`
+  does not take it. A fast-forward or run-start tracking commit that fails
+  because main moved is retried once, then pauses if it fails again (adj 601,
+  605, 606). The base branch is the branch the main checkout is on. Each step
   reads git first, so a retry after a pause continues where the landing
   stopped.
   *Proposed (S217):* before approval, the run pane asks `run.landcheck` on

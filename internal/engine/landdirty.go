@@ -160,6 +160,31 @@ func movedItems(tracking []string) map[string]bool {
 	return moved
 }
 
+// launchTracking serializes the run-start commit with repository landings.
+// An outside writer moving HEAD earns one retry; other failures pause at once.
+func (e *Engine) launchTracking(ctx context.Context, item string) (string, error) {
+	release, err := e.lockMain(ctx)
+	if err != nil {
+		if ctx.Err() != nil {
+			return "", ctx.Err()
+		}
+		return oneLine("git rev-parse --git-common-dir: " + err.Error()), nil
+	}
+	defer release()
+	before, err := e.gitRead(ctx, e.proj.Path, "rev-parse", "HEAD")
+	if err != nil {
+		return oneLine("git rev-parse HEAD: " + err.Error()), nil
+	}
+	reason := e.commitLaunchTracking(ctx, item)
+	if reason != "" {
+		after, err := e.gitRead(ctx, e.proj.Path, "rev-parse", "HEAD")
+		if err == nil && after != before {
+			reason = e.commitLaunchTracking(ctx, item)
+		}
+	}
+	return reason, nil
+}
+
 // commitLaunchTracking carries this item's tracking edits into a new worktree.
 // When it commits the index it also commits each moved item's slice-file move
 // and render, so the worktree has no index status without its file (S543).

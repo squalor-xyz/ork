@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-624 items · — 67 · done 422 · retired 135
+624 items · — 66 · done 423 · retired 135
 
 ## v1.3
 
@@ -373,7 +373,7 @@ v1.2
 | 316 | [S611](slices/S611.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md |  | - |  | discovered from S574 | — |
 | 317 | [S612](slices/S612.md) | In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output |  | - |  | discovered from S584 | — |
 | 318 | [S613](slices/S613.md) | allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output |  | - |  | Covered by adj 594 (no git grep allowlist entry) and S592 (git show pointer); Jon chose 'Fold hint into follow-up, retire S613', session 8d711f67, 2026-11-26. · discovered from S597 | retired |
-| 319 | [S614](slices/S614.md) | landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files | S | - |  |  | — |
+| 319 | [S614](slices/S614.md) | landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files | S | - |  |  | done |
 | 320 | [S615](slices/S615.md) | before round 1 check that each path argument in a slice Check command exists in the worktree |  | - |  | discovered from S597 | — |
 | 321 | [S616](slices/S616.md) | when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default |  | - |  | discovered from S584 | — |
 | 322 | [S617](slices/S617.md) | flag when a slice note recorded after the spec contradicts the spec's Implement or test text, before the implementer starts |  | - |  | discovered from S592 | done |

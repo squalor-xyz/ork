@@ -227,14 +227,21 @@ func TestLaunchTrackingClean(t *testing.T) {
 
 func TestLaunchTrackingCommitFailure(t *testing.T) {
 	h := launchTrackingHarness(t, false)
+	before := gitRun(t, h.P, "rev-parse", "HEAD")
 	writeFile(t, filepath.Join(h.P, ".slicer/slices/S04.json"), "edited\n")
 	// A local hook fails the real git commit with multiline output.
 	hook := filepath.Join(h.P, ".git/hooks/pre-commit")
-	writeFile(t, hook, "#!/bin/sh\nprintf 'commit failed\\nsecond line\\n' >&2\nexit 1\n")
+	writeFile(t, hook, "#!/bin/sh\necho called >> \"$0.calls\"\nprintf 'commit failed\\nsecond line\\n' >&2\nexit 1\n")
 	if err := os.Chmod(hook, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	e := launchTrackingSetup(t, h)
+	if got := gitRun(t, h.P, "rev-parse", "HEAD"); got != before {
+		t.Errorf("failed hook moved HEAD: %s", got)
+	}
+	if calls, err := os.ReadFile(hook + ".calls"); err != nil || string(calls) != "called\n" {
+		t.Errorf("commit hook calls %q, %v; want one", calls, err)
+	}
 	rec := requireState(t, e, runrec.StatePaused)
 	if !strings.Contains(rec.Reason, "second line") {
 		t.Errorf("commit hook output missing: %q", rec.Reason)

@@ -279,6 +279,7 @@ func runDaemonIn(t *testing.T, root string, runner roundRunner, routes ...clites
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "step"}, Prefix: true, Stdout: `{"step":{"id":"1"}}`},
 		clitest.Route{Tool: "slicer", Args: []string{"relay-run", "end"}, Prefix: true, Stdout: `{}`},
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "--git-path", "info/exclude"}, Stdout: filepath.Join(root, "exclude")},
+		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "rev-parse", "--git-common-dir"}, Stdout: filepath.Join(root, "gitdir") + "\n"},
 		clitest.Route{Tool: "git", Args: []string{"-C", filepath.Join(p.Path, ".worktrees", "S1"), "rev-parse", "HEAD"}, Stdout: "abc123\n"},
 		// The landing after an approval (S119) on a base branch that did not move.
 		clitest.Route{Tool: "git", Args: []string{"-C", p.Path, "symbolic-ref", "--short", "HEAD"}, Stdout: "main\n"},
@@ -287,6 +288,12 @@ func runDaemonIn(t *testing.T, root string, runner roundRunner, routes ...clites
 		clitest.Route{Tool: "git", Prefix: true},
 	}...)...)
 	lastFake = fake
+	// The main lock file lives in the git common directory. It is under root,
+	// not p.Path: a project path that exists makes projects set verify the check
+	// command on PATH (verifyNewCheck), which these tests do not want.
+	if err := os.MkdirAll(filepath.Join(root, "gitdir"), 0o755); err != nil {
+		t.Fatal(err)
+	}
 	deps := engine.Deps{Store: store, Slicer: slicercli.Client{Bin: fake.Bin("slicer")}, GitBin: fake.Bin("git"), Runner: runner,
 		Check: func(context.Context, string, string, time.Duration) (engine.CheckOutput, error) {
 			return engine.CheckOutput{OK: true}, nil
