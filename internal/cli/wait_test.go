@@ -30,6 +30,7 @@ type waitFake struct {
 	notFound bool                          // run.show says the run is unknown
 	projects []string                      // registered project names; default one, "p"
 	runs     map[string][]string           // per project: "ID:state" engine runs that status lists
+	slotWait map[string]bool               // run ids whose resume waits for a slot
 	afterRun func(n int)                   // after the n-th run.show reply was written (one-based)
 	perRun   map[string][]daemon.ShowReply // when set, run.show answers from the list of the run it names
 
@@ -78,15 +79,35 @@ func (f *waitFake) handle(ctx context.Context, method string, raw json.RawMessag
 		f.mu.Unlock()
 		return nil, nil
 	case daemon.MethodStatus:
+		f.mu.Lock()
+		defer f.mu.Unlock()
 		var p daemon.StatusParams
 		json.Unmarshal(raw, &p)
 		var out daemon.StatusResult
-		ps := daemon.ProjectStatus{Name: p.Project}
-		for _, r := range f.runs[p.Project] {
-			id, state, _ := strings.Cut(r, ":")
-			ps.EngineRuns = append(ps.EngineRuns, source.EngineRun{ID: id, State: state})
+		names := []string{p.Project}
+		if p.Project == "" {
+			names = f.projects
+			if names == nil {
+				names = []string{"p"}
+			}
 		}
-		out.Projects = append(out.Projects, ps)
+		for _, name := range names {
+			ps := daemon.ProjectStatus{Name: name}
+			for _, r := range f.runs[name] {
+				id, state, _ := strings.Cut(r, ":")
+				run := source.EngineRun{ID: id, State: state, ResumeWaiting: f.slotWait[id]}
+				if run.ResumeWaiting {
+					run.State, run.Pending = "paused", "question"
+				}
+				ps.EngineRuns = append(ps.EngineRuns, run)
+			}
+			for id, waiting := range f.slotWait {
+				if waiting && !slices.ContainsFunc(ps.EngineRuns, func(r source.EngineRun) bool { return r.ID == id }) {
+					ps.EngineRuns = append(ps.EngineRuns, source.EngineRun{ID: id, State: "paused", Pending: "question", ResumeWaiting: true})
+				}
+			}
+			out.Projects = append(out.Projects, ps)
+		}
 		return out, nil
 	case daemon.MethodRunShow:
 		if f.notFound {
@@ -605,6 +626,85 @@ func TestWaitSeveralRunsPrintsEachChangedRun(t *testing.T) {
 	if code != ExitOK || out != "r1 S1 landed\nr2 S2 awaiting-approval next: ork approve r2\n" || errs != "" {
 		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
 	}
+}
+
+func TestWaitSlotWaitingQuestionIsNotAStop(t *testing.T) {
+	for _, until := range []string{"question,stopped,landed", "paused,stopped,landed"} {
+		t.Run(until, func(t *testing.T) {
+			f, app := multiFake(t, map[string][]daemon.ShowReply{
+				"r1": {runQuestion("r1", "S1", "old.question"), runShow("r1", "S1", "implement"), runLanded("r1", "S1")},
+			})
+			f.slotWait = map[string]bool{"r1": true}
+			code, out, errs := runWait(t, app, "r1", "--until", until)
+			if code != ExitOK || out != "r1 landed\n" {
+				t.Errorf("code %d, stdout %q, stderr %q", code, out, errs)
+			}
+			if n := f.readsOf("r1"); n < 3 {
+				t.Errorf("run.show was read %d times, want at least 3", n)
+			}
+		})
+	}
+}
+
+func TestWaitProjectSkipsASlotWaitingQuestion(t *testing.T) {
+	f, app := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runQuestion("r1", "S1", "old.question")},
+		"r2": {runShow("r2", "S2", "implement"), runLanded("r2", "S2")},
+	})
+	f.runs = map[string][]string{"p": {"r1:paused", "r2:implement"}}
+	f.slotWait = map[string]bool{"r1": true}
+	code, out, errs := runWait(t, app, "--project", "p", "--until", "question,landed")
+	if code != ExitOK || out != "r2 S2 landed\n" {
+		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+	}
+}
+
+func TestWaitQuestionStillStopsWhenTheRunDoesNotWaitForASlot(t *testing.T) {
+	_, app := newWaitFake(t, runQuestion("r1", "S1", "old.question"))
+	code, out, errs := runWait(t, app, "r1", "--until", "question,stopped,landed")
+	want := "r1 paused\nquestion pause, reviewer round 1\ndecision key: old.question\nnext: ork answer r1 TEXT\n"
+	if code != ExitWaitQuestion || out != want {
+		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+	}
+}
+
+func TestWaitSlotWaitingRunStopsOnANewQuestion(t *testing.T) {
+	f, app := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runQuestion("r1", "S1", "old.question"), runQuestion("r1", "S1", "new.question")},
+	})
+	f.slotWait = map[string]bool{"r1": true}
+	f.afterRun = func(n int) {
+		if n >= 2 {
+			f.mu.Lock()
+			delete(f.slotWait, "r1")
+			f.mu.Unlock()
+		}
+	}
+	code, out, errs := runWait(t, app, "r1", "--until", "question,stopped,landed")
+	want := "r1 paused\nquestion pause, reviewer round 1\ndecision key: new.question\nnext: ork answer r1 TEXT\n"
+	if code != ExitWaitQuestion || out != want {
+		t.Fatalf("code %d, stdout %q, stderr %q", code, out, errs)
+	}
+}
+
+func TestWaitSlotWaitingJudgment(t *testing.T) {
+	for _, until := range []string{"question", "paused", "stopped", "landed"} {
+		t.Run(until, func(t *testing.T) {
+			w := &waiter{until: []string{until}, stage: true}
+			f := &followed{id: "r1", slotWait: true}
+			r := runQuestion("r1", "S1", "old.question")
+			if got := w.judge(f, r); got != verdictNone {
+				t.Fatalf("slot-waiting question: verdict %d, want none", got)
+			}
+		})
+	}
+	t.Run("question without slot wait", func(t *testing.T) {
+		w := &waiter{until: []string{"landed"}}
+		f := &followed{id: "r1"}
+		if got := w.judge(f, runQuestion("r1", "S1", "new.question")); got != verdictQuestion {
+			t.Fatalf("new question: verdict %d, want question", got)
+		}
+	})
 }
 
 func TestWaitSeveralRunsQuestionWins(t *testing.T) {

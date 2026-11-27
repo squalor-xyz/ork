@@ -992,14 +992,17 @@ read from the run record, not stored in it:
 
 | Name | Read as |
 | --- | --- |
-| `question` | `state` `paused` and `pending.kind` `question` |
+| `question` | `state` `paused` and `pending.kind` `question`, except an answered question whose run only waits for a slot |
 | `awaiting-approval` | `state` `awaiting-approval` |
-| `paused` | `state` `paused`, any `pending.kind` |
+| `paused` | `state` `paused`, any `pending.kind`, except an answered question whose run only waits for a slot |
 | `stopped` | `state` `stopped` |
 | `landed` | `state` `committed` and `landed_at` set (`run.show` has `landed: true`) |
 
 A question is also a pause, so a run on a question matches both `question` and
 `paused`; `ork wait` reports it with its own exit code.
+An answered question whose run only waits for a slot under the global cap
+counts as in progress and matches no wait state. `ork wait` reads this from
+the status call's `ResumeWaiting` hint (adj 613).
 
 There is no `failed` name for now (adj 247, `cli.wait-failed-state`, which
 narrowed adj 202). It would mean a slicer ledger run that ended with outcome

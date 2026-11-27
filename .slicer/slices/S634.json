@@ -1,0 +1,39 @@
+{
+  "id": "S634",
+  "title": "give a base overlay for check.go that also reverts brief.go when brief.go reads the new field, so the check.go revert check builds",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #620 was decided to file it:\n\nProposal: give a base overlay for check.go that also reverts brief.go when brief.go reads the new field, so the check.go revert check builds\nRole: reviewer\nRun: ork-20261127-131405-8913\nProject: ork\nItem: S615\nEvidence: Base overlays said check.go does not build: brief.go:820:12 w.quoted undefined"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
