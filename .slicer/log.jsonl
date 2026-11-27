@@ -7541,3 +7541,8 @@
 {"when": "2026-11-27T21:20:26Z", "item": "S654", "action": "add", "from": "", "to": "open", "note": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix"}
 {"when": "2026-11-27T21:20:26Z", "item": "S654", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T21:20:27Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T21:36:25Z", "item": "S655", "action": "add", "from": "", "to": "open", "note": "When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer"}
+{"when": "2026-11-27T21:36:25Z", "item": "S655", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:38:37Z", "item": "S654", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 657): 4 random bytes (8 hex digits), ret", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:38:37Z", "item": "S649", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 658): a gate-only line 'Intended red: N ", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:38:37Z", "item": "S526", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 659): when ork renders a Check line into", "by": "Jon Robbins"}

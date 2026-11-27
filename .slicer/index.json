@@ -28307,7 +28307,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "24deb41a-fa7d-446d-83cf-7f3f5c8ac6f8",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 659): when ork renders a Check line into a brief, wrap an unquoted -run pattern that contains | in single quotes (-run 'A|B'); spec Check lines stay as written. The spec check could not verify that the permission check accepts a quoted pipe, so the tests should cover the allowlist matcher with the quoted form. Jon chose 'Quote in brief', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -34560,7 +34575,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "4b35c8dc-9632-4595-ac37-7ded5969ef8d",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 658): a gate-only line 'Intended red: N failed' that CheckReport reads into a new Report field; it adds nothing to Passed or Failed, so PASS reports failed tests no longer fires for it; non-gate roles' line is ignored. Gate prompt, docs/design.md and report_test.go. Jon chose 'Separate evidence line', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -34715,7 +34745,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6e398f8a-2176-47cc-8515-fab5901dc453",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 657): 4 random bytes (8 hex digits), retry the create up to 8 times on file exists, for run IDs (internal/engine/engine.go:428) and chain and wave IDs (internal/daemon/runs.go:1378, :1675); update the {4} test regexes (wave_test.go:51, runs_test.go:2550) and the Deps.RandHex comment. Jon chose '4 bytes, 8 tries, all three', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:38:37Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
