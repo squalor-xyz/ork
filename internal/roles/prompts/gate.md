@@ -166,20 +166,27 @@ The first line of your report is exactly `VERDICT: PASS` or `VERDICT: FAIL`, wit
 nothing before it and nothing else on that line. Then:
 
 - one evidence line per criterion;
-- one line `Tests: N passed, M failed` with the counts of the run you made;
+- one line `Tests: N passed, M failed` with the counts of tests you ran, or, when you ran no tests and relied on ork's round check, `Tests: relied on ork round results`;
 - if FAIL, only what must change, each as `file:line` and the fix, tagged `[fix]`;
 - non-blocking nits under "Non-blocking", tagged `[later]` when one deserves a
   slice; they do not make it FAIL;
 - `## Owner needed`: a design choice that is the owner's, as the question, the
   options and your recommendation, or "none".
 
-These two lines must appear exactly as shown, each on its own line, with nothing
-before or after them on that line. The heading has no number. Replace N and M
-with integers; put skipped or blocked tests elsewhere, not on the Tests line:
+Use either Tests form exactly as shown below, on its own line; either form may
+start with a list marker. The Owner needed heading must appear exactly as shown,
+on its own line with no number. Replace N and M with integer counts of tests you
+ran; put skipped or blocked tests elsewhere, not on the Tests line:
 
 ```text
 Tests: N passed, M failed
 ## Owner needed
+```
+
+When you ran no tests and relied on ork's round check, use:
+
+```text
+Tests: relied on ork round results
 ```
 
 For each [later] finding, propose scores on three indented lines, each 1 to 3:

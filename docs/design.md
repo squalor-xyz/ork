@@ -1491,8 +1491,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
 - **Report checks.** `CheckReport` refuses a gate report whose first line is
   not exactly `VERDICT: PASS` or `VERDICT: FAIL`, an implementer or gate
   report with no `Tests: N passed, M failed` line (the finish step needs
-  none), and any report with no `## Owner needed` section. All problems are
-  listed. A gate PASS with a nonzero failed-test count is also refused.
+  none). A gate report may instead carry
+  `Tests: relied on ork round results` when it ran no tests and relied on
+  ork's round check (adj 635, 638). Any report with no `## Owner needed`
+  section is refused. All problems are listed. A gate PASS with a nonzero
+  failed-test count is also refused.
   A plain relay v13 implementer report also needs exactly one non-empty
   `Outcome:` line with the verified outcome. Split leads, sliver chains,
   lone slivers, v12 runs and finish reports keep their existing shape
@@ -2243,7 +2246,10 @@ separately.
   (S256, *proposed*). ork validates the shape: the gate's first line, the
   test counts. The prompts ask for one line `Tests: N passed, M failed`
   in the implementer's and the gate's report, and for a final `## Owner
-  needed` section in every report (`role.report-shape`).
+  needed` section in every report (`role.report-shape`). The gate alone may
+  instead report `Tests: relied on ork round results` when it ran no tests and
+  relied on ork's round check; the approval card prints that line in place of
+  counts (adj 635, 638). Either Tests form may start with a list marker (adj 636).
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).

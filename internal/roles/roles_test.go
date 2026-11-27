@@ -250,6 +250,17 @@ func TestImplementerAndGateShowTheTestsLineLiterally(t *testing.T) {
 	}
 }
 
+func TestGatePromptNamesTheRelianceLine(t *testing.T) {
+	p := prompts(t)["gate"]
+	for _, want := range []string{"`Tests: N passed, M failed`", "Tests: relied on ork round results", "ran no tests and relied on ork's round check"} {
+		t.Run(want, func(t *testing.T) {
+			if !strings.Contains(p, want) {
+				t.Fatalf("gate prompt lacks %q", want)
+			}
+		})
+	}
+}
+
 func TestPromptsTellRolesListNumbersAreNotHeadings(t *testing.T) {
 	if !has(prompts(t)["implementer"], "They are not part of the report: never number a heading.") {
 		t.Error("implementer does not explain list numbers are not part of the report and headings are never numbered")

@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-643 items · — 35 · done 438 · retired 170
+643 items · — 34 · done 439 · retired 170
 
 ## v1.3
 
@@ -280,7 +280,7 @@ v1.2
 | 223 | [S518](slices/S518.md) | flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph |  | - |  | Merged into S457; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S394 | retired |
 | 224 | [S519](slices/S519.md) | allow go -C WORKTREE run ./cmd/ork help in the reviewer allowlist so the slice's Check line can be run as written |  | - |  | Not adopted (adj 519 brief-first); CLI renders come from S475's -renders flag. · discovered from S240 | retired |
 | 225 | [S520](slices/S520.md) | give TestRenderCLIViews a status fixture with engine runs, a multi-line wait, findings and a relay row, so the status render shows the run rows |  | - |  | Folded into S499 per the owner (adj 528). · discovered from S240 | retired |
-| 226 | [S521](slices/S521.md) | let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed |  | - |  | discovered from S394 | — |
+| 226 | [S521](slices/S521.md) | let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed |  | - |  | discovered from S394 | done |
 | 227 | [S522](slices/S522.md) | name the golden files in the UI-pass brief when a slice adds CLI goldens, so the pass reads them instead of writing an overlay test |  | - |  | Folded into S499 (render test fixtures; the brief names the render command). · discovered from S434 | retired |
 | 228 | [S523](slices/S523.md) | Give the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule |  | - |  | Covered by S565/S571: one test per command, no pipe in -run (internal/engine/brief.go:234); Jon chose 'Retire all 9' in triage, session 8d711f67, 2026-11-27. · discovered from S400 | retired |
 | 229 | [S524](slices/S524.md) | Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator |  | - |  | discovered from S400 | — |

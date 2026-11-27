@@ -336,15 +336,16 @@ func (c HumanCheck) Resolved() bool { return c.State == CheckTicked || c.State =
 // slice's human checks. The engine builds it when the gate passes. Owner
 // findings are in Record.Findings.
 type ApprovalCard struct {
-	Deviations  []string     `json:"deviations,omitempty"`
-	Round       int          `json:"round"`
-	Verdict     string       `json:"verdict"`
-	Passed      int          `json:"passed"`
-	Failed      int          `json:"failed"`
-	DiffStat    string       `json:"diff_stat,omitempty"` // git diff --stat against HEAD
-	Untracked   []string     `json:"untracked,omitempty"` // new files the diff stat does not count
-	HumanChecks []HumanCheck `json:"human_checks,omitempty"`
-	ChecksError string       `json:"checks_error,omitempty"` // why the slice's human checks could not be read
+	RelianceOnRound bool         `json:"reliance_on_round,omitempty"`
+	Deviations      []string     `json:"deviations,omitempty"`
+	Round           int          `json:"round"`
+	Verdict         string       `json:"verdict"`
+	Passed          int          `json:"passed"`
+	Failed          int          `json:"failed"`
+	DiffStat        string       `json:"diff_stat,omitempty"` // git diff --stat against HEAD
+	Untracked       []string     `json:"untracked,omitempty"` // new files the diff stat does not count
+	HumanChecks     []HumanCheck `json:"human_checks,omitempty"`
+	ChecksError     string       `json:"checks_error,omitempty"` // why the slice's human checks could not be read
 
 	// The UI pass's renders (S121, *proposed*; adj 165): the changed views as
 	// plain text files, listed by name and size. UIRound is the round of the UI pass they come from, or 0

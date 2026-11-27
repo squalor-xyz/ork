@@ -166,7 +166,7 @@ func humanCheckTexts(sections []slicercli.Section) []humanCheckItem {
 // on a check with the same text carry over. A diff stat that cannot be read
 // is left empty; human checks that cannot be read are named on the card.
 func (e *Engine) buildCard(ctx context.Context, rec runrec.Record, rep *Report) *runrec.ApprovalCard {
-	card := &runrec.ApprovalCard{Round: rec.Round, Verdict: rep.Verdict, Passed: rep.Passed, Failed: rep.Failed, Deviations: roleSwitches(rec)}
+	card := &runrec.ApprovalCard{Round: rec.Round, Verdict: rep.Verdict, Passed: rep.Passed, Failed: rep.Failed, RelianceOnRound: rep.RelianceOnRound, Deviations: roleSwitches(rec)}
 	if out, err := e.gitRead(ctx, rec.Worktree, "diff", "--stat", "HEAD"); err == nil {
 		card.DiffStat = strings.TrimSpace(out)
 	}
