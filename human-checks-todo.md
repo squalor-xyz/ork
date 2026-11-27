@@ -358,3 +358,8 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S601 (run ork-20261127-131401-a265, 2026-11-27)
 
 - [ ] Open a long record on Decisions at 80x24 and press pgdown to the end. Each page should start with the line that sat under the "+N more lines" marker on the page before. Press pgup back up the same way. Do the same in a Questions detail, a Waves item pane and the Settings pane (S on the Roadmap). In Settings, a page that starts inside a block shows that block's dim heading under the "+N lines above" marker and still starts at the next unseen row.
+
+## S622 (run ork-20261127-141336-9ee9, 2026-11-27)
+
+- [ ] In the next reviewer round for a slice that changes a non-test Go file with no test of its own, open the reviewer's brief under the run's role files. In ## Base overlays, that file's entry should end with "Passes in full with this file reverted: ..." after its command. An entry for a file whose revert fails a test should have no such sentence.
+- [ ] In the next reviewer round for a slice whose only Go changes are _test.go files, open the reviewer's brief. ## Base overlays should hold a paragraph saying a base overlay cannot isolate the product change, and no go -C ... test -overlay command.
