@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-628 items · — 68 · done 425 · retired 135
+628 items · — 58 · done 425 · retired 145
 
 ## v1.3
 
@@ -361,9 +361,9 @@ v1.2
 | 304 | [S599](slices/S599.md) | build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice |  | - |  | Duplicate of S598; Jon chose 'Two slices', session 8d711f67, 2026-11-25. · discovered from S593 | retired |
 | 305 | [S600](slices/S600.md) | While the Goals are lifted, `enter` opens the hidden first row with no cue on screen. |  | 2 |  | discovered from S580 | done |
 | 306 | [S601](slices/S601.md) | Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget) | S | 1 |  | discovered from S588 | — |
-| 307 | [S602](slices/S602.md) | Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget) | S | 1 |  | discovered from S588 | — |
-| 308 | [S603](slices/S603.md) | Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget) | S | 1 |  | discovered from S588 | — |
-| 309 | [S604](slices/S604.md) | Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget) | S | 1 |  | discovered from S588 | — |
+| 307 | [S602](slices/S602.md) | Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
+| 308 | [S603](slices/S603.md) | Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
+| 309 | [S604](slices/S604.md) | Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
 | 310 | [S605](slices/S605.md) | allow a non-standard size render name such as VIEW-80x10.txt in the approval-card contract when the slice's acceptance size is not 80x24 |  | - |  | discovered from S600 | — |
 | 311 | [S606](slices/S606.md) | say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing |  | - |  | discovered from S596 | — |
 | 312 | [S607](slices/S607.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list |  | - |  | discovered from S574 | done |
@@ -371,7 +371,7 @@ v1.2
 | 314 | [S609](slices/S609.md) | adj guard check: flag a client passed as an argument or bound with `var`, and an inverted guard |  | 1 |  | discovered from S570 | done |
 | 315 | [S610](slices/S610.md) | say in the reviewer brief that a -run pattern anchored with $ is denied, and give the anchored form to use instead |  | - |  | discovered from S574 | — |
 | 316 | [S611](slices/S611.md) | add a test that every name in renderFixtureNames appears in the UI brief's fixture list and in docs/guide.md |  | - |  | discovered from S574 | — |
-| 317 | [S612](slices/S612.md) | In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output |  | - |  | discovered from S584 | — |
+| 317 | [S612](slices/S612.md) | In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output |  | - |  | Moot: S584 already landed; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S584 | retired |
 | 318 | [S613](slices/S613.md) | allow read-only git grep or git show HEAD:PATH for reviewer roles so a revert check on a non-Go prompt file can be shown with tool output |  | - |  | Covered by adj 594 (no git grep allowlist entry) and S592 (git show pointer); Jon chose 'Fold hint into follow-up, retire S613', session 8d711f67, 2026-11-26. · discovered from S597 | retired |
 | 319 | [S614](slices/S614.md) | landing and run start: serialize main's tracking commits so concurrent landings do not stop each other on uncommitted tracking files | S | - |  |  | — |
 | 320 | [S615](slices/S615.md) | before round 1 check that each path argument in a slice Check command exists in the worktree |  | - |  | discovered from S597 | — |
@@ -382,12 +382,12 @@ v1.2
 | 325 | [S620](slices/S620.md) | Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list | S | - |  |  | — |
 | 326 | [S621](slices/S621.md) | ork wait: do not fire again on a run whose question is answered and that only waits for a slot under the global cap | S | - |  |  | — |
 | 327 | [S622](slices/S622.md) | For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test |  | - |  | discovered from S617 | — |
-| 328 | [S623](slices/S623.md) | when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only |  | - |  | discovered from S609 | — |
-| 329 | [S624](slices/S624.md) | add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames |  | - |  | discovered from S607 | — |
-| 330 | [S625](slices/S625.md) | add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test |  | - |  | discovered from S607 | — |
-| 331 | [S626](slices/S626.md) | check that each path in a slice's Check commands exists before round 1 (S615 covers this) |  | - |  | discovered from S616 | — |
-| 332 | [S627](slices/S627.md) | before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615) |  | - |  | discovered from S616 | — |
-| 333 | [S628](slices/S628.md) | in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go |  | - |  | discovered from S607 | — |
+| 328 | [S623](slices/S623.md) | when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only |  | - |  | Merged into S622; Jon chose 'Two slices', session 8d711f67, 2026-11-27. · discovered from S609 | retired |
+| 329 | [S624](slices/S624.md) | add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames |  | - |  | Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S607 | retired |
+| 330 | [S625](slices/S625.md) | add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test |  | - |  | Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S607 | retired |
+| 331 | [S626](slices/S626.md) | check that each path in a slice's Check commands exists before round 1 (S615 covers this) |  | - |  | Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S616 | retired |
+| 332 | [S627](slices/S627.md) | before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615) |  | - |  | Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27. · discovered from S616 | retired |
+| 333 | [S628](slices/S628.md) | in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go |  | - |  | Merged into S620; Jon chose 'Two slices', session 8d711f67, 2026-11-27. · discovered from S607 | retired |
 
 ---
 

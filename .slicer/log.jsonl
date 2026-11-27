@@ -7166,3 +7166,17 @@
 {"when": "2026-11-26T04:55:11Z", "item": "S627", "action": "note", "from": "", "to": "", "note": "possible duplicate of S615, S626", "by": "Jon Robbins"}
 {"when": "2026-11-27T12:43:38Z", "item": "S628", "action": "add", "from": "", "to": "open", "note": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go"}
 {"when": "2026-11-27T12:43:38Z", "item": "S628", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T13:03:13Z", "item": "S626", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:13Z", "item": "S627", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:13Z", "item": "S624", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:13Z", "item": "S625", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S611", "action": "note", "from": "", "to": "", "note": "Also covers S624 and S625: a check that every renderFixtureN", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:03:14Z", "item": "S612", "action": "retire", "from": "open", "to": "retired", "note": "Moot: S584 already landed; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S602", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S603", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S604", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S601", "action": "note", "from": "", "to": "", "note": "Also covers S602 (questions detail, shared scrollDecision ma", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:03:15Z", "item": "S628", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S620; Jon chose 'Two slices', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:15Z", "item": "S620", "action": "note", "from": "", "to": "", "note": "Also covers S628 (adj 611): in Base overlays, also list the ", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:03:15Z", "item": "S623", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S622; Jon chose 'Two slices', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:15Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Also covers S623: when a slice's checker and its tests are i", "by": "Jon Robbins"}
