@@ -7302,3 +7302,7 @@
 {"when": "2026-11-27T15:45:12Z", "item": "S530", "action": "retire", "from": "open", "to": "retired", "note": "Covered by S606 (reviewer and gate briefs carry the sandbox socket line, adj 616); Jon chose 'File 626, retire S530', session 8d711f67, 2026-11-27."}
 {"when": "2026-11-27T15:45:43Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-27T15:45:43Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T15:45:45Z", "item": "S639", "action": "add", "from": "", "to": "open", "note": "when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text"}
+{"when": "2026-11-27T15:45:45Z", "item": "S639", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T15:46:33Z", "item": "S636", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 628): flag a clause-leading word from a ", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:46:34Z", "item": "S633", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 629): three fixtures, wait-block (one ru", "by": "Jon Robbins"}
