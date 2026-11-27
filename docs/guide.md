@@ -1019,7 +1019,8 @@ its `renders/` directory with the prompt's `VIEW-80x24.txt` names so they
 appear on the approval card.
 
 `TestRenderFixtureDocsListEveryFixture` checks that every additional render
-fixture has an exact name in this guide and the design document.
+fixture has an exact name in the `-render-fixture` lists in this guide and the
+design document, ignoring mentions elsewhere in the documents.
 
 The UI pass brief also says that a `go test -run` pattern must not contain a
 pipe, because `|` makes a compound command that the permission check denies.

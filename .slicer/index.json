@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 640,
+  "next_id": 641,
   "preamble": "",
   "passes": [
     {
@@ -32983,7 +32983,7 @@
       "id": "S620",
       "title": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list",
       "short_title": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33014,6 +33014,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "465e58a5-b598-4403-ab40-0ae3c1c8bbe5",
+          "kind": "",
+          "text": "**2026-11-27** — Base overlays exclude tracking paths, offer at most 20 vetted direct-importer lines, and use uncached overlay test commands; focused tests and the full engine suite pass.",
+          "created_at": "2026-11-27T16:21:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -33033,7 +33047,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33706,10 +33720,25 @@
       "id": "S638",
       "title": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document",
       "short_title": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "fe9e96b7-989c-409a-9f5b-1dd739271bd3",
+          "kind": "",
+          "text": "**2026-11-27** — Fixture documentation checks now require exact names inside each render-fixture list and fail on a missing list opener or ending.",
+          "created_at": "2026-11-27T16:23:42Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -33727,7 +33756,7 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33749,6 +33778,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-950e3088",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S640",
+      "title": "in Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line",
+      "short_title": "in Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S620",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-6c80cb71",
         "pass": "v1.2",
         "group": "",
         "reason": "",

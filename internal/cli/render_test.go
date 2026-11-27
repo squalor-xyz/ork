@@ -457,16 +457,30 @@ func TestUIPassBriefListsEveryRenderFixture(t *testing.T) {
 }
 
 func TestRenderFixtureDocsListEveryFixture(t *testing.T) {
-	for _, doc := range []string{"guide.md", "design.md"} {
-		t.Run(doc, func(t *testing.T) {
-			data, err := os.ReadFile(filepath.Join("..", "..", "docs", doc))
+	for _, doc := range []struct {
+		name string
+		end  string
+	}{
+		{name: "guide.md", end: "A view of several commands"},
+		{name: "design.md", end: "With no flag it writes"},
+	} {
+		t.Run(doc.name, func(t *testing.T) {
+			data, err := os.ReadFile(filepath.Join("..", "..", "docs", doc.name))
 			if err != nil {
 				t.Fatal(err)
 			}
+			_, rest, ok := strings.Cut(string(data), "`-render-fixture NAME[,NAME...]`")
+			if !ok {
+				t.Fatal("render fixture list lacks opening")
+			}
+			list, _, ok := strings.Cut(rest, doc.end)
+			if !ok {
+				t.Fatal("render fixture list lacks ending")
+			}
 			for _, name := range renderFixtureNames {
 				t.Run(name, func(t *testing.T) {
-					if !strings.Contains(string(data), "`"+name+"`") {
-						t.Errorf("docs/%s lacks exact render fixture name %q", doc, name)
+					if !strings.Contains(list, "`"+name+"`") {
+						t.Errorf("docs/%s render fixture list lacks exact name %q", doc.name, name)
 					}
 				})
 			}

@@ -1,0 +1,39 @@
+{
+  "id": "S640",
+  "title": "in Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-154633-787b, project ork, item S620:\n\nin Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line\n\nEvidence: the overlay-1.json run with -run TestBaseOverlay printed over 20000 characters and was truncated, which hid some per-test FAIL lines"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

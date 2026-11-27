@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -54,6 +55,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	var goFiles, otherFiles []string
 	hasGoTest := false
 	for _, p := range changed {
+		if baseOverlayTrackingPath(p) {
+			continue
+		}
 		hasGoTest = hasGoTest || strings.HasSuffix(p, "_test.go")
 		if strings.HasSuffix(p, ".go") && !strings.HasSuffix(p, "_test.go") {
 			goFiles = append(goFiles, p)
@@ -84,6 +88,8 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	replacements := make(map[string]string)
 	var packages []string
 	commands := 0
+	type builtOverlay struct{ file, overlay string }
+	var built []builtOverlay
 	for _, p := range goFiles {
 		isNew, key, replacement, err := e.writeBaseOverlay(ctx, rec, tmpDir, mergeBase, p, len(entries)+1)
 		if err != nil {
@@ -102,13 +108,38 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			entries = append(entries, line+": does not build: "+message+". Trace its base version with `git -C "+ShellWord(rec.Worktree)+" show "+ShellWord(mergeBase+":"+p)+"` instead.")
 			continue
 		}
-		command := fmt.Sprintf("go -C %s test -overlay %s %s", ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(packageArg(p)))
+		command := fmt.Sprintf("go -C %s test -overlay %s -count=1 %s", ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(packageArg(p)))
 		entry := line + ": `" + command + "`"
 		if e.overlayPackagePasses(ctx, rec, overlayFile, packageArg(p)) {
 			entry += ". " + baseOverlayPassNote
 		}
 		entries = append(entries, entry)
 		commands++
+		built = append(built, builtOverlay{p, overlayFile})
+	}
+	var importerEntries []string
+	importerLeftOut := 0
+	importerIncomplete := false
+	if commands > 0 {
+		importers, err := e.baseOverlayImporters(ctx, rec)
+		importerIncomplete = err != nil
+		if err == nil {
+			for _, entry := range built {
+				for _, pkg := range importers[packageArg(entry.file)] {
+					if len(importerEntries) >= baseOverlayLimit {
+						importerLeftOut++
+						continue
+					}
+					line := "- Importer `" + pkg + "` of `" + entry.file + "`: "
+					if message := e.overlayBuildError(ctx, rec, entry.overlay, pkg); message != "" {
+						line += "does not build: " + message + "."
+					} else {
+						line += fmt.Sprintf("`go -C %s test -overlay %s -count=1 %s`", ShellWord(rec.Worktree), ShellWord(entry.overlay), ShellWord(pkg))
+					}
+					importerEntries = append(importerEntries, line)
+				}
+			}
+		}
 	}
 	if len(replacements) >= 2 && commands == 0 {
 		overlayFile := filepath.Join(tmpDir, "overlay-all.json")
@@ -125,7 +156,7 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			if message := e.overlayBuildError(ctx, rec, overlayFile, packages...); message != "" {
 				entries = append(entries, line+": does not build: "+message+". Trace the base versions with `git show` instead.")
 			} else {
-				command := "go -C " + ShellWord(rec.Worktree) + " test -overlay " + ShellWord(overlayFile)
+				command := "go -C " + ShellWord(rec.Worktree) + " test -overlay " + ShellWord(overlayFile) + " -count=1"
 				for _, pkg := range packages {
 					command += " " + ShellWord(pkg)
 				}
@@ -144,6 +175,16 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	if len(entries) > 0 {
 		body.WriteString(strings.Join(entries, "\n"))
 		body.WriteString("\n")
+	}
+	if len(importerEntries) > 0 {
+		body.WriteString(strings.Join(importerEntries, "\n") + "\n")
+	}
+	if importerLeftOut > 0 {
+		noun := "lines were"
+		if importerLeftOut == 1 {
+			noun = "line was"
+		}
+		fmt.Fprintf(&body, "\n%d more importer %s left out (ork lists at most %d).\n", importerLeftOut, noun, baseOverlayLimit)
 	}
 	if leftOut > 0 {
 		if body.Len() > 0 {
@@ -183,6 +224,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		}
 		body.WriteString("Check incomplete: the base version of " + strings.Join(unread, ", ") + " could not be read. Trace it yourself with `git show` (`git -C " + ShellWord(rec.Worktree) + " show " + ShellWord(mergeBase) + ":PATH`); this does not block the run.\n")
 	}
+	if importerIncomplete {
+		body.WriteString("\nCheck incomplete: the packages that import the reverted files could not be listed, so only each file's own package is offered.\n")
+	}
 	if testOnly {
 		body.WriteString("\n" + baseOverlayTestOnlyNote + "\n")
 	}
@@ -195,11 +239,68 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	return &BriefSection{Title: title, Body: strings.TrimRight(body.String(), "\n")}
 }
 
+func baseOverlayTrackingPath(p string) bool {
+	return strings.HasPrefix(p, ".slicer/") || strings.HasPrefix(p, "landed-changed/")
+}
+
+// baseOverlayImporters reads direct module importers, including test imports.
+// The process and its timeout are owned by clirun.Run; decoding opens no files.
+func (e *Engine) baseOverlayImporters(ctx context.Context, rec runrec.Record) (map[string][]string, error) {
+	result, err := clirun.Run(ctx, clirun.Call{
+		Bin: e.d.goBin(), Args: []string{"-C", rec.Worktree, "list", "-e", "-json", "./..."},
+		Timeout: baseOverlayVetTimeout,
+	})
+	if err != nil {
+		return nil, err
+	}
+	type listedPackage struct {
+		ImportPath                         string
+		Module                             *struct{ Path string }
+		Imports, TestImports, XTestImports []string
+	}
+	var packages []listedPackage
+	args := make(map[string]string)
+	decoder := json.NewDecoder(strings.NewReader(string(result.Stdout)))
+	for {
+		var pkg listedPackage
+		if err := decoder.Decode(&pkg); err != nil {
+			if errors.Is(err, io.EOF) {
+				break
+			}
+			return nil, err
+		}
+		if pkg.Module == nil {
+			continue
+		}
+		arg := "."
+		if pkg.ImportPath != pkg.Module.Path {
+			arg = "./" + strings.TrimPrefix(pkg.ImportPath, pkg.Module.Path+"/")
+		}
+		args[pkg.ImportPath] = arg
+		packages = append(packages, pkg)
+	}
+	importers := make(map[string][]string)
+	for _, pkg := range packages {
+		for _, imports := range [][]string{pkg.Imports, pkg.TestImports, pkg.XTestImports} {
+			for _, imported := range imports {
+				if arg, ok := args[imported]; ok && imported != pkg.ImportPath {
+					importers[arg] = append(importers[arg], args[pkg.ImportPath])
+				}
+			}
+		}
+	}
+	for pkg, values := range importers {
+		slices.Sort(values)
+		importers[pkg] = slices.Compact(values)
+	}
+	return importers, nil
+}
+
 // overlayPackagePasses annotates only completed, successful test runs. Any
 // failure, including an unavailable tool or deadline, leaves the entry plain.
 func (e *Engine) overlayPackagePasses(ctx context.Context, rec runrec.Record, overlayFile, pkg string) bool {
 	_, err := clirun.Run(ctx, clirun.Call{
-		Bin: e.d.goBin(), Args: []string{"-C", rec.Worktree, "test", "-overlay", overlayFile, pkg},
+		Bin: e.d.goBin(), Args: []string{"-C", rec.Worktree, "test", "-overlay", overlayFile, "-count=1", pkg},
 		Timeout: baseOverlayTestTimeout,
 	})
 	return err == nil
