@@ -1,0 +1,39 @@
+{
+  "id": "S628",
+  "title": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #611 was decided to file it:\n\nProposal: in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go\nRole: reviewer\nRun: ork-20261126-021918-bdc3\nProject: ork\nItem: S607\nEvidence: the new test lives in internal/cli but the only overlay command listed was ./internal/engine; the same overlay-1.json worked for ./internal/cli"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

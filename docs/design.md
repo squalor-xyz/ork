@@ -834,7 +834,8 @@ slice.
     CLI fixtures, without editing the tree. `-render-fixture NAME[,NAME...]`
     writes only `NAME.txt` for each name: those five and `projects-set`,
     `projects-set-refusals`, `wave-start`, `status-queued-held`,
-    `status-engine`, `summary-real`, `projects-setup`, `fake-reply` and
+    `status-engine`, `summary-real`, `projects-setup`, `fake-reply`,
+    `matrix-copy-preview`, `matrix-copy-ask`, `matrix-copy-stale-preview` and
     `wave-start-finding` (a wave start with `--yes` that holds one item on a
     Check finding and starts the other) (adj 542). With no flag it writes
     nothing.

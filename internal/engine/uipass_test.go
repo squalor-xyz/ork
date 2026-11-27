@@ -892,13 +892,13 @@ func TestOnlyTUITestFiles(t *testing.T) {
 	}
 }
 
-// noRendersHarness is a UI harness whose routed diff lists the given paths, or
-// whose git diff exits 1 when no paths are given.
+// noRendersHarness is a UI harness whose routed diff lists the run's tracking
+// paths, then the given paths, or exits 1 when no paths are given.
 func noRendersHarness(t *testing.T, files string, changed ...string) *harness {
 	t.Helper()
 	h := newHarness(t, func(o *harnessOpts) {
 		o.routesFor = func(P, W string) []clitest.Route {
-			diff := clitest.Route{Tool: "git", Args: []string{"-C", W, "diff", "--name-only", "-z", "--no-renames", "--no-relative", "base"}, Stdout: strings.Join(changed, "\x00") + "\x00"}
+			diff := diffRoute(W, "base", changed...)
 			if len(changed) == 0 {
 				diff.Stdout, diff.Exit = "", 1
 			}
@@ -930,9 +930,8 @@ func briefsOf(h *harness) (reviewer, ui string, uiRuns int) {
 }
 
 func TestUIPassBriefSaysNoRendersWhenOnlyTUITestsChanged(t *testing.T) {
-	// The diff looks as a real run's does: the run's tracking files ride along
-	// with the test file (adj 600).
-	h := noRendersHarness(t, "- `internal/tui/scroll_sweep_test.go`", ".slicer/index.json", "landed-changed/"+item+".md", "internal/tui/scroll_sweep_test.go")
+	// The harness supplies the run's tracking paths alongside the test (adj 600).
+	h := noRendersHarness(t, "- `internal/tui/scroll_sweep_test.go`", "internal/tui/scroll_sweep_test.go")
 	requireState(t, h.start(), runrec.StateAwaitingApproval)
 	reviewer, ui, runs := briefsOf(h)
 	if runs != 1 {

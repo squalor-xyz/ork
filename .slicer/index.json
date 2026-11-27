@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 625,
+  "next_id": 631,
   "preamble": "",
   "passes": [
     {
@@ -32076,7 +32076,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "a6a22dc8-4ef9-4cfd-8b37-3ea6f4b783e7",
+          "kind": "",
+          "text": "**2026-11-27** — Also covers S602 (questions detail, shared scrollDecision marker budget), S603 (waves item pane, waveItemKey marker budget, heights 10-40) and S604 (settings pane, settingsKey marker and pinned heading budget). Apply S579's page-step fix (page by room minus the lines the draw spends on markers) to all four panes and re-enable their TestScrollSweep cases. Jon chose 'One slice', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:03:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -32101,7 +32116,7 @@
       "id": "S602",
       "title": "Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget)",
       "short_title": "Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget)",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32118,7 +32133,7 @@
         "key": "S588-questions-detail-paging",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": 1,
@@ -32129,7 +32144,7 @@
       "id": "S603",
       "title": "Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget)",
       "short_title": "Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget)",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32146,7 +32161,7 @@
         "key": "S588-waves-item-paging",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": 1,
@@ -32157,7 +32172,7 @@
       "id": "S604",
       "title": "Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget)",
       "short_title": "Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget)",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32174,7 +32189,7 @@
         "key": "S588-settings-paging",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": 1,
@@ -32241,10 +32256,25 @@
       "id": "S607",
       "title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list",
       "short_title": "add a test that every name in renderFixtureNames appears in the UI brief's fixture list",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "917a8025-3ac2-4e27-954a-b94bb59ff736",
+          "kind": "",
+          "text": "**2026-11-26** — The UI brief, guide and design document list all twelve optional CLI render fixtures, including all three matrix-copy fixtures.",
+          "created_at": "2026-11-26T04:14:17Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32262,7 +32292,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32400,6 +32430,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "cfa0fd1c-572e-4539-8073-d873ba976f08",
+          "kind": "",
+          "text": "**2026-11-27** — Also covers S624 and S625: a check that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like TestUIPassBriefListsEveryRenderFixture. Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:03:14Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -32426,7 +32470,7 @@
       "id": "S612",
       "title": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output",
       "short_title": "In the S584 Check, replace `gofmt -l ./engine` with `gofmt -l .` (the AGENTS.md form); the implementer should run `gofmt -l .` and expect no output",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32443,7 +32487,7 @@
         "key": "tool-feedback-ork-8d22e527",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Moot: S584 already landed; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -32571,7 +32615,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "72bccb2d-2710-47a9-ac20-3913f1f11d3e",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 614): a relative word with / or a leading ./ is a path argument; flags, URLs, quoted patterns, globs (including ./...) and absolute paths are not. A missing path argument that is not a Files-created path is a finding that refuses the start (internal/daemon/runs.go:1112) and shows in the spec check (internal/daemon/speccheck.go:324). Extend SliceCheckCommandWarnings (internal/engine/brief.go:794). Jon chose 'Refuse the start', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:05:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32596,7 +32655,7 @@
       "id": "S616",
       "title": "when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default",
       "short_title": "when a slice's rule tests the branch diff's paths, have test harnesses include the run's own tracking paths by default",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32606,6 +32665,20 @@
           "text": "**2026-11-26** — Owner decision (key tests.diff-harness-tracking-paths): a shared diff-route helper in internal/engine/harness_test.go prepends .slicer/ and landed-changed/ paths to every routed git diff --name-only; a test opts out for a diff that must list no tracking paths; noRendersHarness (internal/engine/uipass_test.go:897) uses it. Jon chose 'Shared default', session 8d711f67, 2026-11-26.",
           "created_at": "2026-11-26T02:04:59Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "b4b53798-b090-495d-a947-064145a2035c",
+          "kind": "",
+          "text": "**2026-11-26** — Shared diff-route helpers include tracking paths by default, provide an exact-path opt-out, and supply noRendersHarness; the Check line's gofmt path now names a directory that exists.",
+          "created_at": "2026-11-26T04:55:11Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -32632,7 +32705,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32753,10 +32826,25 @@
       "id": "S619",
       "title": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report",
       "short_title": "spec draft: on the format-fix resume, keep the first report's spec sections when the role returns only its questions, or ask it for the full report",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "bd548c84-a1ee-4f9c-8024-f68f9adf78b0",
+          "kind": "",
+          "text": "**2026-11-26** — Spec draft denial and shape retries now request all five sections and owner questions in one complete reply; the Check line gofmt path now names internal/engine; focused tests, vet and gofmt pass.",
+          "created_at": "2026-11-26T04:55:10Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -32774,7 +32862,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -32784,7 +32872,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f0e5a3ec-f423-46e2-a70e-4c355e36a995",
+          "kind": "",
+          "text": "**2026-11-27** — Also covers S628 (adj 611): in Base overlays, also list the test commands for packages that import the reverted file's package, e.g. ./internal/cli for internal/engine/brief.go. Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:03:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -32812,7 +32915,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "f30a8f50-b044-4cdb-b43b-96adffba6bec",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 613): read EngineRun.ResumeWaiting from the status call ork wait already makes (internal/cli/wait.go:306); judge (wait.go:332) treats such a run as in progress, so --until question, stopped and landed do not match it. No wire change. Jon chose 'From the status call', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:05:59Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -32840,7 +32958,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "2ffcddc8-f4b1-4589-b0f1-7d3f58e66c59",
+          "kind": "",
+          "text": "**2026-11-27** — Also covers S623: when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change. Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T13:03:15Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -32865,7 +32998,7 @@
       "id": "S623",
       "title": "when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only",
       "short_title": "when a slice's checker and its tests are in the same _test.go file, say in the brief that a base overlay cannot isolate the product change, so the reviewer knows the revert check is by tracing only",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32882,7 +33015,7 @@
         "key": "tool-feedback-ork-6105b76a",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S622; Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
         "importance": 2,
         "urgency": 2,
         "effort": null,
@@ -32893,7 +33026,7 @@
       "id": "S624",
       "title": "add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames",
       "short_title": "add a doc-list check like TestUIPassBriefListsEveryRenderFixture for docs/guide.md and docs/design.md so the fixture lists there cannot drift from renderFixtureNames",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -32908,6 +33041,219 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-bb424997",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S625",
+      "title": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test",
+      "short_title": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "52a54138-2656-4ab4-99ef-2a5440b27daf",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S611",
+          "created_at": "2026-11-26T04:14:16Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S607",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-be050999",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S626",
+      "title": "check that each path in a slice's Check commands exists before round 1 (S615 covers this)",
+      "short_title": "check that each path in a slice's Check commands exists before round 1 (S615 covers this)",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "512ad2d2-4e52-4fd3-9607-6131485bcf50",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S615",
+          "created_at": "2026-11-26T04:28:40Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S616",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1dd7524c",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S627",
+      "title": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)",
+      "short_title": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "b8e086b3-1b28-4b1b-b53c-e44d7f1ca9a2",
+          "kind": "",
+          "text": "**2026-11-26** — possible duplicate of S615, S626",
+          "created_at": "2026-11-26T04:55:11Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S616",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5964c2fa",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S628",
+      "title": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go",
+      "short_title": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go",
+      "status": "retired",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S607",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5c310ab5",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "Merged into S620; Jon chose 'Two slices', session 8d711f67, 2026-11-27.",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S629",
+      "title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
+      "short_title": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S614",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-1547b44a",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S630",
+      "title": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused",
+      "short_title": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S614",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-922f0eae",
         "pass": "v1.2",
         "group": "",
         "reason": "",

@@ -7122,6 +7122,14 @@
 {"when": "2026-11-26T02:26:29Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-26T02:26:29Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-26T02:26:29Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T03:17:50Z", "item": "S607", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T03:17:50Z", "item": "S607", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-26T03:17:50Z", "item": "S607", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-26T03:20:07Z", "item": "S607", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-26T04:02:44Z", "item": "S607", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T04:02:44Z", "item": "S607", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-26T04:14:17Z", "item": "S607", "action": "note", "from": "", "to": "", "note": "The UI brief, guide and design document list all twelve opti", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:14:17Z", "item": "S607", "action": "status", "from": "started", "to": "done", "note": "The UI brief, guide and design document list all twelve optional CLI render fixtures, including all three matrix-copy fixtures.", "by": "Jon Robbins"}
 {"when": "2026-11-26T02:50:48Z", "item": "S620", "action": "add", "from": "", "to": "open", "note": "Base overlays: skip slicer tracking paths (.slicer/, landed-changed/) in the other-file git show list"}
 {"when": "2026-11-26T02:50:48Z", "item": "S620", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T02:50:48Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Why"}
@@ -7144,3 +7152,62 @@
 {"when": "2026-11-27T13:03:30Z", "item": "S614", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-27T13:17:11Z", "item": "S614", "action": "note", "from": "", "to": "", "note": "S614 is complete and the check is green: landings and run-st", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:17:11Z", "item": "S614", "action": "status", "from": "started", "to": "done", "note": "S614 is complete and the check is green: landings and run-start tracking commits share the per-repository lock ork-main.lock and retry once when main moved, and the daemon test helper now keeps the git common dir under the test root so the three TestProjectsSet* tests pass again; go test ./... all ok, vet, gofmt and slicer check clean.", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:14:22Z", "item": "S616", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:14:38Z", "item": "S616", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T04:14:38Z", "item": "S616", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-26T04:51:50Z", "item": "S616", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T04:55:11Z", "item": "S616", "action": "note", "from": "", "to": "", "note": "Shared diff-route helpers include tracking paths by default,", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:55:12Z", "item": "S616", "action": "status", "from": "started", "to": "done", "note": "Shared diff-route helpers include tracking paths by default, provide an exact-path opt-out, and supply noRendersHarness; the Check line's gofmt path now names a directory that exists.", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:27:38Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T04:27:39Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-26T04:27:39Z", "item": "S619", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:32:01Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-26T04:51:50Z", "item": "S619", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-26T04:55:10Z", "item": "S619", "action": "note", "from": "", "to": "", "note": "Spec draft denial and shape retries now request all five sec", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:55:10Z", "item": "S619", "action": "status", "from": "started", "to": "done", "note": "Spec draft denial and shape retries now request all five sections and owner questions in one complete reply; the Check line gofmt path now names internal/engine; focused tests, vet and gofmt pass.", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:14:15Z", "item": "S625", "action": "add", "from": "", "to": "open", "note": "add a docscheck test that every renderFixtureNames entry appears as an exact name in docs/guide.md and docs/design.md, like the new brief test"}
+{"when": "2026-11-26T04:14:15Z", "item": "S625", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T04:14:16Z", "item": "S625", "action": "note", "from": "", "to": "", "note": "possible duplicate of S611", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:28:40Z", "item": "S626", "action": "add", "from": "", "to": "open", "note": "check that each path in a slice's Check commands exists before round 1 (S615 covers this)"}
+{"when": "2026-11-26T04:28:40Z", "item": "S626", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T04:28:40Z", "item": "S626", "action": "note", "from": "", "to": "", "note": "possible duplicate of S615", "by": "Jon Robbins"}
+{"when": "2026-11-26T04:55:10Z", "item": "S627", "action": "add", "from": "", "to": "open", "note": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)"}
+{"when": "2026-11-26T04:55:10Z", "item": "S627", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-26T04:55:11Z", "item": "S627", "action": "note", "from": "", "to": "", "note": "possible duplicate of S615, S626", "by": "Jon Robbins"}
+{"when": "2026-11-27T12:43:38Z", "item": "S628", "action": "add", "from": "", "to": "open", "note": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go"}
+{"when": "2026-11-27T12:43:38Z", "item": "S628", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T13:03:13Z", "item": "S626", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:13Z", "item": "S627", "action": "retire", "from": "open", "to": "retired", "note": "Duplicate of S615; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:13Z", "item": "S624", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:13Z", "item": "S625", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S611; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S611", "action": "note", "from": "", "to": "", "note": "Also covers S624 and S625: a check that every renderFixtureN", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:03:14Z", "item": "S612", "action": "retire", "from": "open", "to": "retired", "note": "Moot: S584 already landed; Jon chose 'Merge all as proposed', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S602", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S603", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S604", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:14Z", "item": "S601", "action": "note", "from": "", "to": "", "note": "Also covers S602 (questions detail, shared scrollDecision ma", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:03:15Z", "item": "S628", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S620; Jon chose 'Two slices', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:15Z", "item": "S620", "action": "note", "from": "", "to": "", "note": "Also covers S628 (adj 611): in Base overlays, also list the ", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:03:15Z", "item": "S623", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S622; Jon chose 'Two slices', session 8d711f67, 2026-11-27."}
+{"when": "2026-11-27T13:03:15Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Also covers S623: when a slice's checker and its tests are i", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:05:59Z", "item": "S621", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 613): read EngineRun.ResumeWaiting from ", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:05:59Z", "item": "S615", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 614): a relative word with / or a leadin", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:12:29Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T13:12:29Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T13:12:29Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T13:12:29Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T13:12:29Z", "item": "S601", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T13:12:30Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T13:12:30Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T13:12:30Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T13:12:30Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T13:12:30Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T13:12:30Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T13:15:03Z", "item": "S629", "action": "add", "from": "", "to": "open", "note": "in the reviewer brief, give a go test ./... form that prints only the failing package and test lines, or let ork run the full suite and hand its result over, so a truncated failure can be identified"}
+{"when": "2026-11-27T13:15:03Z", "item": "S629", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T13:17:10Z", "item": "S630", "action": "add", "from": "", "to": "open", "note": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused"}
+{"when": "2026-11-27T13:17:10Z", "item": "S630", "action": "promote", "from": "", "to": "", "note": ""}

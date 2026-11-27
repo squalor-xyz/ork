@@ -1005,7 +1005,8 @@ directory, without changing the tree. Add `-render-fixture NAME[,NAME...]` to
 write only `NAME.txt` for each name. The names are the five above (without
 `.txt`) and `projects-set`, `projects-set-refusals`, `wave-start`,
 `status-queued-held`, `status-engine`, `summary-real`, `projects-setup`,
-`fake-reply` and `wave-start-finding` (a wave start with `--yes` that holds one
+`fake-reply`, `matrix-copy-preview`, `matrix-copy-ask`,
+`matrix-copy-stale-preview` and `wave-start-finding` (a wave start with `--yes` that holds one
 item on a Check finding and starts the other). A view of several commands puts a `$ ork ARGS` line, with the
 arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`

@@ -6,7 +6,9 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"sync"
 	"testing"
@@ -187,6 +189,73 @@ type harnessOpts struct {
 	project   func(*registry.Project)
 	exclude   *string // contents of .git/info/exclude; nil means the file does not exist
 	contract  int     // relay contract version the fake slicer prints: 12 (default) or 13
+}
+
+// diffRoute includes the run's own tracking paths before changed (adj 600, adj 602).
+// Use diffRouteExact for a diff that must list no tracking paths.
+func diffRoute(W, base string, changed ...string) clitest.Route {
+	paths := append([]string{".slicer/index.json", "landed-changed/" + item + ".md"}, changed...)
+	return diffRouteExact(W, base, paths...)
+}
+
+// diffRouteExact routes a diff listing only changed, without tracking defaults.
+func diffRouteExact(W, base string, changed ...string) clitest.Route {
+	var stdout string
+	for _, path := range changed {
+		stdout += path + "\x00"
+	}
+	return clitest.Route{Tool: "git", Args: []string{"-C", W, "diff", "--name-only", "-z", "--no-renames", "--no-relative", base}, Stdout: stdout}
+}
+
+func TestDiffRouteAddsTrackingPaths(t *testing.T) {
+	got := diffRoute("W", "base", "internal/tui/x_test.go")
+	want := clitest.Route{Tool: "git", Args: []string{"-C", "W", "diff", "--name-only", "-z", "--no-renames", "--no-relative", "base"}, Stdout: ".slicer/index.json\x00landed-changed/S04.md\x00internal/tui/x_test.go\x00"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("diffRoute = %#v, want %#v", got, want)
+	}
+}
+
+func TestDiffRouteExactListsOnlyGivenPaths(t *testing.T) {
+	got := diffRouteExact("W", "base", "internal/tui/x_test.go")
+	want := clitest.Route{Tool: "git", Args: []string{"-C", "W", "diff", "--name-only", "-z", "--no-renames", "--no-relative", "base"}, Stdout: "internal/tui/x_test.go\x00"}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("diffRouteExact = %#v, want %#v", got, want)
+	}
+}
+
+func TestDiffRouteWithNoPathsStillAddsTrackingPaths(t *testing.T) {
+	got := diffRoute("W", "base")
+	if want := ".slicer/index.json\x00landed-changed/S04.md\x00"; got.Stdout != want {
+		t.Fatalf("empty diffRoute stdout = %q, want %q", got.Stdout, want)
+	}
+}
+
+func TestNoRendersHarnessDiffCarriesTrackingPaths(t *testing.T) {
+	h := noRendersHarness(t, "- `internal/tui/scroll_sweep_test.go`", "internal/tui/scroll_sweep_test.go")
+	h.start()
+	wantArgs := []string{"-C", h.W, "diff", "--name-only", "-z", "--no-renames", "--no-relative", "base"}
+	var args []string
+	for _, call := range h.fake.CallsTo("git") {
+		if reflect.DeepEqual(call.Args, wantArgs) {
+			args = call.Args
+			break
+		}
+	}
+	if args == nil {
+		t.Fatal("engine made no expected git diff --name-only call")
+	}
+	// Replay the engine's recorded call to inspect the installed fake's output.
+	out, err := exec.Command(h.fake.Bin("git"), args...).Output()
+	if err != nil {
+		t.Fatalf("replay git diff: %v", err)
+	}
+	if want := ".slicer/index.json\x00landed-changed/S04.md\x00internal/tui/scroll_sweep_test.go\x00"; string(out) != want {
+		t.Fatalf("harness diff stdout = %q, want %q", out, want)
+	}
+	_, ui, _ := briefsOf(h)
+	if !strings.Contains(ui, "## No renders expected") {
+		t.Fatalf("UI brief lacks No renders expected:\n%s", ui)
+	}
 }
 
 type harness struct {

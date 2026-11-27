@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/cli/render_test.go:426-428` (new test beside `renderFixtureNames`)\n- `internal/engine/brief.go:233` (add the three names to the fixture sentence)\n- `internal/engine/brief_test.go:1084-1097` (the `TestUIPassBriefNamesRenderFixtures` expected sentence)"
+      "body": "- `internal/cli/render_test.go:428-457` (renderFixtureNames and TestUIPassBriefListsEveryRenderFixture)\n- `internal/engine/brief.go:233` (UI fixture sentence)\n- `internal/engine/brief_test.go:1084-1097` (TestUIPassBriefNamesRenderFixtures comment and expected sentence)\n- `docs/guide.md:1004-1009` (UI review finding: synchronize optional fixture names)\n- `docs/design.md:834-839` (UI review finding: synchronize optional fixture names)"
     },
     {
       "heading": "Failing tests",
-      "body": "- TestUIPassBriefListsEveryRenderFixture (new, in `internal/cli/render_test.go`): it builds the UI brief with `engine.BuildBrief`, using Role `engine.RoleUI` and the minimum inputs (SliceID, Worktree, TempDir, ReportPath, SliceJSON). It cuts out the fixture list: the text after `The names are the five above (without .txt) and ` up to the next `. Copy the views`. It fails if that sentence is missing, so a reworded brief cannot make the check pass silently. It splits the list on `, ` and a final ` and ` into exact names. For each name in `renderFixtureNames` it asserts the name is in that set. It is red now, with one error each for `matrix-copy-preview`, `matrix-copy-ask` and `matrix-copy-stale-preview`.\n- TestUIPassBriefNamesRenderFixtures (existing, `internal/engine/brief_test.go:1086`): it asserts the exact fixture sentence in the brief. Its expected string changes with the brief text, so it is red until both edits are made."
+      "body": "- `TestUIPassBriefListsEveryRenderFixture` (internal/cli/render_test.go:430; renderFixtureNames at :428): build engine.BuildBrief with RoleUI and minimum SliceID, Worktree, TempDir, ReportPath and SliceJSON. Cut after The names are the five above (without .txt) and and before . Copy the views; fail if either delimiter is missing. Split comma-separated and final and-separated names into an exact-name set. Assert every renderFixtureNames entry is present; initially fail on matrix-copy-preview, matrix-copy-ask and matrix-copy-stale-preview.\n- `TestUIPassBriefNamesRenderFixtures` (internal/engine/brief_test.go:1086, expected list at :1097): update the exact expected fixture list before product code and observe failure until the brief includes the three matrix-copy names."
     },
     {
       "heading": "Implement",
