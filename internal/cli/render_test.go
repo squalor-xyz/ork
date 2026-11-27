@@ -75,6 +75,9 @@ func renderViews() []renderView {
 		}},
 		{name: "projects-setup", text: renderProjectsSetup},
 		{name: "fake-reply", text: renderFakeReply},
+		{name: "wait-block", text: renderWaitBlock},
+		{name: "wait-lines", text: renderWaitLines},
+		{name: "wait-stop", text: renderWaitStop},
 	}
 }
 
@@ -123,6 +126,80 @@ func fakeReplyApp(replies map[string]string, errs map[string]error) *App {
 		}
 		return json.Unmarshal([]byte(reply), result)
 	}}
+}
+
+// renderWaitBlock is the text block of ork wait on one run (S633, adj 629). Each
+// step has its own daemon double, because a double serves one list of replies.
+func renderWaitBlock(t *testing.T) string {
+	question := waitPause("question", "area.topic")
+	question.Pending.Ask = &runrec.OwnerQuestion{Title: "Which store should the cache use?"}
+	question.Next = "ork answer r1 TEXT" // as pausedNext gives a question pause
+	_, questionApp := newWaitFake(t, question)
+
+	shape, shapeApp := newWaitFake(t, waitShow("implement"), waitPause("shape", ""))
+	shape.notify = true
+
+	// The run waits for a slot, so its old question is skipped; the wait stops on
+	// the new question the run asks once the slot wait is over.
+	newQuestion := runQuestion("r1", "S1", "new.question")
+	newQuestion.Pending.Ask = &runrec.OwnerQuestion{Title: "Which store should the cache use now?"}
+	slot, slotApp := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runQuestion("r1", "S1", "old.question"), newQuestion},
+	})
+	slot.slotWait = map[string]bool{"r1": true}
+	slot.afterRun = func(n int) {
+		if n >= 2 {
+			slot.mu.Lock()
+			delete(slot.slotWait, "r1")
+			slot.mu.Unlock()
+		}
+	}
+	return renderSteps(t,
+		renderStep{app: questionApp, args: []string{"wait", "r1"}},
+		renderStep{app: shapeApp, args: []string{"wait", "r1"}},
+		renderStep{app: slotApp, args: []string{"wait", "r1", "--until", "question,stopped,landed"}},
+	)
+}
+
+// renderWaitLines is ork wait on several runs: one line for each run (S633,
+// adj 629).
+func renderWaitLines(t *testing.T) string {
+	_, changedApp := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runShow("r1", "S1", "implement"), runLanded("r1", "S1")},
+		"r2": {runShow("r2", "S2", "implement"), runApproval("r2", "S2")},
+	})
+	_, questionApp := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runShow("r1", "S1", "implement"), runLanded("r1", "S1")},
+		"r2": {runShow("r2", "S2", "implement"), runQuestion("r2", "S2", "cache.store")},
+	})
+	return renderSteps(t,
+		renderStep{app: changedApp, args: []string{"wait", "r1", "r2", "--until", "landed,awaiting-approval"}},
+		renderStep{app: questionApp, args: []string{"wait", "r1", "r2", "--until", "landed"}},
+	)
+}
+
+// renderWaitStop is what ork wait prints when it stops with no state to show:
+// a stage end, a timeout and the nothing-active messages (S633, adj 629).
+func renderWaitStop(t *testing.T) string {
+	_, stageApp := multiFake(t, map[string][]daemon.ShowReply{"r1": {stageReply(false, ""), stageReply(true, "clean")}})
+	_, timeoutApp := newWaitFake(t, waitShow("implement"))
+	_, committedApp := newWaitFake(t, waitShow("committed"))
+	unknown, unknownApp := newWaitFake(t, waitShow("implement"))
+	unknown.notFound = true
+	idle, idleApp := newWaitFake(t, waitShow("implement"))
+	idle.runs = map[string][]string{"p": {"r1:committed", "r2:stopped"}}
+	_, finalApp := multiFake(t, map[string][]daemon.ShowReply{
+		"r1": {runShow("r1", "S1", "stopped")},
+		"r2": {runLanded("r2", "S2")},
+	})
+	return renderSteps(t,
+		renderStep{app: stageApp, args: []string{"wait", "r1", "--stage"}},
+		renderStep{app: timeoutApp, args: []string{"wait", "r1", "--timeout", "50ms"}},
+		renderStep{app: committedApp, args: []string{"wait", "r1"}},
+		renderStep{app: unknownApp, args: []string{"wait", "r9"}},
+		renderStep{app: idleApp, args: []string{"wait"}},
+		renderStep{app: finalApp, args: []string{"wait", "r1", "r2", "--until", "awaiting-approval"}},
+	)
 }
 
 func renderProjectsSet(t *testing.T) string {
@@ -425,7 +502,7 @@ func TestRenderCLIViews(t *testing.T) {
 
 // renderFixtureNames are the fixtures that -render-fixture adds beside the five
 // default files (adj 542, owner 2026-11-25).
-var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave-start", "wave-start-finding", "status-queued-held", "status-engine", "summary-real", "projects-setup", "fake-reply", "matrix-copy-preview", "matrix-copy-ask", "matrix-copy-stale-preview"}
+var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave-start", "wave-start-finding", "status-queued-held", "status-engine", "summary-real", "projects-setup", "fake-reply", "matrix-copy-preview", "matrix-copy-ask", "matrix-copy-stale-preview", "wait-block", "wait-lines", "wait-stop"}
 
 func TestUIPassBriefListsEveryRenderFixture(t *testing.T) {
 	brief, err := engine.BuildBrief(engine.BriefInput{
@@ -640,4 +717,54 @@ func TestRenderStepHeaderQuotesArguments(t *testing.T) {
 // A line of projects show, which the fake daemon reply made.
 func TestRenderFakeReplyFixture(t *testing.T) {
 	assertRenderLine(t, "fake-reply", "unavailable  slicer relay-roles show failed (unavailable)")
+}
+
+// The text block of one run's wait: a question pause with its decision key, a
+// shape pause with none, and the slot-wait run that stops on a new question.
+func TestRenderWaitBlockFixture(t *testing.T) {
+	assertRenderLine(t, "wait-block", "decision key: area.topic")
+	text := renderViewText(t, "wait-block")
+	for _, want := range []string{
+		"\nr1 paused\nquestion pause, reviewer round 1\nquestion: Which store should the cache use?\ndecision key: area.topic\nnext: ork answer r1 TEXT\n",
+		"\nr1 paused\nshape pause, reviewer round 1\nnext: ork retry r1\n",
+		"\nquestion: Which store should the cache use now?\ndecision key: new.question\nnext: ork answer r1 TEXT\n",
+	} {
+		if !strings.Contains("\n"+text, want) {
+			t.Errorf("wait-block lacks %q:\n%s", want, text)
+		}
+	}
+	if strings.Contains(text, "old.question") {
+		t.Errorf("wait-block shows the skipped slot-wait question:\n%s", text)
+	}
+	if n := strings.Count(text, "decision key:"); n != 2 {
+		t.Errorf("wait-block has %d decision key lines, want 2 (the shape pause has none):\n%s", n, text)
+	}
+}
+
+// The one line of each run, and a question line with its key that exits 3.
+func TestRenderWaitLinesFixture(t *testing.T) {
+	assertRenderLine(t, "wait-lines", "r1 S1 landed")
+	assertRenderLine(t, "wait-lines", "r2 S2 awaiting-approval next: ork approve r2")
+	assertRenderLine(t, "wait-lines", "r2 S2 question key: cache.store next: ork answer r2 TEXT")
+	text := renderViewText(t, "wait-lines")
+	if !strings.Contains(text, "(exit 3)\n") {
+		t.Errorf("wait-lines has no step that exits 3:\n%s", text)
+	}
+}
+
+// The stage-end line, the timeout message and the nothing-active messages.
+func TestRenderWaitStopFixture(t *testing.T) {
+	assertRenderLine(t, "wait-stop", "ork: timed out after 50ms; run r1 is still implement")
+	assertRenderLine(t, "wait-stop", "r1 S1 stage implementer round 1 ended clean")
+	text := renderViewText(t, "wait-stop")
+	for _, want := range []string{
+		"ork: run r1 is committed, so nothing is active\n",
+		"ork: no run r9: it is unknown to the daemon, so nothing is active\n",
+		"ork: project p has no unfinished run, so nothing is active\n",
+		"ork: nothing is active: r1 stopped, r2 landed\n",
+	} {
+		if !strings.Contains(text, want) {
+			t.Errorf("wait-stop lacks %q:\n%s", want, text)
+		}
+	}
 }

@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 641,
+  "next_id": 642,
   "preamble": "",
   "passes": [
     {
@@ -33521,7 +33521,7 @@
       "id": "S633",
       "title": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output",
       "short_title": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33531,6 +33531,20 @@
           "text": "**2026-11-27** — Owner decision (adj 629): three fixtures, wait-block (one run, text block with a pause, question and decision key, including the S621 slot-wait state), wait-lines (several runs, one line each) and wait-stop (stage end, timeout and nothing-active messages); add each to renderFixtureNames, the UI pass brief's fixture list, docs/guide.md and docs/design.md, with a renderViews entry and a TestRenderCLIViewsWritesFiles case each. Jon chose 'Three shapes', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T15:46:34Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5114fbbb-4654-48d7-97c2-5049cb77f09a",
+          "kind": "",
+          "text": "**2026-11-27** — `-render-fixture` now offers wait-block, wait-lines and wait-stop. Together they render every `ork wait` output shape, and the question pause in `wait-block` shows the `ork answer r1 TEXT` hint the daemon gives. The UI pass brief, `docs/guide.md` and `docs/design.md` list them. The full suite, vet, gofmt and `slicer check` pass.",
+          "created_at": "2026-11-27T16:38:30Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -33557,7 +33571,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33663,7 +33677,7 @@
       "id": "S636",
       "title": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing",
       "short_title": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33673,6 +33687,20 @@
           "text": "**2026-11-27** — Owner decision (adj 628): flag a clause-leading word from a fixed list (go, gofmt, git, slicer, adj, ork), after , ; and or ., followed by an argument, in a Check entry's text outside the backticks; the finding names that command. In the spec check, the spec draft and ork run, like S563's lint. Jon chose 'Known commands', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T15:46:33Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "946e3fa9-29a0-4544-a435-7b08e2ea2c98",
+          "kind": "",
+          "text": "**2026-11-27** — A Check entry whose text outside the backticks has a clause-leading go, gofmt, git, slicer, adj or ork followed by an argument now warns, naming that command; run.start, the spec check and the spec draft all pick it up through checkCommandWarnings; go test ./..., go vet ./..., gofmt -l . and slicer check are clean.",
+          "created_at": "2026-11-27T16:35:32Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -33699,7 +33727,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -33820,6 +33848,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-6c80cb71",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S641",
+      "title": "in render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record",
+      "short_title": "in render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S633",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b0e30bc2",
         "pass": "v1.2",
         "group": "",
         "reason": "",

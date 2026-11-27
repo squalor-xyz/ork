@@ -16,7 +16,7 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/cli/render_test.go:41-79` (the `renderViews` entries and the new wait fixture builders)\n- `internal/cli/render_test.go:428` (`renderFixtureNames`)\n- `internal/cli/render_test.go:598` (three new named tests after the existing fixture tests)\n- `internal/engine/brief.go:233` (the fixture sentence of the UI pass brief)\n- `internal/engine/brief_test.go:1184-1197` (`TestUIPassBriefNamesRenderFixtures`)\n- `docs/guide.md:1005-1011`\n- `docs/design.md:834-841`\n- `landed-changed/S633.md` (new)"
+      "body": "- `internal/cli/render_test.go:41-82` (the `renderViews` entries)\n- `internal/cli/render_test.go:133-200` (the new wait fixture builders `renderWaitBlock`, `renderWaitLines` and `renderWaitStop`)\n- `internal/cli/render_test.go:504` (`renderFixtureNames`)\n- `internal/cli/render_test.go:709-760` (three new named tests after the existing fixture tests)\n- `internal/engine/brief.go:233` (the fixture sentence of the UI pass brief)\n- `internal/engine/brief_test.go:1208-1227` (`TestUIPassBriefNamesRenderFixtures`)\n- `docs/guide.md:1003-1019`\n- `docs/design.md:832-848`\n- `landed-changed/S633.md` (new)"
     },
     {
       "heading": "Failing tests",

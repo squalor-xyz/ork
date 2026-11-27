@@ -4341,6 +4341,53 @@ func TestRunStartRefusesANonCommandCheckEntry(t *testing.T) {
 	}
 }
 
+func TestRunStartRefusesACheckEntryThatNamesASecondCommand(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
+	proj, err := rig.d.registered("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(proj.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(proj.Path, "go.mod"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	write := func(body string) {
+		t.Helper()
+		raw, err := json.Marshal(map[string]any{"id": "S1", "slice": map[string]any{"id": "S1", "sections": []map[string]string{{"heading": "Check", "body": body}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(rig.root, "S1.json"), raw, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("- `go test ./...` exits 0, go vet ./... prints nothing")
+	plan := launchPlan(t, rig.d, `{"project":"p","item":"S1"}`)
+	if len(plan.Warnings) != 1 {
+		t.Fatalf("warnings %q", plan.Warnings)
+	}
+	_, err = rig.d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1"}`))
+	if re := ipc.ErrorOf(err); err == nil || re.Code != CodeRefused {
+		t.Errorf("must refuse a second command: %v", err)
+	} else {
+		for _, text := range []string{"S1", "go vet", "edit the Check section", "start again"} {
+			if !strings.Contains(re.Message, text) {
+				t.Errorf("refusal %q lacks %q", re.Message, text)
+			}
+		}
+	}
+	if runs, err := rig.store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("refusal created runs: %+v %v", runs, err)
+	}
+	write("- `go test ./...` exits 0\n- `go vet ./...` prints nothing")
+	var rec runrec.Record
+	if err := json.Unmarshal(request(t, rig.d, MethodRunStart, `{"project":"p","item":"S1"}`), &rec); err != nil || rec.ID == "" {
+		t.Fatalf("split Check start: %+v %v", rec, err)
+	}
+}
+
 func TestRunPlanCarriesSetupWarnings(t *testing.T) {
 	d, _, p := runDaemon(t, nil)
 	if err := os.MkdirAll(p.Path, 0o755); err != nil {

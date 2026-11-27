@@ -835,10 +835,14 @@ slice.
     writes only `NAME.txt` for each name: those five and `projects-set`,
     `projects-set-refusals`, `wave-start`, `status-queued-held`,
     `status-engine`, `summary-real`, `projects-setup`, `fake-reply`,
-    `matrix-copy-preview`, `matrix-copy-ask`, `matrix-copy-stale-preview` and
+    `matrix-copy-preview`, `matrix-copy-ask`, `matrix-copy-stale-preview`,
     `wave-start-finding` (a wave start with `--yes` that holds one item on a
-    Check finding and starts the other) (adj 542). With no flag it writes
-    nothing.
+    Check finding and starts the other), `wait-block` (`ork wait` on one run:
+    the text block of a question pause with its decision key, a shape pause
+    with none, and the slot-wait run that stops on a new question),
+    `wait-lines` (several runs, one line each) and `wait-stop` (the stage-end
+    line, the timeout message and the nothing-active messages) (adj 542,
+    adj 629). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). These are scratch files in the role's temp directory named
     in the brief under Your files. The pass
@@ -3562,6 +3566,12 @@ listed in Files. A missing directory containing a Files path is exempt too
 absolute paths, paths outside the worktree, values after `-run`, `-bench`
 and `-skip`, `rev:path` words, and import paths whose first element contains
 a dot (except `.` and `..`) are excluded (adj 614).
+A backticked Check entry whose text outside the backticks has a clause-leading
+`go`, `gofmt`, `git`, `slicer`, `adj` or `ork` followed by an argument also
+warns, naming that command, once for each such command. A clause starts after
+a word ending in `,` or `;`, after a sentence-ending `.`, and after `and` or
+`or`. The refusal, spec check finding and draft problem are the same as for
+the other entry warnings (adj 628).
 Check-entry warnings refuse
 `run.start` and the affected member of `wave.start` before a role starts. The
 refusal names the item and each entry and asks the owner to edit Check and

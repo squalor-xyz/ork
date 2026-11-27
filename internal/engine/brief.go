@@ -230,7 +230,7 @@ func BuildBrief(in BriefInput) (string, error) {
 		fmt.Fprintf(&b, "The UI renders directory `%s` is also an exception to the workspace limit. Keep renders there, separately from TMPDIR.\n\n", filepath.Join(in.TempDir, "renders"))
 		b.WriteString("## CLI text renders\n\nFor ork CLI views, run this from the worktree with the test flag:\n\n")
 		fmt.Fprintf(&b, "`go test ./internal/cli -run TestRenderCLIViews -renders %s`\n\n", ShellWord(processTemp))
-		b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory (named under Your files), exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview and wave-start-finding. Copy the views you want on the approval card into the renders directory under the VIEW-80x24.txt names required by your prompt.\n\n")
+		b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory (named under Your files), exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop. Copy the views you want on the approval card into the renders directory under the VIEW-80x24.txt names required by your prompt.\n\n")
 		fmt.Fprintf(&b, "## Test run patterns\n\nRun one test per command: `go -C %s test -run NAME PKG`, for example `go -C %s test -run TestRenderCLIViews ./internal/cli`, then the next test in its own command. A `go test -run` pattern must not contain a pipe: a pipe makes a compound command, and the permission check denies it as multiple operations. Do not join test names in one pattern.\n\n", in.Worktree, in.Worktree)
 		if (in.Vendor == "claude" || in.Vendor == "claude-local") && len(in.UIPassSkills) > 0 {
 			fmt.Fprintf(&b, "## Skills\n\nLoad these skills for the UI pass: %s. If one is not available, say so in your report and go on.\n\n", strings.Join(in.UIPassSkills, ", "))
@@ -786,6 +786,9 @@ var envAssignment = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*=`)
 type sliceCheckCommand struct {
 	command string
 	empty   bool
+	// outside is the entry's text outside the backticks. It is set on the first
+	// command of an entry only, so an entry warns once about a second command.
+	outside string
 }
 
 // SliceCheckCommandWarnings flags unrunnable commands and missing path arguments.
@@ -872,6 +875,9 @@ func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) [
 	}
 	var warnings []string
 	for _, entry := range entries {
+		for _, name := range secondCommands(entry.outside) {
+			warnings = append(warnings, fmt.Sprintf("Check entry %q: text outside the backticks names a second command %q; put each command in its own backticked entry", entry.command, name))
+		}
 		// Leading NAME=value words are environment, as plainCheckRow reads them.
 		word, end := scanWord(entry.command, 0)
 		for envAssignment.MatchString(word.text) && end < len(entry.command) {
@@ -934,17 +940,54 @@ func checkBodyCommands(body string) []sliceCheckCommand {
 			continue
 		}
 		parts := strings.Split(entry, "`")
+		var outside []string
+		for i := 0; i < len(parts); i += 2 {
+			outside = append(outside, parts[i])
+		}
+		text := strings.Join(outside, " ")
 		for i := 1; i+1 < len(parts); i += 2 {
 			if command := strings.TrimSpace(parts[i]); command != "" {
 				// These wordings share the empty-output rule (S419, S525, adj 468).
 				lower := strings.ToLower(entry)
 				empty := strings.Contains(lower, "prints nothing") || strings.Contains(lower, "must print nothing") ||
 					strings.Contains(lower, "finds nothing") || strings.Contains(lower, "matches nothing") || strings.Contains(lower, "returns nothing")
-				commands = append(commands, sliceCheckCommand{command: command, empty: empty})
+				commands = append(commands, sliceCheckCommand{command: command, empty: empty, outside: text})
+				text = ""
 			}
 		}
 	}
 	return commands
+}
+
+// secondCommands returns "NAME ARG" for each clause-leading listed command word
+// in the text outside an entry's backticks, in text order (adj 628,
+// spec.check-second-command). A clause starts after a word that ends in "," or
+// ";", or in "." right after a letter or digit, and after the words "and" and
+// "or". The first word is not a clause start.
+func secondCommands(outside string) []string {
+	words := strings.Fields(outside)
+	var found []string
+	for i := 1; i+1 < len(words); i++ {
+		if !clauseEnd(words[i-1]) {
+			continue
+		}
+		switch words[i] {
+		case "go", "gofmt", "git", "slicer", "adj", "ork":
+			found = append(found, words[i]+" "+strings.TrimRight(words[i+1], ",;."))
+		}
+	}
+	return found
+}
+
+func clauseEnd(word string) bool {
+	if word == "and" || word == "or" || strings.HasSuffix(word, ",") || strings.HasSuffix(word, ";") {
+		return true
+	}
+	if !strings.HasSuffix(word, ".") || len(word) < 2 {
+		return false
+	}
+	c := word[len(word)-2]
+	return c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z' || c >= '0' && c <= '9'
 }
 
 // withoutAcceptanceCriteria drops the lines from an "Acceptance criteria:" line

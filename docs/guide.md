@@ -618,7 +618,10 @@ fails it. ork does not run a piped line; the orchestrator runs it and judges it
 by its last command, by the same rule. A line not worded that way must exit 0.
 Backticked entries that are not commands refuse a start and hold the spec
 check or draft; paths listed in Files that do not exist yet are exempt, so edit Check before
-starting again when ork names a non-command entry.
+starting again when ork names a non-command entry. Give each command its own
+backticked entry, because ork applies the entry's wording to the backticked
+command only; an entry whose text names a second command outside the
+backticks is flagged the same way.
 
 ## 8. Watch it
 
@@ -1007,8 +1010,11 @@ write only `NAME.txt` for each name. The names are the five above (without
 `.txt`) and `projects-set`, `projects-set-refusals`, `wave-start`,
 `status-queued-held`, `status-engine`, `summary-real`, `projects-setup`,
 `fake-reply`, `matrix-copy-preview`, `matrix-copy-ask`,
-`matrix-copy-stale-preview` and `wave-start-finding` (a wave start with `--yes` that holds one
-item on a Check finding and starts the other). A view of several commands puts a `$ ork ARGS` line, with the
+`matrix-copy-stale-preview`, `wave-start-finding` (a wave start with `--yes` that holds one
+item on a Check finding and starts the other), `wait-block` (`ork wait` on one run: the text
+block of a question pause with its decision key, a shape pause with none, and the slot-wait
+run that stops on a new question), `wait-lines` (several runs, one line each) and `wait-stop`
+(the stage-end line, the timeout message and the nothing-active messages) (adj 629). A view of several commands puts a `$ ork ARGS` line, with the
 arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`
 the render test writes nothing. The pass copies selected scratch files into

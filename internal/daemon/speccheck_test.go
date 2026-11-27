@@ -500,6 +500,51 @@ func TestSpecCheckReportsNotReadyForANonCommandCheckEntry(t *testing.T) {
 	}
 }
 
+func TestSpecCheckHoldsACheckEntryThatNamesASecondCommand(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
+	rig.readyReport = true
+	write := func(body string) {
+		t.Helper()
+		raw, err := json.Marshal(map[string]any{"id": "S1", "slice": map[string]any{"id": "S1", "sections": []map[string]string{{"heading": "Check", "body": body}}}})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(rig.root, "S1.json"), raw, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("- `go test ./...` exits 0, go vet ./... prints nothing")
+	res := rig.check(t, "S1", "S2")
+	b, _ := json.Marshal(rig.item(res, "S1"))
+	var held struct {
+		Ready     bool
+		Findings  []string
+		Questions []engine.SpecQuestion
+	}
+	if err := json.Unmarshal(b, &held); err != nil {
+		t.Fatal(err)
+	}
+	if held.Ready || len(held.Findings) != 1 || !strings.Contains(held.Findings[0], `"go vet"`) || len(held.Questions) != 0 {
+		t.Errorf("bad item: %s", b)
+	}
+	if !rig.item(res, "S2").Ready {
+		t.Errorf("good item held: %+v", res)
+	}
+	for _, req := range rig.requests() {
+		if strings.Contains(req.Brief, "go vet ./... prints nothing") {
+			t.Error("role ran for bad Check")
+		}
+	}
+	if _, ok := rig.d.runs.specs[specKey("p", "S1")]; ok {
+		t.Error("finding cached as role result")
+	}
+	write("- `go test ./...` exits 0\n- `go vet ./...` prints nothing")
+	rig.report = "## Slice S1\nReady\n\n## Owner needed\nnone\n"
+	if res := rig.check(t, "S1"); !rig.item(res, "S1").Ready {
+		t.Fatalf("fixed item still held: %+v", res)
+	}
+}
+
 func TestSpecCheckRunsTheSpecCheckRowReadOnly(t *testing.T) {
 	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
 	res := rig.check(t, "S1", "S2")

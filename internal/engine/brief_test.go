@@ -117,6 +117,69 @@ func TestSliceCheckCommandWarningsExemptsAFilesPath(t *testing.T) {
 	}
 }
 
+func checkBodyWarnings(t *testing.T, body string) []string {
+	t.Helper()
+	raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{
+		{"heading": "Files", "body": ""}, {"heading": "Check", "body": body},
+	}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return SliceCheckCommandWarnings(string(raw), t.TempDir())
+}
+
+func TestSliceCheckCommandWarningsFlagsASecondCommandOutsideTheBackticks(t *testing.T) {
+	warn := func(first, name string) string {
+		return fmt.Sprintf("Check entry %q: text outside the backticks names a second command %q; put each command in its own backticked entry", first, name)
+	}
+	for _, tc := range []struct {
+		name, body string
+		want       []string
+	}{
+		{"S598", "- `go test ./...` exits 0, go vet ./... prints nothing, and gofmt -l . prints nothing.", []string{warn("go test ./...", "go vet"), warn("go test ./...", "gofmt -l")}},
+		{"S606", "- `go vet ./...` reports nothing, and gofmt -l /home/x prints nothing.", []string{warn("go vet ./...", "gofmt -l")}},
+		{"S622", "- `go test ./...` passes; go vet ./... prints nothing; gofmt -l . prints nothing.", []string{warn("go test ./...", "go vet"), warn("go test ./...", "gofmt -l")}},
+		{"sentence end", "- `go test ./...` passes. go vet ./... prints nothing.", []string{warn("go test ./...", "go vet")}},
+		{"or", "- `go test ./...` passes or go vet ./... fails", []string{warn("go test ./...", "go vet")}},
+		{"git", "- `go test ./...` passes, git status --short prints nothing", []string{warn("go test ./...", "git status")}},
+		{"slicer", "- `go test ./...` passes, slicer check --root X exits 0", []string{warn("go test ./...", "slicer check")}},
+		{"adj", "- `go test ./...` passes; adj lint exits 0", []string{warn("go test ./...", "adj lint")}},
+		{"ork", "- `go test ./...` passes and ork show R exits 0", []string{warn("go test ./...", "ork show")}},
+		{"two backticked commands", "- `go test ./...`; go vet ./... prints nothing, `gofmt -l .`", []string{warn("go test ./...", "go vet")}},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			got := checkBodyWarnings(t, tc.body)
+			if strings.Join(got, "\n") != strings.Join(tc.want, "\n") {
+				t.Fatalf("warnings %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSliceCheckCommandWarningsAllowsProseOutsideTheBackticks(t *testing.T) {
+	for _, tc := range []struct{ name, body string }{
+		{"prose", "- `go test ./...` exits 0 and lists each new test as PASS."},
+		{"gofmt", "- `gofmt -l .` prints nothing."},
+		{"chain inside", "- `go test ./... && go vet ./...`"},
+		{"no argument", "- `go test ./...` exits 0, then go."},
+		{"clause start without argument", "- `go test ./...` exits 0, and go"},
+		{"not at a clause start", "- `go test ./...` passes when run with go vet clean"},
+		{"first word", "- go vet ./... is clean when `go test ./...` exits 0"},
+		{"dotted path ends no clause", "- `go test ./...` runs against ./... go vet is not run, nor against . go vet"},
+		{"capitalised", "- `go test ./...` exits 0 and Go vet is clean"},
+		{"human", "- HUMAN CHECK: `go test ./...` passes, go vet ./... prints nothing"},
+		{"after land", "- [AFTER LAND] `go test ./...`, go vet ./..."},
+		{"acceptance", "Acceptance criteria:\n- `go test ./...` passes, go vet ./... prints nothing\nCommands:\n- `go test ./...` exits 0"},
+		{"no backticks", "- go test ./... passes, go vet ./... prints nothing"},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := checkBodyWarnings(t, tc.body); len(got) != 0 {
+				t.Fatalf("warnings %q, want none", got)
+			}
+		})
+	}
+}
+
 func TestSliceCheckCommandWarningsFlagsAnExistingFilesPathThatDoesNotRun(t *testing.T) {
 	tree := t.TempDir()
 	for path, mode := range map[string]os.FileMode{"internal/plain.go": 0o644, "scripts/run.sh": 0o755} {
@@ -1206,7 +1269,8 @@ func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
 }
 
 // The UI pass brief says that -renders alone writes five files and names the
-// -render-fixture flag with the twelve fixtures it adds (S607, adj 542).
+// -render-fixture flag with the fifteen fixtures it adds (S607, adj 542; S633,
+// adj 629).
 func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 	in := baseBrief()
 	in.Role = RoleUI
@@ -1218,7 +1282,7 @@ func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 		"This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory",
 		"`-render-fixture NAME[,NAME...]`",
 		"writes only NAME.txt for each name",
-		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview and wave-start-finding",
+		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("UI brief lacks %q", want)
