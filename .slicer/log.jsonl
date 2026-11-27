@@ -7223,3 +7223,5 @@
 {"when": "2026-11-27T13:43:11Z", "item": "S606", "action": "note", "from": "", "to": "", "note": "Owner decision: one generic line in the reviewer and gate br", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:43:11Z", "item": "S620", "action": "note", "from": "", "to": "", "note": "Owner decision (key base-overlays.importer-packages): ork ru", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:43:11Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Owner decision (key reviewer.overlay-pass-note): ork runs ea", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:45:17Z", "item": "S632", "action": "add", "from": "", "to": "open", "note": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file"}
+{"when": "2026-11-27T13:45:18Z", "item": "S632", "action": "promote", "from": "", "to": "", "note": ""}

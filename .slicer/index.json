@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 632,
+  "next_id": 633,
   "preamble": "",
   "passes": [
     {
@@ -33353,6 +33353,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-0b7ca38d",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S632",
+      "title": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file",
+      "short_title": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S621",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-ea92a1d6",
         "pass": "v1.2",
         "group": "",
         "reason": "",
