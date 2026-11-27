@@ -1,0 +1,39 @@
+{
+  "id": "S643",
+  "title": "Base overlays: a per-test or FAIL-lines-only revert command, and a short sample of real go vet type-error output",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Split from S594 (Jon chose 'Closure + gate, revert named tests', session 8d711f67, 2026-11-27). Carries S640 (overlay commands run a whole package, internal/engine/baseoverlay.go:146; give a per-test revert command or a form that prints only FAIL lines) and adj 632 (in Base overlays, include a short sample of real go vet type-error output for one changed file so reviewers can confirm vet path forms without a probe overlay)."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

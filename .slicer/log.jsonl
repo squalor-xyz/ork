@@ -7389,3 +7389,10 @@
 {"when": "2026-11-27T17:43:02Z", "item": "S536", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S457; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27."}
 {"when": "2026-11-27T17:43:03Z", "item": "S457", "action": "note", "from": "", "to": "", "note": "Merged group (reviewer diff lints): S457 (docs whose example", "by": "Jon Robbins"}
 {"when": "2026-11-27T17:43:03Z", "item": "S629", "action": "note", "from": "", "to": "", "note": "Triage 2026-11-27: the reviewer is told it need not run go t", "by": "Jon Robbins"}
+{"when": "2026-11-27T17:45:32Z", "item": "S594", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 633): closure plus gate. Extend the S634", "by": "Jon Robbins"}
+{"when": "2026-11-27T17:45:32Z", "item": "S527", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 634): all three. Add go doc (Bash(go doc", "by": "Jon Robbins"}
+{"when": "2026-11-27T17:45:32Z", "item": "S521", "action": "note", "from": "", "to": "", "note": "Owner decisions (adj 635, 636): accept the standalone line '", "by": "Jon Robbins"}
+{"when": "2026-11-27T17:45:32Z", "item": "S537", "action": "note", "from": "", "to": "", "note": "Scope after triage (Jon chose 'S537 = S539+S542', session 8d", "by": "Jon Robbins"}
+{"when": "2026-11-27T17:45:33Z", "item": "S643", "action": "add", "from": "", "to": "open", "note": "Base overlays: a per-test or FAIL-lines-only revert command, and a short sample of real go vet type-error output"}
+{"when": "2026-11-27T17:45:33Z", "item": "S643", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T17:45:33Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Why"}
