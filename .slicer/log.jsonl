@@ -7577,3 +7577,6 @@
 {"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-27T21:54:20Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T21:55:03Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T21:55:48Z", "item": "S649", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:04:41Z", "item": "S649", "action": "note", "from": "", "to": "", "note": "The gate may report a base-overlay revert failure on its own", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:04:41Z", "item": "S649", "action": "status", "from": "started", "to": "done", "note": "The gate may report a base-overlay revert failure on its own `Intended red: N failed` line, which CheckReport reads into Report.IntendedRed (gate only) without adding to Passed or Failed, so `PASS reports failed tests` no longer fires for it; gate prompt, docs/design.md and tests updated.", "by": "Jon Robbins"}

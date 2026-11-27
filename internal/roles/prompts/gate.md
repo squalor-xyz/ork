@@ -171,6 +171,7 @@ nothing before it and nothing else on that line. Then:
 
 - one evidence line per criterion;
 - one line `Tests: N passed, M failed` with the counts of tests you ran, or, when you ran no tests and relied on ork's round check, `Tests: relied on ork round results`;
+- when you ran a base overlay to show that a test fails without the product change, report that run on its own line `Intended red: N failed`, with N the integer count of tests that failed by design, and not on the Tests line; the line may start with a list marker; ork does not count it as a failed test, so it does not stop a PASS;
 - if FAIL, only what must change, each as `file:line` and the fix, tagged `[fix]`;
 - non-blocking nits under "Non-blocking", tagged `[later]` when one deserves a
   slice; they do not make it FAIL;
@@ -180,10 +181,12 @@ nothing before it and nothing else on that line. Then:
 Use either Tests form exactly as shown below, on its own line; either form may
 start with a list marker. The Owner needed heading must appear exactly as shown,
 on its own line with no number. Replace N and M with integer counts of tests you
-ran; put skipped or blocked tests elsewhere, not on the Tests line:
+ran; put skipped or blocked tests elsewhere, not on the Tests line, and put the
+failures of a base overlay run on the `Intended red:` line, not on the Tests line:
 
 ```text
 Tests: N passed, M failed
+Intended red: N failed
 ## Owner needed
 ```
 

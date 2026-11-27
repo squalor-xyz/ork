@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-659 items · — 41 · done 448 · retired 170
+659 items · — 40 · done 449 · retired 170
 
 ## v1.3
 
@@ -408,7 +408,7 @@ v1.2
 | 351 | [S646](slices/S646.md) | start the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines |  | - |  | discovered from S527 | — |
 | 352 | [S647](slices/S647.md) | flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph | S | - |  |  | — |
 | 353 | [S648](slices/S648.md) | flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too | S | - |  |  | — |
-| 354 | [S649](slices/S649.md) | give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line |  | - |  | discovered from S527 | — |
+| 354 | [S649](slices/S649.md) | give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line |  | - |  | discovered from S527 | done |
 | 355 | [S650](slices/S650.md) | allow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search |  | - |  | discovered from S521 | — |
 | 356 | [S651](slices/S651.md) | run the new spec-open-key and decision-key checks on the slice's own spec and diff before the review, so a slice that adds such a check can see its own false positives |  | - |  | discovered from S537 | — |
 | 357 | [S652](slices/S652.md) | Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files |  | 1 |  | discovered from S537 | done |

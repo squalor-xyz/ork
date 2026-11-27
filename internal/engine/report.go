@@ -93,8 +93,12 @@ type Report struct {
 	Failed          int
 	HasTests        bool
 	RelianceOnRound bool
-	Key             string // optional adj decision key
-	Question        string // the Owner needed section; empty for none
+	// IntendedRed is the count of the gate's "Intended red: N failed" lines:
+	// evidence of a base-overlay revert run that fails by design. It is never
+	// added to Passed or Failed.
+	IntendedRed int
+	Key         string // optional adj decision key
+	Question    string // the Owner needed section; empty for none
 
 	ToolFeedback []ToolFeedback // at most 3 well-formed lines, advisory (relay v12)
 }
@@ -118,6 +122,11 @@ var testsLine = regexp.MustCompile(`(?m)^(?:(?:[-*+]|\d+[.)])[ \t]+)?Tests: (\d+
 
 // adj 635 and adj 636 allow a gate's reliance line, including a list marker.
 var relianceLine = regexp.MustCompile(`(?m)^(?:(?:[-*+]|\d+[.)])[ \t]+)?Tests: relied on ork round results\r?$`)
+
+// adj 658 lets a gate report a base-overlay revert run that fails by design on
+// its own line, apart from the Tests line. Same list marker form and strict
+// whole-line match as testsLine (adj 636).
+var intendedRedLine = regexp.MustCompile(`(?m)^(?:(?:[-*+]|\d+[.)])[ \t]+)?Intended red: (\d+) failed\r?$`)
 
 var outcomeLine = regexp.MustCompile(`(?m)^Outcome:([^\r\n]*)\r?$`)
 
@@ -181,6 +190,9 @@ func splitToolFeedback(role, text string) (string, []ToolFeedback) {
 // a final Owner needed section from every role. finish is the implementer's
 // finish step, which needs no Tests line. The architect needs only the shared
 // Owner needed section; its whole report is findings context (adj 150).
+// The gate alone may add an "Intended red: N failed" line for a base-overlay
+// revert run that fails by design (adj 658); it is read into Report.IntendedRed,
+// adds nothing to the Tests counts and never refuses a PASS.
 // Tool feedback lines are read out of the report first (splitToolFeedback) and
 // never count toward the shape. A shape error is a *ShapeError.
 // needsOutcome, when true, requires one non-empty Outcome line from a plain
@@ -225,6 +237,13 @@ func CheckReport(role string, finish bool, text string, needsOutcome ...bool) (*
 			rep.Passed += p
 			rep.Failed += f
 			rep.HasTests = true
+		}
+	}
+
+	if role == RoleGate {
+		for _, m := range intendedRedLine.FindAllStringSubmatch(text, -1) {
+			n, _ := strconv.Atoi(m[1])
+			rep.IntendedRed += n
 		}
 	}
 

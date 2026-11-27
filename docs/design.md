@@ -1503,7 +1503,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   `Tests: relied on ork round results` when it ran no tests and relied on
   ork's round check (adj 635, 638). Any report with no `## Owner needed`
   section is refused. All problems are listed. A gate PASS with a nonzero
-  failed-test count is also refused.
+  failed-test count is also refused. The gate alone may add a line
+  `Intended red: N failed` for a base-overlay revert run that fails by design.
+  `CheckReport` reads it into `Report.IntendedRed`, adds nothing to the Tests
+  counts so a PASS is not refused for it, and ignores the line in any other
+  role's report (adj 658).
   A plain relay v13 implementer report also needs exactly one non-empty
   `Outcome:` line with the verified outcome. Split leads, sliver chains,
   lone slivers, v12 runs and finish reports keep their existing shape
@@ -2308,6 +2312,11 @@ The reviewer is not told to run the suite.
   instead report `Tests: relied on ork round results` when it ran no tests and
   relied on ork's round check; the approval card prints that line in place of
   counts (adj 635, 638). Either Tests form may start with a list marker (adj 636).
+  The gate alone may add one more line, `Intended red: N failed`, for a
+  base-overlay revert run that fails by design; it may also start with a list
+  marker, `CheckReport` reads it into `Report.IntendedRed`, and it is never
+  added to the Tests counts, so it does not stop a PASS. Any other role's
+  report ignores the line (adj 658).
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).

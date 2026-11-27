@@ -261,6 +261,24 @@ func TestGatePromptNamesTheRelianceLine(t *testing.T) {
 	}
 }
 
+func TestGatePromptNamesTheIntendedRedLine(t *testing.T) {
+	ps := prompts(t)
+	for _, want := range []string{"Intended red: N failed", "base overlay", "not on the Tests line"} {
+		t.Run(want, func(t *testing.T) {
+			if !has(ps["gate"], want) {
+				t.Fatalf("gate prompt lacks %q", want)
+			}
+		})
+	}
+	for _, name := range []string{"implementer", "reviewer"} {
+		t.Run(name, func(t *testing.T) {
+			if strings.Contains(ps[name], "Intended red:") {
+				t.Fatalf("%s prompt holds Intended red:", name)
+			}
+		})
+	}
+}
+
 func TestPromptsTellRolesListNumbersAreNotHeadings(t *testing.T) {
 	if !has(prompts(t)["implementer"], "They are not part of the report: never number a heading.") {
 		t.Error("implementer does not explain list numbers are not part of the report and headings are never numbered")
