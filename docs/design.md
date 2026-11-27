@@ -2706,6 +2706,9 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Implementer briefs say socket-bound tests may fail inside their sandbox,
   report those as sandbox-limited, and use ork's round check outside the
   sandbox as the evidence (adj 519).
+  Reviewer and gate briefs carry a generic line saying socket-bound failures
+  are sandbox-limited, ork's round check is the evidence, and the role need
+  not run `go test ./...`; it names no package (S606, adj 616).
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs

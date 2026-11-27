@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": "- `internal/engine/brief.go:440-450`\n- `internal/engine/brief_test.go:97-112`\n- `docs/design.md:2706-2708`\n- `landed-changed/S606.md` (new)"
+      "body": "- `internal/engine/brief.go:440-451` (reviewer and gate checklist branch)\n- `internal/engine/brief_test.go:97-136` (implementer and new reviewer/gate sandbox reporting tests); TestClaudeAndCodexReadOnlyDoneWhen also updates its exact checklist expectations\n- `docs/design.md:2706-2711` (sandbox evidence guidance)\n- `landed-changed/S606.md` (new)"
     },
     {
       "heading": "Failing tests",
-      "body": "- TestReviewerAndGateBriefsNoteSandboxSocketTests (`internal/engine/brief_test.go`): for each of RoleReviewer and RoleGate, with `in.ReadOnly = true`, the \"Done when\" checklist contains the new line exactly once. The line says socket-bound test failures in the sandbox are sandbox-limited, that ork's round check is the evidence, and that the role need not run `go test ./...`. It is red before the code because the branch at `brief.go:440` adds no such item. The test also asserts the line names no package path: it contains no `internal/` and no `./internal`.\n- TestImplementerBriefNotesSandboxSocketTests (`internal/engine/brief_test.go:97`): unchanged. It stays green and proves the implementer line is untouched.\n- TestReviewerAndGateDoneWhen (`internal/engine/brief_test.go:2145`): unchanged. It stays green, so the existing reviewer and gate checklist wording is kept and the checklist stays under 40 lines."
+      "body": "- TestReviewerAndGateBriefsNoteSandboxSocketTests (`internal/engine/brief_test.go:114`): for RoleReviewer and RoleGate with ReadOnly = true, BuildBrief produces exactly one new sandbox line in Done when. Assert on the generated line that it contains neither internal/ nor ./internal. Red before the add call in the reviewer/gate branch at `internal/engine/brief.go:440`.\n- TestImplementerBriefNotesSandboxSocketTests (`internal/engine/brief_test.go:97`): unchanged; stays green and proves the implementer line is untouched.\n- TestReviewerAndGateDoneWhen (`internal/engine/brief_test.go:2172`): unchanged; stays green and keeps existing checklist wording. TestEveryRoleBriefHasADoneWhenSection (`internal/engine/brief_test.go:1570`) enforces the checklist line limit.\n- TestClaudeAndCodexReadOnlyDoneWhen (`internal/engine/brief_test.go`): update the exact reviewer and gate checklist expectations for the new guidance; other roles stay unchanged. Reproduced red in fix round 1 before updating expectations."
     },
     {
       "heading": "Implement",

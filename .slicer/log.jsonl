@@ -7249,3 +7249,12 @@
 {"when": "2026-11-27T14:11:51Z", "item": "S635", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T14:12:48Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T14:12:48Z", "item": "S622", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:41:32Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:41:32Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:56:27Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:56:27Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T15:10:31Z", "item": "S606", "action": "note", "from": "", "to": "", "note": "Reviewer and gate sandbox guidance passes its dedicated test", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:10:31Z", "item": "S606", "action": "status", "from": "started", "to": "done", "note": "Reviewer and gate sandbox guidance passes its dedicated tests and existing exact-checklist expectations; the full engine suite passes.", "by": "Jon Robbins"}

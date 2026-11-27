@@ -32256,7 +32256,7 @@
       "id": "S606",
       "title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
       "short_title": "say in the reviewer brief which packages fail only from sandbox socket limits, so the reviewer can skip go test ./... and rely on ork's run without guessing",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -32266,6 +32266,20 @@
           "text": "**2026-11-27** — Owner decision: one generic line in the reviewer and gate briefs (internal/engine/brief.go:440), like the implementer line (adj 519): socket-bound test failures in the sandbox are sandbox-limited, ork's round check is the evidence, and the reviewer need not run go test ./...; names no packages. Jon chose 'Generic line', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T13:43:11Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "359ca686-6e6b-4614-800f-48f018edefe5",
+          "kind": "",
+          "text": "**2026-11-27** — Reviewer and gate sandbox guidance passes its dedicated tests and existing exact-checklist expectations; the full engine suite passes.",
+          "created_at": "2026-11-27T15:10:31Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -32292,7 +32306,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

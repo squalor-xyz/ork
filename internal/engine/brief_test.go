@@ -111,6 +111,30 @@ func TestImplementerBriefNotesSandboxSocketTests(t *testing.T) {
 	}
 }
 
+func TestReviewerAndGateBriefsNoteSandboxSocketTests(t *testing.T) {
+	const want = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./...."
+	for _, role := range []string{RoleReviewer, RoleGate} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.ReadOnly = role, true
+			got := checklist(t, in)
+			if count := strings.Count(got, want); count != 1 {
+				t.Errorf("sandbox socket-test line count = %d, want 1", count)
+			}
+			for _, line := range strings.Split(got, "\n") {
+				if !strings.Contains(line, "Socket-bound tests") {
+					continue
+				}
+				for _, path := range []string{"internal/", "./internal"} {
+					if strings.Contains(line, path) {
+						t.Errorf("sandbox socket-test line names package path %q: %s", path, line)
+					}
+				}
+			}
+		})
+	}
+}
+
 func TestSavedOrientationReachesOnlyLocalImplementer(t *testing.T) {
 	for _, vendor := range []string{"claude-local", "claude"} {
 		t.Run(vendor, func(t *testing.T) {
@@ -1633,6 +1657,9 @@ func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 				got = strings.Join(kept, "")
 			}
 			want := wantByRole[role]
+			if role == RoleReviewer || role == RoleGate {
+				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./....\n", 1)
+			}
 			want = strings.Replace(want, "\n", "\n- [ ] Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C.\n", 1)
 			if got != want {
 				t.Errorf("%s %s checklist changed", vendor, role)
