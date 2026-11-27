@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 650,
+  "next_id": 651,
   "preamble": "",
   "passes": [
     {
@@ -34445,6 +34445,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-23c73137",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S650",
+      "title": "allow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search",
+      "short_title": "allow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S521",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-12bf6a83",
         "pass": "v1.2",
         "group": "",
         "reason": "",
