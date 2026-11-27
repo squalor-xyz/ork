@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 657,
+  "next_id": 658,
   "preamble": "",
   "passes": [
     {
@@ -34843,6 +34843,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-b16958bc",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S657",
+      "title": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop",
+      "short_title": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S652",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-2b2466ca",
         "pass": "v1.2",
         "group": "",
         "reason": "",

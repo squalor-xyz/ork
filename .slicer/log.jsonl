@@ -7549,3 +7549,5 @@
 {"when": "2026-11-27T21:41:30Z", "item": "S656", "action": "add", "from": "", "to": "open", "note": "When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round"}
 {"when": "2026-11-27T21:41:31Z", "item": "S656", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T21:41:31Z", "item": "S656", "action": "note", "from": "", "to": "", "note": "possible duplicate of S655", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:43:37Z", "item": "S657", "action": "add", "from": "", "to": "open", "note": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop"}
+{"when": "2026-11-27T21:43:37Z", "item": "S657", "action": "promote", "from": "", "to": "", "note": ""}

@@ -1,0 +1,39 @@
+{
+  "id": "S657",
+  "title": "when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261127-213635-5441, project ork, item S652:\n\nwhen an older binary builds the Decision keys not found list, say which keys the slice's own code would drop\n\nEvidence: this brief lists a.first, test.decided and test.missing, which all come from _test.go fixtures that this slice now skips"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
