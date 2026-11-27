@@ -438,6 +438,7 @@ func doneWhen(in BriefInput) string {
 				}
 			}
 		case RoleReviewer, RoleGate:
+			add("Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./....")
 			add("Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.")
 			if in.Role == RoleReviewer {
 				add("A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.")
@@ -787,7 +788,7 @@ type sliceCheckCommand struct {
 	empty   bool
 }
 
-// SliceCheckCommandWarnings flags Check entries whose first word cannot run.
+// SliceCheckCommandWarnings flags unrunnable commands and missing path arguments.
 // The caller supplies the worktree, or the checkout before that tree exists.
 // A first word that names a Files path is exempt only while that path does not
 // exist there.
@@ -816,13 +817,58 @@ func filesPathNotYet(path, worktree string) bool {
 	return errors.Is(err, fs.ErrNotExist)
 }
 
+func isPathArgument(w shellWord) bool {
+	first, _, _ := strings.Cut(w.text, "/")
+	if strings.Contains(first, ":") || first != "." && first != ".." && strings.Contains(first, ".") {
+		return false
+	}
+	return !w.quoted && !w.dynamic && !strings.HasPrefix(w.text, "-") &&
+		!filepath.IsAbs(w.text) && strings.Contains(w.text, "/") &&
+		!strings.Contains(w.text, "://") && !strings.HasSuffix(w.text, "...")
+}
+
+func missingPathArguments(command string, paths map[string]bool, worktree string) []string {
+	var missing []string
+	seen := map[string]bool{}
+	for _, words := range simpleCommands(command) {
+		i := 0
+		for i < len(words) && envAssignment.MatchString(words[i].text) {
+			i++
+		}
+		for i++; i < len(words); i++ {
+			w := words[i]
+			switch w.text {
+			case "-run", "-bench", "-skip":
+				i++ // The next word is a test pattern, not a path.
+				continue
+			}
+			if !isPathArgument(w) || seen[w.text] || !filesPathNotYet(w.text, worktree) {
+				continue
+			}
+			path := filepath.Clean(strings.TrimPrefix(w.text, "./"))
+			exempt := paths[path]
+			for file := range paths {
+				if strings.HasPrefix(file, path+string(filepath.Separator)) {
+					exempt = true
+					break
+				}
+			}
+			if !exempt {
+				missing = append(missing, w.text)
+				seen[w.text] = true
+			}
+		}
+	}
+	return missing
+}
+
 // checkCommandWarnings skips a command word that names a Files path only while
 // that path does not exist; an existing one must be on PATH or be an
 // executable regular file in the worktree.
 func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) []string {
 	paths := map[string]bool{}
 	for _, m := range backticked.FindAllStringSubmatch(files, -1) {
-		paths[strings.TrimPrefix(lineAnchor.ReplaceAllString(strings.TrimSpace(m[1]), ""), "./")] = true
+		paths[filepath.Clean(strings.TrimPrefix(lineAnchor.ReplaceAllString(strings.TrimSpace(m[1]), ""), "./"))] = true
 	}
 	var warnings []string
 	for _, entry := range entries {
@@ -843,12 +889,10 @@ func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) [
 			warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
 			continue
 		}
-		if paths[strings.TrimPrefix(word.text, "./")] && filesPathNotYet(word.text, worktree) {
-			continue
-		}
+		runnable := paths[filepath.Clean(strings.TrimPrefix(word.text, "./"))] && filesPathNotYet(word.text, worktree)
 		if filepath.IsAbs(word.text) || !strings.ContainsRune(word.text, filepath.Separator) {
 			if _, err := exec.LookPath(word.text); err == nil {
-				continue
+				runnable = true
 			}
 		}
 		// os/exec finds a bare name only on PATH, never in the worktree.
@@ -860,11 +904,17 @@ func checkCommandWarnings(entries []sliceCheckCommand, files, worktree string) [
 			rel, err := filepath.Rel(worktree, path)
 			if err == nil && rel != ".." && !strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 				if info, err := os.Stat(path); err == nil && info.Mode().IsRegular() && info.Mode().Perm()&0o111 != 0 {
-					continue
+					runnable = true
 				}
 			}
 		}
-		warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
+		if !runnable {
+			warnings = append(warnings, fmt.Sprintf("Check entry %q: first word %q is not a runnable command", entry.command, word.text))
+			continue
+		}
+		for _, path := range missingPathArguments(entry.command, paths, worktree) {
+			warnings = append(warnings, fmt.Sprintf("Check entry %q: path argument %q does not exist in the worktree", entry.command, path))
+		}
 	}
 	return warnings
 }

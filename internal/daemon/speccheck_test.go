@@ -429,6 +429,38 @@ func (r *specRig) item(res SpecCheckResult, id string) SpecItemResult {
 	return SpecItemResult{}
 }
 
+func TestSpecCheckReportsNotReadyForAMissingCheckPathArgument(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
+	rig.readyReport = true
+	proj, err := rig.d.registered("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	raw := `{"id":"S1","slice":{"id":"S1","sections":[{"heading":"Check","body":"- ` + "`gofmt -l ./roles`" + `"}]}}`
+	if err := os.WriteFile(filepath.Join(rig.root, "S1.json"), []byte(raw), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	res := rig.check(t, "S1")
+	held := rig.item(res, "S1")
+	if held.Ready || len(held.Findings) != 1 || !strings.Contains(held.Findings[0], "./roles") || len(held.Questions) != 0 {
+		t.Errorf("bad item: %+v", held)
+	}
+	for _, req := range rig.requests() {
+		if strings.Contains(req.Brief, "gofmt -l ./roles") {
+			t.Error("role ran for missing path")
+		}
+	}
+	if _, ok := rig.d.runs.specs[specKey("p", "S1")]; ok {
+		t.Error("finding cached as role result")
+	}
+	if err := os.MkdirAll(filepath.Join(proj.Path, "roles"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if res := rig.check(t, "S1"); !rig.item(res, "S1").Ready {
+		t.Fatalf("existing path still held: %+v", res)
+	}
+}
+
 func TestSpecCheckReportsNotReadyForANonCommandCheckEntry(t *testing.T) {
 	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
 	rig.readyReport = true

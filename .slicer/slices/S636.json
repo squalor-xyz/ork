@@ -1,0 +1,39 @@
+{
+  "id": "S636",
+  "title": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "S",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "ork runs only the backticked command of a Check entry and applies the entry's expectation (\"prints nothing\", \"exits 0\") to that command. Spec drafts often join several commands in one entry, so the expectation of a later command lands on the first one:\n- S598 (run ork-20261125-232714-f9a7) went red in round 3 on \"- `go test ./...` exits 0, go vet ./... prints nothing, and gofmt -l . prints nothing.\" go test passed, but ork applied \"must print nothing\" to it.\n- S606 and S622 drafts on 2026-11-27 had \"- `go vet ./...` reports nothing, and gofmt -l /home/... prints nothing.\" and \"- `go test ./...` passes; go vet ./... prints nothing; gofmt -l ... prints nothing.\", fixed by hand before the start.\n\nork should flag such an entry in the spec check, the spec draft and ork run (like S563's non-command lint), naming the unbackticked command, so each command gets its own entry."
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

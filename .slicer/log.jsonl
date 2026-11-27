@@ -7207,6 +7207,15 @@
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-27T13:12:31Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T13:43:08Z", "item": "S615", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T13:43:56Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T13:43:57Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T13:55:53Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:18:29Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:18:29Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:20:18Z", "item": "S615", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:33:09Z", "item": "S615", "action": "note", "from": "", "to": "", "note": "Check path validation now excludes test-pattern flag values,", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:33:09Z", "item": "S615", "action": "status", "from": "started", "to": "done", "note": "Check path validation now excludes test-pattern flag values, rev:path words and import paths with a dotted first element, while preserving relative path warnings.", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:28:46Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-27T13:28:46Z", "item": "S621", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-27T13:28:46Z", "item": "S621", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
@@ -7229,6 +7238,12 @@
 {"when": "2026-11-27T13:43:11Z", "item": "S606", "action": "note", "from": "", "to": "", "note": "Owner decision: one generic line in the reviewer and gate br", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:43:11Z", "item": "S620", "action": "note", "from": "", "to": "", "note": "Owner decision (key base-overlays.importer-packages): ork ru", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:43:11Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Owner decision (key reviewer.overlay-pass-note): ork runs ea", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:06:42Z", "item": "S611", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:07:07Z", "item": "S611", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:07:07Z", "item": "S611", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:08:31Z", "item": "S611", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:56:20Z", "item": "S611", "action": "note", "from": "", "to": "", "note": "Reverified S611 without further edits; both fixture coverage", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:56:20Z", "item": "S611", "action": "status", "from": "started", "to": "done", "note": "Reverified S611 without further edits; both fixture coverage tests pass, and all 24 exact-name mutations fail independently.", "by": "Jon Robbins"}
 {"when": "2026-11-27T13:45:17Z", "item": "S632", "action": "add", "from": "", "to": "open", "note": "For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file"}
 {"when": "2026-11-27T13:45:18Z", "item": "S632", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T14:11:40Z", "item": "S633", "action": "add", "from": "", "to": "open", "note": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output"}
@@ -7257,3 +7272,30 @@
 {"when": "2026-11-27T15:35:36Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Human checks at approval (S622):", "by": "Jon Robbins"}
 {"when": "2026-11-27T15:35:36Z", "item": "S622", "action": "note", "from": "", "to": "", "note": "Reviewer briefs mark passing single-file base overlays and e", "by": "Jon Robbins"}
 {"when": "2026-11-27T15:35:37Z", "item": "S622", "action": "status", "from": "started", "to": "done", "note": "Reviewer briefs mark passing single-file base overlays and explain test-only Go changes; all 1228 engine tests pass.", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:30:34Z", "item": "S606", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:41:32Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:41:32Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:56:27Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:56:27Z", "item": "S606", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T15:10:31Z", "item": "S606", "action": "note", "from": "", "to": "", "note": "Reviewer and gate sandbox guidance passes its dedicated test", "by": "Jon Robbins"}
+{"when": "2026-11-27T15:10:31Z", "item": "S606", "action": "status", "from": "started", "to": "done", "note": "Reviewer and gate sandbox guidance passes its dedicated tests and existing exact-checklist expectations; the full engine suite passes.", "by": "Jon Robbins"}
+{"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "add", "from": "", "to": "open", "note": "Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing"}
+{"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:13:51Z", "item": "S636", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T14:18:05Z", "item": "S610", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T14:18:05Z", "item": "S610", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:18:05Z", "item": "S610", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:18:05Z", "item": "S610", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T14:18:06Z", "item": "S610", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T14:18:06Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T14:18:06Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T14:18:06Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T14:18:06Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T14:18:06Z", "item": "S620", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T14:33:08Z", "item": "S637", "action": "add", "from": "", "to": "open", "note": "give the gate a fresh base overlay for the fix round's changed file so a revert check runs without the earlier role temp dir"}
+{"when": "2026-11-27T14:33:08Z", "item": "S637", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:42:46Z", "item": "S638", "action": "add", "from": "", "to": "open", "note": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document"}
+{"when": "2026-11-27T14:42:47Z", "item": "S638", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T14:42:47Z", "item": "S638", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}

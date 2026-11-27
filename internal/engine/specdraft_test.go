@@ -277,6 +277,19 @@ func TestSpecDraftShapeFailureDropsFailedReportsOfAnOldDraft(t *testing.T) {
 	}
 }
 
+func TestCheckDraftCheckFlagsAMissingPathArgument(t *testing.T) {
+	tree := t.TempDir()
+	sections := []SpecDraftSection{{Name: "Check", Text: "- `gofmt -l ./roles`"}}
+	want := []SpecDraftProblem{{Section: "Check", Message: `Check entry "gofmt -l ./roles": path argument "./roles" does not exist in the worktree`}}
+	if got := CheckDraftCheck(tree, sections, nil); !reflect.DeepEqual(got, want) {
+		t.Fatalf("problems %+v, want %+v", got, want)
+	}
+	sections = append(sections, SpecDraftSection{Name: "Files", Text: "- `roles/x.go` (new)"})
+	if got := CheckDraftCheck(tree, sections, nil); len(got) != 0 {
+		t.Fatalf("Files parent problems %+v", got)
+	}
+}
+
 func TestSpecDraftRefusesACheckEntryThatIsNotACommand(t *testing.T) {
 	for _, tc := range []struct {
 		name, check, files string

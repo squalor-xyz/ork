@@ -22,6 +22,82 @@ import (
 	"github.com/squalor-xyz/ork/internal/slicercli"
 )
 
+func pathArgumentWarnings(t *testing.T, tree, files string, commands ...string) []string {
+	t.Helper()
+	var body strings.Builder
+	for _, command := range commands {
+		fmt.Fprintf(&body, "- `%s`\n", command)
+	}
+	raw, err := json.Marshal(map[string]any{"slice": map[string]any{"sections": []map[string]string{
+		{"heading": "Files", "body": files}, {"heading": "Check", "body": body.String()},
+	}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	return SliceCheckCommandWarnings(string(raw), tree)
+}
+
+func requirePathWarnings(t *testing.T, got []string, commands, paths []string) {
+	t.Helper()
+	var want []string
+	for i, path := range paths {
+		want = append(want, fmt.Sprintf("Check entry %q: path argument %q does not exist in the worktree", commands[i], path))
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("warnings %q, want %q", got, want)
+	}
+}
+
+func TestSliceCheckCommandWarningsFlagsAMissingPathArgument(t *testing.T) {
+	tree := t.TempDir()
+	for _, path := range []string{"internal/ok", "scripts"} {
+		if err := os.MkdirAll(filepath.Join(tree, path), 0o755); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.WriteFile(filepath.Join(tree, "scripts/ok.sh"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	commands := []string{"gofmt -l ./roles", "go vet internal/missing", "GOFLAGS=-count=1 go test ./internal/ok", "go vet scripts/ok.sh"}
+	requirePathWarnings(t, pathArgumentWarnings(t, tree, "", commands...), commands[:2], []string{"./roles", "internal/missing"})
+}
+
+func TestSliceCheckCommandWarningsSkipsWordsThatAreNotPaths(t *testing.T) {
+	for _, command := range []string{
+		"go test -run TestX ./...", "gofmt -l .", "curl https://example.com/a/b",
+		"rg 'a/b' -n", `rg "a/b"`, "ls /nonexistent/abs", "rg --glob=src/x",
+		"ls ./internal/*", "ls ../outside/x", "go -C /nonexistent test ./...",
+		"slicer show S1 --root /nonexistent", `ls a\/b`, "ls ~/x", "ls $ROOT/x",
+		"ls ./a? ./a[bc] ./a{b,c}", "ls > ./redirect/output",
+		"go test -run TestX/sub ./...", "go test -bench BenchmarkX/sub ./...",
+		"go test -skip TestX/sub ./...", "git show main:internal/engine/brief.go",
+		"go test github.com/x/y", "go test charm.land/z",
+	} {
+		t.Run(command, func(t *testing.T) {
+			// Each exclusion is tested beside the same positive control.
+			commands := []string{"ls ./missing", command}
+			requirePathWarnings(t, pathArgumentWarnings(t, t.TempDir(), "", commands...), commands[:1], []string{"./missing"})
+		})
+	}
+}
+
+func TestSliceCheckCommandWarningsExemptsAFilesPathArgument(t *testing.T) {
+	files := "- `scripts/new.sh`\n- `./docs/new.md:3-9`\n- `internal/newpkg/x_test.go` (new)"
+	commands := []string{"go vet scripts/new.sh", "go vet ./docs/new.md", "go test internal/newpkg/x_test.go", "ls ./scripts ./docs internal/newpkg", "ls ./other"}
+	requirePathWarnings(t, pathArgumentWarnings(t, t.TempDir(), files, commands...), commands[4:], []string{"./other"})
+}
+
+func TestSliceCheckCommandWarningsChecksEachPartOfAChain(t *testing.T) {
+	for _, command := range []string{"go vet ./... && gofmt -l ./roles", "go vet ./... | gofmt -l ./roles", "go vet ./... && A=1 gofmt -l ./roles"} {
+		requirePathWarnings(t, pathArgumentWarnings(t, t.TempDir(), "", command), []string{command}, []string{"./roles"})
+	}
+}
+
+func TestSliceCheckCommandWarningsReportsOneWarningForEachMissingPath(t *testing.T) {
+	command := "ls ./a ./b ./a"
+	requirePathWarnings(t, pathArgumentWarnings(t, t.TempDir(), "", command), []string{command, command}, []string{"./a", "./b"})
+}
+
 func TestSliceCheckCommandWarningsExemptsAFilesPath(t *testing.T) {
 	for _, prefix := range []string{"", "./", "A=1 B=2 "} {
 		t.Run(prefix, func(t *testing.T) {
@@ -106,6 +182,30 @@ func TestImplementerBriefNotesSandboxSocketTests(t *testing.T) {
 			}
 			if !strings.Contains(got, want) {
 				t.Error("implementer brief lacks sandbox socket-test reporting and round-check evidence")
+			}
+		})
+	}
+}
+
+func TestReviewerAndGateBriefsNoteSandboxSocketTests(t *testing.T) {
+	const want = "Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./...."
+	for _, role := range []string{RoleReviewer, RoleGate} {
+		t.Run(role, func(t *testing.T) {
+			in := baseBrief()
+			in.Role, in.ReadOnly = role, true
+			got := checklist(t, in)
+			if count := strings.Count(got, want); count != 1 {
+				t.Errorf("sandbox socket-test line count = %d, want 1", count)
+			}
+			for _, line := range strings.Split(got, "\n") {
+				if !strings.Contains(line, "Socket-bound tests") {
+					continue
+				}
+				for _, path := range []string{"internal/", "./internal"} {
+					if strings.Contains(line, path) {
+						t.Errorf("sandbox socket-test line names package path %q: %s", path, line)
+					}
+				}
 			}
 		})
 	}
@@ -1633,6 +1733,9 @@ func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 				got = strings.Join(kept, "")
 			}
 			want := wantByRole[role]
+			if role == RoleReviewer || role == RoleGate {
+				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./....\n", 1)
+			}
 			want = strings.Replace(want, "\n", "\n- [ ] Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C.\n", 1)
 			if got != want {
 				t.Errorf("%s %s checklist changed", vendor, role)
