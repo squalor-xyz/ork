@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-628 items · — 58 · done 425 · retired 145
+628 items · — 57 · done 426 · retired 145
 
 ## v1.3
 
@@ -360,7 +360,7 @@ v1.2
 | 303 | [S598](slices/S598.md) | build-check the base overlays with the slice's own logic, or say in the brief that the overlay list was made by a binary older than the slice |  | - |  | discovered from S593 | done |
 | 304 | [S599](slices/S599.md) | build the reviewer's Base overlays section with the slice's own binary, or say in the brief that the installed ork predates the slice |  | - |  | Duplicate of S598; Jon chose 'Two slices', session 8d711f67, 2026-11-25. · discovered from S593 | retired |
 | 305 | [S600](slices/S600.md) | While the Goals are lifted, `enter` opens the hidden first row with no cue on screen. |  | 2 |  | discovered from S580 | done |
-| 306 | [S601](slices/S601.md) | Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget) | S | 1 |  | discovered from S588 | — |
+| 306 | [S601](slices/S601.md) | Decisions detail: pgdown and pgup skip content at heights 10, 16 and 24 (scrollDecision marker budget) | S | 1 |  | discovered from S588 | done |
 | 307 | [S602](slices/S602.md) | Questions detail: pgdown and pgup skip content at heights 10, 16 and 24 (shared scrollDecision marker budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
 | 308 | [S603](slices/S603.md) | Waves item pane: pgdown and pgup skip content at heights 10, 16, 24 and 40 (waveItemKey marker budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |
 | 309 | [S604](slices/S604.md) | Settings pane: pgdown and pgup skip content at heights 10, 16 and 24 (settingsKey marker and pinned heading budget) | S | 1 |  | Merged into S601 (one marker-budget paging fix for four panes); Jon chose 'One slice', session 8d711f67, 2026-11-27. · discovered from S588 | retired |

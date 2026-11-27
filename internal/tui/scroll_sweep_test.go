@@ -209,23 +209,10 @@ var (
 // its end and back at heights 10, 16, 24 and 40, and fails when a line of the
 // view never appears (S531, adj 570). A page-up that skips a line at 80x16
 // passed the 80x24 tests until the UI pass found it by hand (S401).
-// Decisions detail, Questions detail and Settings run at height 40 through
-// test-only fixtures. TestSweepPaneFixturesScroll also reaches the Waves item
-// pane and checks that all four fixtures scroll at height 10.
 //
 // The first sweep found a real paging defect in the Roadmap item pane and in
 // the Roadmap row list at height 10 (adj 570, adj 575). Both are fixed (S579,
 // S580).
-//
-// Left out: decisions-detail with pgdown/pgup at heights 10, 16 and 24 skips
-// lines because decisions.go:scrollDecision does not reserve the scroll marker
-// budget (S601). questions-detail with pgdown/pgup at heights 10, 16 and 24
-// shares that cause in decisions.go:scrollDecision (S602).
-// Left out: waves-item with pgdown/pgup at heights 10, 16, 24 and 40 skips
-// lines because waves.go:waveItemKey does not reserve the scroll marker budget
-// (S603). settings with pgdown/pgup at heights 10, 16 and 24 skips lines because
-// settings.go:settingsKey advances by the full room while settings.go:settingsBody
-// also spends lines on scroll markers and a pinned block heading (S604).
 func TestScrollSweep(t *testing.T) {
 	cases := []sweepCase{
 		{name: "help-running", heights: sweepAll, setup: sweepHelp(0), reference: sweepHelpReference, pageDown: sweepPgDown, pageUp: sweepPgUp},
@@ -252,9 +239,10 @@ func TestScrollSweep(t *testing.T) {
 		// unique stays unset: the reference repeats lines, such as the pane's
 		// own heading.
 		{name: "roadmap-item", heights: sweepAll, setup: openLongItemPane, pageDown: sweepPgDown, pageUp: sweepPgUp},
-		{name: "decisions-detail", heights: []int{40}, unique: true, setup: sweepDecisionsDetail, pageDown: sweepPgDown, pageUp: sweepPgUp},
-		{name: "questions-detail", heights: []int{40}, unique: true, setup: sweepQuestionsDetail, pageDown: sweepPgDown, pageUp: sweepPgUp},
-		{name: "settings", heights: []int{40}, unique: true, setup: sweepSettings, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		{name: "decisions-detail", heights: sweepAll, unique: true, setup: sweepDecisionsDetail, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		{name: "questions-detail", heights: sweepAll, unique: true, setup: sweepQuestionsDetail, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		{name: "waves-item", heights: sweepAll, unique: true, setup: sweepWavesItem, pageDown: sweepPgDown, pageUp: sweepPgUp},
+		{name: "settings", heights: sweepAll, unique: true, setup: sweepSettings, pageDown: sweepPgDown, pageUp: sweepPgUp},
 		{name: "launch-confirm", heights: sweepAll, setup: func(t *testing.T) *harness {
 			h, l := launchHarness(t)
 			for i := 1; i <= 8; i++ {

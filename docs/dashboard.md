@@ -577,8 +577,8 @@ pane open, no row key moves the cursor;
 pane, and `j`, `k`, `g` and `G` (or `down`, `up`, `home` and `end`) scroll a
 Roadmap item or matrix pane by a line or to its ends (S190, *proposed*; the
 Roadmap help says `pgdown/pgup page rows or scroll a pane`). A page key in a
-Roadmap item, matrix or spec-draft pane moves by the pane's lines minus the
-"+N more lines" marker line, so no line is skipped.
+decision, Roadmap item, matrix, spec-draft or Waves item pane moves by the
+pane's lines minus the "+N more lines" marker line, so no line is skipped.
 In a run, decision, Roadmap item or Waves item pane
 `ctrl+d` and `ctrl+u` scroll it by half the pane's scrolling part (S149, S152,
 *proposed*). `ctrl+u` in an answer or fix-note field still clears the field, so
@@ -2500,8 +2500,9 @@ above` marker, and the window shows one line fewer of the body, so a row is
 never read under another block's heading (owner 2026-11-25,
 `ui.settings-pane-scroll-heading`). A window that starts on a heading or on
 the blank line between blocks pins nothing, and neither does a window under 4
-lines. A line under it names the way to change
-a field: `ork projects set NAME --FIELD VALUE`. The pane edits no field.
+lines. `pgdown` starts at the first line the window left out; `pgup` starts at
+the first window that reaches the current top. A line under it names the way
+to change a field: `ork projects set NAME --FIELD VALUE`. The pane edits no field.
 
 The pane is the screen's body while it is open: the hint line lists its keys,
 the mouse does nothing, and a read that was open when it closed is dropped.

@@ -38,13 +38,15 @@ const (
 // settingsState is the project settings pane: a read of projects.show, and
 // the setup step the owner is choosing, confirming or running.
 type settingsState struct {
-	project string
-	request uint64 // the projects.show call the pane waits for or shows
-	pending bool   // a read is out; the last result stays on screen
-	result  *daemon.ProjectsShowResult
-	err     error
-	offset  int // the first line shown below the heading
-	room    int // the lines of the scrolling part the last draw had
+	project  string
+	request  uint64 // the projects.show call the pane waits for or shows
+	pending  bool   // a read is out; the last result stays on screen
+	result   *daemon.ProjectsShowResult
+	err      error
+	offset   int // the first line shown below the heading
+	room     int // the lines of the scrolling part the last draw had
+	pageDown int // page-key steps from the last draw, including markers and pin
+	pageUp   int
 
 	choosing   bool     // the one-line chooser of setup steps is open
 	steps      []string // the steps the chooser lists
@@ -226,9 +228,9 @@ func (m *Model) settingsKey(msg tea.KeyPressMsg) tea.Cmd {
 	case key.Matches(msg, k.RowPrev):
 		s.offset = max(s.offset-1, 0)
 	case key.Matches(msg, k.PageDown):
-		s.offset += max(s.room, 1)
+		s.offset += max(s.pageDown, 1)
 	case key.Matches(msg, k.PageUp):
-		s.offset = max(s.offset-max(s.room, 1), 0)
+		s.offset = max(s.offset-max(s.pageUp, 1), 0)
 	}
 	return nil
 }
@@ -396,6 +398,24 @@ func (m *Model) settingsBody(width, height int) []string {
 			s.offset = fit
 		}
 		body = window(lines, s.offset, room, th, "")
+	}
+	// Reach is the first body line omitted by a window, including its markers
+	// and the heading pinned when the window starts inside a block.
+	reach := func(start int) int {
+		n := room
+		if canPin && start > 0 && start < len(heads) && heads[start] != "" {
+			n--
+		}
+		hi, _, _ := span(len(lines), start, n)
+		return hi
+	}
+	s.pageDown = max(reach(s.offset)-s.offset, 1)
+	s.pageUp = 1
+	for back := 0; back < s.offset; back++ {
+		if reach(back) >= s.offset {
+			s.pageUp = s.offset - back
+			break
+		}
 	}
 	return append(append(head, body...), foot...)
 }

@@ -951,8 +951,8 @@ func TestWavesItemPanePageKeysUseVisibleHeight(t *testing.T) {
 		h.m.Update(tea.WindowSizeMsg{Width: size[0], Height: size[1]})
 		_ = h.m.View()
 		h.deliver(press("pgdown"))
-		if h.m.waves.paneOffset != size[1]-6 { // the hint line takes a row (S149)
-			t.Errorf("page offset %d, want %d", h.m.waves.paneOffset, size[1]-6)
+		if h.m.waves.paneOffset != size[1]-7 { // reserve the hint and more-lines marker rows
+			t.Errorf("page offset %d, want %d", h.m.waves.paneOffset, size[1]-7)
 		}
 		h.deliver(press("down"))
 		h.deliver(press("pgup"))
