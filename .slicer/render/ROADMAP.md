@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-643 items · — 35 · done 438 · retired 170
+643 items · — 34 · done 439 · retired 170
 
 ## v1.3
 
@@ -353,7 +353,7 @@ v1.2
 | 296 | [S591](slices/S591.md) | when a slice adds a struct field that its tests read, also write a base overlay that reverts those test files, so the revert check builds |  | - |  | Merged into S593 (build-check base overlays); Jon chose 'Merge: build-check overlays', session 8d711f67, 2026-11-25. · discovered from S579 | retired |
 | 297 | [S592](slices/S592.md) | allow read-only git grep against HEAD for reviewer roles so a non-Go prompt file can be checked against its base version |  | - |  | discovered from S571 | done |
 | 298 | [S593](slices/S593.md) | when a changed file's signature change makes the base overlay fail to build, say so in the Base overlays section instead of offering it as a revert check |  | - |  | discovered from S586 | done |
-| 299 | [S594](slices/S594.md) | when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds |  | - |  | discovered from S579 | — |
+| 299 | [S594](slices/S594.md) | when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds |  | - |  | discovered from S579 | done |
 | 300 | [S595](slices/S595.md) | `go -C * test*` and `go -C * vet*` read-only entries have the same mid-pattern `*` problem |  | 1 |  | discovered from S586 | done |
 | 301 | [S596](slices/S596.md) | when two changed files depend on each other's new fields, write a base overlay that reverts both together |  | - |  | discovered from S580 | done |
 | 302 | [S597](slices/S597.md) | name a preset fixture height in the render brief when the changed behavior only shows below 80x24 |  | - |  | discovered from S580 | done |

@@ -31793,7 +31793,7 @@
       "id": "S594",
       "title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
       "short_title": "when a slice adds a struct field that its tests read, have the base overlay also revert those test files so the revert check builds",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -31838,6 +31838,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "12bc6908-6d14-430d-9238-4ce85fd4b56d",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S594):\n- later: In the next reviewer round on a slice where one changed Go file adds a struct field that a changed test file reads (as in S579, roadmap.go and matrix_test.go), open the reviewer brief's ## Base overlays section.",
+          "created_at": "2026-11-27T19:03:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "80a15a16-fc6c-46f7-84b5-c833f4d36bbd",
+          "kind": "",
+          "text": "**2026-11-27** — Base overlays revert changed test files named by vet, identify omitted new tests, suppress misleading pass probes, and are freshly generated for every gate round; focused checks and engine/roles suites pass.",
+          "created_at": "2026-11-27T19:03:01Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -31857,7 +31885,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

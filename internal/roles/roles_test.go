@@ -668,6 +668,30 @@ func TestReviewerPromptCarriesTheProbeRecipe(t *testing.T) {
 	}
 }
 
+func TestGatePromptPointsAtBaseOverlays(t *testing.T) {
+	p := prompts(t)["gate"]
+	for _, want := range []string{"## Base overlays", "one changed Go file reverted to the base", "as a plain command", "ork wrote those overlay files for this round"} {
+		if !has(p, want) {
+			t.Errorf("gate prompt lacks %q", want)
+		}
+	}
+	for _, line := range strings.Split(p, "\n") {
+		if strings.Contains(line, "-run") && strings.Contains(line, "|") {
+			t.Errorf("gate prompt joins test names: %s", line)
+		}
+	}
+	for i, r := range p {
+		if r > 127 {
+			t.Errorf("gate prompt holds a non-ASCII character at %d", i)
+		}
+	}
+	for _, word := range []string{"severity", "medium"} {
+		if strings.Contains(strings.ToLower(p), word) {
+			t.Errorf("gate prompt contains %q", word)
+		}
+	}
+}
+
 func TestImplementerPromptSelfCheck(t *testing.T) {
 	p := prompts(t)["implementer"]
 	selfCheck, report := strings.Index(p, "\n## Self-check\n"), strings.Index(p, "\n## Report\n")
