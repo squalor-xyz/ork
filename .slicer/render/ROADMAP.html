@@ -47,7 +47,7 @@
 <h3>C16 No scheduler: ork does not pick and run waves on its own</h3>
 <h3>C17 One workflow kind for now: the slice relay; no general pipeline language</h3>
 </section>
-<p class="summary">638 items · — 60 · done 432 · retired 146</p>
+<p class="summary">638 items · — 59 · done 432 · retired 147</p>
 <h2>v1.3</h2>
 <table><thead><tr><th>#</th><th>ID</th><th>Title</th><th>Size</th><th>Effort</th><th>Trees</th><th>Findings</th><th>Status</th></tr></thead><tbody>
 <tr class="open"><td>1</td><td>S374</td><td>Grok cutover by 2026-12-09</td><td>S</td><td>1</td><td></td><td>Owner, 2026-11-16 (relay session 8d711f67, chat): &quot;my grok accounts will be cancelled effective December 9th. so let&#x27;s ensure we maximize that account use through then&quot;. Grok is first choice in ork&#x27;s matrix for reviewer (r22), gate (r23), architect (r31), orchestrator (r21) and spec check (r24), and in slicer&#x27;s matrix for reviewer (r15), gate (r16) and architect (r17) (`slicer relay-roles show`, 2026-11-16). S305 adds grok write rows. · discovered from S305</td><td class="status">—</td></tr>
@@ -287,7 +287,7 @@
 <tr class="open"><td>232</td><td>S527</td><td>allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output</td><td></td><td>-</td><td></td><td>discovered from S249</td><td class="status">—</td></tr>
 <tr class="open"><td>233</td><td>S528</td><td>allow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated</td><td></td><td>-</td><td></td><td>discovered from S250</td><td class="status">—</td></tr>
 <tr class="open"><td>234</td><td>S529</td><td>tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures</td><td></td><td>-</td><td></td><td>discovered from S399</td><td class="status">—</td></tr>
-<tr class="open"><td>235</td><td>S530</td><td>say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite</td><td></td><td>-</td><td></td><td>discovered from S399</td><td class="status">—</td></tr>
+<tr class="retired"><td>235</td><td>S530</td><td>say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite</td><td></td><td>-</td><td></td><td>Covered by S606 (reviewer and gate briefs carry the sandbox socket line, adj 616); Jon chose &#x27;File 626, retire S530&#x27;, session 8d711f67, 2026-11-27. · discovered from S399</td><td class="status">retired</td></tr>
 <tr class="done"><td>236</td><td>S531</td><td>give the UI pass a scroll-sweep check that pages to the end and back at several heights and asserts every line appears</td><td></td><td>-</td><td></td><td>discovered from S401</td><td class="status">done</td></tr>
 <tr class="retired"><td>237</td><td>S532</td><td>let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run</td><td></td><td>-</td><td></td><td>Duplicate of S510 (reviewer write to its role temp dir); same evidence from S401&#x27;s reviewer · discovered from S401</td><td class="status">retired</td></tr>
 <tr class="retired"><td>238</td><td>S533</td><td>add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test</td><td></td><td>-</td><td></td><td>Folded into S534 (adj 531, owner 2026-11-25) · discovered from S249</td><td class="status">retired</td></tr>

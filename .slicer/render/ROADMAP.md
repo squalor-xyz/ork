@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-638 items · — 60 · done 432 · retired 146
+638 items · — 59 · done 432 · retired 147
 
 ## v1.3
 
@@ -289,7 +289,7 @@ v1.2
 | 232 | [S527](slices/S527.md) | allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output |  | - |  | discovered from S249 | — |
 | 233 | [S528](slices/S528.md) | allow reviewer writes and slicer runs in the role temp dir so the scratch-project Check line can be repeated |  | - |  | discovered from S250 | — |
 | 234 | [S529](slices/S529.md) | tell roles in the brief when the full suite needs to run outside the sandbox, so implementers do not report socket errors as suite failures |  | - |  | discovered from S399 | — |
-| 235 | [S530](slices/S530.md) | say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite |  | - |  | discovered from S399 | — |
+| 235 | [S530](slices/S530.md) | say in the reviewer brief which suite failures come from the sandbox (socket errors), so an implementer report of 323 failures is not read as a red suite |  | - |  | Covered by S606 (reviewer and gate briefs carry the sandbox socket line, adj 616); Jon chose 'File 626, retire S530', session 8d711f67, 2026-11-27. · discovered from S399 | retired |
 | 236 | [S531](slices/S531.md) | give the UI pass a scroll-sweep check that pages to the end and back at several heights and asserts every line appears |  | - |  | discovered from S401 | done |
 | 237 | [S532](slices/S532.md) | let the reviewer write to its role temp dir as the prompt says, so a UI overlay probe can run |  | - |  | Duplicate of S510 (reviewer write to its role temp dir); same evidence from S401's reviewer · discovered from S401 | retired |
 | 238 | [S533](slices/S533.md) | add a projects-setup view to TestRenderCLIViews so the UI pass can render new CLI subcommands without an overlay test |  | - |  | Folded into S534 (adj 531, owner 2026-11-25) · discovered from S249 | retired |
