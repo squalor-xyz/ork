@@ -7511,3 +7511,4 @@
 {"when": "2026-11-27T20:18:38Z", "item": "S652", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T20:18:38Z", "item": "S652", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
 {"when": "2026-11-27T20:18:38Z", "item": "S652", "action": "note", "from": "", "to": "", "note": "Owner direction: the Decision keys not found check skips _te", "by": "Jon Robbins"}
+{"when": "2026-11-27T20:26:43Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Also covers adj 655: when a base overlay also reverts a test", "by": "Jon Robbins"}
