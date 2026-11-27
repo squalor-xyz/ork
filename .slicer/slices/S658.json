@@ -1,0 +1,39 @@
+{
+  "id": "S658",
+  "title": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261127-194957-90f9, project ork, item S538:\n\nin the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step\n\nEvidence: brief.go:233-238 says \"Copy the views you want ... into the renders directory\"; a read-only pass has no cp, and the TUI flag already writes NAME-80x24.txt names"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
