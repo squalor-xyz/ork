@@ -7522,3 +7522,6 @@
 {"when": "2026-11-27T20:26:43Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Also covers adj 655: when a base overlay also reverts a test", "by": "Jon Robbins"}
 {"when": "2026-11-27T21:11:35Z", "item": "S653", "action": "add", "from": "", "to": "open", "note": "Make the run-id suffix longer, or retry on a directory collision, so a wave of runs started in one second cannot collide"}
 {"when": "2026-11-27T21:11:36Z", "item": "S653", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:20:26Z", "item": "S654", "action": "add", "from": "", "to": "open", "note": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix"}
+{"when": "2026-11-27T21:20:26Z", "item": "S654", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:20:27Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Why"}
