@@ -2732,7 +2732,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   runs a program (adj 520, adj 457); roles use Grep instead. Every read-only
   brief names the denied forms: pipes, `&&` and `;` chains, redirects,
   command substitution, shell variables, env prefixes and `cd`. It directs
-  roles to use literal absolute paths with `git -C` and `go -C`. These
+  roles to use literal absolute paths with `git -C` and `go -C`. The line also
+  says a `go test -run` pattern must not end in `$`, because that command is
+  denied before it runs. It gives `-run NAME` with the full test name and no
+  anchor, noting that this also runs tests whose names start with NAME
+  (S610, from tool feedback). These
   additions grant no shell variables, chains, env prefixes or `git init`.
   Implementer briefs say socket-bound tests may fail inside their sandbox,
   report those as sandbox-limited, and use ork's round check outside the
