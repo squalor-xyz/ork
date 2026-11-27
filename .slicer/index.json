@@ -33026,7 +33026,7 @@
       "id": "S622",
       "title": "For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test",
       "short_title": "For a changed non-test file whose base overlay passes the whole package, say so in the Base overlays section, so the reviewer sees at once which changed sites have no test",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33057,6 +33057,34 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6291e4c9-cb23-487f-9a17-4a674f23358d",
+          "kind": "",
+          "text": "**2026-11-27** — Human checks at approval (S622):\n- later: In the next reviewer round for a slice that changes a non-test Go file with no test of its own, open the reviewer's brief under the run's role files. In ## Base overlays, that file's entry should end with \"Passes in full with this file reverted: ...\" after its command. An entry for a file whose revert fails a test should have no such sentence.\n- later: In the next reviewer round for a slice whose only Go changes are _test.go files, open the reviewer's brief. ## Base overlays should hold a paragraph saying a base overlay cannot isolate the product change, and no go -C ... test -overlay command.",
+          "created_at": "2026-11-27T15:35:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "e0b2ec3b-2308-4491-94ad-5def76105bbc",
+          "kind": "",
+          "text": "**2026-11-27** — Reviewer briefs mark passing single-file base overlays and explain test-only Go changes; all 1228 engine tests pass.",
+          "created_at": "2026-11-27T15:35:36Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -33076,7 +33104,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

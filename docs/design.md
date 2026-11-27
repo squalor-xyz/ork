@@ -2085,7 +2085,13 @@ separately.
     For each remaining file, the section names
     one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
     ./DIR` command, so a read-only reviewer can run the package's tests with
-    only that file reverted and see a test the slice added fail. It tells the
+    only that file reverted and see a test the slice added fail. ork also runs
+    each of these single-file test commands sequentially with a two-minute
+    timeout (S622, adj 618, adj 622). An exit-zero run adds "Passes in full
+    with this file reverted: no test in the package fails for this change, so
+    no test covers it." after the command. A non-zero exit, timeout or failure
+    to start leaves the entry plain. Failed-vet and unreadable-base entries,
+    and the combined overlay, get no test run. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
     test names in one `-run` pattern (S571). This command guidance appears only
     when at least one single-file test command remains (S593). When at least
@@ -2105,6 +2111,11 @@ separately.
     marked "new in this slice, no base version", without a command. Invalid
     paths and failed reads join the incomplete-check notice. A diff with only
     other files gets this list without Go overlays, vet calls or the Go intro.
+    When every changed Go file is a `_test.go` file, it adds a paragraph before
+    the closing guidance: a base overlay cannot isolate the product change
+    because the tests are part of the change; read each file's base version
+    with `git show` instead (S622, S623, adj 618). A diff with no Go file gets
+    no such paragraph.
     The section ends with a paragraph: the overlays cover non-test Go files
     only; other changed files are not overlaid. It adds that `git
     grep` is not on the read-only list. No `git grep` entry was added, because
