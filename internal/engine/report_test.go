@@ -95,6 +95,112 @@ func TestCheckReportRelianceLineIsGateOnly(t *testing.T) {
 	}
 }
 
+func TestCheckReportGateReadsIntendedRedLine(t *testing.T) {
+	for _, marker := range []string{"", "- ", "* ", "+ ", "1. ", "1) ", "12.\t"} {
+		t.Run(marker, func(t *testing.T) {
+			r, err := CheckReport(RoleGate, false, "VERDICT: PASS\nTests: 5 passed, 0 failed\n"+marker+"Intended red: 2 failed\n"+ownerNone)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if r.Passed != 5 || r.Failed != 0 || !r.HasTests || r.IntendedRed != 2 {
+				t.Fatalf("intended red report: %+v", r)
+			}
+		})
+	}
+	t.Run("crlf", func(t *testing.T) {
+		r, err := CheckReport(RoleGate, false, "VERDICT: PASS\r\nTests: 5 passed, 0 failed\r\nIntended red: 2 failed\r\n"+ownerNone)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if r.Passed != 5 || r.Failed != 0 || !r.HasTests || r.IntendedRed != 2 {
+			t.Fatalf("crlf intended red report: %+v", r)
+		}
+	})
+	t.Run("two lines add up", func(t *testing.T) {
+		r, err := CheckReport(RoleGate, false, "VERDICT: PASS\nTests: 5 passed, 0 failed\nIntended red: 1 failed\nIntended red: 2 failed\n"+ownerNone)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if r.IntendedRed != 3 || r.Passed != 5 || r.Failed != 0 {
+			t.Fatalf("summed intended red: %+v", r)
+		}
+	})
+}
+
+func TestCheckReportIntendedRedLineKeepsItsShape(t *testing.T) {
+	// Prove the valid form first, so the cases below cannot pass because the
+	// line was ignored.
+	r, err := CheckReport(RoleGate, false, "VERDICT: PASS\nTests: 5 passed, 0 failed\nIntended red: 1 failed\n"+ownerNone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.IntendedRed != 1 {
+		t.Fatalf("valid line not read: %+v", r)
+	}
+	for _, line := range []string{"Intended red: 1 failed (overlay)", "Intended red: one failed", "Intended red: 1 passed", "Intended red: 1 Failed", "see Intended red: 1 failed", "  Intended red: 1 failed", "intended red: 1 failed"} {
+		t.Run(line, func(t *testing.T) {
+			r, err := CheckReport(RoleGate, false, "VERDICT: PASS\nTests: 5 passed, 0 failed\n"+line+"\n"+ownerNone)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if r.IntendedRed != 0 || r.Failed != 0 {
+				t.Fatalf("malformed line counted: %+v", r)
+			}
+		})
+	}
+}
+
+func TestCheckReportIntendedRedDoesNotRescueFailedTests(t *testing.T) {
+	text := "VERDICT: PASS\nTests: 2 passed, 1 failed\nIntended red: 1 failed\n" + ownerNone
+	_, err := CheckReport(RoleGate, false, text)
+	if err == nil {
+		t.Fatal("PASS accepted failed tests next to an intended red line")
+	}
+	mustMention(t, shapeProblems(t, err), "PASS reports failed tests")
+	r, err := CheckReport(RoleGate, false, strings.Replace(text, "VERDICT: PASS", "VERDICT: FAIL", 1))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Passed != 2 || r.Failed != 1 || r.IntendedRed != 1 {
+		t.Fatalf("FAIL counts: %+v", r)
+	}
+	_, err = CheckReport(RoleGate, false, "VERDICT: PASS\nIntended red: 1 failed\n"+ownerNone)
+	if err == nil {
+		t.Fatal("accepted an intended red line with no Tests line")
+	}
+	mustMention(t, shapeProblems(t, err), "Tests:")
+	r, err = CheckReport(RoleGate, false, "VERDICT: PASS\nTests: relied on ork round results\nIntended red: 1 failed\n"+ownerNone)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !r.RelianceOnRound || r.IntendedRed != 1 {
+		t.Fatalf("reliance with intended red: %+v", r)
+	}
+}
+
+func TestCheckReportIntendedRedLineIsGateOnly(t *testing.T) {
+	for _, role := range []string{RoleImplementer, RolePart} {
+		t.Run(role, func(t *testing.T) {
+			r, err := CheckReport(role, false, "Tests: 3 passed, 0 failed\nIntended red: 2 failed\n"+ownerNone)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if r.IntendedRed != 0 || r.Passed != 3 || r.Failed != 0 {
+				t.Fatalf("non-gate report: %+v", r)
+			}
+		})
+	}
+	t.Run(RoleReviewer, func(t *testing.T) {
+		r, err := CheckReport(RoleReviewer, false, "Intended red: 2 failed\n"+ownerNone)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if r.IntendedRed != 0 {
+			t.Fatalf("reviewer report: %+v", r)
+		}
+	})
+}
+
 func TestImplementerPromptExampleBlockPassesTheShapeCheck(t *testing.T) {
 	prompt, err := roles.Prompt("implementer")
 	if err != nil {

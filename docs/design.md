@@ -871,14 +871,29 @@ slice.
     The UI brief also tells the pass that a `go test -run` pattern holds no
     pipe, because a pipe makes a compound command that the permission check
     denies, and gives the one-test-per-command form (S565).
-    TUI views and the pass's commands (*proposed*, S416; adj 507):
-    a TUI view may come from a test file kept outside the tree, run with
-    `go -C WORKTREE test -overlay FILE -run NAME ./PKG` (for ork, the recipe is
-    in AGENTS.md, Project Commands). The pass writes the test file, the overlay
-    JSON and any other helper file in its temp directory with the Write tool, and
-    the test writes each render into `TEMPDIR/renders/` by an absolute path. The
-    prompt tells the pass to run one plain command per shell call (no `&&`, `;`,
-    pipe, redirect or env prefix). A cloud Claude UI pass's brief adds an
+    TUI views and the pass's commands (*proposed*, S538; adj 644, adj 649,
+    adj 650, adj 651, superseding adj 507 and the overlay recipe of S416):
+    the UI brief's `## TUI renders` section gives
+    `go test ./internal/tui -run TestRenderTUIViews -renders DIR`, with the
+    brief's temp directory as DIR. Add `-v` to see go test's output. For each
+    fixture the flag writes `NAME-80x24.txt`, `NAME-120x40.txt` and
+    `NAME-ascii.txt` (the mono theme and ASCII option, at 80x24) as plain text
+    from the TUI test harnesses, without changing the tree.
+    `-render-fixture NAME[,NAME...]` writes only the named fixtures; with no
+    `-render-fixture` the five defaults are written: `overview`, `roadmap`,
+    `launch-confirm` (the launch plan and its confirm bar), `approval-card`
+    (a run's approval card with three human checks) and `approval-render` (the
+    card's render viewer on its first render). An unknown name fails with
+    `no render fixture` and the list. `-render-size WxH[,WxH...]` adds
+    `NAME-WxH.txt` for each size beside the three. `-render-print` prints each
+    file's text to stdout under a `## NAME-SIZE` header line, with or without
+    `-renders`. No file is written without `-renders`.
+    The slice that changes a TUI view adds its fixture to
+    `internal/tui/render_views_test.go`; a view with no fixture is reported, not
+    rendered. `TestRenderTUIFixtureDocsListEveryFixture` checks that this
+    document and the guide name every TUI fixture in backticks in that list.
+    The prompt tells the pass to run one plain command per shell call (no `&&`,
+    `;`, pipe, redirect or env prefix). A cloud Claude UI pass's brief adds an
     "Allowed forms" Done-when item that lists the allowlist the runner sends
     (the fixed read-only list plus Skill, `engine.CloudUIAllowlist()`), the Edit
     and Write rule under the temp directory, and says any other command is
@@ -1503,7 +1518,11 @@ S17; S04 is tested with a fake runner, fake `slicer`, `adj` and `git`
   `Tests: relied on ork round results` when it ran no tests and relied on
   ork's round check (adj 635, 638). Any report with no `## Owner needed`
   section is refused. All problems are listed. A gate PASS with a nonzero
-  failed-test count is also refused.
+  failed-test count is also refused. The gate alone may add a line
+  `Intended red: N failed` for a base-overlay revert run that fails by design.
+  `CheckReport` reads it into `Report.IntendedRed`, adds nothing to the Tests
+  counts so a PASS is not refused for it, and ignores the line in any other
+  role's report (adj 658).
   A plain relay v13 implementer report also needs exactly one non-empty
   `Outcome:` line with the verified outcome. Split leads, sliver chains,
   lone slivers, v12 runs and finish reports keep their existing shape
@@ -2308,6 +2327,11 @@ The reviewer is not told to run the suite.
   instead report `Tests: relied on ork round results` when it ran no tests and
   relied on ork's round check; the approval card prints that line in place of
   counts (adj 635, 638). Either Tests form may start with a list marker (adj 636).
+  The gate alone may add one more line, `Intended red: N failed`, for a
+  base-overlay revert run that fails by design; it may also start with a list
+  marker, `CheckReport` reads it into `Report.IntendedRed`, and it is never
+  added to the Tests counts, so it does not stop a PASS. Any other role's
+  report ignores the line (adj 658).
 - **Resume.** For fix rounds and the lite gate, ork resumes a session from the same
   vendor and model where the vendor supports it. Otherwise it starts fresh with the
   earlier reports in the brief (`role.resume`).

@@ -62,10 +62,9 @@ tooling (its `AGENTS.md`, its UI tests and view snapshots say how); ork has no r
 code of its own. Do not add a render path to the tree.
 
 - CLI views come from the render flag of the project's test suite, when it has one.
-- When a TUI view renders only through the project's tests, it may come from a test
-  file kept outside the tree. Write the file in {{temp_dir}} with the Write tool. For
-  Go, run it with `go -C {{worktree}} test -overlay FILE -run NAME ./PKG`, and let the
-  test write each render into {{temp_dir}}/renders/ by an absolute path.
+- TUI views come from the TUI render command in the brief's `## TUI renders` section.
+  Run it as given; it needs no test file of your own. A TUI view with no fixture in
+  that section is not rendered: say so in your report.
 
 ork has already made `{{renders_dir}}/`, empty. Write into it; do not make or remove it.
 

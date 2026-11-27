@@ -261,6 +261,24 @@ func TestGatePromptNamesTheRelianceLine(t *testing.T) {
 	}
 }
 
+func TestGatePromptNamesTheIntendedRedLine(t *testing.T) {
+	ps := prompts(t)
+	for _, want := range []string{"Intended red: N failed", "base overlay", "not on the Tests line"} {
+		t.Run(want, func(t *testing.T) {
+			if !has(ps["gate"], want) {
+				t.Fatalf("gate prompt lacks %q", want)
+			}
+		})
+	}
+	for _, name := range []string{"implementer", "reviewer"} {
+		t.Run(name, func(t *testing.T) {
+			if strings.Contains(ps[name], "Intended red:") {
+				t.Fatalf("%s prompt holds Intended red:", name)
+			}
+		})
+	}
+}
+
 func TestPromptsTellRolesListNumbersAreNotHeadings(t *testing.T) {
 	if !has(prompts(t)["implementer"], "They are not part of the report: never number a heading.") {
 		t.Error("implementer does not explain list numbers are not part of the report and headings are never numbered")
@@ -829,10 +847,10 @@ func TestUIPromptHasNoOrkPaths(t *testing.T) {
 	}
 }
 
-// S416 (adj 505, adj 507): the UI pass renders outside the tree. Helper files go
-// in its temp dir by the Write tool, each shell call is one plain command, a TUI
-// view may come from a test file kept outside the tree, and CLI views come from
-// the render flag of S475.
+// S416 (adj 505), S538 (adj 644): the UI pass renders outside the tree. Helper
+// files go in its temp dir by the Write tool, each shell call is one plain
+// command, TUI views come from the TUI render command of the brief (no test file
+// of the pass's own), and CLI views come from the render flag of S475.
 func TestUIPromptNamesTheOutOfTreeRenderRoute(t *testing.T) {
 	p := prompts(t)["ui"]
 	rules, renders, ok := strings.Cut(p, "\n## Renders\n")
@@ -850,13 +868,17 @@ func TestUIPromptNamesTheOutOfTreeRenderRoute(t *testing.T) {
 		}
 	}
 	for _, want := range []string{
-		"-overlay",
-		"a test file kept outside the tree",
-		"{{temp_dir}}/renders/",
+		"TUI views come from the TUI render command in the brief's `## TUI renders` section",
+		"{{renders_dir}}/",
 		"CLI views come from the render flag",
 	} {
 		if !has(renders, want) {
 			t.Errorf("ui Renders lacks %q", want)
+		}
+	}
+	for _, bad := range []string{"-overlay", "a test file kept outside the tree"} {
+		if has(renders, bad) {
+			t.Errorf("ui Renders still names %q", bad)
 		}
 	}
 }
