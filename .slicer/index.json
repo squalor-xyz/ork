@@ -34641,7 +34641,7 @@
       "id": "S652",
       "title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
       "short_title": "Decision keys not found: skip test-fixture citations, or treat `_test.go` files apart from other files",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -34651,6 +34651,20 @@
           "text": "**2026-11-27** — Owner direction: the Decision keys not found check skips _test.go files (narrows adj 640, review.decision-key-citation). Jon chose 'File: skip _test.go', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T20:18:38Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "7b563a1d-da39-4089-80cf-3efb2ab4bb65",
+          "kind": "",
+          "text": "**2026-11-27** — The Decision keys not found brief section now skips every `_test.go` file, in both the tracked-diff scan and the untracked-file scan, and docs/design.md says so.",
+          "created_at": "2026-11-27T21:45:29Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -34677,7 +34691,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

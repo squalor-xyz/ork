@@ -41,10 +41,17 @@ func TestDiffCitedKeys(t *testing.T) {
 			}
 		})
 	}
-	for _, path := range []string{".slicer/x.md", "decisions/x.md", "landed-changed/S537.md"} {
+	for _, path := range []string{".slicer/x.md", "decisions/x.md", "landed-changed/S537.md", "internal/engine/x_test.go", "y_test.go"} {
 		t.Run(path, func(t *testing.T) {
 			if got := diffCitedKeys(decisionDiff(path, "+adj a.first\n")); len(got) != 0 {
 				t.Fatalf("excluded path keys = %v", got)
+			}
+		})
+	}
+	for _, path := range []string{"internal/engine/x.go", "docs/x_test.md", "x_test.go.txt"} {
+		t.Run("kept "+path, func(t *testing.T) {
+			if got := diffCitedKeys(decisionDiff(path, "+adj a.first\n")); !reflect.DeepEqual(got, []string{"a.first"}) {
+				t.Fatalf("kept path keys = %v", got)
 			}
 		})
 	}
@@ -141,6 +148,22 @@ func TestUnfoundDecisionKeysUntrackedFile(t *testing.T) {
 	for _, role := range []string{RoleReviewer, RoleGate} {
 		if body := decisionSection(t, h, role, "Decision keys not found"); !strings.Contains(body, "- `test.missing`") {
 			t.Fatalf("untracked key absent: %s", body)
+		}
+	}
+}
+
+func TestUnfoundDecisionKeysSkipsTestFiles(t *testing.T) {
+	// One tracked and one untracked _test.go file cite a missing key; a non-test
+	// file cites another. Only the non-test citation may be listed.
+	h := decisionKeysHarness(t, decisionDiff("internal/x/a_test.go", "+adj test.missing\n"), "", "internal/x/new_test.go\x00docs/new.md\x00", "", true, map[string]string{
+		"internal/x/new_test.go": "adj test.missing\n",
+		"docs/new.md":            "adj test.decided\n",
+	})
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	for _, role := range []string{RoleReviewer, RoleGate} {
+		brief := staleDocsRequest(t, h, role).Brief
+		if strings.Contains(brief, "- `test.missing`") {
+			t.Errorf("%s lists a _test.go citation", role)
 		}
 	}
 }

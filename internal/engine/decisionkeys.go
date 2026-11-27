@@ -46,7 +46,12 @@ func (e *Engine) decisionKeyChecker(ctx context.Context) func(string) decisionKe
 	}
 }
 
+// Go test files hold citation-shaped fixtures, not owner-decision citations
+// (S652, narrows review.decision-key-citation).
 func skipDecisionKeyPath(path string) bool {
+	if strings.HasSuffix(path, "_test.go") {
+		return true
+	}
 	for _, prefix := range []string{".slicer/", "decisions/", "landed-changed/"} {
 		if strings.HasPrefix(path, prefix) {
 			return true

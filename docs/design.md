@@ -2261,8 +2261,9 @@ The reviewer is not told to run the suite.
     `adj`, with optional backticks, brackets or parentheses. Citation phrases
     are case-insensitive. The check reads the diff
     against the merge base and scans new files absent from its headers.
-    It skips `.slicer/`, `decisions/` and `landed-changed/`, and skips
-    nonregular, binary or over-1-MiB new files. Missing evidence adds an
+    It skips `.slicer/`, `decisions/` and `landed-changed/`, and every
+    `_test.go` file, whose citation-shaped test fixtures are not citations
+    (S652). It skips nonregular, binary or over-1-MiB new files. Missing evidence adds an
     incomplete-check notice. The section is advisory and never blocks or
     pauses the run; the architect gets none;
   - before the reviewer and gate start, a `## Spec text calls a decided key
