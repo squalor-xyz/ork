@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 628,
+  "next_id": 629,
   "preamble": "",
   "passes": [
     {
@@ -33067,6 +33067,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-5964c2fa",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S628",
+      "title": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go",
+      "short_title": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S607",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-5c310ab5",
         "pass": "v1.2",
         "group": "",
         "reason": "",

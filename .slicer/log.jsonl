@@ -7164,3 +7164,5 @@
 {"when": "2026-11-26T04:55:10Z", "item": "S627", "action": "add", "from": "", "to": "open", "note": "before round 1, check that each path argument in a slice's Check commands exists in the worktree (S615)"}
 {"when": "2026-11-26T04:55:10Z", "item": "S627", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-26T04:55:11Z", "item": "S627", "action": "note", "from": "", "to": "", "note": "possible duplicate of S615, S626", "by": "Jon Robbins"}
+{"when": "2026-11-27T12:43:38Z", "item": "S628", "action": "add", "from": "", "to": "open", "note": "in Base overlays, also list the cross-package test commands for packages that import the reverted file, such as ./internal/cli for engine/brief.go"}
+{"when": "2026-11-27T12:43:38Z", "item": "S628", "action": "promote", "from": "", "to": "", "note": ""}
