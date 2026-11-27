@@ -28,7 +28,7 @@
     },
     {
       "heading": "Check",
-      "body": "- Acceptance: go test ./... passes. After the change a doc quote that disagrees with the test's expected output makes go test ./internal/docscheck fail, and the failure names both strings.\n- `go test -run TestQuotedSpansJoinWrappedLines ./internal/docscheck` passes.\n- `go test -run TestTestStringLiteralsUnquotesGoStrings ./internal/docscheck` passes.\n- `go test -run TestCLIOutputQuoteDisagreementIsFlagged ./internal/docscheck` passes.\n- `go test -run TestCLIOutputQuoteAgreementPasses ./internal/docscheck` passes.\n- `go test -run TestDesignCLIOutputQuotesMatchCLITests ./internal/docscheck` passes. It fails if docs/design.md:4381-4382 is put back to implementer:3 patterns.\n- `go test ./...` passes.\n- `go vet ./...` prints nothing.\n- `gofmt -l ./docscheck` prints nothing."
+      "body": "- Acceptance: go test ./... passes. After the change a doc quote that disagrees with the test's expected output makes go test ./internal/docscheck fail, and the failure names both strings.\n- `go test -run TestQuotedSpansJoinWrappedLines ./internal/docscheck` passes.\n- `go test -run TestTestStringLiteralsUnquotesGoStrings ./internal/docscheck` passes.\n- `go test -run TestCLIOutputQuoteDisagreementIsFlagged ./internal/docscheck` passes.\n- `go test -run TestCLIOutputQuoteAgreementPasses ./internal/docscheck` passes.\n- `go test -run TestDesignCLIOutputQuotesMatchCLITests ./internal/docscheck` passes. It fails if docs/design.md:4381-4382 is put back to implementer:3 patterns.\n- `go test ./...` passes.\n- `go vet ./...` prints nothing.\n- `gofmt -l .` prints nothing."
     },
     {
       "heading": "Git",
