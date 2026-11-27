@@ -31,25 +31,39 @@ func whyContainsTitle(why, title string) bool {
 // NearDuplicateTitles returns similar, unfinished items in list order. Titles
 // are compared as sets of ASCII content words using the Jaccard index.
 func NearDuplicateTitles(title, selfID string, open []slicercli.Item, min float64) []string {
-	words := titleWords(title)
 	var ids []string
 	for _, item := range open {
 		if item.ID == selfID || item.Status == "done" || item.Status == "retired" {
 			continue
 		}
-		other := titleWords(item.Title)
-		intersection := 0
-		for word := range words {
-			if other[word] {
-				intersection++
-			}
-		}
-		union := len(words) + len(other) - intersection
-		if union > 0 && float64(intersection)/float64(union) >= min {
+		if similarTitles(title, item.Title, min) {
 			ids = append(ids, item.ID)
 		}
 	}
 	return ids
+}
+
+// NearDoneTitles returns similar done items in list order, excluding self.
+func NearDoneTitles(title, selfID string, items []slicercli.Item, min float64) []string {
+	var ids []string
+	for _, item := range items {
+		if item.ID != selfID && item.Status == "done" && similarTitles(title, item.Title, min) {
+			ids = append(ids, item.ID)
+		}
+	}
+	return ids
+}
+
+func similarTitles(a, b string, min float64) bool {
+	words, other := titleWords(a), titleWords(b)
+	intersection := 0
+	for word := range words {
+		if other[word] {
+			intersection++
+		}
+	}
+	union := len(words) + len(other) - intersection
+	return union > 0 && float64(intersection)/float64(union) >= min
 }
 
 func titleWords(title string) map[string]bool {
