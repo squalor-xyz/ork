@@ -28206,7 +28206,7 @@
       "id": "S527",
       "title": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output",
       "short_title": "allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -28237,6 +28237,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "16c22c03-ff3c-4ed3-a2a2-80889b7bf853",
+          "kind": "",
+          "text": "**2026-11-27** — Read-only Claude allowlists now include go doc and slicer relay-roles show; eligible reviewers receive the six temp-root slicer write grants, verified by focused tests and mutations.",
+          "created_at": "2026-11-27T19:19:45Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -28256,7 +28270,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

@@ -278,7 +278,7 @@ func TestLocalDispatcherUsesLaunchersAndRowFlags(t *testing.T) {
 
 // localReadOnlyTemplate is the read-only list with its git -C and go -C entries as a
 // template, `*` in place of the worktree (S586, adj 577).
-const localReadOnlyTemplate = "Read,Grep,Glob,Bash(slicer * --help),Bash(slicer ai relay),Bash(ls*),Bash(git ls-files*),Bash(git -C * ls-files*),Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(git merge-base*),Bash(git -C * merge-base*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(slicer check*),Bash(adj show*),Bash(adj check*),Bash(adj lint*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(gofmt -l*)"
+const localReadOnlyTemplate = "Read,Grep,Glob,Bash(slicer * --help),Bash(slicer ai relay),Bash(ls*),Bash(git ls-files*),Bash(git -C * ls-files*),Bash(git diff*),Bash(git log*),Bash(git status*),Bash(git show*),Bash(git -C * diff*),Bash(git -C * log*),Bash(git -C * status*),Bash(git -C * show*),Bash(git merge-base*),Bash(git -C * merge-base*),Bash(slicer show*),Bash(slicer goals*),Bash(slicer list*),Bash(slicer deps*),Bash(slicer find*),Bash(slicer check*),Bash(slicer relay-roles show*),Bash(adj show*),Bash(adj check*),Bash(adj lint*),Bash(go test*),Bash(go vet*),Bash(go -C * test*),Bash(go -C * vet*),Bash(go doc*),Bash(go -C * doc*),Bash(gofmt -l*)"
 
 // localReadOnlyToolsFor is the list a request with this worktree gets: each
 // git -C and go -C entry names the worktree. An empty worktree cannot be pinned,
@@ -439,6 +439,51 @@ func TestClaudeRunnerGivesOnlyTheReviewerATMPDirWriteGrant(t *testing.T) {
 				t.Fatalf("hook allowlist grant = %v for %s: %q", got, tc.vendor, hook)
 			}
 		})
+	}
+}
+
+func TestClaudeRunnerGivesOnlyTheReviewerTheTempSlicerWrites(t *testing.T) {
+	const tmp = "/state/t/run/role-1"
+	for _, vendor := range []string{"claude", "claude-local"} {
+		for _, tc := range []struct {
+			name, role, tmp string
+			readOnly, want  bool
+		}{
+			{"reviewer", engine.RoleReviewer, tmp, true, true},
+			{"without TMPDir", engine.RoleReviewer, "", true, false},
+			{"gate", engine.RoleGate, tmp, true, false},
+			{"architect", engine.RoleArchitect, tmp, true, false},
+			{"spec check", engine.RoleSpecCheck, tmp, true, false},
+			{"UI pass", engine.RoleUI, tmp, true, false},
+			{"write reviewer", engine.RoleReviewer, tmp, false, false},
+		} {
+			t.Run(vendor+"/"+tc.name, func(t *testing.T) {
+				var spec claude.Spec
+				var hook []string
+				r := claudeRunner{
+					approval: func(_ context.Context, _ engine.Request, allow []string, _ string) (string, func() []runrec.DeniedCommand, error) {
+						hook = slices.Clone(allow)
+						return "hook", func() []runrec.DeniedCommand { return nil }, nil
+					},
+					round: func(_ context.Context, s claude.Spec) (claude.Round, error) {
+						spec = s
+						return claude.Round{Class: claude.ClassOK}, nil
+					},
+				}
+				if _, err := r.Run(context.Background(), engine.Request{Vendor: vendor, Role: tc.role, ReadOnly: tc.readOnly, Worktree: "/work/tree", TempDir: t.TempDir(), TMPDir: tc.tmp, Brief: "brief"}); err != nil {
+					t.Fatal(err)
+				}
+				for _, sub := range []string{"init", "add", "set", "note", "done", "relay-roles"} {
+					entry := "Bash(slicer " + sub + "* --root " + tmp + ")"
+					if got := slices.Contains(spec.Allowlist, entry); got != tc.want {
+						t.Errorf("Spec contains %s = %v, want %v", entry, got, tc.want)
+					}
+					if got, want := slices.Contains(hook, entry), tc.want && vendor == "claude-local"; got != want {
+						t.Errorf("hook contains %s = %v, want %v", entry, got, want)
+					}
+				}
+			})
+		}
 	}
 }
 

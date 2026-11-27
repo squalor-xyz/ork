@@ -2738,7 +2738,8 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   absolute, or holds a space, `*`, `,`, a quote or a parenthesis, drops every
   `git -C` and `go -C` entry instead (adj 580). The list also allows
   `slicer show`, `slicer goals`, `slicer list`, `slicer deps`, `slicer find`,
-  `slicer check` (adj 504, including `slicer check --root DIR`), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet` (also
+  `slicer check` (adj 504, including `slicer check --root DIR`),
+  `slicer relay-roles show` (adj 634), `adj show`, `adj check`, `adj lint` (adj 499), `go test`, `go vet`, `go doc` (also
   with `go -C`) and `gofmt -l`, with trailing argument wildcards, including
   `adj lint --root DIR`. S358 adds an exact-file Edit/Write exception for
   the local progress note described under Roles.
@@ -2761,6 +2762,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   Reviewer and gate briefs carry a generic line saying socket-bound failures
   are sandbox-limited, ork's round check is the evidence, and the role need
   not run `go test ./...`; it names no package (S606, adj 616).
+  A reviewer also gets `slicer init`, `add`, `set`, `note`, `done` and
+  `relay-roles` writes with a final, literal `--root` naming its own process
+  temp dir (S527, adj 634 and 639), under the same reviewer-only condition as
+  the temp-dir write grant (S510). The temp path must be absolute, clean and
+  need no shell quoting. Other roots and trailing arguments are refused.
   It allows no other edits, broad Bash or tracking-write commands. The cloud
   UI pass keeps its scoped render-directory write grant and Skill (adj 372).
   Local Claude roles use manual permission mode (adj 328-331). ork installs
