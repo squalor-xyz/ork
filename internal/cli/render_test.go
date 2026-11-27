@@ -456,6 +456,24 @@ func TestUIPassBriefListsEveryRenderFixture(t *testing.T) {
 	}
 }
 
+func TestRenderFixtureDocsListEveryFixture(t *testing.T) {
+	for _, doc := range []string{"guide.md", "design.md"} {
+		t.Run(doc, func(t *testing.T) {
+			data, err := os.ReadFile(filepath.Join("..", "..", "docs", doc))
+			if err != nil {
+				t.Fatal(err)
+			}
+			for _, name := range renderFixtureNames {
+				t.Run(name, func(t *testing.T) {
+					if !strings.Contains(string(data), "`"+name+"`") {
+						t.Errorf("docs/%s lacks exact render fixture name %q", doc, name)
+					}
+				})
+			}
+		})
+	}
+}
+
 func TestRenderCLIViewsWritesFiles(t *testing.T) {
 	if flag.Lookup("renders") == nil {
 		t.Fatal("missing -renders test flag")

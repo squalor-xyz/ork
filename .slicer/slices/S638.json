@@ -1,0 +1,39 @@
+{
+  "id": "S638",
+  "title": "Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261127-134347-4da8 for S611 (discovered from S611):\n\nScope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document\nCONFIRMED by grep: `docs/design.md:4447` has its own copies of `` `matrix-copy-preview` ``, `` `matrix-copy-ask` `` and `` `matrix-copy-stale-preview` ``. If one of those three is dropped from the fixture list at `docs/design.md:838`, `TestRenderFixtureDocsListEveryFixture/design.md/...` stays green.\nThe implementer's mutation table (every code span in the whole document replaced) does not cover this case. The slice spec and the 2026-11-27 owner note ask for names \"in docs/guide.md and docs/design.md\", so the whole-document check meets the contract. This is not a `[fix]`.\nA follow-up could cut the paragraph out between fixed openers, as `TestUIPassBriefListsEveryRenderFixture` does (`render_test.go:438-445`).\nImportance: 1\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

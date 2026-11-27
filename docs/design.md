@@ -844,6 +844,8 @@ slice.
     in the brief under Your files. The pass
     copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
     names for the approval card.
+    `TestRenderFixtureDocsListEveryFixture` checks that this document and the
+    guide include every additional render fixture by its exact name.
     No renders expected (*proposed*, S584; adj 600): ork skips the run's own
     tracking paths under `.slicer/` and `landed-changed/` in the branch's diff.
     When at least one path is left and every path left is a `_test.go` file
@@ -3507,7 +3509,14 @@ checks. An entry whose command word matches a path in the slice's Files is
 exempt only when that path does not exist in the worktree (or the checkout
 before the worktree exists), ignoring line anchors and a leading `./`; an
 existing Files path goes through the PATH and executable-file lookups above
-(S572). Check-entry warnings refuse
+(S572). Each backticked Check entry also warns for each distinct relative
+path argument containing `/` that does not exist in the worktree and is not
+listed in Files. A missing directory containing a Files path is exempt too
+(adj 615). Flags, URLs, quoted or escaped words, globs (including `./...`),
+absolute paths, paths outside the worktree, values after `-run`, `-bench`
+and `-skip`, `rev:path` words, and import paths whose first element contains
+a dot (except `.` and `..`) are excluded (adj 614).
+Check-entry warnings refuse
 `run.start` and the affected member of `wave.start` before a role starts. The
 refusal names the item and each entry and asks the owner to edit Check and
 start again. The spec check reports these entries as deterministic findings,

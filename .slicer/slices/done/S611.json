@@ -16,11 +16,11 @@
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "`internal/cli/render_test.go:428`: renderFixtureNames and TestUIPassBriefListsEveryRenderFixture; add exact-name documentation coverage beside the existing brief test.\n`docs/guide.md:1005`: CLI render fixture list; document its coverage check.\n`docs/design.md:835`: CLI render fixture list; document its coverage check.\n`internal/engine/brief.go:233`: existing UI brief fixture list, verified complete; no edit needed."
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "No failing tests were specified. `TestUIPassBriefListsEveryRenderFixture` at `internal/cli/render_test.go:430` already covers the UI brief. Add `TestRenderFixtureDocsListEveryFixture` at `internal/cli/render_test.go:459` for exact backtick-delimited names in docs/guide.md and docs/design.md. Both documents already contain all current names, so baseline coverage is expected to pass; mutation-check longer-name substitutions independently for each fixture and document."
     },
     {
       "heading": "Implement",

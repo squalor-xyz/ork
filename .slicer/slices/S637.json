@@ -1,0 +1,39 @@
+{
+  "id": "S637",
+  "title": "give the gate a fresh base overlay for the fix round's changed file so a revert check runs without the earlier role temp dir",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261127-131405-8913, project ork, item S615:\n\ngive the gate a fresh base overlay for the fix round's changed file so a revert check runs without the earlier role temp dir\n\nEvidence: earlier reviewer temp dir was removed from the working directories; no Base overlays section in the gate brief"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

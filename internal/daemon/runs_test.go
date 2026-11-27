@@ -4251,6 +4251,49 @@ func TestPlanWarnsOnANonCommandCheckEntry(t *testing.T) {
 	}
 }
 
+func TestRunStartRefusesAMissingCheckPathArgument(t *testing.T) {
+	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
+	proj, err := rig.d.registered("p")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.MkdirAll(proj.Path, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(proj.Path, "go.mod"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	raw := `{"id":"S1","slice":{"id":"S1","sections":[{"heading":"Check","body":"- ` + "`gofmt -l ./roles`" + `"}]}}`
+	if err := os.WriteFile(filepath.Join(rig.root, "S1.json"), []byte(raw), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	plan := launchPlan(t, rig.d, `{"project":"p","item":"S1"}`)
+	want := `Check entry "gofmt -l ./roles": path argument "./roles" does not exist in the worktree`
+	if len(plan.Warnings) != 1 || plan.Warnings[0] != want {
+		t.Errorf("warnings %q, want %q", plan.Warnings, want)
+	}
+	_, err = rig.d.handle(context.Background(), MethodRunStart, json.RawMessage(`{"project":"p","item":"S1"}`))
+	if re := ipc.ErrorOf(err); err == nil || re.Code != CodeRefused {
+		t.Errorf("must refuse missing Check path: %v", err)
+	} else {
+		for _, text := range []string{"S1", "./roles", "edit the Check section", "start again"} {
+			if !strings.Contains(re.Message, text) {
+				t.Errorf("refusal %q lacks %q", re.Message, text)
+			}
+		}
+	}
+	if runs, err := rig.store.List(); err != nil || len(runs) != 0 {
+		t.Errorf("refusal created runs: %+v %v", runs, err)
+	}
+	if err := os.MkdirAll(filepath.Join(proj.Path, "roles"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	var rec runrec.Record
+	if err := json.Unmarshal(request(t, rig.d, MethodRunStart, `{"project":"p","item":"S1"}`), &rec); err != nil || rec.ID == "" {
+		t.Fatalf("existing path start: %+v %v", rec, err)
+	}
+}
+
 func TestRunStartRefusesANonCommandCheckEntry(t *testing.T) {
 	rig := newSpecRig(t, rulesJSON("A reviewer never wrote code.", u11))
 	proj, err := rig.d.registered("p")
