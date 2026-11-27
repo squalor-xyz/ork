@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 655,
+  "next_id": 656,
   "preamble": "",
   "passes": [
     {
@@ -34727,6 +34727,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S655",
+      "title": "When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer",
+      "short_title": "When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S631",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-8fc3bae8",
         "pass": "v1.2",
         "group": "",
         "reason": "",
