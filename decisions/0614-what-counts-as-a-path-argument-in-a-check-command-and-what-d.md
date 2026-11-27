@@ -2,7 +2,7 @@
 {
   "id": 614,
   "title": "What counts as a path argument in a Check command, and what does a missing one do before round 1?",
-  "status": "decided",
+  "status": "superseded",
   "key": "checks.path-arguments",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -25,6 +25,7 @@
   },
   "decision": "refuse",
   "rationale": "Owner chose 'Refuse the start' in an interactive question, relay session 8d711f67, 2026-11-27.",
+  "superseded_by": 621,
   "refs": [
     "S615"
   ],
@@ -36,6 +37,11 @@
     {
       "date": "2026-11-27",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-27",
+      "event": "supersede",
+      "note": "by 621"
     }
   ]
 }

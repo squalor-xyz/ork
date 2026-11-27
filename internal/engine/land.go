@@ -45,6 +45,14 @@ func (e *Engine) land(ctx context.Context) error {
 	pauseWith := func(reason string) error {
 		return e.pause(runrec.Pending{Kind: runrec.PendingError, State: runrec.StateLand, Reason: reason})
 	}
+	releaseMain, err := e.lockMain(ctx)
+	if err != nil {
+		if ctx.Err() != nil {
+			return ctx.Err()
+		}
+		return pauseWith(oneLine("git rev-parse --git-common-dir: " + err.Error()))
+	}
+	defer releaseMain()
 	if B == "" || W == "" || strings.HasPrefix(B, "-") || strings.HasPrefix(W, "-") {
 		return pauseWith("the run has no usable branch and worktree to land")
 	}
@@ -71,33 +79,39 @@ func (e *Engine) land(ctx context.Context) error {
 		// landed on the base in that gap (another writer, or this landing's
 		// own tracking commit while an older merge was still open) is the
 		// same kind of move: merge it in once more. One retry. A further
-		// overlap, or a base that moves again, pauses: the overlap as above,
-		// the commit at the fast-forward with git's own message (S377).
-		for first := true; ; first = false {
-			proceed, err := e.mergeBaseIn(ctx, e.run.Snapshot(), base)
-			if !proceed {
-				return err
+		// overlap pauses as above (S377). If an outside commit defeats the
+		// fast-forward, repeat the merge-in passes once (S614, adj 601).
+		for attempt := 0; ; attempt++ {
+			for first := true; ; first = false {
+				proceed, err := e.mergeBaseIn(ctx, e.run.Snapshot(), base)
+				if !proceed {
+					return err
+				}
+				committed, reason := e.checkMain(ctx, P, base, B, rec.Item, first)
+				if reason != "" {
+					return pauseWith(reason)
+				}
+				if committed {
+					continue
+				}
+				has, err := e.isAncestor(ctx, W, base, "HEAD")
+				if err != nil {
+					return pauseWith("git merge-base: " + err.Error())
+				}
+				if has || !first {
+					break
+				}
 			}
-			committed, reason := e.checkMain(ctx, P, base, B, rec.Item, first)
-			if reason != "" {
+			if reason := e.probeContract(ctx, W); reason != "" {
 				return pauseWith(reason)
 			}
-			if committed {
-				continue
+			if _, err := e.gitWrite(ctx, P, "merge", "--ff-only", B); err != nil {
+				if has, ancestorErr := e.isAncestor(ctx, W, base, "HEAD"); ancestorErr == nil && !has && attempt == 0 {
+					continue
+				}
+				return pauseWith(oneLine("git merge --ff-only " + B + ": " + errText(err)))
 			}
-			has, err := e.isAncestor(ctx, W, base, "HEAD")
-			if err != nil {
-				return pauseWith("git merge-base: " + err.Error())
-			}
-			if has || !first {
-				break
-			}
-		}
-		if reason := e.probeContract(ctx, W); reason != "" {
-			return pauseWith(reason)
-		}
-		if _, err := e.gitWrite(ctx, P, "merge", "--ff-only", B); err != nil {
-			return pauseWith(oneLine("git merge --ff-only " + B + ": " + errText(err)))
+			break
 		}
 	}
 	// The last sliver of a chain lands the parent once (S62). A lone sliver, and
