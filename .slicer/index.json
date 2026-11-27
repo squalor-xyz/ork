@@ -33507,7 +33507,7 @@
       "id": "S633",
       "title": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output",
       "short_title": "add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -33517,6 +33517,20 @@
           "text": "**2026-11-27** — Owner decision (adj 629): three fixtures, wait-block (one run, text block with a pause, question and decision key, including the S621 slot-wait state), wait-lines (several runs, one line each) and wait-stop (stage end, timeout and nothing-active messages); add each to renderFixtureNames, the UI pass brief's fixture list, docs/guide.md and docs/design.md, with a renderViews entry and a TestRenderCLIViewsWritesFiles case each. Jon chose 'Three shapes', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T15:46:34Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "5114fbbb-4654-48d7-97c2-5049cb77f09a",
+          "kind": "",
+          "text": "**2026-11-27** — `-render-fixture` now offers wait-block, wait-lines and wait-stop. Together they render every `ork wait` output shape, and the question pause in `wait-block` shows the `ork answer r1 TEXT` hint the daemon gives. The UI pass brief, `docs/guide.md` and `docs/design.md` list them. The full suite, vet, gofmt and `slicer check` pass.",
+          "created_at": "2026-11-27T16:38:30Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -33543,7 +33557,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

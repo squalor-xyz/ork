@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-639 items · — 59 · done 433 · retired 147
+639 items · — 58 · done 434 · retired 147
 
 ## v1.3
 
@@ -392,7 +392,7 @@ v1.2
 | 335 | [S630](slices/S630.md) | accept the Tests line when it is a list item, or say in the prompt that a leading "- " is refused |  | - |  | discovered from S614 | — |
 | 336 | [S631](slices/S631.md) | when tool feedback is filed as a slice, check it against slices that landed after the feedback's run, and drop or link it when one already covers it |  | - |  | discovered from S605 | — |
 | 337 | [S632](slices/S632.md) | For a revert check where the base file does not build against the new tests, give a ready overlay that reverts both the Go file and its test file |  | - |  | discovered from S621 | — |
-| 338 | [S633](slices/S633.md) | add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output |  | - |  | discovered from S621 | — |
+| 338 | [S633](slices/S633.md) | add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output |  | - |  | discovered from S621 | done |
 | 339 | [S634](slices/S634.md) | give a base overlay for check.go that also reverts brief.go when brief.go reads the new field, so the check.go revert check builds |  | - |  | discovered from S615 | — |
 | 340 | [S635](slices/S635.md) | when an owner answer arrives and the tree is unchanged, say in the resumed brief that no fix round ran yet |  | - |  | discovered from S615 | — |
 | 341 | [S636](slices/S636.md) | Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing | S | - |  |  | — |

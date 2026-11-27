@@ -1007,8 +1007,11 @@ write only `NAME.txt` for each name. The names are the five above (without
 `.txt`) and `projects-set`, `projects-set-refusals`, `wave-start`,
 `status-queued-held`, `status-engine`, `summary-real`, `projects-setup`,
 `fake-reply`, `matrix-copy-preview`, `matrix-copy-ask`,
-`matrix-copy-stale-preview` and `wave-start-finding` (a wave start with `--yes` that holds one
-item on a Check finding and starts the other). A view of several commands puts a `$ ork ARGS` line, with the
+`matrix-copy-stale-preview`, `wave-start-finding` (a wave start with `--yes` that holds one
+item on a Check finding and starts the other), `wait-block` (`ork wait` on one run: the text
+block of a question pause with its decision key, a shape pause with none, and the slot-wait
+run that stops on a new question), `wait-lines` (several runs, one line each) and `wait-stop`
+(the stage-end line, the timeout message and the nothing-active messages) (adj 629). A view of several commands puts a `$ ork ARGS` line, with the
 arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`
 the render test writes nothing. The pass copies selected scratch files into

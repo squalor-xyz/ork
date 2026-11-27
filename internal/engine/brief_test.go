@@ -1206,7 +1206,8 @@ func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
 }
 
 // The UI pass brief says that -renders alone writes five files and names the
-// -render-fixture flag with the twelve fixtures it adds (S607, adj 542).
+// -render-fixture flag with the fifteen fixtures it adds (S607, adj 542; S633,
+// adj 629).
 func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 	in := baseBrief()
 	in.Role = RoleUI
@@ -1218,7 +1219,7 @@ func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 		"This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory",
 		"`-render-fixture NAME[,NAME...]`",
 		"writes only NAME.txt for each name",
-		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview and wave-start-finding",
+		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("UI brief lacks %q", want)

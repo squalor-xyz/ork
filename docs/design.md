@@ -835,10 +835,14 @@ slice.
     writes only `NAME.txt` for each name: those five and `projects-set`,
     `projects-set-refusals`, `wave-start`, `status-queued-held`,
     `status-engine`, `summary-real`, `projects-setup`, `fake-reply`,
-    `matrix-copy-preview`, `matrix-copy-ask`, `matrix-copy-stale-preview` and
+    `matrix-copy-preview`, `matrix-copy-ask`, `matrix-copy-stale-preview`,
     `wave-start-finding` (a wave start with `--yes` that holds one item on a
-    Check finding and starts the other) (adj 542). With no flag it writes
-    nothing.
+    Check finding and starts the other), `wait-block` (`ork wait` on one run:
+    the text block of a question pause with its decision key, a shape pause
+    with none, and the slot-wait run that stops on a new question),
+    `wait-lines` (several runs, one line each) and `wait-stop` (the stage-end
+    line, the timeout message and the nothing-active messages) (adj 542,
+    adj 629). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). These are scratch files in the role's temp directory named
     in the brief under Your files. The pass
