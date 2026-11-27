@@ -1,0 +1,39 @@
+{
+  "id": "S630",
+  "title": "accept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261126-022730-61cc, project ork, item S614:\n\naccept the Tests line when it is a list item, or say in the prompt that a leading \"- \" is refused\n\nEvidence: gate-2 was refused for \"no Tests: N passed, M failed line\" when the line was written as \"- Tests: 3 passed, 0 failed\""
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
