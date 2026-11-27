@@ -618,7 +618,10 @@ fails it. ork does not run a piped line; the orchestrator runs it and judges it
 by its last command, by the same rule. A line not worded that way must exit 0.
 Backticked entries that are not commands refuse a start and hold the spec
 check or draft; paths listed in Files that do not exist yet are exempt, so edit Check before
-starting again when ork names a non-command entry.
+starting again when ork names a non-command entry. Give each command its own
+backticked entry, because ork applies the entry's wording to the backticked
+command only; an entry whose text names a second command outside the
+backticks is flagged the same way.
 
 ## 8. Watch it
 

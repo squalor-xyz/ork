@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-639 items · — 59 · done 433 · retired 147
+639 items · — 58 · done 434 · retired 147
 
 ## v1.3
 
@@ -395,7 +395,7 @@ v1.2
 | 338 | [S633](slices/S633.md) | add an ork wait fixture to -render-fixture so the UI pass does not need an overlay test for wait output |  | - |  | discovered from S621 | — |
 | 339 | [S634](slices/S634.md) | give a base overlay for check.go that also reverts brief.go when brief.go reads the new field, so the check.go revert check builds |  | - |  | discovered from S615 | — |
 | 340 | [S635](slices/S635.md) | when an owner answer arrives and the tree is unchanged, say in the resumed brief that no fix round ran yet |  | - |  | discovered from S615 | — |
-| 341 | [S636](slices/S636.md) | Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing | S | - |  |  | — |
+| 341 | [S636](slices/S636.md) | Check lint: flag an entry whose text names a second command or an output claim that belongs to another command, such as `go test ./...` passes; go vet ./... prints nothing | S | - |  |  | done |
 | 342 | [S637](slices/S637.md) | give the gate a fresh base overlay for the fix round's changed file so a revert check runs without the earlier role temp dir |  | - |  | discovered from S615 | — |
 | 343 | [S638](slices/S638.md) | Scope the fixture docs check to the `-render-fixture` list paragraph instead of the whole document |  | 1 |  | discovered from S611 | — |
 | 344 | [S639](slices/S639.md) | when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text |  | - |  | discovered from S606 | — |

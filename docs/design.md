@@ -3531,6 +3531,12 @@ listed in Files. A missing directory containing a Files path is exempt too
 absolute paths, paths outside the worktree, values after `-run`, `-bench`
 and `-skip`, `rev:path` words, and import paths whose first element contains
 a dot (except `.` and `..`) are excluded (adj 614).
+A backticked Check entry whose text outside the backticks has a clause-leading
+`go`, `gofmt`, `git`, `slicer`, `adj` or `ork` followed by an argument also
+warns, naming that command, once for each such command. A clause starts after
+a word ending in `,` or `;`, after a sentence-ending `.`, and after `and` or
+`or`. The refusal, spec check finding and draft problem are the same as for
+the other entry warnings (adj 628).
 Check-entry warnings refuse
 `run.start` and the affected member of `wave.start` before a role starts. The
 refusal names the item and each entry and asks the owner to edit Check and
