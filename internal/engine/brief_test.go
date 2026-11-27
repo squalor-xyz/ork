@@ -416,6 +416,78 @@ func TestResumedBriefUnchangedLine(t *testing.T) {
 	}
 }
 
+func resumedSection(t *testing.T, mutate func(*BriefInput)) string {
+	t.Helper()
+	in := baseBrief()
+	in.Resumed = true
+	mutate(&in)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	s, _ := section(got, "## Resumed session")
+	return s
+}
+
+const (
+	unchangedSentence  = "The tree is unchanged since round 2, when you last reported."
+	doneSentence       = "The slice is marked done."
+	noFixRoundSentence = "No fix round has run since then."
+	fixRoundSentence   = "A fix round ran after that report and left the tree unchanged."
+)
+
+func TestResumedBriefDoneUnchangedLine(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) { in.TreeUnchangedSince = 2; in.SliceDone = true })
+	for _, want := range []string{unchangedSentence, doneSentence, noFixRoundSentence, "read again every file you cite"} {
+		if !strings.Contains(s, want) {
+			t.Errorf("section lacks %q:\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, fixRoundSentence) {
+		t.Errorf("section says a fix round ran:\n%s", s)
+	}
+}
+
+func TestResumedBriefDoneUnchangedAfterFixRoundLine(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) {
+		in.TreeUnchangedSince = 2
+		in.SliceDone = true
+		in.FixRoundSince = true
+	})
+	for _, want := range []string{unchangedSentence, doneSentence, fixRoundSentence} {
+		if !strings.Contains(s, want) {
+			t.Errorf("section lacks %q:\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, noFixRoundSentence) {
+		t.Errorf("section says no fix round ran:\n%s", s)
+	}
+}
+
+func TestResumedBriefUnchangedNotDoneOmitsDoneLine(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) { in.TreeUnchangedSince = 2 })
+	for _, want := range []string{unchangedSentence, noFixRoundSentence} {
+		if !strings.Contains(s, want) {
+			t.Errorf("section lacks %q:\n%s", want, s)
+		}
+	}
+	if strings.Contains(s, doneSentence) {
+		t.Errorf("section says the slice is done:\n%s", s)
+	}
+}
+
+func TestResumedBriefChangedTreeOmitsNoChangeLines(t *testing.T) {
+	s := resumedSection(t, func(in *BriefInput) { in.SliceDone = true })
+	for _, bad := range []string{"marked done", noFixRoundSentence, fixRoundSentence} {
+		if strings.Contains(s, bad) {
+			t.Errorf("changed-tree section contains %q:\n%s", bad, s)
+		}
+	}
+	if !strings.Contains(s, "run git status and git diff") {
+		t.Errorf("git re-run instruction missing:\n%s", s)
+	}
+}
+
 func localImplementerBrief(t *testing.T) string {
 	t.Helper()
 	in := baseBrief()

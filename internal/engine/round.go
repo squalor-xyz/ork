@@ -5,6 +5,7 @@ package engine
 import (
 	"context"
 	"crypto/sha256"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -21,6 +22,15 @@ import (
 )
 
 const heartbeatInterval = 10 * time.Minute
+
+// sliceStatusDone reports whether the top-level status of `slicer show --json
+// --lean` output is "done". A parse failure is false (S455, adj 645, *proposed*).
+func sliceStatusDone(raw []byte) bool {
+	var s struct {
+		Status string `json:"status"`
+	}
+	return json.Unmarshal(raw, &s) == nil && s.Status == "done"
+}
 
 const localFreshTokens = 70000
 
@@ -633,7 +643,7 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 	}
 	in := BriefInput{
 		Role: r.role, SliceID: rec.Item, Worktree: rec.Worktree, TempDir: tempDir, TMPDir: tmpDir, ReportPath: reportPath,
-		SliceJSON: string(sliceJSON), EnvLines: e.proj.EnvironmentLines,
+		SliceJSON: string(sliceJSON), SliceDone: sliceStatusDone(sliceJSON), EnvLines: e.proj.EnvironmentLines,
 		CheckCommand: e.proj.CheckCommand,
 		Allow:        perm.Allow,
 		UIDoc:        e.proj.UIDoc,
@@ -754,6 +764,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 				}
 				if old.Session == session && old.StartTreeSHA256 != "" && old.StartTreeSHA256 == startTree {
 					in.TreeUnchangedSince = old.Round
+					// S455, adj 645, *proposed*: say whether a fix round ran since.
+					for _, later := range rec.Roles {
+						if later.Role == RoleImplementer && later.Round > old.Round {
+							in.FixRoundSince = true
+						}
+					}
 				}
 				break
 			}

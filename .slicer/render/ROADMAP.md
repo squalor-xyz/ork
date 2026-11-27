@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-652 items · — 40 · done 442 · retired 170
+652 items · — 39 · done 443 · retired 170
 
 ## v1.3
 
@@ -214,7 +214,7 @@ v1.2
 | 157 | [S452](slices/S452.md) | Start the reviewer without Claude Code plan mode, or say in the brief that a plan-mode ExitPlanMode instruction is to be ignored |  | - |  | Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418 | retired |
 | 158 | [S453](slices/S453.md) | Resume the gate without Claude Code plan mode until S418 lands in the daemon binary |  | - |  | Duplicate of S418 (cloud Claude read-only roles off plan mode, adj 489), filed while S418 ran. · discovered from S418 | retired |
 | 159 | [S454](slices/S454.md) | Landing commits new slice files | S | 1 |  | 2026-11-18: commit f197f7dc "Tracking edits on main before landing S418" committed `.slicer/index.json` with S452 and S453 in it but left `.slicer/slices/S452.json`, `.slicer/slices/S453.json` and their renders untracked on main; the S418 worktree then failed `slicer check` and the run paused asking where the bodies were (run ork-20261118-225521-b892). The same happened with S446/S447 (S444) and S450 earlier the same day. | done |
-| 160 | [S455](slices/S455.md) | Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change |  | - |  | discovered from S418 | — |
+| 160 | [S455](slices/S455.md) | Skip the gate round, or say so in the brief, when the slice is already done and the round's implementer made no change |  | - |  | discovered from S418 | done |
 | 161 | [S456](slices/S456.md) | give read-only reviewer runs the new short TMPDIR too, so a reviewer can check a socket-length slice like S437 directly |  | - |  | Covered: every role gets the short runrec.RoleTMPDir (internal/engine/round.go:578); Jon chose 'Retire all 9' in triage, session 8d711f67, 2026-11-27. · discovered from S437 | retired |
 | 162 | [S457](slices/S457.md) | flag docs whose example CLI output strings disagree with the expected output in cli_test.go |  | - |  | discovered from S345 | — |
 | 163 | [S458](slices/S458.md) | Read-only roles may run adj lint | S | - |  | discovered from S345 | done |

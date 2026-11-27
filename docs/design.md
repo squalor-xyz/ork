@@ -2014,6 +2014,13 @@ The reviewer is not told to run the suite.
     On resume, if the previous row of that role belongs to the
     resumed session and has the same fingerprint, the section says
     "The tree is unchanged since round N, when you last reported."
+    *Proposed (S455, adj 645):* that section then also says "The slice is
+    marked done." when the slice's tracking status is done (the top-level
+    `status` of the `slicer show --json --lean` ork already reads), and one of
+    two sentences: "No fix round has run since then." or, when an implementer
+    round ran after that report, "A fix round ran after that report and left
+    the tree unchanged." The gate round still runs; the lines only say what
+    happened since the role's last report.
     It drops the git status and git diff re-run instructions, including in
     Done when, but keeps re-reading every cited file (adj 490).
     Missing fingerprints in older records and changed contents keep the
