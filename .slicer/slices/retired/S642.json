@@ -1,0 +1,39 @@
+{
+  "id": "S642",
+  "title": "list a ready overlay command that prints each new render fixture's text so a reviewer can read the views without writing a probe test",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #631 was decided to file it:\n\nProposal: list a ready overlay command that prints each new render fixture's text so a reviewer can read the views without writing a probe test\nRole: reviewer\nRun: ork-20261127-160126-bfbb\nProject: ork\nItem: S633\nEvidence: I wrote TestProbeWaitViews in my temp dir only to t.Log renderViewText for wait-block, wait-lines and wait-stop"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
