@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 639,
+  "next_id": 640,
   "preamble": "",
   "passes": [
     {
@@ -33639,6 +33639,34 @@
         "importance": 1,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S639",
+      "title": "when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text",
+      "short_title": "when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S606",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-950e3088",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

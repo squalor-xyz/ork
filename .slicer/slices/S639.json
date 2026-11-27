@@ -1,0 +1,39 @@
+{
+  "id": "S639",
+  "title": "when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "A role proposed this as tool feedback, and adj #626 was decided to file it:\n\nProposal: when a slice in the run delivers the outcome of another open item with a near-identical title, list that item under Likely duplicates by comparing titles, not only against the Why text\nRole: reviewer\nRun: ork-20261127-141302-0a36\nProject: ork\nItem: S606\nEvidence: S530 asks for the same reviewer-brief sandbox line that S606 adds, but the brief's Likely duplicates said none"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
