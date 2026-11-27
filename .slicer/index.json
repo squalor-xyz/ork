@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 658,
+  "next_id": 659,
   "preamble": "",
   "passes": [
     {
@@ -34885,6 +34885,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-2b2466ca",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S658",
+      "title": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step",
+      "short_title": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S538",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-a9342d54",
         "pass": "v1.2",
         "group": "",
         "reason": "",
