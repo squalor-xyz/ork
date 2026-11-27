@@ -7444,3 +7444,5 @@
 {"when": "2026-11-27T19:19:16Z", "item": "S648", "action": "add", "from": "", "to": "open", "note": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too"}
 {"when": "2026-11-27T19:19:17Z", "item": "S648", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T19:19:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T19:19:44Z", "item": "S649", "action": "add", "from": "", "to": "open", "note": "give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line"}
+{"when": "2026-11-27T19:19:44Z", "item": "S649", "action": "promote", "from": "", "to": "", "note": ""}

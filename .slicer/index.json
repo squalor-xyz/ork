@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 649,
+  "next_id": 650,
   "preamble": "",
   "passes": [
     {
@@ -34403,6 +34403,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S649",
+      "title": "give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line",
+      "short_title": "give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S527",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-23c73137",
         "pass": "v1.2",
         "group": "",
         "reason": "",
