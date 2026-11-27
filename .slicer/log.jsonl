@@ -7563,3 +7563,16 @@
 {"when": "2026-11-27T21:43:37Z", "item": "S657", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T21:48:31Z", "item": "S658", "action": "add", "from": "", "to": "open", "note": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step"}
 {"when": "2026-11-27T21:48:31Z", "item": "S658", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:50:53Z", "item": "S659", "action": "add", "from": "", "to": "open", "note": "Base overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread"}
+{"when": "2026-11-27T21:50:53Z", "item": "S659", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:54:06Z", "item": "S526", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 661): also add a Check command list to t", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:54:18Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T21:54:18Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T21:54:18Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T21:54:19Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T21:54:19Z", "item": "S654", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-27T21:54:20Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Check"}

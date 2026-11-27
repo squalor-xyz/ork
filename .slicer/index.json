@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 659,
+  "next_id": 660,
   "preamble": "",
   "passes": [
     {
@@ -28321,6 +28321,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "3370246b-e588-479e-9739-95d99cbc8336",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 661): also add a Check command list to the reviewer brief, built the same way as the gate's, with the quoted -run form; the ## Slice JSON stays as stored. Jon chose 'Reviewer command list', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T21:54:06Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -34927,6 +34941,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-a9342d54",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S659",
+      "title": "Base overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread",
+      "short_title": "Base overlays could flag a new exported symbol whose only test sits in an importer, so a \"no test covers it\" note on the defining package is not misread",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S538",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-b4cd3d6b",
         "pass": "v1.2",
         "group": "",
         "reason": "",
