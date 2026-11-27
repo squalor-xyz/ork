@@ -1373,7 +1373,7 @@ func sliverItems(slivers []SliverPlan) []string {
 
 // newChainID links the run records of one sliver chain.
 func newChainID(now time.Time) string {
-	b := make([]byte, 2)
+	b := make([]byte, 4)
 	rand.Read(b)
 	return "chain-" + now.UTC().Format("20060102-150405") + "-" + hex.EncodeToString(b)
 }
@@ -1670,7 +1670,7 @@ func stoppedNext(rec runrec.Record, stored []*runrec.Run) string {
 // newWaveID returns a wave id in the form docs/state.md shows. A run started
 // alone is a wave of one. The generator is proposed.
 func newWaveID(now time.Time) string {
-	b := make([]byte, 2)
+	b := make([]byte, 4)
 	rand.Read(b)
 	return "wave-" + now.UTC().Format("20060102-150405") + "-" + hex.EncodeToString(b)
 }

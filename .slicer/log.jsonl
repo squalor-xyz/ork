@@ -7584,6 +7584,9 @@
 {"when": "2026-11-27T21:54:19Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-27T21:54:20Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-27T21:55:03Z", "item": "S649", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-27T21:55:14Z", "item": "S654", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:09:58Z", "item": "S654", "action": "note", "from": "", "to": "", "note": "Run, chain and wave IDs now end in 8 hex digits, and engine.", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:09:58Z", "item": "S654", "action": "status", "from": "started", "to": "done", "note": "Run, chain and wave IDs now end in 8 hex digits, and engine.New retries the run create up to 8 times with a fresh suffix on file exists; go test ./..., go vet and gofmt are clean.", "by": "Jon Robbins"}
 {"when": "2026-11-27T21:55:48Z", "item": "S649", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-27T22:04:41Z", "item": "S649", "action": "note", "from": "", "to": "", "note": "The gate may report a base-overlay revert failure on its own", "by": "Jon Robbins"}
 {"when": "2026-11-27T22:04:41Z", "item": "S649", "action": "status", "from": "started", "to": "done", "note": "The gate may report a base-overlay revert failure on its own `Intended red: N failed` line, which CheckReport reads into Report.IntendedRed (gate only) without adding to Passed or Failed, so `PASS reports failed tests` no longer fires for it; gate prompt, docs/design.md and tests updated.", "by": "Jon Robbins"}
@@ -7603,3 +7606,10 @@
 {"when": "2026-11-27T22:12:39Z", "item": "S526", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-27T22:25:55Z", "item": "S526", "action": "note", "from": "", "to": "", "note": "Spec-check, gate and reviewer briefs and the implementer's D", "by": "Jon Robbins"}
 {"when": "2026-11-27T22:25:55Z", "item": "S526", "action": "status", "from": "started", "to": "done", "note": "Spec-check, gate and reviewer briefs and the implementer's Done-when items show an unquoted -run pattern with | in single quotes, the reviewer brief lists the three Check command groups, and the \"ork runs\" group is judged on the stored text so an env-prefixed quoted line stays orchestrator-run; full suite, go vet, gofmt and slicer check are clean.", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:10:48Z", "item": "S660", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 662): write ## CLI text renders and ## T", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:10:48Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Owner decisions (adj 663, 664): per-test lines go -C WT test", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:10:48Z", "item": "S647", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 665): a go test in internal/docscheck di", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:10:48Z", "item": "S648", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 666): a go test lint in internal/engine ", "by": "Jon Robbins"}
+{"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "add", "from": "", "to": "open", "note": "allow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search"}
+{"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "note", "from": "", "to": "", "note": "possible duplicate of S650", "by": "Jon Robbins"}

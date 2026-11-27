@@ -3525,7 +3525,7 @@ Each item uses the existing `run.start` override validation and plan check
 (`run.launch-wire`). As with `run.start`, an absent `expected` permits a
 start from the current plan. The CLI supplies it for every item. A stale
 plan or admission error is returned for that item; later items still start.
-All admitted records share one `wave-YYYYMMDD-HHMMSS-xxxx` id and use the
+All admitted records share one `wave-YYYYMMDD-HHMMSS-xxxxxxxx` id and use the
 global and project caps. One failed or stopped item leaves its peers
 running (`wave.failure`). `ork stop` selects a wave by its `wave-` prefix
 (`wave.stop-target`). Queued members stay queued until stopped, with no

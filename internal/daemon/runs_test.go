@@ -2528,6 +2528,18 @@ func TestDefaultGlobalCapQueuesTheThirdRunUntilASlotFrees(t *testing.T) {
 	w.expectStart(t, "S3")
 }
 
+func TestNewChainIDEndsInEightHexDigits(t *testing.T) {
+	if id := newChainID(time.Now()); !regexp.MustCompile(`^chain-\d{8}-\d{6}-[0-9a-f]{8}$`).MatchString(id) {
+		t.Errorf("chain id %q, want eight hex digits", id)
+	}
+}
+
+func TestNewWaveIDEndsInEightHexDigits(t *testing.T) {
+	if id := newWaveID(time.Now()); !regexp.MustCompile(`^wave-\d{8}-\d{6}-[0-9a-f]{8}$`).MatchString(id) {
+		t.Errorf("wave id %q, want eight hex digits", id)
+	}
+}
+
 func TestWaveGlobalCapQueuesTheFifthRun(t *testing.T) {
 	w := newWaveRig(t, 4, 0)
 	var recs []runrec.Record
@@ -2547,7 +2559,7 @@ func TestWaveGlobalCapQueuesTheFifthRun(t *testing.T) {
 		if i == 4 && rec.State != want {
 			t.Errorf("fifth run state %q, want queued", rec.State)
 		}
-		if !regexp.MustCompile(`^wave-\d{8}-\d{6}-[0-9a-f]{4}$`).MatchString(rec.Wave) {
+		if !regexp.MustCompile(`^wave-\d{8}-\d{6}-[0-9a-f]{8}$`).MatchString(rec.Wave) {
 			t.Errorf("run %d wave id %q", i+1, rec.Wave)
 		}
 	}

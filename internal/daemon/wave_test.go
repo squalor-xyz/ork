@@ -48,7 +48,7 @@ func waveRecords(t *testing.T, d *Daemon, raw string) (string, []runrec.Record) 
 func TestWaveStartStampsOneWaveIDOnEachRun(t *testing.T) {
 	w := newWaveRig(t, 4, 0)
 	wave, runs := waveRecords(t, w.d, `{"items":[{"project":"p","item":"S1"},{"project":"p","item":"S2"}]}`)
-	if len(runs) != 2 || !regexp.MustCompile(`^wave-\d{8}-\d{6}-[0-9a-f]{4}$`).MatchString(wave) {
+	if len(runs) != 2 || !regexp.MustCompile(`^wave-\d{8}-\d{6}-[0-9a-f]{8}$`).MatchString(wave) {
 		t.Fatalf("wave %q runs %+v", wave, runs)
 	}
 	for _, run := range runs {

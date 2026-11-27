@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 662,
+  "next_id": 663,
   "preamble": "",
   "passes": [
     {
@@ -34461,6 +34461,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "2bae4f64-0664-40d9-8db8-93df1aa23361",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decisions (adj 663, 664): per-test lines go -C WT test -overlay F -count=1 -run '^TestName$' PKG for each test in the changed test files; a live vet sample quoting the first line of a real overlay vet failure, omitted when none fails; and a product-only overlay that reverts only the product file and keeps the new tests (red by compile error). Jon chose 'Per-test lines + live sample' and 'Keep tests, compile red', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -34589,7 +34603,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "7059ed1c-e048-4da7-84e6-3aa0e35c2311",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 665): a go test in internal/docscheck diffs docs against main and flags an inserted doc line that touches an unchanged non-blank line (before or after); it skips when git or main is absent. Jon chose 'Diff rule', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -34617,7 +34646,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "e61a2870-7958-4231-9795-f85fb43f9d71",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 666): a go test lint in internal/engine that fails when a BuildBrief sentence gated on role has a permission grant gated on vendor; the spec names the sentence and grant. Jon chose 'go test lint', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
@@ -34840,7 +34884,7 @@
       "id": "S654",
       "title": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix",
       "short_title": "run IDs: retry with a new suffix when the run directory already exists, and widen the 2-byte random suffix",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -34850,6 +34894,20 @@
           "text": "**2026-11-27** — Owner decision (adj 657): 4 random bytes (8 hex digits), retry the create up to 8 times on file exists, for run IDs (internal/engine/engine.go:428) and chain and wave IDs (internal/daemon/runs.go:1378, :1675); update the {4} test regexes (wave_test.go:51, runs_test.go:2550) and the Deps.RandHex comment. Jon chose '4 bytes, 8 tries, all three', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T21:38:37Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2145f9b8-1128-4662-bb67-b9cf41b36c05",
+          "kind": "",
+          "text": "**2026-11-27** — Run, chain and wave IDs now end in 8 hex digits, and engine.New retries the run create up to 8 times with a fresh suffix on file exists; go test ./..., go vet and gofmt are clean.",
+          "created_at": "2026-11-27T22:09:58Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -34876,7 +34934,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -35055,6 +35113,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "4bdebe0e-b947-41a7-aa83-10dbe4ba5c31",
+          "kind": "",
+          "text": "**2026-11-27** — Owner decision (adj 662): write ## CLI text renders and ## TUI renders only when the worktree has the render tests (e.g. TestRenderCLIViews, TestRenderTUIViews); otherwise a short generic ## Renders section pointing at the project's AGENTS.md and docs (like the fallback at brief.go:247). Jon chose 'Detect in worktree + brief fallback', session 8d711f67, 2026-11-27.",
+          "created_at": "2026-11-27T22:10:48Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -35111,6 +35183,49 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-98b7832f",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S662",
+      "title": "allow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search",
+      "short_title": "allow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "b7f1a171-4538-4dbd-977b-6d784c1e26b6",
+          "kind": "",
+          "text": "**2026-11-27** — possible duplicate of S650",
+          "created_at": "2026-11-27T22:19:25Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S526",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-4a1d3d19",
         "pass": "v1.2",
         "group": "",
         "reason": "",

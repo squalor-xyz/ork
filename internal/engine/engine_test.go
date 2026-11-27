@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"regexp"
 	"slices"
 	"strings"
 	"testing"
@@ -1911,6 +1912,65 @@ func TestNewRecordsTheRunAndRefusesBadInput(t *testing.T) {
 		if _, err := New(context.Background(), h.deps, cfg); err == nil {
 			t.Errorf("%s: accepted", name)
 		}
+	}
+}
+
+func TestNewRetriesTheRunIDWhenItsDirectoryExists(t *testing.T) {
+	h := newHarness(t)
+	suffixes := []string{"aaaaaaaa", "bbbbbbbb"}
+	calls := 0
+	h.deps.RandHex = func() string {
+		s := suffixes[min(calls, len(suffixes)-1)]
+		calls++
+		return s
+	}
+	if err := os.MkdirAll(h.store.RunDir("ork-20261019-161201-aaaaaaaa"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatalf("New: %v", err)
+	}
+	if got := e.Snapshot().ID; got != "ork-20261019-161201-bbbbbbbb" {
+		t.Errorf("ID %q, want the second suffix", got)
+	}
+	if calls != 2 {
+		t.Errorf("RandHex called %d times, want 2", calls)
+	}
+}
+
+func TestNewGivesUpAfterEightCollidingRunIDs(t *testing.T) {
+	h := newHarness(t)
+	calls := 0
+	h.deps.RandHex = func() string { calls++; return "aaaaaaaa" }
+	if err := os.MkdirAll(h.store.RunDir("ork-20261019-161201-aaaaaaaa"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	_, err := New(context.Background(), h.deps, h.cfg)
+	if err == nil || !errors.Is(err, os.ErrExist) {
+		t.Fatalf("error %v, want one wrapping os.ErrExist", err)
+	}
+	if calls != 8 {
+		t.Errorf("RandHex called %d times, want 8", calls)
+	}
+	entries, err := os.ReadDir(h.store.Dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(entries) != 1 || entries[0].Name() != "ork-20261019-161201-aaaaaaaa" {
+		t.Errorf("run directories: %v, want only the pre-made one", entries)
+	}
+}
+
+func TestNewRunIDEndsInEightHexDigits(t *testing.T) {
+	h := newHarness(t)
+	h.deps.RandHex = nil
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if id := e.Snapshot().ID; !regexp.MustCompile(`^ork-\d{8}-\d{6}-[0-9a-f]{8}$`).MatchString(id) {
+		t.Errorf("ID %q, want ork-DATE-TIME- and eight hex digits", id)
 	}
 }
 
