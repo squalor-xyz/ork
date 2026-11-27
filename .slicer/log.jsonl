@@ -7581,3 +7581,6 @@
 {"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→2"}
 {"when": "2026-11-27T21:56:13Z", "item": "S660", "action": "note", "from": "", "to": "", "note": "Also covers S538 finding 1: the UI brief's render sections (", "by": "Jon Robbins"}
+{"when": "2026-11-27T21:57:36Z", "item": "S661", "action": "add", "from": "", "to": "open", "note": "in Base overlays, mention an importer that covers a new exported symbol, so \"no test covers it\" on the defining package is not misread"}
+{"when": "2026-11-27T21:57:37Z", "item": "S661", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-27T21:57:37Z", "item": "S661", "action": "note", "from": "", "to": "", "note": "possible duplicate of S659", "by": "Jon Robbins"}

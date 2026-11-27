@@ -1,0 +1,39 @@
+{
+  "id": "S661",
+  "title": "in Base overlays, mention an importer that covers a new exported symbol, so \"no test covers it\" on the defining package is not misread",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261127-194957-90f9, project ork, item S538:\n\nin Base overlays, mention an importer that covers a new exported symbol, so \"no test covers it\" on the defining package is not misread\n\nEvidence: overlay-1 says no daemon test covers runs.go, but internal/cli fails to build without daemon.PausedNext and TestRenderWaitPausesUsePausedNext covers it"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
