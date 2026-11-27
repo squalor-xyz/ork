@@ -2225,6 +2225,28 @@ separately.
     blocks or pauses the run. The reviewer and the gate get it and the
     architect gets none. The reviewer round shares its branch read with its
     other sections; the gate round makes its own;
+  - before the reviewer and gate start, a `## Decision keys not found`
+    section lists keys cited as owner decisions in added branch lines when
+    `adj check` reports `not found` (S537, `review.decision-key-citation`).
+    Citations use a lowercase dotted key after `owner DATE`, `adj N`, or
+    `adj`, with optional backticks, brackets or parentheses. Citation phrases
+    are case-insensitive. The check reads the diff
+    against the merge base and scans new files absent from its headers.
+    It skips `.slicer/`, `decisions/` and `landed-changed/`, and skips
+    nonregular, binary or over-1-MiB new files. Missing evidence adds an
+    incomplete-check notice. The section is advisory and never blocks or
+    pauses the run; the architect gets none;
+  - before the reviewer and gate start, a `## Spec text calls a decided key
+    open` section names spec headings and lines that cite a bracketed or
+    backticked key and say `open`, `undecided`, or `not decided` on the same
+    line, when `adj check` reports `decided` (S537, `review.spec-open-key`).
+    Open wording inside key citations does not count.
+    It scans the lead, boundary and section bodies and gives the decided
+    record's id. Failed checks add incomplete-check notices. Both sections
+    require adj and share one check per key per role round, separately from
+    Decision changelog paths. They reuse the role's existing branch read.
+    This section is advisory and never blocks or pauses the run; the
+    architect gets none;
   - earlier reports, when the role is not resumed.
 
   A tracking step denied to the implementer is a Deviation for the orchestrator,

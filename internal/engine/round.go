@@ -619,12 +619,19 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Lead:         r.lead,
 		Sections:     append(append(lostSection(rec, r, pend), pendingSection(pend)...), r.sections...),
 	}
+	decisionChecker := e.decisionKeyChecker(ctx)
 	if r.role == RoleReviewer {
 		if section := e.decisionPathsSection(ctx, rec, sliceJSON); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
 		mergeBase, paths, err := e.branchChange(ctx, rec)
 		change := branchChangeResult{MergeBase: mergeBase, Paths: paths, Err: err}
+		if section := e.unfoundDecisionKeysSection(ctx, rec, change, decisionChecker); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
+		if section := e.specOpenKeysSection(ctx, sliceJSON, decisionChecker); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
 		if section := e.baseOverlaySection(ctx, rec, tmpDir, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
@@ -665,6 +672,12 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		in.Allow = PinGitC(implementerPerm.Allow, rec.Worktree)
 		mergeBase, paths, err := e.branchChange(ctx, rec)
 		change := branchChangeResult{MergeBase: mergeBase, Paths: paths, Err: err}
+		if section := e.unfoundDecisionKeysSection(ctx, rec, change, decisionChecker); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
+		if section := e.specOpenKeysSection(ctx, sliceJSON, decisionChecker); section != nil {
+			in.Sections = append(in.Sections, *section)
+		}
 		if section := e.staleDocsSection(ctx, rec, change); section != nil {
 			in.Sections = append(in.Sections, *section)
 		}
