@@ -152,7 +152,7 @@ func TestSliceCheckCommandWarningsFlagsAnExistingFilesPathThatDoesNotRun(t *test
 }
 
 func TestReadOnlyBriefsNameTheDeniedForms(t *testing.T) {
-	const want = "Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C."
+	const want = "Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C. Do not end a `go test -run` pattern with `$`: that command is denied because it cannot be checked before it runs. Use `-run NAME` with the full test name and no anchor; it also runs any test whose name starts with NAME."
 	for _, vendor := range []string{"claude", "claude-local", "codex", "grok"} {
 		for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleSpecCheck, RoleSpecDraft, RoleUI} {
 			t.Run(vendor+"/"+role, func(t *testing.T) {
@@ -164,6 +164,30 @@ func TestReadOnlyBriefsNameTheDeniedForms(t *testing.T) {
 				}
 				if strings.Count(got, want) != 1 {
 					t.Error("brief must have exactly one shared denied-forms line")
+				}
+			})
+		}
+	}
+}
+
+func TestReadOnlyBriefsNameTheRunAnchorRule(t *testing.T) {
+	anchoredExample := regexp.MustCompile("`[^`\n]*-run[ \\t]+[^`\n]*\\$`")
+	for _, vendor := range []string{"claude", "claude-local", "codex", "grok"} {
+		for _, role := range []string{RoleReviewer, RoleGate, RoleArchitect, RoleSpecCheck, RoleSpecDraft, RoleUI} {
+			t.Run(vendor+"/"+role, func(t *testing.T) {
+				in := baseBrief()
+				in.Role, in.Vendor, in.ReadOnly = role, vendor, true
+				got, err := BuildBrief(in)
+				if err != nil {
+					t.Fatal(err)
+				}
+				for _, want := range []string{"Do not end a `go test -run` pattern with `$`", "`-run NAME`", "no anchor"} {
+					if !strings.Contains(got, want) {
+						t.Errorf("brief lacks %q", want)
+					}
+				}
+				if example := anchoredExample.FindString(got); example != "" {
+					t.Errorf("brief gives an end-anchored -run example: %s", example)
 				}
 			})
 		}
@@ -1736,7 +1760,7 @@ func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 			if role == RoleReviewer || role == RoleGate {
 				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence; you need not run go test ./....\n", 1)
 			}
-			want = strings.Replace(want, "\n", "\n- [ ] Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C.\n", 1)
+			want = strings.Replace(want, "\n", "\n- [ ] Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C. Do not end a `go test -run` pattern with `$`: that command is denied because it cannot be checked before it runs. Use `-run NAME` with the full test name and no anchor; it also runs any test whose name starts with NAME.\n", 1)
 			if got != want {
 				t.Errorf("%s %s checklist changed", vendor, role)
 			}

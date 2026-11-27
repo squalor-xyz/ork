@@ -126,7 +126,7 @@ func readOnlyReportPrompt(role, prompt string) (string, error) {
 	return strings.Replace(prompt, originalReportSentence, "give your whole report as your final message and exit; ork saves it to {{report_path}}.", 1), nil
 }
 
-const deniedCommandForms = "Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C."
+const deniedCommandForms = "Run one plain command per call: no pipes, && or ; chains, redirects, command substitution, shell variables, env prefixes or cd. Use literal absolute paths with git -C and go -C. Do not end a `go test -run` pattern with `$`: that command is denied because it cannot be checked before it runs. Use `-run NAME` with the full test name and no anchor; it also runs any test whose name starts with NAME."
 
 // BuildBrief returns the brief for a role: the role prompt with its
 // placeholders filled, then the slice, the tracking rule, the workspace

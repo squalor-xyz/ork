@@ -2072,7 +2072,10 @@ separately.
     Failed reads add an incomplete-check notice. The check is advisory and
     never blocks the run;
   - before the reviewer starts, a `## Base overlays` section when the branch
-    diff against the base holds any changed file (S618). For each non-test Go file,
+    diff against the base holds any changed file after skipping every path
+    under `.slicer/` or `landed-changed/` (S620, adj 600, adj 610). These paths
+    are removed before the section test, sorting and limits, including
+    `.slicer/config.json` and `.slicer/relay-roles.json`. For each non-test Go file,
     in sorted order and at most 20, ork writes the file's base version
     (`git show MERGEBASE:path`, the merge base Direction uses) to
     `TMPDIR/base/path` and `TMPDIR/overlay-N.json`, `{"Replace": {"WORKTREE/path":
@@ -2086,12 +2089,33 @@ separately.
     command. stderr takes priority over stdout; empty output gives the exit
     code. A vet that cannot run or times out leaves the test command in place.
     For each remaining file, the section names
-    one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json
+    one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json -count=1
     ./DIR` command, so a read-only reviewer can run the package's tests with
-    only that file reverted and see a test the slice added fail. It tells the
+    only that file reverted and see a test the slice added fail. ork also runs
+    each of these single-file test commands sequentially with a two-minute
+    timeout (S622, adj 618, adj 622). An exit-zero run adds "Passes in full
+    with this file reverted: no test in the package fails for this change, so
+    no test covers it." after the command. A non-zero exit, timeout or failure
+    to start leaves the entry plain. Every emitted overlay test command and
+    every automatic single-file test run carries `-count=1`, including combined
+    overlays and importer commands, so test results are never served from the
+    cache (S620, adj 627). Failed-vet and unreadable-base entries,
+    and the combined overlay, get no test run. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
     test names in one `-run` pattern (S571). This command guidance appears only
-    when at least one single-file test command remains (S593). When at least
+    when at least one single-file test command remains (S593). In that case,
+    ork also runs `go -C WORKTREE list -e -json ./...` once with a two-minute
+    timeout and reads the module packages (S620, S628, adj 611, adj 617).
+    Direct importers of each reverted file's package, including `TestImports`
+    and `XTestImports`, get `- Importer` lines after the Go entries. Each uses
+    the same overlay as that file and is vetted separately before a test
+    command is offered; a non-zero vet exit gives `does not build: ERROR`
+    instead. Self imports and transitive imports are excluded. Importer
+    lines are sorted by file then package, deduplicated per file, capped at
+    20 across the section, with a count of lines left out (adj 625). When no
+    single-file overlay builds, ork does not list importers. A failed list,
+    timeout or invalid JSON adds one advisory incomplete notice; each file's
+    own package command remains. When at least
     two overlays were written and every one fails vet, ork writes
     `TMPDIR/overlay-all.json` reverting all those files, vets it over their
     packages, and lists it as a final entry with a test command (or
@@ -2108,6 +2132,11 @@ separately.
     marked "new in this slice, no base version", without a command. Invalid
     paths and failed reads join the incomplete-check notice. A diff with only
     other files gets this list without Go overlays, vet calls or the Go intro.
+    When every changed Go file is a `_test.go` file, it adds a paragraph before
+    the closing guidance: a base overlay cannot isolate the product change
+    because the tests are part of the change; read each file's base version
+    with `git show` instead (S622, S623, adj 618). A diff with no Go file gets
+    no such paragraph.
     The section ends with a paragraph: the overlays cover non-test Go files
     only; other changed files are not overlaid. It adds that `git
     grep` is not on the read-only list. No `git grep` entry was added, because
@@ -2704,7 +2733,11 @@ cites the first run, kept as `07-out-of-credits-403`. The adapter behaviour
   runs a program (adj 520, adj 457); roles use Grep instead. Every read-only
   brief names the denied forms: pipes, `&&` and `;` chains, redirects,
   command substitution, shell variables, env prefixes and `cd`. It directs
-  roles to use literal absolute paths with `git -C` and `go -C`. These
+  roles to use literal absolute paths with `git -C` and `go -C`. The line also
+  says a `go test -run` pattern must not end in `$`, because that command is
+  denied before it runs. It gives `-run NAME` with the full test name and no
+  anchor, noting that this also runs tests whose names start with NAME
+  (S610, from tool feedback). These
   additions grant no shell variables, chains, env prefixes or `git init`.
   Implementer briefs say socket-bound tests may fail inside their sandbox,
   report those as sandbox-limited, and use ork's round check outside the
