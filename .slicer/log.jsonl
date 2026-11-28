@@ -7635,3 +7635,10 @@
 {"when": "2026-11-28T00:26:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-28T00:26:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-28T00:26:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T00:48:29Z", "item": "S643", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T00:48:35Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T00:48:41Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T00:55:28Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T00:55:29Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T01:12:39Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Base overlays provide capped unanchored per-test commands, p", "by": "Jon Robbins"}
+{"when": "2026-11-28T01:12:39Z", "item": "S643", "action": "status", "from": "started", "to": "done", "note": "Base overlays provide capped unanchored per-test commands, product-only overlays retaining new tests, and a safe first-failure vet sample; focused suites and 35 mutation checks pass, while full-suite verification is sandbox-limited.", "by": "Jon Robbins"}

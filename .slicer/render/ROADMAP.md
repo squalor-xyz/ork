@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-662 items · — 39 · done 452 · retired 171
+662 items · — 38 · done 453 · retired 171
 
 ## v1.3
 
@@ -402,7 +402,7 @@ v1.2
 | 345 | [S640](slices/S640.md) | in Base overlays, add a ready per-test revert command or a FAIL-lines-only form so the reviewer does not need one run per test to see each FAIL line |  | - |  | Merged into S594; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S620 | retired |
 | 346 | [S641](slices/S641.md) | in render fixtures, flag a next: hint for a pause kind that differs from what daemon pausedNext would give for that record |  | - |  | Merged into S538; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S633 | retired |
 | 347 | [S642](slices/S642.md) | list a ready overlay command that prints each new render fixture's text so a reviewer can read the views without writing a probe test |  | - |  | Merged into S538; Jon chose 'Merge as proposed' in triage, session 8d711f67, 2026-11-27. · discovered from S633 | retired |
-| 348 | [S643](slices/S643.md) | Base overlays: a per-test or FAIL-lines-only revert command, and a short sample of real go vet type-error output | S | - |  |  | — |
+| 348 | [S643](slices/S643.md) | Base overlays: a per-test or FAIL-lines-only revert command, and a short sample of real go vet type-error output | S | - |  |  | done |
 | 349 | [S644](slices/S644.md) | in the Base overlays intro, say that an entry with "reverted too" reverts more than one file |  | - |  | discovered from S594 | — |
 | 350 | [S645](slices/S645.md) | in the Base overlays intro, say that an entry marked "reverted too" reverts more than one file |  | - |  | discovered from S594 | — |
 | 351 | [S646](slices/S646.md) | start the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines |  | - |  | discovered from S527 | — |
