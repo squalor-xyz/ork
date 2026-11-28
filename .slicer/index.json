@@ -27840,7 +27840,7 @@
       "id": "S511",
       "title": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key",
       "short_title": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -27871,6 +27871,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "a8fa815c-678a-47bf-a0e6-b635c1a2f052",
+          "kind": "",
+          "text": "**2026-11-28** — Eight prompts (ui, architect, gate, reviewer, spec-check, implementer, lead, part) now say `## Owner needed` takes at most one `Question:` block and one `Decision key:` line and that ork refuses a second of either; TestOwnerNeededSaysOneQuestionBlockAndOneDecisionKey is green, spec-draft untouched, and go test ./..., go vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-28T04:52:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27890,7 +27904,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -35561,6 +35575,20 @@
           "kind": "",
           "text": "**2026-11-28** — Owner decision (adj 679): narrow per-vendor grant. codex adds the renders directory as its only writable root with the worktree read-only; grok and claude-local get the same single-path write rule through their own permission mechanisms (as CloudUIAllowlist does for cloud claude, internal/daemon/runner.go:49-52); then remove the in.Vendor == claude gate on the renders-directory sentence (internal/engine/brief.go:234). Jon chose 'Narrow per-vendor grant', session 8d711f67, 2026-11-28.",
           "created_at": "2026-11-28T03:38:41Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fd513fbe-9f4a-47d1-b473-061cff7eda34",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decisions (adj 685, 686): codex: the implementer first probes the installed codex for a setting that keeps the worktree read-only with the renders directory as the one writable root, saves the probe under testdata/vendors/codex/, and builds on it; if codex has none, it stops and reports and does not widen the grant (mind GOCACHE under TEMP). grok: deferred; the grok brief keeps the vendor gate and the S648 lint row omits grok and grok-local (grok ends 2026-12-09). claude-local gets the single-path grant. Jon chose 'Probe first, stop if none' and 'Defer grok', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T03:49:53Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",

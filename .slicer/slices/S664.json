@@ -12,23 +12,23 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261128-002853-34ba2dd2, project ork, item S647:\n\nset GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir\n\nEvidence: the notRepo subtest found the enclosing repo when run from a nested non-repo dir (TestProbeNestedNonRepo)"
+      "body": "Some tests need a directory that is not inside any git repository, and they get it from `t.TempDir()`. Go places that directory under `$TMPDIR`, so when `TMPDIR` points inside a checkout, git walks up from it, finds the enclosing repository, and the \"not a repository\" case silently becomes a repository case. The reviewer of ork run ork-20261128-002853-34ba2dd2 (item S647) hit this with the `notRepo` fixture. S647 already fixed that fixture by setting `GIT_CEILING_DIRECTORIES` (`internal/docscheck/blankline_test.go:219`).\n\nThe owner decided the fix (adj 681, key `tests.non-repo-temp-dir`, Jon chose \"Set GIT_CEILING_DIRECTORIES\", session 8d711f67, 2026-11-28). A test that needs a non-repo temp dir sets `GIT_CEILING_DIRECTORIES` with `t.Setenv`. TMPDIR placement is not documented.\n\nTwo findings from reading the tree:\n\n- No test named `TestProbeNestedNonRepo` exists in the checkout. A search of `internal/` finds no such name, and the name appears only in tracking text. It was the reviewer's own probe. This draft treats the name as the reviewer's evidence rather than a test to fix, and the note's instruction to name it does not apply.\n- The other test that runs real git against a plain `t.TempDir()` and expects \"no repository\" is `TestProjectPrefix`, subtest `not a repository`, at `internal/engine/speccheck_test.go:463-467`. It calls `projectPrefix` (`internal/engine/gitpaths.go:16`), which runs `git -C DIR rev-parse --show-prefix`. If `TMPDIR` is inside a checkout, that call succeeds and the test fails. Every other \"not a git repository\" case in the tests uses a fake git route (`internal/cli/upgrade_test.go:115`, `internal/engine/check_test.go:196`, `internal/engine/pause_test.go:202`), so none depends on `TMPDIR`.\n\nOwner decision, 2026-11-28: adj 681 (set GIT_CEILING_DIRECTORIES in the tests)."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/speccheck_test.go:463-467`"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- TestProjectPrefix (subtest `not a repository`, in `internal/engine/speccheck_test.go`): `projectPrefix` returns an error for a plain directory that sits inside an enclosing git repository. The subtest builds that setup itself. It creates a `t.TempDir()` root and runs `git init` there with `gitRun`. It makes a `plain` subdirectory under it and calls `projectPrefix` on `plain`. It sets `GIT_CEILING_DIRECTORIES` to the root so git stops looking at the root. It asserts a non-nil error. Without the `GIT_CEILING_DIRECTORIES` line, git finds the root repository, `projectPrefix` returns `plain/` with no error, and the subtest fails. This reproduces a `TMPDIR` inside a checkout on any host."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. In `internal/engine/speccheck_test.go`, rewrite the `not a repository` subtest of `TestProjectPrefix` (lines 463-467). Name it `not a repository` as before. Make these changes:\n   - Set `outer := t.TempDir()` and run `gitRun(t, outer, \"init\", \"-q\")`.\n   - Set `plain := filepath.Join(outer, \"plain\")` and create it with `os.Mkdir(plain, 0o700)`. Call `t.Fatal` on error.\n   - Add a comment saying this reproduces `TMPDIR` pointing inside a checkout, as `internal/docscheck/blankline_test.go:212` does.\n   - Call `projectPrefix(context.Background(), plain)` and keep the failure message `project prefix outside a repository succeeded`.\n2. Run the subtest first without the ceiling line and confirm it fails, because `projectPrefix` returns `plain/`. Then add `t.Setenv(\"GIT_CEILING_DIRECTORIES\", outer)` before the `projectPrefix` call, as `internal/docscheck/blankline_test.go:219` does, and confirm it passes. The `GIT_CEILING_DIRECTORIES` entry is the only environment change, and `t.Setenv` restores it when the subtest ends.\n3. Add `os` to the imports of `internal/engine/speccheck_test.go` if it is not already imported. Add nothing else: no helper, no change to `projectPrefix`, no docs change.\n4. Run `go -C /home/jon/code/squalor-xyz/ork vet ./...`, `gofmt -l /home/jon/code/squalor-xyz/ork/internal/engine` and `go -C /home/jon/code/squalor-xyz/ork test ./...`. Write the changelog entry with `slicer changelog add S664 --text \"...\" --root /home/jon/code/squalor-xyz/ork`. Do not edit `CHANGELOG.md`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- Acceptance: TestProjectPrefix/not a repository passes when its temp dir sits inside an enclosing git repository, because the test sets GIT_CEILING_DIRECTORIES. It no longer depends on where TMPDIR points.\n- `go test -run TestProjectPrefix ./internal/engine` exits 0 and runs the not a repository subtest.\n- `go test ./internal/engine` exits 0.\n- `go test ./internal/docscheck` exits 0, so the S647 fixture still passes.\n- `go vet ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `go test ./...` exits 0.\n- `slicer check` exits 0.\n- [HUMAN CHECK] In internal/engine/speccheck_test.go, the not a repository subtest holds a t.Setenv(\"GIT_CEILING_DIRECTORIES\", ...) call. Deleting that line makes go test -run TestProjectPrefix ./internal/engine fail with project prefix outside a repository succeeded."
     },
     {
       "heading": "Git",

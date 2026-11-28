@@ -533,14 +533,15 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 			// Outcome report guidance to the implementer prompt.
 			// S417 adds guidance for reading named run reports with ork show.
 			// S505 adds the sandbox socket-test note to the checklist.
+			// S511 adds the one-Question-block, one-Decision-key paragraph.
 			got = strings.Replace(got, "Role: implementer. Contract: relay v13\n", "Role: implementer. Contract: relay v12\n", 1)
-			want := "05d20aa4bf069abea441c2fb89b1583a510a45dfb4324970290465584c156b43"
+			want := "2a052753fd40b8807e7302aab9443d3923d85dab522f41620728cdba4329a6e9"
 			switch vendor {
 			case "claude":
-				want = "095a8e4b4f0785da57f82aafb16c1bf953e860a1794cb46edc8a5f7cb70c4e40"
+				want = "59e193b534a70348d5de16aa99788cec9ed86a6695301957f1c0c073b41a7304"
 			case "grok":
 				// S305: a grok implementer's checklist names dontAsk mode.
-				want = "000c8469ba9e870aa0ee11cf67c9cb01ef77c9184bb670bc854e667dbff742db"
+				want = "a3e1c9de0c854848575fa857bdb3865ca04ea958c140ed88855b525e154dc048"
 			}
 			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
 				t.Fatalf("%s cloud brief changed %x", vendor, sha256.Sum256([]byte(got)))
