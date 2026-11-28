@@ -461,7 +461,16 @@ func TestProjectPrefix(t *testing.T) {
 		})
 	}
 	t.Run("not a repository", func(t *testing.T) {
-		if _, err := projectPrefix(context.Background(), t.TempDir()); err == nil {
+		// Reproduce TMPDIR pointing inside a checkout, as
+		// internal/docscheck/blankline_test.go does.
+		outer := t.TempDir()
+		gitRun(t, outer, "init", "-q")
+		plain := filepath.Join(outer, "plain")
+		if err := os.Mkdir(plain, 0o700); err != nil {
+			t.Fatal(err)
+		}
+		t.Setenv("GIT_CEILING_DIRECTORIES", outer)
+		if _, err := projectPrefix(context.Background(), plain); err == nil {
 			t.Fatal("project prefix outside a repository succeeded")
 		}
 	})

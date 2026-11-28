@@ -35452,7 +35452,7 @@
       "id": "S664",
       "title": "set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir",
       "short_title": "set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -35462,6 +35462,34 @@
           "text": "**2026-11-28** — Owner decision (adj 681): tests that need a non-repo temp dir set GIT_CEILING_DIRECTORIES (t.Setenv, as internal/docscheck/blankline_test.go:219 does); name TestProbeNestedNonRepo and the other such tests. Jon chose 'Set GIT_CEILING_DIRECTORIES', session 8d711f67, 2026-11-28.",
           "created_at": "2026-11-28T03:38:41Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fe3e98ca-1186-48af-9ea7-c18a25652312",
+          "kind": "",
+          "text": "**2026-11-28** — Human checks at approval (S664):\n- later: In internal/engine/speccheck_test.go, the not a repository subtest holds a t.Setenv(\"GIT_CEILING_DIRECTORIES\", ...) call. Deleting that line makes go test -run TestProjectPrefix ./internal/engine fail with project prefix outside a repository succeeded.",
+          "created_at": "2026-11-28T05:13:41Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "4174e470-94b4-44ed-be70-9615c95b369e",
+          "kind": "",
+          "text": "**2026-11-28** — TestProjectPrefix/not a repository now builds an enclosing git repo itself and sets GIT_CEILING_DIRECTORIES, so it passes however TMPDIR is placed; full suite, vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-28T05:13:42Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -35488,7 +35516,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

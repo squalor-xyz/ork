@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-667 items · — 36 · done 460 · retired 171
+667 items · — 35 · done 461 · retired 171
 
 ## v1.3
 
@@ -423,7 +423,7 @@ v1.2
 | 366 | [S661](slices/S661.md) | in Base overlays, mention an importer that covers a new exported symbol, so "no test covers it" on the defining package is not misread |  | - |  | discovered from S538 | — |
 | 367 | [S662](slices/S662.md) | allow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search |  | - |  | discovered from S526 | — |
 | 368 | [S663](slices/S663.md) | flag a strings.Index on a heading in a brief test when the prompt text also contains that heading |  | - |  | discovered from S660 | — |
-| 369 | [S664](slices/S664.md) | set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir |  | - |  | discovered from S647 | — |
+| 369 | [S664](slices/S664.md) | set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir |  | - |  | discovered from S647 | done |
 | 370 | [S665](slices/S665.md) | ui.md file-name rule conflicts with the CLI render file names now written straight into renders/ |  | 1 |  | discovered from S660 | done |
 | 371 | [S666](slices/S666.md) | substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round |  | - |  | discovered from S648 | — |
 | 372 | [S667](slices/S667.md) | UI pass: give every vendor's UI role write access to the renders directory, so S660's render commands work for codex, grok and claude-local | S | - |  |  | — |
