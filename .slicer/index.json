@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 667,
+  "next_id": 668,
   "preamble": "",
   "passes": [
     {
@@ -35482,6 +35482,34 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-40e79eb2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S667",
+      "title": "UI pass: give every vendor's UI role write access to the renders directory, so S660's render commands work for codex, grok and claude-local",
+      "short_title": "UI pass: give every vendor's UI role write access to the renders directory, so S660's render commands work for codex, grok and claude-local",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "S",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "",
+        "parent": "",
+        "cites": [],
+        "key": "",
         "pass": "v1.2",
         "group": "",
         "reason": "",

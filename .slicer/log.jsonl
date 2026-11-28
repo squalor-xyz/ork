@@ -7679,3 +7679,6 @@
 {"when": "2026-11-28T02:45:09Z", "item": "S463", "action": "note", "from": "", "to": "", "note": "Owner decision: the reviewer brief says its permission allow", "by": "Jon Robbins"}
 {"when": "2026-11-28T02:45:09Z", "item": "S489", "action": "note", "from": "", "to": "", "note": "Owner decision: a test over the built briefs for every role ", "by": "Jon Robbins"}
 {"when": "2026-11-28T02:45:09Z", "item": "S524", "action": "note", "from": "", "to": "", "note": "Owner decision: ork runs a pipeline of read-only commands (l", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:07:54Z", "item": "S667", "action": "add", "from": "", "to": "open", "note": "UI pass: give every vendor's UI role write access to the renders directory, so S660's render commands work for codex, grok and claude-local"}
+{"when": "2026-11-28T03:07:54Z", "item": "S667", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T03:07:54Z", "item": "S667", "action": "edit", "from": "", "to": "", "note": "Why"}
