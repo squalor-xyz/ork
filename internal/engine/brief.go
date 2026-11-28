@@ -238,12 +238,12 @@ func BuildBrief(in BriefInput) (string, error) {
 		if in.RenderCLI {
 			b.WriteString("## CLI text renders\n\nFor ork CLI views, run this from the worktree with the test flag:\n\n")
 			fmt.Fprintf(&b, "`go test ./internal/cli -run TestRenderCLIViews -renders %s`\n\n", ShellWord(renders))
-			b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into the renders directory, exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop. ork's approval card lists every `.txt` file in the renders directory.\n\n")
+			b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into the renders directory, exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop. ork's approval card lists every `.txt` file in the renders directory. Keep at most 24 files in the renders directory in all, counting the TUI renders; the card drops the rest, so pick fixtures that keep the total at 24 or fewer.\n\n")
 		}
 		if in.RenderTUI {
 			b.WriteString("## TUI renders\n\nFor ork TUI views, run this from the worktree with the test flag:\n\n")
 			fmt.Fprintf(&b, "`go test ./internal/tui -run TestRenderTUIViews -renders %s`\n\n", ShellWord(renders))
-			b.WriteString("This writes NAME-80x24.txt, NAME-120x40.txt and NAME-ascii.txt for each default fixture into the renders directory, as plain text, without changing the tree. The default fixtures are overview, roadmap, launch-confirm, approval-card and approval-render. To write others, add `-render-fixture NAME[,NAME...]`; it writes only those fixtures. To write another size, add `-render-size WxH[,WxH...]`; it writes one more NAME-WxH.txt for each size. To read a view without writing a file, add `-render-print` and `-v`; it prints each text to stdout under a `## NAME-SIZE` line. A TUI view with no fixture is not rendered: say so in your report.\n\n")
+			b.WriteString("This writes NAME-80x24.txt, NAME-120x40.txt and NAME-ascii.txt for each default fixture into the renders directory, as plain text, without changing the tree. The default fixtures are overview, roadmap, launch-confirm, approval-card and approval-render. To write others, add `-render-fixture NAME[,NAME...]`; it writes only those fixtures. To write another size, add `-render-size WxH[,WxH...]`; it writes one more NAME-WxH.txt for each size. To read a view without writing a file, add `-render-print` and `-v`; it prints each text to stdout under a `## NAME-SIZE` line. A TUI view with no fixture is not rendered: say so in your report. The default fixtures write 15 files. Keep at most 24 files in the renders directory in all, counting the CLI renders; the card drops the rest, so pick fixtures and sizes that keep the total at 24 or fewer.\n\n")
 		}
 		if !in.RenderCLI || !in.RenderTUI {
 			missing := "CLI and TUI"
@@ -252,7 +252,7 @@ func BuildBrief(in BriefInput) (string, error) {
 			} else if in.RenderTUI {
 				missing = "CLI"
 			}
-			fmt.Fprintf(&b, "## Renders\n\nork's render test for the %s views is not in this worktree. Find how the project renders its views in its `AGENTS.md` and docs, and use only that tooling. Write the files into the renders directory `%s`. A view that tooling cannot render without changing the tree gets no file: say so in your report.\n\n", missing, renders)
+			fmt.Fprintf(&b, "## Renders\n\nork's render test for the %s views is not in this worktree. Find how the project renders its views in its `AGENTS.md` and docs, and use only that tooling. Write the files into the renders directory `%s`. A view that tooling cannot render without changing the tree gets no file: say so in your report. Keep at most 24 files in the renders directory in all; the card drops the rest.\n\n", missing, renders)
 		}
 		fmt.Fprintf(&b, "## Test run patterns\n\nRun one test per command: `go -C %s test -run NAME PKG`", in.Worktree)
 		if in.RenderCLI {
@@ -482,6 +482,9 @@ func doneWhen(in BriefInput) string {
 			add("Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.")
 			if in.Role == RoleReviewer {
 				add("A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.")
+				if in.Vendor == "claude" || in.Vendor == "claude-local" {
+					add("Your permission allowlist comes from the ork build that started this run, so a permission this slice adds or changes is not in effect for you. If a command is denied, do not retry it another way: report the verbatim command and denial text as one untagged line under section (C) for the orchestrator to run; it is not a [fix] and does not start a fix round.")
+				}
 				add("Complete sections (A)-(D), marking findings CONFIRMED or PLAUSIBLE; end with the exact unnumbered heading ## Owner needed and questions or none. In gate mode use the gate's first line and one evidence line per criterion; put denied tracking in a Deviation for the orchestrator evidence line.")
 			} else {
 				add("Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.")
@@ -1140,6 +1143,7 @@ func withoutAcceptanceCriteria(body string) string {
 type sliceCheck struct {
 	sliceCheckCommand
 	env, argv []string
+	pipe      [][]string // stages after argv, executed without a shell (S524)
 	notRun    string
 	chain     int // nonzero for a part of an && chain: the parts of one line share it (S406)
 }
@@ -1181,7 +1185,7 @@ func checkRows(command sliceCheckCommand, worktree string, chain int) []sliceChe
 }
 
 // checkRunByOrk reports whether ork runs the Check line itself: a plain
-// command, or a chain of plain commands joined by && (S406, adj 454).
+// command, a read-only pipeline, or an && chain of those (S406, S524).
 func checkRunByOrk(command, worktree string) bool {
 	for _, row := range checkRows(sliceCheckCommand{command: command}, worktree, 1) {
 		if row.notRun != "" {
@@ -1219,6 +1223,59 @@ func splitAndChain(command string) []string {
 
 // plainCheckRow is the row for one command with no && in it.
 func plainCheckRow(command sliceCheckCommand, worktree string) sliceCheck {
+	parts := splitPipeline(command.command)
+	row := checkStage(parts[0], worktree)
+	row.sliceCheckCommand = command
+	if len(parts) == 1 {
+		return row
+	}
+	for i, part := range parts {
+		stage := checkStage(part, worktree)
+		if stage.notRun != "" || len(stage.env) != 0 || len(stage.argv) == 0 || (stage.argv[0] != "ls" && stage.argv[0] != "rg") {
+			row.notRun = "not run by ork: orchestrator"
+			return row
+		}
+		if stage.argv[0] == "rg" {
+			for _, arg := range stage.argv[1:] {
+				if arg == "--pre" || strings.HasPrefix(arg, "--pre=") || arg == "--hostname-bin" || strings.HasPrefix(arg, "--hostname-bin=") {
+					row.notRun = "not run by ork: orchestrator"
+					return row
+				}
+			}
+		}
+		if i > 0 {
+			row.pipe = append(row.pipe, stage.argv)
+		}
+	}
+	return row
+}
+
+// splitPipeline uses the same quote and escape rules as splitAndChain.
+func splitPipeline(command string) []string {
+	var parts []string
+	var quote byte
+	start := 0
+	for i := 0; i < len(command); i++ {
+		c := command[i]
+		switch {
+		case c == '\\' && quote != '\'':
+			i++
+		case c == quote:
+			quote = 0
+		case quote != 0:
+		case c == '\'' || c == '"':
+			quote = c
+		case c == '|':
+			parts = append(parts, strings.TrimSpace(command[start:i]))
+			start = i + 1
+		}
+	}
+	return append(parts, strings.TrimSpace(command[start:]))
+}
+
+// checkStage parses one stage; plain commands retain their existing rules.
+func checkStage(text, worktree string) sliceCheck {
+	command := sliceCheckCommand{command: text}
 	row := sliceCheck{sliceCheckCommand: command}
 	// No shell runs these commands. Reject shell syntax rather than changing
 	// its meaning. scanWord handles literal quotes and escaped spaces.
@@ -1266,7 +1323,7 @@ func plainCheckRow(command sliceCheckCommand, worktree string) sliceCheck {
 }
 
 func plainCheckSyntax(command string) bool {
-	return !shellSyntaxOutsideQuotes(command, "|&;<>(){}*?[]~#")
+	return !shellSyntaxOutsideQuotes(command, "&;<>(){}*?[]~#")
 }
 
 // shellSyntaxOutsideQuotes reports whether command holds shell syntax: a

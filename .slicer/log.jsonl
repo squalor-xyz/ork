@@ -7707,3 +7707,45 @@
 {"when": "2026-11-28T04:13:17Z", "item": "S489", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-28T05:10:12Z", "item": "S489", "action": "note", "from": "", "to": "", "note": "Added a test-only write-target lint over built briefs for ev", "by": "Jon Robbins"}
 {"when": "2026-11-28T05:10:12Z", "item": "S489", "action": "status", "from": "started", "to": "done", "note": "Added a test-only write-target lint over built briefs for every role and vendor (extractor handles the Local progress note target and semicolon-delimited paths per adj 688); the full suite, go vet, gofmt and slicer check are green.", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:18:48Z", "item": "S524", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:19:04Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T04:23:31Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T04:24:28Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T04:57:52Z", "item": "S524", "action": "note", "from": "", "to": "", "note": "S524 runs approved ls/rg Check pipelines without a shell, re", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:57:53Z", "item": "S524", "action": "status", "from": "started", "to": "done", "note": "S524 runs approved ls/rg Check pipelines without a shell, records one row with the last stage's exit and accumulated diagnostics, and leaves unsupported pipelines orchestrator-run.", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:42:28Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:42:29Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T03:42:29Z", "item": "S463", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:47:02Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:54:59Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T04:53:37Z", "item": "S463", "action": "note", "from": "", "to": "", "note": "Claude reviewer briefs explain their running-build permissio", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:53:37Z", "item": "S463", "action": "status", "from": "started", "to": "done", "note": "Claude reviewer briefs explain their running-build permission allowlist and route denied commands to the orchestrator under section (C), without starting a fix round.", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:49:53Z", "item": "S667", "action": "note", "from": "", "to": "", "note": "Owner decisions (adj 685, 686): codex: the implementer first", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:50:00Z", "item": "S511", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T03:50:00Z", "item": "S511", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:50:00Z", "item": "S511", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T03:50:00Z", "item": "S511", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-28T03:50:00Z", "item": "S511", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T03:50:01Z", "item": "S665", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T03:50:01Z", "item": "S665", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:50:01Z", "item": "S665", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T03:50:01Z", "item": "S665", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-28T03:50:01Z", "item": "S665", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T03:50:01Z", "item": "S664", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T03:50:01Z", "item": "S664", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:50:02Z", "item": "S664", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T03:50:02Z", "item": "S664", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-28T03:50:02Z", "item": "S664", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T04:42:04Z", "item": "S511", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:52:06Z", "item": "S511", "action": "note", "from": "", "to": "", "note": "Eight prompts (ui, architect, gate, reviewer, spec-check, im", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:52:06Z", "item": "S511", "action": "status", "from": "started", "to": "done", "note": "Eight prompts (ui, architect, gate, reviewer, spec-check, implementer, lead, part) now say `## Owner needed` takes at most one `Question:` block and one `Decision key:` line and that ork refuses a second of either; TestOwnerNeededSaysOneQuestionBlockAndOneDecisionKey is green, spec-draft untouched, and go test ./..., go vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:07:39Z", "item": "S667", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T04:07:40Z", "item": "S667", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T04:07:40Z", "item": "S667", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T04:07:40Z", "item": "S667", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-28T04:07:40Z", "item": "S667", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T04:42:04Z", "item": "S665", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:56:12Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "S665 landed in the worktree: ui.md keeps NAME.txt and NAME-W", "by": "Jon Robbins"}
+{"when": "2026-11-28T04:56:13Z", "item": "S665", "action": "status", "from": "started", "to": "done", "note": "S665 landed in the worktree: ui.md keeps NAME.txt and NAME-WxH/ascii names for the brief's render commands, limits VIEW- names to uncovered views, applies the Renders fallback when either render section is missing, and the prompt, the three brief paragraphs and both docs tell the UI role to keep at most 24 files in renders/; go test ./..., go vet, gofmt and slicer check are clean.", "by": "Jon Robbins"}
+{"when": "2026-11-28T05:07:20Z", "item": "S668", "action": "add", "from": "", "to": "open", "note": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe"}
+{"when": "2026-11-28T05:07:20Z", "item": "S668", "action": "promote", "from": "", "to": "", "note": ""}

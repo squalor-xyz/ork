@@ -849,7 +849,10 @@ slice.
     adj 629). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). The commands write straight into `renders/`; ork's approval
-    card lists every `.txt` file there.
+    card lists every `.txt` file there. The UI brief and prompt tell the role
+    to keep at most 24 files in `renders/`, counting the CLI and TUI files
+    together, because the card keeps 24 (`maxRenders`). `VIEW-` names are for
+    views the brief's render sections do not cover.
     `TestRenderFixtureDocsListEveryFixture` checks that this document and the
     guide include every additional render fixture by its exact name in their
     `-render-fixture` lists, ignoring mentions elsewhere in the documents.
@@ -1928,19 +1931,32 @@ containment check.
 plain commands joined only by `&&` outside quotes is run as its parts, in
 order: each part has its own row, log and check record, and a failed part
 (nonzero exit or timeout) leaves the later parts recorded as "not run by ork:
-an earlier part of the chain failed". A `&` that is not part of `&&`, a `|`, a
+an earlier part of the chain failed". A `&` that is not part of `&&`, a
 `;` or any part ork would not run keeps the whole line as one "not run by ork:
 orchestrator" row. A line's "prints nothing" or "must print nothing" binds every
 part.
+
+*Proposed (S524, adj 677, `checks.read-only-pipes`):* a pipeline joined by `|`
+outside quotes runs when every stage is `ls` or `rg`, with no environment
+assignment prefix, outside-worktree path, other shell syntax, or `rg --pre`
+or `--hostname-bin` (including their `=` forms). Each stage runs without a
+shell in the worktree, feeding stdout to the next stage, even when empty.
+A pipeline is one row with the whole command, one log and one timeout shared
+by all stages. Exit and ok come from the last stage (adj 684); a timeout in
+any stage fails the row. Its judged and logged output is every stage's stderr
+in order, followed by the last stage's stdout. A part of an `&&` chain may
+be a pipeline. Unsupported pipelines stay orchestrator-run.
+
 *Proposed (S419, `checks.prints-nothing-exit`, adj 468):* a line worded "prints
 nothing" or "must print nothing" (any case) is an empty-output check. Its row is
 ok when the output is empty and the exit is 0, or 1 from `rg`, `grep` or
 `git grep`, whose exit 1 means "no match". Any output, an exit of 2 or more, a
 timeout, or exit 1 from another command is red. The log of a row that printed
 something ends with "check must print nothing"; the log of any other red row
-names the exit code. ork runs no piped line, so a piped line stays "not run by
-ork: orchestrator"; the orchestrator judges it by its last command, by the same
-rule.
+names the exit code. *Proposed (S524, adj 677, `checks.read-only-pipes`):*
+supported pipelines use the last stage's exit and include every stage's
+stderr in the empty-output check. Unsupported pipelines stay orchestrator-run
+and are judged by their last command, by the same rule.
 *Proposed (S368):* a backticked entry whose first word starts with `-` (a
 flag such as `--yes`, left in the Check after a spec answer dropped it) is not
 a command: ork records it as "not run by ork: not a command (starts with -)"
@@ -1969,11 +1985,13 @@ The run pane does not add a list of check rows.
 *Proposed (S309, S406):* spec-check and gate briefs split slice Check commands
 three ways, in code (`checks.three-way-split`, adj 454, which supersedes adj
 280): implementer-runnable (the implementer's resolved allowlist), "Check
-commands ork runs" (a plain command or `&&` chain that the S317 paragraph
-above has ork run, such as an environment assignment prefix, a quoted
+commands ork runs" (a plain command or `&&` chain that the paragraphs
+above have ork run, such as an environment assignment prefix, a quoted
 argument or a command outside the allowlist) and orchestrator-run (shell
-syntax ork does not run, or an absolute path outside the worktree). A line
-goes to the first group that fits. A `;`, `|`, `&`, `<` or `>` inside quotes
+syntax ork does not run, or an absolute path outside the worktree). The
+ork-run group can also contain a pipeline of `ls` and `rg`
+(*Proposed (S524, adj 677, `checks.read-only-pipes`)*).
+A line goes to the first group that fits. A `;`, `|`, `&`, `<` or `>` inside quotes
 is an argument, so `go test -run 'A|B'` stays runnable; unquoted, it makes the
 command compound and not implementer-runnable unless an allowlist form names
 the whole command (S409). Spec-check raises no finding and asks no question
@@ -2348,6 +2366,12 @@ The reviewer is not told to run the suite.
   commentary line under section (C); the gate writes one "Deviation for the
   orchestrator" evidence line beside its criterion lines. Neither is a finding
   or starts a fix round.
+
+  A Claude reviewer's allowlist comes from the ork build that started the run,
+  so a slice's own permission change is not in effect for its reviewer. The
+  reviewer's brief says so and asks it to hand a denied command to the
+  orchestrator as an untagged line under section (C).
+
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
   (`role.report-io`). If the file is missing, ork uses the vendor JSON's

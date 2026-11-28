@@ -614,8 +614,14 @@ as "prints nothing", "must print nothing", "finds nothing", "matches nothing"
 or "returns nothing" (case-insensitive; S525). Such a line passes when its
 output is empty and its exit is 0, or 1 from `rg`, `grep` or `git grep` (their
 no-match code). Output, exit 2 or more, or exit 1 from any other command
-fails it. ork does not run a piped line; the orchestrator runs it and judges it
-by its last command, by the same rule. A line not worded that way must exit 0.
+fails it. *Proposed (S524, adj 677, `checks.read-only-pipes`):* ork runs a
+pipeline of `ls` and `rg` without a shell in the worktree, with one row and
+one timeout for the pipeline. No stage may use an environment assignment
+prefix, an outside-worktree path, other shell syntax, or `rg --pre` or
+`--hostname-bin` (including `=` forms). Exit and ok come from the last stage;
+the judged output is every stage's stderr, then the last stage's stdout.
+Any stage timeout fails the row. Unsupported pipelines stay orchestrator-run,
+judged by their last command. A line not worded that way must exit 0.
 Backticked entries that are not commands refuse a start and hold the spec
 check or draft; paths listed in Files that do not exist yet are exempt, so edit Check before
 starting again when ork names a non-command entry. Give each command its own
@@ -1024,7 +1030,10 @@ run that stops on a new question), `wait-lines` (several runs, one line each) an
 arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`
 the render test writes nothing. The command writes straight into `renders/`;
-ork's approval card lists every `.txt` file there.
+ork's approval card lists every `.txt` file there. The UI brief and prompt tell
+the role to keep at most 24 files in `renders/`, counting the CLI and TUI files
+together, because the card keeps 24 (`maxRenders`). `VIEW-` names are for views
+the brief's render sections do not cover.
 
 `TestRenderFixtureDocsListEveryFixture` checks that every additional render
 fixture has an exact name in the `-render-fixture` lists in this guide and the

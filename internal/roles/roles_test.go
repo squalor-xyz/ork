@@ -873,7 +873,7 @@ func TestUIPromptNamesTheOutOfTreeRenderRoute(t *testing.T) {
 		"CLI views come from the render flag",
 		"CLI views come from the render flag in the brief's `## CLI text renders` section, when the brief has one.",
 		"TUI views come from the TUI render command in the brief's `## TUI renders` section, when the brief has one.",
-		"When the brief has no `## TUI renders` or `## CLI text renders` section",
+		"When the brief has no `## TUI renders` section or no `## CLI text renders` section, follow its `## Renders` section",
 		"follow its `## Renders` section and the project's own tooling",
 	} {
 		if !has(renders, want) {
@@ -883,6 +883,40 @@ func TestUIPromptNamesTheOutOfTreeRenderRoute(t *testing.T) {
 	for _, bad := range []string{"-overlay", "a test file kept outside the tree"} {
 		if has(renders, bad) {
 			t.Errorf("ui Renders still names %q", bad)
+		}
+	}
+}
+
+// S665 (adj 680): VIEW- names are only for views the brief's render sections do
+// not cover; the brief's commands keep their own file names; the role keeps at
+// most 24 files in the renders directory.
+func TestUIPromptLimitsVIEWNamesToUncoveredViews(t *testing.T) {
+	p := prompts(t)["ui"]
+	_, renders, ok := strings.Cut(p, "\n## Renders\n")
+	if !ok {
+		t.Fatal("ui prompt has no Renders section")
+	}
+	renders, _, _ = strings.Cut(renders, "\n## Finding kinds\n")
+	for _, want := range []string{
+		"`NAME.txt` for CLI views",
+		"`NAME-80x24.txt`, `NAME-120x40.txt` and `NAME-ascii.txt` for TUI views",
+		"Leave those names as they are",
+		"For each view the diff adds or changes that the brief's render sections do not cover",
+		"`VIEW-80x24.txt`: the view at 80 columns by 24 rows.",
+		"`VIEW-120x40.txt`: the view at 120 columns by 40 rows.",
+		"`VIEW-ascii.txt`: the view in the project's ASCII or mono mode",
+		"Keep at most 24 files in the renders directory in all, counting the files the brief's render commands write.",
+		"ork's card drops the rest.",
+		"render fewer and say in your report which views you left out",
+		"only `.txt` files that are not links",
+	} {
+		if !has(renders, want) {
+			t.Errorf("ui Renders lacks %q", want)
+		}
+	}
+	for _, bad := range []string{"For each view the diff adds or changes, write plain text files"} {
+		if has(renders, bad) {
+			t.Errorf("ui Renders still has %q", bad)
 		}
 	}
 }
@@ -901,6 +935,7 @@ func TestUIPromptNamesAShortFixtureHeight(t *testing.T) {
 		"the height the tests use for that view",
 		"name the size in your report",
 		"VIEW-WxH.txt",
+		"`-render-size WxH`, which writes `NAME-WxH.txt`",
 	} {
 		if !has(renders, want) {
 			t.Errorf("ui Renders lacks %q", want)
@@ -1187,6 +1222,33 @@ func TestOwnerNeededBlockWordingMatchesTheParser(t *testing.T) {
 	}
 	if n != 9 {
 		t.Errorf("%d prompts carry the Owner needed block rule, want 9", n)
+	}
+}
+
+// S511 (adj 682): eight prompts say the Owner needed section takes one
+// Question: block and one Decision key: line, and that ork refuses a second of
+// either. The spec-draft prompt stays out: its own parser allows one block per
+// decision. Under a slice heading the spec check allows several blocks, each
+// with at most one key.
+func TestOwnerNeededSaysOneQuestionBlockAndOneDecisionKey(t *testing.T) {
+	all := prompts(t)
+	const limit = "`## Owner needed` takes at most one `Question:` block and at most one `Decision key:` line"
+	const refused = "ork refuses a report with a second `Question:` block or a second `Decision key:` line in it"
+	for _, name := range []string{"ui", "architect", "gate", "reviewer", "spec-check", "implementer", "lead", "part"} {
+		p := all[name]
+		if !has(p, limit) {
+			t.Errorf("%s lacks %q", name, limit)
+		}
+		if !has(p, refused) {
+			t.Errorf("%s lacks %q", name, refused)
+		}
+		perSlice := "Under a slice heading, each question block has at most one `Decision key:` line."
+		if got := has(p, perSlice); got != (name == "spec-check") {
+			t.Errorf("%s has the per-slice sentence = %v, want %v", name, got, name == "spec-check")
+		}
+	}
+	if has(all["spec-draft"], limit) {
+		t.Error("spec-draft carries the one-block sentence, but its parser allows one block per decision")
 	}
 }
 

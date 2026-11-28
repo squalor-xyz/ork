@@ -609,6 +609,13 @@ commands have `not_run: "not run by ork: orchestrator"` and no execution.
 *Proposed (S406):* a plain `&&` chain has one row for each part, and a part
 after a failed one has `not_run: "not run by ork: an earlier part of the chain
 failed"` and no execution.
+
+*Proposed (S524, adj 677, `checks.read-only-pipes`):* a supported pipeline of
+`ls` and `rg` has one row whose `command` is the whole pipeline. Its `exit`
+and `ok` come from the last stage (adj 684), with any stage timeout failing
+the row. Its log holds every stage's stderr in order, then the last stage's
+stdout. The stages share the row's timeout. A chain part may be a pipeline.
+
 Logs are `slice-checks-ROUND-ROW.log` or `land-slice-checks-ROUND-ROW.log`.
 `product_sha256` fingerprints product paths, modes and contents (including
 untracked files and symlink targets) plus the Check section. Only `docs/`

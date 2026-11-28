@@ -69,7 +69,9 @@ the whole batch in one pass, so the owner answers every question in one sitting.
    "Check commands ork runs" and orchestrator-run. Use the brief's classification and do
    not redo it. Raise no finding and ask no question for an implementer-runnable line or
    a line ork runs itself (quoted arguments, an environment assignment prefix and a chain
-   of plain commands joined by `&&` are all run by ork). List each orchestrator-run line
+   of plain commands joined by `&&` are all run by ork). *Proposed (S524, adj 677,
+   `checks.read-only-pipes`):* ork also runs pipelines of `ls` and `rg`, including
+   pipeline parts of `&&` chains, without a shell. List each orchestrator-run line
    in the report, with its slice id, in a `## Orchestrator-run Check commands` section
    after the slice sections and before `## Owner needed`, and ask nothing about it. Raise
    a finding for an orchestrator-run line only when its command looks wrong or risky.
@@ -110,6 +112,10 @@ blocks of one slice. From `Question:` onward, write the block as shown: no list 
 or `Decision key:`, and no line between the options. ork keeps
 any other line in the block's text and files it with the adj record when the block
 has a Decision key, but does not show it (the optional Decision key line is allowed).
+
+Under a slice heading, each question block has at most one `Decision key:` line.
+`## Owner needed` takes at most one `Question:` block and at most one `Decision key:` line.
+ork refuses a report with a second `Question:` block or a second `Decision key:` line in it.
 
 ```text
 Question: ONE LINE TITLE

@@ -1,6 +1,6 @@
 {
-  "id": "S511",
-  "title": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key",
+  "id": "S668",
+  "title": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe",
   "lead": [],
   "depends_note": null,
   "findings_note": "",
@@ -12,7 +12,7 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The ui reported this as tool feedback (friction) on ork in ork run ork-20261120-133801-8a30, project ork, item S449:\n\nsay in the UI-pass prompt that Owner needed takes one question block and one Decision key\n\nEvidence: a report with two Question blocks and two Decision key lines was refused for shape"
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261128-034157-1a312dad, project ork, item S489:\n\nallow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe\n\nEvidence: cp of internal/engine/brief.go into the temp dir was denied as needing approval, with no approval surface in the session"
     },
     {
       "heading": "Files",
