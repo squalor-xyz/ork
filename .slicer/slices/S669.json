@@ -1,0 +1,39 @@
+{
+  "id": "S669",
+  "title": "Cover pipeline timeouts and a later stage that cannot start in `runSliceChecks`",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "Raised by the reviewer in round 1 of ork run ork-20261128-034159-7b668596 for S524 (discovered from S524):\n\nCover pipeline timeouts and a later stage that cannot start in `runSliceChecks`\nNo test reaches these branches at states.go:1221-1224 and 1229-1230:\n- the shared time running out between stages;\n- a stage timing out mid-pipeline;\n- a later stage, such as a missing `rg`, failing to start, which should pause the run.\n\nThe spec's failing-test list did not ask for these tests, so this is not a fix for this slice.\nImportance: 1\nUrgency: 1\nEffort: 1"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

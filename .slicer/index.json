@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 669,
+  "next_id": 670,
   "preamble": "",
   "passes": [
     {
@@ -35714,6 +35714,34 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S669",
+      "title": "Cover pipeline timeouts and a later stage that cannot start in `runSliceChecks`",
+      "short_title": "Cover pipeline timeouts and a later stage that cannot start in `runSliceChecks`",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S524",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261128-034159-7b668596-later-1",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 1,
+        "urgency": 1,
+        "effort": 1,
         "attempts": 0
       }
     }

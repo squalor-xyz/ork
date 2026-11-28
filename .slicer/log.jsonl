@@ -7753,3 +7753,6 @@
 {"when": "2026-11-28T05:13:42Z", "item": "S664", "action": "status", "from": "started", "to": "done", "note": "TestProjectPrefix/not a repository now builds an enclosing git repo itself and sets GIT_CEILING_DIRECTORIES, so it passes however TMPDIR is placed; full suite, vet, gofmt and slicer check pass.", "by": "Jon Robbins"}
 {"when": "2026-11-28T05:07:20Z", "item": "S668", "action": "add", "from": "", "to": "open", "note": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe"}
 {"when": "2026-11-28T05:07:20Z", "item": "S668", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T06:07:32Z", "item": "S669", "action": "add", "from": "", "to": "open", "note": "Cover pipeline timeouts and a later stage that cannot start in `runSliceChecks`"}
+{"when": "2026-11-28T06:07:32Z", "item": "S669", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T06:07:33Z", "item": "S669", "action": "set", "from": "", "to": "", "note": "importance 2→1; urgency 2→1; effort -→1"}
