@@ -7651,3 +7651,9 @@
 {"when": "2026-11-28T01:12:39Z", "item": "S643", "action": "status", "from": "started", "to": "done", "note": "Base overlays provide capped unanchored per-test commands, product-only overlays retaining new tests, and a safe first-failure vet sample; focused suites and 35 mutation checks pass, while full-suite verification is sandbox-limited.", "by": "Jon Robbins"}
 {"when": "2026-11-28T00:52:36Z", "item": "S663", "action": "add", "from": "", "to": "open", "note": "flag a strings.Index on a heading in a brief test when the prompt text also contains that heading"}
 {"when": "2026-11-28T00:52:36Z", "item": "S663", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T01:49:56Z", "item": "S664", "action": "add", "from": "", "to": "open", "note": "set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir"}
+{"when": "2026-11-28T01:49:57Z", "item": "S664", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "add", "from": "", "to": "open", "note": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/"}
+{"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
+{"when": "2026-11-28T02:02:27Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "Also covers S660 finding 1: reword internal/roles/prompts/ui", "by": "Jon Robbins"}
