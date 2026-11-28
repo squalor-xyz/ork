@@ -533,14 +533,15 @@ func TestCloudImplementerByteBaseline(t *testing.T) {
 			// Outcome report guidance to the implementer prompt.
 			// S417 adds guidance for reading named run reports with ork show.
 			// S505 adds the sandbox socket-test note to the checklist.
+			// S511 adds the one-Question-block, one-Decision-key paragraph.
 			got = strings.Replace(got, "Role: implementer. Contract: relay v13\n", "Role: implementer. Contract: relay v12\n", 1)
-			want := "05d20aa4bf069abea441c2fb89b1583a510a45dfb4324970290465584c156b43"
+			want := "2a052753fd40b8807e7302aab9443d3923d85dab522f41620728cdba4329a6e9"
 			switch vendor {
 			case "claude":
-				want = "095a8e4b4f0785da57f82aafb16c1bf953e860a1794cb46edc8a5f7cb70c4e40"
+				want = "59e193b534a70348d5de16aa99788cec9ed86a6695301957f1c0c073b41a7304"
 			case "grok":
 				// S305: a grok implementer's checklist names dontAsk mode.
-				want = "000c8469ba9e870aa0ee11cf67c9cb01ef77c9184bb670bc854e667dbff742db"
+				want = "a3e1c9de0c854848575fa857bdb3865ca04ea958c140ed88855b525e154dc048"
 			}
 			if fmt.Sprintf("%x", sha256.Sum256([]byte(got))) != want {
 				t.Fatalf("%s cloud brief changed %x", vendor, sha256.Sum256([]byte(got)))
@@ -1670,6 +1671,34 @@ func TestUIPassBriefFallbackRendersSection(t *testing.T) {
 	}
 }
 
+// S665 (adj 680): every render paragraph that is present tells the UI role to
+// keep at most 24 files, the number ork's approval card keeps.
+func TestUIPassBriefNamesTheRenderFileCap(t *testing.T) {
+	for _, tc := range []struct{ cli, tui bool }{{true, true}, {true, false}, {false, true}, {false, false}} {
+		body := uiBriefBody(t, tc.cli, tc.tui)
+		for _, section := range []struct {
+			name string
+			want bool
+		}{{"CLI text renders", tc.cli}, {"TUI renders", tc.tui}, {"Renders", !tc.cli || !tc.tui}} {
+			_, text, ok := strings.Cut(body, "\n## "+section.name+"\n")
+			if ok != section.want {
+				t.Errorf("cli=%t tui=%t: %s present = %t, want %t", tc.cli, tc.tui, section.name, ok, section.want)
+				continue
+			}
+			if !ok {
+				continue
+			}
+			text, _, _ = strings.Cut(text, "\n## ")
+			if !strings.Contains(text, "at most 24 files") {
+				t.Errorf("cli=%t tui=%t: %s does not name the cap", tc.cli, tc.tui, section.name)
+			}
+			if section.name == "CLI text renders" && !strings.Contains(text, "ork's approval card lists every `.txt` file in the renders directory") {
+				t.Errorf("cli=%t tui=%t: CLI section lost the approval card sentence", tc.cli, tc.tui)
+			}
+		}
+	}
+}
+
 func TestUIPassBriefPointsRenderFlagAtRendersDir(t *testing.T) {
 	body := uiBriefBody(t, true, true)
 	for _, pkg := range []string{"cli", "tui"} {
@@ -2333,6 +2362,9 @@ func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 				got = strings.Join(kept, "")
 			}
 			want := wantByRole[role]
+			if vendor == "claude" && role == RoleReviewer {
+				want = strings.Replace(want, "- [ ] Complete sections", "- [ ] Your permission allowlist comes from the ork build that started this run, so a permission this slice adds or changes is not in effect for you. If a command is denied, do not retry it another way: report the verbatim command and denial text as one untagged line under section (C) for the orchestrator to run; it is not a [fix] and does not start a fix round.\n- [ ] Complete sections", 1)
+			}
 			if role == RoleReviewer || role == RoleGate {
 				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./....\n", 1)
 			}
@@ -2897,6 +2929,52 @@ func TestReviewerAndGateDoneWhen(t *testing.T) {
 				requireChecklistText(t, in, "untagged line under section (C)")
 			} else {
 				requireChecklistText(t, in, "first line exactly VERDICT: PASS or VERDICT: FAIL", "one evidence line per criterion", "Tests: N passed, M failed", "Deviation for the orchestrator", "no [fix]", "no blocker", "tests green", "docs match")
+			}
+		})
+	}
+}
+
+func TestReviewerDoneWhenNamesTheOldAllowlist(t *testing.T) {
+	for _, vendor := range []string{"claude", "claude-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = RoleReviewer
+			in.ReadOnly = true
+			in.Vendor = vendor
+			requireChecklistText(t, in, "- [ ] Your permission allowlist comes from the ork build that started this run, so a permission this slice adds or changes is not in effect for you. If a command is denied, do not retry it another way: report the verbatim command and denial text as one untagged line under section (C) for the orchestrator to run; it is not a [fix] and does not start a fix round.")
+			if n := strings.Count(checklist(t, in), "Your permission allowlist comes from"); n != 1 {
+				t.Errorf("old-allowlist item appears %d times, want 1", n)
+			}
+		})
+	}
+}
+
+func TestReviewerDoneWhenOldAllowlistNoteIsReviewerOnly(t *testing.T) {
+	for _, tc := range []struct {
+		role   string
+		vendor string
+	}{
+		{RoleGate, "claude"},
+		{RoleGate, "claude-local"},
+		{RoleImplementer, "claude"},
+		{RoleImplementer, "claude-local"},
+		{RoleReviewer, "codex"},
+		{RoleReviewer, "grok"},
+	} {
+		t.Run(tc.role+"/"+tc.vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = RoleReviewer
+			in.ReadOnly = true
+			in.Vendor = "claude"
+			if tc.vendor == "claude-local" {
+				in.Vendor = tc.vendor
+			}
+			// A positive control makes absence meaningful; change only role or vendor.
+			requireChecklistText(t, in, "Your permission allowlist comes from")
+			in.Role = tc.role
+			in.Vendor = tc.vendor
+			if strings.Contains(checklist(t, in), "Your permission allowlist comes from") {
+				t.Error("old-allowlist item present outside a Claude reviewer brief")
 			}
 		})
 	}

@@ -849,7 +849,10 @@ slice.
     adj 629). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). The commands write straight into `renders/`; ork's approval
-    card lists every `.txt` file there.
+    card lists every `.txt` file there. The UI brief and prompt tell the role
+    to keep at most 24 files in `renders/`, counting the CLI and TUI files
+    together, because the card keeps 24 (`maxRenders`). `VIEW-` names are for
+    views the brief's render sections do not cover.
     `TestRenderFixtureDocsListEveryFixture` checks that this document and the
     guide include every additional render fixture by its exact name in their
     `-render-fixture` lists, ignoring mentions elsewhere in the documents.
@@ -2363,6 +2366,12 @@ The reviewer is not told to run the suite.
   commentary line under section (C); the gate writes one "Deviation for the
   orchestrator" evidence line beside its criterion lines. Neither is a finding
   or starts a fix round.
+
+  A Claude reviewer's allowlist comes from the ork build that started the run,
+  so a slice's own permission change is not in effect for its reviewer. The
+  reviewer's brief says so and asks it to hand a denied command to the
+  orchestrator as an untagged line under section (C).
+
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
   (`role.report-io`). If the file is missing, ork uses the vendor JSON's

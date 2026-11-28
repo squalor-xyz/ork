@@ -25960,7 +25960,7 @@
       "id": "S463",
       "title": "start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist",
       "short_title": "start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -25991,6 +25991,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "c14f03ae-a3e1-4183-a4d2-8910c4ae0b66",
+          "kind": "",
+          "text": "**2026-11-28** — Claude reviewer briefs explain their running-build permission allowlist and route denied commands to the orchestrator under section (C), without starting a fix round.",
+          "created_at": "2026-11-28T04:53:37Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -26010,7 +26024,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -27826,7 +27840,7 @@
       "id": "S511",
       "title": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key",
       "short_title": "say in the UI-pass prompt that Owner needed takes one question block and one Decision key",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -27857,6 +27871,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "a8fa815c-678a-47bf-a0e6-b635c1a2f052",
+          "kind": "",
+          "text": "**2026-11-28** — Eight prompts (ui, architect, gate, reviewer, spec-check, implementer, lead, part) now say `## Owner needed` takes at most one `Question:` block and one `Decision key:` line and that ork refuses a second of either; TestOwnerNeededSaysOneQuestionBlockAndOneDecisionKey is green, spec-draft untouched, and go test ./..., go vet, gofmt and slicer check pass.",
+          "created_at": "2026-11-28T04:52:06Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -27876,7 +27904,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -35467,7 +35495,7 @@
       "id": "S665",
       "title": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/",
       "short_title": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -35498,6 +35526,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6556a6d1-1b66-49c7-b9b8-299f685b4908",
+          "kind": "",
+          "text": "**2026-11-28** — S665 landed in the worktree: ui.md keeps NAME.txt and NAME-WxH/ascii names for the brief's render commands, limits VIEW- names to uncovered views, applies the Renders fallback when either render section is missing, and the prompt, the three brief paragraphs and both docs tell the UI role to keep at most 24 files in renders/; go test ./..., go vet, gofmt and slicer check are clean.",
+          "created_at": "2026-11-28T04:56:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -35517,7 +35559,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -35561,6 +35603,20 @@
           "kind": "",
           "text": "**2026-11-28** — Owner decision (adj 679): narrow per-vendor grant. codex adds the renders directory as its only writable root with the worktree read-only; grok and claude-local get the same single-path write rule through their own permission mechanisms (as CloudUIAllowlist does for cloud claude, internal/daemon/runner.go:49-52); then remove the in.Vendor == claude gate on the renders-directory sentence (internal/engine/brief.go:234). Jon chose 'Narrow per-vendor grant', session 8d711f67, 2026-11-28.",
           "created_at": "2026-11-28T03:38:41Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "fd513fbe-9f4a-47d1-b473-061cff7eda34",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decisions (adj 685, 686): codex: the implementer first probes the installed codex for a setting that keeps the worktree read-only with the renders directory as the one writable root, saves the probe under testdata/vendors/codex/, and builds on it; if codex has none, it stops and reports and does not widen the grant (mind GOCACHE under TEMP). grok: deferred; the grok brief keeps the vendor gate and the S648 lint row omits grok and grok-local (grok ends 2026-12-09). claude-local gets the single-path grant. Jon chose 'Probe first, stop if none' and 'Defer grok', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T03:49:53Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
