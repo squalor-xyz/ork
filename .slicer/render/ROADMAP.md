@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-667 items · — 40 · done 456 · retired 171
+667 items · — 39 · done 457 · retired 171
 
 ## v1.3
 
@@ -283,7 +283,7 @@ v1.2
 | 226 | [S521](slices/S521.md) | let the Tests line say that the gate relied on ork's round results instead of forcing 0 passed 0 failed |  | - |  | discovered from S394 | done |
 | 227 | [S522](slices/S522.md) | name the golden files in the UI-pass brief when a slice adds CLI goldens, so the pass reads them instead of writing an overlay test |  | - |  | Folded into S499 (render test fixtures; the brief names the render command). · discovered from S434 | retired |
 | 228 | [S523](slices/S523.md) | Give the brief's focused test command without regex alternation, or as one command per test, so roles can run it under the one-command rule |  | - |  | Covered by S565/S571: one test per command, no pipe in -run (internal/engine/brief.go:234); Jon chose 'Retire all 9' in triage, session 8d711f67, 2026-11-27. · discovered from S400 | retired |
-| 229 | [S524](slices/S524.md) | Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator |  | - |  | discovered from S400 | — |
+| 229 | [S524](slices/S524.md) | Mark ls-and-rg Check lines as runnable by read-only roles, or have ork run them itself, instead of leaving them to the orchestrator |  | - |  | discovered from S400 | done |
 | 230 | [S525](slices/S525.md) | More prints-nothing wordings | S | 1 |  | 2026-11-22, S240 (run ork-20261120-152559-6a31): the Check line "`rg -n "does not show ages" docs/` finds nothing." went red on exit 1 with no output, because only "prints nothing" and "must print nothing" mark a row as empty-output (S419, adj 468). The slice was correct; the orchestrator reworded the line by hand. | done |
 | 231 | [S526](slices/S526.md) | quote -run regexes that contain the pipe character when Check lines go into role briefs, so read-only roles can run them as written |  | - |  | discovered from S434 | done |
 | 232 | [S527](slices/S527.md) | allow `go doc` for read-only reviewer roles so a doc-comment finding can be shown with tool output |  | - |  | discovered from S249 | done |

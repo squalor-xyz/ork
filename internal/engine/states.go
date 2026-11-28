@@ -1128,7 +1128,7 @@ func (e *Engine) productContent(ctx context.Context, worktree string) (string, e
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-// runSliceChecks executes the slice's plain commands outside role sandboxes.
+// runSliceChecks executes plain commands and read-only pipelines outside role sandboxes.
 // Each row has its own deadline and log. Landing always forces a fresh run.
 func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, prefix string, force bool) (checkRun, bool, error) {
 	pause := func(err error) (checkRun, bool, error) {
@@ -1211,7 +1211,27 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 		if notRun != "" {
 			log += notRun + "\n"
 		} else {
-			res, runErr := clirun.Run(ctx, clirun.Call{Bin: row.argv[0], Args: row.argv[1:], Env: append(os.Environ(), row.env...), Dir: rec.Worktree, Timeout: timeout})
+			var res clirun.Result
+			var runErr error
+			var stderr []byte
+			var stdin []byte
+			deadline := time.Now().Add(timeout)
+			stages := append([][]string{row.argv}, row.pipe...)
+			for _, argv := range stages {
+				left := time.Until(deadline)
+				if left <= 0 {
+					runErr = &clirun.TimeoutError{Call: clirun.Call{Timeout: timeout}, Result: res}
+					break
+				}
+				res, runErr = clirun.Run(ctx, clirun.Call{Bin: argv[0], Args: argv[1:], Env: append(os.Environ(), row.env...), Dir: rec.Worktree, Stdin: stdin, Timeout: left})
+				stderr = append(stderr, res.Stderr...)
+				var stageExit *clirun.ExitError
+				if runErr != nil && !errors.As(runErr, &stageExit) {
+					break
+				}
+				// Even empty stdout supplies EOF to the following stage.
+				stdin = append([]byte{}, res.Stdout...)
+			}
 			if ctx.Err() != nil {
 				return checkRun{}, false, ctx.Err()
 			}
@@ -1221,6 +1241,9 @@ func (e *Engine) runSliceChecks(ctx context.Context, rec runrec.Record, state, p
 				return pause(runErr)
 			}
 			output := string(res.Stdout) + string(res.Stderr)
+			if len(row.pipe) != 0 {
+				output = string(stderr) + string(res.Stdout)
+			}
 			log += output
 			c.Exit = res.ExitCode
 			if row.empty {

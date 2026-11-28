@@ -976,6 +976,53 @@ func TestCheckRunByOrk(t *testing.T) {
 	}
 }
 
+// S524: read-only pipelines run without extending the plain-command allowlist.
+func TestCheckRunByOrkRunsAReadOnlyPipeline(t *testing.T) {
+	for _, command := range []string{
+		"ls testdata/golden | rg 'runtree-fix-round-real'", "ls a | rg b | rg c",
+		"rg -n A docs | rg B", "ls . | rg 'a|b'", "ls . | rg x && ls docs | rg y",
+	} {
+		t.Run(command, func(t *testing.T) {
+			if !checkRunByOrk(command, "/p/worktree") {
+				t.Errorf("read-only pipeline is not ork-run: %s", command)
+			}
+		})
+	}
+	for _, command := range []string{
+		"go test ./... | tee out", "go test ./... | rg x", "ls . | cat", "ls . | go vet ./...",
+		"ls . |", "| rg x", "ls . || rg x", "ls . |& rg x",
+		"A=1 ls . | rg x", "ls . | A=1 rg x", "ls /old/checkout | rg x", "ls ../x | rg y",
+		"ls . | rg x > out", "ls . | rg $X", "ls . | rg --pre ./x y",
+		"ls . | rg --pre=./x y", "ls . | rg --hostname-bin=x y", "ls . | rg --hostname-bin x y",
+	} {
+		t.Run(command, func(t *testing.T) {
+			if checkRunByOrk(command, "/p/worktree") {
+				t.Errorf("unsupported pipeline is ork-run: %s", command)
+			}
+		})
+	}
+}
+
+func TestCheckSectionsListAPipelineAmongTheCommandsOrkRuns(t *testing.T) {
+	in := baseBrief()
+	in.Role = RoleSpecCheck
+	in.Allow = []string{"Bash(go vet *)"}
+	raw, _ := json.Marshal([]any{map[string]any{"id": "S04", "slice": map[string]any{"sections": []map[string]string{{"heading": "Check", "body": "- `ls testdata/golden | rg 'runtree-fix-round-real'`\n- `go test ./... | tee out`"}}}}})
+	in.SliceJSON = string(raw)
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{
+		"## Check commands ork runs\n\n- ls testdata/golden | rg 'runtree-fix-round-real'\n",
+		"## Orchestrator-run Check commands\n\n- go test ./... | tee out\n",
+	} {
+		if !strings.Contains(got, want) {
+			t.Errorf("brief lacks pipeline classification %q", want)
+		}
+	}
+}
+
 // S407: criteria bullets never reach the spec check as Check commands.
 func TestCheckSectionsSkipAcceptanceCriteria(t *testing.T) {
 	in := baseBrief()

@@ -487,7 +487,7 @@ func TestSliceChecksResumeStoppedSetsTheRetryMark(t *testing.T) {
 	}
 }
 
-// ork does not run a piped line, so the rule is a pure helper (S419).
+// The last stage determines the no-match exit rule (S419, S524).
 func TestPrintsNothingPipedLineJudgedByLastCommand(t *testing.T) {
 	for _, tc := range []struct {
 		command string
@@ -774,4 +774,86 @@ func TestSliceChecksLandingRechecksMergedTree(t *testing.T) {
 		}
 	}
 	t.Fatal(fmt.Sprintf("landing did not record slice row: %+v", rec.Checks))
+}
+
+func pipelineCheck(t *testing.T, wording, first, last string) (runrec.CheckRecord, string) {
+	t.Helper()
+	h := sliceChecksHarness(t, "- `ls docs | rg zed`"+wording)
+	writeCheckTool(t, h.W, "ls", first)
+	writeCheckTool(t, h.W, "rg", last)
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, paused, err := e.runSliceChecks(context.Background(), e.Snapshot(), runrec.StateGate, "slice-checks", false); err != nil || paused {
+		t.Fatalf("pipeline paused=%v err=%v", paused, err)
+	}
+	rows := sliceCheckRows(e)
+	if len(rows) != 1 {
+		t.Fatalf("pipeline rows = %+v, want one", rows)
+	}
+	b, err := os.ReadFile(filepath.Join(e.run.Dir(), rows[0].Log))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return rows[0], string(b)
+}
+
+func TestSliceChecksRunAReadOnlyPipeline(t *testing.T) {
+	row, log := pipelineCheck(t, "", "printf 'a.txt\\nzed.txt\\n'", "printf 'args:%s\\n' \"$*\"; cat")
+	if row.Command != "ls docs | rg zed" || !row.OK || row.Exit != 0 || row.NotRun != "" {
+		t.Errorf("pipeline row = %+v, want whole command, OK, exit 0 and no NotRun", row)
+	}
+	if log != "$ ls docs | rg zed\nargs:zed\na.txt\nzed.txt\n" {
+		t.Errorf("pipeline log = %q, want last-stage arguments and stdin", log)
+	}
+}
+
+func TestSliceChecksPipelineExitIsTheLastStages(t *testing.T) {
+	row, log := pipelineCheck(t, " prints nothing.", "printf 'zed.txt\\n'", "exit 1")
+	if !row.OK || row.Exit != 1 || row.NotRun != "" {
+		t.Errorf("pipeline row = %+v, want OK with last-stage exit 1\n%s", row, log)
+	}
+}
+
+func TestSliceChecksPipelineStageErrorOutputFailsAnEmptyCheck(t *testing.T) {
+	row, log := pipelineCheck(t, " prints nothing.", "printf 'ls: cannot access\\n' >&2; exit 2", "exit 1")
+	if row.OK || row.Exit != 1 || row.NotRun != "" {
+		t.Errorf("pipeline row = %+v, want red with last-stage exit 1", row)
+	}
+	if !strings.Contains(log, "ls: cannot access\n") || !strings.HasSuffix(log, "check must print nothing\n") {
+		t.Errorf("pipeline log = %q, want stage stderr and empty-check failure", log)
+	}
+}
+
+func TestSliceChecksRecordUnsupportedPipelines(t *testing.T) {
+	commands := []string{"go test ./pkg | rg x", "ls . | cat", "ls . | rg --pre ./x y", "ls /outside | rg x", "A=1 ls . | rg x"}
+	var body string
+	for _, command := range commands {
+		body += "- `" + command + "`\n"
+	}
+	h := sliceChecksHarness(t, body)
+	trace := filepath.Join(t.TempDir(), "trace")
+	for _, tool := range []string{"ls", "rg"} {
+		writeCheckTool(t, h.W, tool, "echo ran >> '"+trace+"'")
+	}
+	e, err := New(context.Background(), h.deps, h.cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, paused, err := e.runSliceChecks(context.Background(), e.Snapshot(), runrec.StateGate, "slice-checks", false); err != nil || paused {
+		t.Fatalf("unsupported pipelines paused=%v err=%v", paused, err)
+	}
+	rows := sliceCheckRows(e)
+	if len(rows) != len(commands) {
+		t.Fatalf("got %d rows, want %d", len(rows), len(commands))
+	}
+	for i, row := range rows {
+		if row.Command != commands[i] || row.NotRun != "not run by ork: orchestrator" || row.OK {
+			t.Errorf("unsupported pipeline row = %+v", row)
+		}
+	}
+	if _, err := os.Stat(trace); !errors.Is(err, os.ErrNotExist) {
+		t.Errorf("unsupported pipeline ran: trace stat = %v", err)
+	}
 }
