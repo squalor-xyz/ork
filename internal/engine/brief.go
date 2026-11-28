@@ -482,6 +482,9 @@ func doneWhen(in BriefInput) string {
 			add("Each [fix] has file:line and a reproduction or a test; each [later] has proposed Importance, Urgency and Effort scores (1 to 3). Apply owner answers and keep findings within the slice.")
 			if in.Role == RoleReviewer {
 				add("A tracking step denied to the implementer is a Deviation for the orchestrator, never a [fix]: one untagged line under section (C), not a finding or a reason to start a fix round.")
+				if in.Vendor == "claude" || in.Vendor == "claude-local" {
+					add("Your permission allowlist comes from the ork build that started this run, so a permission this slice adds or changes is not in effect for you. If a command is denied, do not retry it another way: report the verbatim command and denial text as one untagged line under section (C) for the orchestrator to run; it is not a [fix] and does not start a fix round.")
+				}
 				add("Complete sections (A)-(D), marking findings CONFIRMED or PLAUSIBLE; end with the exact unnumbered heading ## Owner needed and questions or none. In gate mode use the gate's first line and one evidence line per criterion; put denied tracking in a Deviation for the orchestrator evidence line.")
 			} else {
 				add("Report first line exactly VERDICT: PASS or VERDICT: FAIL, with nothing else on that line; one evidence line per criterion. PASS requires resolved earlier blockers with proving tests, no [fix], no blocker owner finding, tests green, and docs match the code; otherwise FAIL.")

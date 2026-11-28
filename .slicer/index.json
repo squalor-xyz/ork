@@ -25960,7 +25960,7 @@
       "id": "S463",
       "title": "start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist",
       "short_title": "start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -25991,6 +25991,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "c14f03ae-a3e1-4183-a4d2-8910c4ae0b66",
+          "kind": "",
+          "text": "**2026-11-28** — Claude reviewer briefs explain their running-build permission allowlist and route denied commands to the orchestrator under section (C), without starting a fix round.",
+          "created_at": "2026-11-28T04:53:37Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -26010,7 +26024,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

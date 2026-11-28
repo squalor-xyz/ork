@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-667 items · — 40 · done 456 · retired 171
+667 items · — 39 · done 457 · retired 171
 
 ## v1.3
 
@@ -222,7 +222,7 @@ v1.2
 | 165 | [S460](slices/S460.md) | allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it |  | - |  | Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S442 | retired |
 | 166 | [S461](slices/S461.md) | this reviewer brief's role prompt still carried "write your final report to PATH" beside "you cannot write it", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt |  | - |  | Covered by S423, which fixes this brief text; filed while S423 ran. · discovered from S423 | retired |
 | 167 | [S462](slices/S462.md) | allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief |  | - |  | Duplicate of S456 (short TMPDIR for read-only reviewers so socket tests run). · discovered from S357 | retired |
-| 168 | [S463](slices/S463.md) | start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist |  | - |  | discovered from S458 | — |
+| 168 | [S463](slices/S463.md) | start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist |  | - |  | discovered from S458 | done |
 | 169 | [S464](slices/S464.md) | start read-only roles from a build that includes the slice's own permission change, or say in the brief that they run under the old allowlist |  | - |  | Duplicate of S463 (read-only roles run under the daemon's allowlist, not the slice's). · discovered from S458 | retired |
 | 170 | [S465](slices/S465.md) | allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture |  | - |  | Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added). · discovered from S424 | retired |
 | 171 | [S466](slices/S466.md) | give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand |  | - |  | Owner turned down a per-project render command for the UI pass (adj 487, roles.ui-pass-render-path = overlay); S416 documents the overlay route. · discovered from S338 | retired |

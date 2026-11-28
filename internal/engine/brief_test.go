@@ -2286,6 +2286,9 @@ func TestClaudeAndCodexReadOnlyDoneWhen(t *testing.T) {
 				got = strings.Join(kept, "")
 			}
 			want := wantByRole[role]
+			if vendor == "claude" && role == RoleReviewer {
+				want = strings.Replace(want, "- [ ] Complete sections", "- [ ] Your permission allowlist comes from the ork build that started this run, so a permission this slice adds or changes is not in effect for you. If a command is denied, do not retry it another way: report the verbatim command and denial text as one untagged line under section (C) for the orchestrator to run; it is not a [fix] and does not start a fix round.\n- [ ] Complete sections", 1)
+			}
 			if role == RoleReviewer || role == RoleGate {
 				want = strings.Replace(want, "\n", "\n- [ ] Socket-bound tests may fail in sandbox; report them as sandbox-limited, not as findings. ork's round check is the evidence: its result and captured log, with the failing lines, are in the Ork round check result section; you need not run go test ./....\n", 1)
 			}
@@ -2850,6 +2853,52 @@ func TestReviewerAndGateDoneWhen(t *testing.T) {
 				requireChecklistText(t, in, "untagged line under section (C)")
 			} else {
 				requireChecklistText(t, in, "first line exactly VERDICT: PASS or VERDICT: FAIL", "one evidence line per criterion", "Tests: N passed, M failed", "Deviation for the orchestrator", "no [fix]", "no blocker", "tests green", "docs match")
+			}
+		})
+	}
+}
+
+func TestReviewerDoneWhenNamesTheOldAllowlist(t *testing.T) {
+	for _, vendor := range []string{"claude", "claude-local"} {
+		t.Run(vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = RoleReviewer
+			in.ReadOnly = true
+			in.Vendor = vendor
+			requireChecklistText(t, in, "- [ ] Your permission allowlist comes from the ork build that started this run, so a permission this slice adds or changes is not in effect for you. If a command is denied, do not retry it another way: report the verbatim command and denial text as one untagged line under section (C) for the orchestrator to run; it is not a [fix] and does not start a fix round.")
+			if n := strings.Count(checklist(t, in), "Your permission allowlist comes from"); n != 1 {
+				t.Errorf("old-allowlist item appears %d times, want 1", n)
+			}
+		})
+	}
+}
+
+func TestReviewerDoneWhenOldAllowlistNoteIsReviewerOnly(t *testing.T) {
+	for _, tc := range []struct {
+		role   string
+		vendor string
+	}{
+		{RoleGate, "claude"},
+		{RoleGate, "claude-local"},
+		{RoleImplementer, "claude"},
+		{RoleImplementer, "claude-local"},
+		{RoleReviewer, "codex"},
+		{RoleReviewer, "grok"},
+	} {
+		t.Run(tc.role+"/"+tc.vendor, func(t *testing.T) {
+			in := baseBrief()
+			in.Role = RoleReviewer
+			in.ReadOnly = true
+			in.Vendor = "claude"
+			if tc.vendor == "claude-local" {
+				in.Vendor = tc.vendor
+			}
+			// A positive control makes absence meaningful; change only role or vendor.
+			requireChecklistText(t, in, "Your permission allowlist comes from")
+			in.Role = tc.role
+			in.Vendor = tc.vendor
+			if strings.Contains(checklist(t, in), "Your permission allowlist comes from") {
+				t.Error("old-allowlist item present outside a Claude reviewer brief")
 			}
 		})
 	}
