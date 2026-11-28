@@ -7685,3 +7685,19 @@
 {"when": "2026-11-28T03:38:41Z", "item": "S667", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 679): narrow per-vendor grant. codex add", "by": "Jon Robbins"}
 {"when": "2026-11-28T03:38:41Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 680): reword ui.md so VIEW-WxH naming ap", "by": "Jon Robbins"}
 {"when": "2026-11-28T03:38:41Z", "item": "S664", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 681): tests that need a non-repo temp di", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:40:38Z", "item": "S511", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 682): the one-Question-block, one-Decisi", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:40:50Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T03:40:50Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:40:50Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T03:40:50Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-28T03:40:50Z", "item": "S463", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T03:40:50Z", "item": "S489", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T03:40:50Z", "item": "S489", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:40:51Z", "item": "S489", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T03:40:51Z", "item": "S489", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-28T03:40:51Z", "item": "S489", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T03:40:51Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T03:40:51Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T03:40:51Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T03:40:52Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Implement"}
+{"when": "2026-11-28T03:40:52Z", "item": "S524", "action": "edit", "from": "", "to": "", "note": "Check"}

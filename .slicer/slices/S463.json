@@ -12,23 +12,23 @@
   "sections": [
     {
       "heading": "Why",
-      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261119-125428-c06d, project ork, item S458:\n\nstart reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist\n\nEvidence: adj lint --help denied with \"This command requires approval\" while reviewing S458, the slice that adds Bash(adj lint*)"
+      "body": "A reviewer session runs under the permission allowlist of the ork build that started the run. `claudeRunner.Run` in `internal/daemon/runner.go:40-59` builds it from `engine.LocalReadOnlyAllowlist` when the role is read-only. A slice that adds or changes a permission therefore has no effect on its own reviewer. The reviewer of S458, the slice that added `Bash(adj lint*)`, saw `adj lint --help` denied with \"This command requires approval\", and its brief did not say why.\n\nThe owner chose the brief-note option on 2026-11-28 (session 8d711f67, recorded in the slice notes). The reviewer's Done when checklist will say the allowlist comes from the ork build that started the run. It will say a permission the slice adds or changes is not in effect for that reviewer. It will tell the reviewer to hand any denied command to the orchestrator as an untagged line under section (C), not as a `[fix]` and not as a reason to start a fix round. ork's runner and the allowlist stay as they are.\n\nOwner decision, 2026-11-28 (adj 675): a brief note that permissions come from the running ork build."
     },
     {
       "heading": "Files",
-      "body": ""
+      "body": "- `internal/engine/brief.go:480-491` (the reviewer branch of `doneWhen`)\n- `internal/engine/brief_test.go:2831-2856` (next to `TestReviewerAndGateDoneWhen`)\n- `docs/design.md:2346-2350` (the paragraph on a tracking step denied to the implementer)"
     },
     {
       "heading": "Failing tests",
-      "body": ""
+      "body": "- TestReviewerDoneWhenNamesTheOldAllowlist: a claude reviewer brief (`RoleReviewer`, `ReadOnly`, `Vendor` \"claude\") has a Done when item that carries four things. It says the allowlist comes from the ork build that started the run. It says a permission the slice adds or changes is not in effect for the reviewer. It says a denied command goes to the orchestrator to run. It says the denial is an untagged line under section (C), not a `[fix]`. The same holds for Vendor \"claude-local\". The item appears exactly once. Fails first: no such item.\n- TestReviewerDoneWhenOldAllowlistNoteIsReviewerOnly: the item is absent from a gate brief, from a reviewer brief with Vendor \"codex\" or \"grok\", and from an implementer brief. Those roles and vendors do not get the read-only allowlist as a Claude reviewer does. Fails first: no such item, so it only guards the scope once the item exists."
     },
     {
       "heading": "Implement",
-      "body": ""
+      "body": "1. In `internal/engine/brief.go`, in the `case RoleReviewer, RoleGate:` branch of `doneWhen`, inside the existing `if in.Role == RoleReviewer {` block, add a guarded `add(...)` call. It runs only when `in.Vendor == \"claude\" || in.Vendor == \"claude-local\"`, the vendors whose runner sends the allowlist. The text is: \"Your permission allowlist comes from the ork build that started this run, so a permission this slice adds or changes is not in effect for you. If a command is denied, do not retry it another way: report the verbatim command and denial text as one untagged line under section (C) for the orchestrator to run; it is not a [fix] and does not start a fix round.\" Place it after the existing \"A tracking step denied to the implementer\" item.\n2. In `internal/engine/brief_test.go`, add `TestReviewerDoneWhenNamesTheOldAllowlist` and `TestReviewerDoneWhenOldAllowlistNoteIsReviewerOnly` after `TestReviewerAndGateDoneWhen`. Use `baseBrief()`, `checklist` and `requireChecklistText`, and set `Role`, `ReadOnly` and `Vendor` on each case.\n3. In `docs/design.md`, after the denied-tracking-step paragraph (`docs/design.md:2346-2350`), add a sentence. A Claude reviewer's allowlist comes from the ork build that started the run, so a slice's own permission change is not in effect for its reviewer. The reviewer's brief says so and asks it to hand a denied command to the orchestrator as an untagged line under section (C).\n4. Run `slicer changelog add S463 --text \"...\"` with one bullet, as the project's AGENTS.md says. Never edit `CHANGELOG.md`."
     },
     {
       "heading": "Check",
-      "body": ""
+      "body": "- Acceptance criteria: a Claude reviewer's Done when names the old allowlist and the hand-off to the orchestrator; a gate, a codex or grok reviewer and an implementer brief do not carry it; no other brief text changes; go vet and gofmt are clean.\n- `go test -run TestReviewerDoneWhenNamesTheOldAllowlist ./internal/engine` passes.\n- `go test -run TestReviewerDoneWhenOldAllowlistNoteIsReviewerOnly ./internal/engine` passes.\n- `go test -run TestReviewerAndGateDoneWhen ./internal/engine` passes.\n- `go test -run TestEveryRoleBriefHasADoneWhenSection ./internal/engine` passes: the checklist stays under 40 lines.\n- `go test ./...` passes.\n- `go vet ./...` exits 0.\n- `gofmt -l .` prints nothing.\n- `slicer check` exits 0."
     },
     {
       "heading": "Git",
