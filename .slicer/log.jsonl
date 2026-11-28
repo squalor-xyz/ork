@@ -7644,6 +7644,13 @@
 {"when": "2026-11-28T01:49:18Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-28T02:04:30Z", "item": "S648", "action": "note", "from": "", "to": "", "note": "The named brief permission lint passes focused checks, and S", "by": "Jon Robbins"}
 {"when": "2026-11-28T02:04:30Z", "item": "S648", "action": "status", "from": "started", "to": "done", "note": "The named brief permission lint passes focused checks, and S648’s executable commands now use the absolute worktree path instead of DIR.", "by": "Jon Robbins"}
+{"when": "2026-11-28T01:35:17Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T01:35:17Z", "item": "S647", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T01:36:48Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T02:00:25Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T02:00:26Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T02:12:03Z", "item": "S647", "action": "note", "from": "", "to": "", "note": "Added the docs insertion lint against main's merge base, wit", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:12:03Z", "item": "S647", "action": "status", "from": "started", "to": "done", "note": "Added the docs insertion lint against main's merge base, with paragraph-boundary checks and a skip fixture isolated from parent repositories.", "by": "Jon Robbins"}
 {"when": "2026-11-28T00:28:40Z", "item": "S660", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-28T00:29:06Z", "item": "S660", "action": "edit", "from": "", "to": "", "note": "Files"}
 {"when": "2026-11-28T00:29:07Z", "item": "S660", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
@@ -7668,3 +7675,7 @@
 {"when": "2026-11-28T02:02:27Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "Also covers S660 finding 1: reword internal/roles/prompts/ui", "by": "Jon Robbins"}
 {"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "add", "from": "", "to": "open", "note": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round"}
 {"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T02:45:08Z", "item": "S511", "action": "note", "from": "", "to": "", "note": "Owner decision: ui, architect, gate, reviewer and spec-check", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:45:09Z", "item": "S463", "action": "note", "from": "", "to": "", "note": "Owner decision: the reviewer brief says its permission allow", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:45:09Z", "item": "S489", "action": "note", "from": "", "to": "", "note": "Owner decision: a test over the built briefs for every role ", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:45:09Z", "item": "S524", "action": "note", "from": "", "to": "", "note": "Owner decision: ork runs a pipeline of read-only commands (l", "by": "Jon Robbins"}

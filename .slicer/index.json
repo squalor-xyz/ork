@@ -25977,6 +25977,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "c5441cd4-ef77-4184-b263-b28dec7dd2ee",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision: the reviewer brief says its permission allowlist comes from the ork build that started the run, so a slice that adds or changes a permission is not in effect for that reviewer; it asks the orchestrator to run any denied command. Jon chose 'Brief note', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T02:45:09Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -26896,7 +26910,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "b5c3982f-4d66-44bd-8588-586daff79ed6",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision: a test over the built briefs for every role checks that each path the brief tells the role to write is inside TempDir, the renders directory, ReportPath or the local implementer ProgressFile; BuildBrief is unchanged. Jon chose 'Test only', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T02:45:09Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -27800,7 +27829,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "c3f7850d-c680-4e23-9a34-e30eb1e52f6a",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision: ui, architect, gate, reviewer and spec-check prompts all say Owner needed takes at most one Question: block and one Decision key: line (the shape check is shared, report.go:272-275, kinds.go:176-179). Jon chose 'All owner-question prompts', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T02:45:08Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -28236,7 +28280,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "0b611138-53d5-425e-a497-d4a6420371c4",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision: ork runs a pipeline of read-only commands (ls, rg) joined by | itself, in the worktree, with no shell, as it runs && chains (adj 454); such lines move from Orchestrator-run to Check commands ork runs. Jon chose 'ork runs read-only pipes', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T02:45:09Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -34628,7 +34687,7 @@
       "id": "S647",
       "title": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph",
       "short_title": "flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -34638,6 +34697,20 @@
           "text": "**2026-11-27** — Owner decision (adj 665): a go test in internal/docscheck diffs docs against main and flags an inserted doc line that touches an unchanged non-blank line (before or after); it skips when git or main is absent. Jon chose 'Diff rule', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T22:10:48Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "1a6cbe3a-bf43-4b39-929c-aa3b5a5e603b",
+          "kind": "",
+          "text": "**2026-11-28** — Added the docs insertion lint against main's merge base, with paragraph-boundary checks and a skip fixture isolated from parent repositories.",
+          "created_at": "2026-11-28T02:12:03Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -34664,7 +34737,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
