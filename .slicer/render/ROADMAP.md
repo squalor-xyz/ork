@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-667 items · — 39 · done 457 · retired 171
+667 items · — 37 · done 459 · retired 171
 
 ## v1.3
 
@@ -222,7 +222,7 @@ v1.2
 | 165 | [S460](slices/S460.md) | allow adj lint --root DIR alone in the reviewer sandbox since the slice Check names it |  | - |  | Duplicate of S458 (adj lint in the read-only allowlist). · discovered from S442 | retired |
 | 166 | [S461](slices/S461.md) | this reviewer brief's role prompt still carried "write your final report to PATH" beside "you cannot write it", the defect S423 fixes; expected until S423 lands and the daemon is rebuilt |  | - |  | Covered by S423, which fixes this brief text; filed while S423 ran. · discovered from S423 | retired |
 | 167 | [S462](slices/S462.md) | allow the reviewer's go test ./... to bind unix sockets under its own TMPDIR, or name the packages it should skip in the brief |  | - |  | Duplicate of S456 (short TMPDIR for read-only reviewers so socket tests run). · discovered from S357 | retired |
-| 168 | [S463](slices/S463.md) | start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist |  | - |  | discovered from S458 | — |
+| 168 | [S463](slices/S463.md) | start reviewer sessions from a build that includes the slice's own permission change, or say in the brief that the reviewer runs under the old allowlist |  | - |  | discovered from S458 | done |
 | 169 | [S464](slices/S464.md) | start read-only roles from a build that includes the slice's own permission change, or say in the brief that they run under the old allowlist |  | - |  | Duplicate of S463 (read-only roles run under the daemon's allowlist, not the slice's). · discovered from S458 | retired |
 | 170 | [S465](slices/S465.md) | allow read-only roles to run git init and ls-files in their own TMPDIR, so a reviewer can check git behaviour with a fixture |  | - |  | Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added). · discovered from S424 | retired |
 | 171 | [S466](slices/S466.md) | give the UI pass a render command (for example a test flag that writes a command's help block as plain text to a given directory) so help renders do not have to be copied from source by hand |  | - |  | Owner turned down a per-project render command for the UI pass (adj 487, roles.ui-pass-render-path = overlay); S416 documents the overlay route. · discovered from S338 | retired |
@@ -270,7 +270,7 @@ v1.2
 | 213 | [S508](slices/S508.md) | Lint Check commands at plan time | S | 1 |  | 2026-11-18 to 11-20: three runs stopped at slice checks because a Check section had backticked text that is not a command: S392 (a test name in prose ran the race test), S384 ("Contract: relay v13": exec "Contract:" not found), S318 ("internal/cli": fork/exec permission denied). Each cost a stop and a hand fix in the worktree. | done |
 | 214 | [S509](slices/S509.md) | test every read-only allowlist entry against a fixed list of known tracking-write commands (slicer note, done, set, ai relay --init-roles, changelog add) and fail on any match |  | - |  | discovered from S505 | done |
 | 215 | [S510](slices/S510.md) | allow the reviewer to write to its own role temp dir, as the prompt says it may |  | - |  | discovered from S449 | done |
-| 216 | [S511](slices/S511.md) | say in the UI-pass prompt that Owner needed takes one question block and one Decision key |  | - |  | discovered from S449 | — |
+| 216 | [S511](slices/S511.md) | say in the UI-pass prompt that Owner needed takes one question block and one Decision key |  | - |  | discovered from S449 | done |
 | 217 | [S512](slices/S512.md) | allow the reviewer's own TMPDIR as a Write target in the reviewer's permission settings |  | - |  | Duplicate of S510 (reviewer may write its own temp dir). · discovered from S508 | retired |
 | 218 | [S513](slices/S513.md) | check each read-only allowlist entry against Claude Code's real permission matcher on fixed write commands, instead of the test's own regex model |  | - |  | Duplicate of S509 (test read-only allowlist entries against write commands). · discovered from S505 | retired |
 | 219 | [S514](slices/S514.md) | Include a tool feedback entry in the pausedShow fixture used by TestRenderCLIViews so the brief's render command shows the new section |  | - |  | Folded into S499 (render test fixtures, adj 513/514/515/517). · discovered from S389 | retired |
