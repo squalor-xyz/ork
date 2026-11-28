@@ -57,6 +57,64 @@ func sortedRoles(h *harness) []string {
 	return got
 }
 
+func TestUIPassBriefDetectsWorktreeRenderTests(t *testing.T) {
+	for _, pkg := range []string{"cli", "tui"} {
+		t.Run(pkg, func(t *testing.T) {
+			h := uiHarness(t, tuiFiles)
+			dir := filepath.Join(h.W, "internal", pkg)
+			name, heading := "TestRenderCLIViews", "CLI text renders"
+			if pkg == "tui" {
+				name, heading = "TestRenderTUIViews", "TUI renders"
+			}
+			h.runner.script = func(req Request, _ int) (Result, error) {
+				if req.Role == RoleImplementer {
+					if err := os.MkdirAll(dir, 0755); err != nil {
+						return Result{}, err
+					}
+					if err := os.WriteFile(filepath.Join(dir, "render_test.go"), []byte("func "+name+"("), 0644); err != nil {
+						return Result{}, err
+					}
+				}
+				return Result{}, nil
+			}
+			requireState(t, h.start(), runrec.StateAwaitingApproval)
+			for _, req := range h.runner.requests() {
+				if req.Role != RoleUI {
+					continue
+				}
+				_, body, _ := strings.Cut(req.Brief, "\n# Brief\n")
+				if !strings.Contains(body, "\n## "+heading+"\n") {
+					t.Errorf("UI round did not detect %s", name)
+				}
+			}
+		})
+	}
+}
+
+func TestUIPassBriefHasFallbackRendersWithoutRenderTests(t *testing.T) {
+	h := uiHarness(t, tuiFiles)
+	requireState(t, h.start(), runrec.StateAwaitingApproval)
+	saw := false
+	for _, req := range h.runner.requests() {
+		if req.Role != RoleUI {
+			continue
+		}
+		saw = true
+		_, body, _ := strings.Cut(req.Brief, "\n# Brief\n")
+		if !strings.Contains(body, "\n## Renders\n") {
+			t.Error("UI round brief lacks fallback")
+		}
+		for _, name := range []string{"CLI text renders", "TUI renders"} {
+			if strings.Contains(body, "\n## "+name+"\n") {
+				t.Errorf("UI round brief contains %s", name)
+			}
+		}
+	}
+	if !saw {
+		t.Fatal("no UI request")
+	}
+}
+
 func TestUIPassRunsWithReviewerOnUISlice(t *testing.T) {
 	h := uiHarness(t, tuiFiles)
 	// Each of the two roles waits until the other has started. Run one after

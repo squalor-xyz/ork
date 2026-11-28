@@ -653,6 +653,9 @@ func (e *Engine) runRound(ctx context.Context, r round, pend *runrec.Pending) (o
 		Lead:         r.lead,
 		Sections:     append(append(lostSection(rec, r, pend), pendingSection(pend)...), r.sections...),
 	}
+	if r.role == RoleUI {
+		in.RenderCLI, in.RenderTUI = renderTestsIn(rec.Worktree)
+	}
 	decisionChecker := e.decisionKeyChecker(ctx)
 	if r.role == RoleReviewer {
 		if section := e.decisionPathsSection(ctx, rec, sliceJSON); section != nil {

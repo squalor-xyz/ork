@@ -825,10 +825,14 @@ slice.
     it. When the gate passes, the
     approval card keeps the files of the latest UI pass that ended well (see
     Approval card).
-    For ork CLI views, the brief names
+    Each render section appears only when the worktree has its render test
+    (adj 662, adj 668). For missing tests, a generic `## Renders` section
+    points to the project's `AGENTS.md` and docs and uses only its tooling.
+    Views that tooling cannot render without changing the tree get no file;
+    the pass says so in its report. For ork CLI views, the brief names
     `go test ./internal/cli -run TestRenderCLIViews -renders DIR`, with
-    the brief's temp directory (`TMPDir`, or `TempDir` when unset) as DIR
-    (adj 505, superseding adj 487; adj 508).
+    the role's renders directory (`TempDir/renders`) as DIR
+    (adj 505, superseding adj 487; adj 667, superseding adj 508).
     The test flag writes `status.txt`, `status-summary.txt`,
     `status-summary-long.txt`, `show.txt` and `help.txt` using existing
     CLI fixtures, without editing the tree. `-render-fixture NAME[,NAME...]`
@@ -844,10 +848,8 @@ slice.
     line, the timeout message and the nothing-active messages) (adj 542,
     adj 629). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
-    (adj 509). These are scratch files in the role's temp directory named
-    in the brief under Your files. The pass
-    copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
-    names for the approval card.
+    (adj 509). The commands write straight into `renders/`; ork's approval
+    card lists every `.txt` file there.
     `TestRenderFixtureDocsListEveryFixture` checks that this document and the
     guide include every additional render fixture by its exact name in their
     `-render-fixture` lists, ignoring mentions elsewhere in the documents.
@@ -875,7 +877,7 @@ slice.
     adj 650, adj 651, superseding adj 507 and the overlay recipe of S416):
     the UI brief's `## TUI renders` section gives
     `go test ./internal/tui -run TestRenderTUIViews -renders DIR`, with the
-    brief's temp directory as DIR. Add `-v` to see go test's output. For each
+    role's renders directory as DIR. Add `-v` to see go test's output. For each
     fixture the flag writes `NAME-80x24.txt`, `NAME-120x40.txt` and
     `NAME-ascii.txt` (the mono theme and ASCII option, at 80x24) as plain text
     from the TUI test harnesses, without changing the tree.

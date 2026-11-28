@@ -101,7 +101,7 @@ and the owner's words. Anything the owner did not decide stays an open ask.
   `go test ./internal/cli -update`, then review the diff in `testdata/golden/`.
 - Render TUI views (the UI pass; adj 644, S538). Run one plain command:
   `go test ./internal/tui -run TestRenderTUIViews -renders DIR`, with the role's
-  temp dir as DIR. It writes `NAME-80x24.txt`, `NAME-120x40.txt` and
+  renders directory as DIR. It writes `NAME-80x24.txt`, `NAME-120x40.txt` and
   `NAME-ascii.txt` for the five default fixtures (`overview`, `roadmap`,
   `launch-confirm`, `approval-card`, `approval-render`).
   `-render-fixture NAME[,NAME...]` picks fixtures, `-render-size WxH[,WxH...]`

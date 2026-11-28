@@ -871,6 +871,10 @@ func TestUIPromptNamesTheOutOfTreeRenderRoute(t *testing.T) {
 		"TUI views come from the TUI render command in the brief's `## TUI renders` section",
 		"{{renders_dir}}/",
 		"CLI views come from the render flag",
+		"CLI views come from the render flag in the brief's `## CLI text renders` section, when the brief has one.",
+		"TUI views come from the TUI render command in the brief's `## TUI renders` section, when the brief has one.",
+		"When the brief has no `## TUI renders` or `## CLI text renders` section",
+		"follow its `## Renders` section and the project's own tooling",
 	} {
 		if !has(renders, want) {
 			t.Errorf("ui Renders lacks %q", want)

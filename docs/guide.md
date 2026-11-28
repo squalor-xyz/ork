@@ -998,8 +998,14 @@ approval, and directory-versus-file clashes are not detected.
   project's `push` setting is on, and removes the worktree and the branch
   (`docs/design.md:646-810`).
 
-For ork CLI text views, the UI pass brief gives this command with the temp
-directory named under Your files in its brief in place of DIR:
+Each specialized render section appears only when the worktree has its
+render test. For missing tests, the brief gives a generic `## Renders`
+section pointing to the project's `AGENTS.md` and docs. Use only that
+tooling. If it cannot render a view without changing the tree, write no
+file for that view and say so in the report.
+
+For ork CLI text views, the UI pass brief gives this command with the role's
+renders directory in place of DIR:
 
     go test ./internal/cli -run TestRenderCLIViews -renders DIR
 
@@ -1017,9 +1023,8 @@ run that stops on a new question), `wait-lines` (several runs, one line each) an
 (the stage-end line, the timeout message and the nothing-active messages) (adj 629). A view of several commands puts a `$ ork ARGS` line, with the
 arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`
-the render test writes nothing. The pass copies selected scratch files into
-its `renders/` directory with the prompt's `VIEW-80x24.txt` names so they
-appear on the approval card.
+the render test writes nothing. The command writes straight into `renders/`;
+ork's approval card lists every `.txt` file there.
 
 `TestRenderFixtureDocsListEveryFixture` checks that every additional render
 fixture has an exact name in the `-render-fixture` lists in this guide and the
@@ -1027,12 +1032,13 @@ design document, ignoring mentions elsewhere in the documents.
 
 The UI pass brief also says that a `go test -run` pattern must not contain a
 pipe, because `|` makes a compound command that the permission check denies.
-It gives the form that is allowed: one test per command, for example
-`go -C WORKTREE test -run TestRenderCLIViews ./internal/cli`, and the next
-test in its own command.
+It gives the form that is allowed: `go -C WORKTREE test -run NAME PKG`,
+one test per command, and the next test in its own command. When the CLI
+render test is present it also gives `TestRenderCLIViews ./internal/cli`
+as an example.
 
 For TUI views, the same brief has a `## TUI renders` section with this
-command, again with the temp directory in place of DIR:
+command, again with the renders directory in place of DIR:
 
     go test ./internal/tui -run TestRenderTUIViews -renders DIR
 
