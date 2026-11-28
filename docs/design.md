@@ -849,7 +849,10 @@ slice.
     adj 629). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
     (adj 509). The commands write straight into `renders/`; ork's approval
-    card lists every `.txt` file there.
+    card lists every `.txt` file there. The UI brief and prompt tell the role
+    to keep at most 24 files in `renders/`, counting the CLI and TUI files
+    together, because the card keeps 24 (`maxRenders`). `VIEW-` names are for
+    views the brief's render sections do not cover.
     `TestRenderFixtureDocsListEveryFixture` checks that this document and the
     guide include every additional render fixture by its exact name in their
     `-render-fixture` lists, ignoring mentions elsewhere in the documents.

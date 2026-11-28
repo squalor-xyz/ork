@@ -35453,7 +35453,7 @@
       "id": "S665",
       "title": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/",
       "short_title": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -35484,6 +35484,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "6556a6d1-1b66-49c7-b9b8-299f685b4908",
+          "kind": "",
+          "text": "**2026-11-28** — S665 landed in the worktree: ui.md keeps NAME.txt and NAME-WxH/ascii names for the brief's render commands, limits VIEW- names to uncovered views, applies the Renders fallback when either render section is missing, and the prompt, the three brief paragraphs and both docs tell the UI role to keep at most 24 files in renders/; go test ./..., go vet, gofmt and slicer check are clean.",
+          "created_at": "2026-11-28T04:56:12Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -35503,7 +35517,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {

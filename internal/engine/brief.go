@@ -238,12 +238,12 @@ func BuildBrief(in BriefInput) (string, error) {
 		if in.RenderCLI {
 			b.WriteString("## CLI text renders\n\nFor ork CLI views, run this from the worktree with the test flag:\n\n")
 			fmt.Fprintf(&b, "`go test ./internal/cli -run TestRenderCLIViews -renders %s`\n\n", ShellWord(renders))
-			b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into the renders directory, exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop. ork's approval card lists every `.txt` file in the renders directory.\n\n")
+			b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into the renders directory, exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop. ork's approval card lists every `.txt` file in the renders directory. Keep at most 24 files in the renders directory in all, counting the TUI renders; the card drops the rest, so pick fixtures that keep the total at 24 or fewer.\n\n")
 		}
 		if in.RenderTUI {
 			b.WriteString("## TUI renders\n\nFor ork TUI views, run this from the worktree with the test flag:\n\n")
 			fmt.Fprintf(&b, "`go test ./internal/tui -run TestRenderTUIViews -renders %s`\n\n", ShellWord(renders))
-			b.WriteString("This writes NAME-80x24.txt, NAME-120x40.txt and NAME-ascii.txt for each default fixture into the renders directory, as plain text, without changing the tree. The default fixtures are overview, roadmap, launch-confirm, approval-card and approval-render. To write others, add `-render-fixture NAME[,NAME...]`; it writes only those fixtures. To write another size, add `-render-size WxH[,WxH...]`; it writes one more NAME-WxH.txt for each size. To read a view without writing a file, add `-render-print` and `-v`; it prints each text to stdout under a `## NAME-SIZE` line. A TUI view with no fixture is not rendered: say so in your report.\n\n")
+			b.WriteString("This writes NAME-80x24.txt, NAME-120x40.txt and NAME-ascii.txt for each default fixture into the renders directory, as plain text, without changing the tree. The default fixtures are overview, roadmap, launch-confirm, approval-card and approval-render. To write others, add `-render-fixture NAME[,NAME...]`; it writes only those fixtures. To write another size, add `-render-size WxH[,WxH...]`; it writes one more NAME-WxH.txt for each size. To read a view without writing a file, add `-render-print` and `-v`; it prints each text to stdout under a `## NAME-SIZE` line. A TUI view with no fixture is not rendered: say so in your report. The default fixtures write 15 files. Keep at most 24 files in the renders directory in all, counting the CLI renders; the card drops the rest, so pick fixtures and sizes that keep the total at 24 or fewer.\n\n")
 		}
 		if !in.RenderCLI || !in.RenderTUI {
 			missing := "CLI and TUI"
@@ -252,7 +252,7 @@ func BuildBrief(in BriefInput) (string, error) {
 			} else if in.RenderTUI {
 				missing = "CLI"
 			}
-			fmt.Fprintf(&b, "## Renders\n\nork's render test for the %s views is not in this worktree. Find how the project renders its views in its `AGENTS.md` and docs, and use only that tooling. Write the files into the renders directory `%s`. A view that tooling cannot render without changing the tree gets no file: say so in your report.\n\n", missing, renders)
+			fmt.Fprintf(&b, "## Renders\n\nork's render test for the %s views is not in this worktree. Find how the project renders its views in its `AGENTS.md` and docs, and use only that tooling. Write the files into the renders directory `%s`. A view that tooling cannot render without changing the tree gets no file: say so in your report. Keep at most 24 files in the renders directory in all; the card drops the rest.\n\n", missing, renders)
 		}
 		fmt.Fprintf(&b, "## Test run patterns\n\nRun one test per command: `go -C %s test -run NAME PKG`", in.Worktree)
 		if in.RenderCLI {

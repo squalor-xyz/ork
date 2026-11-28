@@ -67,12 +67,16 @@ code of its own. Do not add a render path to the tree.
   Run it as given; it needs no test file of your own. A TUI view with no fixture in
   that section is not rendered: say so in your report.
 
-When the brief has no `## TUI renders` or `## CLI text renders` section,
-follow its `## Renders` section and the project's own tooling for those views.
+When the brief has no `## TUI renders` section or no `## CLI text renders` section, follow its `## Renders` section and the project's own tooling for the views that section names.
 
 ork has already made `{{renders_dir}}/`, empty. Write into it; do not make or remove it.
 
-For each view the diff adds or changes, write plain text files in `{{renders_dir}}/`:
+The brief's render commands name their own files. Leave those names as they are:
+
+- `NAME.txt` for CLI views.
+- `NAME-80x24.txt`, `NAME-120x40.txt` and `NAME-ascii.txt` for TUI views.
+
+For each view the diff adds or changes that the brief's render sections do not cover (the `## Renders` fallback), write plain text files in `{{renders_dir}}/`:
 
 - `VIEW-80x24.txt`: the view at 80 columns by 24 rows.
 - `VIEW-120x40.txt`: the view at 120 columns by 40 rows.
@@ -82,14 +86,16 @@ For each view the diff adds or changes, write plain text files in `{{renders_dir
 `VIEW` is a short name for the view, with letters, digits and `-`. Write the text
 as the screen shows it, with no color codes. If the project's snapshots hold color
 codes, write the plain view (the tests' plain or stripped helper), not the snapshot
-file. ork keeps up to 24 files, 24 KiB each,
-and only `.txt` files that are not links. If the tooling cannot render a view
+file. ork keeps up to 24 files of 24 KiB each, and only `.txt` files that are not links.
+Keep at most 24 files in the renders directory in all, counting the files the brief's render commands write. ork's card drops the rest. When the fixtures you need would pass 24, render fewer and say in your report which views you left out. If the tooling cannot render a view
 without changing the tree, write no file for it and say so in your report, under
 the view's name. Say in your report which files you wrote.
 - A view whose changed behavior only shows below 80x24 (a list that scrolls, a hint
   line that shortens, a row that is hidden) looks the same in the two sizes above. For
   that view also render it at the height the tests use for that view, at the width the
-  test uses, and write it as `VIEW-WxH.txt` with that size in W and H (for example
+  test uses. A TUI view in the brief's `## TUI renders` section gets its extra size from
+  `-render-size WxH`, which writes `NAME-WxH.txt`. `VIEW-WxH.txt` is for views the
+  brief's render sections do not cover: write it with that size in W and H (for example
   `VIEW-80x12.txt`). Then name the size in your report, and say which behavior it shows.
   If the project's tests set no such height, say so in your report and render the
   nearest size where the change shows.

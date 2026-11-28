@@ -1024,7 +1024,10 @@ run that stops on a new question), `wait-lines` (several runs, one line each) an
 arguments quoted for a shell, above each command's output. The files contain
 plain text as printed, without imposing a terminal width. Without `-renders`
 the render test writes nothing. The command writes straight into `renders/`;
-ork's approval card lists every `.txt` file there.
+ork's approval card lists every `.txt` file there. The UI brief and prompt tell
+the role to keep at most 24 files in `renders/`, counting the CLI and TUI files
+together, because the card keeps 24 (`maxRenders`). `VIEW-` names are for views
+the brief's render sections do not cover.
 
 `TestRenderFixtureDocsListEveryFixture` checks that every additional render
 fixture has an exact name in the `-render-fixture` lists in this guide and the

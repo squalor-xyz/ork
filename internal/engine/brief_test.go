@@ -1623,6 +1623,34 @@ func TestUIPassBriefFallbackRendersSection(t *testing.T) {
 	}
 }
 
+// S665 (adj 680): every render paragraph that is present tells the UI role to
+// keep at most 24 files, the number ork's approval card keeps.
+func TestUIPassBriefNamesTheRenderFileCap(t *testing.T) {
+	for _, tc := range []struct{ cli, tui bool }{{true, true}, {true, false}, {false, true}, {false, false}} {
+		body := uiBriefBody(t, tc.cli, tc.tui)
+		for _, section := range []struct {
+			name string
+			want bool
+		}{{"CLI text renders", tc.cli}, {"TUI renders", tc.tui}, {"Renders", !tc.cli || !tc.tui}} {
+			_, text, ok := strings.Cut(body, "\n## "+section.name+"\n")
+			if ok != section.want {
+				t.Errorf("cli=%t tui=%t: %s present = %t, want %t", tc.cli, tc.tui, section.name, ok, section.want)
+				continue
+			}
+			if !ok {
+				continue
+			}
+			text, _, _ = strings.Cut(text, "\n## ")
+			if !strings.Contains(text, "at most 24 files") {
+				t.Errorf("cli=%t tui=%t: %s does not name the cap", tc.cli, tc.tui, section.name)
+			}
+			if section.name == "CLI text renders" && !strings.Contains(text, "ork's approval card lists every `.txt` file in the renders directory") {
+				t.Errorf("cli=%t tui=%t: CLI section lost the approval card sentence", tc.cli, tc.tui)
+			}
+		}
+	}
+}
+
 func TestUIPassBriefPointsRenderFlagAtRendersDir(t *testing.T) {
 	body := uiBriefBody(t, true, true)
 	for _, pkg := range []string{"cli", "tui"} {
