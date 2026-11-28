@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 668,
+  "next_id": 669,
   "preamble": "",
   "passes": [
     {
@@ -35638,6 +35638,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S668",
+      "title": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe",
+      "short_title": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S489",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-797a7ff5",
         "pass": "v1.2",
         "group": "",
         "reason": "",

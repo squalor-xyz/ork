@@ -7741,3 +7741,5 @@
 {"when": "2026-11-28T04:42:04Z", "item": "S665", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
 {"when": "2026-11-28T04:56:12Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "S665 landed in the worktree: ui.md keeps NAME.txt and NAME-W", "by": "Jon Robbins"}
 {"when": "2026-11-28T04:56:13Z", "item": "S665", "action": "status", "from": "started", "to": "done", "note": "S665 landed in the worktree: ui.md keeps NAME.txt and NAME-WxH/ascii names for the brief's render commands, limits VIEW- names to uncovered views, applies the Renders fallback when either render section is missing, and the prompt, the three brief paragraphs and both docs tell the UI role to keep at most 24 files in renders/; go test ./..., go vet, gofmt and slicer check are clean.", "by": "Jon Robbins"}
+{"when": "2026-11-28T05:07:20Z", "item": "S668", "action": "add", "from": "", "to": "open", "note": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe"}
+{"when": "2026-11-28T05:07:20Z", "item": "S668", "action": "promote", "from": "", "to": "", "note": ""}
