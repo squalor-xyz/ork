@@ -1,0 +1,39 @@
+{
+  "id": "S663",
+  "title": "flag a strings.Index on a heading in a brief test when the prompt text also contains that heading",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (deterministic-check) on ork in ork run ork-20261128-002826-1170e384, project ork, item S660:\n\nflag a strings.Index on a heading in a brief test when the prompt text also contains that heading\n\nEvidence: brief_test.go:1788 Index(\"## CLI text renders\") now matches ui.md:64 in the prompt, so the order check passes without checking anything"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -61,10 +61,14 @@ sees them without opening a terminal. You produce them with the project's own
 tooling (its `AGENTS.md`, its UI tests and view snapshots say how); ork has no render
 code of its own. Do not add a render path to the tree.
 
-- CLI views come from the render flag of the project's test suite, when it has one.
-- TUI views come from the TUI render command in the brief's `## TUI renders` section.
+- CLI views come from the render flag in the brief's `## CLI text renders`
+  section, when the brief has one.
+- TUI views come from the TUI render command in the brief's `## TUI renders` section, when the brief has one.
   Run it as given; it needs no test file of your own. A TUI view with no fixture in
   that section is not rendered: say so in your report.
+
+When the brief has no `## TUI renders` or `## CLI text renders` section,
+follow its `## Renders` section and the project's own tooling for those views.
 
 ork has already made `{{renders_dir}}/`, empty. Write into it; do not make or remove it.
 

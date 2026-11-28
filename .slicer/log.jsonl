@@ -7644,3 +7644,27 @@
 {"when": "2026-11-28T01:49:18Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Check"}
 {"when": "2026-11-28T02:04:30Z", "item": "S648", "action": "note", "from": "", "to": "", "note": "The named brief permission lint passes focused checks, and S", "by": "Jon Robbins"}
 {"when": "2026-11-28T02:04:30Z", "item": "S648", "action": "status", "from": "started", "to": "done", "note": "The named brief permission lint passes focused checks, and S648’s executable commands now use the absolute worktree path instead of DIR.", "by": "Jon Robbins"}
+{"when": "2026-11-28T00:28:40Z", "item": "S660", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T00:29:06Z", "item": "S660", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T00:29:07Z", "item": "S660", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T00:39:51Z", "item": "S660", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T00:42:09Z", "item": "S660", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T01:39:39Z", "item": "S660", "action": "note", "from": "", "to": "", "note": "The heading-order test now ignores inline prompt mentions, a", "by": "Jon Robbins"}
+{"when": "2026-11-28T01:39:39Z", "item": "S660", "action": "status", "from": "started", "to": "done", "note": "The heading-order test now ignores inline prompt mentions, and the design document retains both governing CLI render decisions; focused checks and all engine tests pass.", "by": "Jon Robbins"}
+{"when": "2026-11-28T00:48:29Z", "item": "S643", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T00:48:35Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T00:48:41Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T00:55:28Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T00:55:29Z", "item": "S643", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T01:12:39Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Base overlays provide capped unanchored per-test commands, p", "by": "Jon Robbins"}
+{"when": "2026-11-28T01:12:39Z", "item": "S643", "action": "status", "from": "started", "to": "done", "note": "Base overlays provide capped unanchored per-test commands, product-only overlays retaining new tests, and a safe first-failure vet sample; focused suites and 35 mutation checks pass, while full-suite verification is sandbox-limited.", "by": "Jon Robbins"}
+{"when": "2026-11-28T00:52:36Z", "item": "S663", "action": "add", "from": "", "to": "open", "note": "flag a strings.Index on a heading in a brief test when the prompt text also contains that heading"}
+{"when": "2026-11-28T00:52:36Z", "item": "S663", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T01:49:56Z", "item": "S664", "action": "add", "from": "", "to": "open", "note": "set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir"}
+{"when": "2026-11-28T01:49:57Z", "item": "S664", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "add", "from": "", "to": "open", "note": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/"}
+{"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
+{"when": "2026-11-28T02:02:27Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "Also covers S660 finding 1: reword internal/roles/prompts/ui", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "add", "from": "", "to": "open", "note": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round"}
+{"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "promote", "from": "", "to": "", "note": ""}

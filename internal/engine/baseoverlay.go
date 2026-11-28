@@ -7,6 +7,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
 	"io"
 	"maps"
 	"os"
@@ -15,6 +18,8 @@ import (
 	"slices"
 	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 
 	"github.com/squalor-xyz/ork/internal/clirun"
 	"github.com/squalor-xyz/ork/internal/runrec"
@@ -92,6 +97,30 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	}
 
 	var entries, unread []string
+	testLines, testLeftOut := 0, 0
+	var sample string
+	vetNoted := false
+	noteVet := func(output string) {
+		if vetNoted {
+			return
+		}
+		vetNoted = true
+		if strings.HasPrefix(output, "go vet exit ") {
+			return
+		}
+		for _, line := range strings.Split(output, "\n") {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, "#") {
+				continue
+			}
+			runes := []rune(line)
+			if len(runes) > 200 {
+				line = string(runes[:200])
+			}
+			sample = strings.NewReplacer("|", "/", "`", "'").Replace(line)
+			return
+		}
+	}
 	replacements := make(map[string]string)
 	var packages []string
 	commands := 0
@@ -117,6 +146,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		replace := map[string]string{key: replacement}
 		var added []string
 		output, failed := e.overlayVetOutput(ctx, rec, overlayFile, packageArg(p))
+		if failed {
+			noteVet(output)
+		}
 		for round := 0; failed && round < len(closure); round++ {
 			var next []string
 			for _, f := range namedChangedFiles(output, rec.Worktree, closure, path.Dir(p)) {
@@ -143,6 +175,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			replace = grown
 			added = append(added, next...)
 			output, failed = e.overlayVetOutput(ctx, rec, overlayFile, packageArg(p))
+			if failed {
+				noteVet(output)
+			}
 		}
 		if len(added) > 0 {
 			line += " (with `" + strings.Join(added, "`, `") + "` reverted too)"
@@ -165,6 +200,25 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		} else if e.overlayPackagePasses(ctx, rec, overlayFile, packageArg(p)) {
 			entry += ". " + baseOverlayPassNote
 		}
+		for _, f := range testFiles {
+			if path.Dir(f) != path.Dir(p) || slices.Contains(revertedTests, f) {
+				continue
+			}
+			for _, name := range testNames(rec.Worktree, f) {
+				if testLines >= baseOverlayLimit {
+					testLeftOut++
+					continue
+				}
+				entry += fmt.Sprintf("\n  - Test `%s`: `go -C %s test -overlay %s -count=1 -run %s %s`", name, ShellWord(rec.Worktree), ShellWord(overlayFile), ShellWord(perTestRunPattern(name)), ShellWord(packageArg(p)))
+				testLines++
+			}
+		}
+		if len(revertedTests) > 0 {
+			productOverlay := filepath.Join(tmpDir, fmt.Sprintf("overlay-%d-product.json", n))
+			if writeOverlayJSON(productOverlay, map[string]string{key: replacement}) == nil {
+				entry += fmt.Sprintf("\n  - Product file only, with this slice's tests kept (a test that needs a new symbol fails to build, which shows it is red): `go -C %s test -overlay %s -count=1 %s`", ShellWord(rec.Worktree), ShellWord(productOverlay), ShellWord(packageArg(p)))
+			}
+		}
 		entries = append(entries, entry)
 		commands++
 		built = append(built, builtOverlay{p, overlayFile})
@@ -183,8 +237,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 						continue
 					}
 					line := "- Importer `" + pkg + "` of `" + entry.file + "`: "
-					if message := e.overlayBuildError(ctx, rec, entry.overlay, pkg); message != "" {
-						line += "does not build: " + message + "."
+					if output, failed := e.overlayVetOutput(ctx, rec, entry.overlay, pkg); failed {
+						noteVet(output)
+						line += "does not build: " + vetMessage(output) + "."
 					} else {
 						line += fmt.Sprintf("`go -C %s test -overlay %s -count=1 %s`", ShellWord(rec.Worktree), ShellWord(entry.overlay), ShellWord(pkg))
 					}
@@ -205,8 +260,9 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 		} else {
 			slices.Sort(packages)
 			packages = slices.Compact(packages)
-			if message := e.overlayBuildError(ctx, rec, overlayFile, packages...); message != "" {
-				entries = append(entries, line+": does not build: "+message+". Trace the base versions with `git show` instead.")
+			if output, failed := e.overlayVetOutput(ctx, rec, overlayFile, packages...); failed {
+				noteVet(output)
+				entries = append(entries, line+": does not build: "+vetMessage(output)+". Trace the base versions with `git show` instead.")
 			} else {
 				command := "go -C " + ShellWord(rec.Worktree) + " test -overlay " + ShellWord(overlayFile) + " -count=1"
 				for _, pkg := range packages {
@@ -247,6 +303,12 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 			noun = "file was"
 		}
 		fmt.Fprintf(&body, "%d more changed Go %s left out (ork lists at most %d). Trace the rest yourself with `git show`.\n", leftOut, noun, baseOverlayLimit)
+	}
+	if testLeftOut > 0 {
+		fmt.Fprintf(&body, "\n%d more test lines were left out (ork lists at most %d).\n", testLeftOut, baseOverlayLimit)
+	}
+	if sample != "" {
+		fmt.Fprintf(&body, "\nSample of a real `go vet` failure from these overlays: `%s`\n", sample)
 	}
 	for _, p := range otherFiles {
 		if !filepath.IsLocal(p) || path.IsAbs(p) {
@@ -294,6 +356,39 @@ func (e *Engine) baseOverlaySection(ctx context.Context, rec runrec.Record, tmpD
 	}
 	return &BriefSection{Title: title, Body: strings.TrimRight(body.String(), "\n")}
 }
+
+// testNames reads only source declarations; unreadable or invalid files are advisory.
+func testNames(worktree, file string) []string {
+	if !filepath.IsLocal(file) {
+		return nil
+	}
+	source, err := os.ReadFile(filepath.Join(worktree, filepath.FromSlash(file)))
+	if err != nil {
+		return nil
+	}
+	parsed, err := parser.ParseFile(token.NewFileSet(), file, source, 0)
+	if err != nil {
+		return nil
+	}
+	var names []string
+	for _, decl := range parsed.Decls {
+		fn, ok := decl.(*ast.FuncDecl)
+		if !ok || fn.Recv != nil || fn.Type.Results.NumFields() != 0 || fn.Type.Params.NumFields() != 1 {
+			continue
+		}
+		name := fn.Name.Name
+		if !strings.HasPrefix(name, "Test") || name == "TestMain" {
+			continue
+		}
+		r, _ := utf8.DecodeRuneInString(strings.TrimPrefix(name, "Test"))
+		if !unicode.IsLower(r) {
+			names = append(names, name)
+		}
+	}
+	return names
+}
+
+func perTestRunPattern(name string) string { return name }
 
 func baseOverlayTrackingPath(p string) bool {
 	return strings.HasPrefix(p, ".slicer/") || strings.HasPrefix(p, "landed-changed/")
@@ -360,16 +455,6 @@ func (e *Engine) overlayPackagePasses(ctx context.Context, rec runrec.Record, ov
 		Timeout: baseOverlayTestTimeout,
 	})
 	return err == nil
-}
-
-// overlayBuildError is advisory: only a vet process that exits non-zero
-// replaces the test command. Failure to start or finish vet leaves it intact.
-func (e *Engine) overlayBuildError(ctx context.Context, rec runrec.Record, overlayFile string, pkgs ...string) string {
-	output, failed := e.overlayVetOutput(ctx, rec, overlayFile, pkgs...)
-	if !failed {
-		return ""
-	}
-	return vetMessage(output)
 }
 
 // overlayVetOutput runs go vet with the overlay. failed is true only when vet

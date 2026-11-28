@@ -1,0 +1,39 @@
+{
+  "id": "S664",
+  "title": "set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261128-002853-34ba2dd2, project ork, item S647:\n\nset GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir\n\nEvidence: the notRepo subtest found the enclosing repo when run from a nested non-repo dir (TestProbeNestedNonRepo)"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}

@@ -74,6 +74,8 @@ type EarlierReport struct{ Name, Text string }
 
 // BriefInput is what a brief is built from (docs/design.md, Roles).
 type BriefInput struct {
+	RenderCLI          bool // the worktree has TestRenderCLIViews
+	RenderTUI          bool // the worktree has TestRenderTUIViews
 	TreeUnchangedSince int  // previous read-only round with the same full-content fingerprint
 	SliceDone          bool // the slice's tracking status is done (S455, adj 645, *proposed*)
 	FixRoundSince      bool // an implementer round ran after the role's last report (S455, adj 645, *proposed*)
@@ -232,13 +234,31 @@ func BuildBrief(in BriefInput) (string, error) {
 		if in.Vendor == "claude" {
 			fmt.Fprintf(&b, "The UI renders directory `%s` is also an exception to the workspace limit. Keep renders there, separately from TMPDIR.\n\n", filepath.Join(in.TempDir, "renders"))
 		}
-		b.WriteString("## CLI text renders\n\nFor ork CLI views, run this from the worktree with the test flag:\n\n")
-		fmt.Fprintf(&b, "`go test ./internal/cli -run TestRenderCLIViews -renders %s`\n\n", ShellWord(processTemp))
-		b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory (named under Your files), exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop. Copy the views you want on the approval card into the renders directory under the VIEW-80x24.txt names required by your prompt.\n\n")
-		b.WriteString("## TUI renders\n\nFor ork TUI views, run this from the worktree with the test flag:\n\n")
-		fmt.Fprintf(&b, "`go test ./internal/tui -run TestRenderTUIViews -renders %s`\n\n", ShellWord(processTemp))
-		b.WriteString("This writes NAME-80x24.txt, NAME-120x40.txt and NAME-ascii.txt for each default fixture into your temp directory (named under Your files), as plain text, without changing the tree. The default fixtures are overview, roadmap, launch-confirm, approval-card and approval-render. To write others, add `-render-fixture NAME[,NAME...]`; it writes only those fixtures. To write another size, add `-render-size WxH[,WxH...]`; it writes one more NAME-WxH.txt for each size. To read a view without writing a file, add `-render-print` and `-v`; it prints each text to stdout under a `## NAME-SIZE` line. Copy the views you want on the approval card into the renders directory under the VIEW-80x24.txt names required by your prompt. A TUI view with no fixture is not rendered: say so in your report.\n\n")
-		fmt.Fprintf(&b, "## Test run patterns\n\nRun one test per command: `go -C %s test -run NAME PKG`, for example `go -C %s test -run TestRenderCLIViews ./internal/cli`, then the next test in its own command. A `go test -run` pattern must not contain a pipe: a pipe makes a compound command, and the permission check denies it as multiple operations. Do not join test names in one pattern.\n\n", in.Worktree, in.Worktree)
+		renders := filepath.Join(in.TempDir, "renders")
+		if in.RenderCLI {
+			b.WriteString("## CLI text renders\n\nFor ork CLI views, run this from the worktree with the test flag:\n\n")
+			fmt.Fprintf(&b, "`go test ./internal/cli -run TestRenderCLIViews -renders %s`\n\n", ShellWord(renders))
+			b.WriteString("This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into the renders directory, exactly as printed, without changing the tree. To write other views, add `-render-fixture NAME[,NAME...]` after `-renders`; it writes only NAME.txt for each name. The names are the five above (without .txt) and projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop. ork's approval card lists every `.txt` file in the renders directory.\n\n")
+		}
+		if in.RenderTUI {
+			b.WriteString("## TUI renders\n\nFor ork TUI views, run this from the worktree with the test flag:\n\n")
+			fmt.Fprintf(&b, "`go test ./internal/tui -run TestRenderTUIViews -renders %s`\n\n", ShellWord(renders))
+			b.WriteString("This writes NAME-80x24.txt, NAME-120x40.txt and NAME-ascii.txt for each default fixture into the renders directory, as plain text, without changing the tree. The default fixtures are overview, roadmap, launch-confirm, approval-card and approval-render. To write others, add `-render-fixture NAME[,NAME...]`; it writes only those fixtures. To write another size, add `-render-size WxH[,WxH...]`; it writes one more NAME-WxH.txt for each size. To read a view without writing a file, add `-render-print` and `-v`; it prints each text to stdout under a `## NAME-SIZE` line. A TUI view with no fixture is not rendered: say so in your report.\n\n")
+		}
+		if !in.RenderCLI || !in.RenderTUI {
+			missing := "CLI and TUI"
+			if in.RenderCLI {
+				missing = "TUI"
+			} else if in.RenderTUI {
+				missing = "CLI"
+			}
+			fmt.Fprintf(&b, "## Renders\n\nork's render test for the %s views is not in this worktree. Find how the project renders its views in its `AGENTS.md` and docs, and use only that tooling. Write the files into the renders directory `%s`. A view that tooling cannot render without changing the tree gets no file: say so in your report.\n\n", missing, renders)
+		}
+		fmt.Fprintf(&b, "## Test run patterns\n\nRun one test per command: `go -C %s test -run NAME PKG`", in.Worktree)
+		if in.RenderCLI {
+			fmt.Fprintf(&b, ", for example `go -C %s test -run TestRenderCLIViews ./internal/cli`", in.Worktree)
+		}
+		b.WriteString(", then the next test in its own command. A `go test -run` pattern must not contain a pipe: a pipe makes a compound command, and the permission check denies it as multiple operations. Do not join test names in one pattern.\n\n")
 		if (in.Vendor == "claude" || in.Vendor == "claude-local") && len(in.UIPassSkills) > 0 {
 			fmt.Fprintf(&b, "## Skills\n\nLoad these skills for the UI pass: %s. If one is not available, say so in your report and go on.\n\n", strings.Join(in.UIPassSkills, ", "))
 		}
