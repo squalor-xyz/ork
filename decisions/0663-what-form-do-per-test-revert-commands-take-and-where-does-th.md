@@ -2,7 +2,7 @@
 {
   "id": 663,
   "title": "What form do per-test revert commands take, and where does the vet sample come from?",
-  "status": "decided",
+  "status": "superseded",
   "key": "base-overlays.per-test-and-vet-sample",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -29,6 +29,7 @@
   },
   "decision": "per-test-live",
   "rationale": "Owner chose 'Per-test lines + live sample' in an interactive question, relay session 8d711f67, 2026-11-27.",
+  "superseded_by": 669,
   "refs": [
     "S643"
   ],
@@ -40,6 +41,11 @@
     {
       "date": "2026-11-27",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-27",
+      "event": "supersede",
+      "note": "by 669"
     }
   ]
 }

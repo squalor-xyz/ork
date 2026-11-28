@@ -2,7 +2,7 @@
 {
   "id": 508,
   "title": "Where does the UI pass brief tell -renders to write?",
-  "status": "decided",
+  "status": "superseded",
   "key": "ui.render-flag-dir",
   "asked_by": "Jon",
   "decided_by": "Jon",
@@ -25,6 +25,7 @@
   },
   "decision": "tempdir",
   "rationale": "Owner chose 'Role temp dir (Recommended)' in an interactive question, relay session 8d711f67, 2026-11-19.",
+  "superseded_by": 667,
   "refs": [
     "S475"
   ],
@@ -36,6 +37,11 @@
     {
       "date": "2026-11-19",
       "event": "decide"
+    },
+    {
+      "date": "2026-11-27",
+      "event": "supersede",
+      "note": "by 667"
     }
   ]
 }

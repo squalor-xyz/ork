@@ -34475,6 +34475,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "05496d9f-3455-439d-9f36-3ce734892ff1",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision update (adj 669, supersedes adj 663): per-test lines use the unanchored form go -C WT test -overlay F -count=1 -run TestName PKG (S610 denies $-anchored -run for read-only roles), capped at 20 lines with a left-out count; the live vet sample stays. Jon chose 'Unanchored, cap 20', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T00:25:27Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -35040,7 +35054,7 @@
       "id": "S658",
       "title": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step",
       "short_title": "in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step",
-      "status": "open",
+      "status": "retired",
       "has_slice": true,
       "depends_on": [],
       "note_records": [],
@@ -35057,7 +35071,7 @@
         "key": "tool-feedback-ork-a9342d54",
         "pass": "v1.2",
         "group": "",
-        "reason": "",
+        "reason": "Merged into S660 (both CLI and TUI render commands write straight into the renders directory, adj 667); Jon chose 'Renders dir, both; retire S658', session 8d711f67, 2026-11-28.",
         "importance": 2,
         "urgency": 2,
         "effort": null,

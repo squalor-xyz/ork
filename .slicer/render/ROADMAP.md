@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-662 items · — 40 · done 452 · retired 170
+662 items · — 39 · done 452 · retired 171
 
 ## v1.3
 
@@ -417,7 +417,7 @@ v1.2
 | 360 | [S655](slices/S655.md) | When a fix round's check output is byte-identical to the previous round's, flag it as a possible replay and rerun the check before spawning another implementer |  | - |  | discovered from S631 | — |
 | 361 | [S656](slices/S656.md) | When a fix round's failing check output matches the previous round's byte for byte, rerun the check before starting another implementer round |  | - |  | discovered from S631 | — |
 | 362 | [S657](slices/S657.md) | when an older binary builds the Decision keys not found list, say which keys the slice's own code would drop |  | - |  | discovered from S652 | — |
-| 363 | [S658](slices/S658.md) | in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step |  | - |  | discovered from S538 | — |
+| 363 | [S658](slices/S658.md) | in the UI brief, point -renders at the renders directory instead of the temp dir plus a copy step |  | - |  | Merged into S660 (both CLI and TUI render commands write straight into the renders directory, adj 667); Jon chose 'Renders dir, both; retire S658', session 8d711f67, 2026-11-28. · discovered from S538 | retired |
 | 364 | [S659](slices/S659.md) | Base overlays could flag a new exported symbol whose only test sits in an importer, so a "no test covers it" note on the defining package is not misread |  | - |  | discovered from S538 | — |
 | 365 | [S660](slices/S660.md) | Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says "The UI pass runs in any project". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects. |  | 2 |  | discovered from S538 | — |
 | 366 | [S661](slices/S661.md) | in Base overlays, mention an importer that covers a new exported symbol, so "no test covers it" on the defining package is not misread |  | - |  | discovered from S538 | — |

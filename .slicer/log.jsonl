@@ -7613,3 +7613,5 @@
 {"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "add", "from": "", "to": "open", "note": "allow read-only rg with literal absolute paths for reviewer roles, or say in the brief that the Grep tool is the way to search"}
 {"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-27T22:19:25Z", "item": "S662", "action": "note", "from": "", "to": "", "note": "possible duplicate of S650", "by": "Jon Robbins"}
+{"when": "2026-11-28T00:25:27Z", "item": "S658", "action": "retire", "from": "open", "to": "retired", "note": "Merged into S660 (both CLI and TUI render commands write straight into the renders directory, adj 667); Jon chose 'Renders dir, both; retire S658', session 8d711f67, 2026-11-28."}
+{"when": "2026-11-28T00:25:27Z", "item": "S643", "action": "note", "from": "", "to": "", "note": "Owner decision update (adj 669, supersedes adj 663): per-tes", "by": "Jon Robbins"}
