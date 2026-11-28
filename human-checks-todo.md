@@ -387,3 +387,7 @@ Tick a box when the check is done, or delete the line. Write `-> SNNN` after a c
 ## S538 (run ork-20261127-194957-90f9, 2026-11-27)
 
 - [ ] Open the UI pass brief in the next UI round. You should see a ## TUI renders section with the go test ./internal/tui ... -renders command and the fixture names. Open AGENTS.md and internal/roles/prompts/ui.md. You should see no overlay JSON recipe.
+
+## S664 (run ork-20261128-035119-16e09e6b, 2026-11-28)
+
+- [ ] In internal/engine/speccheck_test.go, the not a repository subtest holds a t.Setenv("GIT_CEILING_DIRECTORIES", ...) call. Deleting that line makes go test -run TestProjectPrefix ./internal/engine fail with project prefix outside a repository succeeded.
