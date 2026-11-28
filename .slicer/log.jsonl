@@ -7635,3 +7635,10 @@
 {"when": "2026-11-28T00:26:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
 {"when": "2026-11-28T00:26:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Implement"}
 {"when": "2026-11-28T00:26:17Z", "item": "S648", "action": "edit", "from": "", "to": "", "note": "Check"}
+{"when": "2026-11-28T01:35:17Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T01:35:17Z", "item": "S647", "action": "status", "from": "open", "to": "started", "note": "", "by": "Jon Robbins"}
+{"when": "2026-11-28T01:36:48Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T02:00:25Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Files"}
+{"when": "2026-11-28T02:00:26Z", "item": "S647", "action": "edit", "from": "", "to": "", "note": "Failing tests"}
+{"when": "2026-11-28T02:12:03Z", "item": "S647", "action": "note", "from": "", "to": "", "note": "Added the docs insertion lint against main's merge base, wit", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:12:03Z", "item": "S647", "action": "status", "from": "started", "to": "done", "note": "Added the docs insertion lint against main's merge base, with paragraph-boundary checks and a skip fixture isolated from parent repositories.", "by": "Jon Robbins"}

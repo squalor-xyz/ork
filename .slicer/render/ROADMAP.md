@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-662 items · — 39 · done 452 · retired 171
+662 items · — 38 · done 453 · retired 171
 
 ## v1.3
 
@@ -406,7 +406,7 @@ v1.2
 | 349 | [S644](slices/S644.md) | in the Base overlays intro, say that an entry with "reverted too" reverts more than one file |  | - |  | discovered from S594 | — |
 | 350 | [S645](slices/S645.md) | in the Base overlays intro, say that an entry marked "reverted too" reverts more than one file |  | - |  | discovered from S594 | — |
 | 351 | [S646](slices/S646.md) | start the reviewer from a build that includes the slice's own permission change, so the reviewer can run a new grant's Check lines |  | - |  | discovered from S527 | — |
-| 352 | [S647](slices/S647.md) | flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph | S | - |  |  | — |
+| 352 | [S647](slices/S647.md) | flag a doc insertion that leaves a paragraph with no blank line after it, which joins the next paragraph | S | - |  |  | done |
 | 353 | [S648](slices/S648.md) | flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too | S | - |  |  | — |
 | 354 | [S649](slices/S649.md) | give the gate a separate place to report an intended base-overlay revert failure, so it is not counted on the Tests line |  | - |  | discovered from S527 | done |
 | 355 | [S650](slices/S650.md) | allow read-only git grep for reviewer roles, or say in the brief that Grep is the way to search |  | - |  | discovered from S521 | — |
