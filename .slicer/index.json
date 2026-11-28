@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 668,
+  "next_id": 669,
   "preamble": "",
   "passes": [
     {
@@ -26921,7 +26921,7 @@
       "id": "S489",
       "title": "when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path",
       "short_title": "when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -26931,6 +26931,20 @@
           "text": "**2026-11-28** — Owner decision: a test over the built briefs for every role checks that each path the brief tells the role to write is inside TempDir, the renders directory, ReportPath or the local implementer ProgressFile; BuildBrief is unchanged. Jon chose 'Test only', session 8d711f67, 2026-11-28.",
           "created_at": "2026-11-28T02:45:09Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "9d20ccd3-07dd-45a0-85ad-b9a16fab1ea3",
+          "kind": "",
+          "text": "**2026-11-28** — Added a test-only write-target lint over built briefs for every role and vendor (extractor handles the Local progress note target and semicolon-delimited paths per adj 688); the full suite, go vet, gofmt and slicer check are green.",
+          "created_at": "2026-11-28T05:10:12Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -26957,7 +26971,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -35666,6 +35680,34 @@
         "parent": "",
         "cites": [],
         "key": "",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S668",
+      "title": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe",
+      "short_title": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S489",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-797a7ff5",
         "pass": "v1.2",
         "group": "",
         "reason": "",

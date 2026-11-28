@@ -1,0 +1,39 @@
+{
+  "id": "S668",
+  "title": "allow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The reviewer reported this as tool feedback (friction) on ork in ork run ork-20261128-034157-1a312dad, project ork, item S489:\n\nallow cp from the worktree into the reviewer temp dir so a reviewer can overlay a product file for a revert probe\n\nEvidence: cp of internal/engine/brief.go into the temp dir was denied as needing approval, with no approval surface in the session"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
