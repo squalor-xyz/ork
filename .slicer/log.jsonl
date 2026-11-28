@@ -7657,3 +7657,5 @@
 {"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-28T02:02:26Z", "item": "S665", "action": "set", "from": "", "to": "", "note": "urgency 2→1; effort -→1"}
 {"when": "2026-11-28T02:02:27Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "Also covers S660 finding 1: reword internal/roles/prompts/ui", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "add", "from": "", "to": "open", "note": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round"}
+{"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "promote", "from": "", "to": "", "note": ""}

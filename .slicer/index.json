@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 666,
+  "next_id": 667,
   "preamble": "",
   "passes": [
     {
@@ -35373,6 +35373,34 @@
         "importance": 2,
         "urgency": 1,
         "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S666",
+      "title": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round",
+      "short_title": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S648",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-40e79eb2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
         "attempts": 0
       }
     }

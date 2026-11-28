@@ -1,0 +1,39 @@
+{
+  "id": "S666",
+  "title": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round",
+  "lead": [],
+  "depends_note": null,
+  "findings_note": "",
+  "size": "",
+  "flags": [],
+  "trees_note": "",
+  "trees_plural": false,
+  "boundary": "**Not in this slice:**",
+  "sections": [
+    {
+      "heading": "Why",
+      "body": "The gate reported this as tool feedback (friction) on ork in ork run ork-20261128-002830-34c6cdfa, project ork, item S648:\n\nsubstitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round\n\nEvidence: round 1 slice check failed with \"go: chdir DIR: no such file or directory\" and needed a fix round that only edited the spec"
+    },
+    {
+      "heading": "Files",
+      "body": ""
+    },
+    {
+      "heading": "Failing tests",
+      "body": ""
+    },
+    {
+      "heading": "Implement",
+      "body": ""
+    },
+    {
+      "heading": "Check",
+      "body": ""
+    },
+    {
+      "heading": "Git",
+      "body": ""
+    }
+  ],
+  "notes": []
+}
