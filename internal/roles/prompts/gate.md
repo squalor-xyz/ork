@@ -148,6 +148,9 @@ the options. From `Question:` onward, write the block as shown: no list marker b
 or `Decision key:`, and no line between the options. ork keeps any other line as
 context and shows it with the question (the optional Decision key line is allowed).
 
+`## Owner needed` takes at most one `Question:` block and at most one `Decision key:` line.
+ork refuses a report with a second `Question:` block or a second `Decision key:` line in it.
+
 ```text
 Question: ONE LINE TITLE
 Options:
