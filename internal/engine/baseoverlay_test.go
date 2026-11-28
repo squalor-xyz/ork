@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -696,6 +697,7 @@ func TestBaseOverlayBuildErrorIsOneShortLine(t *testing.T) {
 	h := overlayVetHarness(t, "internal/x/a.go\x00", false, clitest.Reply{Exit: 1, Stderr: "\n" + strings.Join(lines, "\n\n")})
 	_, body, entries := overlayVetResult(t, h)
 	want := "- `internal/x/a.go`: does not build: " + strings.Join(wantLines, "; ") + ". Trace its base version with `git -C " + ShellWord(h.W) + " show " + ShellWord("base:internal/x/a.go") + "` instead."
+	want += "\n\nSample of a real `go vet` failure from these overlays: `" + wantLines[0] + "`"
 	if len(entries) != 1 || strings.TrimSpace(body) != want {
 		t.Errorf("short one-line section = %q, want %q", body, want)
 	}
@@ -757,7 +759,7 @@ func TestBaseOverlayAllTogetherWhenEverySingleFileFails(t *testing.T) {
 	if strings.Contains(body, "|") || strings.Contains(body, "only that file reverted") {
 		t.Errorf("combined-only guidance contains pipe or single-file intro: %s", body)
 	}
-	if strings.TrimSpace(body) != strings.Join(append(entries, entry), "\n") {
+	if strings.TrimSpace(body) != strings.Join(append(entries, entry), "\n")+"\n\nSample of a real `go vet` failure from these overlays: `undefined helper`" {
 		t.Errorf("combined entry is not last: %s", body)
 	}
 }
@@ -1596,4 +1598,225 @@ func TestBaseOverlayOnlyForReviewerAndGate(t *testing.T) {
 			t.Fatalf("role %s did not run: %v", role, h.runner.roles())
 		}
 	}
+}
+
+// overlaySourceHarness keeps the changed test sources on disk while routing vet.
+func overlaySourceHarness(t *testing.T, files map[string]string, changed string, newProduct bool, replies ...clitest.Reply) *harness {
+	t.Helper()
+	return ucsReviewerHarness(t, files, changed, func(W string) []clitest.Route {
+		routes := []clitest.Route{{Tool: "go", Args: []string{"-C", W, "vet"}, Prefix: true, Seq: replies}}
+		for _, p := range strings.Split(strings.TrimSuffix(changed, "\x00"), "\x00") {
+			if newProduct && p == "internal/x/a.go" {
+				routes = append(routes, baseOverlayNotInBase(W, p))
+			} else {
+				routes = append(routes, baseOverlayShow(W, p, "package x\n"))
+			}
+		}
+		return routes
+	})
+}
+
+func overlayTestLines(body string) []string {
+	var lines []string
+	for _, line := range strings.Split(body, "\n") {
+		if strings.HasPrefix(line, "  - Test `") {
+			lines = append(lines, line)
+		}
+	}
+	return lines
+}
+
+func wantOverlayTestLine(h *harness, req Request, name string, n int) string {
+	return "  - Test `" + name + "`: `go -C " + ShellWord(h.W) + " test -overlay " + ShellWord(filepath.Join(req.TMPDir, fmt.Sprintf("overlay-%d.json", n))) + " -count=1 -run " + name + " ./internal/x`"
+}
+
+func TestBaseOverlayPerTestLines(t *testing.T) {
+	source := "package x\nfunc TestOne(t *T) {}\nfunc helper() {}\nfunc TestMain(m *M) {}\nfunc BenchmarkX(b *B) {}\nfunc (r R) TestM(t *T) {}\nfunc Testlower(t *T) {}\nfunc TestResult(t *T) int {return 0}\nfunc TestZero() {}\nfunc TestMany(a, b *T) {}\nfunc TestTwo(t *T) {}\n"
+	h := overlaySourceHarness(t, map[string]string{"internal/x/a_test.go": source}, "internal/x/a.go\x00internal/x/a_test.go\x00", false, clitest.Reply{})
+	req, body, _ := overlayVetResult(t, h)
+	want := []string{wantOverlayTestLine(h, req, "TestOne", 1), wantOverlayTestLine(h, req, "TestTwo", 1)}
+	if got := overlayTestLines(body); !reflect.DeepEqual(got, want) {
+		t.Fatalf("per-test lines = %q, want %q", got, want)
+	}
+	if !strings.Contains(body, "\n"+strings.Join(want, "\n")) {
+		t.Fatal("per-test lines are not consecutive entry sub-lines")
+	}
+}
+
+func TestBaseOverlayPerTestLinesOnlySamePackage(t *testing.T) {
+	h := overlaySourceHarness(t, map[string]string{"internal/x/a_test.go": "package x\nfunc TestOne(t *T) {}", "internal/y/b_test.go": "package y\nfunc TestOther(t *T) {}"}, "internal/x/a.go\x00internal/x/a_test.go\x00internal/y/b_test.go\x00", false, clitest.Reply{})
+	req, body, _ := overlayVetResult(t, h)
+	if got, want := overlayTestLines(body), []string{wantOverlayTestLine(h, req, "TestOne", 1)}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("same-package lines = %q, want %q", got, want)
+	}
+}
+
+func TestBaseOverlayPerTestLinesSkipRevertedTestFile(t *testing.T) {
+	h := overlaySourceHarness(t, map[string]string{"internal/x/a_test.go": "package x\nfunc TestReverted(t *T) {}", "internal/x/b_test.go": "package x\nfunc TestKept(t *T) {}"}, "internal/x/a.go\x00internal/x/a_test.go\x00internal/x/b_test.go\x00", false, clitest.Reply{Exit: 1, Stderr: "internal/x/a_test.go:1:1: undefined"}, clitest.Reply{})
+	req, body, _ := overlayVetResult(t, h)
+	if got, want := overlayTestLines(body), []string{wantOverlayTestLine(h, req, "TestKept", 1)}; !reflect.DeepEqual(got, want) {
+		t.Fatalf("kept-test lines = %q, want %q", got, want)
+	}
+}
+
+func TestBaseOverlayPerTestLinesUnreadableFileIsSilent(t *testing.T) {
+	for _, source := range []string{"", "package x\nfunc TestBroken("} {
+		t.Run(fmt.Sprintf("source-%d", len(source)), func(t *testing.T) {
+			files := map[string]string{"internal/x/a_test.go": "package x\nfunc TestOne(t *T) {}"}
+			if source != "" {
+				files["internal/x/b_test.go"] = source
+			}
+			h := overlaySourceHarness(t, files, "internal/x/a.go\x00internal/x/a_test.go\x00internal/x/b_test.go\x00", false, clitest.Reply{})
+			req, body, entries := overlayVetResult(t, h)
+			if got, want := overlayTestLines(body), []string{wantOverlayTestLine(h, req, "TestOne", 1)}; !reflect.DeepEqual(got, want) {
+				t.Fatalf("readable-test lines = %q, want %q", got, want)
+			}
+			if strings.Contains(body, "Check incomplete") || len(entries) != 1 || entries[0] != "- `internal/x/a.go`: `"+baseOverlayCommand(h.W, req.TMPDir, 1, "internal/x")+"`" {
+				t.Fatalf("unreadable source changed entry: %s", body)
+			}
+		})
+	}
+}
+
+func TestBaseOverlayPerTestLinesLimit(t *testing.T)   { checkOverlayTestLimit(t, 2, 13) }
+func TestBaseOverlayPerTestLinesCapAt20(t *testing.T) { checkOverlayTestLimit(t, 1, 25) }
+
+func checkOverlayTestLimit(t *testing.T, products, tests int) {
+	t.Helper()
+	source := "package x\n"
+	for i := range tests {
+		source += fmt.Sprintf("func Test%02d(t *T) {}\n", i)
+	}
+	changed := "internal/x/a.go\x00internal/x/a_test.go\x00"
+	if products == 2 {
+		changed += "internal/x/b.go\x00"
+	}
+	h := overlaySourceHarness(t, map[string]string{"internal/x/a_test.go": source}, changed, false, clitest.Reply{})
+	req, body, _ := overlayVetResult(t, h)
+	var want []string
+	for n := 1; n <= products; n++ {
+		for i := 0; i < tests && len(want) < 20; i++ {
+			want = append(want, wantOverlayTestLine(h, req, fmt.Sprintf("Test%02d", i), n))
+		}
+	}
+	if got := overlayTestLines(body); !reflect.DeepEqual(got, want) {
+		t.Fatalf("capped lines = %q, want %q", got, want)
+	}
+	wantNotice := fmt.Sprintf("%d more test lines were left out (ork lists at most 20).", products*tests-20)
+	if !strings.Contains(body, wantNotice) {
+		t.Fatalf("missing %q", wantNotice)
+	}
+}
+
+func TestBaseOverlayProductOnlyOverlayWhenTestFileReverted(t *testing.T) {
+	checkProductOverlay(t, false)
+}
+func TestBaseOverlayProductOnlyOverlayMapsNewProductFileToEmpty(t *testing.T) {
+	checkProductOverlay(t, true)
+}
+func checkProductOverlay(t *testing.T, newProduct bool) {
+	t.Helper()
+	h := overlaySourceHarness(t, map[string]string{"internal/x/a_test.go": "package x\nfunc TestOne(t *T) {}"}, "internal/x/a.go\x00internal/x/a_test.go\x00internal/x/b.go\x00", newProduct,
+		clitest.Reply{Exit: 1, Stderr: "internal/x/a_test.go:1:1: undefined\ninternal/x/b.go:1:1: undefined"}, clitest.Reply{}, clitest.Reply{})
+	req, body, _ := overlayVetResult(t, h)
+	file := filepath.Join(req.TMPDir, "overlay-1-product.json")
+	want := baseOverlayWantReplace(h, req.TMPDir, "internal/x/a.go")
+	if newProduct {
+		want[filepath.Join(h.W, "internal/x/a.go")] = ""
+	}
+	if got := baseOverlayReplace(t, file); !reflect.DeepEqual(got, want) {
+		t.Fatalf("product Replace = %v, want %v", got, want)
+	}
+	command := "go -C " + ShellWord(h.W) + " test -overlay " + ShellWord(file) + " -count=1 ./internal/x"
+	wantLine := "  - Product file only, with this slice's tests kept (a test that needs a new symbol fails to build, which shows it is red): `" + command + "`"
+	if !strings.Contains(body, "\n"+wantLine+"\n") {
+		t.Fatalf("missing product command: %s", body)
+	}
+	for _, call := range baseOverlayReviewerGoCalls(h) {
+		if slices.Contains(call.Args, file) {
+			t.Fatalf("product overlay ran automatically: %v", call.Args)
+		}
+	}
+}
+
+func TestBaseOverlayNoProductOnlyOverlayWithoutRevertedTest(t *testing.T) {
+	h := overlaySourceHarness(t, map[string]string{"internal/x/a_test.go": "package x\nfunc TestOne(t *T) {}"}, "internal/x/a.go\x00internal/x/a_test.go\x00", false, clitest.Reply{})
+	req, body, _ := overlayVetResult(t, h)
+	if !strings.Contains(body, wantOverlayTestLine(h, req, "TestOne", 1)) {
+		t.Fatal("missing kept-test command")
+	}
+	if _, err := os.Stat(filepath.Join(req.TMPDir, "overlay-1-product.json")); !os.IsNotExist(err) {
+		t.Fatalf("unexpected product overlay: %v", err)
+	}
+	if strings.Contains(body, "Product file only") {
+		t.Fatal("unexpected product line")
+	}
+}
+
+func TestBaseOverlayNoProductOnlyOverlayWhenEntryDoesNotBuild(t *testing.T) {
+	h := overlaySourceHarness(t, map[string]string{"internal/y/b_test.go": "package y\nfunc TestOne(t *T) {}"}, "internal/x/a.go\x00internal/x/a_test.go\x00internal/y/b.go\x00internal/y/b_test.go\x00", false,
+		clitest.Reply{Exit: 1, Stderr: "internal/x/a_test.go:1:1: undefined"}, clitest.Reply{Exit: 1, Stderr: "undefined helper"}, clitest.Reply{})
+	req, body, _ := overlayVetResult(t, h)
+	// The second entry supplies a positive control while the first cannot build.
+	if !strings.Contains(body, "  - Test `TestOne`:") {
+		t.Fatal("missing built-entry test command")
+	}
+	if _, err := os.Stat(filepath.Join(req.TMPDir, "overlay-1-product.json")); !os.IsNotExist(err) {
+		t.Fatalf("unexpected failed-entry product overlay: %v", err)
+	}
+	if strings.Contains(body, "Product file only") {
+		t.Fatal("failed entry has product line")
+	}
+}
+
+func overlaySample(body string) string {
+	for _, line := range strings.Split(body, "\n") {
+		if strings.HasPrefix(line, "Sample of a real `go vet`") {
+			return line
+		}
+	}
+	return ""
+}
+func requireOverlaySample(t *testing.T, body, line string) {
+	t.Helper()
+	want := "Sample of a real `go vet` failure from these overlays: `" + line + "`"
+	if got := overlaySample(body); got != want {
+		t.Fatalf("sample = %q, want %q", got, want)
+	}
+}
+func TestBaseOverlayVetSampleQuotesFirstFailureLine(t *testing.T) {
+	h := overlaySourceHarness(t, nil, "internal/x/a.go\x00", false, clitest.Reply{Exit: 1, Stderr: "# pkg\ninternal/x/b.go:20:12: w.quoted undefined\nsecond error"})
+	_, body, _ := overlayVetResult(t, h)
+	requireOverlaySample(t, body, "internal/x/b.go:20:12: w.quoted undefined")
+}
+func TestBaseOverlayVetSampleIsTheFirstFailureOfTheSection(t *testing.T) {
+	h := overlaySourceHarness(t, nil, "internal/x/a.go\x00internal/x/b.go\x00", false, clitest.Reply{Exit: 1, Stderr: "internal/x/b.go:1:1: first"}, clitest.Reply{}, clitest.Reply{Exit: 1, Stderr: "later error"})
+	_, body, _ := overlayVetResult(t, h)
+	requireOverlaySample(t, body, "internal/x/b.go:1:1: first")
+}
+func TestBaseOverlayVetSampleFromImporterFailure(t *testing.T) {
+	h := importerHarness(t, "internal/x/a.go\x00", importerJSON("internal/x", "")+importerJSON("internal/y", "Imports", "m/internal/x"), 0, clitest.Reply{}, clitest.Reply{Exit: 1, Stderr: "# importer\ninternal/y/b.go:1:1: importer error"})
+	_, body, _ := overlayVetResult(t, h)
+	requireOverlaySample(t, body, "internal/y/b.go:1:1: importer error")
+}
+func TestBaseOverlayNoVetSampleWhenNoVetFails(t *testing.T) { checkNoOverlaySample(t, clitest.Reply{}) }
+func TestBaseOverlayVetSampleSkipsExitCodeFallback(t *testing.T) {
+	checkNoOverlaySample(t, clitest.Reply{Exit: 1})
+}
+func checkNoOverlaySample(t *testing.T, reply clitest.Reply) {
+	t.Helper()
+	h := overlaySourceHarness(t, map[string]string{"internal/x/a_test.go": "package x\nfunc TestOne(t *T) {}"}, "internal/x/a.go\x00internal/x/a_test.go\x00internal/y/b.go\x00", false, clitest.Reply{}, reply)
+	req, body, _ := overlayVetResult(t, h)
+	if !strings.Contains(body, wantOverlayTestLine(h, req, "TestOne", 1)) {
+		t.Fatal("missing test command")
+	}
+	if got := overlaySample(body); got != "" {
+		t.Fatalf("unexpected sample: %s", got)
+	}
+}
+func TestBaseOverlayVetSampleIsOneSafeLine(t *testing.T) {
+	line := "error|`" + strings.Repeat("界", 293)
+	h := overlaySourceHarness(t, nil, "internal/x/a.go\x00", false, clitest.Reply{Exit: 1, Stderr: "# pkg\n\n" + line + "\nsecond"})
+	_, body, _ := overlayVetResult(t, h)
+	requireOverlaySample(t, body, "error/'"+strings.Repeat("界", 193))
 }
