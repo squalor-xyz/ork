@@ -34657,7 +34657,7 @@
       "id": "S648",
       "title": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too",
       "short_title": "flag a brief sentence that is gated on role only when the matching permission grant is gated on vendor too",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -34667,6 +34667,20 @@
           "text": "**2026-11-27** — Owner decision (adj 666): a go test lint in internal/engine that fails when a BuildBrief sentence gated on role has a permission grant gated on vendor; the spec names the sentence and grant. Jon chose 'go test lint', session 8d711f67, 2026-11-27.",
           "created_at": "2026-11-27T22:10:48Z",
           "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "d102ae95-b30f-4461-bc6f-540db602c366",
+          "kind": "",
+          "text": "**2026-11-28** — The named brief permission lint passes focused checks, and S648’s executable commands now use the absolute worktree path instead of DIR.",
+          "created_at": "2026-11-28T02:04:30Z",
+          "attempt": 1,
           "by": "Jon Robbins",
           "verified_by": "",
           "verified_at": "",
@@ -34693,7 +34707,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
