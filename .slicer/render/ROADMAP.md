@@ -42,7 +42,7 @@
 
 ### C17 One workflow kind for now: the slice relay; no general pipeline language
 
-667 items · — 40 · done 456 · retired 171
+667 items · — 39 · done 457 · retired 171
 
 ## v1.3
 
@@ -248,7 +248,7 @@ v1.2
 | 191 | [S486](slices/S486.md) | allow read-only rg on test globs in the reviewer allowlist |  | - |  | Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added). · discovered from S351 | retired |
 | 192 | [S487](slices/S487.md) | have the UI brief print the resolved -renders path and say whether it equals TMPDIR |  | - |  | Covered by S475: the UI brief names the -renders directory, the role's temp directory (TMPDIR), per adj 508. · discovered from S475 | retired |
 | 193 | [S488](slices/S488.md) | allow ls of the role's own temp directory for read-only roles, since the brief tells them to write and check renders there |  | - |  | Folded into S505 (adj 519, brief-first: the brief names the denied forms; only plain read-only commands are added). · discovered from S475 | retired |
-| 194 | [S489](slices/S489.md) | when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path |  | - |  | discovered from S475 | — |
+| 194 | [S489](slices/S489.md) | when building a UI brief, check that every path the brief tells the role to write is inside the temp directory, the renders directory or the report path |  | - |  | discovered from S475 | done |
 | 195 | [S490](slices/S490.md) | tell the implementer in the brief that socket-bound packages fail inside its sandbox and that ork runs the suite itself, so its Tests line does not report sandbox failures |  | - |  | Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S417 | retired |
 | 196 | [S491](slices/S491.md) | allow the UI pass to run `go run ./cmd/ork ... --help` (no pipe) so the CLI help can be rendered |  | - |  | Covered by S475 (landed 2026-11-20): UI passes render CLI views with the -renders test flag. · discovered from S353 | retired |
 | 197 | [S492](slices/S492.md) | tell implementers in the brief that CLI socket tests may only fail in their sandbox and that the reviewer re-runs them |  | - |  | Duplicate of S485 (socket tests fail inside the implementer sandbox). · discovered from S353 | retired |
