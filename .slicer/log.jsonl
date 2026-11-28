@@ -7682,3 +7682,6 @@
 {"when": "2026-11-28T03:07:54Z", "item": "S667", "action": "add", "from": "", "to": "open", "note": "UI pass: give every vendor's UI role write access to the renders directory, so S660's render commands work for codex, grok and claude-local"}
 {"when": "2026-11-28T03:07:54Z", "item": "S667", "action": "promote", "from": "", "to": "", "note": ""}
 {"when": "2026-11-28T03:07:54Z", "item": "S667", "action": "edit", "from": "", "to": "", "note": "Why"}
+{"when": "2026-11-28T03:38:41Z", "item": "S667", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 679): narrow per-vendor grant. codex add", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:38:41Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 680): reword ui.md so VIEW-WxH naming ap", "by": "Jon Robbins"}
+{"when": "2026-11-28T03:38:41Z", "item": "S664", "action": "note", "from": "", "to": "", "note": "Owner decision (adj 681): tests that need a non-repo temp di", "by": "Jon Robbins"}

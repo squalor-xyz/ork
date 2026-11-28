@@ -35399,7 +35399,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6a8593d5-53fe-4335-8bc2-0acf6b495723",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision (adj 681): tests that need a non-repo temp dir set GIT_CEILING_DIRECTORIES (t.Setenv, as internal/docscheck/blankline_test.go:219 does); name TestProbeNestedNonRepo and the other such tests. Jon chose 'Set GIT_CEILING_DIRECTORIES', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T03:38:41Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "",
@@ -35433,6 +35448,20 @@
           "kind": "",
           "text": "**2026-11-28** — Also covers S660 finding 1: reword internal/roles/prompts/ui.md:70-71 so the ## Renders fallback applies when either render section is missing, not only when both are. Jon chose 'One follow-up slice', session 8d711f67, 2026-11-28.",
           "created_at": "2026-11-28T02:02:27Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        },
+        {
+          "id": "2b5e5b31-197d-4343-ae11-ecd4bdb47596",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision (adj 680): reword ui.md so VIEW-WxH naming applies only to views the brief's render sections do not cover (CLI files keep NAME.txt); tell the UI role to keep at most 24 files, in ui.md and in the brief's render paragraphs; maxRenders stays 24. Jon chose 'Reword + warn about cap', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T03:38:41Z",
           "attempt": 0,
           "by": "Jon Robbins",
           "verified_by": "",
@@ -35498,7 +35527,22 @@
       "status": "open",
       "has_slice": true,
       "depends_on": [],
-      "note_records": [],
+      "note_records": [
+        {
+          "id": "6f5613c1-6525-4144-abaa-80b066cd2ed2",
+          "kind": "",
+          "text": "**2026-11-28** — Owner decision (adj 679): narrow per-vendor grant. codex adds the renders directory as its only writable root with the worktree read-only; grok and claude-local get the same single-path write rule through their own permission mechanisms (as CloudUIAllowlist does for cloud claude, internal/daemon/runner.go:49-52); then remove the in.Vendor == claude gate on the renders-directory sentence (internal/engine/brief.go:234). Jon chose 'Narrow per-vendor grant', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T03:38:41Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
       "claim": null,
       "fields": {
         "size": "S",
