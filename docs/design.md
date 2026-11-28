@@ -2351,6 +2351,12 @@ The reviewer is not told to run the suite.
   commentary line under section (C); the gate writes one "Deviation for the
   orchestrator" evidence line beside its criterion lines. Neither is a finding
   or starts a fix round.
+
+  A Claude reviewer's allowlist comes from the ork build that started the run,
+  so a slice's own permission change is not in effect for its reviewer. The
+  reviewer's brief says so and asks it to hand a denied command to the
+  orchestrator as an untagged line under section (C).
+
 - **Report.** The role writes its final report to
   `~/.local/state/ork/runs/<run>/<role>-<round>.md` and exits
   (`role.report-io`). If the file is missing, ork uses the vendor JSON's

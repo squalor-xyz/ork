@@ -1225,6 +1225,33 @@ func TestOwnerNeededBlockWordingMatchesTheParser(t *testing.T) {
 	}
 }
 
+// S511 (adj 682): eight prompts say the Owner needed section takes one
+// Question: block and one Decision key: line, and that ork refuses a second of
+// either. The spec-draft prompt stays out: its own parser allows one block per
+// decision. Under a slice heading the spec check allows several blocks, each
+// with at most one key.
+func TestOwnerNeededSaysOneQuestionBlockAndOneDecisionKey(t *testing.T) {
+	all := prompts(t)
+	const limit = "`## Owner needed` takes at most one `Question:` block and at most one `Decision key:` line"
+	const refused = "ork refuses a report with a second `Question:` block or a second `Decision key:` line in it"
+	for _, name := range []string{"ui", "architect", "gate", "reviewer", "spec-check", "implementer", "lead", "part"} {
+		p := all[name]
+		if !has(p, limit) {
+			t.Errorf("%s lacks %q", name, limit)
+		}
+		if !has(p, refused) {
+			t.Errorf("%s lacks %q", name, refused)
+		}
+		perSlice := "Under a slice heading, each question block has at most one `Decision key:` line."
+		if got := has(p, perSlice); got != (name == "spec-check") {
+			t.Errorf("%s has the per-slice sentence = %v, want %v", name, got, name == "spec-check")
+		}
+	}
+	if has(all["spec-draft"], limit) {
+		t.Error("spec-draft carries the one-block sentence, but its parser allows one block per decision")
+	}
+}
+
 // S271: ork sets TMPDIR to the role's temp directory for Claude and Codex, so
 // a role needs no "env TMPDIR=DIR" prefix and no mkdir (neither matches an
 // allowlist pattern). Every prompt says so.
