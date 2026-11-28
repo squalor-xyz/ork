@@ -2,7 +2,7 @@
   "version": 11,
   "id_prefix": "S",
   "id_width": 2,
-  "next_id": 663,
+  "next_id": 667,
   "preamble": "",
   "passes": [
     {
@@ -34444,7 +34444,7 @@
       "id": "S643",
       "title": "Base overlays: a per-test or FAIL-lines-only revert command, and a short sample of real go vet type-error output",
       "short_title": "Base overlays: a per-test or FAIL-lines-only revert command, and a short sample of real go vet type-error output",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -34489,6 +34489,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "80c7155a-ca1c-4d32-b82a-97a6c023d7ed",
+          "kind": "",
+          "text": "**2026-11-28** — Base overlays provide capped unanchored per-test commands, product-only overlays retaining new tests, and a safe first-failure vet sample; focused suites and 35 mutation checks pass, while full-suite verification is sandbox-limited.",
+          "created_at": "2026-11-28T01:12:39Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -34508,7 +34522,7 @@
         "importance": 2,
         "urgency": 2,
         "effort": null,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -35124,7 +35138,7 @@
       "id": "S660",
       "title": "Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects.",
       "short_title": "Gate the UI brief's ork-only render sections by project, and keep a generic TUI route in ui.md for other projects. Both `## CLI text renders` and the new `## TUI renders` are written for every UI brief with no project check (`internal/engine/brief.go:231-238`). `roles_test.go:821-822` says \"The UI pass runs in any project\". ui.md:65-67 now sends every project's TUI views to that ork-only section, and the generic out-of-tree route is gone. A UI pass on another project would be told to run `go test ./internal/tui -run TestRenderTUIViews`, which does not exist there, and would then render nothing. The spec's step 6 asked for this wording, so the slice is not wrong. The cross-project gap is new. CONFIRMED by reading. PLAUSIBLE as to how often ork runs UI passes on other projects.",
-      "status": "open",
+      "status": "done",
       "has_slice": true,
       "depends_on": [],
       "note_records": [
@@ -35155,6 +35169,20 @@
           "retracted_by": "",
           "retracted_at": "",
           "retracted_reason": ""
+        },
+        {
+          "id": "f2ff8dc8-cf04-4a54-ae3f-85eafeaf4de4",
+          "kind": "",
+          "text": "**2026-11-28** — The heading-order test now ignores inline prompt mentions, and the design document retains both governing CLI render decisions; focused checks and all engine tests pass.",
+          "created_at": "2026-11-28T01:39:39Z",
+          "attempt": 1,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
         }
       ],
       "claim": null,
@@ -35174,7 +35202,7 @@
         "importance": 2,
         "urgency": 1,
         "effort": 2,
-        "attempts": 0
+        "attempts": 1
       }
     },
     {
@@ -35254,6 +35282,133 @@
         "parent": "",
         "cites": [],
         "key": "tool-feedback-ork-4a1d3d19",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S663",
+      "title": "flag a strings.Index on a heading in a brief test when the prompt text also contains that heading",
+      "short_title": "flag a strings.Index on a heading in a brief test when the prompt text also contains that heading",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S660",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-a178de87",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S664",
+      "title": "set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir",
+      "short_title": "set GIT_CEILING_DIRECTORIES or document TMPDIR placement for tests that rely on a non-repo temp dir",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S647",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-fb9c12d0",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 2,
+        "effort": null,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S665",
+      "title": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/",
+      "short_title": "ui.md file-name rule conflicts with the CLI render file names now written straight into renders/",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [
+        {
+          "id": "cfe0e4a1-f5a1-4b66-bfd9-20fcdac21380",
+          "kind": "",
+          "text": "**2026-11-28** — Also covers S660 finding 1: reword internal/roles/prompts/ui.md:70-71 so the ## Renders fallback applies when either render section is missing, not only when both are. Jon chose 'One follow-up slice', session 8d711f67, 2026-11-28.",
+          "created_at": "2026-11-28T02:02:27Z",
+          "attempt": 0,
+          "by": "Jon Robbins",
+          "verified_by": "",
+          "verified_at": "",
+          "stale_after": "",
+          "retracted_by": "",
+          "retracted_at": "",
+          "retracted_reason": ""
+        }
+      ],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S660",
+        "parent": "",
+        "cites": [],
+        "key": "ork-20261128-002826-1170e384-later-2",
+        "pass": "v1.2",
+        "group": "",
+        "reason": "",
+        "importance": 2,
+        "urgency": 1,
+        "effort": 1,
+        "attempts": 0
+      }
+    },
+    {
+      "id": "S666",
+      "title": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round",
+      "short_title": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round",
+      "status": "open",
+      "has_slice": true,
+      "depends_on": [],
+      "note_records": [],
+      "claim": null,
+      "fields": {
+        "size": "",
+        "flags": [],
+        "trees": [],
+        "trees_literal": false,
+        "findings": "",
+        "discovered_from": "S648",
+        "parent": "",
+        "cites": [],
+        "key": "tool-feedback-ork-40e79eb2",
         "pass": "v1.2",
         "group": "",
         "reason": "",

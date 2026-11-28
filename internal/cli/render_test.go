@@ -572,7 +572,8 @@ var renderFixtureNames = []string{"projects-set", "projects-set-refusals", "wave
 
 func TestUIPassBriefListsEveryRenderFixture(t *testing.T) {
 	brief, err := engine.BuildBrief(engine.BriefInput{
-		Role: engine.RoleUI, SliceID: "S607", Worktree: "/worktree",
+		RenderCLI: true,
+		Role:      engine.RoleUI, SliceID: "S607", Worktree: "/worktree",
 		TempDir: "/temp", ReportPath: "/temp/ui.md", SliceJSON: `{"id":"S607"}`,
 	})
 	if err != nil {
@@ -582,7 +583,7 @@ func TestUIPassBriefListsEveryRenderFixture(t *testing.T) {
 	if !ok {
 		t.Fatal("UI brief lacks fixture list opening")
 	}
-	list, _, ok := strings.Cut(rest, ". Copy the views")
+	list, _, ok := strings.Cut(rest, ". ork's approval card lists every `.txt` file in the renders directory")
 	if !ok {
 		t.Fatal("UI brief lacks fixture list ending")
 	}

@@ -1568,18 +1568,92 @@ func checkBriefInstructionsOnlyForImplementer(t *testing.T) {
 	}
 }
 
+func uiBriefBody(t *testing.T, cli, tui bool) string {
+	t.Helper()
+	in := baseBrief()
+	in.Role = RoleUI
+	in.RenderCLI, in.RenderTUI = cli, tui
+	in.TempDir = "/state/role scratch/ui-1"
+	got, err := BuildBrief(in)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, body, ok := strings.Cut(got, "\n# Brief\n")
+	if !ok {
+		t.Fatal("missing brief marker")
+	}
+	return body
+}
+
+func TestUIPassBriefGatesRenderSectionsByWorktreeTests(t *testing.T) {
+	for _, tc := range []struct{ cli, tui bool }{{true, true}, {true, false}, {false, true}, {false, false}} {
+		t.Run(fmt.Sprintf("cli=%t/tui=%t", tc.cli, tc.tui), func(t *testing.T) {
+			body := uiBriefBody(t, tc.cli, tc.tui)
+			for _, section := range []struct {
+				name string
+				want bool
+			}{{"CLI text renders", tc.cli}, {"TUI renders", tc.tui}, {"Renders", !tc.cli || !tc.tui}} {
+				if got := strings.Contains(body, "\n## "+section.name+"\n"); got != section.want {
+					t.Errorf("%s present = %t, want %t", section.name, got, section.want)
+				}
+			}
+		})
+	}
+}
+
+func TestUIPassBriefFallbackRendersSection(t *testing.T) {
+	body := uiBriefBody(t, false, false)
+	_, section, ok := strings.Cut(body, "\n## Renders\n")
+	if !ok {
+		t.Fatal("missing generic Renders section")
+	}
+	section, _, _ = strings.Cut(section, "\n## Test run patterns\n")
+	for _, want := range []string{"CLI and TUI", "AGENTS.md", "docs", "only that tooling", "/state/role scratch/ui-1/renders", "without changing the tree", "report"} {
+		if !strings.Contains(section, want) {
+			t.Errorf("fallback lacks %q", want)
+		}
+	}
+	for _, bad := range []string{"TestRenderCLIViews", "TestRenderTUIViews", "-renders"} {
+		if strings.Contains(body, bad) {
+			t.Errorf("generic brief contains %q", bad)
+		}
+	}
+	if !strings.Contains(body, "go -C /p/.worktrees/S04 test -run NAME PKG") {
+		t.Error("generic test run form missing")
+	}
+}
+
+func TestUIPassBriefPointsRenderFlagAtRendersDir(t *testing.T) {
+	body := uiBriefBody(t, true, true)
+	for _, pkg := range []string{"cli", "tui"} {
+		name := "CLI text renders"
+		if pkg == "tui" {
+			name = "TUI renders"
+		}
+		_, section, _ := strings.Cut(body, "\n## "+name+"\n")
+		section, _, _ = strings.Cut(section, "\n## ")
+		if !strings.Contains(section, "-renders '/state/role scratch/ui-1/renders'`") {
+			t.Errorf("%s command does not target renders directory", pkg)
+		}
+		if strings.Contains(section, "Copy the views") {
+			t.Errorf("%s still requires copying", pkg)
+		}
+	}
+}
+
 func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
 	for _, tc := range []struct {
 		name, tmpDir, want string
 	}{
-		{"TMPDir", "/state/process-temp", "/state/process-temp"},
-		{"TempDir fallback", "", "'/state/role scratch/ui-1'"},
+		{"TMPDir", "/state/process-temp", "'/state/role scratch/ui-1/renders'"},
+		{"TempDir fallback", "", "'/state/role scratch/ui-1/renders'"},
 	} {
 		t.Run(tc.name, func(t *testing.T) {
 			in := baseBrief()
 			in.Role = RoleUI
 			in.TempDir = "/state/role scratch/ui-1"
 			in.TMPDir = tc.tmpDir
+			in.RenderCLI, in.RenderTUI = true, true
 			got, err := BuildBrief(in)
 			if err != nil {
 				t.Fatal(err)
@@ -1597,6 +1671,7 @@ func TestUIPassBriefNamesTheRenderCommand(t *testing.T) {
 // adj 650, adj 651).
 func TestUIPassBriefNamesTheTUIRenderCommand(t *testing.T) {
 	in := baseBrief()
+	in.RenderCLI, in.RenderTUI = true, true
 	in.Role = RoleUI
 	in.TempDir = "/state/role scratch/ui-1"
 	in.TMPDir = "/state/process-temp"
@@ -1613,7 +1688,7 @@ func TestUIPassBriefNamesTheTUIRenderCommand(t *testing.T) {
 	}
 	section := got[tui:pat]
 	for _, want := range []string{
-		"`go test ./internal/tui -run TestRenderTUIViews -renders /state/process-temp`",
+		"`go test ./internal/tui -run TestRenderTUIViews -renders '/state/role scratch/ui-1/renders'`",
 		"`-render-fixture NAME[,NAME...]`",
 		"`-render-print`",
 		"`-render-size WxH[,WxH...]`",
@@ -1661,13 +1736,14 @@ func TestUIPromptHasNoOverlayRecipe(t *testing.T) {
 // adj 629).
 func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 	in := baseBrief()
+	in.RenderCLI, in.RenderTUI = true, true
 	in.Role = RoleUI
 	got, err := BuildBrief(in)
 	if err != nil {
 		t.Fatal(err)
 	}
 	for _, want := range []string{
-		"This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into your temp directory",
+		"This writes status.txt, status-summary.txt, status-summary-long.txt, show.txt and help.txt into the renders directory",
 		"`-render-fixture NAME[,NAME...]`",
 		"writes only NAME.txt for each name",
 		"projects-set, projects-set-refusals, wave-start, status-queued-held, status-engine, summary-real, projects-setup, fake-reply, matrix-copy-preview, matrix-copy-ask, matrix-copy-stale-preview, wave-start-finding, wait-block, wait-lines and wait-stop",
@@ -1693,6 +1769,7 @@ func TestUIPassBriefNamesRenderFixtures(t *testing.T) {
 // one-test-per-command form; no other role's brief has the section (S565).
 func TestUIPassBriefNamesRunPatternRule(t *testing.T) {
 	in := baseBrief()
+	in.RenderCLI, in.RenderTUI = true, true
 	in.Role = RoleUI
 	got, err := BuildBrief(in)
 	if err != nil {
@@ -1708,8 +1785,8 @@ func TestUIPassBriefNamesRunPatternRule(t *testing.T) {
 			t.Errorf("UI brief lacks %q", want)
 		}
 	}
-	cli := strings.Index(got, "## CLI text renders")
-	pat := strings.Index(got, "## Test run patterns")
+	cli := strings.Index(got, "\n## CLI text renders\n")
+	pat := strings.Index(got, "\n## Test run patterns\n")
 	doc := strings.Index(got, "## UI design doc")
 	if cli < 0 || pat < 0 || doc < 0 || !(cli < pat && pat < doc) {
 		t.Fatalf("heading order wrong: CLI text renders %d, Test run patterns %d, UI design doc %d", cli, pat, doc)

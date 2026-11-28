@@ -825,10 +825,14 @@ slice.
     it. When the gate passes, the
     approval card keeps the files of the latest UI pass that ended well (see
     Approval card).
-    For ork CLI views, the brief names
+    Each render section appears only when the worktree has its render test
+    (adj 662, adj 668). For missing tests, a generic `## Renders` section
+    points to the project's `AGENTS.md` and docs and uses only its tooling.
+    Views that tooling cannot render without changing the tree get no file;
+    the pass says so in its report. For ork CLI views, the brief names
     `go test ./internal/cli -run TestRenderCLIViews -renders DIR`, with
-    the brief's temp directory (`TMPDir`, or `TempDir` when unset) as DIR
-    (adj 505, superseding adj 487; adj 508).
+    the role's renders directory (`TempDir/renders`) as DIR
+    (adj 505, superseding adj 487; adj 667, superseding adj 508).
     The test flag writes `status.txt`, `status-summary.txt`,
     `status-summary-long.txt`, `show.txt` and `help.txt` using existing
     CLI fixtures, without editing the tree. `-render-fixture NAME[,NAME...]`
@@ -844,10 +848,8 @@ slice.
     line, the timeout message and the nothing-active messages) (adj 542,
     adj 629). With no flag it writes nothing.
     Files contain the command output as printed; no width is imposed
-    (adj 509). These are scratch files in the role's temp directory named
-    in the brief under Your files. The pass
-    copies selected views into `renders/` under the prompt's `VIEW-80x24.txt`
-    names for the approval card.
+    (adj 509). The commands write straight into `renders/`; ork's approval
+    card lists every `.txt` file there.
     `TestRenderFixtureDocsListEveryFixture` checks that this document and the
     guide include every additional render fixture by its exact name in their
     `-render-fixture` lists, ignoring mentions elsewhere in the documents.
@@ -875,7 +877,7 @@ slice.
     adj 650, adj 651, superseding adj 507 and the overlay recipe of S416):
     the UI brief's `## TUI renders` section gives
     `go test ./internal/tui -run TestRenderTUIViews -renders DIR`, with the
-    brief's temp directory as DIR. Add `-v` to see go test's output. For each
+    role's renders directory as DIR. Add `-v` to see go test's output. For each
     fixture the flag writes `NAME-80x24.txt`, `NAME-120x40.txt` and
     `NAME-ascii.txt` (the mono theme and ASCII option, at 80x24) as plain text
     from the TUI test harnesses, without changing the tree.
@@ -2171,6 +2173,14 @@ The reviewer is not told to run the suite.
     offers a command (S634, adj 630). When test files are reverted too, the
     entry says tests this slice added in those files do not run. Such an entry
     gets no automatic pass run and no "Passes in full" note (S594, adj 633).
+    When that entry builds, it also offers `overlay-N-product.json`, reverting
+    only the product file and keeping this slice's tests. Its indented command
+    runs `go -C WORKTREE test -overlay TMPDIR/overlay-N-product.json -count=1
+    ./DIR`. A test that needs a new symbol can fail to build; otherwise an
+    assertion can show red. A new product file maps to `""`. ork neither vets
+    nor automatically runs this overlay. Failed writes silently omit the line.
+    No product-only overlay is written without a reverted test file or when
+    the entry does not build (S643, adj 655, adj 664).
     For each remaining file, the section names
     one plain `go -C WORKTREE test -overlay TMPDIR/overlay-N.json -count=1
     ./DIR` command, so a read-only reviewer can run the package's tests with
@@ -2186,7 +2196,16 @@ The reviewer is not told to run the suite.
     cache (S620, adj 627). Failed-vet and unreadable-base entries,
     and the combined overlay, get no test run. It tells the
     reviewer to run one test per command with `-run NAME` and never to join
-    test names in one `-run` pattern (S571). This command guidance appears only
+    test names in one `-run` pattern (S571). Each built entry also gets indented
+    per-test commands for changed test files in the product file's directory,
+    excluding test files reverted in that overlay. The form is
+    `go -C WORKTREE test -overlay TMPDIR/overlay-N.json -count=1 -run TestName
+    ./DIR`, with the unanchored test name (S643, adj 669). Files are sorted;
+    names follow source order. Only top-level Test functions with one parameter,
+    no results and no lowercase letter after Test qualify; methods and TestMain
+    are excluded. Unreadable or unparseable files silently add no lines. The
+    section lists at most 20 per-test lines in total, then says how many were
+    left out. This command guidance appears only
     when at least one single-file test command remains (S593). In that case,
     ork also runs `go -C WORKTREE list -e -json ./...` once with a two-minute
     timeout and reads the module packages (S620, S628, adj 611, adj 617).
@@ -2204,7 +2223,13 @@ The reviewer is not told to run the suite.
     `TMPDIR/overlay-all.json` reverting all those files, vets it over their
     packages, and lists it as a final entry with a test command (or
     `does not build: ERROR`) (S596, adj 588). It says how
-    many files past 20 it left out. A path that is absolute or holds `..` is
+    many files past 20 it left out. After the entries and left-out counts, a
+    paragraph quotes a sample from the first failing overlay vet, including
+    closure rounds, importer checks and the combined overlay. It uses the first
+    non-empty line not starting with `#`, limited to 200 runes, with pipes changed
+    to slashes and backticks to apostrophes. Exit-code fallback output supplies
+    no sample. When no vet fails, there is no sample paragraph
+    (S643, adj 632, adj 663, adj 669). A path that is absolute or holds `..` is
     never written. A failed diff read or `git show` (other than path not in
     base) adds an incomplete-check notice that tells the reviewer to run `git
     show` itself; when the diff itself cannot be read, the notice says to trace
