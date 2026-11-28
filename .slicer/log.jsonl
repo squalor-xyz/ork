@@ -7666,3 +7666,7 @@
 {"when": "2026-11-28T02:02:27Z", "item": "S665", "action": "note", "from": "", "to": "", "note": "Also covers S660 finding 1: reword internal/roles/prompts/ui", "by": "Jon Robbins"}
 {"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "add", "from": "", "to": "open", "note": "substitute the absolute worktree path for DIR in Check lines before running them, so a spec placeholder does not fail a round"}
 {"when": "2026-11-28T02:04:29Z", "item": "S666", "action": "promote", "from": "", "to": "", "note": ""}
+{"when": "2026-11-28T02:45:08Z", "item": "S511", "action": "note", "from": "", "to": "", "note": "Owner decision: ui, architect, gate, reviewer and spec-check", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:45:09Z", "item": "S463", "action": "note", "from": "", "to": "", "note": "Owner decision: the reviewer brief says its permission allow", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:45:09Z", "item": "S489", "action": "note", "from": "", "to": "", "note": "Owner decision: a test over the built briefs for every role ", "by": "Jon Robbins"}
+{"when": "2026-11-28T02:45:09Z", "item": "S524", "action": "note", "from": "", "to": "", "note": "Owner decision: ork runs a pipeline of read-only commands (l", "by": "Jon Robbins"}
